@@ -3117,6 +3117,13 @@
                         xhttp.responseType = responseType;
                         xhttp.send();
                     };
+                    this.argumentsToArray = function(argumentsObject){
+                        const outputArray = [];
+                        for(let a = 0; a < argumentsObject.length; a++){
+                            outputArray.push( argumentsObject[a] );
+                        }
+                        return outputArray;
+                    };
                 };
                 const _thirdparty = new function(){
                     const thirdparty = this;
@@ -21511,63 +21518,6 @@
                     },
                 };
                 
-                communicationModule.function.go = function(){
-                    dev.log.service('.go()'); //#development
-                    _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
-                    if(self.meta.go){self.meta.go();} /* callback */
-                };
-                communicationModule.function.printToScreen = function(imageData){
-                    dev.log.service('.printToScreen(-imageData-)'); //#development
-                    _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
-                };
-                communicationModule.function.onViewportAdjust = function(state){
-                    dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
-                    console.log('onViewportAdjust -> ',state); /* callback */
-                };
-                
-                communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
-                    return attributeNames.map((name,index) => {
-                        return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
-                    });    
-                };
-                communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
-                    dev.log.service('.setCanvasAttributes('+JSON.stringify(attributes)+','+JSON.stringify(prefixActiveArray)+')'); //#development
-                    attributes.map((attribute,index) => {
-                        _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
-                    });
-                };
-                communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasParentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
-                    return attributeNames.map((name,index) => {
-                        return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
-                    });
-                };
-                
-                communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                    dev.log.service('.getDocumentAttributes('+JSON.stringify(attributeNames)+')'); //#development
-                    return attributeNames.map(attribute => {
-                        return eval('document.'+attribute);
-                    });
-                };
-                communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                    dev.log.service('.setDocumentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+')'); //#development
-                    return attributeNames.map((attribute,index) => {
-                        eval('document.'+attribute+' = "'+values[index]+'"');
-                    });
-                };
-                communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                    dev.log.service('.getWindowAttributes('+JSON.stringify(attributeNames)+')'); //#development
-                    return attributeNames.map(attribute => {
-                        return eval('window.'+attribute);
-                    });
-                };
-                communicationModule.function.setWindowAttributes = function(attributes=[]){
-                    dev.log.service('.setWindowAttributes('+JSON.stringify(attributes)+')'); //#development
-                    attributes.map((attribute,index) => {
-                        eval('window.'+attribute.name+' = "'+attribute.value+'"');
-                    });
-                };
                 let elementRegistry = [];
                 const elementLibrary = new function(){
                     function executeMethod(id,method,argumentList,postProcessing){
@@ -21645,13 +21595,13 @@
                     
                         function repush(){ 
                             dev.log.elementLibrary('['+self.getAddress()+'] - group::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                             
                             if(stencilElement != undefined){
                                 function readdStencil(){
                                     if( stencilElement.getId() == -1 ){ setTimeout(readdStencil,1); }
-                                    else{ communicationModule.run('element.executeMethod',[id,'stencil',[stencilElement.getId()]]); }
+                                    else{ _canvas_.core.element.__executeMethod(id,'stencil',[stencilElement.getId()]); }
                                 }
                                 readdStencil();
                             }
@@ -21661,7 +21611,7 @@
                                     dev.log.elementLibrary('['+self.getAddress()+'] - group::repush::readdChildren -> self.getName(): '+ self.getName()+' children: ['+children.map(child => child.getId())+']'); //#development
                                     const childIds = children.map(child => child.getId());
                                     if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
-                                    else{ communicationModule.run('element.executeMethod',[id,'syncChildren',[childIds]]); }
+                                    else{ _canvas_.core.element.__executeMethod(id,'syncChildren',[childIds]); }
                                 }
                                 readdChildren();
                             });
@@ -21712,49 +21662,49 @@
                             if(bool == undefined){ return cashedAttributes.ignored; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.heedCamera = function(bool){
                             if(bool == undefined){ return cashedAttributes.heedCamera; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.heedCamera('+bool+')'); //#development
                             cashedAttributes.heedCamera = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'heedCamera',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'heedCamera',[bool]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                         this.getChildren = function(){ 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildren()'); //#development
@@ -21788,13 +21738,13 @@
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> newElement\'s "__idRecieved" callback ->'); //#development
                                     if(children.indexOf(newElement) != -1 && id != -1){ 
                                         dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                                        communicationModule.run('element.executeMethod',[id,'append', [newElement.getId()]]);
+                                        _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
                                     }
                                 };
                             }else{
                                 if(id != -1){
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                                    communicationModule.run('element.executeMethod',[id,'append', [newElement.getId()]]);
+                                    _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
                                 }
                             }
                         };
@@ -21814,19 +21764,20 @@
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> newElement\'s "__idRecieved" callback ->'); //#development
                                     if(children.indexOf(newElement) != -1 && id != -1){ 
                                         dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                                        communicationModule.run('element.executeMethod',[id,'prepend', [newElement.getId()]]);
+                                        _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
                                     }
                                 };
                             }else{
                                 if(id != -1){
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                                    communicationModule.run('element.executeMethod',[id,'prepend', [newElement.getId()]]);
+                                    _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
                                 }
                             }
                         };
                         this.remove = function(elementToRemove){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.remove('+JSON.stringify(elementToRemove)+')'); //#development
+                            dev.log.elementLibrary('['+this.getAddress()+'] - group.remove('+elementToRemove.getAddress()+')'); //#development
                             children.splice(children.indexOf(elementToRemove), 1);
+                            delete childRegistry[elementToRemove.getName()];
                             elementToRemove.parent = undefined;
                     
                             if(clearingLock){ return; }
@@ -21837,13 +21788,13 @@
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> newElement\'s "__idRecieved" callback ->'); //#development
                                     if(children.indexOf(newElement) == -1 && id != -1){ 
                                         dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                                        communicationModule.run('element.executeMethod',[id,'remove', [elementToRemove.getId()]]);
+                                        _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
                                     }
                                 };
                             }else{
                                 if(id != -1){
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                                    communicationModule.run('element.executeMethod',[id,'remove', [elementToRemove.getId()]]);
+                                    _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
                                 }
                             }
                         };
@@ -21856,10 +21807,14 @@
                                 communicationModule.run('element.executeMethod',[id,'clear',[]],()=>{unlockClearingLock();});
                             }
                         };
-                        // this.getElementsUnderPoint = function(x,y){
-                        //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderPoint('+x+','+y+')'); //#development
-                        //     executeMethod_withReturn('getElementsUnderPoint',[x,y],result => result.map(result => elementRegistry[result]));
-                        // };
+                        this.getElementsUnderPoint = function(x,y){
+                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderPoint('+x+','+y+')'); //#development
+                            if(id != -1){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.__executeMethod(id,'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
+                                });
+                            }
+                        };
                         // this.getElementsUnderArea = function(points){
                         //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
                         //     executeMethod_withReturn('getElementsUnderArea',[points],result => result.map(result => elementRegistry[result]));
@@ -21881,16 +21836,16 @@
                     
                             if(newStencilElement.getId() == -1){
                                 newStencilElement.__idRecieved = function(){
-                                    if(id != -1){ communicationModule.run('element.executeMethod',[id,'stencil', [newStencilElement.getId()]]); }
+                                    if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
                                 };
                             }else{
-                                if(id != -1){ communicationModule.run('element.executeMethod',[id,'stencil', [newStencilElement.getId()]]); }
+                                if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
                             }
                         };
                         this.clipActive = function(bool){ 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.clipActive('+bool+')'); //#development
                             if(bool == undefined){ return cashedAttributes.clipActive; } cashedAttributes.clipActive = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'clipActive',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'clipActive',[bool]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -21909,7 +21864,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary('['+this.getAddress()+'] - group._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     
@@ -21947,7 +21902,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary('['+self.getAddress()+'] - rectangle::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -21982,67 +21937,67 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(newAnchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22061,7 +22016,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     this.rectangleWithOutline = function(_name){
@@ -22100,7 +22055,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - rectangleWithOutline::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22135,79 +22090,79 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - rectangleWithOutline.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - rectangleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.lineColour = function(colour){
                             if(colour == undefined){ return cashedAttributes.lineColour; }
                             dev.log.elementLibrary(' - rectangleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.lineColour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'lineColour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - rectangleWithOutline.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - rectangleWithOutline.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - rectangleWithOutline.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(newAnchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary(' - rectangleWithOutline.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - rectangleWithOutline.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - rectangleWithOutline.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - rectangleWithOutline.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.thickness = function(number){
                             if(number == undefined){ return cashedAttributes.thickness; }
                             dev.log.elementLibrary(' - rectangleWithOutline.thickness('+number+')'); //#development
                             cashedAttributes.thickness = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - rectangleWithOutline.static('+bool+')'); //#development
                             if(bool == undefined){ return cashedAttributes.static; } cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - rectangleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22226,7 +22181,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - rectangleWithOutline._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     this.circle = function(_name){
@@ -22260,7 +22215,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - circle::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22295,49 +22250,49 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - circle.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - circle.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - circle.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - circle.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.radius = function(number){
                             if(number == undefined){ return cashedAttributes.radius; }
                             dev.log.elementLibrary(' - circle.radius('+number+')'); //#development
                             cashedAttributes.radius = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'radius',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - circle.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - circle.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - circle.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22356,7 +22311,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - circle._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     this.circleWithOutline = function(_name){
@@ -22392,7 +22347,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - circleWithOutline::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22427,61 +22382,61 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - circleWithOutline.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - circleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.lineColour = function(colour){
                             if(colour == undefined){ return cashedAttributes.lineColour; }
                             dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.lineColour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'lineColour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - circleWithOutline.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - circleWithOutline.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.radius = function(number){
                             if(number == undefined){ return cashedAttributes.radius; }
                             dev.log.elementLibrary(' - circleWithOutline.radius('+number+')'); //#development
                             cashedAttributes.radius = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'radius',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - circleWithOutline.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.thickness = function(number){
                             if(number == undefined){ return cashedAttributes.thickness; }
                             dev.log.elementLibrary(' - circleWithOutline.thickness('+number+')'); //#development
                             cashedAttributes.thickness = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - circleWithOutline.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - circleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22500,7 +22455,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - circleWithOutline._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     this.polygon = function(_name){
@@ -22532,7 +22487,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - polygon::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22567,19 +22522,19 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - polygon.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - polygon.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.points = function(points){
                             if(points == undefined){ return cashedAttributes.points; }
                             dev.log.elementLibrary(' - polygon.points('+JSON.stringify(points)+')'); //#development
                             cashedAttributes.points = points;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'points',[points]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
                         }; 
                         this.pointsAsXYArray = function(pointsXY){
                             function pointsToXYArray(points){ 
@@ -22590,25 +22545,25 @@
                             if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
                             dev.log.elementLibrary(' - polygon.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
                             cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'pointsAsXYArray',[pointsXY]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - polygon.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - polygon.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - polygon.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22627,7 +22582,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - polygon._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     this.polygonWithOutline = function(_name){
@@ -22660,7 +22615,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - polygonWithOutline::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22695,25 +22650,25 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - polygonWithOutline.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - polygonWithOutline.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.lineColour = function(colour){
                             if(colour == undefined){ return cashedAttributes.lineColour; }
                             dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.lineColour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'lineColour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
                         };
                         this.points = function(points){
                             if(points == undefined){ return cashedAttributes.points; }
                             dev.log.elementLibrary(' - polygonWithOutline.points('+JSON.stringify(points)+')'); //#development
                             cashedAttributes.points = points;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'points',[points]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
                         }; 
                         this.pointsAsXYArray = function(pointsXY){
                             function pointsToXYArray(points){ 
@@ -22724,51 +22679,51 @@
                             if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
                             dev.log.elementLibrary(' - polygonWithOutline.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
                             cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'pointsAsXYArray',[pointsXY]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - polygonWithOutline.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                     
                         this.thickness = function(number){
                             if(number == undefined){ return cashedAttributes.thickness; }
                             dev.log.elementLibrary(' - polygonWithOutline.thickness('+number+')'); //#development
                             cashedAttributes.thickness = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
                         };
                         this.jointDetail = function(number){
                             if(number == undefined){ return cashedAttributes.jointDetail; }
                             dev.log.elementLibrary(' - polygonWithOutline.jointDetail('+number+')'); //#development
                             cashedAttributes.jointDetail = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointDetail',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
                         };
                         this.jointType = function(type){
                             if(type == undefined){ return cashedAttributes.jointType; }
                             dev.log.elementLibrary(' - polygonWithOutline.jointType('+type+')'); //#development
                             cashedAttributes.jointType = type;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointType',[type]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
                         };
                         this.sharpLimit = function(number){
                             if(number == undefined){ return cashedAttributes.sharpLimit; }
                             dev.log.elementLibrary(' - polygonWithOutline.sharpLimit('+number+')'); //#development
                             cashedAttributes.sharpLimit = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'sharpLimit',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
                         };
                     
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - polygonWithOutline.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - polygonWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22787,7 +22742,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - polygonWithOutline._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     
@@ -22825,7 +22780,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - path::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22860,19 +22815,19 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - path.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - path.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.points = function(points){
                             if(points == undefined){ return cashedAttributes.points; }
                             dev.log.elementLibrary(' - path.points('+points+')'); //#development
                             cashedAttributes.points = points;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'points',[points]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
                         }; 
                         this.pointsAsXYArray = function(pointsXY){
                             function pointsToXYArray(points){ 
@@ -22883,61 +22838,61 @@
                             if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
                             dev.log.elementLibrary(' - path.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
                             cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'pointsAsXYArray',[pointsXY]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - path.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.looping = function(bool){
                             if(bool == undefined){ return cashedAttributes.looping; }
                             dev.log.elementLibrary(' - path.looping('+bool+')'); //#development
                             cashedAttributes.looping = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'looping',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'looping',[bool]); }
                         };
                         this.thickness = function(number){
                             if(number == undefined){ return cashedAttributes.thickness; }
                             dev.log.elementLibrary(' - path.thickness('+number+')'); //#development
                             cashedAttributes.thickness = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
                         };
                         this.capType = function(type){
                             if(type == undefined){ return cashedAttributes.capType; }
                             dev.log.elementLibrary(' - path.capType('+type+')'); //#development
                             cashedAttributes.capType = type;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'capType',[type]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'capType',[type]); }
                         };
                         this.jointType = function(type){
                             if(type == undefined){ return cashedAttributes.jointType; }
                             dev.log.elementLibrary(' - path.jointType('+type+')'); //#development
                             cashedAttributes.jointType = type;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointType',[type]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
                         };
                         this.jointDetail = function(number){
                             if(number == undefined){ return cashedAttributes.jointDetail; }
                             dev.log.elementLibrary(' - path.jointDetail('+number+')'); //#development
                             cashedAttributes.jointDetail = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointDetail',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
                         };
                         this.sharpLimit = function(number){
                             if(number == undefined){ return cashedAttributes.sharpLimit; }
                             dev.log.elementLibrary(' - path.sharpLimit('+number+')'); //#development
                             cashedAttributes.sharpLimit = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'sharpLimit',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - path.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - path.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22956,7 +22911,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - path._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     
@@ -22995,7 +22950,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - image::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -23030,73 +22985,73 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - image.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - image.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - image.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(anchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - image.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - image.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - image.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - image.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.url = function(url){
                             if(url == undefined){ return cashedAttributes.url; }
                             dev.log.elementLibrary(' - image.url('+url+')'); //#development
                             cashedAttributes.url = url;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'url',[url]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'url',[url]); }
                         };
                         this.bitmap = function(bitmap){
                             if(bitmap == undefined){ return cashedAttributes.bitmap; }
                             dev.log.elementLibrary(' - image.bitmap('+bitmap+')'); //#development
                             cashedAttributes.bitmap = bitmap;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'bitmap',[bitmap]],undefined,[bitmap]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'bitmap',[bitmap],undefined,[bitmap]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - image.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -23115,7 +23070,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - image._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     this.canvas = function(_name){
@@ -23151,7 +23106,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - image::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                             self.requestUpdate();
                         }
@@ -23202,7 +23157,7 @@
                             };
                             this.requestUpdate = function(){
                                 createImageBitmap(subCanvas.object).then(bitmap => {
-                                    if(id != -1){ communicationModule.run('element.executeMethod',[id,'imageBitmap',[bitmap]],undefined,[bitmap]); }
+                                    if(id != -1){ _canvas_.core.element.__executeMethod(id,'imageBitmap',[bitmap],undefined,[bitmap]); }
                                 });
                             };
                             this.requestUpdate();
@@ -23211,57 +23166,57 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - image.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - image.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - image.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(anchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - image.width('+number+')'); //#development
                             cashedAttributes.width = number;
                             updateDimentions();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - image.height('+number+')'); //#development
                             cashedAttributes.height = number;
                             updateDimentions();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - image.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - image.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
@@ -23272,12 +23227,12 @@
                             }
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
                             updateDimentions();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - canvas._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     
@@ -23318,7 +23273,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - character::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -23353,90 +23308,90 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - character.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - character.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - character.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - character.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - character.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - character.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(anchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary(' - character.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - character.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - character.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.font = function(font){
                             if(font == undefined){ return cashedAttributes.font; }
                             dev.log.elementLibrary(' - character.font('+font+')'); //#development
                             cashedAttributes.font = font;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'font',[font]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'font',[font]); }
                         };
                         this.character = function(character){
                             if(character == undefined){ return cashedAttributes.character; }
                             dev.log.elementLibrary(' - character.character('+character+')'); //#development
                             cashedAttributes.character = character;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'character',[character]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'character',[character]); }
                         };
                         this.printingMode = function(printingMode){
                             if(printingMode == undefined){ return cashedAttributes.printingMode; }
                             dev.log.elementLibrary(' - character.printingMode('+printingMode+')'); //#development
                             cashedAttributes.printingMode = printingMode;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'printingMode',[printingMode]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'printingMode',[printingMode]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - character.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - character.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - character._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     this.characterString = function(_name){
@@ -23473,23 +23428,29 @@
                             scale: 1,
                             static: false,
                         };
+                        const cashedAttributes_presentationOnly = {
+                            resultingWidth: 0, 
+                        };
                         const cashedCallbacks = {};
+                        const cashedCallbacks_elementSpecific = {
+                            onFontUpdateCallback:function(){},
+                        };
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - characterString::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
-                        function executeMethod_simple(method,argumentList){
-                            // dev.log.elementLibrary(' - characterString::executeMethod_simple('+method+','+argumentList+')'); //#development
-                            // if(id == -1){
-                            //     dev.log.elementLibrary(' - characterString::executeMethod_simple -> this element\'s ID is -1, will retry in '+missingIdRetryPeriod+'ms...'); //#development
-                            //     setTimeout(() => {executeMethod_simple(method,argumentList);},missingIdRetryPeriod);
-                            // }else{
-                            //     communicationModule.run('element.executeMethod',[id,method,argumentList]);
-                            // }
-                        }
+                        this.__updateValues = function(data){
+                            dev.log.elementLibrary(' - characterString.__updateValues('+JSON.stringify(data)+')'); //#development
+                            Object.keys(data).forEach(key => { cashedAttributes_presentationOnly[key] = data[key]; });
+                        };
+                        this.__runCallback = function(data){
+                            Object.entries(data).forEach(entry => {
+                                if(entry[0] in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[entry[0]](entry[1]); }
+                            });
+                        };
                     
                         this.getAddress = function(){
                             return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
@@ -23522,98 +23483,133 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - characterString.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){
+                                _canvas_.core.element.__executeMethod(id,'ignored',[bool]);
+                            }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - characterString.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - characterString.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - characterString.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - characterString.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - characterString.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - characterString.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - characterString.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.font = function(font){
                             if(font == undefined){ return cashedAttributes.font; }
                             dev.log.elementLibrary(' - characterString.font('+font+')'); //#development
                             cashedAttributes.font = font;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'font',[font]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'font',[font]); }
                         };
                         this.string = function(string){
                             if(string == undefined){ return cashedAttributes.string; }
                             dev.log.elementLibrary(' - characterString.string('+string+')'); //#development
                             cashedAttributes.string = string;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'string',[string]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'string',[string]); }
                         };
                         this.interCharacterSpacing = function(number){
                             if(number == undefined){ return cashedAttributes.interCharacterSpacing; }
                             dev.log.elementLibrary(' - characterString.interCharacterSpacing('+number+')'); //#development
                             cashedAttributes.interCharacterSpacing = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'interCharacterSpacing',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'interCharacterSpacing',[number]); }
                         };
                         this.printingMode = function(printingMode){
                             if(printingMode == undefined){ return cashedAttributes.printingMode; }
                             dev.log.elementLibrary(' - characterString.printingMode('+printingMode+')'); //#development
                             cashedAttributes.printingMode = printingMode;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'printingMode',[printingMode]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'printingMode',[printingMode]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - characterString.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - characterString.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]); }
                         };
+                    
+                        this.getCallback = function(callbackType){
+                            if(callbackType in cashedCallbacks_elementSpecific){
+                                return cashedCallbacks_elementSpecific[callbackType];
+                            }
+                    
+                            return cashedCallbacks[callbackType];
+                        };
+                        this.attachCallback = function(callbackType, callback){
+                            dev.log.elementLibrary('['+this.getAddress()+'] - characterString.attachCallback('+callbackType+','+callback+')'); //#development
+                            if(callbackType in cashedCallbacks_elementSpecific){
+                                cashedCallbacks_elementSpecific[callbackType] = callback;
+                                return;
+                            }
+                            cashedCallbacks[callbackType] = callback;
+                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
+                        }
+                        this.removeCallback = function(callbackType){
+                            dev.log.elementLibrary('['+this.getAddress()+'] - characterString.removeCallback('+callbackType+')'); //#development
+                            if(callbackType in cashedCallbacks_elementSpecific){
+                                delete cashedCallbacks_elementSpecific[callbackType];
+                                return;
+                            }
+                            delete cashedCallbacks[callbackType];
+                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
+                        }
                     
                         this.resultingWidth = function(){
                             dev.log.elementLibrary(' - characterString.resultingWidth()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'resultingWidth',[]]); }
+                            return cashedAttributes_presentationOnly.resultingWidth;
                         };
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - characterString._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
 
+                };
+                
+                this.go = new function(){
+                    const functionList = [];
+                
+                    this.add = function(newFunction){ functionList.push(newFunction); };
+                    this.__activate = function(){ functionList.forEach(f => f()); };
                 };
                 
                 this.meta = new function(){
@@ -23628,6 +23624,10 @@
                         return new Promise((resolve, reject) => {
                             communicationModule.run('refresh',[],resolve);
                         });
+                    };
+                    this.getElementFromId = function(id){
+                        dev.log.interface('.meta.getElementFromId('+id+')'); //#development
+                        return elementRegistry[id];
                     };
                 };
                 
@@ -23694,6 +23694,11 @@
                         dev.log.interface('.element.deleteAllCreated()'); //#development
                         communicationModule.run('element.deleteAllCreated',[]);
                         elementRegistry = [];
+                    };
+                
+                    this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
+                        dev.log.interface('.element.__executeMethod('+id+','+attribute+','+JSON.stringify(argumentList)+')'); //#development
+                        communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
                     };
                 };
                 this.arrangement = new function(){
@@ -23824,6 +23829,35 @@
                         angle:0,
                     };
                 
+                    //adapter
+                        this.adapter = new function(){
+                            this.windowPoint2workspacePoint = function(x,y){
+                                dev.log.interface('.viewport.adapter.windowPoint2workspacePoint('+x+','+y+')'); //#development
+                                const position = cachedValues.position;
+                                const scale = cachedValues.scale;
+                                const angle = cachedValues.angle;
+                
+                                let tmp = {x:x, y:y};
+                                tmp.x = (tmp.x - position.x)/scale;
+                                tmp.y = (tmp.y - position.y)/scale;
+                                tmp = _canvas_.library.math.cartesianAngleAdjust(tmp.x,tmp.y,-angle);
+                
+                                return tmp;
+                            };
+                            // this.workspacePoint2windowPoint = function(x,y){
+                                // const position = cachedValues.position;
+                                // const scale = cachedValues.scale;
+                                // const angle = cachedValues.angle;
+                
+                            //     let point = _canvas_.library.math.cartesianAngleAdjust(x,y,angle);
+                
+                            //     return {
+                            //         x: (point.x+position.x) * scale,
+                            //         y: (point.y+position.y) * scale
+                            //     };
+                            // };
+                        };
+                
                     this.refresh = function(){
                         dev.log.interface('.viewport.refresh()'); //#development
                         communicationModule.run('viewport.refresh',[]);
@@ -23882,6 +23916,12 @@
                             communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
                         });
                     };
+                
+                    this.cursor = function(type){
+                        //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
+                        if(type == undefined){return document.body.style.cursor;}
+                        document.body.style.cursor = type;
+                    };
                 };
                 this.stats = new function(){
                     this.active = function(active){
@@ -23904,29 +23944,6 @@
                             communicationModule.run('callback.listCallbackTypes',[],resolve);
                         });
                     };
-                    this.getCallbackTypeState = function(type){
-                        dev.log.interface('.callback.getCallbackTypeState('+type+')'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('callback.getCallbackTypeState',[type],resolve);
-                        });
-                    };
-                    this.activateCallbackType = function(type){
-                        dev.log.interface('.callback.activateCallbackType('+type+')'); //#development
-                        communicationModule.run('callback.activateCallbackType',[type]);
-                    };
-                    this.disactivateCallbackType = function(type){
-                        dev.log.interface('.callback.disactivateCallbackType('+type+')'); //#development
-                        communicationModule.run('callback.disactivateCallbackType',[type]);
-                    };
-                    this.activateAllCallbackTypes = function(){
-                        dev.log.interface('.callback.activateAllCallbackTypes()'); //#development
-                        communicationModule.run('callback.activateAllCallbackTypes',[]);
-                    };
-                    this.disactivateAllCallbackTypes = function(){
-                        dev.log.interface('.callback.disactivateAllCallbackTypes()'); //#development
-                        communicationModule.run('callback.disactivateAllCallbackTypes',[]);
-                    };
-                
                 
                     const callbackRegistry = new function(){
                         const registeredShapes = {};
@@ -23944,8 +23961,9 @@
                             delete registeredShapes[id][callbackType];
                         };
                         this.call = function(id,callbackType,x,y,event){
-                            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
+                            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return false;}
                             registeredShapes[id][callbackType](x,y,event);
+                            return true;
                         };
                     };
                     this.getCallback = function(element, callbackType){
@@ -23963,11 +23981,11 @@
                         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
                     };
                 
-                    let allowHiddenElementCallback = true;
-                    this.allowHiddenElementCallback = function(bool){
-                        dev.log.interface('.callback.allowHiddenElementCallback('+bool+')'); //#development
-                        if(bool==undefined){return allowHiddenElementCallback;}
-                        allowHiddenElementCallback = bool;
+                    let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
+                    this.callbackActivationMode = function(mode){
+                        if(mode==undefined){return callbackActivationMode;}
+                        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
+                        callbackActivationMode = mode;
                     };
                 
                     this.functions = {};
@@ -24002,22 +24020,93 @@
                                     console.warn('unknown event type: ',event);
                                 }
                 
-                                communicationModule.run('callback.coupling.'+callbackName,[sudoEvent]);
+                                communicationModule.run('callback.coupling_in.'+callbackName,[sudoEvent]);
                             };
-                            communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
-                                if(allowHiddenElementCallback){
-                                    elements.forEach(id => { callbackRegistry.call(id,callbackName,x,y,event); });
-                                }else{
-                                    callbackRegistry.call(elements[0],callbackName,x,y,event);
-                                }
-                                if(self.callback.functions[callbackName]){
-                                    self.callback.functions[callbackName](x,y,event,elements);
-                                }
-                            };
+                
+                            //service
+                                communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
+                                    if(self.callback.functions[callbackName]){
+                                        self.callback.functions[callbackName](x,y,event,{
+                                            all: elements.all.map(id => elementRegistry[id]),
+                                            relevant: elements.relevant ? elements.relevant.map(id => elementRegistry[id]) : undefined,
+                                        });
+                                    }
+                
+                                    elements.relevant.forEach(id => callbackRegistry.call(id,callbackName,x,y,event) );
+                                };
+                
                         });
                     });
                 };
 
+                communicationModule.function.go = function(){
+                    dev.log.service('.go()'); //#development
+                    _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
+                    self.go.__activate();
+                };
+                communicationModule.function.printToScreen = function(imageData){
+                    dev.log.service('.printToScreen(-imageData-)'); //#development
+                    _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
+                };
+                // communicationModule.function.onViewportAdjust = function(state){
+                //     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
+                //     console.log('onViewportAdjust -> ',state); /* callback */
+                // };
+                
+                communicationModule.function.updateElement = function(elem, data={}){
+                    dev.log.service('.updateElement('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
+                    const proxyElement = _canvas_.core.meta.getElementFromId(elem);
+                    if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
+                };
+                communicationModule.function.runElementCallback = function(elem, data={}){
+                    dev.log.service('.runElementCallback('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
+                    const proxyElement = _canvas_.core.meta.getElementFromId(elem);
+                    if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
+                };
+                
+                communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    dev.log.service('.getCanvasAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
+                    });    
+                };
+                communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
+                    dev.log.service('.setCanvasAttributes('+JSON.stringify(attributes)+','+JSON.stringify(prefixActiveArray)+')'); //#development
+                    attributes.map((attribute,index) => {
+                        _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
+                    });
+                };
+                communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    dev.log.service('.getCanvasParentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
+                    });
+                };
+                
+                communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
+                    dev.log.service('.getDocumentAttributes('+JSON.stringify(attributeNames)+')'); //#development
+                    return attributeNames.map(attribute => {
+                        return eval('document.'+attribute);
+                    });
+                };
+                communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
+                    dev.log.service('.setDocumentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+')'); //#development
+                    return attributeNames.map((attribute,index) => {
+                        eval('document.'+attribute+' = "'+values[index]+'"');
+                    });
+                };
+                communicationModule.function.getWindowAttributes = function(attributeNames=[]){
+                    dev.log.service('.getWindowAttributes('+JSON.stringify(attributeNames)+')'); //#development
+                    return attributeNames.map(attribute => {
+                        return eval('window.'+attribute);
+                    });
+                };
+                communicationModule.function.setWindowAttributes = function(attributes=[]){
+                    dev.log.service('.setWindowAttributes('+JSON.stringify(attributes)+')'); //#development
+                    attributes.map((attribute,index) => {
+                        eval('window.'+attribute.name+' = "'+attribute.value+'"');
+                    });
+                };
 
             };
         }

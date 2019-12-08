@@ -62,13 +62,13 @@ this.group = function(_name){
 
     function repush(){ 
         dev.log.elementLibrary('['+self.getAddress()+'] - group::repush()'); //#development
-        communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+        _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
         Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
         
         if(stencilElement != undefined){
             function readdStencil(){
                 if( stencilElement.getId() == -1 ){ setTimeout(readdStencil,1); }
-                else{ communicationModule.run('element.executeMethod',[id,'stencil',[stencilElement.getId()]]); }
+                else{ _canvas_.core.element.__executeMethod(id,'stencil',[stencilElement.getId()]); }
             }
             readdStencil();
         }
@@ -78,7 +78,7 @@ this.group = function(_name){
                 dev.log.elementLibrary('['+self.getAddress()+'] - group::repush::readdChildren -> self.getName(): '+ self.getName()+' children: ['+children.map(child => child.getId())+']'); //#development
                 const childIds = children.map(child => child.getId());
                 if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
-                else{ communicationModule.run('element.executeMethod',[id,'syncChildren',[childIds]]); }
+                else{ _canvas_.core.element.__executeMethod(id,'syncChildren',[childIds]); }
             }
             readdChildren();
         });
@@ -129,49 +129,49 @@ this.group = function(_name){
         if(bool == undefined){ return cashedAttributes.ignored; } 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.ignored('+bool+')'); //#development
         cashedAttributes.ignored = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
     };
     this.x = function(number){
         if(number == undefined){ return cashedAttributes.x; } 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.x('+number+')'); //#development
         cashedAttributes.x = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
     };
     this.y = function(number){
         if(number == undefined){ return cashedAttributes.y; } 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.y('+number+')'); //#development
         cashedAttributes.y = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
     };
     this.angle = function(number){
         if(number == undefined){ return cashedAttributes.angle; } 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.angle('+number+')'); //#development
         cashedAttributes.angle = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
     };
     this.scale = function(number){
         if(number == undefined){ return cashedAttributes.scale; } 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.scale('+number+')'); //#development
         cashedAttributes.scale = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
     };
     this.heedCamera = function(bool){
         if(bool == undefined){ return cashedAttributes.heedCamera; } 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.heedCamera('+bool+')'); //#development
         cashedAttributes.heedCamera = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'heedCamera',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'heedCamera',[bool]); }
     };
     this.static = function(bool){
         if(bool == undefined){ return cashedAttributes.static; } 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.static('+bool+')'); //#development
         cashedAttributes.static = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
     };
     this.unifiedAttribute = function(attributes){
         if(attributes == undefined){ return cashedAttributes; } 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
         Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
     };
     this.getChildren = function(){ 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildren()'); //#development
@@ -205,13 +205,13 @@ this.group = function(_name){
                 dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> newElement\'s "__idRecieved" callback ->'); //#development
                 if(children.indexOf(newElement) != -1 && id != -1){ 
                     dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                    communicationModule.run('element.executeMethod',[id,'append', [newElement.getId()]]);
+                    _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
                 }
             };
         }else{
             if(id != -1){
                 dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                communicationModule.run('element.executeMethod',[id,'append', [newElement.getId()]]);
+                _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
             }
         }
     };
@@ -231,19 +231,20 @@ this.group = function(_name){
                 dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> newElement\'s "__idRecieved" callback ->'); //#development
                 if(children.indexOf(newElement) != -1 && id != -1){ 
                     dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                    communicationModule.run('element.executeMethod',[id,'prepend', [newElement.getId()]]);
+                    _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
                 }
             };
         }else{
             if(id != -1){
                 dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                communicationModule.run('element.executeMethod',[id,'prepend', [newElement.getId()]]);
+                _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
             }
         }
     };
     this.remove = function(elementToRemove){
-        dev.log.elementLibrary('['+this.getAddress()+'] - group.remove('+JSON.stringify(elementToRemove)+')'); //#development
+        dev.log.elementLibrary('['+this.getAddress()+'] - group.remove('+elementToRemove.getAddress()+')'); //#development
         children.splice(children.indexOf(elementToRemove), 1);
+        delete childRegistry[elementToRemove.getName()];
         elementToRemove.parent = undefined;
 
         if(clearingLock){ return; }
@@ -254,13 +255,13 @@ this.group = function(_name){
                 dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> newElement\'s "__idRecieved" callback ->'); //#development
                 if(children.indexOf(newElement) == -1 && id != -1){ 
                     dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                    communicationModule.run('element.executeMethod',[id,'remove', [elementToRemove.getId()]]);
+                    _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
                 }
             };
         }else{
             if(id != -1){
                 dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                communicationModule.run('element.executeMethod',[id,'remove', [elementToRemove.getId()]]);
+                _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
             }
         }
     };
@@ -273,10 +274,14 @@ this.group = function(_name){
             communicationModule.run('element.executeMethod',[id,'clear',[]],()=>{unlockClearingLock();});
         }
     };
-    // this.getElementsUnderPoint = function(x,y){
-    //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderPoint('+x+','+y+')'); //#development
-    //     executeMethod_withReturn('getElementsUnderPoint',[x,y],result => result.map(result => elementRegistry[result]));
-    // };
+    this.getElementsUnderPoint = function(x,y){
+        dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderPoint('+x+','+y+')'); //#development
+        if(id != -1){
+            return new Promise((resolve, reject) => {
+                _canvas_.core.element.__executeMethod(id,'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
+            });
+        }
+    };
     // this.getElementsUnderArea = function(points){
     //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
     //     executeMethod_withReturn('getElementsUnderArea',[points],result => result.map(result => elementRegistry[result]));
@@ -298,16 +303,16 @@ this.group = function(_name){
 
         if(newStencilElement.getId() == -1){
             newStencilElement.__idRecieved = function(){
-                if(id != -1){ communicationModule.run('element.executeMethod',[id,'stencil', [newStencilElement.getId()]]); }
+                if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
             };
         }else{
-            if(id != -1){ communicationModule.run('element.executeMethod',[id,'stencil', [newStencilElement.getId()]]); }
+            if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
         }
     };
     this.clipActive = function(bool){ 
         dev.log.elementLibrary('['+this.getAddress()+'] - group.clipActive('+bool+')'); //#development
         if(bool == undefined){ return cashedAttributes.clipActive; } cashedAttributes.clipActive = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'clipActive',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'clipActive',[bool]); }
     };
 
     this.getCallback = function(callbackType){
@@ -326,6 +331,6 @@ this.group = function(_name){
 
     this._dump = function(){
         dev.log.elementLibrary('['+this.getAddress()+'] - group._dump()'); //#development
-        communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+        _canvas_.core.element.__executeMethod(id,'_dump',[]);
     };
 };

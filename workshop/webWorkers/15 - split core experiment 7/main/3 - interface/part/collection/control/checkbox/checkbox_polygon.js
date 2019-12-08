@@ -10,6 +10,8 @@ this.checkbox_polygon = function(
     backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
     onchange = function(){},
 ){
+    dev.log.partControl('.checkbox_polygon(...)'); //#development
+
     //adding on the specific shapes
         //main
             const subject = interfacePart.builder('basic','group',name+'subGroup',{});

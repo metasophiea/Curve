@@ -29,5 +29,5 @@ const dev = {
     },
 };
 
-{{include:services.js}}
 {{include:interface/main.js}}
+{{include:service.js}}

@@ -9,12 +9,14 @@ this.slide_continuous_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.slide_continuous_image(...)'); //#development
+
     //default to non-image version if handle image link is missing
         if(handleURL == undefined){
-            return this.slide_continuous(
+            return this.slide(
                 name, x, y, width, height, angle, interactable,
                 handleHeight, value, resetValue,
-                undefined, undefined, undefined, invisibleHandleStyle,
+                handleURL, backingURL, invisibleHandleStyle,
                 onchange, onrelease,
             );
         }
@@ -36,12 +38,12 @@ this.slide_continuous_image = function(
         //handle
             const handle = interfacePart.builder('basic','image','handle',{width:width, height:height*handleHeight, url:handleURL});
             object.append(handle);
-        //cover
-            const cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-            object.append(cover);
         //invisible handle
             const invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
             object.append(invisibleHandle);
+        //cover
+            const cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+            object.append(cover);
 
     //graphical adjust
         function set(a,update=true){
@@ -73,15 +75,15 @@ this.slide_continuous_image = function(
         };
 
     //interaction
-        function ondblclick(){
+        cover.attachCallback('ondblclick', function(){
             if(!interactable){return;}
             if(resetValue<0){return;}
             if(grappled){return;}
 
             set(resetValue);
             if(object.onrelease != undefined){object.onrelease(value);}
-        }
-        function onwheel(x,y,event){
+        });
+        cover.attachCallback('onwheel', function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
 
@@ -89,24 +91,20 @@ this.slide_continuous_image = function(
             const globalScale = _canvas_.core.viewport.scale();
             set( value + move/(10*globalScale) );
             if(object.onrelease != undefined){object.onrelease(value);}
-        }
-        cover.attachCallback('ondblclick', ondblclick);
-        invisibleHandle.attachCallback('ondblclick', ondblclick);
-        cover.attachCallback('onwheel', onwheel);
-        invisibleHandle.attachCallback('onwheel', onwheel);
-
-        cover.attachCallback('onclick', function(x,y,event){
+        });
+        backingAndSlotCover.attachCallback('onmousedown', function(){}); //to stop unit selection
+        backingAndSlotCover.attachCallback('onclick', function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
 
             //calculate the distance the click is from the top of the slider (accounting for angle)
                 const offset = backingAndSlot.getOffset();
                 const delta = {
-                    x: x - (backingAndSlot.x() + offset.x),
-                    y: y - (backingAndSlot.y() + offset.y),
+                    x: x - (backingAndSlot.x()+ offset.x),
+                    y: y - (backingAndSlot.y()+ offset.y),
                     a: 0 - (backingAndSlot.angle() + offset.angle),
                 };
-                const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / cover.height();
+                const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
 
             //use the distance to calculate the correct value to set the slide to
             //taking into account the slide handle's size also
@@ -115,6 +113,7 @@ this.slide_continuous_image = function(
             set(value);
             if(object.onrelease != undefined){object.onrelease(value);}
         });
+        invisibleHandle.attachCallback('onclick', function(x,y,event){});
         invisibleHandle.attachCallback('onmousedown', function(x,y,event){
             if(!interactable){return;}
             grappled = true;
@@ -124,12 +123,12 @@ this.slide_continuous_image = function(
             const mux = height - height*handleHeight;
 
             _canvas_.system.mouse.mouseInteractionHandler(
-                function(event){
+                function(x,y,event){
                     const numerator = initialY-currentMousePosition(event);
                     const divider = _canvas_.core.viewport.scale();
                     set( initialValue - (numerator/(divider*mux) ) );
                 },
-                function(event){
+                function(x,y,event){
                     grappled = false;
                 }
             );
@@ -150,7 +149,3 @@ interfacePart.partLibrary.control.slide_continuous_image = function(name,data){ 
     data.handleURL, data.backingURL, data.style.invisibleHandle,
     data.onchange, data.onrelease
 ); };
-interfacePart.partLibrary.control.slide_image = function(name,data){ 
-    console.warn('depreciated - please use slide_continuous_image instead');
-    return interfacePart.partLibrary.control.slide_continuous_image(name,data);
-};

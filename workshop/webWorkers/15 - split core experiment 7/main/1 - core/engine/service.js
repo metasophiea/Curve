@@ -226,26 +226,6 @@
         dev.log.service('.callback.listCallbackTypes()'); //#development
         return callback.listCallbackTypes();
     };
-    communicationModule.function['callback.getCallbackTypeState'] = function(type){
-        dev.log.service('.callback.getCallbackTypeState('+type+')'); //#development
-        return callback.getCallbackTypeState(type);
-    };
-    communicationModule.function['callback.activateCallbackType'] = function(type){
-        dev.log.service('.callback.activateCallbackType('+type+')'); //#development
-        callback.activateCallbackType(type);
-    };
-    communicationModule.function['callback.disactivateCallbackType'] = function(type){
-        dev.log.service('.callback.disactivateCallbackType('+type+')'); //#development
-        callback.disactivateCallbackType(type);
-    };
-    communicationModule.function['callback.activateAllCallbackTypes'] = function(){
-        dev.log.service('.callback.activateAllCallbackTypes()'); //#development
-        callback.activateAllCallbackTypes();
-    };
-    communicationModule.function['callback.disactivateAllCallbackTypes'] = function(){
-        dev.log.service('.callback.disactivateAllCallbackTypes()'); //#development
-        callback.disactivateAllCallbackTypes();
-    };
     communicationModule.function['callback.attachCallback'] = function(id, callbackType){
         dev.log.service('.callback.attachCallback('+id+','+callbackType+')'); //#development
         callback.attachCallback(element.getElementFromId(id),callbackType);
@@ -256,8 +236,8 @@
     };
     callback.listCallbackTypes().forEach(callbackName => {
         //for accepting the callback signals from the window's canvas
-        communicationModule.function['callback.coupling.'+callbackName] = function(event){
-            dev.log.service('.callback.coupling.'+callbackName+'('+JSON.stringify(event)+')'); //#development
-            callback.coupling[callbackName](event);
+        communicationModule.function['callback.coupling_in.'+callbackName] = function(event){
+            dev.log.service('.callback.coupling_in.'+callbackName+'('+JSON.stringify(event)+')'); //#development
+            callback.coupling_in[callbackName](event);
         };
     });

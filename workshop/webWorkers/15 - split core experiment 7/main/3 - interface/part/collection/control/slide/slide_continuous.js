@@ -9,6 +9,8 @@ this.slide_continuous = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.slide_continuous(...)'); //#development
+
     //elements 
         //main
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -81,7 +83,7 @@ this.slide_continuous = function(
             set( value + move/(10*globalScale) );
             if(object.onrelease != undefined){object.onrelease(value);}
         });
-        // backingAndSlotCover.onmousedown = function(){};//to stop unit selection
+        backingAndSlotCover.attachCallback('onmousedown', function(){});//to stop unit selection
         backingAndSlotCover.attachCallback('onclick', function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
@@ -102,7 +104,7 @@ this.slide_continuous = function(
             set(value);
             if(object.onrelease != undefined){object.onrelease(value);}
         });
-        // invisibleHandle.onclick = function(x,y,event){};
+        invisibleHandle.attachCallback('onclick', function(x,y,event){});
         invisibleHandle.attachCallback('onmousedown', function(x,y,event){
             if(!interactable){return;}
             grappled = true;
@@ -112,12 +114,12 @@ this.slide_continuous = function(
             const mux = height - height*handleHeight;
 
             _canvas_.system.mouse.mouseInteractionHandler(
-                function(event){
+                function(x,y,event){
                     const numerator = initialY-currentMousePosition(event);
                     const divider = _canvas_.core.viewport.scale();
                     set( initialValue - (numerator/(divider*mux) ) );
                 },
-                function(event){
+                function(x,y,event){
                     grappled = false;
                 }
             );

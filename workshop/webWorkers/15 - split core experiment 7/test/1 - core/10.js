@@ -1,4 +1,4 @@
-_canvas_.core.meta.go = function(){
+_canvas_.core.go.add( function(){ 
     var gap = 50;
     _canvas_.library.font.getLoadableFonts().forEach((name,index) => {
         
@@ -19,4 +19,4 @@ _canvas_.core.meta.go = function(){
     setTimeout(function(){ _canvas_.core.render.frame(); },1500);
     setTimeout(function(){ _canvas_.core.render.frame(); },2000);
     setTimeout(function(){ _canvas_.core.render.frame(); },2500);
-};
+} );

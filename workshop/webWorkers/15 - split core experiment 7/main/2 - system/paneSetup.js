@@ -1,8 +1,7 @@
 //add main panes to arrangement
 _canvas_.system.pane = {};
 
-_canvas_.core.meta.go = function(){
-
+_canvas_.core.go.add( function(){
     //background
         _canvas_.system.pane.background = _canvas_.core.element.create('group','background');
         _canvas_.system.pane.background.ignored(true);
@@ -33,21 +32,7 @@ _canvas_.core.meta.go = function(){
         _canvas_.system.pane.mm = _canvas_.system.pane.middleground_middle;
         _canvas_.system.pane.mf = _canvas_.system.pane.middleground_front;
         _canvas_.system.pane.f = _canvas_.system.pane.foreground;
-
-    const checkingInterval = setInterval(() => {
-        if(
-            _canvas_.system.pane.b.getId() != -1 &&
-            _canvas_.system.pane.mb.getId() != -1 &&
-            _canvas_.system.pane.mm.getId() != -1 &&
-            _canvas_.system.pane.mf.getId() != -1 &&
-            _canvas_.system.pane.f.getId() != -1
-        ){
-            clearInterval(checkingInterval);
-            _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
-            if(_canvas_.system.go){_canvas_.system.go();}
-        }
-    }, 1000);
-};
+} );
 
 //utility
     _canvas_.system.pane.getMiddlegroundPane = function(element){

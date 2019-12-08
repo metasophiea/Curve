@@ -1,4 +1,4 @@
-_canvas_.core.meta.go = function(){ 
+_canvas_.core.go.add( function(){ 
     let rectangleCount = 16;
     let canvasSize = {width:0,height:0};
 
@@ -151,4 +151,4 @@ _canvas_.core.meta.go = function(){
         //     });
         // },1000);
 
-};
+} );

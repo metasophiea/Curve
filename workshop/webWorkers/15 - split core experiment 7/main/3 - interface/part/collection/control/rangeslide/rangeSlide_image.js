@@ -10,6 +10,8 @@ this.rangeslide_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.rangeslide_image(...)'); //#development
+
     //default to non-image version if handle image link is missing
         if(handleURL == undefined){
             return this.rangeslide(
@@ -57,6 +59,10 @@ this.rangeslide_image = function(
                     handles[handleNames[a]].append(invisibleHandle);
             }
 
+        //cover
+            const cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+            object.append(cover);
+
     //graphical adjust
         function set(a,handle,update=true){
             a = (a>1 ? 1 : a);
@@ -68,28 +74,28 @@ this.rangeslide_image = function(
                     default: console.error('unknown handle to adjust'); break;
                     case 'start':
                         {
-                        //don't allow start slide to encroach on end slider's space
-                            if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                            //don't allow start slide to encrouch on end slider's space
+                                if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
 
-                        //if start slide bumps up against end slide; move end slide accordingly
-                            const start_rightEdge = a + (1-a)*handleHeight;
-                            const end_leftEdge = values.end - (values.end)*handleHeight;
-                            if( start_rightEdge >= end_leftEdge ){
-                                values.end = start_rightEdge/(1-handleHeight);
-                            }
+                            //if start slide bumps up against end slide; move end slide accordingly
+                                const start_rightEdge = a + (1-a)*handleHeight;
+                                const end_leftEdge = values.end - (values.end)*handleHeight;
+                                if( start_rightEdge >= end_leftEdge ){
+                                    values.end = start_rightEdge/(1-handleHeight);
+                                }
                         }
                     break;
                     case 'end':
                         {
-                        //don't allow end slide to encroach on start slider's space
-                            if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                            //don't allow end slide to encrouch on start slider's space
+                                if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
 
-                        //if end slide bumps up against start slide; move start slide accordingly
-                            const start_rightEdge= values.start + (1-values.start)*handleHeight;
-                            const end_leftEdge = a - (a)*handleHeight;
-                            if( start_rightEdge >= end_leftEdge ){
-                                values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
-                            }
+                            //if end slide bumps up against start slide; move start slide accordingly
+                                const start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                const end_leftEdge = a - (a)*handleHeight;
+                                if( start_rightEdge >= end_leftEdge ){
+                                    values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                }
                         }
                     break;
                 }
@@ -154,6 +160,11 @@ this.rangeslide_image = function(
         }
 
         //background click
+            //to stop clicks passing through the span
+                span.attachCallback('onmousedown', function(){});
+                span.attachCallback('onclick', function(){});
+                
+            backingAndSlotCover.attachCallback('onmousedown', function(){}); //to stop unit selection
             backingAndSlotCover.attachCallback('onclick', function(x,y,event){
                 if(!interactable){return;}
                 if(grappled){return;}
@@ -170,7 +181,7 @@ this.rangeslide_image = function(
             });
 
         //double-click reset
-            function ondblclick(){
+            cover.attachCallback('ondblclick', function(){
                 if(!interactable){return;}
                 if(resetValues.start<0 || resetValues.end<0){return;}
                 if(grappled){return;}
@@ -178,15 +189,10 @@ this.rangeslide_image = function(
                 set(resetValues.start,'start');
                 set(resetValues.end,'end');
                 object.onrelease(values);
-            }
-            backingAndSlotCover.attachCallback('ondblclick', ondblclick);
-            span.attachCallback('ondblclick', ondblclick);
-            Object.entries(handles).forEach(entry => {
-                entry[1].getChildren()[1].attachCallback('ondblclick', ondblclick);
-            });
+            } );
 
         //span panning - expand/shrink
-            function onwheel(x,y,event){
+            cover.attachCallback('onwheel', function(x,y,event){
                 if(!interactable){return;}
                 if(grappled){return;}
 
@@ -196,12 +202,7 @@ this.rangeslide_image = function(
 
                 set(values.start-val,'start');
                 set(values.end+val,'end');
-            }
-            backingAndSlotCover.attachCallback('onwheel', onwheel);
-            span.attachCallback('onwheel', onwheel);
-            Object.entries(handles).forEach(entry => {
-                entry[1].getChildren()[1].attachCallback('onwheel', onwheel);
-            });
+            } );
 
         //span panning - drag
             span.attachCallback('onmousedown', function(x,y,event){
@@ -213,21 +214,22 @@ this.rangeslide_image = function(
                 const mux = height - height*handleHeight;
 
                 _canvas_.system.mouse.mouseInteractionHandler(
-                    function(event){
+                    function(x,y,event){
                         const numerator = initialY - currentMousePosition(event);
                         const divider = _canvas_.core.viewport.scale();
                         pan( initialValue - (numerator/(divider*mux)) )
                         object.onchange(values);
                     },
-                    function(event){
+                    function(x,y,event){
                         object.onrelease(values);
                         grappled = false;
                     }
                 );
-            });
+            } );
 
         //handle movement
             for(let a = 0; a < handleNames.length; a++){
+                handles[handleNames[a]].getChildren()[1].attachCallback('onclick', function(){});
                 handles[handleNames[a]].getChildren()[1].attachCallback('onmousedown', (function(a){
                     return function(x,y,event){
                         if(!interactable){return;}
@@ -238,20 +240,20 @@ this.rangeslide_image = function(
                         const mux = height - height*handleHeight;
 
                         _canvas_.system.mouse.mouseInteractionHandler(
-                            function(event){
+                            function(x,y,event){
                                 const numerator = initialY-currentMousePosition(event);
                                 const divider = _canvas_.core.viewport.scale();
                                 set( initialValue - (numerator/(divider*mux) ), handleNames[a] );
                             },
-                            function(event){
+                            function(x,y,event){
                                 object.onrelease(values);
                                 grappled = false;
                             }
                         );
                     }
-                })(a));
+                })(a) );
             }
-
+    
     //callbacks
         object.onchange = onchange;
         object.onrelease = onrelease;  

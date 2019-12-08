@@ -9,6 +9,8 @@ this.dial_continuous_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.dial_continuous_image(...)'); //#development
+
     //default to non-image version if image links are missing
         if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
             return this.dial_continuous(
@@ -94,13 +96,13 @@ this.dial_continuous_image = function(
 
             grappled = true;
             _canvas_.system.mouse.mouseInteractionHandler(
-                function(event){
+                function(x,y,event){
                     const value = initialValue;
                     const numerator = event.Y - initialY;
                     const divider = _canvas_.core.viewport.scale();
                     set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                 },
-                function(event){
+                function(x,y,event){
                     grappled = false;
                     if(object.onrelease != undefined){object.onrelease(value);}
                 }

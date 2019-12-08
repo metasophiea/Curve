@@ -3,7 +3,7 @@ let rectangle_tr;
 let rectangle_bl;
 let rectangle_br;
 
-_canvas_.core.meta.go = function(){
+_canvas_.core.go.add( function(){ 
     _canvas_.core.render.getCanvasSize().then(dimensions => {
 
         rectangle_tl = _canvas_.core.element.create('rectangle','rectangle_tl');
@@ -23,7 +23,7 @@ _canvas_.core.meta.go = function(){
         _canvas_.core.arrangement.append(rectangle_br);
 
     });
-};
+} );
 
 window.onresize = function(){
     _canvas_.core.meta.refresh().then(() => {

@@ -27,7 +27,7 @@ this.polygon = function(_name){
 
     function repush(self){ 
         dev.log.elementLibrary(' - polygon::repush()'); //#development
-        communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+        _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
         Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
     }
 
@@ -62,19 +62,19 @@ this.polygon = function(_name){
         if(bool == undefined){ return cashedAttributes.ignored; }
         dev.log.elementLibrary(' - polygon.ignored('+bool+')'); //#development
         cashedAttributes.ignored = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
     };
     this.colour = function(colour){
         if(colour == undefined){ return cashedAttributes.colour; }
         dev.log.elementLibrary(' - polygon.colour('+JSON.stringify(colour)+')'); //#development
         cashedAttributes.colour = colour;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
     };
     this.points = function(points){
         if(points == undefined){ return cashedAttributes.points; }
         dev.log.elementLibrary(' - polygon.points('+JSON.stringify(points)+')'); //#development
         cashedAttributes.points = points;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'points',[points]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
     }; 
     this.pointsAsXYArray = function(pointsXY){
         function pointsToXYArray(points){ 
@@ -85,25 +85,25 @@ this.polygon = function(_name){
         if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
         dev.log.elementLibrary(' - polygon.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
         cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'pointsAsXYArray',[pointsXY]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
     };
     this.scale = function(number){
         if(number == undefined){ return cashedAttributes.scale; }
         dev.log.elementLibrary(' - polygon.scale('+number+')'); //#development
         cashedAttributes.scale = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
     };
     this.static = function(bool){
         if(bool == undefined){ return cashedAttributes.static; }
         dev.log.elementLibrary(' - polygon.static('+bool+')'); //#development
         cashedAttributes.static = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
     };
     this.unifiedAttribute = function(attributes){
         if(attributes == undefined){ return cashedAttributes; }
         dev.log.elementLibrary(' - polygon.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
         Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
     };
 
     this.getCallback = function(callbackType){
@@ -122,6 +122,6 @@ this.polygon = function(_name){
 
     this._dump = function(){
         dev.log.elementLibrary(' - polygon._dump()'); //#development
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
     };
 };

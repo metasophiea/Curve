@@ -32,7 +32,7 @@ this.path = function(_name){
 
     function repush(self){ 
         dev.log.elementLibrary(' - path::repush()'); //#development
-        communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+        _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
         Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
     }
 
@@ -67,19 +67,19 @@ this.path = function(_name){
         if(bool == undefined){ return cashedAttributes.ignored; }
         dev.log.elementLibrary(' - path.ignored('+bool+')'); //#development
         cashedAttributes.ignored = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
     };
     this.colour = function(colour){
         if(colour == undefined){ return cashedAttributes.colour; }
         dev.log.elementLibrary(' - path.colour('+JSON.stringify(colour)+')'); //#development
         cashedAttributes.colour = colour;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
     };
     this.points = function(points){
         if(points == undefined){ return cashedAttributes.points; }
         dev.log.elementLibrary(' - path.points('+points+')'); //#development
         cashedAttributes.points = points;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'points',[points]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
     }; 
     this.pointsAsXYArray = function(pointsXY){
         function pointsToXYArray(points){ 
@@ -90,61 +90,61 @@ this.path = function(_name){
         if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
         dev.log.elementLibrary(' - path.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
         cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'pointsAsXYArray',[pointsXY]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
     };
     this.scale = function(number){
         if(number == undefined){ return cashedAttributes.scale; }
         dev.log.elementLibrary(' - path.scale('+number+')'); //#development
         cashedAttributes.scale = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
     };
     this.looping = function(bool){
         if(bool == undefined){ return cashedAttributes.looping; }
         dev.log.elementLibrary(' - path.looping('+bool+')'); //#development
         cashedAttributes.looping = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'looping',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'looping',[bool]); }
     };
     this.thickness = function(number){
         if(number == undefined){ return cashedAttributes.thickness; }
         dev.log.elementLibrary(' - path.thickness('+number+')'); //#development
         cashedAttributes.thickness = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
     };
     this.capType = function(type){
         if(type == undefined){ return cashedAttributes.capType; }
         dev.log.elementLibrary(' - path.capType('+type+')'); //#development
         cashedAttributes.capType = type;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'capType',[type]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'capType',[type]); }
     };
     this.jointType = function(type){
         if(type == undefined){ return cashedAttributes.jointType; }
         dev.log.elementLibrary(' - path.jointType('+type+')'); //#development
         cashedAttributes.jointType = type;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointType',[type]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
     };
     this.jointDetail = function(number){
         if(number == undefined){ return cashedAttributes.jointDetail; }
         dev.log.elementLibrary(' - path.jointDetail('+number+')'); //#development
         cashedAttributes.jointDetail = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointDetail',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
     };
     this.sharpLimit = function(number){
         if(number == undefined){ return cashedAttributes.sharpLimit; }
         dev.log.elementLibrary(' - path.sharpLimit('+number+')'); //#development
         cashedAttributes.sharpLimit = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'sharpLimit',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
     };
     this.static = function(bool){
         if(bool == undefined){ return cashedAttributes.static; }
         dev.log.elementLibrary(' - path.static('+bool+')'); //#development
         cashedAttributes.static = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
     };
     this.unifiedAttribute = function(attributes){
         if(attributes == undefined){ return cashedAttributes; }
         dev.log.elementLibrary(' - path.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
         Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
     };
 
     this.getCallback = function(callbackType){
@@ -163,6 +163,6 @@ this.path = function(_name){
 
     this._dump = function(){
         dev.log.elementLibrary(' - path._dump()'); //#development
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
     };
 };

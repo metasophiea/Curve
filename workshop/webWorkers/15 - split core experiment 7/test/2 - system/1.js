@@ -1,4 +1,4 @@
-_canvas_.system.go = function(){
+_canvas_.system.go.add( function(){
 
     let rectangle_1 = _canvas_.core.element.create('rectangle','test_rectangle_1');
     rectangle_1.unifiedAttribute({ 
@@ -55,4 +55,4 @@ _canvas_.system.go = function(){
 
     setTimeout(_canvas_.core.render.frame,500);
     setTimeout(_canvas_.core.render.frame,1500);
-};
+} )

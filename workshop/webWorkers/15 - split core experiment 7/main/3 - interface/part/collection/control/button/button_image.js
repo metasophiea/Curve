@@ -31,6 +31,8 @@ this.button_image = function(
     onselect = function(event){},
     ondeselect = function(event){},
 ){
+    dev.log.partControl('.button_image(...)'); //#development
+
     //adding on the specific shapes
         //main
             var subject = interfacePart.builder('basic','group',name+'subGroup',{});

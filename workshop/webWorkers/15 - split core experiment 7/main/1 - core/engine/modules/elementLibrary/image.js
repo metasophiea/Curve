@@ -118,7 +118,7 @@ this.image = function(_id,_name){
                 });
                 image.isLoaded = false; 
             }
-            setTimeout(()=>{ if(image.url == undefined){ loadImage(image.defaultURL); } },100);
+            setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
 
             this.url = function(a){
                 dev.log.elementLibrary(type,self.getAddress(),'.url('+a+')'); //#development
@@ -368,6 +368,7 @@ this.image = function(_id,_name){
             report.info(self.getAddress(),'._dump -> height: '+height);
             report.info(self.getAddress(),'._dump -> scale: '+scale);
             report.info(self.getAddress(),'._dump -> static: '+static);
+            report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
         };
     
     //interface

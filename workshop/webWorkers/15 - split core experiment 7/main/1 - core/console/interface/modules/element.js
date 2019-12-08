@@ -29,4 +29,9 @@ this.element = new function(){
         communicationModule.run('element.deleteAllCreated',[]);
         elementRegistry = [];
     };
+
+    this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
+        dev.log.interface('.element.__executeMethod('+id+','+attribute+','+JSON.stringify(argumentList)+')'); //#development
+        communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
+    };
 };

@@ -90,6 +90,8 @@ this.button_rectangle = function(
     onselect = function(event){},
     ondeselect = function(event){},
 ){
+    dev.log.partControl('.button_rectangle(...)'); //#development
+
     //adding on the specific shapes
         //main
             const subject = interfacePart.builder('basic','group',name+'__subGroup');

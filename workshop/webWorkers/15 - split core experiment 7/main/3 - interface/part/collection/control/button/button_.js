@@ -14,6 +14,8 @@ this.button_ = function(
 
     subject
 ){
+    dev.log.partControl('.button_(...)'); //#development
+
     if(subject == undefined){console.warn('button_ : No subject provided');}
 
     //elements 

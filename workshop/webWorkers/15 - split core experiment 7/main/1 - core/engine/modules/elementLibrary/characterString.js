@@ -5,12 +5,15 @@ this.characterString = function(_id,_name){
         const innerGroup = element.create_skipDatabase('group','innerGroup');
             innerGroup.parent = this;
         const vectorLibrary = elementLibrary.character.vectorLibrary;
+
         //protected attributes
             const type = 'characterString'; 
             this.getType = function(){return type;}
             const id = _id; 
             this.getId = function(){return id;}
             this.name = _name;
+
+            const defaultFontName = 'defaultThin';
 
             this.parent = undefined;
             this.dotFrame = false; innerGroup.dotFrame = this.dotFrame;
@@ -30,10 +33,18 @@ this.characterString = function(_id,_name){
                 horizontal:'left', //left / middle / right
                 vertical:'bottom', //top  / middle / bottom
             };
+
         //advanced use attributes
             let allowGenerateStringCharacters = true;
+
+        //callbacks
+            this.onFontUpdateCallback = function(newFont){
+                interface.runElementCallback(self, {onFontUpdateCallback:newFont});
+            };
+        
         //addressing
             this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
+        
         //attributes pertinent to extremity calculation
             this.x = innerGroup.x;
             this.y = innerGroup.y;
@@ -81,6 +92,7 @@ this.characterString = function(_id,_name){
                     }
     
                     if(allowGenerateStringCharacters){generateStringCharacters();} 
+                    self.onFontUpdateCallback();
                 };
                 this.string = function(a){ 
                     if(a==undefined){return string;} 
@@ -138,7 +150,7 @@ this.characterString = function(_id,_name){
                         try{
                             self[key](attributes[key]);
                         }catch(err){
-                            console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                            console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to '+JSON.stringify(attributes[key])+'');
                             console.warn(err);
                         }
                     }
@@ -148,6 +160,7 @@ this.characterString = function(_id,_name){
                 allowGenerateStringCharacters = true;
 
                 generateStringCharacters();
+                self.onFontUpdateCallback();
             }
     //string
         let resultingWidth = 0;
@@ -210,6 +223,7 @@ this.characterString = function(_id,_name){
                 }
 
                 resultingWidth = cumulativeWidth;
+                interface.updateElement(self, {resultingWidth:resultingWidth});
 
             //printingMode - horizontal
                 if( printingMode.horizontal == 'middle' ){ innerGroup.children().forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }

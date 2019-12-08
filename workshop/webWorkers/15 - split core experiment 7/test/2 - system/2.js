@@ -1,4 +1,4 @@
-_canvas_.system.go = function(){
+_canvas_.system.go.add( function(){
     _canvas_.system.mouse.functionList.onmousedown.push(
         {
             requiredKeys:[['shift']],
@@ -72,4 +72,4 @@ _canvas_.system.go = function(){
         _canvas_.system.pane.getMiddlegroundPane(testRectangle_middleground_front).then(result => { if(result){ console.log(result.getName()); } });
         _canvas_.system.pane.getMiddlegroundPane(_canvas_.system.pane.f).then(result => { if(result){ console.log(result.getName()); } });
     },1000);
-};
+} );

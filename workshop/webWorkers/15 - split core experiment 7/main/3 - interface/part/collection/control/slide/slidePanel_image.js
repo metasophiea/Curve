@@ -8,6 +8,8 @@ this.slidePanel_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.slidePanel_image(...)'); //#development
+
     //elements 
         //main
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});

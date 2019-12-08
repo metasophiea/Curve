@@ -152,3 +152,10 @@ this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
     xhttp.responseType = responseType;
     xhttp.send();
 };
+this.argumentsToArray = function(argumentsObject){
+    const outputArray = [];
+    for(let a = 0; a < argumentsObject.length; a++){
+        outputArray.push( argumentsObject[a] );
+    }
+    return outputArray;
+};

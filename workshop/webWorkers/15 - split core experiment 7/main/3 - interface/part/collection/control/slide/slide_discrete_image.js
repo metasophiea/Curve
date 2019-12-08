@@ -7,6 +7,8 @@ this.slide_discrete_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.slide_discrete_image(...)'); //#development
+
     //elements 
         //main
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -50,7 +52,7 @@ this.slide_discrete_image = function(
     //interaction
         let acc = 0;
 
-        function ondblclick(){
+        slide.getChildByName('cover').attachCallback('ondblclick', function(){
             if(!interactable){return;}
             if(resetValue<0){return;}
             if(grappled){return;}
@@ -58,8 +60,8 @@ this.slide_discrete_image = function(
             set(resetValue);
 
             if(object.onrelease != undefined){object.onrelease(value);}
-        }
-        function onwheel(x,y,event){
+        });
+        slide.getChildByName('cover').attachCallback('onwheel', function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
 
@@ -71,12 +73,7 @@ this.slide_discrete_image = function(
                 acc = 0;
                 if(object.onrelease != undefined){object.onrelease(value);}
             }
-        }
-        slide.getChildByName('cover').attachCallback('ondblclick', ondblclick);
-        slide.getChildByName('invisibleHandle').attachCallback('ondblclick', ondblclick);
-        slide.getChildByName('invisibleHandle').attachCallback('onwheel', onwheel);
-        slide.getChildByName('cover').attachCallback('onwheel', onwheel);
-
+        });
         slide.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
             if(!interactable){return;}
             grappled = true;
@@ -86,29 +83,30 @@ this.slide_discrete_image = function(
             const mux = height - height*handleHeight;
 
             _canvas_.system.mouse.mouseInteractionHandler(
-                function(event){
+                function(x,y,event){
                     const numerator = initialY-currentMousePosition(event);
                     const divider = _canvas_.core.viewport.scale();
                     set( (initialValue - (numerator/(divider*mux) ))*(optionCount-1) );
                 },
-                function(event){
+                function(x,y,event){
                     grappled = false;
                 }
             );
         });
-        slide.getChildByName('cover').attachCallback('onclick', function(x,y,event){
+        slide.getChildByName('backingAndSlotGroup').getChildByName('backingAndSlotCover').attachCallback('onclick', function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
 
             //calculate the distance the click is from the top of the slider (accounting for angle)
-                const cover = slide.getChildByName('cover');
-                const offset = cover.getOffset();
+                const backingAndSlot = slide.getChildByName('backingAndSlotGroup');
+                const backingAndSlotCover = backingAndSlot.getChildByName('backingAndSlotCover');
+                const offset = backingAndSlot.getOffset();
                 const delta = {
-                    x: x - (cover.x() + offset.x),
-                    y: y - (cover.y() + offset.y),
-                    a: 0 - (cover.angle() + offset.angle),
+                    x: x - (backingAndSlot.x() + offset.x),
+                    y: y - (backingAndSlot.y() + offset.y),
+                    a: 0 - (backingAndSlot.angle() + offset.angle),
                 };
-                const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / cover.height();
+                const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
 
             //use the distance to calculate the correct value to set the slide to
             //taking into account the slide handle's size also

@@ -8,6 +8,8 @@ this.checkboxgrid = function(
     backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
     onchange = function(){},
 ){
+    dev.log.partControl('.checkboxgrid(...)'); //#development
+
     //elements 
         //main
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});

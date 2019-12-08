@@ -1,4 +1,4 @@
-_canvas_.system.go = function(){
+_canvas_.system.go.add( function(){
     _canvas_.system.keyboard.functionList.onkeydown.push(
         {
             requiredKeys:[],
@@ -29,4 +29,4 @@ _canvas_.system.go = function(){
             }
         }
     );
-};
+} );

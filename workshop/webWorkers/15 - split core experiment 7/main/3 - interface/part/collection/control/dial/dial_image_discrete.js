@@ -9,6 +9,8 @@ this.dial_discrete_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.dial_discrete_image(...)'); //#development
+
     //elements 
         //main
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -78,12 +80,12 @@ this.dial_discrete_image = function(
 
             grappled = true;
             _canvas_.system.mouse.mouseInteractionHandler(
-                function(event){
+                function(x,y,event){
                     var diff = Math.round( (event.Y - initialY)/25 );
                     set( initialValue - diff );
                     if(object.onchange != undefined){object.onchange(value);}
                 },
-                function(event){
+                function(x,y,event){
                     grappled = false;
                     if(object.onrelease != undefined){object.onrelease(value);}
                 }

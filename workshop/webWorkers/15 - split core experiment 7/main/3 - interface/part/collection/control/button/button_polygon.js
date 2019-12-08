@@ -89,6 +89,8 @@ this.button_polygon = function(
     onselect = function(event){},
     ondeselect = function(event){},
 ){
+    dev.log.partControl('.button_polygon(...)'); //#development
+
     //adding on the specific shapes
         //main
             var subject = interfacePart.builder('basic','group',name+'subGroup');

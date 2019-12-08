@@ -6,6 +6,8 @@ this.checkbox_ = function(
 
     subject
 ){
+    dev.log.partControl('.checkbox_(...)'); //#development
+
     if(subject == undefined){console.warn('checkbox_ : No subject provided');}
 
     //elements 

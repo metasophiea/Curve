@@ -89,6 +89,8 @@ this.button_circle = function(
     onselect = function(event){},
     ondeselect = function(event){},
 ){
+    dev.log.partControl('.button_circle(...)'); //#development
+
     //adding on the specific shapes
         //main
             const subject = interfacePart.builder('basic','group',name+'subGroup',{});

@@ -1,61 +1,41 @@
-var group_1;
-var rectangle_1;
+let group_1;
+let group_2;
+let rectangle_1;
+let rectangle_2;
+let rectangle_3;
 
-_canvas_.core.meta.go = function(){
+_canvas_.core.go.add( function(){ 
+
     group_1 = _canvas_.core.element.create('group','group_1');
+    group_1.unifiedAttribute({ x:100, y:100 });
     _canvas_.core.arrangement.append(group_1);
 
+    group_2 = _canvas_.core.element.create('group','group_2');
+    group_2.unifiedAttribute({ x:50 });
+    group_1.append(group_2);
+
     rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_1.unifiedAttribute({ width:30, height:30, colour:{r:1,g:0,b:0,a:1} });
+    group_1.append(rectangle_1);
 
-    setTimeout(() => {
-        console.log( '-> printouts' );
-        console.log('group_1.ignored() :',group_1.ignored());
-        console.log('group_1.x() :',group_1.x());
-        console.log('group_1.y() :',group_1.y());
-        console.log('group_1.angle() :',group_1.angle());
-        console.log('group_1.scale() :',group_1.scale());
-        console.log('group_1.static() :',group_1.static());
-        console.log('group_1.getChildren() :',group_1.getChildren());
-        console.log('group_1.stencil() :',group_1.stencil());
-        console.log('group_1.clipActive() :',group_1.clipActive());
-        console.log('group_1.unifiedAttribute() :',group_1.unifiedAttribute());
-    },500);
+    rectangle_2 = _canvas_.core.element.create('rectangle','rectangle_2');
+    rectangle_2.unifiedAttribute({ width:30, height:30, colour:{r:0,g:1,b:0,a:1} });
+    group_2.append(rectangle_2);
 
-    setTimeout(() => {
-        console.log('');
-        console.log( '-> append rectangle_1' );
-        group_1.append(rectangle_1);
-    },1000);
+    rectangle_3 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_3.unifiedAttribute({ x:50, width:30, height:30, colour:{r:0,g:0,b:1,a:1} });
+    group_2.append(rectangle_3);
 
-    setTimeout(() => {
-        console.log('');
-        console.log('group_1.getChildren() :',group_1.getChildren());
-    },1500);
+} );
 
-    setTimeout(() => {
-        console.log('');
-        console.log( '-> append rectangle_1 (again)' );
-        group_1.append(rectangle_1);
-    },2000);
+// _canvas_.core.render.active(true);
 
-    setTimeout(() => {
-        console.log('');
-        console.log('group_1.getChildren() :',group_1.getChildren());
-    },2500);
+setTimeout(()=>{_canvas_.core.arrangement.printTree()},500);
 
-    setTimeout(() => {
-        console.log('');
-        console.log('group_1.contains() :',group_1.contains());
-    },3000);
-
-    setTimeout(() => {
-        console.log('');
-        console.log( '-> remove rectangle_1' );
-        group_1.remove(rectangle_1);
-    },3400);
-
-    setTimeout(() => {
-        console.log('');
-        console.log('group_1.getChildren() :',group_1.getChildren());
-    },4000);
-};
+setTimeout(()=>{
+    _canvas_.core.arrangement.areParents(rectangle_3, [rectangle_2,group_2]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_3, [group_1]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_3, [rectangle_2]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_1, [group_2]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_2, [group_1,group_2]).then(console.log);
+},1000);

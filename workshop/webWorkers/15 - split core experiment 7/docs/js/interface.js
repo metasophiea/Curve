@@ -3117,6 +3117,13 @@
                         xhttp.responseType = responseType;
                         xhttp.send();
                     };
+                    this.argumentsToArray = function(argumentsObject){
+                        const outputArray = [];
+                        for(let a = 0; a < argumentsObject.length; a++){
+                            outputArray.push( argumentsObject[a] );
+                        }
+                        return outputArray;
+                    };
                 };
                 const _thirdparty = new function(){
                     const thirdparty = this;
@@ -21511,63 +21518,6 @@
                     },
                 };
                 
-                communicationModule.function.go = function(){
-                    dev.log.service('.go()'); //#development
-                    _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
-                    if(self.meta.go){self.meta.go();} /* callback */
-                };
-                communicationModule.function.printToScreen = function(imageData){
-                    dev.log.service('.printToScreen(-imageData-)'); //#development
-                    _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
-                };
-                communicationModule.function.onViewportAdjust = function(state){
-                    dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
-                    console.log('onViewportAdjust -> ',state); /* callback */
-                };
-                
-                communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
-                    return attributeNames.map((name,index) => {
-                        return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
-                    });    
-                };
-                communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
-                    dev.log.service('.setCanvasAttributes('+JSON.stringify(attributes)+','+JSON.stringify(prefixActiveArray)+')'); //#development
-                    attributes.map((attribute,index) => {
-                        _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
-                    });
-                };
-                communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasParentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
-                    return attributeNames.map((name,index) => {
-                        return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
-                    });
-                };
-                
-                communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                    dev.log.service('.getDocumentAttributes('+JSON.stringify(attributeNames)+')'); //#development
-                    return attributeNames.map(attribute => {
-                        return eval('document.'+attribute);
-                    });
-                };
-                communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                    dev.log.service('.setDocumentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+')'); //#development
-                    return attributeNames.map((attribute,index) => {
-                        eval('document.'+attribute+' = "'+values[index]+'"');
-                    });
-                };
-                communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                    dev.log.service('.getWindowAttributes('+JSON.stringify(attributeNames)+')'); //#development
-                    return attributeNames.map(attribute => {
-                        return eval('window.'+attribute);
-                    });
-                };
-                communicationModule.function.setWindowAttributes = function(attributes=[]){
-                    dev.log.service('.setWindowAttributes('+JSON.stringify(attributes)+')'); //#development
-                    attributes.map((attribute,index) => {
-                        eval('window.'+attribute.name+' = "'+attribute.value+'"');
-                    });
-                };
                 let elementRegistry = [];
                 const elementLibrary = new function(){
                     function executeMethod(id,method,argumentList,postProcessing){
@@ -21645,13 +21595,13 @@
                     
                         function repush(){ 
                             dev.log.elementLibrary('['+self.getAddress()+'] - group::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                             
                             if(stencilElement != undefined){
                                 function readdStencil(){
                                     if( stencilElement.getId() == -1 ){ setTimeout(readdStencil,1); }
-                                    else{ communicationModule.run('element.executeMethod',[id,'stencil',[stencilElement.getId()]]); }
+                                    else{ _canvas_.core.element.__executeMethod(id,'stencil',[stencilElement.getId()]); }
                                 }
                                 readdStencil();
                             }
@@ -21661,7 +21611,7 @@
                                     dev.log.elementLibrary('['+self.getAddress()+'] - group::repush::readdChildren -> self.getName(): '+ self.getName()+' children: ['+children.map(child => child.getId())+']'); //#development
                                     const childIds = children.map(child => child.getId());
                                     if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
-                                    else{ communicationModule.run('element.executeMethod',[id,'syncChildren',[childIds]]); }
+                                    else{ _canvas_.core.element.__executeMethod(id,'syncChildren',[childIds]); }
                                 }
                                 readdChildren();
                             });
@@ -21712,49 +21662,49 @@
                             if(bool == undefined){ return cashedAttributes.ignored; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.heedCamera = function(bool){
                             if(bool == undefined){ return cashedAttributes.heedCamera; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.heedCamera('+bool+')'); //#development
                             cashedAttributes.heedCamera = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'heedCamera',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'heedCamera',[bool]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; } 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                         this.getChildren = function(){ 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildren()'); //#development
@@ -21788,13 +21738,13 @@
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> newElement\'s "__idRecieved" callback ->'); //#development
                                     if(children.indexOf(newElement) != -1 && id != -1){ 
                                         dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                                        communicationModule.run('element.executeMethod',[id,'append', [newElement.getId()]]);
+                                        _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
                                     }
                                 };
                             }else{
                                 if(id != -1){
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                                    communicationModule.run('element.executeMethod',[id,'append', [newElement.getId()]]);
+                                    _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
                                 }
                             }
                         };
@@ -21814,19 +21764,20 @@
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> newElement\'s "__idRecieved" callback ->'); //#development
                                     if(children.indexOf(newElement) != -1 && id != -1){ 
                                         dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                                        communicationModule.run('element.executeMethod',[id,'prepend', [newElement.getId()]]);
+                                        _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
                                     }
                                 };
                             }else{
                                 if(id != -1){
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                                    communicationModule.run('element.executeMethod',[id,'prepend', [newElement.getId()]]);
+                                    _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
                                 }
                             }
                         };
                         this.remove = function(elementToRemove){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.remove('+JSON.stringify(elementToRemove)+')'); //#development
+                            dev.log.elementLibrary('['+this.getAddress()+'] - group.remove('+elementToRemove.getAddress()+')'); //#development
                             children.splice(children.indexOf(elementToRemove), 1);
+                            delete childRegistry[elementToRemove.getName()];
                             elementToRemove.parent = undefined;
                     
                             if(clearingLock){ return; }
@@ -21837,13 +21788,13 @@
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> newElement\'s "__idRecieved" callback ->'); //#development
                                     if(children.indexOf(newElement) == -1 && id != -1){ 
                                         dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                                        communicationModule.run('element.executeMethod',[id,'remove', [elementToRemove.getId()]]);
+                                        _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
                                     }
                                 };
                             }else{
                                 if(id != -1){
                                     dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                                    communicationModule.run('element.executeMethod',[id,'remove', [elementToRemove.getId()]]);
+                                    _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
                                 }
                             }
                         };
@@ -21856,10 +21807,14 @@
                                 communicationModule.run('element.executeMethod',[id,'clear',[]],()=>{unlockClearingLock();});
                             }
                         };
-                        // this.getElementsUnderPoint = function(x,y){
-                        //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderPoint('+x+','+y+')'); //#development
-                        //     executeMethod_withReturn('getElementsUnderPoint',[x,y],result => result.map(result => elementRegistry[result]));
-                        // };
+                        this.getElementsUnderPoint = function(x,y){
+                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderPoint('+x+','+y+')'); //#development
+                            if(id != -1){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.__executeMethod(id,'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
+                                });
+                            }
+                        };
                         // this.getElementsUnderArea = function(points){
                         //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
                         //     executeMethod_withReturn('getElementsUnderArea',[points],result => result.map(result => elementRegistry[result]));
@@ -21881,16 +21836,16 @@
                     
                             if(newStencilElement.getId() == -1){
                                 newStencilElement.__idRecieved = function(){
-                                    if(id != -1){ communicationModule.run('element.executeMethod',[id,'stencil', [newStencilElement.getId()]]); }
+                                    if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
                                 };
                             }else{
-                                if(id != -1){ communicationModule.run('element.executeMethod',[id,'stencil', [newStencilElement.getId()]]); }
+                                if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
                             }
                         };
                         this.clipActive = function(bool){ 
                             dev.log.elementLibrary('['+this.getAddress()+'] - group.clipActive('+bool+')'); //#development
                             if(bool == undefined){ return cashedAttributes.clipActive; } cashedAttributes.clipActive = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'clipActive',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'clipActive',[bool]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -21909,7 +21864,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary('['+this.getAddress()+'] - group._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     
@@ -21947,7 +21902,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary('['+self.getAddress()+'] - rectangle::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -21982,67 +21937,67 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(newAnchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22061,7 +22016,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary('['+this.getAddress()+'] - rectangle._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     this.rectangleWithOutline = function(_name){
@@ -22100,7 +22055,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - rectangleWithOutline::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22135,79 +22090,79 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - rectangleWithOutline.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - rectangleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.lineColour = function(colour){
                             if(colour == undefined){ return cashedAttributes.lineColour; }
                             dev.log.elementLibrary(' - rectangleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.lineColour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'lineColour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - rectangleWithOutline.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - rectangleWithOutline.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - rectangleWithOutline.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(newAnchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary(' - rectangleWithOutline.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - rectangleWithOutline.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - rectangleWithOutline.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - rectangleWithOutline.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.thickness = function(number){
                             if(number == undefined){ return cashedAttributes.thickness; }
                             dev.log.elementLibrary(' - rectangleWithOutline.thickness('+number+')'); //#development
                             cashedAttributes.thickness = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - rectangleWithOutline.static('+bool+')'); //#development
                             if(bool == undefined){ return cashedAttributes.static; } cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - rectangleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22226,7 +22181,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - rectangleWithOutline._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     this.circle = function(_name){
@@ -22260,7 +22215,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - circle::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22295,49 +22250,49 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - circle.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - circle.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - circle.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - circle.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.radius = function(number){
                             if(number == undefined){ return cashedAttributes.radius; }
                             dev.log.elementLibrary(' - circle.radius('+number+')'); //#development
                             cashedAttributes.radius = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'radius',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - circle.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - circle.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - circle.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22356,7 +22311,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - circle._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     this.circleWithOutline = function(_name){
@@ -22392,7 +22347,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - circleWithOutline::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22427,61 +22382,61 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - circleWithOutline.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - circleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.lineColour = function(colour){
                             if(colour == undefined){ return cashedAttributes.lineColour; }
                             dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.lineColour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'lineColour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - circleWithOutline.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - circleWithOutline.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.radius = function(number){
                             if(number == undefined){ return cashedAttributes.radius; }
                             dev.log.elementLibrary(' - circleWithOutline.radius('+number+')'); //#development
                             cashedAttributes.radius = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'radius',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - circleWithOutline.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.thickness = function(number){
                             if(number == undefined){ return cashedAttributes.thickness; }
                             dev.log.elementLibrary(' - circleWithOutline.thickness('+number+')'); //#development
                             cashedAttributes.thickness = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - circleWithOutline.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - circleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22500,7 +22455,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - circleWithOutline._dump()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     this.polygon = function(_name){
@@ -22532,7 +22487,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - polygon::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22567,19 +22522,19 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - polygon.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - polygon.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.points = function(points){
                             if(points == undefined){ return cashedAttributes.points; }
                             dev.log.elementLibrary(' - polygon.points('+JSON.stringify(points)+')'); //#development
                             cashedAttributes.points = points;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'points',[points]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
                         }; 
                         this.pointsAsXYArray = function(pointsXY){
                             function pointsToXYArray(points){ 
@@ -22590,25 +22545,25 @@
                             if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
                             dev.log.elementLibrary(' - polygon.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
                             cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'pointsAsXYArray',[pointsXY]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - polygon.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - polygon.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - polygon.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22627,7 +22582,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - polygon._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     this.polygonWithOutline = function(_name){
@@ -22660,7 +22615,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - polygonWithOutline::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22695,25 +22650,25 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - polygonWithOutline.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - polygonWithOutline.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.lineColour = function(colour){
                             if(colour == undefined){ return cashedAttributes.lineColour; }
                             dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.lineColour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'lineColour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
                         };
                         this.points = function(points){
                             if(points == undefined){ return cashedAttributes.points; }
                             dev.log.elementLibrary(' - polygonWithOutline.points('+JSON.stringify(points)+')'); //#development
                             cashedAttributes.points = points;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'points',[points]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
                         }; 
                         this.pointsAsXYArray = function(pointsXY){
                             function pointsToXYArray(points){ 
@@ -22724,51 +22679,51 @@
                             if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
                             dev.log.elementLibrary(' - polygonWithOutline.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
                             cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'pointsAsXYArray',[pointsXY]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - polygonWithOutline.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                     
                         this.thickness = function(number){
                             if(number == undefined){ return cashedAttributes.thickness; }
                             dev.log.elementLibrary(' - polygonWithOutline.thickness('+number+')'); //#development
                             cashedAttributes.thickness = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
                         };
                         this.jointDetail = function(number){
                             if(number == undefined){ return cashedAttributes.jointDetail; }
                             dev.log.elementLibrary(' - polygonWithOutline.jointDetail('+number+')'); //#development
                             cashedAttributes.jointDetail = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointDetail',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
                         };
                         this.jointType = function(type){
                             if(type == undefined){ return cashedAttributes.jointType; }
                             dev.log.elementLibrary(' - polygonWithOutline.jointType('+type+')'); //#development
                             cashedAttributes.jointType = type;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointType',[type]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
                         };
                         this.sharpLimit = function(number){
                             if(number == undefined){ return cashedAttributes.sharpLimit; }
                             dev.log.elementLibrary(' - polygonWithOutline.sharpLimit('+number+')'); //#development
                             cashedAttributes.sharpLimit = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'sharpLimit',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
                         };
                     
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - polygonWithOutline.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - polygonWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22787,7 +22742,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - polygonWithOutline._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     
@@ -22825,7 +22780,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - path::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -22860,19 +22815,19 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - path.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - path.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.points = function(points){
                             if(points == undefined){ return cashedAttributes.points; }
                             dev.log.elementLibrary(' - path.points('+points+')'); //#development
                             cashedAttributes.points = points;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'points',[points]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
                         }; 
                         this.pointsAsXYArray = function(pointsXY){
                             function pointsToXYArray(points){ 
@@ -22883,61 +22838,61 @@
                             if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
                             dev.log.elementLibrary(' - path.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
                             cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'pointsAsXYArray',[pointsXY]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - path.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.looping = function(bool){
                             if(bool == undefined){ return cashedAttributes.looping; }
                             dev.log.elementLibrary(' - path.looping('+bool+')'); //#development
                             cashedAttributes.looping = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'looping',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'looping',[bool]); }
                         };
                         this.thickness = function(number){
                             if(number == undefined){ return cashedAttributes.thickness; }
                             dev.log.elementLibrary(' - path.thickness('+number+')'); //#development
                             cashedAttributes.thickness = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
                         };
                         this.capType = function(type){
                             if(type == undefined){ return cashedAttributes.capType; }
                             dev.log.elementLibrary(' - path.capType('+type+')'); //#development
                             cashedAttributes.capType = type;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'capType',[type]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'capType',[type]); }
                         };
                         this.jointType = function(type){
                             if(type == undefined){ return cashedAttributes.jointType; }
                             dev.log.elementLibrary(' - path.jointType('+type+')'); //#development
                             cashedAttributes.jointType = type;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointType',[type]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
                         };
                         this.jointDetail = function(number){
                             if(number == undefined){ return cashedAttributes.jointDetail; }
                             dev.log.elementLibrary(' - path.jointDetail('+number+')'); //#development
                             cashedAttributes.jointDetail = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'jointDetail',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
                         };
                         this.sharpLimit = function(number){
                             if(number == undefined){ return cashedAttributes.sharpLimit; }
                             dev.log.elementLibrary(' - path.sharpLimit('+number+')'); //#development
                             cashedAttributes.sharpLimit = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'sharpLimit',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - path.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - path.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -22956,7 +22911,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - path._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     
@@ -22995,7 +22950,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - image::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -23030,73 +22985,73 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - image.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - image.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - image.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(anchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - image.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - image.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - image.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - image.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.url = function(url){
                             if(url == undefined){ return cashedAttributes.url; }
                             dev.log.elementLibrary(' - image.url('+url+')'); //#development
                             cashedAttributes.url = url;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'url',[url]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'url',[url]); }
                         };
                         this.bitmap = function(bitmap){
                             if(bitmap == undefined){ return cashedAttributes.bitmap; }
                             dev.log.elementLibrary(' - image.bitmap('+bitmap+')'); //#development
                             cashedAttributes.bitmap = bitmap;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'bitmap',[bitmap]],undefined,[bitmap]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'bitmap',[bitmap],undefined,[bitmap]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - image.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this.getCallback = function(callbackType){
@@ -23115,7 +23070,7 @@
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - image._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     this.canvas = function(_name){
@@ -23151,7 +23106,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - image::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                             self.requestUpdate();
                         }
@@ -23202,7 +23157,7 @@
                             };
                             this.requestUpdate = function(){
                                 createImageBitmap(subCanvas.object).then(bitmap => {
-                                    if(id != -1){ communicationModule.run('element.executeMethod',[id,'imageBitmap',[bitmap]],undefined,[bitmap]); }
+                                    if(id != -1){ _canvas_.core.element.__executeMethod(id,'imageBitmap',[bitmap],undefined,[bitmap]); }
                                 });
                             };
                             this.requestUpdate();
@@ -23211,57 +23166,57 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - image.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - image.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - image.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(anchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - image.width('+number+')'); //#development
                             cashedAttributes.width = number;
                             updateDimentions();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - image.height('+number+')'); //#development
                             cashedAttributes.height = number;
                             updateDimentions();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - image.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - image.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
@@ -23272,12 +23227,12 @@
                             }
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
                             updateDimentions();
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - canvas._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     
@@ -23318,7 +23273,7 @@
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - character::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
@@ -23353,90 +23308,90 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - character.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - character.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - character.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - character.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - character.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - character.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.anchor = function(anchor){
                             if(anchor == undefined){ return cashedAttributes.anchor; }
                             dev.log.elementLibrary(' - character.anchor('+anchor+')'); //#development
                             cashedAttributes.anchor = anchor;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - character.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - character.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.font = function(font){
                             if(font == undefined){ return cashedAttributes.font; }
                             dev.log.elementLibrary(' - character.font('+font+')'); //#development
                             cashedAttributes.font = font;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'font',[font]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'font',[font]); }
                         };
                         this.character = function(character){
                             if(character == undefined){ return cashedAttributes.character; }
                             dev.log.elementLibrary(' - character.character('+character+')'); //#development
                             cashedAttributes.character = character;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'character',[character]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'character',[character]); }
                         };
                         this.printingMode = function(printingMode){
                             if(printingMode == undefined){ return cashedAttributes.printingMode; }
                             dev.log.elementLibrary(' - character.printingMode('+printingMode+')'); //#development
                             cashedAttributes.printingMode = printingMode;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'printingMode',[printingMode]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'printingMode',[printingMode]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - character.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - character.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                         };
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - character._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
                     this.characterString = function(_name){
@@ -23473,23 +23428,29 @@
                             scale: 1,
                             static: false,
                         };
+                        const cashedAttributes_presentationOnly = {
+                            resultingWidth: 0, 
+                        };
                         const cashedCallbacks = {};
+                        const cashedCallbacks_elementSpecific = {
+                            onFontUpdateCallback:function(){},
+                        };
                     
                         function repush(self){ 
                             dev.log.elementLibrary(' - characterString::repush()'); //#development
-                            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
                             Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
                         }
                     
-                        function executeMethod_simple(method,argumentList){
-                            // dev.log.elementLibrary(' - characterString::executeMethod_simple('+method+','+argumentList+')'); //#development
-                            // if(id == -1){
-                            //     dev.log.elementLibrary(' - characterString::executeMethod_simple -> this element\'s ID is -1, will retry in '+missingIdRetryPeriod+'ms...'); //#development
-                            //     setTimeout(() => {executeMethod_simple(method,argumentList);},missingIdRetryPeriod);
-                            // }else{
-                            //     communicationModule.run('element.executeMethod',[id,method,argumentList]);
-                            // }
-                        }
+                        this.__updateValues = function(data){
+                            dev.log.elementLibrary(' - characterString.__updateValues('+JSON.stringify(data)+')'); //#development
+                            Object.keys(data).forEach(key => { cashedAttributes_presentationOnly[key] = data[key]; });
+                        };
+                        this.__runCallback = function(data){
+                            Object.entries(data).forEach(entry => {
+                                if(entry[0] in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[entry[0]](entry[1]); }
+                            });
+                        };
                     
                         this.getAddress = function(){
                             return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
@@ -23522,98 +23483,133 @@
                             if(bool == undefined){ return cashedAttributes.ignored; }
                             dev.log.elementLibrary(' - characterString.ignored('+bool+')'); //#development
                             cashedAttributes.ignored = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+                            if(id != -1){
+                                _canvas_.core.element.__executeMethod(id,'ignored',[bool]);
+                            }
                         };
                         this.colour = function(colour){
                             if(colour == undefined){ return cashedAttributes.colour; }
                             dev.log.elementLibrary(' - characterString.colour('+JSON.stringify(colour)+')'); //#development
                             cashedAttributes.colour = colour;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
                         };
                         this.x = function(number){
                             if(number == undefined){ return cashedAttributes.x; }
                             dev.log.elementLibrary(' - characterString.x('+number+')'); //#development
                             cashedAttributes.x = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
                         };
                         this.y = function(number){
                             if(number == undefined){ return cashedAttributes.y; }
                             dev.log.elementLibrary(' - characterString.y('+number+')'); //#development
                             cashedAttributes.y = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
                         };
                         this.scale = function(number){
                             if(number == undefined){ return cashedAttributes.scale; }
                             dev.log.elementLibrary(' - characterString.scale('+number+')'); //#development
                             cashedAttributes.scale = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
                         };
                         this.angle = function(number){
                             if(number == undefined){ return cashedAttributes.angle; }
                             dev.log.elementLibrary(' - characterString.angle('+number+')'); //#development
                             cashedAttributes.angle = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
                         };
                         this.width = function(number){
                             if(number == undefined){ return cashedAttributes.width; }
                             dev.log.elementLibrary(' - characterString.width('+number+')'); //#development
                             cashedAttributes.width = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
                         };
                         this.height = function(number){
                             if(number == undefined){ return cashedAttributes.height; }
                             dev.log.elementLibrary(' - characterString.height('+number+')'); //#development
                             cashedAttributes.height = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
                         };
                         this.font = function(font){
                             if(font == undefined){ return cashedAttributes.font; }
                             dev.log.elementLibrary(' - characterString.font('+font+')'); //#development
                             cashedAttributes.font = font;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'font',[font]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'font',[font]); }
                         };
                         this.string = function(string){
                             if(string == undefined){ return cashedAttributes.string; }
                             dev.log.elementLibrary(' - characterString.string('+string+')'); //#development
                             cashedAttributes.string = string;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'string',[string]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'string',[string]); }
                         };
                         this.interCharacterSpacing = function(number){
                             if(number == undefined){ return cashedAttributes.interCharacterSpacing; }
                             dev.log.elementLibrary(' - characterString.interCharacterSpacing('+number+')'); //#development
                             cashedAttributes.interCharacterSpacing = number;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'interCharacterSpacing',[number]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'interCharacterSpacing',[number]); }
                         };
                         this.printingMode = function(printingMode){
                             if(printingMode == undefined){ return cashedAttributes.printingMode; }
                             dev.log.elementLibrary(' - characterString.printingMode('+printingMode+')'); //#development
                             cashedAttributes.printingMode = printingMode;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'printingMode',[printingMode]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'printingMode',[printingMode]); }
                         };
                         this.static = function(bool){
                             if(bool == undefined){ return cashedAttributes.static; }
                             dev.log.elementLibrary(' - characterString.static('+bool+')'); //#development
                             cashedAttributes.static = bool;
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
                             dev.log.elementLibrary(' - characterString.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]); }
                         };
+                    
+                        this.getCallback = function(callbackType){
+                            if(callbackType in cashedCallbacks_elementSpecific){
+                                return cashedCallbacks_elementSpecific[callbackType];
+                            }
+                    
+                            return cashedCallbacks[callbackType];
+                        };
+                        this.attachCallback = function(callbackType, callback){
+                            dev.log.elementLibrary('['+this.getAddress()+'] - characterString.attachCallback('+callbackType+','+callback+')'); //#development
+                            if(callbackType in cashedCallbacks_elementSpecific){
+                                cashedCallbacks_elementSpecific[callbackType] = callback;
+                                return;
+                            }
+                            cashedCallbacks[callbackType] = callback;
+                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
+                        }
+                        this.removeCallback = function(callbackType){
+                            dev.log.elementLibrary('['+this.getAddress()+'] - characterString.removeCallback('+callbackType+')'); //#development
+                            if(callbackType in cashedCallbacks_elementSpecific){
+                                delete cashedCallbacks_elementSpecific[callbackType];
+                                return;
+                            }
+                            delete cashedCallbacks[callbackType];
+                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
+                        }
                     
                         this.resultingWidth = function(){
                             dev.log.elementLibrary(' - characterString.resultingWidth()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'resultingWidth',[]]); }
+                            return cashedAttributes_presentationOnly.resultingWidth;
                         };
                     
                         this._dump = function(){
                             dev.log.elementLibrary(' - characterString._dump()'); //#development
-                            if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
                         };
                     };
 
+                };
+                
+                this.go = new function(){
+                    const functionList = [];
+                
+                    this.add = function(newFunction){ functionList.push(newFunction); };
+                    this.__activate = function(){ functionList.forEach(f => f()); };
                 };
                 
                 this.meta = new function(){
@@ -23628,6 +23624,10 @@
                         return new Promise((resolve, reject) => {
                             communicationModule.run('refresh',[],resolve);
                         });
+                    };
+                    this.getElementFromId = function(id){
+                        dev.log.interface('.meta.getElementFromId('+id+')'); //#development
+                        return elementRegistry[id];
                     };
                 };
                 
@@ -23694,6 +23694,11 @@
                         dev.log.interface('.element.deleteAllCreated()'); //#development
                         communicationModule.run('element.deleteAllCreated',[]);
                         elementRegistry = [];
+                    };
+                
+                    this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
+                        dev.log.interface('.element.__executeMethod('+id+','+attribute+','+JSON.stringify(argumentList)+')'); //#development
+                        communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
                     };
                 };
                 this.arrangement = new function(){
@@ -23824,6 +23829,35 @@
                         angle:0,
                     };
                 
+                    //adapter
+                        this.adapter = new function(){
+                            this.windowPoint2workspacePoint = function(x,y){
+                                dev.log.interface('.viewport.adapter.windowPoint2workspacePoint('+x+','+y+')'); //#development
+                                const position = cachedValues.position;
+                                const scale = cachedValues.scale;
+                                const angle = cachedValues.angle;
+                
+                                let tmp = {x:x, y:y};
+                                tmp.x = (tmp.x - position.x)/scale;
+                                tmp.y = (tmp.y - position.y)/scale;
+                                tmp = _canvas_.library.math.cartesianAngleAdjust(tmp.x,tmp.y,-angle);
+                
+                                return tmp;
+                            };
+                            // this.workspacePoint2windowPoint = function(x,y){
+                                // const position = cachedValues.position;
+                                // const scale = cachedValues.scale;
+                                // const angle = cachedValues.angle;
+                
+                            //     let point = _canvas_.library.math.cartesianAngleAdjust(x,y,angle);
+                
+                            //     return {
+                            //         x: (point.x+position.x) * scale,
+                            //         y: (point.y+position.y) * scale
+                            //     };
+                            // };
+                        };
+                
                     this.refresh = function(){
                         dev.log.interface('.viewport.refresh()'); //#development
                         communicationModule.run('viewport.refresh',[]);
@@ -23882,6 +23916,12 @@
                             communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
                         });
                     };
+                
+                    this.cursor = function(type){
+                        //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
+                        if(type == undefined){return document.body.style.cursor;}
+                        document.body.style.cursor = type;
+                    };
                 };
                 this.stats = new function(){
                     this.active = function(active){
@@ -23904,29 +23944,6 @@
                             communicationModule.run('callback.listCallbackTypes',[],resolve);
                         });
                     };
-                    this.getCallbackTypeState = function(type){
-                        dev.log.interface('.callback.getCallbackTypeState('+type+')'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('callback.getCallbackTypeState',[type],resolve);
-                        });
-                    };
-                    this.activateCallbackType = function(type){
-                        dev.log.interface('.callback.activateCallbackType('+type+')'); //#development
-                        communicationModule.run('callback.activateCallbackType',[type]);
-                    };
-                    this.disactivateCallbackType = function(type){
-                        dev.log.interface('.callback.disactivateCallbackType('+type+')'); //#development
-                        communicationModule.run('callback.disactivateCallbackType',[type]);
-                    };
-                    this.activateAllCallbackTypes = function(){
-                        dev.log.interface('.callback.activateAllCallbackTypes()'); //#development
-                        communicationModule.run('callback.activateAllCallbackTypes',[]);
-                    };
-                    this.disactivateAllCallbackTypes = function(){
-                        dev.log.interface('.callback.disactivateAllCallbackTypes()'); //#development
-                        communicationModule.run('callback.disactivateAllCallbackTypes',[]);
-                    };
-                
                 
                     const callbackRegistry = new function(){
                         const registeredShapes = {};
@@ -23944,8 +23961,9 @@
                             delete registeredShapes[id][callbackType];
                         };
                         this.call = function(id,callbackType,x,y,event){
-                            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
+                            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return false;}
                             registeredShapes[id][callbackType](x,y,event);
+                            return true;
                         };
                     };
                     this.getCallback = function(element, callbackType){
@@ -23963,11 +23981,11 @@
                         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
                     };
                 
-                    let allowHiddenElementCallback = true;
-                    this.allowHiddenElementCallback = function(bool){
-                        dev.log.interface('.callback.allowHiddenElementCallback('+bool+')'); //#development
-                        if(bool==undefined){return allowHiddenElementCallback;}
-                        allowHiddenElementCallback = bool;
+                    let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
+                    this.callbackActivationMode = function(mode){
+                        if(mode==undefined){return callbackActivationMode;}
+                        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
+                        callbackActivationMode = mode;
                     };
                 
                     this.functions = {};
@@ -24002,26 +24020,105 @@
                                     console.warn('unknown event type: ',event);
                                 }
                 
-                                communicationModule.run('callback.coupling.'+callbackName,[sudoEvent]);
+                                communicationModule.run('callback.coupling_in.'+callbackName,[sudoEvent]);
                             };
-                            communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
-                                if(allowHiddenElementCallback){
-                                    elements.forEach(id => { callbackRegistry.call(id,callbackName,x,y,event); });
-                                }else{
-                                    callbackRegistry.call(elements[0],callbackName,x,y,event);
-                                }
-                                if(self.callback.functions[callbackName]){
-                                    self.callback.functions[callbackName](x,y,event,elements);
-                                }
-                            };
+                
+                            //service
+                                communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
+                                    if(self.callback.functions[callbackName]){
+                                        self.callback.functions[callbackName](x,y,event,{
+                                            all: elements.all.map(id => elementRegistry[id]),
+                                            relevant: elements.relevant ? elements.relevant.map(id => elementRegistry[id]) : undefined,
+                                        });
+                                    }
+                
+                                    elements.relevant.forEach(id => callbackRegistry.call(id,callbackName,x,y,event) );
+                                };
+                
                         });
                     });
                 };
 
+                communicationModule.function.go = function(){
+                    dev.log.service('.go()'); //#development
+                    _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
+                    self.go.__activate();
+                };
+                communicationModule.function.printToScreen = function(imageData){
+                    dev.log.service('.printToScreen(-imageData-)'); //#development
+                    _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
+                };
+                // communicationModule.function.onViewportAdjust = function(state){
+                //     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
+                //     console.log('onViewportAdjust -> ',state); /* callback */
+                // };
+                
+                communicationModule.function.updateElement = function(elem, data={}){
+                    dev.log.service('.updateElement('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
+                    const proxyElement = _canvas_.core.meta.getElementFromId(elem);
+                    if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
+                };
+                communicationModule.function.runElementCallback = function(elem, data={}){
+                    dev.log.service('.runElementCallback('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
+                    const proxyElement = _canvas_.core.meta.getElementFromId(elem);
+                    if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
+                };
+                
+                communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    dev.log.service('.getCanvasAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
+                    });    
+                };
+                communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
+                    dev.log.service('.setCanvasAttributes('+JSON.stringify(attributes)+','+JSON.stringify(prefixActiveArray)+')'); //#development
+                    attributes.map((attribute,index) => {
+                        _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
+                    });
+                };
+                communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    dev.log.service('.getCanvasParentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
+                    });
+                };
+                
+                communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
+                    dev.log.service('.getDocumentAttributes('+JSON.stringify(attributeNames)+')'); //#development
+                    return attributeNames.map(attribute => {
+                        return eval('document.'+attribute);
+                    });
+                };
+                communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
+                    dev.log.service('.setDocumentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+')'); //#development
+                    return attributeNames.map((attribute,index) => {
+                        eval('document.'+attribute+' = "'+values[index]+'"');
+                    });
+                };
+                communicationModule.function.getWindowAttributes = function(attributeNames=[]){
+                    dev.log.service('.getWindowAttributes('+JSON.stringify(attributeNames)+')'); //#development
+                    return attributeNames.map(attribute => {
+                        return eval('window.'+attribute);
+                    });
+                };
+                communicationModule.function.setWindowAttributes = function(attributes=[]){
+                    dev.log.service('.setWindowAttributes('+JSON.stringify(attributes)+')'); //#development
+                    attributes.map((attribute,index) => {
+                        eval('window.'+attribute.name+' = "'+attribute.value+'"');
+                    });
+                };
 
             };
             _canvas_.system = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
+                this.mouseReady = false;
+            
+                this.go = new function(){
+                    const functionList = [];
+            
+                    this.add = function(newFunction){ functionList.push(newFunction); };
+                    this.__activate = function(){ functionList.forEach(f => f()); };
+                };
             };
             _canvas_.system.mouse = new function(){
                 //setup
@@ -24039,11 +24136,14 @@
                     this.functionList.ondblclick = [];
                 
                 //save the listener functions of the canvas
-                    this.original = {
-                        onmousemove: _canvas_.onmousemove,
-                        onmouseleave: _canvas_.onmouseleave,
-                        onmouseup: _canvas_.onmouseup,
-                    };
+                    _canvas_.core.go.add( function(){
+                        _canvas_.system.mouse.original = {
+                            onmousemove: _canvas_.onmousemove,
+                            onmouseleave: _canvas_.onmouseleave,
+                            onmouseup: _canvas_.onmouseup,
+                        };
+                        _canvas_.system.mouseReady = true;
+                    } );
                 
                 //utility functions
                     this.mouseInteractionHandler = function(moveCode, stopCode){
@@ -24052,14 +24152,16 @@
                                 _canvas_.onmousemove = function(event){ 
                                     if(moveCode!=undefined){
                                         event.X = event.offsetX; event.Y = event.offsetY;
-                                        moveCode(event);
+                                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                        moveCode(XY.x,XY.y,event);
                                     }
                                 };
                             //stopping code
                                 _canvas_.onmouseup = function(event){
                                     if(stopCode != undefined){ 
                                         event.X = event.offsetX; event.Y = event.offsetY;
-                                        stopCode(event);
+                                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                        stopCode(XY.x,XY.y,event);
                                     }
                 
                                     _canvas_.onmousemove = mouse.original.onmousemove;
@@ -24068,6 +24170,8 @@
                                 };
                                 _canvas_.onmouseleave = _canvas_.onmouseup;
                     };
+                
+                    this.forceMouseUp = function(){ _canvas_.onmouseup(); };
                 
                 //connect callbacks to mouse function lists
                     this.setUpCallbacks = function(){
@@ -24130,12 +24234,6 @@
                         //     }
                         
                         //perform action
-                            for(let a = 0; a < shapes.length; a++){
-                                if(shapes[a].glyphs.includes(event.key)){
-                                    shapes[a].onkeydown(x,y,event);
-                                    return;
-                                }
-                            }
                             _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                     };
                 
@@ -24146,12 +24244,6 @@
                             customKeyInterpreter(event,false);
                         
                         //perform action
-                            for(let a = 0; a < shapes.length; a++){
-                                if(shapes[a].glyphs.includes(event.key)){
-                                    shapes[a].onkeyup(x,y,event);
-                                    return;
-                                }
-                            }
                             _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeyup, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                     };
             };
@@ -24159,8 +24251,7 @@
             //add main panes to arrangement
             _canvas_.system.pane = {};
             
-            _canvas_.core.meta.go = function(){
-            
+            _canvas_.core.go.add( function(){
                 //background
                     _canvas_.system.pane.background = _canvas_.core.element.create('group','background');
                     _canvas_.system.pane.background.ignored(true);
@@ -24191,21 +24282,7 @@
                     _canvas_.system.pane.mm = _canvas_.system.pane.middleground_middle;
                     _canvas_.system.pane.mf = _canvas_.system.pane.middleground_front;
                     _canvas_.system.pane.f = _canvas_.system.pane.foreground;
-            
-                const checkingInterval = setInterval(() => {
-                    if(
-                        _canvas_.system.pane.b.getId() != -1 &&
-                        _canvas_.system.pane.mb.getId() != -1 &&
-                        _canvas_.system.pane.mm.getId() != -1 &&
-                        _canvas_.system.pane.mf.getId() != -1 &&
-                        _canvas_.system.pane.f.getId() != -1
-                    ){
-                        clearInterval(checkingInterval);
-                        _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
-                        if(_canvas_.system.go){_canvas_.system.go();}
-                    }
-                }, 1000);
-            };
+            } );
             
             //utility
                 _canvas_.system.pane.getMiddlegroundPane = function(element){
@@ -24218,7 +24295,23 @@
                         });
                     });
                 };
-
+            
+            const checkingInterval = setInterval(() => {
+                if(
+                    _canvas_.system.pane != undefined &&
+                    _canvas_.system.pane.b != undefined &&
+                    _canvas_.system.pane.b.getId() != -1 &&
+                    _canvas_.system.pane.mb.getId() != -1 &&
+                    _canvas_.system.pane.mm.getId() != -1 &&
+                    _canvas_.system.pane.mf.getId() != -1 &&
+                    _canvas_.system.pane.f.getId() != -1 &&
+                    _canvas_.system.mouse.original != undefined
+                ){
+                    clearInterval(checkingInterval);
+                    _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
+                    _canvas_.system.go.__activate();
+                }
+            }, 100);
             _canvas_.interface = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
                 const interface = this;
@@ -24227,14 +24320,14 @@
                     prefix:'interface',
                     channels:{
                         circuit:{       prefix:'circuit',                   active:false,   fontStyle:'color:rgb(195, 81, 172); font-style:italic;' },
-                        part:{          prefix:'part',                      active:false,  fontStyle:'color:rgb(81, 178, 223); font-style:italic;' },
-                        partBasic:{     prefix:'part.collection.basic',     active:false,  fontStyle:'color:rgb(229, 96, 83); font-style:italic;'  },
-                        partDisplay:{   prefix:'part.collection.display',   active:false,  fontStyle:'color:rgb(99, 196, 129); font-style:italic;' },
-                        partControl:{   prefix:'part.collection.control',   active:false,  fontStyle:'color:rgb(243, 194, 95); font-style:italic;' },
-                        partDynamic:{   prefix:'part.collection.display',   active:false,  fontStyle:'color:rgb(24, 53, 157); font-style:italic;'  },
+                        part:{          prefix:'part',                      active:false,   fontStyle:'color:rgb(81, 178, 223); font-style:italic;' },
+                        partBasic:{     prefix:'part.collection.basic',     active:false,   fontStyle:'color:rgb(229, 96, 83);  font-style:italic;' },
+                        partDisplay:{   prefix:'part.collection.display',   active:false,   fontStyle:'color:rgb(99, 196, 129); font-style:italic;' },
+                        partControl:{   prefix:'part.collection.control',   active:false,   fontStyle:'color:rgb(243, 194, 95); font-style:italic;' },
+                        partDynamic:{   prefix:'part.collection.dynamic',   active:!false,   fontStyle:'color:rgb(24, 53, 157);  font-style:italic;' },
                         unit:{          prefix:'unit',                      active:false,   fontStyle:'color:rgb(66, 145, 115); font-style:italic;' },
                     },
-                    log: {},
+                    log:{},
                 };
                 Object.keys(dev.channels).forEach(channel => {
                     dev.log[channel]  = function(data){
@@ -24249,6 +24342,13 @@
                         dev.log[channel]('.testLoggers -> '+channel);
                         dev.channels[channel].active = temp;
                     });
+                };
+            
+                this.go = new function(){
+                    const functionList = [];
+            
+                    this.add = function(newFunction){ functionList.push(newFunction); };
+                    this.__activate = function(){ functionList.forEach(f => f()); };
                 };
             
                 this.circuit = new function(){
@@ -26081,7 +26181,7 @@
                                         function drawBackground(){
                                             //horizontal lines
                                                 //calculate the x value for all parts of this section
-                                                    const x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, backgroundTextStyle_horizontalMarkings.mappedPosition );
+                                                    const x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, backgroundTextStyle_horizontalMarkings.mappedPosition?backgroundTextStyle_horizontalMarkings.mappedPosition:0 );
                                 
                                                 //add all horizontal markings
                                                     for(let a = 0; a < backgroundTextStyle_horizontalMarkings.points.length; a++){
@@ -26110,7 +26210,7 @@
                                 
                                             //vertical lines
                                                 //calculate the y value for all parts of this section
-                                                    const y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, backgroundTextStyle_verticalMarkings.mappedPosition );
+                                                    const y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, backgroundTextStyle_verticalMarkings.mappedPosition?backgroundTextStyle_verticalMarkings.mappedPosition:0 );
                                 
                                                 //add all vertical markings
                                                     for(let a = 0; a < backgroundTextStyle_verticalMarkings.points.length; a++){
@@ -26249,7 +26349,7 @@
                             
                                             //horizontal lines
                                                 //calculate the x value for all parts of this section
-                                                    const x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, backgroundTextStyle_horizontalMarkings.mappedPosition );
+                                                    const x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, backgroundTextStyle_horizontalMarkings.mappedPosition?backgroundTextStyle_horizontalMarkings.mappedPosition:0 );
                             
                                                 //add all horizontal markings
                                                     for(let a = 0; a < backgroundTextStyle_horizontalMarkings.points.length; a++){
@@ -26280,7 +26380,7 @@
                             
                                             //vertical lines
                                                 //calculate the y value for all parts of this section
-                                                    const y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, backgroundTextStyle_verticalMarkings.mappedPosition );
+                                                    const y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, backgroundTextStyle_verticalMarkings.mappedPosition?backgroundTextStyle_verticalMarkings.mappedPosition:0 );
                             
                                                 //add all vertical markings
                                                     for(let a = 0; a < backgroundTextStyle_verticalMarkings.points.length; a++){
@@ -28385,6 +28485,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slidePanel_image(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -28449,7 +28551,6 @@
                                         });
                                         object.append(slide);
                             
-                            
                                 //graphical adjust
                                     function set(a,update=true){ 
                                         a = (a>(optionCount-1) ? (optionCount-1) : a);
@@ -28481,7 +28582,7 @@
                                 //interaction
                                     let acc = 0;
                             
-                                    function ondblclick(){
+                                    slide.getChildByName('cover').attachCallback('ondblclick', function(){
                                         if(!interactable){return;}
                                         if(resetValue<0){return;}
                                         if(grappled){return;}
@@ -28489,8 +28590,8 @@
                                         set(resetValue);
                             
                                         if(object.onrelease != undefined){object.onrelease(value);}
-                                    }
-                                    function onwheel(x,y,event){
+                                    });
+                                    slide.getChildByName('cover').attachCallback('onwheel', function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
@@ -28502,12 +28603,7 @@
                                             acc = 0;
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         }
-                                    }
-                                    slide.getChildByName('cover').attachCallback('ondblclick', ondblclick);
-                                    slide.getChildByName('invisibleHandle').attachCallback('ondblclick', ondblclick);
-                                    slide.getChildByName('invisibleHandle').attachCallback('onwheel', onwheel);
-                                    slide.getChildByName('cover').attachCallback('onwheel', onwheel);
-                            
+                                    });
                                     slide.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
                                         if(!interactable){return;}
                                         grappled = true;
@@ -28517,29 +28613,30 @@
                                         const mux = height - height*handleHeight;
                             
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const numerator = initialY-currentMousePosition(event);
                                                 const divider = _canvas_.core.viewport.scale();
                                                 set( (initialValue - (numerator/(divider*mux) ))*(optionCount-1) );
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                             }
                                         );
                                     });
-                                    slide.getChildByName('cover').attachCallback('onclick', function(x,y,event){
+                                    slide.getChildByName('backingAndSlotGroup').getChildByName('backingAndSlotCover').attachCallback('onclick', function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
-                                            const cover = slide.getChildByName('cover');
-                                            const offset = cover.getOffset();
+                                            const backingAndSlot = slide.getChildByName('backingAndSlotGroup');
+                                            const backingAndSlotCover = backingAndSlot.getChildByName('backingAndSlotCover');
+                                            const offset = backingAndSlot.getOffset();
                                             const delta = {
-                                                x: x - (cover.x() + offset.x),
-                                                y: y - (cover.y() + offset.y),
-                                                a: 0 - (cover.angle() + offset.angle),
+                                                x: x - (backingAndSlot.x() + offset.x),
+                                                y: y - (backingAndSlot.y() + offset.y),
+                                                a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
-                                            const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / cover.height();
+                                            const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
                             
                                         //use the distance to calculate the correct value to set the slide to
                                         //taking into account the slide handle's size also
@@ -28574,6 +28671,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slidePanel(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -28621,12 +28720,14 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slide_continuous_image(...)'); //#development
+                            
                                 //default to non-image version if handle image link is missing
                                     if(handleURL == undefined){
-                                        return this.slide_continuous(
+                                        return this.slide(
                                             name, x, y, width, height, angle, interactable,
                                             handleHeight, value, resetValue,
-                                            undefined, undefined, undefined, invisibleHandleStyle,
+                                            handleURL, backingURL, invisibleHandleStyle,
                                             onchange, onrelease,
                                         );
                                     }
@@ -28648,12 +28749,12 @@
                                     //handle
                                         const handle = interfacePart.builder('basic','image','handle',{width:width, height:height*handleHeight, url:handleURL});
                                         object.append(handle);
-                                    //cover
-                                        const cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                        object.append(cover);
                                     //invisible handle
                                         const invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
                                         object.append(invisibleHandle);
+                                    //cover
+                                        const cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(cover);
                             
                                 //graphical adjust
                                     function set(a,update=true){
@@ -28685,15 +28786,15 @@
                                     };
                             
                                 //interaction
-                                    function ondblclick(){
+                                    cover.attachCallback('ondblclick', function(){
                                         if(!interactable){return;}
                                         if(resetValue<0){return;}
                                         if(grappled){return;}
                             
                                         set(resetValue);
                                         if(object.onrelease != undefined){object.onrelease(value);}
-                                    }
-                                    function onwheel(x,y,event){
+                                    });
+                                    cover.attachCallback('onwheel', function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
@@ -28701,24 +28802,20 @@
                                         const globalScale = _canvas_.core.viewport.scale();
                                         set( value + move/(10*globalScale) );
                                         if(object.onrelease != undefined){object.onrelease(value);}
-                                    }
-                                    cover.attachCallback('ondblclick', ondblclick);
-                                    invisibleHandle.attachCallback('ondblclick', ondblclick);
-                                    cover.attachCallback('onwheel', onwheel);
-                                    invisibleHandle.attachCallback('onwheel', onwheel);
-                            
-                                    cover.attachCallback('onclick', function(x,y,event){
+                                    });
+                                    backingAndSlotCover.attachCallback('onmousedown', function(){}); //to stop unit selection
+                                    backingAndSlotCover.attachCallback('onclick', function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
                                             const offset = backingAndSlot.getOffset();
                                             const delta = {
-                                                x: x - (backingAndSlot.x() + offset.x),
-                                                y: y - (backingAndSlot.y() + offset.y),
+                                                x: x - (backingAndSlot.x()+ offset.x),
+                                                y: y - (backingAndSlot.y()+ offset.y),
                                                 a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
-                                            const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / cover.height();
+                                            const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
                             
                                         //use the distance to calculate the correct value to set the slide to
                                         //taking into account the slide handle's size also
@@ -28727,6 +28824,7 @@
                                         set(value);
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     });
+                                    invisibleHandle.attachCallback('onclick', function(x,y,event){});
                                     invisibleHandle.attachCallback('onmousedown', function(x,y,event){
                                         if(!interactable){return;}
                                         grappled = true;
@@ -28736,12 +28834,12 @@
                                         const mux = height - height*handleHeight;
                             
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const numerator = initialY-currentMousePosition(event);
                                                 const divider = _canvas_.core.viewport.scale();
                                                 set( initialValue - (numerator/(divider*mux) ) );
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                             }
                                         );
@@ -28762,10 +28860,6 @@
                                 data.handleURL, data.backingURL, data.style.invisibleHandle,
                                 data.onchange, data.onrelease
                             ); };
-                            interfacePart.partLibrary.control.slide_image = function(name,data){ 
-                                console.warn('depreciated - please use slide_continuous_image instead');
-                                return interfacePart.partLibrary.control.slide_continuous_image(name,data);
-                            };
                             this.slide_continuous = function(
                                 name='slide_continuous', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -28777,6 +28871,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slide_continuous(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -28849,7 +28945,7 @@
                                         set( value + move/(10*globalScale) );
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     });
-                                    // backingAndSlotCover.onmousedown = function(){};//to stop unit selection
+                                    backingAndSlotCover.attachCallback('onmousedown', function(){});//to stop unit selection
                                     backingAndSlotCover.attachCallback('onclick', function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
@@ -28870,7 +28966,7 @@
                                         set(value);
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     });
-                                    // invisibleHandle.onclick = function(x,y,event){};
+                                    invisibleHandle.attachCallback('onclick', function(x,y,event){});
                                     invisibleHandle.attachCallback('onmousedown', function(x,y,event){
                                         if(!interactable){return;}
                                         grappled = true;
@@ -28880,12 +28976,12 @@
                                         const mux = height - height*handleHeight;
                             
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const numerator = initialY-currentMousePosition(event);
                                                 const divider = _canvas_.core.viewport.scale();
                                                 set( initialValue - (numerator/(divider*mux) ) );
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                             }
                                         );
@@ -28915,6 +29011,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slide_discrete_image(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -28958,7 +29056,7 @@
                                 //interaction
                                     let acc = 0;
                             
-                                    function ondblclick(){
+                                    slide.getChildByName('cover').attachCallback('ondblclick', function(){
                                         if(!interactable){return;}
                                         if(resetValue<0){return;}
                                         if(grappled){return;}
@@ -28966,8 +29064,8 @@
                                         set(resetValue);
                             
                                         if(object.onrelease != undefined){object.onrelease(value);}
-                                    }
-                                    function onwheel(x,y,event){
+                                    });
+                                    slide.getChildByName('cover').attachCallback('onwheel', function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
@@ -28979,12 +29077,7 @@
                                             acc = 0;
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         }
-                                    }
-                                    slide.getChildByName('cover').attachCallback('ondblclick', ondblclick);
-                                    slide.getChildByName('invisibleHandle').attachCallback('ondblclick', ondblclick);
-                                    slide.getChildByName('invisibleHandle').attachCallback('onwheel', onwheel);
-                                    slide.getChildByName('cover').attachCallback('onwheel', onwheel);
-                            
+                                    });
                                     slide.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
                                         if(!interactable){return;}
                                         grappled = true;
@@ -28994,29 +29087,30 @@
                                         const mux = height - height*handleHeight;
                             
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const numerator = initialY-currentMousePosition(event);
                                                 const divider = _canvas_.core.viewport.scale();
                                                 set( (initialValue - (numerator/(divider*mux) ))*(optionCount-1) );
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                             }
                                         );
                                     });
-                                    slide.getChildByName('cover').attachCallback('onclick', function(x,y,event){
+                                    slide.getChildByName('backingAndSlotGroup').getChildByName('backingAndSlotCover').attachCallback('onclick', function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
-                                            const cover = slide.getChildByName('cover');
-                                            const offset = cover.getOffset();
+                                            const backingAndSlot = slide.getChildByName('backingAndSlotGroup');
+                                            const backingAndSlotCover = backingAndSlot.getChildByName('backingAndSlotCover');
+                                            const offset = backingAndSlot.getOffset();
                                             const delta = {
-                                                x: x - (cover.x() + offset.x),
-                                                y: y - (cover.y() + offset.y),
-                                                a: 0 - (cover.angle() + offset.angle),
+                                                x: x - (backingAndSlot.x() + offset.x),
+                                                y: y - (backingAndSlot.y() + offset.y),
+                                                a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
-                                            const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / cover.height();
+                                            const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
                             
                                         //use the distance to calculate the correct value to set the slide to
                                         //taking into account the slide handle's size also
@@ -29051,6 +29145,8 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkbox_rectangle(...)'); //#development
+                            
                                 //adding on the specific shapes
                                     //main
                                         const subject = interfacePart.builder('basic','group',name+'subGroup');
@@ -29106,6 +29202,8 @@
                                 uncheckURL='', checkURL='', uncheckGlowURL='', checkGlowStyle='',
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkbox_image(...)'); //#development
+                            
                                 //adding on the specific shapes
                                     //main
                                         const subject = interfacePart.builder('basic','group',name+'subGroup');
@@ -29151,6 +29249,8 @@
                             
                                 subject
                             ){
+                                dev.log.partControl('.checkbox_(...)'); //#development
+                            
                                 if(subject == undefined){console.warn('checkbox_ : No subject provided');}
                             
                                 //elements 
@@ -29214,6 +29314,8 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkbox_polygon(...)'); //#development
+                            
                                 //adding on the specific shapes
                                     //main
                                         const subject = interfacePart.builder('basic','group',name+'subGroup',{});
@@ -29266,6 +29368,8 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkbox_circle(...)'); //#development
+                            
                                 //adding on the specific shapes
                                     //main
                                         const subject = interfacePart.builder('basic','group',name+'subGroup');
@@ -29319,6 +29423,8 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkboxgrid(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -29400,6 +29506,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_continuous_image(...)'); //#development
+                            
                                 //default to non-image version if image links are missing
                                     if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
                                         return this.dial_continuous(
@@ -29485,13 +29593,13 @@
                             
                                         grappled = true;
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const value = initialValue;
                                                 const numerator = event.Y - initialY;
                                                 const divider = _canvas_.core.viewport.scale();
                                                 set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                                 if(object.onrelease != undefined){object.onrelease(value);}
                                             }
@@ -29529,6 +29637,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_1_discrete(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -29598,12 +29708,12 @@
                             
                                         grappled = true;
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const diff = Math.round( (event.Y - initialY)/25 );
                                                 set( initialValue - diff );
                                                 if(object.onchange != undefined){object.onchange(value);}
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                                 if(object.onrelease != undefined){object.onrelease(value);}
                                             }
@@ -29642,6 +29752,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.checkboxgrid(...)'); //#development
+                                
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -29717,13 +29829,13 @@
                             
                                         grappled = true;
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const value = initialValue;
                                                 const numerator = event.Y - initialY;
                                                 const divider = _canvas_.core.viewport.scale();
                                                 set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                                 if(object.onrelease != undefined){object.onrelease(value);}
                                             }
@@ -29760,6 +29872,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_discrete_image(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -29829,12 +29943,12 @@
                             
                                         grappled = true;
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 var diff = Math.round( (event.Y - initialY)/25 );
                                                 set( initialValue - diff );
                                                 if(object.onchange != undefined){object.onchange(value);}
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                                 if(object.onrelease != undefined){object.onrelease(value);}
                                             }
@@ -29872,6 +29986,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_2_discrete(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -29941,12 +30057,12 @@
                             
                                         grappled = true;
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const diff = Math.round( (event.Y - initialY)/25 );
                                                 set( initialValue - diff );
                                                 if(object.onchange != undefined){object.onchange(value);}
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                                 if(object.onrelease != undefined){object.onrelease(value);}
                                             }
@@ -29984,6 +30100,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_2_continuous(...)'); //#development
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -30065,13 +30183,13 @@
                             
                                         grappled = true;
                                         _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
+                                            function(x,y,event){
                                                 const value = initialValue;
                                                 const numerator = event.Y - initialY;
                                                 const divider = _canvas_.core.viewport.scale();
                                                 set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                                             },
-                                            function(event){
+                                            function(x,y,event){
                                                 grappled = false;
                                                 if(object.onrelease != undefined){object.onrelease(value);}
                                             }
@@ -30108,6 +30226,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.rangeslide_image(...)'); //#development
+                            
                                 //default to non-image version if handle image link is missing
                                     if(handleURL == undefined){
                                         return this.rangeslide(
@@ -30155,6 +30275,10 @@
                                                 handles[handleNames[a]].append(invisibleHandle);
                                         }
                             
+                                    //cover
+                                        const cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(cover);
+                            
                                 //graphical adjust
                                     function set(a,handle,update=true){
                                         a = (a>1 ? 1 : a);
@@ -30166,28 +30290,28 @@
                                                 default: console.error('unknown handle to adjust'); break;
                                                 case 'start':
                                                     {
-                                                    //don't allow start slide to encroach on end slider's space
-                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                                                        //don't allow start slide to encrouch on end slider's space
+                                                            if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
                             
-                                                    //if start slide bumps up against end slide; move end slide accordingly
-                                                        const start_rightEdge = a + (1-a)*handleHeight;
-                                                        const end_leftEdge = values.end - (values.end)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.end = start_rightEdge/(1-handleHeight);
-                                                        }
+                                                        //if start slide bumps up against end slide; move end slide accordingly
+                                                            const start_rightEdge = a + (1-a)*handleHeight;
+                                                            const end_leftEdge = values.end - (values.end)*handleHeight;
+                                                            if( start_rightEdge >= end_leftEdge ){
+                                                                values.end = start_rightEdge/(1-handleHeight);
+                                                            }
                                                     }
                                                 break;
                                                 case 'end':
                                                     {
-                                                    //don't allow end slide to encroach on start slider's space
-                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                                                        //don't allow end slide to encrouch on start slider's space
+                                                            if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
                             
-                                                    //if end slide bumps up against start slide; move start slide accordingly
-                                                        const start_rightEdge= values.start + (1-values.start)*handleHeight;
-                                                        const end_leftEdge = a - (a)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
-                                                        }
+                                                        //if end slide bumps up against start slide; move start slide accordingly
+                                                            const start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                                            const end_leftEdge = a - (a)*handleHeight;
+                                                            if( start_rightEdge >= end_leftEdge ){
+                                                                values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                                            }
                                                     }
                                                 break;
                                             }
@@ -30252,6 +30376,11 @@
                                     }
                             
                                     //background click
+                                        //to stop clicks passing through the span
+                                            span.attachCallback('onmousedown', function(){});
+                                            span.attachCallback('onclick', function(){});
+                                            
+                                        backingAndSlotCover.attachCallback('onmousedown', function(){}); //to stop unit selection
                                         backingAndSlotCover.attachCallback('onclick', function(x,y,event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
@@ -30268,7 +30397,7 @@
                                         });
                             
                                     //double-click reset
-                                        function ondblclick(){
+                                        cover.attachCallback('ondblclick', function(){
                                             if(!interactable){return;}
                                             if(resetValues.start<0 || resetValues.end<0){return;}
                                             if(grappled){return;}
@@ -30276,15 +30405,10 @@
                                             set(resetValues.start,'start');
                                             set(resetValues.end,'end');
                                             object.onrelease(values);
-                                        }
-                                        backingAndSlotCover.attachCallback('ondblclick', ondblclick);
-                                        span.attachCallback('ondblclick', ondblclick);
-                                        Object.entries(handles).forEach(entry => {
-                                            entry[1].getChildren()[1].attachCallback('ondblclick', ondblclick);
-                                        });
+                                        } );
                             
                                     //span panning - expand/shrink
-                                        function onwheel(x,y,event){
+                                        cover.attachCallback('onwheel', function(x,y,event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
                             
@@ -30294,12 +30418,7 @@
                             
                                             set(values.start-val,'start');
                                             set(values.end+val,'end');
-                                        }
-                                        backingAndSlotCover.attachCallback('onwheel', onwheel);
-                                        span.attachCallback('onwheel', onwheel);
-                                        Object.entries(handles).forEach(entry => {
-                                            entry[1].getChildren()[1].attachCallback('onwheel', onwheel);
-                                        });
+                                        } );
                             
                                     //span panning - drag
                                         span.attachCallback('onmousedown', function(x,y,event){
@@ -30311,21 +30430,22 @@
                                             const mux = height - height*handleHeight;
                             
                                             _canvas_.system.mouse.mouseInteractionHandler(
-                                                function(event){
+                                                function(x,y,event){
                                                     const numerator = initialY - currentMousePosition(event);
                                                     const divider = _canvas_.core.viewport.scale();
                                                     pan( initialValue - (numerator/(divider*mux)) )
                                                     object.onchange(values);
                                                 },
-                                                function(event){
+                                                function(x,y,event){
                                                     object.onrelease(values);
                                                     grappled = false;
                                                 }
                                             );
-                                        });
+                                        } );
                             
                                     //handle movement
                                         for(let a = 0; a < handleNames.length; a++){
+                                            handles[handleNames[a]].getChildren()[1].attachCallback('onclick', function(){});
                                             handles[handleNames[a]].getChildren()[1].attachCallback('onmousedown', (function(a){
                                                 return function(x,y,event){
                                                     if(!interactable){return;}
@@ -30336,20 +30456,20 @@
                                                     const mux = height - height*handleHeight;
                             
                                                     _canvas_.system.mouse.mouseInteractionHandler(
-                                                        function(event){
+                                                        function(x,y,event){
                                                             const numerator = initialY-currentMousePosition(event);
                                                             const divider = _canvas_.core.viewport.scale();
                                                             set( initialValue - (numerator/(divider*mux) ), handleNames[a] );
                                                         },
-                                                        function(event){
+                                                        function(x,y,event){
                                                             object.onrelease(values);
                                                             grappled = false;
                                                         }
                                                     );
                                                 }
-                                            })(a));
+                                            })(a) );
                                         }
-                            
+                                
                                 //callbacks
                                     object.onchange = onchange;
                                     object.onrelease = onrelease;  
@@ -30369,7 +30489,7 @@
                             this.rangeslide = function(
                                 name='rangeslide', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:0.5,end:0.75},
+                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
                                 handleStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 backingStyle={r:0.58,g:0.58,b:0.58,a:1},
                                 slotStyle={r:0.2,g:0.2,b:0.2,a:1},
@@ -30378,6 +30498,8 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.rangeslide(...)'); //#development
+                            
                                 let grappled = false;
                                 const handleNames = ['start','end'];
                             
@@ -30431,28 +30553,28 @@
                                                 default: console.error('unknown handle to adjust'); break;
                                                 case 'start':
                                                     {
-                                                    //don't allow start slide to encroach on end slider's space
-                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                                                        //don't allow start slide to encrouch on end slider's space
+                                                            if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
                             
-                                                    //if start slide bumps up against end slide; move end slide accordingly
-                                                        const start_rightEdge = a + (1-a)*handleHeight;
-                                                        const end_leftEdge = values.end - (values.end)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.end = start_rightEdge/(1-handleHeight);
-                                                        }
+                                                        //if start slide bumps up against end slide; move end slide accordingly
+                                                            const start_rightEdge = a + (1-a)*handleHeight;
+                                                            const end_leftEdge = values.end - (values.end)*handleHeight;
+                                                            if( start_rightEdge >= end_leftEdge ){
+                                                                values.end = start_rightEdge/(1-handleHeight);
+                                                            }
                                                     }
                                                 break;
                                                 case 'end':
                                                     {
-                                                    //don't allow end slide to encroach on start slider's space
-                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                                                        //don't allow end slide to encrouch on start slider's space
+                                                            if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
                             
-                                                    //if end slide bumps up against start slide; move start slide accordingly
-                                                        const start_rightEdge = values.start + (1-values.start)*handleHeight;
-                                                        const end_leftEdge = a - (a)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
-                                                        }
+                                                        //if end slide bumps up against start slide; move start slide accordingly
+                                                            const start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                                            const end_leftEdge = a - (a)*handleHeight;
+                                                            if( start_rightEdge >= end_leftEdge ){
+                                                                values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                                            }
                                                     }
                                                 break;
                                             }
@@ -30489,7 +30611,7 @@
                             
                                 //methods
                                     object.get = function(){return values;};
-                                    object.set = function(values,update=true){
+                                    object.set = function(values,update){
                                         if(grappled){return;}
                                         if(values.start != undefined){set(values.start,'start',update);}
                                         if(values.end != undefined){set(values.end,'end',update);}
@@ -30498,7 +30620,7 @@
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
                                     };
-                            
+                                    
                                 //interaction
                                     function getPositionWithinFromMouse(x,y){
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
@@ -30517,6 +30639,11 @@
                                     }
                             
                                     //background click
+                                        //to stop clicks passing through the span
+                                            span.attachCallback('onmousedown', function(){});
+                                            span.attachCallback('onclick', function(){});
+                                            
+                                        backingAndSlotCover.attachCallback('onmousedown', function(){}); //to stop unit selection
                                         backingAndSlotCover.attachCallback('onclick', function(x,y,event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
@@ -30533,7 +30660,7 @@
                                         });
                             
                                     //double-click reset
-                                        function ondblclick(){
+                                        cover.attachCallback('ondblclick', function(){
                                             if(!interactable){return;}
                                             if(resetValues.start<0 || resetValues.end<0){return;}
                                             if(grappled){return;}
@@ -30541,15 +30668,10 @@
                                             set(resetValues.start,'start');
                                             set(resetValues.end,'end');
                                             object.onrelease(values);
-                                        }
-                                        backingAndSlotCover.attachCallback('ondblclick', ondblclick);
-                                        span.attachCallback('ondblclick', ondblclick);
-                                        Object.entries(handles).forEach(entry => {
-                                            entry[1].getChildren()[1].attachCallback('ondblclick', ondblclick);
-                                        });
+                                        } );
                             
                                     //span panning - expand/shrink
-                                        function onwheel(x,y,event){
+                                        cover.attachCallback('onwheel', function(x,y,event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
                             
@@ -30559,12 +30681,7 @@
                             
                                             set(values.start-val,'start');
                                             set(values.end+val,'end');
-                                        }
-                                        backingAndSlotCover.attachCallback('onwheel', onwheel);
-                                        span.attachCallback('onwheel', onwheel);
-                                        Object.entries(handles).forEach(entry => {
-                                            entry[1].getChildren()[1].attachCallback('onwheel', onwheel);
-                                        });
+                                        } );
                             
                                     //span panning - drag
                                         span.attachCallback('onmousedown', function(x,y,event){
@@ -30576,21 +30693,22 @@
                                             const mux = height - height*handleHeight;
                             
                                             _canvas_.system.mouse.mouseInteractionHandler(
-                                                function(event){
+                                                function(x,y,event){
                                                     const numerator = initialY - currentMousePosition(event);
                                                     const divider = _canvas_.core.viewport.scale();
                                                     pan( initialValue - (numerator/(divider*mux)) )
                                                     object.onchange(values);
                                                 },
-                                                function(event){
+                                                function(x,y,event){
                                                     object.onrelease(values);
                                                     grappled = false;
                                                 }
                                             );
-                                        });
+                                        } );
                             
                                     //handle movement
                                         for(let a = 0; a < handleNames.length; a++){
+                                            handles[handleNames[a]].getChildren()[1].attachCallback('onclick', function(){});
                                             handles[handleNames[a]].getChildren()[1].attachCallback('onmousedown', (function(a){
                                                 return function(x,y,event){
                                                     if(!interactable){return;}
@@ -30601,20 +30719,20 @@
                                                     const mux = height - height*handleHeight;
                             
                                                     _canvas_.system.mouse.mouseInteractionHandler(
-                                                        function(event){
+                                                        function(x,y,event){
                                                             const numerator = initialY-currentMousePosition(event);
                                                             const divider = _canvas_.core.viewport.scale();
                                                             set( initialValue - (numerator/(divider*mux) ), handleNames[a] );
                                                         },
-                                                        function(event){
+                                                        function(x,y,event){
                                                             object.onrelease(values);
                                                             grappled = false;
                                                         }
                                                     );
                                                 }
-                                            })(a));
+                                            })(a) );
                                         }
-                              
+                            
                                 //callbacks
                                     object.onchange = onchange;
                                     object.onrelease = onrelease;  
@@ -30722,6 +30840,8 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                dev.log.partControl('.button_circle(...)'); //#development
+                            
                                 //adding on the specific shapes
                                     //main
                                         const subject = interfacePart.builder('basic','group',name+'subGroup',{});
@@ -30953,6 +31073,8 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                dev.log.partControl('.button_rectangle(...)'); //#development
+                            
                                 //adding on the specific shapes
                                     //main
                                         const subject = interfacePart.builder('basic','group',name+'__subGroup');
@@ -31141,6 +31263,8 @@
                             
                                 subject
                             ){
+                                dev.log.partControl('.button_(...)'); //#development
+                            
                                 if(subject == undefined){console.warn('button_ : No subject provided');}
                             
                                 //elements 
@@ -31347,6 +31471,8 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                dev.log.partControl('.button_polygon(...)'); //#development
+                            
                                 //adding on the specific shapes
                                     //main
                                         var subject = interfacePart.builder('basic','group',name+'subGroup');
@@ -31523,6 +31649,8 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                dev.log.partControl('.button_image(...)'); //#development
+                            
                                 //adding on the specific shapes
                                     //main
                                         var subject = interfacePart.builder('basic','group',name+'subGroup',{});
@@ -31619,6 +31747,792 @@
                                 data.onselect,
                                 data.ondeselect,
                             ); };
+                            this.needleOverlay = function(
+                                name='needleOverlay',
+                                x, y, width=120, height=60, angle=0, interactable=true, allowAreaSelection=true, needleWidth=1/Math.pow(2,9), 
+                                selectNeedle=true, selectionArea=true, concurrentMarkerCountLimit=-1, //'-1' is infinite
+                                needleStyles=[
+                                    {r:0.94,g:0.94,b:0.94,a:1},
+                                    {r:1,g:0.9,b:0.44,a:1},
+                                ],
+                                onchange=function(needle,value){}, 
+                                onrelease=function(needle,value){}, 
+                                selectionAreaToggle=function(bool){},
+                            ){
+                                dev.log.partControl('.needleOverlay(...)'); //#development
+                            
+                                const needleData = {};
+                                const grappled = {};
+                                let markerCount = 0;
+                            
+                                //elements 
+                                    //main
+                                        const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        const backing = interfacePart.builder('basic','rectangle','backing',{width:width, height:height, colour:{r:0,g:0,b:1,a:0}});
+                                        object.append(backing);
+                                    //control objects
+                                        const controlObjectsGroup = interfacePart.builder('basic','group','controlObjectsGroup');
+                                        object.append(controlObjectsGroup);
+                            
+                                        const invisibleHandleWidth = width*needleWidth + width*0.005;
+                                        const controlObjects = {};
+                                        const selectionObjects = {};
+                            
+                                        function generateNeedle(id,colour){
+                                            let tmp = interfacePart.builder('basic','group',id);
+                                            tmp.append( interfacePart.builder('basic','rectangle','handle',{
+                                                width:needleWidth*width, height:height, colour:colour,
+                                            }));
+                                            tmp.append( interfacePart.builder('basic','rectangle','invisibleHandle',{
+                                                x:(width*needleWidth - invisibleHandleWidth)/2, 
+                                                width:invisibleHandleWidth, height:height, colour:{r:1,g:0,b:0,a:0},
+                                            }));
+                            
+                                            tmp.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                            tmp.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                                            tmp.getChildByName('invisibleHandle').attachCallback('onmousedown', (function(needleID){return function(x,y,event){
+                                                if(!interactable){return;}
+                            
+                                                grappled[needleID] = true;
+                            
+                                                let initialValue = needleData[needleID];
+                                                let initialX = currentMousePosition_x(event);
+                                                let mux = (width - width*needleWidth);
+                            
+                                                _canvas_.system.mouse.mouseInteractionHandler(
+                                                    function(x,y,event){
+                                                        let numerator = initialX - currentMousePosition_x(event);
+                                                        let divider = _canvas_.core.viewport.scale();
+                                                        let location = initialValue - numerator/(divider*mux);
+                                                        location = location < 0 ? 0 : location;
+                                                        location = location > 1 ? 1 : location;
+                                                        select(needleID,location);
+                                                    },
+                                                    function(x,y,event){
+                                                        let numerator = initialX - currentMousePosition_x(event);
+                                                        let divider = _canvas_.core.viewport.scale();
+                                                        let location = initialValue - numerator/(divider*mux);
+                                                        location = location < 0 ? 0 : location;
+                                                        location = location > 1 ? 1 : location;
+                                                        grappled[needleID] = false;
+                                                        select(needleID,location);
+                                                        if(object.onrelease != undefined){object.onrelease(needleID,location);}
+                                                    },       
+                                                );
+                                            }})(id) );
+                            
+                                            needleData[id] = 0;
+                                            grappled[id] = false;
+                            
+                                            return tmp;
+                                        }
+                            
+                                        //selection_A
+                                            selectionObjects.selection_A = generateNeedle('selection_A',needleStyles[1]);
+                                            selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                            selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                            selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                                            selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
+                                                if(!allowAreaSelection){return;}
+                                
+                                                grappled['selection_A'] = true;
+                                
+                                                const initialValue = needleData['selection_A'];
+                                                const initialX = currentMousePosition_x(event);
+                                                const mux = (width - width*needleWidth);
+                            
+                                                function calculateArea(event){
+                                                    const numerator = initialX - currentMousePosition_x(event);
+                                                    const divider = _canvas_.core.viewport.scale();
+                                                    let location = initialValue - numerator/(divider*mux);
+                                                    location = location < 0 ? 0 : location;
+                                                    location = location > 1 ? 1 : location;
+                                                    area(location,needleData.selection_B);
+                                                }
+                                
+                                                _canvas_.system.mouse.mouseInteractionHandler(
+                                                    function(x,y,event){
+                                                        calculateArea(event);
+                                                    },
+                                                    function(x,y,event){
+                                                        calculateArea(event);
+                                                        grappled['selection_A'] = false;
+                                                        if(object.onrelease != undefined){ object.onrelease('selection_A',location); }
+                                                    },       
+                                                );
+                                            } );
+                                            needleData['selection_A'] = undefined;
+                                        //selection_B
+                                            selectionObjects.selection_B = generateNeedle('selection_B',needleStyles[1]);
+                                            selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                            selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                            selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                                            selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
+                                                if(!allowAreaSelection){return;}
+                                
+                                                grappled['selection_B'] = true;
+                                
+                                                const initialValue = needleData['selection_B'];
+                                                const initialX = currentMousePosition_x(event);
+                                                const mux = (width - width*needleWidth);
+                            
+                                                function calculateArea(event){
+                                                    const numerator = initialX - currentMousePosition_x(event);
+                                                    const divider = _canvas_.core.viewport.scale();
+                                                    let location = initialValue - numerator/(divider*mux);
+                                                    location = location < 0 ? 0 : location;
+                                                    location = location > 1 ? 1 : location;
+                                                    area(needleData.selection_A,location);
+                                                }
+                                
+                                                _canvas_.system.mouse.mouseInteractionHandler(
+                                                    function(x,y,event){
+                                                        calculateArea(event);
+                                                    },
+                                                    function(x,y,event){
+                                                        calculateArea(event);
+                                                        grappled['selection_B'] = false;
+                                                        if(object.onrelease != undefined){ object.onrelease('selection_B',location); }
+                                                    },       
+                                                );
+                                            } );
+                                            needleData['selection_B'] = undefined;
+                                        //selection_area
+                                            selectionObjects.selection_area = interfacePart.builder('basic','rectangle','selection_area',{ height:height, colour:_canvas_.library.math.blendColours(needleStyles[1],{r:0,g:0,b:0,a:0},0.5) });
+                                            selectionObjects.selection_area.attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('grab');} );
+                                            selectionObjects.selection_area.attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('grab');} );
+                                            selectionObjects.selection_area.attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                                            selectionObjects.selection_area.attachCallback('onmousedown', function(x,y,event){
+                                                if(!allowAreaSelection){return;}
+                                
+                                                _canvas_.core.viewport.cursor('grabbing');
+                                                grappled['selection_area'] = true;
+                                
+                                                const areaSize = needleData.selection_B - needleData.selection_A;
+                                                const initialValues = {A:needleData.selection_A, B:needleData.selection_B};
+                                                const initialX = currentMousePosition_x(event);
+                                                const mux = (width - width*needleWidth);
+                                
+                                                function calculate(event){
+                                                    const numerator = initialX - currentMousePosition_x(event);
+                                                    const divider = _canvas_.core.viewport.scale();
+                                
+                                                    let location = {
+                                                        A: initialValues.A - numerator/(divider*mux),
+                                                        B: initialValues.B - numerator/(divider*mux),
+                                                    };
+                                
+                                                    if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
+                                                    else if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
+                                                    if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
+                                                    else if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
+                                
+                                                    return location;
+                                                }
+                                                _canvas_.system.mouse.mouseInteractionHandler(
+                                                    function(x,y,event){
+                                                        const location = calculate(event);
+                                                        area(location.A,location.B);
+                                                    },
+                                                    function(x,y,event){
+                                                        _canvas_.core.viewport.cursor('grab');
+                                
+                                                        // const location = calculate(event);
+                                
+                                                        selectionArea_grappled = false;
+                                                        // area(location.A,location.B);
+                                                        if(object.onrelease != undefined){object.onrelease('selection_A',location.A);}
+                                                        if(object.onrelease != undefined){object.onrelease('selection_B',location.B);}
+                                                    },
+                                                );                    
+                                            } );
+                            
+                                //internal functions
+                                    function currentMousePosition_x(event){
+                                        return event.X*Math.cos(angle) - event.Y*Math.sin(angle);
+                                    }
+                                    function getRelativeX(x,y){
+                                        const offset = controlObjectsGroup.getOffset();
+                                        const delta = {
+                                            x: x - (controlObjectsGroup.x()     + offset.x),
+                                            y: y - (controlObjectsGroup.y()     + offset.y),
+                                            a: 0 - (controlObjectsGroup.angle() + offset.angle),
+                                        };
+                                        const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a );
+                            
+                                        return d.x/backing.width();
+                                    }
+                                    function needleJumpTo(needleID,location,style=needleStyles[0]){
+                                        //if the needle doesn't exist, create it
+                                            if(controlObjects[needleID] == undefined){
+                                                //if there's too many markers, don't make a new one. Just bail
+                                                if(concurrentMarkerCountLimit > 0 && markerCount >= concurrentMarkerCountLimit){return -1;}
+                            
+                                                controlObjects[needleID] = generateNeedle(needleID,style);
+                                                markerCount++;
+                                            }
+                            
+                                        //if the needle isn't in the scene, add it
+                                            if( !controlObjectsGroup.contains(controlObjects[needleID]) ){
+                                                controlObjectsGroup.append(controlObjects[needleID]);
+                                            }
+                            
+                                        //if the location is wrong, remove the needle and return
+                                            if(location == undefined || location < 0 || location > 1){
+                                                controlObjectsGroup.remove(controlObjects[needleID]);
+                                                delete needleData[needleID];
+                                                delete grappled[needleID];
+                                                markerCount--;
+                                                return;
+                                            }
+                            
+                                        //actually set the location of the needle (adjusting for the size of needle)
+                                            controlObjects[needleID].x( location*width - width*needleWidth*location );
+                                        //save this value
+                                            needleData[needleID] = location;
+                                    }
+                                    function select(needleID,position,update=true){ 
+                                        if(!selectNeedle){return;}
+                                        //if there's no input, return the value
+                                        //if input is out of bounds, remove the needle
+                                        //otherwise, set the position
+                                        if(position == undefined){ return needleData[needleID]; }
+                                        else if(position > 1 || position < 0){ needleJumpTo(needleID); }
+                                        else{ needleJumpTo(needleID,position); }
+                            
+                                        if(update && object.onchange != undefined){object.onchange(needleID,position);}
+                                    }
+                                    function computeSelectionArea(){
+                                        //if the selection needles' data are missing (or they are the same position) remove the area element (if it exists) and return
+                                            if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
+                                                if(controlObjectsGroup.contains(selectionObjects['selection_area'])){ controlObjectsGroup.remove(selectionObjects['selection_area']); }
+                                                if(object.selectionAreaToggle){object.selectionAreaToggle(false);}
+                                                delete needleData.selection_area;
+                                                return;
+                                            }
+                            
+                                        //if the area isn't in the scene, add it
+                                            if( !controlObjectsGroup.contains(selectionObjects['selection_area']) ){
+                                                controlObjectsGroup.prepend(selectionObjects['selection_area']);
+                                                if(object.selectionAreaToggle){object.selectionAreaToggle(true);}
+                                            }
+                            
+                                        //compute area position and size
+                                            const A = needleData.selection_A < needleData.selection_B ? needleData.selection_A : needleData.selection_B;
+                                            const B = needleData.selection_A < needleData.selection_B ? needleData.selection_B : needleData.selection_A;
+                                            const start = A - needleWidth*A + needleWidth
+                                            let area = B - needleWidth*B - start; 
+                                            if(area < 0){area = 0}
+                            
+                                            selectionObjects['selection_area'].x(width*start);
+                                            selectionObjects['selection_area'].width(width*area);
+                                    }
+                                    function area(positionA,positionB,update=true){
+                                        if(!selectionArea){return;}
+                            
+                                        //if there's no input, return the values
+                                            if(positionA == undefined || positionB == undefined){
+                                                return {A:needleData.selection_A, B:needleData.selection_B};
+                                            }
+                            
+                                        //if the needles aren't in the scene, add them
+                                            if( !controlObjectsGroup.contains(selectionObjects['selection_A']) ){
+                                                controlObjectsGroup.prepend(selectionObjects['selection_A']);
+                                                controlObjectsGroup.prepend(selectionObjects['selection_B']);
+                                            }
+                            
+                                        //if input is out of bounds or if both bounds are set to 0, remove the needles
+                                        //otherwise, set the position
+                                            if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 || (positionA == 0 && positionB == 0) ){
+                                                controlObjectsGroup.remove(selectionObjects['selection_A']);
+                                                controlObjectsGroup.remove(selectionObjects['selection_B']);
+                                                needleData.selection_A = undefined;
+                                                needleData.selection_B = undefined;
+                                            }else{
+                                                selectionObjects['selection_A'].x( positionA*width - width*needleWidth*positionA );
+                                                needleData['selection_A'] = positionA;
+                                                selectionObjects['selection_B'].x( positionB*width - width*needleWidth*positionB );
+                                                needleData['selection_B'] = positionB;
+                                            }
+                            
+                                        //you always gotta compute the selection area
+                                            computeSelectionArea();
+                            
+                                        if(update && object.onchange != undefined){object.onchange('selection_A',positionA);}
+                                        if(update && object.onchange != undefined){object.onchange('selection_B',positionB);}
+                                    }
+                            
+                                //interaction
+                                    //clear space interaction
+                                        backing.attachCallback('onmousedown', function(x,y,event){
+                                            if( _canvas_.system.keyboard.pressedKeys.shift && allowAreaSelection ){
+                                                const firstPosition = getRelativeX(x,y);
+                                                _canvas_.system.mouse.mouseInteractionHandler(
+                                                    function(x,y,event){ 
+                                                        let secondPosition = getRelativeX(x,y);
+                                                        if(secondPosition < 0){secondPosition = 0;}else if(secondPosition > 1){secondPosition = 1;}
+                                                        object.area(firstPosition,secondPosition);
+                                                    },    
+                                                );
+                                                return;
+                                            }
+                            
+                                            if(!interactable){return;}
+                                            const relX = getRelativeX(x,y);
+                                            const markerPositions = Object.keys(controlObjects).map(key => needleData[key]).map(position => Math.abs(position - relX));
+                                            let smallest = {value:markerPositions[0], index:0};
+                                            for(let a = 1; a < markerPositions.length; a++){ if(smallest.value > markerPositions[a]){ smallest = {value:markerPositions[a], index:a}; } }
+                                            select(smallest.index, relX);
+                                        } );
+                                    //doubleclick to destroy selection area
+                                        selectionObjects.selection_A.attachCallback('ondblclick', function(){ if(!interactable){return;} area(-1,-1); _canvas_.core.viewport.cursor('default'); });
+                                        selectionObjects.selection_B.attachCallback('ondblclick', selectionObjects.selection_A.getCallback('ondblclick'));
+                                        selectionObjects.selection_area.attachCallback('ondblclick', selectionObjects.selection_A.getCallback('ondblclick'));
+                                    
+                                //control
+                                    object.interactable = function(bool){
+                                        if(bool == undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                                    object.allowAreaSelection = function(bool){
+                                        if(bool == undefined){return allowAreaSelection;}
+                                        allowAreaSelection = bool;
+                                    };
+                                    object.select = function(needleID,position,update=true){
+                                        if(position == undefined){return select(needleID);}
+                            
+                                        if(grappled[needleID]){return;}
+                                        select(needleID,position,update);
+                                    };
+                                    object.removeAllMarkers = function(){ Object.keys(controlObjects).forEach(ID => object.select(ID,-1)); };
+                                    object.area = function(positionA,positionB,update=true){ return area(positionA,positionB,update); };
+                                    object.areaIsActive = function(){ return !(needleData.selection_A == undefined && needleData.selection_B == undefined); };
+                            
+                                    object.list = function(){
+                                        const tmp = Object.assign({},needleData);
+                                        delete tmp.selection_A;
+                                        delete tmp.selection_B;
+                                        return tmp;
+                                    };
+                            
+                                //callback
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;
+                                    object.selectionAreaToggle = selectionAreaToggle;
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.control.needleOverlay = function(name,data){ return interfacePart.collection.control.needleOverlay(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.allowAreaSelection,
+                                data.needleWidth, data.selectNeedle, data.selectionArea, data.concurrentMarkerCountLimit,
+                                data.style.needles,
+                                data.onchange, data.onrelease, data.selectionAreaToggle,
+                            ); };
+                            // this.list_image = function(
+                            //     name='list_image', 
+                            //     x, y, angle=0, interactable=true,
+                            //     list=[],
+                            
+                            //     active=true, multiSelect=false, hoverable=true, selectable=false, pressable=true,
+                            
+                            //     heightLimit=-1, widthLimit=-1,
+                            //     background_url='/images/testImages/expanded-metal-1.jpg',
+                            //     break_url='/images/testImages/Dore-munchausen-illustration.jpg',
+                            //     image_url='/images/testImages/mikeandbrian.jpg',
+                            
+                            //     default_item_height=10, default_item_width=47.5,
+                            //     default_item_spacingHeight=3/4,
+                            //     default_item_horizontalPadding=2,
+                            
+                            //     default_item__off__url=                     '/images/testImages/buttonStates/off.png',
+                            //     default_item__up__url=                      '/images/testImages/buttonStates/up.png',
+                            //     default_item__press__url=                   '/images/testImages/buttonStates/press.png',
+                            //     default_item__select__url=                  '/images/testImages/buttonStates/select.png',
+                            //     default_item__select_press__url=            '/images/testImages/buttonStates/select_press.png',
+                            //     default_item__glow__url=                    '/images/testImages/buttonStates/glow.png',
+                            //     default_item__glow_press__url=              '/images/testImages/buttonStates/glow_press.png',
+                            //     default_item__glow_select__url=             '/images/testImages/buttonStates/glow_select.png',
+                            //     default_item__glow_select_press__url=       '/images/testImages/buttonStates/glow_select_press.png',
+                            //     default_item__hover__url=                   '/images/testImages/buttonStates/hover.png',
+                            //     default_item__hover_press__url=             '/images/testImages/buttonStates/hover_press.png',
+                            //     default_item__hover_select__url=            '/images/testImages/buttonStates/hover_select.png',
+                            //     default_item__hover_select_press__url=      '/images/testImages/buttonStates/hover_select_press.png',
+                            //     default_item__hover_glow__url=              '/images/testImages/buttonStates/hover_glow.png',
+                            //     default_item__hover_glow_press__url=        '/images/testImages/buttonStates/hover_glow_press.png',
+                            //     default_item__hover_glow_select__url=       '/images/testImages/buttonStates/hover_glow_select.png',
+                            //     default_item__hover_glow_select_press__url= '/images/testImages/buttonStates/hover_glow_select_press.png',
+                            
+                            //     space_height=10/16,
+                            //     break_height=10/8,
+                            //     break_lineMux=1/5,
+                            
+                            //     onenter=function(a){/*console.log('onenter >',a);*/},
+                            //     onleave=function(a){/*console.log('onleave >',a);*/},
+                            //     onpress=function(a){/*console.log('onpress >',a);*/},
+                            //     ondblpress=function(a){/*console.log('ondblpress >',a);*/},
+                            //     onrelease=function(a){/*console.log('onrelease >',a);*/},
+                            //     onselection=function(a){/*console.log('onselection >',a);*/},
+                            //     onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
+                            // ){
+                            //     dev.log.partControl('.list_image(...)'); //#development
+                            
+                            //     //state
+                            //         let self = this;
+                            //         let itemArray = [];
+                            //         let calculatedListHeight = 0;
+                            //         const state = {
+                            //             position:0,
+                            //             lastNonShiftClicked:0,
+                            //             selectedItems:[],
+                            //         };
+                            
+                            //     //default style
+                            //         const style = {
+                            //             default:{
+                            //                 heightLimit:heightLimit, widthLimit:widthLimit,
+                            //                 background_url:background_url,
+                            //                 break_url:break_url,
+                            //                 image_url:image_url,
+                            
+                            //                 height:default_item_height, width:default_item_width,
+                            
+                            //                 itemSpacingHeight:default_item_spacingHeight,
+                            //                 itemHorizontalPadding:default_item_horizontalPadding,
+                            
+                            //                 item__off__url:                     default_item__off__url,
+                            //                 item__up__url:                      default_item__up__url,
+                            //                 item__press__url:                   default_item__press__url,
+                            //                 item__select__url:                  default_item__select__url,
+                            //                 item__select_press__url:            default_item__select_press__url,
+                            //                 item__glow__url:                    default_item__glow__url,
+                            //                 item__glow_press__url:              default_item__glow_press__url,
+                            //                 item__glow_select__url:             default_item__glow_select__url,
+                            //                 item__glow_select_press__url:       default_item__glow_select_press__url,
+                            //                 item__hover__url:                   default_item__hover__url,
+                            //                 item__hover_press__url:             default_item__hover_press__url,
+                            //                 item__hover_select__url:            default_item__hover_select__url,
+                            //                 item__hover_select_press__url:      default_item__hover_select_press__url,
+                            //                 item__hover_glow__url:              default_item__hover_glow__url,
+                            //                 item__hover_glow_press__url:        default_item__hover_glow_press__url,
+                            //                 item__hover_glow_select__url:       default_item__hover_glow_select__url,
+                            //                 item__hover_glow_select_press__url: default_item__hover_glow_select_press__url,
+                            //             },
+                            //             space:{
+                            //                 height:space_height,
+                            //             },
+                            //             image:{},
+                            //             break:{
+                            //                 height:break_height,
+                            //                 lineMux:break_lineMux,
+                            //             },
+                            //             checkbox:{},
+                            //             button:{},
+                            //             list:{
+                            //                 heightLimit:-1,
+                            //                 space_height:space_height,
+                            //                 break_height:break_height,
+                            //                 break_lineMux:break_lineMux,
+                            //             },
+                            //         };
+                            
+                            
+                            //     //generate list content
+                            //         function generateListContent(listItems=[]){
+                            //             function def(i,t){ return i[t]==undefined ? (style[i.type][t]==undefined ? style.default[t] : style[i.type][t]) : i[t]; }
+                            
+                            //             const output = {elements:[], calculatedListHeight:0};
+                            //             const xOffset = style.default.widthLimit < 0 ? 0 : (style.default.widthLimit-style.default.width)/2;
+                            
+                            //             listItems.forEach((item,index) => {
+                            //                 if(index != 0){output.calculatedListHeight += style.default.itemSpacingHeight;}
+                            
+                            //                 let newItem;
+                            //                 if(item.type == 'image'){
+                            //                     newItem = self.list_image.itemTypes.image(
+                            //                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'image_url'),
+                            //                     );
+                            //                 }else if(item.type == 'space'){
+                            //                     newItem = self.list_image.itemTypes.space(index, xOffset, output.calculatedListHeight, def(item,'height') );
+                            //                 }else if(item.type == 'break'){
+                            //                     newItem = self.list_image.itemTypes.break(
+                            //                         index, xOffset, output.calculatedListHeight, def(item,'width'), 
+                            //                         def(item,'height'), def(item,'break_url')
+                            //                     );
+                            //                 }else if(item.type == 'checkbox'){
+                            //                     newItem = self.list_image.itemTypes.checkbox(
+                            //                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
+                            //                         item.active != undefined ? item.active : active, 
+                            //                         item.hoverable != undefined ? item.hoverable : hoverable, 
+                            //                         item.selectable != undefined ? item.selectable : selectable, 
+                            //                         item.pressable != undefined ? item.pressable : pressable, 
+                            
+                            //                         def(item,'item__off__url'),
+                            //                         def(item,'item__up__url'),
+                            //                         def(item,'item__press__url'),
+                            //                         def(item,'item__select__url'),
+                            //                         def(item,'item__select_press__url'),
+                            //                         def(item,'item__glow__url'),
+                            //                         def(item,'item__glow_press__url'),
+                            //                         def(item,'item__glow_select__url'),
+                            //                         def(item,'item__glow_select_press__url'),
+                            //                         def(item,'item__hover__url'),
+                            //                         def(item,'item__hover_press__url'),
+                            //                         def(item,'item__hover_select__url'),
+                            //                         def(item,'item__hover_select_press__url'),
+                            //                         def(item,'item__hover_glow__url'),
+                            //                         def(item,'item__hover_glow_press__url'),
+                            //                         def(item,'item__hover_glow_select__url'),
+                            //                         def(item,'item__hover_glow_select_press__url'),
+                            
+                            //                         item.updateFunction, item.onclickFunction,
+                            //                     );
+                            //                 }else if(item.type == 'button'){
+                            //                     newItem = self.list_image.itemTypes.button(
+                            //                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
+                            //                         item.active != undefined ? item.active : active, 
+                            //                         item.hoverable != undefined ? item.hoverable : hoverable, 
+                            //                         item.selectable != undefined ? item.selectable : selectable, 
+                            //                         item.pressable != undefined ? item.pressable : pressable, 
+                            
+                            //                         def(item,'item__off__url'),
+                            //                         def(item,'item__up__url'),
+                            //                         def(item,'item__press__url'),
+                            //                         def(item,'item__select__url'),
+                            //                         def(item,'item__select_press__url'),
+                            //                         def(item,'item__glow__url'),
+                            //                         def(item,'item__glow_press__url'),
+                            //                         def(item,'item__glow_select__url'),
+                            //                         def(item,'item__glow_select_press__url'),
+                            //                         def(item,'item__hover__url'),
+                            //                         def(item,'item__hover_press__url'),
+                            //                         def(item,'item__hover_select__url'),
+                            //                         def(item,'item__hover_select_press__url'),
+                            //                         def(item,'item__hover_glow__url'),
+                            //                         def(item,'item__hover_glow_press__url'),
+                            //                         def(item,'item__hover_glow_select__url'),
+                            //                         def(item,'item__hover_glow_select_press__url'),
+                            
+                            //                         function(){ object.onenter([index]); },
+                            //                         function(){ object.onleave([index]); },
+                            //                         function(){ object.onpress([index]); },
+                            //                         function(){ object.ondblpress([index]); },
+                            //                         function(){ if(item.function){item.function();} object.onrelease([index]); },
+                            //                         function(obj,event){ object.select(index,true,event,false);} ,
+                            //                         function(obj,event){ object.select(index,false,event,false); },
+                            //                     );
+                            //                 }else if(item.type == 'list'){
+                            //                     newItem = self.list_image.itemTypes.list(
+                            //                         subListGroup,
+                            //                         index, xOffset, output.calculatedListHeight,
+                                                
+                            //                         //internal callbacks
+                            //                             function(isOpen){
+                            //                                 if(!isOpen){return;}
+                            //                                 itemArray.forEach((item,a) => { if(list[a].type == 'list' && a != index && item.isOpen){ item.close(); } });
+                            //                                 return -state.position * (style.default.heightLimit > 0 && style.default.heightLimit < calculatedListHeight ? (calculatedListHeight-style.default.heightLimit) : calculatedListHeight);
+                            //                             },
+                                                    
+                            //                         //button
+                            //                             def(item,'width'), def(item,'height'), 
+                                                
+                            //                             def(item,'itemHorizontalPadding'),
+                            //                             item.active != undefined ? item.active : active, 
+                            //                             item.hoverable != undefined ? item.hoverable : hoverable, 
+                            //                             item.pressable != undefined ? item.pressable : pressable, 
+                                                
+                            //                             def(item,'item__off__url'),
+                            //                             def(item,'item__up__url'),
+                            //                             def(item,'item__press__url'),
+                            //                             def(item,'item__select__url'),
+                            //                             def(item,'item__select_press__url'),
+                            //                             def(item,'item__glow__url'),
+                            //                             def(item,'item__glow_press__url'),
+                            //                             def(item,'item__glow_select__url'),
+                            //                             def(item,'item__glow_select_press__url'),
+                            //                             def(item,'item__hover__url'),
+                            //                             def(item,'item__hover_press__url'),
+                            //                             def(item,'item__hover_select__url'),
+                            //                             def(item,'item__hover_select_press__url'),
+                            //                             def(item,'item__hover_glow__url'),
+                            //                             def(item,'item__hover_glow_press__url'),
+                            //                             def(item,'item__hover_glow_select__url'),
+                            //                             def(item,'item__hover_glow_select_press__url'),
+                                                
+                            //                         //sub list
+                            //                             item.list,
+                            //                             item.interactable,
+                                                
+                            //                             item.itemWidth,
+                            //                             def(item,'heightLimit'),
+                            //                             def(item,'widthLimit'),
+                            //                             def(item,'backgroundColour'),
+                            //                             def(item,'backgroundMarkingColour'),
+                                                
+                            //                             def(item,'default_item_spacingHeight'),
+                                                
+                            //                             def(item,'space_height'),
+                            //                             def(item,'break_height'),
+                            //                             def(item,'break_lineMux'),
+                                                
+                            //                             item.onenter,
+                            //                             item.onleave,
+                            //                             item.onpress,
+                            //                             item.ondblpress,
+                            //                             item.onrelease,
+                            //                             item.onselection,
+                            //                             item.onpositionchange,
+                            //                     );
+                            //                 }else{ //unknown item
+                            //                     output.calculatedListHeight -= style.default.itemSpacingHeight;
+                            //                     console.warn('interface part "list_image" :: error : unknown list item type:',item);
+                            //                     return;
+                            //                 }
+                            
+                            //                 output.elements.push(newItem.item);
+                            //                 output.calculatedListHeight += newItem.height;
+                            //             });
+                            
+                            //             return output;
+                            //         }
+                            
+                            //     //refreshing function
+                            //         function refresh(){
+                            //             itemArray = [];
+                            //             calculatedListHeight = 0;
+                            //             state.selectedItems = [];
+                            //             state.lastNonShiftClicked = 0;
+                            //             state.position = 0;
+                                        
+                            //             results = generateListContent(list);
+                            //             calculatedListHeight = results.calculatedListHeight;
+                            //             itemArray = results.elements;
+                            
+                            //             const widthToUse = style.default.widthLimit < 0 ? style.default.width : style.default.widthLimit;
+                            //             backing.width(widthToUse);
+                            //             cover.width(widthToUse);
+                            //             stencil.width(widthToUse);
+                            
+                            //             const heightToUse = style.default.heightLimit < 0 || style.default.heightLimit > calculatedListHeight ? calculatedListHeight : style.default.heightLimit;
+                            //             backing.height(calculatedListHeight);
+                            //             cover.height(heightToUse);
+                            //             stencil.height(heightToUse);
+                            
+                            //             itemCollection.clear();
+                            //             results.elements.forEach(element => itemCollection.append(element));
+                            //         }
+                            
+                            //     //elements 
+                            //         //main
+                            //             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                            //             //stenciled group
+                            //                 const stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
+                            //                 object.append(stenciledGroup);
+                            //             //sub list group
+                            //                 const subListGroup = interfacePart.builder('basic','group','subListGroup');
+                            //                 object.append(subListGroup);
+                            //             //backing
+                            //                 const backing = interfacePart.builder('basic','image','backing',{url:background_url});
+                            //                 stenciledGroup.append(backing);
+                            //             //item collection
+                            //                 const itemCollection = interfacePart.builder('basic','group','itemCollection');
+                            //                 stenciledGroup.append(itemCollection);
+                            //             //cover
+                            //                 const cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
+                            //                 stenciledGroup.append(cover);
+                            //             //stencil
+                            //                 const stencil = interfacePart.builder('basic','rectangle','stencil');
+                            //                 stenciledGroup.stencil(stencil);
+                            //                 stenciledGroup.clipActive(true);
+                            
+                            //     refresh();
+                            
+                            //     return object;
+                            // };
+                            
+                            // this.list_image.itemTypes = {};
+                            // this.list_image.itemTypes.space = function(index, x, y, height){
+                            //     dev.log.partControl('.list_image.itemTypes.space(...)'); //#development
+                            
+                            //     const newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
+                            //     return {item:newItem,height:height};
+                            // };
+                            // this.list_image.itemTypes.break = function(index, x, y, width, height, url){
+                            //     dev.log.partControl('.list_image.itemTypes.break(...)'); //#development
+                            
+                            //     const newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
+                            //     const image = interfacePart.builder('basic', 'image', 'image', { width:width, height:height, url:url });
+                            //     newItem.append(image);
+                            
+                            //     return {item:newItem,height:height};
+                            // };
+                            // this.list_image.itemTypes.image = function(index, x, y, width, height, url){
+                            //     dev.log.partControl('.list_image.itemTypes.image(...)'); //#development
+                            
+                            //     const newItem = interfacePart.builder('basic','group',index+'_image',{x:x,y:y});
+                            //     const image = interfacePart.builder('basic', 'image', 'image', { width:width, height:height, url:url });
+                            //     newItem.append(image);
+                            
+                            //     return {item:newItem,height:height};
+                            // };
+                            
+                            // interfacePart.partLibrary.control.list_image = function(name,data){ 
+                            //     return interfacePart.collection.control.list_image(
+                            //         name,
+                            //         data.x, 
+                            //         data.y, 
+                            //         data.angle,
+                            //         data.interactable,
+                            //         data.list,
+                                
+                            //         data.active,
+                            //         data.multiSelect,
+                            //         data.hoverable,
+                            //         data.selectable,
+                            //         data.pressable,
+                                
+                            //         data.heightLimit,
+                            //         data.widthLimit,
+                            //         data.background_url,
+                            //         data.break_url,
+                                
+                            //         data.default_item_height,
+                            //         data.default_item_width,
+                            //         data.default_item_spacingHeight,
+                            //         data.default_item_horizontalPadding,
+                                
+                            //         data.default_item__off__url,
+                            //         data.default_item__up__url,
+                            //         data.default_item__press__url,
+                            //         data.default_item__select__url,
+                            //         data.default_item__select_press__url,
+                            //         data.default_item__glow__url,
+                            //         data.default_item__glow_press__url,
+                            //         data.default_item__glow_select__url,
+                            //         data.default_item__glow_select_press__url,
+                            //         data.default_item__hover__url,
+                            //         data.default_item__hover_press__url,
+                            //         data.default_item__hover_select__url,
+                            //         data.default_item__hover_select_press__url,
+                            //         data.default_item__hover_glow__url,
+                            //         data.default_item__hover_glow_press__url,
+                            //         data.default_item__hover_glow_select__url,
+                            //         data.default_item__hover_glow_select_press__url,
+                                
+                            //         data.space_height,
+                            //         data.break_height,
+                            //         data.break_lineMux,
+                                
+                            //         data.onenter,
+                            //         data.onleave,
+                            //         data.onpress,
+                            //         data.ondblpress,
+                            //         data.onrelease,
+                            //         data.onselection,
+                            //         data.onpositionchange,
+                            //     );
+                            // };
                             this.list = function(
                                 name='list', 
                                 x, y, angle=0, interactable=true,
@@ -31659,57 +32573,57 @@
                                 default_text_colour__hover_glow_select=                     {r:0.2,g:0.2,b:0.2,a:1},
                                 default_text_colour__hover_glow_select_press=               {r:0.2,g:0.2,b:0.2,a:1},
                             
-                                default_backing__off__colour=                               {r:180/255,g:180/255,b:180/255,a:1},
-                                default_backing__off__lineColour=                           {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__off__lineThickness=                        0,
-                                default_backing__up__colour=                                {r:200/255,g:200/255,b:200/255,a:1},
-                                default_backing__up__lineColour=                            {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__up__lineThickness=                         0,
-                                default_backing__press__colour=                             {r:230/255,g:230/255,b:230/255,a:1},
-                                default_backing__press__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__press__lineThickness=                      0,
-                                default_backing__select__colour=                            {r:220/255,g:220/255,b:220/255,a:1},
-                                default_backing__select__lineColour=                        {r:120/255,g:120/255,b:120/255,a:1},
-                                default_backing__select__lineThickness=                     0,
-                                default_backing__select_press__colour=                      {r:230/255,g:230/255,b:230/255,a:1},
-                                default_backing__select_press__lineColour=                  {r:120/255,g:120/255,b:120/255,a:1},
-                                default_backing__select_press__lineThickness=               0,
-                                default_backing__glow__colour=                              {r:220/255,g:220/255,b:220/255,a:1},
-                                default_backing__glow__lineColour=                          {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__glow__lineThickness=                       0,
-                                default_backing__glow_press__colour=                        {r:250/255,g:250/255,b:250/255,a:1},
-                                default_backing__glow_press__lineColour=                    {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__glow_press__lineThickness=                 0,
-                                default_backing__glow_select__colour=                       {r:220/255,g:220/255,b:220/255,a:1},
-                                default_backing__glow_select__lineColour=                   {r:120/255,g:120/255,b:120/255,a:1},
-                                default_backing__glow_select__lineThickness=                0,
-                                default_backing__glow_select_press__colour=                 {r:250/255,g:250/255,b:250/255,a:1},
-                                default_backing__glow_select_press__lineColour=             {r:120/255,g:120/255,b:120/255,a:1},
-                                default_backing__glow_select_press__lineThickness=          0,
-                                default_backing__hover__colour=                             {r:220/255,g:220/255,b:220/255,a:1},
-                                default_backing__hover__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__hover__lineThickness=                      0,
-                                default_backing__hover_press__colour=                       {r:240/255,g:240/255,b:240/255,a:1},
-                                default_backing__hover_press__lineColour=                   {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__hover_press__lineThickness=                0,
-                                default_backing__hover_select__colour=                      {r:220/255,g:220/255,b:220/255,a:1},
-                                default_backing__hover_select__lineColour=                  {r:120/255,g:120/255,b:120/255,a:1},
-                                default_backing__hover_select__lineThickness=               0,
-                                default_backing__hover_select_press__colour=                {r:240/255,g:240/255,b:240/255,a:1},
-                                default_backing__hover_select_press__lineColour=            {r:120/255,g:120/255,b:120/255,a:1},
-                                default_backing__hover_select_press__lineThickness=         0,
-                                default_backing__hover_glow__colour=                        {r:250/255,g:250/255,b:250/255,a:1},
-                                default_backing__hover_glow__lineColour=                    {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__hover_glow__lineThickness=                 0,
-                                default_backing__hover_glow_press__colour=                  {r:250/255,g:250/255,b:250/255,a:1},
-                                default_backing__hover_glow_press__lineColour=              {r:0/255,g:0/255,b:0/255,a:0},
-                                default_backing__hover_glow_press__lineThickness=           0,
-                                default_backing__hover_glow_select__colour=                 {r:240/255,g:240/255,b:240/255,a:1},
-                                default_backing__hover_glow_select__lineColour=             {r:120/255,g:120/255,b:120/255,a:1},
-                                default_backing__hover_glow_select__lineThickness=          0,
-                                default_backing__hover_glow_select_press__colour=           {r:250/255,g:250/255,b:250/255,a:1},
-                                default_backing__hover_glow_select_press__lineColour=       {r:120/255,g:120/255,b:120/255,a:1},
-                                default_backing__hover_glow_select_press__lineThickness=    0,
+                                default_item__off__colour=                               {r:180/255,g:180/255,b:180/255,a:1},
+                                default_item__off__lineColour=                           {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__off__lineThickness=                        0,
+                                default_item__up__colour=                                {r:200/255,g:200/255,b:200/255,a:1},
+                                default_item__up__lineColour=                            {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__up__lineThickness=                         0,
+                                default_item__press__colour=                             {r:230/255,g:230/255,b:230/255,a:1},
+                                default_item__press__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__press__lineThickness=                      0,
+                                default_item__select__colour=                            {r:220/255,g:220/255,b:220/255,a:1},
+                                default_item__select__lineColour=                        {r:120/255,g:120/255,b:120/255,a:1},
+                                default_item__select__lineThickness=                     0,
+                                default_item__select_press__colour=                      {r:230/255,g:230/255,b:230/255,a:1},
+                                default_item__select_press__lineColour=                  {r:120/255,g:120/255,b:120/255,a:1},
+                                default_item__select_press__lineThickness=               0,
+                                default_item__glow__colour=                              {r:220/255,g:220/255,b:220/255,a:1},
+                                default_item__glow__lineColour=                          {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__glow__lineThickness=                       0,
+                                default_item__glow_press__colour=                        {r:250/255,g:250/255,b:250/255,a:1},
+                                default_item__glow_press__lineColour=                    {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__glow_press__lineThickness=                 0,
+                                default_item__glow_select__colour=                       {r:220/255,g:220/255,b:220/255,a:1},
+                                default_item__glow_select__lineColour=                   {r:120/255,g:120/255,b:120/255,a:1},
+                                default_item__glow_select__lineThickness=                0,
+                                default_item__glow_select_press__colour=                 {r:250/255,g:250/255,b:250/255,a:1},
+                                default_item__glow_select_press__lineColour=             {r:120/255,g:120/255,b:120/255,a:1},
+                                default_item__glow_select_press__lineThickness=          0,
+                                default_item__hover__colour=                             {r:220/255,g:220/255,b:220/255,a:1},
+                                default_item__hover__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__hover__lineThickness=                      0,
+                                default_item__hover_press__colour=                       {r:240/255,g:240/255,b:240/255,a:1},
+                                default_item__hover_press__lineColour=                   {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__hover_press__lineThickness=                0,
+                                default_item__hover_select__colour=                      {r:220/255,g:220/255,b:220/255,a:1},
+                                default_item__hover_select__lineColour=                  {r:120/255,g:120/255,b:120/255,a:1},
+                                default_item__hover_select__lineThickness=               0,
+                                default_item__hover_select_press__colour=                {r:240/255,g:240/255,b:240/255,a:1},
+                                default_item__hover_select_press__lineColour=            {r:120/255,g:120/255,b:120/255,a:1},
+                                default_item__hover_select_press__lineThickness=         0,
+                                default_item__hover_glow__colour=                        {r:250/255,g:250/255,b:250/255,a:1},
+                                default_item__hover_glow__lineColour=                    {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__hover_glow__lineThickness=                 0,
+                                default_item__hover_glow_press__colour=                  {r:250/255,g:250/255,b:250/255,a:1},
+                                default_item__hover_glow_press__lineColour=              {r:0/255,g:0/255,b:0/255,a:0},
+                                default_item__hover_glow_press__lineThickness=           0,
+                                default_item__hover_glow_select__colour=                 {r:240/255,g:240/255,b:240/255,a:1},
+                                default_item__hover_glow_select__lineColour=             {r:120/255,g:120/255,b:120/255,a:1},
+                                default_item__hover_glow_select__lineThickness=          0,
+                                default_item__hover_glow_select_press__colour=           {r:250/255,g:250/255,b:250/255,a:1},
+                                default_item__hover_glow_select_press__lineColour=       {r:120/255,g:120/255,b:120/255,a:1},
+                                default_item__hover_glow_select_press__lineThickness=    0,
                             
                                 subList_arrowMux=1,
                                 space_height=10/16,
@@ -31728,18 +32642,20 @@
                                 onselection=function(a){/*console.log('onselection >',a);*/},
                                 onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
                             ){
+                                dev.log.partControl('.list(...)'); //#development
+                            
                                 //state
-                                    var self = this;
-                                    var itemArray = [];
-                                    var calculatedListHeight = 0;
-                                    var state = {
+                                    let self = this;
+                                    let itemArray = [];
+                                    let calculatedListHeight = 0;
+                                    const state = {
                                         position:0,
                                         lastNonShiftClicked:0,
                                         selectedItems:[],
                                     };
                             
                                 //default style
-                                    var style = {
+                                    const style = {
                                         default:{
                                             heightLimit:heightLimit, widthLimit:widthLimit,
                                             backgroundColour:backgroundColour,
@@ -31775,57 +32691,57 @@
                                             text_colour__hover_glow_select:default_text_colour__hover_glow_select,
                                             text_colour__hover_glow_select_press:default_text_colour__hover_glow_select_press,
                             
-                                            item__off__colour:                            default_backing__off__colour,
-                                            item__off__lineColour:                        default_backing__off__lineColour,
-                                            item__off__lineThickness:                     default_backing__off__lineThickness,
-                                            item__up__colour:                             default_backing__up__colour,
-                                            item__up__lineColour:                         default_backing__up__lineColour,
-                                            item__up__lineThickness:                      default_backing__up__lineThickness,
-                                            item__press__colour:                          default_backing__press__colour,
-                                            item__press__lineColour:                      default_backing__press__lineColour,
-                                            item__press__lineThickness:                   default_backing__press__lineThickness,
-                                            item__select__colour:                         default_backing__select__colour,
-                                            item__select__lineColour:                     default_backing__select__lineColour,
-                                            item__select__lineThickness:                  default_backing__select__lineThickness,
-                                            item__select_press__colour:                   default_backing__select_press__colour,
-                                            item__select_press__lineColour:               default_backing__select_press__lineColour,
-                                            item__select_press__lineThickness:            default_backing__select_press__lineThickness,
-                                            item__glow__colour:                           default_backing__glow__colour,
-                                            item__glow__lineColour:                       default_backing__glow__lineColour,
-                                            item__glow__lineThickness:                    default_backing__glow__lineThickness,
-                                            item__glow_press__colour:                     default_backing__glow_press__colour,
-                                            item__glow_press__lineColour:                 default_backing__glow_press__lineColour,
-                                            item__glow_press__lineThickness:              default_backing__glow_press__lineThickness,
-                                            item__glow_select__colour:                    default_backing__glow_select__colour,
-                                            item__glow_select__lineColour:                default_backing__glow_select__lineColour,
-                                            item__glow_select__lineThickness:             default_backing__glow_select__lineThickness,
-                                            item__glow_select_press__colour:              default_backing__glow_select_press__colour,
-                                            item__glow_select_press__lineColour:          default_backing__glow_select_press__lineColour,
-                                            item__glow_select_press__lineThickness:       default_backing__glow_select_press__lineThickness,
-                                            item__hover__colour:                          default_backing__hover__colour,
-                                            item__hover__lineColour:                      default_backing__hover__lineColour,
-                                            item__hover__lineThickness:                   default_backing__hover__lineThickness,
-                                            item__hover_press__colour:                    default_backing__hover_press__colour,
-                                            item__hover_press__lineColour:                default_backing__hover_press__lineColour,
-                                            item__hover_press__lineThickness:             default_backing__hover_press__lineThickness,
-                                            item__hover_select__colour:                   default_backing__hover_select__colour,
-                                            item__hover_select__lineColour:               default_backing__hover_select__lineColour,
-                                            item__hover_select__lineThickness:            default_backing__hover_select__lineThickness,
-                                            item__hover_select_press__colour:             default_backing__hover_select_press__colour,
-                                            item__hover_select_press__lineColour:         default_backing__hover_select_press__lineColour,
-                                            item__hover_select_press__lineThickness:      default_backing__hover_select_press__lineThickness,
-                                            item__hover_glow__colour:                     default_backing__hover_glow__colour,
-                                            item__hover_glow__lineColour:                 default_backing__hover_glow__lineColour,
-                                            item__hover_glow__lineThickness:              default_backing__hover_glow__lineThickness,
-                                            item__hover_glow_press__colour:               default_backing__hover_glow_press__colour,
-                                            item__hover_glow_press__lineColour:           default_backing__hover_glow_press__lineColour,
-                                            item__hover_glow_press__lineThickness:        default_backing__hover_glow_press__lineThickness,
-                                            item__hover_glow_select__colour:              default_backing__hover_glow_select__colour,
-                                            item__hover_glow_select__lineColour:          default_backing__hover_glow_select__lineColour,
-                                            item__hover_glow_select__lineThickness:       default_backing__hover_glow_select__lineThickness,
-                                            item__hover_glow_select_press__colour:        default_backing__hover_glow_select_press__colour,
-                                            item__hover_glow_select_press__lineColour:    default_backing__hover_glow_select_press__lineColour,
-                                            item__hover_glow_select_press__lineThickness: default_backing__hover_glow_select_press__lineThickness,
+                                            item__off__colour:                            default_item__off__colour,
+                                            item__off__lineColour:                        default_item__off__lineColour,
+                                            item__off__lineThickness:                     default_item__off__lineThickness,
+                                            item__up__colour:                             default_item__up__colour,
+                                            item__up__lineColour:                         default_item__up__lineColour,
+                                            item__up__lineThickness:                      default_item__up__lineThickness,
+                                            item__press__colour:                          default_item__press__colour,
+                                            item__press__lineColour:                      default_item__press__lineColour,
+                                            item__press__lineThickness:                   default_item__press__lineThickness,
+                                            item__select__colour:                         default_item__select__colour,
+                                            item__select__lineColour:                     default_item__select__lineColour,
+                                            item__select__lineThickness:                  default_item__select__lineThickness,
+                                            item__select_press__colour:                   default_item__select_press__colour,
+                                            item__select_press__lineColour:               default_item__select_press__lineColour,
+                                            item__select_press__lineThickness:            default_item__select_press__lineThickness,
+                                            item__glow__colour:                           default_item__glow__colour,
+                                            item__glow__lineColour:                       default_item__glow__lineColour,
+                                            item__glow__lineThickness:                    default_item__glow__lineThickness,
+                                            item__glow_press__colour:                     default_item__glow_press__colour,
+                                            item__glow_press__lineColour:                 default_item__glow_press__lineColour,
+                                            item__glow_press__lineThickness:              default_item__glow_press__lineThickness,
+                                            item__glow_select__colour:                    default_item__glow_select__colour,
+                                            item__glow_select__lineColour:                default_item__glow_select__lineColour,
+                                            item__glow_select__lineThickness:             default_item__glow_select__lineThickness,
+                                            item__glow_select_press__colour:              default_item__glow_select_press__colour,
+                                            item__glow_select_press__lineColour:          default_item__glow_select_press__lineColour,
+                                            item__glow_select_press__lineThickness:       default_item__glow_select_press__lineThickness,
+                                            item__hover__colour:                          default_item__hover__colour,
+                                            item__hover__lineColour:                      default_item__hover__lineColour,
+                                            item__hover__lineThickness:                   default_item__hover__lineThickness,
+                                            item__hover_press__colour:                    default_item__hover_press__colour,
+                                            item__hover_press__lineColour:                default_item__hover_press__lineColour,
+                                            item__hover_press__lineThickness:             default_item__hover_press__lineThickness,
+                                            item__hover_select__colour:                   default_item__hover_select__colour,
+                                            item__hover_select__lineColour:               default_item__hover_select__lineColour,
+                                            item__hover_select__lineThickness:            default_item__hover_select__lineThickness,
+                                            item__hover_select_press__colour:             default_item__hover_select_press__colour,
+                                            item__hover_select_press__lineColour:         default_item__hover_select_press__lineColour,
+                                            item__hover_select_press__lineThickness:      default_item__hover_select_press__lineThickness,
+                                            item__hover_glow__colour:                     default_item__hover_glow__colour,
+                                            item__hover_glow__lineColour:                 default_item__hover_glow__lineColour,
+                                            item__hover_glow__lineThickness:              default_item__hover_glow__lineThickness,
+                                            item__hover_glow_press__colour:               default_item__hover_glow_press__colour,
+                                            item__hover_glow_press__lineColour:           default_item__hover_glow_press__lineColour,
+                                            item__hover_glow_press__lineThickness:        default_item__hover_glow_press__lineThickness,
+                                            item__hover_glow_select__colour:              default_item__hover_glow_select__colour,
+                                            item__hover_glow_select__lineColour:          default_item__hover_glow_select__lineColour,
+                                            item__hover_glow_select__lineThickness:       default_item__hover_glow_select__lineThickness,
+                                            item__hover_glow_select_press__colour:        default_item__hover_glow_select_press__colour,
+                                            item__hover_glow_select_press__lineColour:    default_item__hover_glow_select_press__lineColour,
+                                            item__hover_glow_select_press__lineThickness: default_item__hover_glow_select_press__lineThickness,
                                         },
                                         space:{
                                             height:space_height,
@@ -31842,8 +32758,9 @@
                                             lineMux:textBreak_lineMux,
                                         },
                                         checkbox:{},
-                                        item:{},
+                                        button:{},
                                         list:{
+                                            heightLimit:-1,
                                             arrowMux:subList_arrowMux,
                                             space_height:space_height,
                                             break_height:break_height,
@@ -31859,13 +32776,18 @@
                                     function generateListContent(listItems=[]){
                                         function def(i,t){ return i[t]==undefined ? (style[i.type][t]==undefined ? style.default[t] : style[i.type][t]) : i[t]; }
                             
-                                        var output = {elements:[], calculatedListHeight:0};
-                                        var xOffset = style.default.widthLimit < 0 ? 0 : (style.default.widthLimit-style.default.width)/2;
+                                        const output = {elements:[], calculatedListHeight:0};
+                                        const xOffset = style.default.widthLimit < 0 ? 0 : (style.default.widthLimit-style.default.width)/2;
                             
                                         listItems.forEach((item,index) => {
                                             if(index != 0){output.calculatedListHeight += style.default.itemSpacingHeight;}
                             
-                                            var newItem;
+                                            if(item.type == 'item'){
+                                                console.warn('"item" item isn\'t an item type you can use for an item. Switching to "button" which is probably what you were looking for');
+                                                item.type = 'button';
+                                            }
+                            
+                                            let newItem;
                                             if(item.type == 'text'){
                                                 newItem = self.list.itemTypes.text(
                                                     index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
@@ -31874,7 +32796,7 @@
                                                     def(item,'interCharacterSpacing'), def(item,'item__up__colour'),
                                                 );
                                             }else if(item.type == 'space'){
-                                                newItem = self.list.itemTypes.space(index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height') );
+                                                newItem = self.list.itemTypes.space(index, xOffset, output.calculatedListHeight, def(item,'height') );
                                             }else if(item.type == 'break'){
                                                 newItem = self.list.itemTypes.break(
                                                     index, xOffset, output.calculatedListHeight, def(item,'width'), 
@@ -31968,8 +32890,8 @@
                             
                                                     item.updateFunction, item.onclickFunction,
                                                 );
-                                            }else if(item.type == 'item'){
-                                                newItem = self.list.itemTypes.item(
+                                            }else if(item.type == 'button'){
+                                                newItem = self.list.itemTypes.button(
                                                     index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
                                                     (item.text?item.text:item.text_left), item.text_centre, item.text_right,
                                                     def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'),
@@ -32057,7 +32979,7 @@
                                                     function(obj,event){ object.select(index,false,event,false); },
                                                 );
                                             }else if(item.type == 'list'){
-                                                var newItem = self.list.itemTypes.list(
+                                                newItem = self.list.itemTypes.list(
                                                     subListGroup,
                                                     index, xOffset, output.calculatedListHeight,
                                                 
@@ -32153,7 +33075,7 @@
                                                         item.interactable,
                                                 
                                                         item.itemWidth,
-                                                        -1,
+                                                        def(item,'heightLimit'),
                                                         def(item,'widthLimit'),
                                                         def(item,'backgroundColour'),
                                                         def(item,'backgroundMarkingColour'),
@@ -32177,6 +33099,7 @@
                                                         item.onpositionchange,
                                                 );
                                             }else{ //unknown item
+                                                output.calculatedListHeight -= style.default.itemSpacingHeight;
                                                 console.warn('interface part "list" :: error : unknown list item type:',item);
                                                 return;
                                             }
@@ -32200,12 +33123,15 @@
                                         calculatedListHeight = results.calculatedListHeight;
                                         itemArray = results.elements;
                             
-                                        backing.width(style.default.widthLimit<0?style.default.width:style.default.widthLimit);
-                                        backing.height(style.default.heightLimit<0?calculatedListHeight:style.default.heightLimit);
-                                        cover.width(style.default.widthLimit<0?style.default.width:style.default.widthLimit);
-                                        cover.height(style.default.heightLimit<0?calculatedListHeight:style.default.heightLimit);
-                                        stencil.width(style.default.widthLimit<0?style.default.width:style.default.widthLimit);
-                                        stencil.height(style.default.heightLimit<0?calculatedListHeight:style.default.heightLimit);
+                                        const widthToUse = style.default.widthLimit < 0 ? style.default.width : style.default.widthLimit;
+                                        backing.width(widthToUse);
+                                        cover.width(widthToUse);
+                                        stencil.width(widthToUse);
+                            
+                                        const heightToUse = style.default.heightLimit < 0 || style.default.heightLimit > calculatedListHeight ? calculatedListHeight : style.default.heightLimit;
+                                        backing.height(heightToUse);
+                                        cover.height(heightToUse);
+                                        stencil.height(heightToUse);
                             
                                         itemCollection.clear();
                                         results.elements.forEach(element => itemCollection.append(element));
@@ -32213,38 +33139,38 @@
                             
                                 //elements 
                                     //main
-                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                        const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
                                         //backing
-                                            var backing = interfacePart.builder('basic','rectangle','backing',{colour:style.default.backgroundColour});
+                                            const backing = interfacePart.builder('basic','rectangle','backing',{colour:style.default.backgroundColour});
                                             object.append(backing);
                                         //stenciled group
-                                            var stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
+                                            const stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
                                             object.append(stenciledGroup);
                                         //sub list group
-                                            var subListGroup = interfacePart.builder('basic','group','subListGroup');
+                                            const subListGroup = interfacePart.builder('basic','group','subListGroup');
                                             object.append(subListGroup);
                                         //item collection
-                                            var itemCollection = interfacePart.builder('basic','group','itemCollection');
+                                            const itemCollection = interfacePart.builder('basic','group','itemCollection');
                                             stenciledGroup.append(itemCollection);
                                         //cover
-                                            var cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
+                                            const cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
                                             stenciledGroup.append(cover);
                                         //stencil
-                                            var stencil = interfacePart.builder('basic','rectangle','stencil');
+                                            const stencil = interfacePart.builder('basic','rectangle','stencil');
                                             stenciledGroup.stencil(stencil);
                                             stenciledGroup.clipActive(true);
                             
                                 //interaction
-                                    cover.onwheel = function(x,y,event){
+                                    cover.attachCallback('onwheel', function(x,y,event){
                                         if(!interactable || !active){return;}
-                                        var move = event.deltaY/100;
+                                        const move = -event.wheelDelta/100;
                                         object.position( object.position() + move/10 );
                                         itemArray.forEach(item => {
                                             if(item.forceMouseLeave != undefined){
                                                 item.forceMouseLeave();
                                             }
                                         });
-                                    };
+                                    } );
                             
                                 //controls
                                     object.position = function(a,update=true){
@@ -32254,7 +33180,7 @@
                                         state.position = a;
                             
                                         if(style.default.heightLimit < 0){return;}
-                                        var movementSpace = calculatedListHeight - style.default.heightLimit;
+                                        const movementSpace = calculatedListHeight - style.default.heightLimit;
                                         itemCollection.y( -a*movementSpace );
                                         
                                         if(update&&this.onpositionchange){this.onpositionchange(a);}
@@ -32268,7 +33194,7 @@
                                                     if(value && !state.selectedItems.includes(a) ){
                                                         //deselect all other items
                                                             while( state.selectedItems.length > 0 ){
-                                                                itemCollection.children()[state.selectedItems[0]].select(false,undefined,undefined);
+                                                                itemCollection.getChildren()[state.selectedItems[0]].select(false,undefined,undefined);
                                                                 state.selectedItems.shift();
                                                             }
                             
@@ -32291,16 +33217,16 @@
                                                         //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
                                                             a = itemCollection.getChildIndexByName(a);
                             
-                                                            var min = Math.min(state.lastNonShiftClicked, a);
-                                                            var max = Math.max(state.lastNonShiftClicked, a);
-                                                            for(var b = 0; b < itemArray.length; b++){
+                                                            let min = Math.min(state.lastNonShiftClicked, a);
+                                                            let max = Math.max(state.lastNonShiftClicked, a);
+                                                            for(let b = 0; b < itemArray.length; b++){
                                                                 if( itemArray[b].name == ''+min ){min = b;}
                                                                 if( itemArray[b].name == ''+max ){max = b;}
                                                             }
                             
                                                         //deselect all outside the range
                                                             state.selectedItems = [];
-                                                            for(var b = 0; b < itemArray.length; b++){
+                                                            for(let b = 0; b < itemArray.length; b++){
                                                                 if( b > max || b < min ){
                                                                     if( itemArray[b].select != undefined && itemArray[b].select() ){
                                                                         itemArray[b].select(false,undefined,false);
@@ -32309,7 +33235,7 @@
                                                             }
                             
                                                         //select those within the range (that aren't already selected)
-                                                            for(var b = min; b <= max; b++){
+                                                            for(let b = min; b <= max; b++){
                                                                 if( itemArray[b].select != undefined && !itemArray[b].select() ){
                                                                     itemArray[b].select(true,undefined,false);
                                                                     state.selectedItems.push(b);
@@ -32329,6 +33255,9 @@
                                     object.add = function(item){
                                         list.push(item);
                                         refresh();
+                                    };
+                                    object.getList = function(){
+                                        return itemArray;
                                     };
                                     object.remove = function(a){
                                         list.splice(a,1);
@@ -32368,33 +33297,38 @@
                                 return object;
                             };
                             this.list.itemTypes = {};
-                            this.list.itemTypes.space = function( index, x, y, width, height ){
-                                var newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
+                            this.list.itemTypes.space = function( index, x, y, height ){
+                                dev.log.partControl('.list.itemTypes.space(...)'); //#development
+                            
+                                const newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
                                 return {item:newItem,height:height};
                             };
                             this.list.itemTypes.break = function( index, x, y, width, height, colour, lineMux){
-                                var newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
-                                var rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:colour });
+                                dev.log.partControl('.list.itemTypes.break(...)'); //#development
+                            
+                                const newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
+                                const rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:colour });
                                 newItem.append(rectangle);
                             
                                 return {item:newItem,height:height};
                             };
                             this.list.itemTypes.textbreak = function( index, x, y, width, height, text, fontColour, printingMode, font, spacing, interCharacterSpacing, textToLineSpacing, textHeightMux, lineMux ){
-                                var newItem = interfacePart.builder('basic','group',index+'_textbreak',{x:x,y:y});
-                                var rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:fontColour });
+                                dev.log.partControl('.list.itemTypes.textbreak(...)'); //#development
+                            
+                                const newItem = interfacePart.builder('basic','group',index+'_textbreak',{x:x,y:y});
+                                const rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:fontColour });
                                 newItem.append(rectangle);
-                                var text = interfacePart.builder('basic','text', 'text', {
+                                const textElement = interfacePart.builder('basic','text', 'text', {
                                     y:height/2, width:height*textHeightMux, height:height*textHeightMux, 
                                     printingMode:printingMode,
                                     text:text, font:font, colour:fontColour, spacing:spacing, 
                                     interCharacterSpacing:interCharacterSpacing
                                 });
-                                text.onFontUpdateCallback = function(){
-                                    rectangle.x( text.resultingWidth() + textToLineSpacing );
-                                    rectangle.width( width - text.resultingWidth() - textToLineSpacing );
-                                };
-                                text.onFontUpdateCallback();
-                                newItem.append(text);
+                                textElement.attachCallback('onFontUpdateCallback', function(){
+                                    rectangle.x( textElement.resultingWidth() + textToLineSpacing );
+                                    rectangle.width( width - textElement.resultingWidth() - textToLineSpacing );
+                                } );
+                                newItem.append(textElement);
                             
                                 return {item:newItem,height:height};
                             }
@@ -32403,12 +33337,14 @@
                                 text_left, text_centre, text_right,
                                 size, font, fontColour, spacing, interCharacterSpacing, itemColour
                             ){
-                                var newItem = interfacePart.builder('basic','group',index+'_text',{x:x,y:y});
-                                var backing = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:itemColour });
+                                dev.log.partControl('.list.itemTypes.text(...)'); //#development
+                            
+                                const newItem = interfacePart.builder('basic','group',index+'_text',{x:x,y:y});
+                                const backing = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:itemColour });
                                 newItem.append(backing);
                             
                                 if(text_left != undefined){
-                                    var text = interfacePart.builder('basic','text', 'text_left', {
+                                    const text = interfacePart.builder('basic','text', 'text_left', {
                                         x:itemHorizontalPadding, y:height/2, width:size, height:size, 
                                         printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'middle'},
                                         text:text_left, font:font, colour:fontColour, spacing:spacing, 
@@ -32417,7 +33353,7 @@
                                     newItem.append(text);
                                 }
                                 if(text_centre != undefined){
-                                    var text = interfacePart.builder('basic','text', 'text_centre', {
+                                    const text = interfacePart.builder('basic','text', 'text_centre', {
                                         x:width/2, y:height/2, width:size, height:size, 
                                         printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
                                         text:text_centre, font:font, colour:fontColour, spacing:spacing, 
@@ -32426,7 +33362,7 @@
                                     newItem.append(text);
                                 }
                                 if(text_right != undefined){
-                                    var text = interfacePart.builder('basic','text', 'text_right', {
+                                    const text = interfacePart.builder('basic','text', 'text_right', {
                                         x:width-itemHorizontalPadding, y:height/2, width:size, height:size, 
                                         printingMode:{widthCalculation:'absolute', horizontal:'right', vertical:'middle'},
                                         text:text_right, font:font, colour:fontColour, spacing:spacing, 
@@ -32515,9 +33451,11 @@
                             
                                 updateFunction, onclickFunction,
                             ){
-                                var newItem = interfacePart.builder('basic','group',index+'_checkbox',{x:x,y:y});
+                                dev.log.partControl('.list.itemTypes.checkbox(...)'); //#development
+                            
+                                const newItem = interfacePart.builder('basic','group',index+'_checkbox',{x:x,y:y});
                                     newItem.state = false;
-                                var button = interfacePart.builder('control', 'button_rectangle', 'button', {
+                                const button = interfacePart.builder('control', 'button_rectangle', 'button', {
                                     width:width, height:height,
                                     text_left:text_left,
                                     text_centre:text_centre,
@@ -32604,16 +33542,16 @@
                                     },
                                 });
                                 newItem.append(button);
-                                var tick = interfacePart.builder('basic', 'circle', 'tick', {
+                                const tick = interfacePart.builder('basic', 'circle', 'tick', {
                                     x:width-height/2, y:height/2, radius:height/4, colour:{r:0,g:0,b:0,a:0},
                                 });
                                 newItem.append(tick);
-                                    var tickState = { hovering:false, glowing:false, selected:false, pressed:false };
+                                    const tickState = { hovering:false, glowing:false, selected:false, pressed:false };
                                     function updateTickColour(){
-                                        if(!newItem.state){ tick.colour = {r:0,g:0,b:0,a:0}; return; }
-                                        if(!active){ tick.colour = text_colour__off; return; }
+                                        if(!newItem.state){ tick.colour({r:0,g:0,b:0,a:0}); return; }
+                                        if(!active){ tick.colour(text_colour__off); return; }
                             
-                                        var styles = [
+                                        const styles = [
                                             text_colour__up,
                                             text_colour__press,
                                             text_colour__select,
@@ -32635,8 +33573,8 @@
                                         if(!hoverable && tickState.hovering ){ tickState.hovering = false; }
                                         if(!selectable && tickState.selected ){ tickState.selected = false; }
                             
-                                        var i = tickState.hovering*8 + tickState.glowing*4 + tickState.selected*2 + (pressable && tickState.pressed)*1;
-                                        tick.colour = styles[i];
+                                        const i = tickState.hovering*8 + tickState.glowing*4 + tickState.selected*2 + (pressable && tickState.pressed)*1;
+                                        tick.colour(styles[i]);
                                     } updateTickColour();
                                     button.onenter = function(){tickState.hovering = true; updateTickColour();};
                                     button.onleave = function(){tickState.hovering = false; updateTickColour();};
@@ -32662,7 +33600,7 @@
                             
                                 return {item:newItem,height:height};
                             };
-                            this.list.itemTypes.item = function(
+                            this.list.itemTypes.button = function(
                                 index, x, y, width, height, itemHorizontalPadding, 
                                 text_left, text_centre, text_right,
                                 fontSize, font, spacing, interCharacterSpacing,
@@ -32746,7 +33684,9 @@
                                 onselect,
                                 ondeselect,
                             ){
-                                var button_rectangle = interfacePart.builder('control', 'button_rectangle', index+'_item', {
+                                dev.log.partControl('.list.itemTypes.button(...)'); //#development
+                            
+                                const button_rectangle = interfacePart.builder('control', 'button_rectangle', index+'_button', {
                                     x:x,y:y,
                                     width:width, height:height,
                                     text_left:text_left,
@@ -32957,8 +33897,10 @@
                                     onselection,
                                     onpositionchange,
                             ){
-                                var newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
-                                var button = interfacePart.builder('control', 'button_rectangle', 'button', {
+                                dev.log.partControl('.list.itemTypes.list(...)'); //#development
+                            
+                                const newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
+                                const button = interfacePart.builder('control', 'button_rectangle', 'button', {
                                     width:width, height:height,
                                     text_left:text_left,
                                     text_centre:text_centre,
@@ -33045,7 +33987,7 @@
                                     },
                                 });
                                 newItem.append(button);
-                                var arrow = interfacePart.builder('basic', 'polygon', 'arrow', {
+                                const arrow = interfacePart.builder('basic', 'polygon', 'arrow', {
                                     pointsAsXYArray:[ 
                                         {x:width-fontSize*arrowMux-itemHorizontalPadding,y:(height-fontSize*arrowMux)/2}, 
                                         {x:width-fontSize*arrowMux-itemHorizontalPadding,y:(height+fontSize*arrowMux)/2}, 
@@ -33054,11 +33996,11 @@
                                     colour:text_colour__up,
                                 });
                                 newItem.append(arrow);
-                                    var arrowState = { hovering:false, glowing:false, selected:false, pressed:false };
+                                    const arrowState = { hovering:false, glowing:false, selected:false, pressed:false };
                                     function updateArrowColour(){
-                                        if(!active){ arrow.colour = text_colour__off; return; }
+                                        if(!active){ arrow.colour(text_colour__off); return; }
                             
-                                        var styles = [
+                                        const styles = [
                                             text_colour__up,
                                             text_colour__press,
                                             text_colour__select,
@@ -33079,15 +34021,15 @@
                             
                                         if(!hoverable && arrowState.hovering ){ arrowState.hovering = false; }
                             
-                                        var i = arrowState.hovering*8 + arrowState.glowing*4 + arrowState.selected*2 + (pressable && arrowState.pressed)*1;
-                                        arrow.colour = styles[i];
+                                        const i = arrowState.hovering*8 + arrowState.glowing*4 + arrowState.selected*2 + (pressable && arrowState.pressed)*1;
+                                        arrow.colour(styles[i]);
                                     } updateArrowColour();
                                     button.onenter = function(){arrowState.hovering = true; updateArrowColour();};
                                     button.onleave = function(){arrowState.hovering = false; updateArrowColour();};
                                     button.onpress = function(){arrowState.pressed = true; updateArrowColour();};
                                     button.onrelease = function(){arrowState.pressed = false; updateArrowColour();};
                             
-                                var sublist;
+                                let sublist;
                             
                                 newItem.open = function(yOffset){
                                     if(this.isOpen){return;}
@@ -33132,57 +34074,57 @@
                                         default_text_colour__hover_glow_select:text_colour__hover_glow_select,
                                         default_text_colour__hover_glow_select_press:text_colour__hover_glow_select_press,
                                   
-                                        default_backing__off__colour:item__off__colour,
-                                        default_backing__off__lineColour:item__off__lineColour,
-                                        default_backing__off__lineThickness:item__off__lineThickness,
-                                        default_backing__up__colour:item__up__colour,
-                                        default_backing__up__lineColour:item__up__lineColour,
-                                        default_backing__up__lineThickness:item__up__lineThickness,
-                                        default_backing__press__colour:item__press__colour,
-                                        default_backing__press__lineColour:item__press__lineColour,
-                                        default_backing__press__lineThickness:item__press__lineThickness,
-                                        default_backing__select__colour:item__select__colour,
-                                        default_backing__select__lineColour:item__select__lineColour,
-                                        default_backing__select__lineThickness:item__select__lineThickness,
-                                        default_backing__select_press__colour:item__select_press__colour,
-                                        default_backing__select_press__lineColour:item__select_press__lineColour,
-                                        default_backing__select_press__lineThickness:item__select_press__lineThickness,
-                                        default_backing__glow__colour:item__glow__colour,
-                                        default_backing__glow__lineColour:item__glow__lineColour,
-                                        default_backing__glow__lineThickness:item__glow__lineThickness,
-                                        default_backing__glow_press__colour:item__glow_press__colour,
-                                        default_backing__glow_press__lineColour:item__glow_press__lineColour,
-                                        default_backing__glow_press__lineThickness:item__glow_press__lineThickness,
-                                        default_backing__glow_select__colour:item__glow_select__colour,
-                                        default_backing__glow_select__lineColour:item__glow_select__lineColour,
-                                        default_backing__glow_select__lineThickness:item__glow_select__lineThickness,
-                                        default_backing__glow_select_press__colour:item__glow_select_press__colour,
-                                        default_backing__glow_select_press__lineColour:item__glow_select_press__lineColour,
-                                        default_backing__glow_select_press__lineThickness:item__glow_select_press__lineThickness,
-                                        default_backing__hover__colour:item__hover__colour,
-                                        default_backing__hover__lineColour:item__hover__lineColour,
-                                        default_backing__hover__lineThickness:item__hover__lineThickness,
-                                        default_backing__hover_press__colour:item__hover_press__colour,
-                                        default_backing__hover_press__lineColour:item__hover_press__lineColour,
-                                        default_backing__hover_press__lineThickness:item__hover_press__lineThickness,
-                                        default_backing__hover_select__colour:item__hover_select__colour,
-                                        default_backing__hover_select__lineColour:item__hover_select__lineColour,
-                                        default_backing__hover_select__lineThickness:item__hover_select__lineThickness,
-                                        default_backing__hover_select_press__colour:item__hover_select_press__colour,
-                                        default_backing__hover_select_press__lineColour:item__hover_select_press__lineColour,
-                                        default_backing__hover_select_press__lineThickness:item__hover_select_press__lineThickness,
-                                        default_backing__hover_glow__colour:item__hover_glow__colour,
-                                        default_backing__hover_glow__lineColour:item__hover_glow__lineColour,
-                                        default_backing__hover_glow__lineThickness:item__hover_glow__lineThickness,
-                                        default_backing__hover_glow_press__colour:item__hover_glow_press__colour,
-                                        default_backing__hover_glow_press__lineColour:item__hover_glow_press__lineColour,
-                                        default_backing__hover_glow_press__lineThickness:item__hover_glow_press__lineThickness,
-                                        default_backing__hover_glow_select__colour:item__hover_glow_select__colour,
-                                        default_backing__hover_glow_select__lineColour:item__hover_glow_select__lineColour,
-                                        default_backing__hover_glow_select__lineThickness:item__hover_glow_select__lineThickness,
-                                        default_backing__hover_glow_select_press__colour:item__hover_glow_select_press__colour,
-                                        default_backing__hover_glow_select_press__lineColour:item__hover_glow_select_press__lineColour,
-                                        default_backing__hover_glow_select_press__lineThickness:item__hover_glow_select_press__lineThickness,
+                                        default_item__off__colour:item__off__colour,
+                                        default_item__off__lineColour:item__off__lineColour,
+                                        default_item__off__lineThickness:item__off__lineThickness,
+                                        default_item__up__colour:item__up__colour,
+                                        default_item__up__lineColour:item__up__lineColour,
+                                        default_item__up__lineThickness:item__up__lineThickness,
+                                        default_item__press__colour:item__press__colour,
+                                        default_item__press__lineColour:item__press__lineColour,
+                                        default_item__press__lineThickness:item__press__lineThickness,
+                                        default_item__select__colour:item__select__colour,
+                                        default_item__select__lineColour:item__select__lineColour,
+                                        default_item__select__lineThickness:item__select__lineThickness,
+                                        default_item__select_press__colour:item__select_press__colour,
+                                        default_item__select_press__lineColour:item__select_press__lineColour,
+                                        default_item__select_press__lineThickness:item__select_press__lineThickness,
+                                        default_item__glow__colour:item__glow__colour,
+                                        default_item__glow__lineColour:item__glow__lineColour,
+                                        default_item__glow__lineThickness:item__glow__lineThickness,
+                                        default_item__glow_press__colour:item__glow_press__colour,
+                                        default_item__glow_press__lineColour:item__glow_press__lineColour,
+                                        default_item__glow_press__lineThickness:item__glow_press__lineThickness,
+                                        default_item__glow_select__colour:item__glow_select__colour,
+                                        default_item__glow_select__lineColour:item__glow_select__lineColour,
+                                        default_item__glow_select__lineThickness:item__glow_select__lineThickness,
+                                        default_item__glow_select_press__colour:item__glow_select_press__colour,
+                                        default_item__glow_select_press__lineColour:item__glow_select_press__lineColour,
+                                        default_item__glow_select_press__lineThickness:item__glow_select_press__lineThickness,
+                                        default_item__hover__colour:item__hover__colour,
+                                        default_item__hover__lineColour:item__hover__lineColour,
+                                        default_item__hover__lineThickness:item__hover__lineThickness,
+                                        default_item__hover_press__colour:item__hover_press__colour,
+                                        default_item__hover_press__lineColour:item__hover_press__lineColour,
+                                        default_item__hover_press__lineThickness:item__hover_press__lineThickness,
+                                        default_item__hover_select__colour:item__hover_select__colour,
+                                        default_item__hover_select__lineColour:item__hover_select__lineColour,
+                                        default_item__hover_select__lineThickness:item__hover_select__lineThickness,
+                                        default_item__hover_select_press__colour:item__hover_select_press__colour,
+                                        default_item__hover_select_press__lineColour:item__hover_select_press__lineColour,
+                                        default_item__hover_select_press__lineThickness:item__hover_select_press__lineThickness,
+                                        default_item__hover_glow__colour:item__hover_glow__colour,
+                                        default_item__hover_glow__lineColour:item__hover_glow__lineColour,
+                                        default_item__hover_glow__lineThickness:item__hover_glow__lineThickness,
+                                        default_item__hover_glow_press__colour:item__hover_glow_press__colour,
+                                        default_item__hover_glow_press__lineColour:item__hover_glow_press__lineColour,
+                                        default_item__hover_glow_press__lineThickness:item__hover_glow_press__lineThickness,
+                                        default_item__hover_glow_select__colour:item__hover_glow_select__colour,
+                                        default_item__hover_glow_select__lineColour:item__hover_glow_select__lineColour,
+                                        default_item__hover_glow_select__lineThickness:item__hover_glow_select__lineThickness,
+                                        default_item__hover_glow_select_press__colour:item__hover_glow_select_press__colour,
+                                        default_item__hover_glow_select_press__lineColour:item__hover_glow_select_press__lineColour,
+                                        default_item__hover_glow_select_press__lineThickness:item__hover_glow_select_press__lineThickness,
                                     
                                         subList_arrowMux:arrowMux,
                                         space_height:space_height,
@@ -33212,7 +34154,7 @@
                                 };
                             
                                 button.onselect = function(){
-                                    var yOffset = buttonClick(true);
+                                    const yOffset = buttonClick(true);
                                     newItem.open(yOffset);
                                     arrowState.selected = true; 
                                     updateArrowColour();
@@ -33268,57 +34210,57 @@
                                     data.default_text_colour__hover_glow_select,
                                     data.default_text_colour__hover_glow_select_press,
                                 
-                                    data.default_backing__off__colour,
-                                    data.default_backing__off__lineColour,
-                                    data.default_backing__off__lineThickness,
-                                    data.default_backing__up__colour,
-                                    data.default_backing__up__lineColour,
-                                    data.default_backing__up__lineThickness,
-                                    data.default_backing__press__colour,
-                                    data.default_backing__press__lineColour,
-                                    data.default_backing__press__lineThickness,
-                                    data.default_backing__select__colour,
-                                    data.default_backing__select__lineColour,
-                                    data.default_backing__select__lineThickness,
-                                    data.default_backing__select_press__colour,
-                                    data.default_backing__select_press__lineColour,
-                                    data.default_backing__select_press__lineThickness,
-                                    data.default_backing__glow__colour,
-                                    data.default_backing__glow__lineColour,
-                                    data.default_backing__glow__lineThickness,
-                                    data.default_backing__glow_press__colour,
-                                    data.default_backing__glow_press__lineColour,
-                                    data.default_backing__glow_press__lineThickness,
-                                    data.default_backing__glow_select__colour,
-                                    data.default_backing__glow_select__lineColour,
-                                    data.default_backing__glow_select__lineThickness,
-                                    data.default_backing__glow_select_press__colour,
-                                    data.default_backing__glow_select_press__lineColour,
-                                    data.default_backing__glow_select_press__lineThickness,
-                                    data.default_backing__hover__colour,
-                                    data.default_backing__hover__lineColour,
-                                    data.default_backing__hover__lineThickness,
-                                    data.default_backing__hover_press__colour,
-                                    data.default_backing__hover_press__lineColour,
-                                    data.default_backing__hover_press__lineThickness,
-                                    data.default_backing__hover_select__colour,
-                                    data.default_backing__hover_select__lineColour,
-                                    data.default_backing__hover_select__lineThickness,
-                                    data.default_backing__hover_select_press__colour,
-                                    data.default_backing__hover_select_press__lineColour,
-                                    data.default_backing__hover_select_press__lineThickness,
-                                    data.default_backing__hover_glow__colour,
-                                    data.default_backing__hover_glow__lineColour,
-                                    data.default_backing__hover_glow__lineThickness,
-                                    data.default_backing__hover_glow_press__colour,
-                                    data.default_backing__hover_glow_press__lineColour,
-                                    data.default_backing__hover_glow_press__lineThickness,
-                                    data.default_backing__hover_glow_select__colour,
-                                    data.default_backing__hover_glow_select__lineColour,
-                                    data.default_backing__hover_glow_select__lineThickness,
-                                    data.default_backing__hover_glow_select_press__colour,
-                                    data.default_backing__hover_glow_select_press__lineColour,
-                                    data.default_backing__hover_glow_select_press__lineThickness,
+                                    data.default_item__off__colour,
+                                    data.default_item__off__lineColour,
+                                    data.default_item__off__lineThickness,
+                                    data.default_item__up__colour,
+                                    data.default_item__up__lineColour,
+                                    data.default_item__up__lineThickness,
+                                    data.default_item__press__colour,
+                                    data.default_item__press__lineColour,
+                                    data.default_item__press__lineThickness,
+                                    data.default_item__select__colour,
+                                    data.default_item__select__lineColour,
+                                    data.default_item__select__lineThickness,
+                                    data.default_item__select_press__colour,
+                                    data.default_item__select_press__lineColour,
+                                    data.default_item__select_press__lineThickness,
+                                    data.default_item__glow__colour,
+                                    data.default_item__glow__lineColour,
+                                    data.default_item__glow__lineThickness,
+                                    data.default_item__glow_press__colour,
+                                    data.default_item__glow_press__lineColour,
+                                    data.default_item__glow_press__lineThickness,
+                                    data.default_item__glow_select__colour,
+                                    data.default_item__glow_select__lineColour,
+                                    data.default_item__glow_select__lineThickness,
+                                    data.default_item__glow_select_press__colour,
+                                    data.default_item__glow_select_press__lineColour,
+                                    data.default_item__glow_select_press__lineThickness,
+                                    data.default_item__hover__colour,
+                                    data.default_item__hover__lineColour,
+                                    data.default_item__hover__lineThickness,
+                                    data.default_item__hover_press__colour,
+                                    data.default_item__hover_press__lineColour,
+                                    data.default_item__hover_press__lineThickness,
+                                    data.default_item__hover_select__colour,
+                                    data.default_item__hover_select__lineColour,
+                                    data.default_item__hover_select__lineThickness,
+                                    data.default_item__hover_select_press__colour,
+                                    data.default_item__hover_select_press__lineColour,
+                                    data.default_item__hover_select_press__lineThickness,
+                                    data.default_item__hover_glow__colour,
+                                    data.default_item__hover_glow__lineColour,
+                                    data.default_item__hover_glow__lineThickness,
+                                    data.default_item__hover_glow_press__colour,
+                                    data.default_item__hover_glow_press__lineColour,
+                                    data.default_item__hover_glow_press__lineThickness,
+                                    data.default_item__hover_glow_select__colour,
+                                    data.default_item__hover_glow_select__lineColour,
+                                    data.default_item__hover_glow_select__lineThickness,
+                                    data.default_item__hover_glow_select_press__colour,
+                                    data.default_item__hover_glow_select_press__lineColour,
+                                    data.default_item__hover_glow_select_press__lineThickness,
                                 
                                     data.subList_arrowMux,
                                     data.space_height,
@@ -33338,10 +34280,1689 @@
                                     data.onpositionchange,
                                 );
                             };
+                            this.sequencer = function(
+                                name='sequencer',
+                                x, y, width=300, height=100, angle=0, interactable=true,
+                                
+                                xCount=64, yCount=16,
+                                zoomLevel_x=1/1, zoomLevel_y=1/1,
+                            
+                                backingStyle={r:20/255,g:20/255,b:20/255,a:1},
+                                selectionAreaStyle={r:209/255,g:189/255,b:222/255,a:0.5},
+                            
+                                signalStyle_body=[
+                                    {colour:{r:138/255,g:138/255,b:138/255,a:0.6}, lineColour:{r:175/255,g:175/255,b:175/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:130/255,g:199/255,b:208/255,a:0.6}, lineColour:{r:130/255,g:199/255,b:208/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:129/255,g:209/255,b:173/255,a:0.6}, lineColour:{r:129/255,g:209/255,b:173/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:234/255,g:238/255,b:110/255,a:0.6}, lineColour:{r:234/255,g:238/255,b:110/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:249/255,g:178/255,b:103/255,a:0.6}, lineColour:{r:249/255,g:178/255,b:103/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:255/255,g: 69/255,b: 69/255,a:0.6}, lineColour:{r:255/255,g: 69/255,b: 69/255,a:0.95}, lineThickness:0.5},
+                                ],
+                                signalStyle_bodyGlow=[
+                                    {colour:{r:138/255,g:138/255,b:138/255,a:0.8}, lineColour:{r:175/255,g:175/255,b:175/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:130/255,g:199/255,b:208/255,a:0.8}, lineColour:{r:130/255,g:199/255,b:208/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:129/255,g:209/255,b:173/255,a:0.8}, lineColour:{r:129/255,g:209/255,b:173/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:234/255,g:238/255,b:110/255,a:0.8}, lineColour:{r:234/255,g:238/255,b:110/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:249/255,g:178/255,b:103/255,a:0.8}, lineColour:{r:249/255,g:178/255,b:103/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:255/255,g: 69/255,b: 69/255,a:0.8}, lineColour:{r:255/255,g: 69/255,b: 69/255,a:1}, lineThickness:0.5},
+                                ],    
+                                signalStyle_handle={r:200/255,g:0/255,b:0/255,a:0},
+                                signalStyle_handleWidth=3,
+                            
+                                horizontalStripStyle_pattern=[0,1],
+                                horizontalStripStyle_glow={colour:{r:120/255,g:120/255,b:120/255,a:0.8}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                horizontalStripStyle_styles=[
+                                    {colour:{r:120/255,g:120/255,b:120/255,a:0.5}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:100/255,g:100/255,b:100/255,a:0.0}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                ],
+                                verticalStripStyle_pattern=[0],
+                                verticalStripStyle_glow={colour:{r:229/255,g: 221/255,b: 112/255,a:0.25}, lineColour:{r:252/255,g:244/255,b:128/255,a:0.5}, lineThickness:0.5},
+                                verticalStripStyle_styles=[
+                                    {colour:{r:30/255,g:30/255,b:30/255,a:0.5}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                ],
+                            
+                                playheadStyle={r:240/255,g: 240/255,b: 240/255, a:1},
+                            
+                                onpan=function(data){},
+                                onchangeviewarea=function(data){},
+                                event=function(events){},
+                            ){
+                                dev.log.partControl('.sequencer(...)'); //#development
+                            
+                                const self = this;
+                            
+                                //settings
+                                    const viewport = {
+                                        totalSize:{
+                                            width:  width/zoomLevel_x,
+                                            height: height/zoomLevel_y,
+                                        },
+                                        viewposition: {x:0,y:0},
+                                        viewArea:{
+                                            topLeft:     {x:0, y:0},
+                                            bottomRight: {x:zoomLevel_x, y:zoomLevel_y},
+                                        }
+                                    };
+                                    const signals = {
+                                        step:1/1,
+                                        snapping: true,
+                                        defaultStrength: 0.5,
+                                        selectedSignals: [],
+                                        activeSignals: [],
+                                        signalRegistry: new _canvas_.library.structure.signalRegistry(xCount,yCount),
+                                    };
+                                    const loop = {
+                                        active:false, 
+                                        period:{
+                                            start:0, 
+                                            end:xCount
+                                        },
+                                    };
+                                    const playhead = {
+                                        present:false,
+                                        width:0.75,
+                                        invisibleHandleMux:4,
+                                        position:-1,
+                                        held:false,
+                                        automoveViewposition:false,
+                                    };
+                            
+                                //elements 
+                                    //main
+                                        const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //static backing
+                                        const backing = interfacePart.builder('basic','rectangle','backing',{width:width, height:height, colour:backingStyle});
+                                        object.append(backing);
+                                    //viewport stencil
+                                        const stencil = interfacePart.builder('basic','rectangle','stencil',{width:width, height:height});
+                                        object.stencil(stencil);
+                                        object.clipActive(true);
+                            
+                                    //workarea
+                                        const workarea = interfacePart.builder('basic','group','workarea');
+                                        object.append(workarea);
+                                        //moveable background
+                                            const backgroundDrawArea = interfacePart.builder('basic','group','backgroundDrawArea');
+                                            workarea.append(backgroundDrawArea);
+                                            const backgroundDrawArea_horizontal = interfacePart.builder('basic','group','backgroundDrawArea_horizontal');
+                                            backgroundDrawArea_horizontal.stopAttributeStartedExtremityUpdate = true;
+                                            backgroundDrawArea.append(backgroundDrawArea_horizontal);
+                                            const backgroundDrawArea_vertical = interfacePart.builder('basic','group','backgroundDrawArea_vertical');
+                                            backgroundDrawArea_vertical.stopAttributeStartedExtremityUpdate = true;
+                                            backgroundDrawArea.append(backgroundDrawArea_vertical);
+                                        //interaction pane back
+                                            const interactionPlane_back = interfacePart.builder('basic','rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:1,g:0,b:0,a:0}});
+                                            workarea.append(interactionPlane_back);
+                                            interactionPlane_back.onwheel = function(){};
+                                        //signal block area
+                                            const signalPane = interfacePart.builder('basic','group','signalPane');
+                                            workarea.append(signalPane);
+                                        //interaction pane front
+                                            const interactionPlane_front = interfacePart.builder('basic','rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
+                                            workarea.append(interactionPlane_front);
+                                            interactionPlane_front.onwheel = function(){};
+                                //internal
+                                    object.__calculationAngle = angle;
+                                    function currentMousePosition(x,y){
+                                        const offset = object.getOffset();
+                                        const delta = {
+                                            x: x - (backing.x()     + offset.x),
+                                            y: y - (backing.y()     + offset.y),
+                                            a: 0 - (backing.angle() + offset.angle),
+                                        };
+                                        const d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a );
+                            
+                                        return { x:d.x/backing.width(), y:d.y/backing.height() };
+                                    }
+                                    function viewportPosition2internalPosition(xy){
+                                        return {x: viewport.viewArea.topLeft.x + xy.x*zoomLevel_x, y:viewport.viewArea.topLeft.y + xy.y*zoomLevel_y};
+                                    }
+                                    function visible2coordinates(xy){
+                                        return {
+                                            x: zoomLevel_x*(xy.x - viewport.viewposition.x) + viewport.viewposition.x,
+                                            y: zoomLevel_y*(xy.y - viewport.viewposition.y) + viewport.viewposition.y,
+                                        };
+                                    }
+                                    function coordinates2lineposition(xy){
+                                        xy.y = Math.floor(xy.y*yCount);
+                                        if(xy.y >= yCount){xy.y = yCount-1;}
+                                    
+                                        xy.x = signals.snapping ? Math.round((xy.x*xCount)/signals.step)*signals.step : xy.x*xCount;
+                                        if(xy.x < 0){xy.x =0;}
+                                    
+                                        return {line:xy.y, position:xy.x};
+                                    }
+                                    function drawBackground(){
+                                        //horizontal strips
+                                            backgroundDrawArea_horizontal.clear();
+                                            for(let a = 0; a < yCount; a++){
+                                                const style = horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
+                                                const tmp = interfacePart.builder('basic','rectangleWithOutline', 'strip_horizontal_'+a,
+                                                    {
+                                                        x:0, y:a*(height/(yCount*zoomLevel_y)),
+                                                        width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
+                                                        colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                                                    }
+                                                );
+                                                tmp.stopAttributeStartedExtremityUpdate = true;
+                                                backgroundDrawArea_horizontal.append(tmp);
+                                            }
+                            
+                                        //vertical strips
+                                            backgroundDrawArea_vertical.clear();
+                                            for(let a = 0; a < xCount; a++){
+                                                const style = verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
+                                                const tmp = interfacePart.builder('basic','rectangleWithOutline', 'strip_vertical_'+a,
+                                                    {
+                                                        x:a*(width/(xCount*zoomLevel_x)), y:0,
+                                                        width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
+                                                        colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                                                    }
+                                                );
+                                                tmp.stopAttributeStartedExtremityUpdate = true;
+                                                backgroundDrawArea_vertical.append(tmp);
+                                            }
+                                    }
+                                    function setViewposition(x,y,update=true){
+                                        if(x == undefined && y == undefined){return viewport.viewposition;}
+                                        if(x == undefined || isNaN(x)){ x = viewport.viewposition.x; }
+                                        if(y == undefined || isNaN(y)){ y = viewport.viewposition.y; }
+                            
+                                        //make sure things are between 0 and 1
+                                            x = x<0?0:x; x = x>1?1:x;
+                                            y = y<0?0:y; y = y>1?1:y;
+                            
+                                        //perform transform
+                                            viewport.viewposition.x = x;
+                                            viewport.viewposition.y = y;
+                                            workarea.x( -viewport.viewposition.x*(viewport.totalSize.width - width) );
+                                            workarea.y( -viewport.viewposition.y*(viewport.totalSize.height - height) );
+                            
+                                        //update viewport.viewArea
+                                            viewport.viewArea = {
+                                                topLeft:     { x:x - zoomLevel_x*x,     y:y - zoomLevel_y*y     },
+                                                bottomRight: { x:x + zoomLevel_x*(1-x), y:y + zoomLevel_y*(1-y) },
+                                            };
+                            
+                                        //callback
+                                            if(update){
+                                                object.onpan(viewport.viewArea);
+                                            }
+                                    }
+                                    function adjustZoom(x,y){
+                                        dev.log.partControl('.sequencer::adjustZoom('+x+','+y+')'); //#development
+                                        
+                                        if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
+                                        const maxZoom = 0.01;
+                            
+                                        //(in a bid for speed, I've written the following code in an odd way, so that if both x and y scales are being changed, then
+                                        //all the elements will be adjusted together (instead of having to repeat resizings of shapes))
+                                        if(x != undefined && x != zoomLevel_x && y != undefined && y != zoomLevel_y ){
+                                            //make sure things are between 0.01 and 1
+                                                x = x<maxZoom?maxZoom:x; x = x>1?1:x;
+                                                y = y<maxZoom?maxZoom:y; y = y>1?1:y;
+                            
+                                            //update state
+                                                zoomLevel_x = x;
+                                                zoomLevel_y = y;
+                                                viewport.totalSize.width = width/zoomLevel_x;
+                                                viewport.totalSize.height = height/zoomLevel_y;
+                            
+                                            //update interactionPlane_back
+                                                interactionPlane_back.width( viewport.totalSize.width );
+                                                interactionPlane_back.height( viewport.totalSize.height );
+                            
+                                            //update interactionPlane_front
+                                                interactionPlane_front.width( viewport.totalSize.width );
+                                                interactionPlane_front.height( viewport.totalSize.height );
+                            
+                                            //update background strips
+                                                backgroundDrawArea_vertical.getChildren().forEach(function(item,index){
+                                                    item.x( index*(width/(xCount*zoomLevel_x)) );
+                                                    item.width( width/(xCount*zoomLevel_x) );
+                                                    item.height( viewport.totalSize.height );
+                                                });
+                                                backgroundDrawArea_horizontal.getChildren().forEach(function(item,index){
+                                                    item.y( index*(height/(yCount*zoomLevel_y)) );
+                                                    item.height( height/(yCount*zoomLevel_y) );
+                                                    item.width( viewport.totalSize.width );
+                                                });
+                            
+                                            //update signals
+                                                signalPane.getChildren().forEach( item => item.unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y)) );
+                            
+                                            //update playhead (if there is one)
+                                                if(playhead.present){
+                                                    workarea.getChildByName('playhead').getChildByName('main').height(viewport.totalSize.height);
+                                                    workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
+                                                    workarea.getChildByName('playhead').x( playhead.position*(viewport.totalSize.width/xCount) );
+                                            }
+                                        }else if( x != undefined && x != zoomLevel_x ){
+                                            //make sure things are between maxZoom and 1
+                                                x = x<maxZoom?maxZoom:x; x = x>1?1:x;
+                            
+                                            //update state
+                                                zoomLevel_x = x;
+                                                viewport.totalSize.width = width/zoomLevel_x;
+                            
+                                            //update interactionPlane_back
+                                                interactionPlane_back.width( viewport.totalSize.width );
+                                            //update interactionPlane_front
+                                                interactionPlane_front.width( viewport.totalSize.width );
+                            
+                                            //update background strips
+                                                backgroundDrawArea_vertical.getChildren().forEach(function(item,index){
+                                                    item.x( index*(width/(xCount*zoomLevel_x)) );
+                                                    item.width( width/(xCount*zoomLevel_x) );
+                                                });
+                                                backgroundDrawArea_horizontal.getChildren().forEach( item => item.width( viewport.totalSize.width ) );
+                            
+                                            //update signals
+                                                signalPane.getChildren().forEach( item => item.unit(width/(xCount*zoomLevel_x), undefined) );
+                            
+                                            //update playhead (if there is one)
+                                                if(playhead.present){
+                                                    workarea.getChildByName('playhead').x( playhead.position*(viewport.totalSize.width/xCount) );
+                                                }
+                                        }else if( y != undefined && y != zoomLevel_y ){
+                                            //make sure things are between maxZoom and 1
+                                                y = y<maxZoom?maxZoom:y; y = y>1?1:y;
+                            
+                                            //update state
+                                                zoomLevel_y = y;
+                                                viewport.totalSize.height = height/zoomLevel_y;
+                            
+                                            //update interactionPlane_back
+                                                interactionPlane_back.height( viewport.totalSize.height );
+                                            //update interactionPlane_front
+                                                interactionPlane_front.height( viewport.totalSize.height );
+                            
+                                            //update background strips
+                                                backgroundDrawArea_vertical.getChildren().forEach( item => item.height( viewport.totalSize.height ) );
+                                                backgroundDrawArea_horizontal.getChildren().forEach(function(item,index){
+                                                    item.y( index*(height/(yCount*zoomLevel_y)) );
+                                                    item.height( height/(yCount*zoomLevel_y) );
+                                                });
+                            
+                                            //update signals
+                                                signalPane.getChildren().forEach( item => item.unit(undefined, height/(yCount*zoomLevel_y)) );
+                            
+                                            //update playhead (if there is one)
+                                                if(playhead.present){
+                                                    workarea.getChildByName('playhead').getChildByName('main').height(viewport.totalSize.height);
+                                                    workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
+                                                }
+                                        }
+                                    }
+                                    function setViewArea(d,update=true){
+                                        //clean off input
+                                            if(d == undefined || (d.topLeft == undefined && d.bottomRight == undefined)){return viewport.viewArea;}
+                                            else{
+                                                if(d.topLeft == undefined){ d.topLeft = {x: viewport.viewArea.topLeft.x, y: viewport.viewArea.topLeft.y}; }
+                                                else{
+                                                    if(d.topLeft.x == undefined){ d.topLeft.x = viewport.viewArea.topLeft.x; }
+                                                    if(d.topLeft.y == undefined){ d.topLeft.y = viewport.viewArea.topLeft.y; }
+                                                }
+                                                if(d.bottomRight == undefined){ d.bottomRight = {x: viewport.bottomRight.topLeft.x, y: viewport.bottomRight.topLeft.ys}; }
+                                                else{
+                                                    if(d.bottomRight.x == undefined){ d.bottomRight.x = viewport.viewArea.bottomRight.x; }
+                                                    if(d.bottomRight.y == undefined){ d.bottomRight.y = viewport.viewArea.bottomRight.y; }
+                                                }
+                                            }
+                            
+                                        //first adjust the zoom, if the distance between the areas changed
+                                            const x = (viewport.viewArea.bottomRight.x-viewport.viewArea.topLeft.x) != (d.bottomRight.x-d.topLeft.x);
+                                            const y = (d.bottomRight.y-d.topLeft.y)!=(viewport.viewArea.bottomRight.y-viewport.viewArea.topLeft.y);
+                                            
+                                            if(x && y){ adjustZoom( (d.bottomRight.x-d.topLeft.x),(d.bottomRight.y-d.topLeft.y) ); }
+                                            else if(x){ adjustZoom( (d.bottomRight.x-d.topLeft.x),undefined ); }
+                                            else if(y){ adjustZoom( undefined,(d.bottomRight.y-d.topLeft.y) ); }
+                            
+                                        //update pan
+                                            let newX = 0; let newY = 0;
+                                            if( (1-(d.bottomRight.x-d.topLeft.x)) != 0 ){ newX = d.topLeft.x + d.topLeft.x*((d.bottomRight.x-d.topLeft.x)/(1-(d.bottomRight.x-d.topLeft.x))); }
+                                            if( (1-(d.bottomRight.y-d.topLeft.y)) != 0 ){ newY = d.topLeft.y + d.topLeft.y*((d.bottomRight.y-d.topLeft.y)/(1-(d.bottomRight.y-d.topLeft.y))); }
+                                            setViewposition(newX,newY,update);
+                            
+                                        //update state
+                                            viewport.viewArea = Object.assign(d,{});
+                            
+                                        //callback
+                                            if(update){
+                                                object.onchangeviewarea(viewport.viewArea);
+                                            }
+                                    }
+                                    function makeSignal(line, position, length, strength=signals.defaultStrength){
+                                        dev.log.partControl('.sequencer::makeSignal('+line+','+position+','+length+','+strength+')'); //#development
+                            
+                                        //register signal and get new id. From the registry, get the approved signal values
+                                            const newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
+                                            dev.log.partControl('.sequencer::makeSignal -> newID:'+newID); //#development
+                                            const approvedData = signals.signalRegistry.getSignal(newID);
+                                            dev.log.partControl('.sequencer::makeSignal -> approvedData:'+JSON.stringify(approvedData)); //#development
+                            
+                                        //create graphical signal with approved values and append it to the pane
+                                            const newSignalBlock = self.sequencer.signalBlock(
+                                                newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), 
+                                                approvedData.line, approvedData.position, approvedData.length, approvedData.strength, 
+                                                false, signalStyle_body, signalStyle_bodyGlow, signalStyle_handle, signalStyle_handleWidth
+                                            );
+                                            signalPane.append(newSignalBlock);
+                            
+                                        //add signal controls to graphical signal block
+                                            newSignalBlock.select = function(remainSelected=false){
+                                                if(signals.selectedSignals.indexOf(this) != -1){ if(!remainSelected){this.deselect();} return; }
+                                                this.selected(true);
+                                                signals.selectedSignals.push(this);
+                                                this.glow(true);
+                                            };
+                                            newSignalBlock.deselect = function(){
+                                                signals.selectedSignals.splice(signals.selectedSignals.indexOf(this),1);
+                                                this.selected(false);
+                                                this.glow(false);
+                                            };
+                                            newSignalBlock.delete = function(){
+                                                this.deselect();
+                                                signals.signalRegistry.remove(parseInt(this.getName()));
+                                                this.parent.remove(newSignalBlock);
+                                            };
+                            
+                                        //add interactions to graphical signal block
+                                            newSignalBlock.body.attachCallback('ondblclick', function(){
+                                                if(!_canvas_.system.keyboard.pressedKeys.control && !_canvas_.system.keyboard.pressedKeys.command){return;}
+                                                for(let a = 0; a < signals.selectedSignals.length; a++){
+                                                    signals.selectedSignals[a].strength(signals.defaultStrength);
+                                                    signals.signalRegistry.update(parseInt(signals.selectedSignals[a].getName()), {strength: signals.defaultStrength});
+                                                }
+                                            });
+                                            newSignalBlock.body.attachCallback('onmousedown', function(x,y,event){
+                                                if(!interactable){return;}
+                            
+                                                //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                                    if(_canvas_.system.keyboard.pressedKeys.Space){
+                                                        interactionPlane_back.onmousedown(x,y,event); return;
+                                                    }
+                            
+                                                //if the shift key is not pressed and this signal is not already selected; deselect everything
+                                                    if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                                                        while(signals.selectedSignals.length > 0){
+                                                            signals.selectedSignals[0].deselect();
+                                                        }
+                                                    }
+                            
+                                                //select this block
+                                                    newSignalBlock.select(true);
+                            
+                                                //gather data for all the blocks that we're about to affect
+                                                    const activeBlocks = [];
+                                                    for(let a = 0; a < signals.selectedSignals.length; a++){
+                                                        activeBlocks.push({
+                                                            name: parseInt(signals.selectedSignals[a].getName()),
+                                                            block: signals.selectedSignals[a],
+                                                            starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].getName())),
+                                                        });
+                                                    }
+                            
+                                                //if control/command key is pressed; this is a strength-change operation
+                                                    if(_canvas_.system.keyboard.pressedKeys.control || _canvas_.system.keyboard.pressedKeys.command){
+                                                        const mux = 4;
+                                                        const initialStrengths = activeBlocks.map(a => a.block.strength());
+                                                        const initial = event.Y;
+                                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                                            function(x,y,event){
+                                                                //check if ctrl/command is still pressed
+                                                                    if( !_canvas_.system.keyboard.pressedKeys.ControlLeft && !_canvas_.system.keyboard.pressedKeys.ControlRight && !_canvas_.system.keyboard.pressedKeys.command ){ 
+                                                                        _canvas_.system.mouse.forceMouseUp();
+                                                                    }
+                            
+                                                                const diff = (initial - event.Y)/(_canvas_.core.viewport.scale()*height*mux);
+                                                                for(let a = 0; a < activeBlocks.length; a++){
+                                                                    activeBlocks[a].block.strength(initialStrengths[a] + diff);
+                                                                    signals.signalRegistry.update(activeBlocks[a].name, { strength: initialStrengths[a] + diff });
+                                                                }
+                                                            }
+                                                        );
+                                                        return;
+                                                    }
+                            
+                                                //if the alt key is pressed, clone the block
+                                                //(but don't select it, this is the 'alt-click-and-drag to clone' trick)
+                                                //this function isn't run until the first sign of movement
+                                                    let cloned = false;
+                                                    function cloneFunc(){
+                                                        if(cloned){return;} cloned = true;
+                                                        if(_canvas_.system.keyboard.pressedKeys.alt){
+                                                            for(let a = 0; a < signals.selectedSignals.length; a++){
+                                                                const temp = signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].getName()));
+                                                                makeSignal(temp.line, temp.position, temp.length, temp.strength);
+                                                            }
+                                                        }
+                                                    }
+                            
+                                                //block movement
+                                                    const initialPosition = coordinates2lineposition( viewportPosition2internalPosition( currentMousePosition(x,y) ) );
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(x,y,event){
+                                                            //clone that block (maybe)
+                                                                cloneFunc();
+                            
+                                                            const livePosition = coordinates2lineposition( viewportPosition2internalPosition( currentMousePosition(x,y) ) );
+                                                            const diff = {
+                                                                line: livePosition.line - initialPosition.line,
+                                                                position: livePosition.position - initialPosition.position,
+                                                            };
+                                    
+                                                            for(let a = 0; a < activeBlocks.length; a++){
+                                                                signals.signalRegistry.update(activeBlocks[a].name, {
+                                                                    line:activeBlocks[a].starting.line+diff.line,
+                                                                    position:activeBlocks[a].starting.position+diff.position,
+                                                                });
+                                    
+                                                                const temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                    
+                                                                activeBlocks[a].block.line( temp.line );
+                                                                activeBlocks[a].block.position( temp.position );
+                                                            }
+                                                        }
+                                                    );
+                                            });
+                                            newSignalBlock.body.attachCallback('onmousemove', function(){
+                                                const pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                            
+                                                let cursor = 'default';
+                                                if( pressedKeys.alt ){ cursor = 'copy'; }
+                                                else if( pressedKeys.Space ){ cursor = 'grab'; }
+                            
+                                                _canvas_.core.viewport.cursor( cursor );
+                                            });
+                                            newSignalBlock.body.attachCallback('onkeydown', function(){
+                                                if(!interactable){return;}
+                            
+                                                const pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                                                if(pressedKeys.alt){ _canvas_.core.viewport.cursor('copy'); }
+                                            });
+                                            newSignalBlock.body.attachCallback('onkeyup', function(){
+                                                if(!interactable){return;}
+                            
+                                                const pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                                                if(!(pressedKeys.alt)){ _canvas_.core.viewport.cursor('default'); }
+                                            });
+                                            newSignalBlock.leftHandle.attachCallback('onmousedown', function(x,y,event){
+                                                if(!interactable){return;}
+                            
+                                                //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                                    if(_canvas_.system.keyboard.pressedKeys.Space){
+                                                        interactionPlane_back.onmousedown(x,y,event); return;
+                                                    }
+                                                    
+                                                //cloning situation
+                                                    if(_canvas_.system.keyboard.pressedKeys.alt){
+                                                        newSignalBlock.body.onmousedown(x,y,event);
+                                                        return;
+                                                    }
+                            
+                                                //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
+                                                    if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                                                        while(signals.selectedSignals.length > 0){
+                                                            signals.selectedSignals[0].deselect();
+                                                        }
+                                                    }
+                                            
+                                                //select this block
+                                                    newSignalBlock.select(true);
+                            
+                                                //gather data for all the blocks that we're about to affect
+                                                    const activeBlocks = [];
+                                                    for(let a = 0; a < signals.selectedSignals.length; a++){
+                                                        activeBlocks.push({
+                                                            name: parseInt(signals.selectedSignals[a].getName()),
+                                                            block: signals.selectedSignals[a],
+                                                            starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].getName())),
+                                                        });
+                                                    }
+                                                
+                                                //perform block length adjustment 
+                                                    const initialPosition = coordinates2lineposition( viewportPosition2internalPosition( currentMousePosition(x,y) ) );
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(x,y,event){
+                                                            const livePosition = coordinates2lineposition( viewportPosition2internalPosition( currentMousePosition(x,y) ) );
+                                                            const diff = {position: initialPosition.position-livePosition.position};
+                                    
+                                                            for(let a = 0; a < activeBlocks.length; a++){
+                                                                if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
+                                                                
+                                                                signals.signalRegistry.update(activeBlocks[a].name, {
+                                                                    length: activeBlocks[a].starting.length+diff.position,
+                                                                    position: activeBlocks[a].starting.position-diff.position,
+                                                                });
+                                                                const temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                                                activeBlocks[a].block.position( temp.position );
+                                                                activeBlocks[a].block.length( temp.length );
+                                                            }
+                                                        }
+                                                    );
+                                            });
+                                            newSignalBlock.leftHandle.attachCallback('onmousemove', function(){
+                                                const pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                            
+                                                let cursor = 'col-resize';
+                                                if( pressedKeys.alt ){ cursor = 'copy'; }
+                                                else if( pressedKeys.Space ){ cursor = 'grab'; }
+                            
+                                                _canvas_.core.viewport.cursor( cursor );
+                                            });
+                                            newSignalBlock.leftHandle.attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');});
+                                            newSignalBlock.rightHandle.attachCallback('onmousedown', function(x,y,event,ignoreCloning=false){
+                                                if(!interactable){return;}
+                            
+                                                //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                                    if(_canvas_.system.keyboard.pressedKeys.Space){
+                                                        interactionPlane_back.getCallback('onmousedown')(x,y,event); return;
+                                                    }
+                            
+                                                //cloning situation
+                                                    if(!ignoreCloning && _canvas_.system.keyboard.pressedKeys.alt){
+                                                        newSignalBlock.body.getCallback('onmousedown')(x,y,event);
+                                                        return;
+                                                    }
+                            
+                                                //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
+                                                    if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                                                        while(signals.selectedSignals.length > 0){
+                                                            signals.selectedSignals[0].deselect();
+                                                        }
+                                                    }
+                                                
+                                                //select this block
+                                                    newSignalBlock.select(true);
+                            
+                                                //gather data for all the blocks that we're about to affect
+                                                    const activeBlocks = [];
+                                                    for(let a = 0; a < signals.selectedSignals.length; a++){
+                                                        activeBlocks.push({
+                                                            name: parseInt(signals.selectedSignals[a].getName()),
+                                                            block: signals.selectedSignals[a],
+                                                            starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].getName())),
+                                                        });
+                                                    }
+                            
+                                                //perform block length adjustment 
+                                                    const initialPosition = coordinates2lineposition( viewportPosition2internalPosition(currentMousePosition(x,y) ) );
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(x,y,event){
+                                                            const livePosition = coordinates2lineposition( viewportPosition2internalPosition(currentMousePosition(x,y) ) );
+                                                            const diff = {position: livePosition.position - initialPosition.position};
+                                
+                                                            for(let a = 0; a < activeBlocks.length; a++){
+                                                                signals.signalRegistry.update(activeBlocks[a].name, {length: activeBlocks[a].starting.length+diff.position});
+                                                                const temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                                                activeBlocks[a].block.position( temp.position );
+                                                                activeBlocks[a].block.length( temp.length );
+                                                            }
+                                                        }
+                                                    );
+                                            });
+                                            newSignalBlock.rightHandle.attachCallback('onmousemove', function(){
+                                                const pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                            
+                                                let cursor = 'col-resize';
+                                                if( pressedKeys.alt ){ cursor = 'copy'; }
+                                                else if( pressedKeys.Space ){ cursor = 'grab'; }
+                            
+                                                _canvas_.core.viewport.cursor( cursor );
+                                            });
+                                            newSignalBlock.rightHandle.attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');});
+                            
+                                        return {id:newID, signalBlock:newSignalBlock};
+                                    }
+                                    function deleteSelectedSignals(){
+                                        while(signals.selectedSignals.length > 0){
+                                            signals.selectedSignals[0].delete();
+                                        }
+                                    }
+                                    function makePlayhead(){
+                                        const newPlayhead = interfacePart.builder('basic','group','playhead');
+                                        workarea.append(newPlayhead);
+                            
+                                        newPlayhead.main = interfacePart.builder('basic','rectangle','main',{
+                                            x: -playhead.width/2,
+                                            width:playhead.width,
+                                            height:viewport.totalSize.height,
+                                            colour:playheadStyle
+                                        });
+                                        newPlayhead.append(newPlayhead.main);
+                            
+                                        newPlayhead.invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{
+                                            x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
+                                            width: playhead.width*playhead.invisibleHandleMux,
+                                            height:viewport.totalSize.height,
+                                            colour:{r:1,g:0,b:0,a:0}
+                                        })
+                                        newPlayhead.append(newPlayhead.invisibleHandle);
+                            
+                                        newPlayhead.invisibleHandle.onmousedown = function(){
+                                            if(!interactable){return;}
+                            
+                                            playhead.held = true;
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){ object.playheadPosition(coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event))).position); },
+                                                function(){playhead.held = false;}
+                                            );
+                                        };
+                            
+                                        newPlayhead.invisibleHandle.onmouseenter = function(){_canvas_.core.viewport.cursor('col-resize');};
+                                        newPlayhead.invisibleHandle.onmousemove = function(){_canvas_.core.viewport.cursor('col-resize');};
+                                        newPlayhead.invisibleHandle.onmouseleave = function(){_canvas_.core.viewport.cursor('default');};
+                            
+                                        playhead.present = true;
+                            
+                                        return newPlayhead;
+                                    }
+                            
+                                //controls
+                                    object.viewposition = setViewposition;
+                                    object.viewarea = setViewArea;
+                                    object.step = function(a){
+                                        if(a == undefined){return signals.step;}
+                                        signals.step = a;
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                                    //background
+                                        object.glowHorizontal = function(state,start,end){
+                                            if(end == undefined){end = start+1;}
+                            
+                                            for(let a = start; a <= end; a++){
+                                                const tmp = state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
+                                                backgroundDrawArea_horizontal.getChildren()[a].colour(tmp.colour);
+                                                backgroundDrawArea_horizontal.getChildren()[a].lineColour(tmp.lineColour);
+                                                backgroundDrawArea_horizontal.getChildren()[a].thickness(tmp.thickness);
+                                            }
+                                        };
+                                        object.glowVertical = function(state,start,end){
+                                            if(end == undefined){end = start+1;}
+                            
+                                            for(let a = start; a < end; a++){
+                                                const tmp = state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
+                                                backgroundDrawArea_vertical.getChildren()[a].colour(tmp.colour);
+                                                backgroundDrawArea_vertical.getChildren()[a].lineColour(tmp.lineColour);
+                                                backgroundDrawArea_vertical.getChildren()[a].thickness(tmp.thickness);
+                                            }
+                                        };
+                                    
+                                    //looping
+                                        object.loopActive = function(bool){
+                                            if(bool == undefined){return loop.active;}
+                                            loop.active = bool;
+                            
+                                            object.glowVertical(false,0,xCount);
+                                            if( loop.active ){
+                                                object.glowVertical(true, 
+                                                    loop.period.start < 0 ? 0 : loop.period.start, 
+                                                    loop.period.end > xCount ? xCount : loop.period.end,
+                                                );
+                                            }
+                                        };
+                                        object.loopPeriod = function(start,end){
+                                            if(start == undefined || end == undefined){return loop.period;}
+                                            if(start > end || start < 0 || end < 0){return;}
+                            
+                                            loop.period = {start:start, end:end};
+                            
+                                            if( loop.active ){
+                                                object.glowVertical(false,0,xCount);
+                                                object.glowVertical(true,
+                                                    start < 0 ? 0 : start, 
+                                                    end > xCount ? xCount : end,
+                                                );
+                                            }
+                                        };
+                            
+                                    //signals
+                                        object.export = function(){return signals.signalRegistry.export();};
+                                        object.import = function(data){signals.signalRegistry.import(data);};
+                                        object.getAllSignals = function(){return signals.signalRegistry.getAllSignals(); };
+                                        object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
+                                        object.addSignals = function(data){ 
+                                            for(let a = 0; a < data.length; a++){
+                                                if( data[a] == undefined || data[a] == null ){continue;}
+                                                this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);
+                                            }
+                                        };
+                                        object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end); };
+                                        
+                                    //playhead
+                                        object.automove = function(a){
+                                            if(a == undefined){return playhead.automoveViewposition;}
+                                            playhead.automoveViewposition = a;
+                                        };
+                                        object.playheadPosition = function(val,stopActive=true){
+                                            if(val == undefined){return playhead.position;}
+                                
+                                            playhead.position = val;
+                                
+                                            //send stop events for all active signals
+                                                if(stopActive){
+                                                    const events = [];
+                                                    for(let a = 0; a < signals.activeSignals.length; a++){
+                                                        const tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
+                                                        events.unshift( {signalID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                                                    }
+                                                    signals.activeSignals = [];
+                                                    if(object.event && events.length > 0){object.event(events);}
+                                                }
+                                
+                                            //reposition graphical playhead
+                                                const playheadObject = workarea.getChildByName('playhead');
+                                                if(playhead.position < 0 || playhead.position > xCount){
+                                                    //outside viable bounds, so remove
+                                                        if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
+                                                }else{ 
+                                                    //within viable bounds, so either create or adjust
+                                                        if( playheadObject == undefined ){ playheadObject = makePlayhead(); }
+                                                        playheadObject.x( playhead.position*(viewport.totalSize.width/xCount) );
+                                                    //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
+                                                    //(assuming automoveViewposition is set)
+                                                        if(playhead.automoveViewposition){
+                                                            const remainderSpace = xCount-(xCount*zoomLevel_x);
+                                                            if( playhead.position < Math.floor(viewport.viewposition.x*remainderSpace) || 
+                                                                playhead.position > Math.floor(viewport.viewposition.x*remainderSpace) + (xCount*zoomLevel_x)  
+                                                            ){ object.viewposition( (playhead.position > remainderSpace ? remainderSpace : playhead.position)/remainderSpace ); }
+                                                        }
+                                                }
+                                        };
+                                        object.progress = function(){
+                                            //if the playhead is being held, just bail completely
+                                                if(playhead.held){return;}
+                                                
+                                            //gather together all the current events
+                                                const events = object.eventsBetween(playhead.position, playhead.position+signals.step);
+                            
+                                            //upon loop; any signals that are still active are to be ended
+                                            //(so create end events for them, and push those into the current events list)
+                                                if(loop.active && playhead.position == loop.period.start){
+                                                    for(let a = 0; a < signals.activeSignals.length; a++){
+                                                        const tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
+                                                        events.unshift( {signalID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                                                    }
+                                                    signals.activeSignals = [];
+                                                }
+                            
+                                            //add newly started signals to - and remove newly finished signals from - 'signals.activeSignals'
+                                                for(let a = 0; a < events.length; a++){
+                                                    const index = signals.activeSignals.indexOf(events[a].signalID);
+                                                    if(index != -1 && events[a].strength == 0){
+                                                        signals.activeSignals.splice(index);
+                                                    }else{
+                                                        if( events[a].strength > 0 ){
+                                                            signals.activeSignals.push(events[a].signalID);
+                                                        }
+                                                    }
+                                                }
+                            
+                                            //progress position
+                                                if( loop.active && (playhead.position+signals.step == loop.period.end) ){
+                                                    playhead.position = loop.period.start;
+                                                }else{
+                                                    playhead.position = playhead.position+signals.step;
+                                                }
+                            
+                                            //update graphical playhead
+                                                object.playheadPosition(playhead.position,false);
+                            
+                                            //perform event callback
+                                                if(object.event && events.length > 0){object.event(events);}
+                                        };
+                            
+                                //interaction
+                                    let viewareaInMotion = false;
+                                    interactionPlane_back.attachCallback('onmousedown', function(x,y,event){ 
+                                        if(!interactable){return;}
+                                        
+                                        const pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                            
+                                        if( pressedKeys.alt && pressedKeys.Space ){return;}
+                            
+                                        if(pressedKeys.shift){//group select 
+                                            const initialPositionData = currentMousePosition(x,y);
+                                            let livePositionData =    currentMousePosition(x,y);
+                                
+                                            const selectionArea = interfacePart.builder('basic','rectangle','selectionArea',{
+                                                x:initialPositionData.x*width, y:initialPositionData.y*height,
+                                                width:0, height:0,
+                                                colour:selectionAreaStyle,
+                                            });
+                                            object.append(selectionArea);
+                                
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(x,y,event){
+                                                    //get live position, and correct it so it's definitely within in the relevant area
+                                                        livePositionData = currentMousePosition(x,y);
+                                                        livePositionData.x = livePositionData.x < 0 ? 0 : livePositionData.x;
+                                                        livePositionData.y = livePositionData.y < 0 ? 0 : livePositionData.y;
+                                                        livePositionData.x = livePositionData.x > 1 ? 1 : livePositionData.x;
+                                                        livePositionData.y = livePositionData.y > 1 ? 1 : livePositionData.y;
+                                                        
+                                                    //gather difference between this point and the initial
+                                                        const diff = {
+                                                            x:livePositionData.x - initialPositionData.x, 
+                                                            y:livePositionData.y - initialPositionData.y
+                                                        };
+                                
+                                                    //account for an inverse rectangle
+                                                        const transform = {
+                                                            x: initialPositionData.x, y: initialPositionData.y, 
+                                                            width: 1, height: 1,
+                                                        };
+                                                        
+                                                        if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
+                                                        if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
+                                
+                                                    //update rectangle
+                                                        selectionArea.x(transform.x*width);
+                                                        selectionArea.y(transform.y*height);
+                                                        selectionArea.width(  transform.width  * diff.x*width  );
+                                                        selectionArea.height( transform.height * diff.y*height );
+                                                },
+                                                function(x,y,event){
+                                                    //remove selection box
+                                                        selectionArea.parent.remove(selectionArea);
+                                
+                                                    //gather the corner points
+                                                        const finishingPositionData = {
+                                                            a: visible2coordinates(initialPositionData),
+                                                            b: visible2coordinates(livePositionData),
+                                                        };
+                                                        finishingPositionData.a.x *= viewport.totalSize.width; finishingPositionData.b.y *= viewport.totalSize.height;
+                                                        finishingPositionData.b.x *= viewport.totalSize.width; finishingPositionData.a.y *= viewport.totalSize.height;
+                                
+                                                        const selectionBox = { topLeft:{ x:0, y:0 }, bottomRight:{ x:0, y:0 } };
+                                                        if( finishingPositionData.a.x < finishingPositionData.b.x ){
+                                                            selectionBox.topLeft.x =     finishingPositionData.a.x;
+                                                            selectionBox.bottomRight.x = finishingPositionData.b.x;
+                                                        }else{
+                                                            selectionBox.topLeft.x =     finishingPositionData.b.x;
+                                                            selectionBox.bottomRight.x = finishingPositionData.a.x;
+                                                        }
+                                                        if( finishingPositionData.a.y < finishingPositionData.b.y ){
+                                                            selectionBox.topLeft.y =     finishingPositionData.a.y;
+                                                            selectionBox.bottomRight.y = finishingPositionData.b.y;
+                                                        }else{
+                                                            selectionBox.topLeft.y =     finishingPositionData.b.y;
+                                                            selectionBox.bottomRight.y = finishingPositionData.a.y;
+                                                        }
+                                
+                                                    //deselect everything
+                                                        while(signals.selectedSignals.length > 0){
+                                                            signals.selectedSignals[0].deselect();
+                                                        }
+                                
+                                                    //select the signals that overlap with the selection area
+                                                        const children = signalPane.getChildren();
+                                                        for(let a = 0; a < children.length; a++){
+                                                            const temp = signals.signalRegistry.getSignal(parseInt(children[a].getName()));
+                                                            const block = { 
+                                                                    topLeft:{
+                                                                        x:temp.position * (viewport.totalSize.width/xCount), 
+                                                                        y:temp.line *     (viewport.totalSize.height/yCount)},
+                                                                    bottomRight:{
+                                                                        x:(temp.position+temp.length) * (viewport.totalSize.width/xCount), 
+                                                                        y:(temp.line+1)*                (viewport.totalSize.height/yCount)
+                                                                    },
+                                                            };
+                                
+                                                            if( _canvas_.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){children[a].select(true);}
+                                                        }
+                                                },
+                                            );
+                                        }else if(pressedKeys.alt){//draw signal
+                                            //deselect everything
+                                                while(signals.selectedSignals.length > 0){
+                                                    signals.selectedSignals[0].deselect();
+                                                }
+                                                
+                                            //get the current location and make a new signal there (with length 0)
+                                                const position = coordinates2lineposition( viewportPosition2internalPosition( currentMousePosition(x,y) ) );
+                                                const temp = makeSignal(position.line,position.position,0);
+                            
+                                            //select this new block, and direct the mouse-down to the right handle (for user lengthening)
+                                                temp.signalBlock.select();
+                                                temp.signalBlock.rightHandle.getCallback('onmousedown')(x,y,event,true);
+                                        }else if(pressedKeys.Space){//pan
+                                            viewareaInMotion = true;
+                                            _canvas_.core.viewport.cursor('grabbing');
+                            
+                                            const initialPosition = currentMousePosition(x,y);
+                                            const old_viewport = {x:viewport.viewposition.x, y:viewport.viewposition.y};
+                            
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(x,y,event){
+                                                    const livePosition = currentMousePosition(x,y);
+                                                    const diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
+                                                    setViewposition(
+                                                        old_viewport.x - (diffPosition.x*zoomLevel_x)/(zoomLevel_x-1),
+                                                        old_viewport.y - (diffPosition.y*zoomLevel_y)/(zoomLevel_y-1),
+                                                    );
+                                                },
+                                                function(x,y,event){
+                                                    viewareaInMotion = false;
+                                                    if( 
+                                                        _canvas_.library.math.detectOverlap.pointWithinBoundingBox( 
+                                                            viewportPosition2internalPosition(currentMousePosition(x,y)), 
+                                                            viewport.viewArea 
+                                                        ) && _canvas_.system.keyboard.pressedKeys.Space
+                                                    ){
+                                                        _canvas_.core.viewport.cursor('grab');
+                                                    }else{
+                                                        _canvas_.core.viewport.cursor('default');
+                                                    }
+                                                },
+                                            );
+                                        }else{//elsewhere click
+                                            //deselect everything
+                                                while(signals.selectedSignals.length > 0){
+                                                    signals.selectedSignals[0].deselect();
+                                                }
+                                        }
+                                    });
+                                    interactionPlane_back.attachCallback('onmousemove', function(){
+                                        if(!interactable){return;}
+                            
+                                        const pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                                        if( pressedKeys.alt ){ _canvas_.core.viewport.cursor('crosshair'); }
+                                        else if( pressedKeys.shift ){ _canvas_.core.viewport.cursor('pointer'); }
+                                        else if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
+                                        else{ _canvas_.core.viewport.cursor('default'); }
+                                    });
+                                    interactionPlane_front.attachCallback('onkeydown', function(x,y,event){
+                                        if(!interactable){return;}
+                            
+                                        const pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                                        if( pressedKeys.Backspace || pressedKeys.Delete ){ deleteSelectedSignals(); }
+                                        if( pressedKeys.Space ){ _canvas_.core.viewport.cursor(viewareaInMotion ? 'grabbing' : 'grab'); }
+                                        if( pressedKeys.alt ){
+                                            signalPane.getElementsUnderPoint(event.X,event.Y).then(result => {
+                                                if( result[0] != undefined ){
+                                                    _canvas_.core.viewport.cursor('copy');
+                                                }else{
+                                                    _canvas_.core.viewport.cursor('crosshair');
+                                                }
+                                            });
+                                        }
+                                    });
+                                    interactionPlane_front.attachCallback('onkeyup', function(){
+                                        if(!interactable){return;}
+                            
+                                        _canvas_.core.viewport.cursor('default');
+                                    });
+                            
+                                //callbacks
+                                    object.onpan = onpan;
+                                    object.onchangeviewarea = onchangeviewarea;
+                                    object.event = event;
+                            
+                                //setup
+                                    drawBackground();
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.control.sequencer = function(name,data){ return interfacePart.collection.control.sequencer(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable,             
+                                data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
+                                data.backingStyle, data.selectionAreaStyle,
+                                data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
+                                data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
+                                data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
+                                data.playheadStyle,
+                                data.onpan, data.onchangeviewarea, data.event,
+                            ); };
+                            
+                            
+                            
+                            
+                            
+                            
+                            this.sequencer.signalBlock = function(
+                                name, unit_x, unit_y,
+                                line, position, length, strength=1, glow=false, 
+                                bodyStyle=[
+                                    {colour:{r:138/255,g:138/255,b:138/255,a:0.6}, lineColour:{r:175/255,g:175/255,b:175/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:130/255,g:199/255,b:208/255,a:0.6}, lineColour:{r:130/255,g:199/255,b:208/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:129/255,g:209/255,b:173/255,a:0.6}, lineColour:{r:129/255,g:209/255,b:173/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:234/255,g:238/255,b:110/255,a:0.6}, lineColour:{r:234/255,g:238/255,b:110/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:249/255,g:178/255,b:103/255,a:0.6}, lineColour:{r:249/255,g:178/255,b:103/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:255/255,g: 69/255,b: 69/255,a:0.6}, lineColour:{r:255/255,g: 69/255,b: 69/255,a:0.95}, lineThickness:0.5},
+                                ],
+                                bodyGlowStyle=[
+                                    {colour:{r:138/255,g:138/255,b:138/255,a:0.8}, lineColour:{r:175/255,g:175/255,b:175/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:130/255,g:199/255,b:208/255,a:0.8}, lineColour:{r:130/255,g:199/255,b:208/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:129/255,g:209/255,b:173/255,a:0.8}, lineColour:{r:129/255,g:209/255,b:173/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:234/255,g:238/255,b:110/255,a:0.8}, lineColour:{r:234/255,g:238/255,b:110/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:249/255,g:178/255,b:103/255,a:0.8}, lineColour:{r:249/255,g:178/255,b:103/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:255/255,g: 69/255,b: 69/255,a:0.8}, lineColour:{r:255/255,g: 69/255,b: 69/255,a:1}, lineThickness:0.5},
+                                ],
+                                handleStyle={r:1,g:1,b:0,a:1},
+                                handleWidth=5,
+                            ){
+                                dev.log.partControl('.sequencer.signalBlock(...)'); //#development
+                            
+                                let selected = false;
+                                const minLength = handleWidth/4;
+                                let currentStyles = {
+                                    body:getBlendedColour(bodyStyle,strength),
+                                    glow:getBlendedColour(bodyGlowStyle,strength),
+                                };
+                                
+                                //elements
+                                    const object = interfacePart.builder('basic','group',String(name),{x:position*unit_x, y:line*unit_y});
+                                    object.body = interfacePart.builder('basic','rectangleWithOutline','body',{width:length*unit_x, height:unit_y, colour:currentStyles.body.colour, lineColour:currentStyles.body.lineColour, lineThickness:currentStyles.body.lineThickness});
+                                    object.leftHandle = interfacePart.builder('basic','rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
+                                    object.rightHandle = interfacePart.builder('basic','rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
+                                    object.append(object.body);
+                                    object.append(object.leftHandle);
+                                    object.append(object.rightHandle);
+                            
+                                //internal functions
+                                    function updateHeight(){
+                                        object.body.height(unit_y);
+                                        object.leftHandle.height(unit_y);
+                                        object.rightHandle.height(unit_y);
+                                    }
+                                    function updateLength(){
+                                        object.body.width(length*unit_x);
+                                        object.rightHandle.x(length*unit_x-handleWidth/2);
+                                    }
+                                    function updateLineAndPosition(){ updateLine(); updatePosition(); }
+                                    function updateLengthAndHeight(){ updateLength(); updateHeight(); }
+                                    function updateLine(){ object.y(line*unit_y); }
+                                    function updatePosition(){ object.x(position*unit_x); }
+                                    function getBlendedColour(swatch,ratio){
+                                        const outputStyle = Object.assign({},swatch[0]);
+                            
+                                        //if there's a colour attribute; blend it and add it to the output 
+                                            if( swatch[0].hasOwnProperty('colour') ){
+                                                outputStyle.colour = _canvas_.library.math.multiBlendColours(swatch.map(a => a.colour),ratio);
+                                            }
+                            
+                                        //if there's a lineColour attribute; blend it and add it to the output
+                                            if( swatch[0].hasOwnProperty('lineColour') ){
+                                                outputStyle.lineColour = _canvas_.library.math.multiBlendColours(swatch.map(a => a.lineColour),ratio);
+                                            }
+                            
+                                        return outputStyle;
+                                    }
+                            
+                                //controls
+                                    object.unit = function(x,y){
+                                        if(x == undefined && y == undefined){return {x:unit_x,y:unit_y};}
+                                        dev.log.partControl('.sequencer.signalBlock.unit('+x+','+y+')'); //#development
+                            
+                                        //(awkward bid for speed)
+                                        if( x == undefined ){
+                                            unit_y = y;
+                                            updateHeight();
+                                            updateLine();
+                                        }else if( y == undefined ){
+                                            unit_x = x;
+                                            updateLength();
+                                            updatePosition();
+                                        }else{
+                                            unit_x = x;
+                                            unit_y = y;
+                                            updateLengthAndHeight();
+                                            updateLineAndPosition();
+                                        }
+                                    };
+                                    object.line = function(a){
+                                        if(a == undefined){return line;}
+                                        dev.log.partControl('.sequencer.signalBlock.line('+a+')'); //#development
+                                        line = a;
+                                        updateLine();
+                                    };
+                                    object.position = function(a){
+                                        if(a == undefined){return position;}
+                                        dev.log.partControl('.sequencer.signalBlock.position('+a+')'); //#development
+                                        position = a;
+                                        updatePosition();
+                                    };
+                                    object.length = function(a){
+                                        if(a == undefined){return length;}
+                                        dev.log.partControl('.sequencer.signalBlock.length('+a+')'); //#development
+                                        length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
+                                        updateLength();
+                                    };
+                                    object.strength = function(a){
+                                        if(a == undefined){return strength;}
+                                        dev.log.partControl('.sequencer.signalBlock.strength('+a+')'); //#development
+                                        a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
+                                        strength = a;
+                                        currentStyles = {
+                                            body:getBlendedColour(bodyStyle,strength),
+                                            glow:getBlendedColour(bodyGlowStyle,strength),
+                                        };
+                                        object.glow(glow);
+                                    };
+                                    object.glow = function(a){
+                                        if(a == undefined){return glow;}
+                                        dev.log.partControl('.sequencer.signalBlock.glow('+a+')'); //#development
+                                        glow = a;
+                                        if(glow){ 
+                                            object.body.colour(currentStyles.glow.colour);
+                                            object.body.lineColour(currentStyles.glow.lineColour);
+                                            object.body.thickness(currentStyles.glow.thickness);
+                                        }else{    
+                                            object.body.colour(currentStyles.body.colour);
+                                            object.body.lineColour(currentStyles.body.lineColour);
+                                            object.body.thickness(currentStyles.body.thickness);
+                                        }            
+                                    };
+                                    object.selected = function(a){
+                                        if(a == undefined){return selected;}
+                                        dev.log.partControl('.sequencer.signalBlock.selected('+a+')'); //#development
+                                        selected = a;
+                                    };
+                            
+                                return object;
+                            };
+                            this.grapher_waveWorkspace = function(
+                                name='grapher_waveWorkspace',
+                                x, y, width=120, height=60, angle=0, interactable=true, selectNeedle=true, selectionArea=true,
+                            
+                                foregroundStyles=[
+                                    {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
+                                    {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
+                                ],
+                                foregroundTextStyles=[
+                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+                                    {colour:{r:1,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+                                ],
+                            
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_lineThickness=0.25,
+                                backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
+                                backgroundTextStyle_size=10,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
+                            
+                                onchange=function(needle,value){}, 
+                                onrelease=function(needle,value){}, 
+                                selectionAreaToggle=function(bool){},
+                            ){
+                                dev.log.partControl('.grapher_waveWorkspace(...)'); //#development
+                            
+                                //elements 
+                                    //main
+                                        const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //main graph
+                                        const graph = interfacePart.builder('display','grapher', 'graph', {
+                                            static:true, resolution:10,
+                                            width:width, height:height,
+                                            backgroundText_horizontalMarkings:{ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:['3/4','1/2','1/4','0','-1/4','-1/2','-3/4'], textPositionOffset:{x:1,y:-0.5}, printText:true },
+                                            backgroundText_verticalMarkings:{  points:[0.75,0.5,0.25,0], printText:false },
+                                            style:{
+                                                foregrounds:foregroundStyles,   
+                                                foregroundText:foregroundTextStyles,
+                                                background_colour:backgroundStyle_colour,
+                                                background_lineThickness:backgroundStyle_lineThickness,
+                                                backgroundText_colour:backgroundTextStyle_colour,
+                                                backgroundText_size:backgroundTextStyle_size,
+                                                backgroundText_font:backgroundTextStyle_font,
+                                                backing:backingStyle,
+                                            }
+                                        });
+                                        object.append(graph);
+                                    //needle overlay
+                                        const overlay = interfacePart.builder('control','needleOverlay', 'overlay', {
+                                            width:width, height:height, interactable:interactable, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                        });
+                                        object.append(overlay);
+                            
+                                //controls
+                                    //grapher
+                                        object.horizontalMarkings = graph.horizontalMarkings;
+                                        object.verticalMarkings = graph.verticalMarkings;
+                                        object.drawBackground = graph.drawBackground;
+                                        object.drawForeground = graph.drawForeground;
+                                        object.draw = graph.draw;
+                                    //needle overlay
+                                        object.removeAllMarkers = overlay.removeAllMarkers;
+                                        object.select = overlay.select;
+                                        object.area = overlay.area;
+                                        object.interactable = overlay.interactable;
+                                        object.areaIsActive = overlay.areaIsActive;
+                                        object.list = overlay.list;
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;
+                                    object.selectionAreaToggle = selectionAreaToggle;
+                                    overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                                    overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                                    overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                            
+                                //setup
+                                    graph.viewbox({left:0});
+                                    graph.drawBackground();
+                                    overlay.select(0);
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.control.grapher_waveWorkspace = function(name,data){ return interfacePart.collection.control.grapher_waveWorkspace(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
+                                data.style.foregrounds, data.style.foregroundText,
+                                data.style.background_colour, data.style.background_lineThickness,
+                                data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                data.style.backing,
+                                data.onchange, data.onrelease, data.selectionAreaToggle
+                            ); };
                         };
-                        // this.dynamic = new function(){
-                        //     interfacePart.partLibrary.dynamic = {};
-                        // };
+                        this.dynamic = new function(){
+                            interfacePart.partLibrary.dynamic = {};
+                            this.connectionNode = function(
+                                name='connectionNode',
+                                x, y, angle=0, width=20, height=20, type='none', direction='',
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:0.86,g:0.86,b:0.86,a:1},
+                                glowStyle={r:0.95,g:0.95,b:0.95,a:1},
+                                cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
+                                cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
+                                cableConnectionPosition={x:1/2,y:1/2},
+                                cableVersion=0, proximityThreshold={distance:15, hysteresisDistance:1},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                dev.log.partDynamic('.connectionNode(...)'); //#development
+                            
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                        object._connectionNode = true;
+                                        object._type = type;
+                                        object._direction = direction;
+                                    //node
+                                        var rectangle = interfacePart.builder('basic','rectangle','node',{ width:width, height:height, colour:dimStyle });
+                                            object.append(rectangle);
+                            
+                                //network functions
+                                    var foreignNode = undefined;
+                            
+                                    object._onconnect = function(instigator){};
+                                    object._ondisconnect = function(instigator){};
+                            
+                                    object.isConnected = function(){ return cable != undefined; };
+                                    object.canDisconnect = function(){ return this.allowDisconnections() && (foreignNode!=undefined && foreignNode.allowDisconnections()); };
+                                    object.allowConnections = function(bool){
+                                        if(bool == undefined){return allowConnections;}
+                                        allowConnections = bool;
+                                    };
+                                    object.allowDisconnections = function(bool){
+                                        if(bool == undefined){return allowDisconnections;}
+                                        allowDisconnections = bool;
+                                    };
+                                    object.connectTo = function(new_foreignNode){
+                                        if( new_foreignNode == undefined){ return; }
+                                        if( new_foreignNode == this ){ return; }
+                                        if( new_foreignNode._type != this._type ){ return; }
+                                        if( (this._direction == '' || new_foreignNode._direction == '') && this._direction != new_foreignNode._direction){ return; }
+                                        if( this._direction != '' && (new_foreignNode._direction == this._direction) ){ return; }
+                            
+                                        if( new_foreignNode == foreignNode ){ return; }
+                                        if( new_foreignNode.isConnected() && !new_foreignNode.canDisconnect() ){ return; }
+                            
+                                        this.disconnect();
+                            
+                                        foreignNode = new_foreignNode;
+                                        this._onconnect(true);
+                                        if(object.onconnect!=undefined){ try{object.onconnect(true);}catch(error){console.log('connectionNode::'+name+'::onconnect error',error);} }
+                                        foreignNode._receiveConnection(this);
+                            
+                                        this._addCable(this);
+                                    };
+                                    object._receiveConnection = function(new_foreignNode){
+                                        this.disconnect();
+                                        foreignNode = new_foreignNode;
+                                        this._onconnect(false);
+                                        if(object.onconnect!=undefined){ try{object.onconnect(false);}catch(error){console.log('connectionNode::'+name+'::onconnect error:',error);} }
+                                    };
+                                    object.disconnect = function(){
+                                        if( foreignNode == undefined ){return;}
+                            
+                                        this._removeCable();
+                                        this._ondisconnect(true);
+                                        if(object.ondisconnect!=undefined){try{object.ondisconnect(true);}catch(error){console.log('connectionNode::'+name+'::ondisconnect error:',error);}}
+                                        foreignNode._receiveDisconnection();
+                                        foreignNode = null;
+                                    };
+                                    object._receiveDisconnection = function(){
+                                        this._ondisconnect(false);
+                                        if(object.ondisconnect!=undefined){try{object.ondisconnect(false);}catch(error){console.log('connectionNode::'+name+'::ondisconnect error:',error);}}
+                                        foreignNode = null;
+                                    };
+                                    object.getForeignNode = function(){ return foreignNode; };
+                            
+                                //cabling
+                                    var cable;
+                            
+                                    object._addCable = function(){
+                                        var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
+                                        cable = interfacePart.builder('dynamic',tempCableType, tempCableType+'-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+                                        
+                                        foreignNode._receiveCable(cable);
+                                        _canvas_.system.pane.getMiddlegroundPane(this).then(pane => {
+                                            pane.append(cable);
+                                            object.draw();
+                                            if(isActive){ cable.activate(); }
+                                        });
+                                    }
+                                    object._receiveCable = function(new_cable){
+                                        cable = new_cable;
+                                    };
+                                    object._removeCable = function(){
+                                        cable.parent.remove(cable);
+                                        cable = undefined;
+                                        foreignNode._loseCable();
+                                    };
+                                    object._loseCable = function(){
+                                        cable = undefined;
+                                    };
+                                    object.getAttachmentPoint = function(){
+                                        var offset = object.getOffset();
+                            
+                                        var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
+                                        var collectedAngle = offset.angle + Math.atan( height/width );
+                            
+                                        var tmp = _canvas_.core.viewport.adapter.windowPoint2workspacePoint( 
+                                            offset.x + (diagonalLength*Math.cos(collectedAngle))*cableConnectionPosition.x*2, 
+                                            offset.y + (diagonalLength*Math.sin(collectedAngle))*cableConnectionPosition.y*2
+                                        );
+                                        tmp.angle = offset.angle;
+                                        return tmp;
+                                    };
+                                    object.draw = function(){
+                                        if( cable == undefined ){return;}
+                            
+                                        var pointA = this.getAttachmentPoint();
+                                        var pointB = foreignNode.getAttachmentPoint();
+                            
+                                        cable.draw(pointA.x,pointA.y,pointB.x,pointB.y,pointA.angle,pointB.angle);
+                                    };
+                            
+                                //mouse interaction
+                                    rectangle.attachCallback('onmousedown', function(x,y,event){
+                                        dev.log.partDynamic('.connectionNode-onmousedown(...)'); //#development
+                                        var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
+                                        var displacedNode = undefined;
+                            
+                                        var liveCable;
+                                        function createLiveCable(){
+                                            var pointA = object.getAttachmentPoint();
+                                            var liveCable = interfacePart.builder(
+                                                'dynamic',tempCableType,'liveCable-'+object.getAddress().replace(/\//g, '_'),
+                                                { x1:pointA.x,y1:pointA.y,x2:x,y2:y, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
+                                            );
+                                            _canvas_.system.pane.getMiddlegroundPane(object).then(pane => {
+                                                pane.append(liveCable);
+                                            });
+                                            return liveCable;
+                                        }
+                            
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(x,y,event){
+                                                if( !object.allowConnections() ){return;}
+                                                if( object.isConnected() && !object.canDisconnect() ){return;}
+                                                if( object.getForeignNode() != undefined && object.getForeignNode().isConnected() && !object.getForeignNode().canDisconnect() ){return;}
+                            
+                                                var mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                            
+                                                //gather connection nodes within proximity
+                                                    console.log(interfacePart.collection.dynamic.connectionNode.registry);
+                                                    var nodesWithinProximity = interfacePart.collection.dynamic.connectionNode.registry.map(node => {
+                                                        if(node === object){return;}
+                                                        var point = node.getAttachmentPoint();
+                                                        var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                        if(distance < proximityThreshold.distance){ return {node:node,distance:distance}; }
+                                                    }).filter(item => item!=undefined).sort((a, b) => {return a.distance-b.distance});
+                                                    dev.log.partDynamic('.connectionNode-onmousedown -> '+JSON.stringify(nodesWithinProximity)); //#development
+                            
+                                                //select node to snap to
+                                                    var snapToNode = undefined;
+                                                    if(nodesWithinProximity.length == 0){
+                                                        if( object.isConnected() ){
+                                                            var point = object.getForeignNode().getAttachmentPoint();
+                                                            var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                            snapToNode = distance > proximityThreshold.distance + proximityThreshold.hysteresisDistance ? undefined : object.getForeignNode();
+                                                        }
+                                                    }else if( nodesWithinProximity.length == 1 ){
+                                                        if( object.isConnected() ){
+                                                            var point = object.getForeignNode().getAttachmentPoint();
+                                                            var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                            snapToNode = distance > proximityThreshold.distance + proximityThreshold.hysteresisDistance ? nodesWithinProximity[0].node : object.getForeignNode();
+                                                        }else{
+                                                            snapToNode = nodesWithinProximity[0].node;
+                                                        }
+                                                    }else{
+                                                        if(!object.isConnected()){
+                                                            snapToNode = nodesWithinProximity[0].node;
+                                                        }else{
+                                                            var point = object.getForeignNode().getAttachmentPoint();
+                                                            var currentlyConnectedNode = { node:object.getForeignNode(), distance:Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2) };
+                                                            var relevantNodes = nodesWithinProximity.filter(node => node.node != object.getForeignNode() );
+                            
+                                                            snapToNode = currentlyConnectedNode.distance > relevantNodes[0].distance + proximityThreshold.hysteresisDistance ? relevantNodes[0].node : currentlyConnectedNode.node;
+                                                        }
+                                                    }
+                                                
+                                                //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
+                                                    if( snapToNode == undefined || !snapToNode.allowConnections() || (object._direction != '' && object._direction == snapToNode._direction) ){
+                                                        if( liveCable == undefined ){
+                                                            if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }else{ object.disconnect(); }
+                                                            liveCable = createLiveCable();
+                                                        }
+                            
+                                                        var thisNode_point = object.getAttachmentPoint();
+                                                        mousePoint.angle = _canvas_.library.math.getAngleOfTwoPoints(mousePoint,thisNode_point);
+                                                        liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle );
+                                                    }else{
+                                                        if(liveCable != undefined){ liveCable.parent.remove(liveCable); liveCable = undefined; }
+                            
+                                                        if( object.getForeignNode() != snapToNode ){
+                                                            if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }
+                                                            if( snapToNode.isConnected() ){ displacedNode = snapToNode.getForeignNode(); }
+                                                            
+                                                            object.connectTo(snapToNode);
+                                                        }
+                                                    }
+                                            },
+                                            function(x,y,event){
+                                                if(liveCable != undefined){ liveCable.parent.remove(liveCable); liveCable = undefined; }
+                                            }
+                                        );
+                                    } );
+                                    rectangle.attachCallback('ondblclick', function(x,y,event){
+                                        if(foreignNode == undefined || !(allowDisconnections && foreignNode.allowDisconnections()) ){return;}
+                                        object.disconnect();
+                                    } );
+                            
+                                //graphical
+                                    var isActive = false;
+                                    object.activate = function(){ 
+                                        rectangle.colour = glowStyle;
+                                        if(cable!=undefined){ cable.activate(); }
+                                        isActive = true;
+                                    }
+                                    object.deactivate = function(){ 
+                                        rectangle.colour = dimStyle;
+                                        if(cable!=undefined){ cable.deactivate(); }
+                                        isActive = false;
+                                    }
+                            
+                                //callbacks
+                                    object.onconnect = onconnect;
+                                    object.ondisconnect = ondisconnect;
+                            
+                                //register self
+                                    object.onadd = function(){
+                                        interfacePart.collection.dynamic.connectionNode.registry.push(this);
+                                    };
+                                    object.onremove = function(){
+                                        interfacePart.collection.dynamic.connectionNode.registry.splice(
+                                            interfacePart.collection.dynamic.connectionNode.registry.indexOf(this), 
+                                            1
+                                        );
+                                    };
+                            
+                                return object;
+                            };
+                            this.connectionNode.registry = [];
+                            interfacePart.partLibrary.dynamic.connectionNode = function(name,data){ 
+                                return interfacePart.collection.dynamic.connectionNode(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion, data.proximityThreshold,
+                                    data.onconnect, data.ondisconnect,
+                                ); 
+                            };
+                            this.cable = function(
+                                name='cable', 
+                                x1=0, y1=0, x2=0, y2=0,
+                                dimStyle={r:1,g:0,b:0,a:1},
+                                glowStyle={r:1,g:0.39,b:0.39,a:1},
+                            ){
+                                dev.log.partDynamic('.cable(...)');  //#development
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name);
+                                    //cable shape
+                                        var path = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+                                        object.append(path);
+                                
+                                //controls
+                                    object.activate = function(){ path.colour = glowStyle; };
+                                    object.deactivate = function(){ path.colour = dimStyle; };
+                                    object.draw = function(new_x1,new_y1,new_x2,new_y2){
+                                        x1 = (new_x1!=undefined ? new_x1 : x1); 
+                                        y1 = (new_y1!=undefined ? new_y1 : y1);
+                                        x2 = (new_x2!=undefined ? new_x2 : x2); 
+                                        y2 = (new_y2!=undefined ? new_y2 : y2);
+                                        path.points([x1,y1,x2,y2]);
+                                    };
+                                    object.draw();
+                            
+                                //identifier
+                                    object._isCable = true;
+                            
+                                return object;
+                            };
+                            interfacePart.partLibrary.dynamic.cable = function(name,data){ 
+                                switch(data.version){
+                                    case 1: default:
+                                        return interfacePart.collection.dynamic.cable(
+                                            name, data.x1, data.y1, data.x2, data.y2,
+                                            data.style.dim, data.style.glow,
+                                        ); 
+                                    case 2:
+                                        return interfacePart.collection.dynamic.cable2(
+                                            name, data.x1, data.y1, data.x2, data.y2, data.a1, data.a2, 
+                                            data.style.dim, data.style.glow,
+                                        ); 
+                                }
+                            };
+                            
+                            this.cable2 = function(
+                                name='cable2', 
+                                x1=0, y1=0, x2=0, y2=0, a1=0, a2=0,
+                                dimStyle={r:1,g:0,b:0,a:1},
+                                glowStyle={r:1,g:0.39,b:0.39,a:1},
+                            ){
+                                dev.log.partDynamic('.cable2(...)');  //#development
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name);
+                                    //cable shape
+                                        var pathShape = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+                                        // var pathShape = interfacePart.builder('pathWithRoundJointsAndEnds','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+                                        object.append(pathShape);
+                                
+                                //controls
+                                    object.activate = function(){ pathShape.colour = glowStyle; };
+                                    object.deactivate = function(){ pathShape.colour = dimStyle; };
+                                    object.draw = function(new_x1,new_y1,new_x2,new_y2,new_angle1,new_angle2){
+                                        x1 = new_x1==undefined ? x1 : new_x1;
+                                        y1 = new_y1==undefined ? y1 : new_y1;
+                                        a1 = new_angle1==undefined ? a1 : new_angle1;
+                                        x2 = new_x2==undefined ? x2 : new_x2;
+                                        y2 = new_y2==undefined ? y2 : new_y2;
+                                        a2 = new_angle2==undefined ? a2 : new_angle2;
+                            
+                                        var push = 20;
+                                        var path = [];
+                            
+                                        //generate initial basic line 
+                                            path.push(x1,y1);
+                            
+                                            var offset = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                                            path.push( x1+offset.x, y1+offset.y );
+                            
+                                            var offset = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                                            path.push( x2+offset.x, y2+offset.y );
+                            
+                                            path.push(x2,y2);
+                            
+                                        // //go through each segment to improve the line, so that it does not collide with any unit
+                                        //     //gather together the relevant units 
+                                        //     var otherUnits = _canvas_.system.pane.getMiddlegroundPane(this).children().filter(a => !a._isCable).map(a => a.space);
+                            
+                                        //     //run though the cable to see what segments collide with units
+                                        //         for(var a = 0; a < path.length-2; a +=2){
+                                        //             //get cable segment
+                                        //             let segment = {x1:path[a],y1:path[a+1],x2:path[a+2],y2:path[a+3]};
+                            
+                                        //             //get the units this segment collides with
+                                        //             let collidingPolys = _canvas_.library.math.detectOverlap.overlappingLineWithPolygons(segment,otherUnits).map(a => otherUnits[a]);
+                                        //         }
+                            
+                            
+                            
+                            
+                                            // for(var a = 0; a < path.length-2; a +=2){
+                                            //     let line = {x1:path[a],y1:path[a+1],x2:path[a+2],y2:path[a+3]}; //console.log(line);
+                                            //     let collidingPolys = _canvas_.library.math.detectOverlap.overlappingLineWithPolygons(line,otherUnits);
+                            
+                                            //     if(collidingPolys.length > 0){
+                                            //         collidingPolys.forEach(a => {
+                                            //             console.log(a,line);
+                                            //             otherUnits[a].points.forEach(point => {
+                            
+                                            //             });
+                                            //             // console.log(a,otherUnits[a].points);
+                                            //             console.log('');
+                            
+                            
+                            
+                                            //         });
+                                            //         path.splice(a+2,0,300,550);
+                                            //     }
+                                            // }
+                            
+                                        // console.log('');
+                                        // console.log(path);
+                                        pathShape.points(path);
+                                    };
+                                    object.draw();
+                            
+                                //identifier
+                                    object._isCable = true;
+                            
+                                return object;
+                            };
+                        };
                     };
 
                 };
@@ -33349,10 +35970,10 @@
                 };
             };
             
-            _canvas_.system.go = function(){
+            _canvas_.system.go.add( function(){
                 _canvas_.layers.registerLayerLoaded('interface',_canvas_.interface);
-                if(_canvas_.interface.go){_canvas_.interface.go();}
-            };
+                _canvas_.interface.go.__activate();
+            } );
         }
     }
 })();

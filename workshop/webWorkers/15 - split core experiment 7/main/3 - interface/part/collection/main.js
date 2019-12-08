@@ -11,8 +11,8 @@ this.collection = new function(){
         interfacePart.partLibrary.control = {};
         {{include:control/*}} /**/
     };
-    // this.dynamic = new function(){
-    //     interfacePart.partLibrary.dynamic = {};
-    //     {{include:dynamic/*}} /**/
-    // };
+    this.dynamic = new function(){
+        interfacePart.partLibrary.dynamic = {};
+        {{include:dynamic/*}} /**/
+    };
 };

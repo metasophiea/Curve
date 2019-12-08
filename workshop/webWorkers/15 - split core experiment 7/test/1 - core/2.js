@@ -1,6 +1,7 @@
-const randomRectangleCount = 10000;
+const randomRectangleCount = 1000;
 
-_canvas_.core.meta.go = function(){
+_canvas_.core.go.add( function(){
+
     _canvas_.core.render.getCanvasSize().then(canvasSize => {
         for(let a = 0; a < randomRectangleCount; a++){
             let rectangle = _canvas_.core.element.create('rectangle','rect_'+a);
@@ -16,4 +17,5 @@ _canvas_.core.meta.go = function(){
 
         setTimeout(_canvas_.core.render.frame,500);
     });
-};
+
+} );

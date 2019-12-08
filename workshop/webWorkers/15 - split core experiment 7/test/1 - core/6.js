@@ -1,7 +1,7 @@
 let dynamicGroup;
 function rc(){return {r:Math.random(),g:Math.random(),b:Math.random(),a:1};}
 
-_canvas_.core.meta.go = function(){
+_canvas_.core.go.add( function(){ 
 
 
 
@@ -42,4 +42,4 @@ _canvas_.core.meta.go = function(){
     },1000/40);
     
     _canvas_.core.render.active(true);
-};
+} );

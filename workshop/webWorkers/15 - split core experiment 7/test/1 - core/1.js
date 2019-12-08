@@ -1,4 +1,4 @@
-_canvas_.core.meta.go = function(){
+_canvas_.core.go.add( function(){
     
     //rectangle
         let rectangle_1 = _canvas_.core.element.create('rectangle','test_rectangle_1');
@@ -135,4 +135,4 @@ _canvas_.core.meta.go = function(){
 
     setTimeout(_canvas_.core.render.frame,100);
     setTimeout(_canvas_.core.render.frame,1100);
-};
+} );

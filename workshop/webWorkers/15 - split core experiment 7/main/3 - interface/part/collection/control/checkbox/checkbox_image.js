@@ -4,6 +4,8 @@ this.checkbox_image = function(
     uncheckURL='', checkURL='', uncheckGlowURL='', checkGlowStyle='',
     onchange = function(){},
 ){
+    dev.log.partControl('.checkbox_image(...)'); //#development
+
     //adding on the specific shapes
         //main
             const subject = interfacePart.builder('basic','group',name+'subGroup');

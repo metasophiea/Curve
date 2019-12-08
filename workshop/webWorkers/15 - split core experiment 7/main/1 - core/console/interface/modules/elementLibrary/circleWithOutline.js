@@ -31,7 +31,7 @@ this.circleWithOutline = function(_name){
 
     function repush(self){ 
         dev.log.elementLibrary(' - circleWithOutline::repush()'); //#development
-        communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+        _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
         Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
     }
 
@@ -66,61 +66,61 @@ this.circleWithOutline = function(_name){
         if(bool == undefined){ return cashedAttributes.ignored; }
         dev.log.elementLibrary(' - circleWithOutline.ignored('+bool+')'); //#development
         cashedAttributes.ignored = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
     };
     this.colour = function(colour){
         if(colour == undefined){ return cashedAttributes.colour; }
         dev.log.elementLibrary(' - circleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
         cashedAttributes.colour = colour;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
     };
     this.lineColour = function(colour){
         if(colour == undefined){ return cashedAttributes.lineColour; }
         dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
         cashedAttributes.lineColour = colour;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'lineColour',[colour]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
     };
     this.x = function(number){
         if(number == undefined){ return cashedAttributes.x; }
         dev.log.elementLibrary(' - circleWithOutline.x('+number+')'); //#development
         cashedAttributes.x = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
     };
     this.y = function(number){
         if(number == undefined){ return cashedAttributes.y; }
         dev.log.elementLibrary(' - circleWithOutline.y('+number+')'); //#development
         cashedAttributes.y = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
     };
     this.radius = function(number){
         if(number == undefined){ return cashedAttributes.radius; }
         dev.log.elementLibrary(' - circleWithOutline.radius('+number+')'); //#development
         cashedAttributes.radius = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'radius',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
     };
     this.scale = function(number){
         if(number == undefined){ return cashedAttributes.scale; }
         dev.log.elementLibrary(' - circleWithOutline.scale('+number+')'); //#development
         cashedAttributes.scale = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
     };
     this.thickness = function(number){
         if(number == undefined){ return cashedAttributes.thickness; }
         dev.log.elementLibrary(' - circleWithOutline.thickness('+number+')'); //#development
         cashedAttributes.thickness = number;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
     };
     this.static = function(bool){
         if(bool == undefined){ return cashedAttributes.static; }
         dev.log.elementLibrary(' - circleWithOutline.static('+bool+')'); //#development
         cashedAttributes.static = bool;
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
     };
     this.unifiedAttribute = function(attributes){
         if(attributes == undefined){ return cashedAttributes; }
         dev.log.elementLibrary(' - circleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
         Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-        if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+        if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
     };
 
     this.getCallback = function(callbackType){
@@ -139,6 +139,6 @@ this.circleWithOutline = function(_name){
 
     this._dump = function(){
         dev.log.elementLibrary(' - circleWithOutline._dump()'); //#development
-        communicationModule.run('element.executeMethod',[id,'_dump',[]]);
+        _canvas_.core.element.__executeMethod(id,'_dump',[]);
     };
 };

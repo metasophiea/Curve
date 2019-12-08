@@ -1,15 +1,26 @@
 communicationModule.function.go = function(){
     dev.log.service('.go()'); //#development
     _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
-    if(self.meta.go){self.meta.go();} /* callback */
+    self.go.__activate();
 };
 communicationModule.function.printToScreen = function(imageData){
     dev.log.service('.printToScreen(-imageData-)'); //#development
     _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
 };
-communicationModule.function.onViewportAdjust = function(state){
-    dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
-    console.log('onViewportAdjust -> ',state); /* callback */
+// communicationModule.function.onViewportAdjust = function(state){
+//     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
+//     console.log('onViewportAdjust -> ',state); /* callback */
+// };
+
+communicationModule.function.updateElement = function(elem, data={}){
+    dev.log.service('.updateElement('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
+    const proxyElement = _canvas_.core.meta.getElementFromId(elem);
+    if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
+};
+communicationModule.function.runElementCallback = function(elem, data={}){
+    dev.log.service('.runElementCallback('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
+    const proxyElement = _canvas_.core.meta.getElementFromId(elem);
+    if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
 };
 
 communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){

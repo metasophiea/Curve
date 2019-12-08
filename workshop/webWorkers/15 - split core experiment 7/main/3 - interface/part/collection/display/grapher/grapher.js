@@ -75,7 +75,7 @@ this.grapher = function(
             function drawBackground(){
                 //horizontal lines
                     //calculate the x value for all parts of this section
-                        const x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, backgroundTextStyle_horizontalMarkings.mappedPosition );
+                        const x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, backgroundTextStyle_horizontalMarkings.mappedPosition?backgroundTextStyle_horizontalMarkings.mappedPosition:0 );
     
                     //add all horizontal markings
                         for(let a = 0; a < backgroundTextStyle_horizontalMarkings.points.length; a++){
@@ -104,7 +104,7 @@ this.grapher = function(
     
                 //vertical lines
                     //calculate the y value for all parts of this section
-                        const y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, backgroundTextStyle_verticalMarkings.mappedPosition );
+                        const y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, backgroundTextStyle_verticalMarkings.mappedPosition?backgroundTextStyle_verticalMarkings.mappedPosition:0 );
     
                     //add all vertical markings
                         for(let a = 0; a < backgroundTextStyle_verticalMarkings.points.length; a++){
@@ -243,7 +243,7 @@ this.grapher = function(
 
                 //horizontal lines
                     //calculate the x value for all parts of this section
-                        const x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, backgroundTextStyle_horizontalMarkings.mappedPosition );
+                        const x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, backgroundTextStyle_horizontalMarkings.mappedPosition?backgroundTextStyle_horizontalMarkings.mappedPosition:0 );
 
                     //add all horizontal markings
                         for(let a = 0; a < backgroundTextStyle_horizontalMarkings.points.length; a++){
@@ -274,7 +274,7 @@ this.grapher = function(
 
                 //vertical lines
                     //calculate the y value for all parts of this section
-                        const y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, backgroundTextStyle_verticalMarkings.mappedPosition );
+                        const y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, backgroundTextStyle_verticalMarkings.mappedPosition?backgroundTextStyle_verticalMarkings.mappedPosition:0 );
 
                     //add all vertical markings
                         for(let a = 0; a < backgroundTextStyle_verticalMarkings.points.length; a++){

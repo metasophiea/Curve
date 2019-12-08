@@ -22489,7 +22489,7 @@
                                         var interCharacterSpacing = 0; 
                                             this.interCharacterSpacing = function(a){ if(a==undefined){return interCharacterSpacing;} interCharacterSpacing = a; if(this.devMode){console.log(this.getAddress()+'::interCharacterSpacing');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); }
                                         var font = defaultFontName;
-                                            this.font =   function(newFont){
+                                            this.font = function(newFont){
                                                 if(newFont==undefined){return font;}
                             
                                                 if( library.character.isApprovedFont(newFont) ){

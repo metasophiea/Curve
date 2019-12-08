@@ -11,6 +11,8 @@ this.dial_2_continuous = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.dial_2_continuous(...)'); //#development
+
     //elements 
         //main
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -92,13 +94,13 @@ this.dial_2_continuous = function(
 
             grappled = true;
             _canvas_.system.mouse.mouseInteractionHandler(
-                function(event){
+                function(x,y,event){
                     const value = initialValue;
                     const numerator = event.Y - initialY;
                     const divider = _canvas_.core.viewport.scale();
                     set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                 },
-                function(event){
+                function(x,y,event){
                     grappled = false;
                     if(object.onrelease != undefined){object.onrelease(value);}
                 }

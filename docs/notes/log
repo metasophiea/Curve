@@ -1,4 +1,70 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-12-08
+  CoreV3
+    - moved all of it into the engine (pretty happy with it too)
+    - dynamic cables are in (which new a new version select argument)
+
+
+2019-12-07
+  CoreV3
+    - made some adjustments to the system level's mouse interaction handlers, so
+      now they store the old functions every time (which I'd removed last time.
+      so I'm probably going to be fixing that again) and so that the onmove and 
+      onend callbacks provide the workspace x and y points along with the event
+      object
+        - later -
+    - yeap, fixed up the system layer's function holder thing, so now it's like
+      before. The code now waits until the core layer is ready before looking
+      for the functions
+    - redid the .go() methods, so that one can now have multiple functions
+      attached to it
+    - sequencers part is in
+    - the new mouse event callback handle was broken, so I fixed that (I'm
+      probably going to move all of it into the engine, but it works for now)
+    
+
+2019-12-06
+  CoreV3
+    - skipped over the list_image part, because lets be honest; its never used
+    - needleOverlay and grapher_waveWorkspace parts are in, though the
+      needleOverlay is having some issues with certian interactions
+    - fixed the system.mouse code slightly, so that the mouseInteractionHandler
+      function save the old listeners correctly
+
+
+2019-12-04
+  CoreV3
+    - after some jiggering, I think the list part is ready to go
+    
+    note: it always surprises me, how fast the system is when you add the
+          -removeDev flag to the compiler
+
+
+2019-12-03
+  CoreV3
+    - added "onFontUpdateCallback" callback to characterString proxy shape,
+      which is called when the engine's element has successfully loaded a new
+      font. Attaching a callback to this uses exactly the same method as
+      attaching a mouse or keyboard callback, though behind the scenes it is
+      dealt with differently (feels a little messy, though the front api is
+      pretty nice)
+    - improved core's callback operation even more, by adding a way of selecting
+      what mode of element activation occurs: "topMostOnly", "firstMatch" or
+      "allMatches". The first indicates that the callback should only be
+      attempted for the element directly under the mouse. The second indicates
+      that, for all the elements that touch the mouse point; only the topmost
+      element with a relivant callback should be activated. The third just
+      attempts the callback for all the elements who touch the mouse point
+    - its a little shakey, but the list part is working now
+
+
+2019-12-02
+  CoreV3
+    - added ".resultingWidth" to characterString proxy shape, which simply
+      returns a cached value. That cached value is automatically updated by the
+      engine's element when it completes its calculations for this value
+
+
 2019-12-01
   CoreV3
     - got together the checkboxes, the checkboxgrid, the dials and the slides

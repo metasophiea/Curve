@@ -3,6 +3,13 @@ const elementLibrary = new function(){
     {{include:modules/elementLibrary/main.js}}
 };
 
+this.go = new function(){
+    const functionList = [];
+
+    this.add = function(newFunction){ functionList.push(newFunction); };
+    this.__activate = function(){ functionList.forEach(f => f()); };
+};
+
 this.meta = new function(){
     this.areYouReady = function(){
         dev.log.interface('.meta.areYouReady()'); //#development
@@ -15,6 +22,10 @@ this.meta = new function(){
         return new Promise((resolve, reject) => {
             communicationModule.run('refresh',[],resolve);
         });
+    };
+    this.getElementFromId = function(id){
+        dev.log.interface('.meta.getElementFromId('+id+')'); //#development
+        return elementRegistry[id];
     };
 };
 

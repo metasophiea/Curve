@@ -1,4 +1,4 @@
-_canvas_.core.meta.go = function(){
+_canvas_.core.go.add( function(){ 
 
     let characterString_1 = _canvas_.core.element.create('characterString','test_characterString_1');
         characterString_1.unifiedAttribute({
@@ -110,4 +110,4 @@ _canvas_.core.meta.go = function(){
         _canvas_.core.arrangement.append(characterString_12);
 
     setTimeout(()=>{_canvas_.core.render.frame();},100);
-};
+} );

@@ -5,29 +5,6 @@ this.callback = new function(){
             communicationModule.run('callback.listCallbackTypes',[],resolve);
         });
     };
-    this.getCallbackTypeState = function(type){
-        dev.log.interface('.callback.getCallbackTypeState('+type+')'); //#development
-        return new Promise((resolve, reject) => {
-            communicationModule.run('callback.getCallbackTypeState',[type],resolve);
-        });
-    };
-    this.activateCallbackType = function(type){
-        dev.log.interface('.callback.activateCallbackType('+type+')'); //#development
-        communicationModule.run('callback.activateCallbackType',[type]);
-    };
-    this.disactivateCallbackType = function(type){
-        dev.log.interface('.callback.disactivateCallbackType('+type+')'); //#development
-        communicationModule.run('callback.disactivateCallbackType',[type]);
-    };
-    this.activateAllCallbackTypes = function(){
-        dev.log.interface('.callback.activateAllCallbackTypes()'); //#development
-        communicationModule.run('callback.activateAllCallbackTypes',[]);
-    };
-    this.disactivateAllCallbackTypes = function(){
-        dev.log.interface('.callback.disactivateAllCallbackTypes()'); //#development
-        communicationModule.run('callback.disactivateAllCallbackTypes',[]);
-    };
-
 
     const callbackRegistry = new function(){
         const registeredShapes = {};
@@ -45,8 +22,9 @@ this.callback = new function(){
             delete registeredShapes[id][callbackType];
         };
         this.call = function(id,callbackType,x,y,event){
-            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
+            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return false;}
             registeredShapes[id][callbackType](x,y,event);
+            return true;
         };
     };
     this.getCallback = function(element, callbackType){
@@ -64,11 +42,11 @@ this.callback = new function(){
         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
     };
 
-    let allowHiddenElementCallback = true;
-    this.allowHiddenElementCallback = function(bool){
-        dev.log.interface('.callback.allowHiddenElementCallback('+bool+')'); //#development
-        if(bool==undefined){return allowHiddenElementCallback;}
-        allowHiddenElementCallback = bool;
+    let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
+    this.callbackActivationMode = function(mode){
+        if(mode==undefined){return callbackActivationMode;}
+        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
+        callbackActivationMode = mode;
     };
 
     this.functions = {};
@@ -103,18 +81,21 @@ this.callback = new function(){
                     console.warn('unknown event type: ',event);
                 }
 
-                communicationModule.run('callback.coupling.'+callbackName,[sudoEvent]);
+                communicationModule.run('callback.coupling_in.'+callbackName,[sudoEvent]);
             };
-            communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
-                if(allowHiddenElementCallback){
-                    elements.forEach(id => { callbackRegistry.call(id,callbackName,x,y,event); });
-                }else{
-                    callbackRegistry.call(elements[0],callbackName,x,y,event);
-                }
-                if(self.callback.functions[callbackName]){
-                    self.callback.functions[callbackName](x,y,event,elements);
-                }
-            };
+
+            //service
+                communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
+                    if(self.callback.functions[callbackName]){
+                        self.callback.functions[callbackName](x,y,event,{
+                            all: elements.all.map(id => elementRegistry[id]),
+                            relevant: elements.relevant ? elements.relevant.map(id => elementRegistry[id]) : undefined,
+                        });
+                    }
+
+                    elements.relevant.forEach(id => callbackRegistry.call(id,callbackName,x,y,event) );
+                };
+
         });
     });
 };

@@ -46,12 +46,6 @@
         //     }
         
         //perform action
-            for(let a = 0; a < shapes.length; a++){
-                if(shapes[a].glyphs.includes(event.key)){
-                    shapes[a].onkeydown(x,y,event);
-                    return;
-                }
-            }
             _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
     };
 
@@ -62,11 +56,5 @@
             customKeyInterpreter(event,false);
         
         //perform action
-            for(let a = 0; a < shapes.length; a++){
-                if(shapes[a].glyphs.includes(event.key)){
-                    shapes[a].onkeyup(x,y,event);
-                    return;
-                }
-            }
             _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeyup, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
     };

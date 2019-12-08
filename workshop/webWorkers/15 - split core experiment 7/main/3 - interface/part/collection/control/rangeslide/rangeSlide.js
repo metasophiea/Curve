@@ -1,7 +1,7 @@
 this.rangeslide = function(
     name='rangeslide', 
     x, y, width=10, height=95, angle=0, interactable=true,
-    handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:0.5,end:0.75},
+    handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
     handleStyle={r:0.78,g:0.78,b:0.78,a:1},
     backingStyle={r:0.58,g:0.58,b:0.58,a:1},
     slotStyle={r:0.2,g:0.2,b:0.2,a:1},
@@ -10,6 +10,8 @@ this.rangeslide = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.rangeslide(...)'); //#development
+
     let grappled = false;
     const handleNames = ['start','end'];
 
@@ -63,28 +65,28 @@ this.rangeslide = function(
                     default: console.error('unknown handle to adjust'); break;
                     case 'start':
                         {
-                        //don't allow start slide to encroach on end slider's space
-                            if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                            //don't allow start slide to encrouch on end slider's space
+                                if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
 
-                        //if start slide bumps up against end slide; move end slide accordingly
-                            const start_rightEdge = a + (1-a)*handleHeight;
-                            const end_leftEdge = values.end - (values.end)*handleHeight;
-                            if( start_rightEdge >= end_leftEdge ){
-                                values.end = start_rightEdge/(1-handleHeight);
-                            }
+                            //if start slide bumps up against end slide; move end slide accordingly
+                                const start_rightEdge = a + (1-a)*handleHeight;
+                                const end_leftEdge = values.end - (values.end)*handleHeight;
+                                if( start_rightEdge >= end_leftEdge ){
+                                    values.end = start_rightEdge/(1-handleHeight);
+                                }
                         }
                     break;
                     case 'end':
                         {
-                        //don't allow end slide to encroach on start slider's space
-                            if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                            //don't allow end slide to encrouch on start slider's space
+                                if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
 
-                        //if end slide bumps up against start slide; move start slide accordingly
-                            const start_rightEdge = values.start + (1-values.start)*handleHeight;
-                            const end_leftEdge = a - (a)*handleHeight;
-                            if( start_rightEdge >= end_leftEdge ){
-                                values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
-                            }
+                            //if end slide bumps up against start slide; move start slide accordingly
+                                const start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                const end_leftEdge = a - (a)*handleHeight;
+                                if( start_rightEdge >= end_leftEdge ){
+                                    values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                }
                         }
                     break;
                 }
@@ -121,7 +123,7 @@ this.rangeslide = function(
 
     //methods
         object.get = function(){return values;};
-        object.set = function(values,update=true){
+        object.set = function(values,update){
             if(grappled){return;}
             if(values.start != undefined){set(values.start,'start',update);}
             if(values.end != undefined){set(values.end,'end',update);}
@@ -130,7 +132,7 @@ this.rangeslide = function(
             if(bool==undefined){return interactable;}
             interactable = bool;
         };
-
+        
     //interaction
         function getPositionWithinFromMouse(x,y){
             //calculate the distance the click is from the top of the slider (accounting for angle)
@@ -149,6 +151,11 @@ this.rangeslide = function(
         }
 
         //background click
+            //to stop clicks passing through the span
+                span.attachCallback('onmousedown', function(){});
+                span.attachCallback('onclick', function(){});
+                
+            backingAndSlotCover.attachCallback('onmousedown', function(){}); //to stop unit selection
             backingAndSlotCover.attachCallback('onclick', function(x,y,event){
                 if(!interactable){return;}
                 if(grappled){return;}
@@ -165,7 +172,7 @@ this.rangeslide = function(
             });
 
         //double-click reset
-            function ondblclick(){
+            cover.attachCallback('ondblclick', function(){
                 if(!interactable){return;}
                 if(resetValues.start<0 || resetValues.end<0){return;}
                 if(grappled){return;}
@@ -173,15 +180,10 @@ this.rangeslide = function(
                 set(resetValues.start,'start');
                 set(resetValues.end,'end');
                 object.onrelease(values);
-            }
-            backingAndSlotCover.attachCallback('ondblclick', ondblclick);
-            span.attachCallback('ondblclick', ondblclick);
-            Object.entries(handles).forEach(entry => {
-                entry[1].getChildren()[1].attachCallback('ondblclick', ondblclick);
-            });
+            } );
 
         //span panning - expand/shrink
-            function onwheel(x,y,event){
+            cover.attachCallback('onwheel', function(x,y,event){
                 if(!interactable){return;}
                 if(grappled){return;}
 
@@ -191,12 +193,7 @@ this.rangeslide = function(
 
                 set(values.start-val,'start');
                 set(values.end+val,'end');
-            }
-            backingAndSlotCover.attachCallback('onwheel', onwheel);
-            span.attachCallback('onwheel', onwheel);
-            Object.entries(handles).forEach(entry => {
-                entry[1].getChildren()[1].attachCallback('onwheel', onwheel);
-            });
+            } );
 
         //span panning - drag
             span.attachCallback('onmousedown', function(x,y,event){
@@ -208,21 +205,22 @@ this.rangeslide = function(
                 const mux = height - height*handleHeight;
 
                 _canvas_.system.mouse.mouseInteractionHandler(
-                    function(event){
+                    function(x,y,event){
                         const numerator = initialY - currentMousePosition(event);
                         const divider = _canvas_.core.viewport.scale();
                         pan( initialValue - (numerator/(divider*mux)) )
                         object.onchange(values);
                     },
-                    function(event){
+                    function(x,y,event){
                         object.onrelease(values);
                         grappled = false;
                     }
                 );
-            });
+            } );
 
         //handle movement
             for(let a = 0; a < handleNames.length; a++){
+                handles[handleNames[a]].getChildren()[1].attachCallback('onclick', function(){});
                 handles[handleNames[a]].getChildren()[1].attachCallback('onmousedown', (function(a){
                     return function(x,y,event){
                         if(!interactable){return;}
@@ -233,20 +231,20 @@ this.rangeslide = function(
                         const mux = height - height*handleHeight;
 
                         _canvas_.system.mouse.mouseInteractionHandler(
-                            function(event){
+                            function(x,y,event){
                                 const numerator = initialY-currentMousePosition(event);
                                 const divider = _canvas_.core.viewport.scale();
                                 set( initialValue - (numerator/(divider*mux) ), handleNames[a] );
                             },
-                            function(event){
+                            function(x,y,event){
                                 object.onrelease(values);
                                 grappled = false;
                             }
                         );
                     }
-                })(a));
+                })(a) );
             }
-  
+
     //callbacks
         object.onchange = onchange;
         object.onrelease = onrelease;  
