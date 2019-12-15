@@ -1,4 +1,17 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-12-15
+  CoreV3
+    - still on that pathfinding library function thing, but have now improved
+      the 'detect overlap' code a lot (into a new section called
+      "detectIntersection") and have code that can generate the visibility graph
+      for a series of polys
+
+
+2019-12-14
+  CoreV3
+    - started work on a new pathfinding library function
+
+
 2019-12-08
   CoreV3
     - moved all of it into the engine (pretty happy with it too)

@@ -89,6 +89,8 @@ _canvas_.library = new function(){
 
     this.math = new function(){
         {{include:modules/math.js}}
+        {{include:modules/detectIntersect.math.js}}
+        {{include:modules/polygonsToVisibilityGraph.math.js}}
     };
     this.glsl = new function(){
         {{include:modules/glsl.js}}

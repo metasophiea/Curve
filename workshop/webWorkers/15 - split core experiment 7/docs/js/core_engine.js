@@ -304,6 +304,9 @@ const library = new function(){
                     a.topLeft.y <= b.bottomRight.y && 
                     a.topLeft.x <= b.bottomRight.x;
             };
+            this.pointOnLine = function(point,line){
+                return library.math.getAngleOfTwoPoints(line[0],line[1]) == library.math.getAngleOfTwoPoints(point,line[1]);
+            }
             this.pointWithinBoundingBox = function(point,box){
                 dev.log.math('.detectOverlap.pointWithinBoundingBox('+JSON.stringify(point)+','+JSON.stringify(box)+')'); //#development
                 dev.count('.math.detectOverlap.pointWithinBoundingBox'); //#development
@@ -352,9 +355,29 @@ const library = new function(){
                 }
                 return inside;
             };
-            this.lineSegments = function(segment1, segment2){
+            this.lineSegments = function(segment1, segment2, countSkirting=true){
                 dev.log.math('.detectOverlap.lineSegments('+JSON.stringify(segment1)+','+JSON.stringify(segment2)+')'); //#development
                 dev.count('.math.detectOverlap.lineSegments'); //#development
+        
+                if(!countSkirting){
+                    //if one point of a line is on the other line; this is a skirt, return null
+                        //point on point
+                            // if(segment1[0] == segment2[0] || segment1[0] == segment2[1] || segment1[1] == segment2[0] || segment1[1] == segment2[1]){
+                            if(
+                                segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y || 
+                                segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y || 
+                                segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y || 
+                                segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y
+                            ){
+                                return null;
+                            }
+                        //point on line
+                            if( this.pointOnLine(segment1[0],segment2) || this.pointOnLine(segment1[1],segment2) ||
+                                this.pointOnLine(segment2[0],segment1) || this.pointOnLine(segment2[1],segment1)
+                            ){
+                                return null;
+                            }
+                }
         
                 const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
                 if(denominator == 0){return null;}
@@ -411,10 +434,9 @@ const library = new function(){
                 }
                 return false;
             };
-        
-            function overlappingLineWithPolygon(line,poly){
-                dev.log.math('.detectOverlap::overlappingLineWithPolygon('+JSON.stringify(line)+','+JSON.stringify(poly)+')'); //#development
-                dev.count('.math.detectOverlap::overlappingLineWithPolygon'); //#development
+            this.overlappingLineWithPolygon = function(line,poly,returnDetails=false,countSkirting=true){
+                dev.log.math('.detectOverlap.overlappingLineWithPolygon('+JSON.stringify(line)+','+JSON.stringify(poly)+')'); //#development
+                dev.count('.math.detectOverlap.overlappingLineWithPolygon'); //#development
         
                 //go through every side of the poly, and if one of them collides with the line, return true
                 for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
@@ -427,13 +449,35 @@ const library = new function(){
                             { x:poly.points[a].x, y:poly.points[a].y },
                             { x:poly.points[b].x, y:poly.points[b].y }
                         ],
+                        countSkirting
                     );
-                    if(tmp != null && tmp.inSeg1 && tmp.inSeg2){ return true; }
+                    if(tmp != null && tmp.inSeg1 && tmp.inSeg2){
+                        return returnDetails ? {x:tmp.x,y:tmp.y} : true;
+                    }
                 }
+                
+                //check if it is a perfect traversal of the poly
+                    for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
+                        if( !countSkirting &&
+                            this.pointOnLine(
+                                { x: (line.x1+line.x2)/2, y: (line.y1+line.y2)/2, },
+                                [
+                                    { x:poly.points[a].x, y:poly.points[a].y },
+                                    { x:poly.points[b].x, y:poly.points[b].y }
+                                ],
+                            )
+                        ){
+                            return returnDetails ? {} : false;
+                        }
+                    }
         
-                return false;
+                    if( this.pointWithinPoly({ x: (line.x1+line.x2)/2, y: (line.y1+line.y2)/2, },poly.points) ){
+                        return returnDetails ? {inSeg1:true,inSeg2:true} : true;
+                    }
+        
+                return returnDetails ? {} : false;
             };
-            this.overlappingLineWithPolygons = function(line,polys){
+            this.overlappingLineWithPolygons = function(line,polys,returnDetails=false,countSkirting=true){
                 dev.log.math('.detectOverlap.overlappingLineWithPolygons('+JSON.stringify(line)+','+JSON.stringify(polys)+')'); //#development
                 dev.count('.math.detectOverlap.overlappingLineWithPolygons'); //#development
         
@@ -458,7 +502,12 @@ const library = new function(){
                     const collidingPolyIndexes = [];
                     polys.forEach((poly,index) => {
                         if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
-                        if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
+                        if(returnDetails){
+                            const result = this.overlappingLineWithPolygon(line,poly,returnDetails,countSkirting);
+                            if(result.x || result.y){ collidingPolyIndexes.push( {index:index,data:result} ); }
+                        }else{
+                            if(this.overlappingLineWithPolygon(line,poly,returnDetails,countSkirting)){ collidingPolyIndexes.push(index); }
+                        }
                     });
         
                 return collidingPolyIndexes;
@@ -588,6 +637,9 @@ const library = new function(){
             return result;
         };
         
+        this.distanceBetweenTwoPoints = function(point_a,point_b){
+            return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
+        };
         this.cartesian2polar = function(x,y){
             dev.log.math('.cartesian2polar('+x+','+y+')'); //#development
             dev.count('.math.cartesian2polar'); //#development
@@ -636,8 +688,6 @@ const library = new function(){
                 const p = ratio*(rgbaList.length-1);
                 return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
         };
-        
-        
         
         this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
             dev.log.math('.polygonToSubTriangles('+JSON.stringify(regions)+','+inputFormat+')'); //#development
@@ -942,7 +992,6 @@ const library = new function(){
                 return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
         };
         
-        
         this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8}){
             dev.log.math('.fitPolyIn('+JSON.stringify(freshPoly)+','+JSON.stringify(environmentPolys)+','+JSON.stringify(snapping)+')'); //#development
             dev.count('.math.fitPolyIn'); //#development
@@ -1089,6 +1138,136 @@ const library = new function(){
         
             return dev ? {offset:offset,paths:paths} : offset;
         };
+        
+        // this.pathFinder = function(point_a,point_b,polys,grapher){
+        //     // return v1(point_a,point_b,polys,grapher);
+        //     return v2(point_a,point_b,polys,grapher);
+        
+        //     function v1(point_a,point_b,polys,grapher){
+        //         const outputPath = [point_a];
+        
+        //         console.log( polys );
+        
+        //         //find first collision poly
+        //             let results = library.math.detectOverlap.overlappingLineWithPolygons( { x1:point_a.x, y1:point_a.y, x2:point_b.x, y2:point_b.y }, polys, true );
+        //             console.log(results);
+        //             results.forEach(result => { grapher.drawCircle(result.data.x,result.data.y,2.5,'rgba(255,0,255,1)'); });
+        //             let collisionPoints = results.map(result => ({x:result.data.x,y:result.data.y}) );
+        //             // console.log(collisionPoints);
+        //             let collisionDistances = collisionPoints.map(point => library.math.distanceBetweenTwpPoints(point_a,point) );
+        //             // console.log(collisionDistances);
+        //             let smallestCollisionDistanceIndex = collisionDistances.indexOf(Math.min(...collisionDistances));
+        //             // console.log(smallestCollisionDistanceIndex);
+        //             let indexOfClosestPoly = results[smallestCollisionDistanceIndex];
+        //             // console.log(indexOfClosestPoly);
+        //             let firstCollisionPoly = polys[indexOfClosestPoly.index];
+        //             // console.log(firstCollisionPoly);
+        //             let firstCollisionPoint = collisionPoints[smallestCollisionDistanceIndex];
+        //             // console.log(firstCollisionPoint);
+        
+        //         //get articulation point
+        //             let collisionPoly = firstCollisionPoly;
+        //             let collisionPoint = firstCollisionPoint;
+        //             // console.log(collisionPoly.points);
+        
+        //             let possiblePoints = [];
+        //             for(let a = 0; a < collisionPoly.points.length; a++){
+        //                 let angle = library.math.getAngleOfTwoPoints(collisionPoint,collisionPoly.points[a])-library.math.getAngleOfTwoPoints(collisionPoint,point_b);
+        //                 if( angle < Math.PI/2 || angle > Math.PI*2 - Math.PI/2 ){
+        //                     possiblePoints.push({
+        //                         point:collisionPoly.points[a],
+        //                         distance:library.math.distanceBetweenTwpPoints(point_a,collisionPoly.points[a])+library.math.distanceBetweenTwpPoints(point_b,collisionPoly.points[a]),
+        //                     });
+        //                 }
+        //             }
+        //             // console.log(possiblePoints);
+        //             // console.log(possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance)))));
+        //             let articulationPoint = possiblePoints[
+        //                 possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance))))
+        //             ].point;
+        //             // console.log(articulationPoint);
+        //             outputPath.push(articulationPoint);
+        
+        //         //find next collision poly
+        //             results = library.math.detectOverlap.overlappingLineWithPolygons( { x1:articulationPoint.x, y1:articulationPoint.y, x2:point_b.x, y2:point_b.y }, polys, true ).filter(point => {
+        //                 return point.data.x != articulationPoint.x || point.data.y != articulationPoint.y;
+        //             });
+        //             results.forEach(result => { grapher.drawCircle(result.data.x,result.data.y,2.5,'rgba(255,0,255,1)'); });
+        //             collisionPoints = results.map(result => ({x:result.data.x,y:result.data.y}) );
+        //             console.log(collisionPoints);
+        
+        //         outputPath.push(point_b);
+        //         return outputPath;
+        //     }
+        //     function v2(point_a,point_b,polys,grapher){
+        
+        //         function getPointsInBetween(point_a,point_b,polys){
+        //             //get all collided polys (if none, return empty array)(if the collision point is one of the argument points, ignore that poly)
+        //                 const collidedPolys = library.math.detectOverlap.overlappingLineWithPolygons( { x1:point_a.x, y1:point_a.y, x2:point_b.x, y2:point_b.y }, polys, true ).filter(poly => {
+        //                     const ind_a = polys[poly.index].points.indexOf(point_a);
+        //                     const ind_b = polys[poly.index].points.indexOf(point_b);
+        //                     if( ind_a != -1 && ind_b != -1 && Math.abs(ind_a - ind_b) != 1){ return true; }
+        //                     return !(poly.data.x == point_a.x && poly.data.y == point_a.y || poly.data.x == point_b.x && poly.data.y == point_b.y);
+        //                 });
+        //                 if(collidedPolys.length == 0){return [];}
+        //                 collidedPolys.forEach(poly => { grapher.drawCircle(poly.data.x,poly.data.y,2.5,'rgba(255,0,255,1)'); });
+        
+        //             //get first collision point and that poly
+        //                 const collisionPoints = collidedPolys.map(result => ({x:                                                result.data.x,y:result.data.y}) );
+        //                 const collisionDistances = collisionPoints.map(point => library.math.distanceBetweenTwpPoints(point_a,point) );
+        //                 const smallestCollisionDistanceIndex = collisionDistances.indexOf(Math.min(...collisionDistances));
+        //                 const collisionPoint = collisionPoints[smallestCollisionDistanceIndex];
+        //                 const collisionPoly = polys[collidedPolys[smallestCollisionDistanceIndex].index];
+        
+        //             //get articulation point around that poly
+        //                 const possiblePoints = [];
+        //                 for(let a = 0; a < collisionPoly.points.length; a++){
+        //                     const angle = library.math.getAngleOfTwoPoints(collisionPoint,collisionPoly.points[a]) - library.math.getAngleOfTwoPoints(collisionPoint,point_b);
+        //                     if( angle < Math.PI/2 || angle > Math.PI*2 - Math.PI/2 ){
+        //                         if(
+        //                             collisionPoly.points[a].x == point_a.x && collisionPoly.points[a].y == point_a.y ||
+        //                             collisionPoly.points[a].x == point_b.x && collisionPoly.points[a].y == point_b.y ||
+        //                             previouslyVisitedPoints.indexOf(collisionPoly.points[a]) != -1
+        //                         ){
+        //                             continue;
+        //                         }
+        
+        //                         possiblePoints.push({
+        //                             point: collisionPoly.points[a],
+        //                             distance: library.math.distanceBetweenTwpPoints(point_a,collisionPoly.points[a]) + library.math.distanceBetweenTwpPoints(point_b,collisionPoly.points[a]),
+        //                         });
+        //                     }
+        //                 }
+        //                 const articulationPoint = possiblePoints[
+        //                     possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance))))
+        //                 ].point;
+        //                 previouslyVisitedPoints.push(articulationPoint);
+        
+        //             //recursive dive on both sides
+        //                 const articulationPoints_upstream = getPointsInBetween(point_a,articulationPoint,polys);
+        //                 const articulationPoints_downstream = getPointsInBetween(articulationPoint,point_b,polys);
+        
+        //             return articulationPoints_upstream.concat(articulationPoint).concat(articulationPoints_downstream);
+        //         };
+        
+        //         //get path
+        //             const previouslyVisitedPoints = [];
+        //             const path = [point_a].concat(getPointsInBetween(point_a,point_b,polys)).concat(point_b);
+        
+        //         //go back over path to remove any detours
+        //             for(let a = 0; a < path.length-2; a++){
+        //                 const collisionPoints = library.math.detectOverlap.overlappingLineWithPolygons({ x1:path[a].x, y1:path[a].y, x2:path[a+2].x, y2:path[a+2].y }, polys, true)
+        //                     .map(i => i.data)
+        //                     .filter(point => !(point.x == path[a].x && point.y == path[a].y || point.x == path[a+2].x && point.y == path[a+2].y));
+        //                 if(collisionPoints.length == 0){
+        //                     path.splice(path.indexOf(path[a+1]),1);
+        //                     a = -1;
+        //                 }
+        //             }
+        
+        //         return path;
+        //     }
+        // };
     };
     this.glsl = new function(){
         this.geometry = `
