@@ -38350,9 +38350,9 @@
                             if(demoURL == undefined){
                                 return;
                             }else if( !isNaN(parseInt(demoURL)) ){
-                                _canvas_.control.scene.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
+                                _canvas_.control.scene.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback,false);
                             }else{ 
-                                _canvas_.control.scene.load(demoURL,loadingCompleteCallback);
+                                _canvas_.control.scene.load(demoURL,loadingCompleteCallback,false);
                             }
                         }
                         function waiter(){

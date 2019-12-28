@@ -10,6 +10,9 @@
     - setting things up for the switch over
     - performed the switch over and pushed
     - updated the readme
+    - demo loader was asking for permission to change the scene, which doesn't
+      make a whole lot of sense considering what the automatic demo loader is
+      trying to accomplish
 
 
 2019-12-26
