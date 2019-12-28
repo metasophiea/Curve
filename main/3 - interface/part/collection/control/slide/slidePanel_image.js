@@ -8,12 +8,14 @@ this.slidePanel_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.slidePanel_image(...)'); //#development
+
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+            const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //slides
-            for(var a = 0; a < count; a++){
-                var temp = interfacePart.builder(
+            for(let a = 0; a < count; a++){
+                const temp = interfacePart.builder(
                     'control', 'slide_continuous_image', 'slide_'+a, {
                         x:a*(width/count), y:0,
                         width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
@@ -28,7 +30,7 @@ this.slidePanel_image = function(
             }
         //overlay
             if(overlayURL != undefined){
-                var overlay = interfacePart.builder('basic','image','overlay',{width:width, height:height, url:overlayURL});
+                const overlay = interfacePart.builder('basic','image','overlay',{width:width, height:height, url:overlayURL});
                 object.append(overlay);
             }
 
@@ -36,7 +38,7 @@ this.slidePanel_image = function(
             if(bool==undefined){return interactable;}
             interactable = bool;
 
-            for(var a = 0; a < count; a++){
+            for(let a = 0; a < count; a++){
                 object.children[a].interactable(bool);
             }
         };

@@ -1,12 +1,12 @@
-this.demultiplexer_2 = function(x,y,angle){
+this.demultiplexer_2 = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'demultiplexer/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = {
+                const div = 10;
+                const measurement = {
                     file: { width:200, height:300 },
                     design: { width:2, height:3 },
                 };
@@ -25,8 +25,9 @@ this.demultiplexer_2 = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'demultiplexer_2',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'demultiplexer_2',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -56,7 +57,7 @@ this.demultiplexer_2 = function(x,y,angle){
         });
 
     //circuitry
-        var state = {
+        const state = {
             channelCount:2,
             previousPosition:-1,
             position:0,
@@ -79,7 +80,7 @@ this.demultiplexer_2 = function(x,y,angle){
 
     //wiring
         //io
-            for(var a = 0; a < state.channelCount; a++){
+            for(let a = 0; a < state.channelCount; a++){
                 object.io.signal['in_'+a].onchange = (function(a){
                     return function(value){
                         if(state.position == a){ object.io.signal.out.set(value); }

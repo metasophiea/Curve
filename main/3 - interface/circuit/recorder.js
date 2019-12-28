@@ -1,7 +1,7 @@
 this.recorder = function(context){
 
     //state
-        var state = {
+        const state = {
             recordedChunks: [],
             recordingStartTime: -1,
             recordingLength: 0,
@@ -9,7 +9,7 @@ this.recorder = function(context){
 
     //flow
         //flow chain
-            var flow = {
+            const flow = {
                 leftIn:{}, rightIn:{},
                 recordingNode:{},
                 leftOut:{}, rightOut:{},
@@ -86,7 +86,7 @@ this.recorder = function(context){
             return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
         };
         this.save = function(filename='output'){
-            var a = document.createElement('a');
+            const a = document.createElement('a');
             a.href = URL.createObjectURL(this.export());
             a.download = filename+'.ogg';
             document.body.appendChild(a);

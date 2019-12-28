@@ -6,7 +6,7 @@ this.button_rectangle = function(
     
     active=true, hoverable=true, selectable=false, pressable=true,
 
-    text_font = 'Arial',
+    text_font='Arial',
     text_size=2.5,
     text_spacing=0.1,
     text_interCharacterSpacing=0,
@@ -90,14 +90,16 @@ this.button_rectangle = function(
     onselect = function(event){},
     ondeselect = function(event){},
 ){
+    dev.log.partControl('.button_rectangle(...)'); //#development
+
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('basic','group',name+'__subGroup');
+            const subject = interfacePart.builder('basic','group',name+'__subGroup');
         //backing
-            var backing = interfacePart.builder('basic','rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
+            const backing = interfacePart.builder('basic','rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
             subject.append(backing);
         //text
-            var text_centre = interfacePart.builder('basic','text','centre', {
+            const textCentreElement = interfacePart.builder('basic','text','centre', {
                 x:width/2, 
                 y:height*textVerticalOffsetMux, 
                 text:text_centre, 
@@ -105,12 +107,12 @@ this.button_rectangle = function(
                 height:text_size,
                 colour:text__up__colour,
                 font:text_font,
-                printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
+                printingMode:{ widthCalculation:'absolute',horizontal:'middle',vertical:'middle' },
                 spacing:text_spacing,
                 interCharacterSpacing:text_interCharacterSpacing,
             });
-            subject.append(text_centre);
-            var text_left = interfacePart.builder('basic','text','left', {
+            subject.append(textCentreElement);
+            const textLeftElement = interfacePart.builder('basic','text','left', {
                 x:width*textHorizontalOffsetMux, 
                 y:height*textVerticalOffsetMux, 
                 text:text_left, 
@@ -122,8 +124,8 @@ this.button_rectangle = function(
                 spacing:text_spacing,
                 interCharacterSpacing:text_interCharacterSpacing,
             });
-            subject.append(text_left);
-            var text_right = interfacePart.builder('basic','text','right',{
+            subject.append(textLeftElement);
+            const textRightElement = interfacePart.builder('basic','text','right',{
                 x:width-(width*textHorizontalOffsetMux), 
                 y:height*textVerticalOffsetMux, 
                 text:text_right, 
@@ -135,13 +137,13 @@ this.button_rectangle = function(
                 spacing:text_spacing,
                 interCharacterSpacing:text_interCharacterSpacing,
             });
-            subject.append(text_right);
+            subject.append(textRightElement);
         //cover
             subject.cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0} });
             subject.append(subject.cover);
 
     //generic button part
-        var object = interfacePart.builder(
+        const object = interfacePart.builder(
             'control', 'button_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
@@ -162,16 +164,16 @@ this.button_rectangle = function(
     //graphical state adjust
         object.activateGraphicalState = function(state){
             if(!active){ 
-                text_centre.colour(text__off__colour);
-                text_left.colour(text__off__colour);
-                text_right.colour(text__off__colour);
+                textCentreElement.colour(text__off__colour);
+                textLeftElement.colour(text__off__colour);
+                textRightElement.colour(text__off__colour);
                 backing.colour = backing__off__colour;
                 backing.lineColour = backing__off__lineColour;
                 backing.thickness( backing__off__lineThickness );
                 return;
             }
             
-            var styles = [
+            const styles = [
                 { text_colour:text__up__colour,                      colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
                 { text_colour:text__press__colour,                   colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
                 { text_colour:text__select__colour,                  colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
@@ -193,13 +195,13 @@ this.button_rectangle = function(
             if(!hoverable && state.hovering ){ state.hovering = false; }
             if(!selectable && state.selected ){ state.selected = false; }
 
-            var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
-            text_centre.colour(styles[i].text_colour);
-            text_left.colour(styles[i].text_colour);
-            text_right.colour(styles[i].text_colour);
-            backing.colour = styles[i].colour;
-            backing.lineColour = styles[i].lineColour;
-            backing.thickness( styles[i].lineThickness );
+            const i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+            textCentreElement.colour(styles[i].text_colour);
+            textLeftElement.colour(styles[i].text_colour);
+            textRightElement.colour(styles[i].text_colour);
+            backing.colour(styles[i].colour);
+            backing.lineColour(styles[i].lineColour);
+            backing.thickness(styles[i].lineThickness);
         };
         object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
 

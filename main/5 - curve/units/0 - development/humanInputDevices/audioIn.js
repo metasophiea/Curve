@@ -1,4 +1,4 @@
-this.audioIn = function(x,y,a,setupConnect=true){
+this.audioIn = function(name,x,y,a,setupConnect=true){
     var attributes = {
         deviceList:[],
         currentSelection: 0
@@ -22,7 +22,8 @@ this.audioIn = function(x,y,a,setupConnect=true){
         },
     };
     var design = {
-        name:'audioIn',
+        name:name,
+        model:'audioIn',
         category:'humanInputDevices',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -37,8 +38,8 @@ this.audioIn = function(x,y,a,setupConnect=true){
                 {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
             ], colour:style.background }},
             {collection:'dynamic', type:'connectionNode_audio', name:'audioOut', data:{x: -10, y: 15, width: 10, height: 20, isAudioOutput:true }},
-            {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
-            {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
+            {collection:'display', type:'readout_sixteenSegmentDisplay', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, static:true, count:5, style:style.readout}},
+            {collection:'display', type:'readout_sixteenSegmentDisplay', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, static:true, count:10, style:style.readout}},
             {collection:'control', type:'button_rectangle', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
             {collection:'control', type:'button_rectangle', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
             {collection:'basic', type:'text', name:'gainLabel_name', data:{x:30, y:42, text:'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
@@ -78,10 +79,10 @@ this.audioIn = function(x,y,a,setupConnect=true){
     //internal functions
         function selectDevice(a){
             if(attributes.deviceList.length == 0){
-                object.elements.readout_sixteenSegmentDisplay_static.index.text(' n/a');
-                object.elements.readout_sixteenSegmentDisplay_static.index.print();
-                object.elements.readout_sixteenSegmentDisplay_static.text.text('no devices');
-                object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
+                object.elements.readout_sixteenSegmentDisplay.index.text(' n/a');
+                object.elements.readout_sixteenSegmentDisplay.index.print();
+                object.elements.readout_sixteenSegmentDisplay.text.text('no devices');
+                object.elements.readout_sixteenSegmentDisplay.text.print('smart');
                 return;
             }
             if( a < 0 || a >= attributes.deviceList.length ){return;}
@@ -89,13 +90,13 @@ this.audioIn = function(x,y,a,setupConnect=true){
 
             selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
             totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
-            object.elements.readout_sixteenSegmentDisplay_static.index.text(selectionNum+'/'+totalNum);
-            object.elements.readout_sixteenSegmentDisplay_static.index.print();
+            object.elements.readout_sixteenSegmentDisplay.index.text(selectionNum+'/'+totalNum);
+            object.elements.readout_sixteenSegmentDisplay.index.print();
 
             var text = attributes.deviceList[a].deviceId;
             if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
-            object.elements.readout_sixteenSegmentDisplay_static.text.text(text);
-            object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
+            object.elements.readout_sixteenSegmentDisplay.text.text(text);
+            object.elements.readout_sixteenSegmentDisplay.text.print('smart');
 
             object.circuitry.unit.selectDevice( attributes.deviceList[a].deviceId );
         }

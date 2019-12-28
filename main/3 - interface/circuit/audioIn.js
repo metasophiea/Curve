@@ -2,7 +2,7 @@ this.audioIn = function(
     context, setupConnect=true
 ){
     //flow chain
-        var flow = {
+        const flow = {
             audioDevice:undefined,
             outAggregator: {}
         };
@@ -25,7 +25,7 @@ this.audioIn = function(
             );
         };
         this.selectDevice = function(deviceId){
-            var promise = navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}});
+            const promise = navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}});
             promise.then(
                 function(source){
                     if(flow.audioDevice != undefined){ flow.audioDevice.disconnect(); }

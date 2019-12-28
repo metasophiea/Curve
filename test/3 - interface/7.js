@@ -1,26 +1,35 @@
-_canvas_.core.render.active(true);
+_canvas_.interface.go.add( function(){
 
-var cn_reg_0 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode', 'test_connectionNode1', { x:10, y:10, cableConnectionPosition:{x:0,y:0} } );
-var cn_reg_1 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode', 'test_connectionNode2', { x:110,y:10, cableConnectionPosition:{x:1,y:1} } );
-_canvas_.system.pane.mm.append( cn_reg_0 );
-_canvas_.system.pane.mm.append( cn_reg_1 );
-cn_reg_0.connectTo(cn_reg_1);
+    var design = {
+        name: 'name of unit (unique to collection)',
+        collection: 'name of the collection to which this unit belongs',
+        x: 0, y: 0,
+        space: [{x:-5,y:-5}, {x:105,y:-5}, {x:105,y:45}, {x:245,y:45}, {x:245,y:105}, {x:-5,y:105}],
+        // spaceOutline: true,
+        elements:[
+            {collection:'basic', type:'rectangle', name:'rectangle0', data:{ x:0, y:0,   width:50, height:50, colour:{r:1,g:0,b:0,a:1} }},
+            {collection:'basic', type:'rectangle', name:'rectangle1', data:{ x:50, y:0,  width:50, height:50, colour:{r:0,g:1,b:0,a:1} }},
+            {collection:'basic', type:'rectangle', name:'rectangle2', data:{ x:50, y:50, width:50, height:50, colour:{r:1,g:1,b:0,a:1} }, grapple:true},
+            {collection:'basic', type:'rectangle', name:'rectangle3', data:{ x:0, y:50,  width:50, height:50, colour:{r:0,g:0,b:1,a:1} }},
 
+            {collection:'dynamic', type:'connectionNode', name:'connectionNode1', data:{ x:100, y:50 }},
+            {collection:'dynamic', type:'connectionNode', name:'connectionNode2', data:{ x:100, y:80 }},
+            {collection:'dynamic', type:'connectionNode_signal', name:'connectionNode_signal1', data:{ x:130, y:50 }},
+            {collection:'dynamic', type:'connectionNode_signal', name:'connectionNode_signal2', data:{ x:130, y:80 }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'connectionNode_voltage1', data:{ x:160, y:50 }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'connectionNode_voltage2', data:{ x:160, y:80 }},
+            {collection:'dynamic', type:'connectionNode_data', name:'connectionNode_data1', data:{ x:190, y:50 }},
+            {collection:'dynamic', type:'connectionNode_data', name:'connectionNode_data2', data:{ x:190, y:80 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'connectionNode_audio1', data:{ x:220, y:50, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'connectionNode_audio2', data:{ x:220, y:80, isAudioOutput:false }},
+        ],
+    };
+    var newUnit = _canvas_.interface.unit.builder(design);
+    _canvas_.system.pane.mm.append( newUnit );
 
+    console.log( newUnit.io );
 
-var rect_1 = _canvas_.interface.part.builder( 'basic', 'rectangle', 'rect_1', { x:10, y:60, height:20, width:20, colour:{r:0.75,g:0.75,b:0.75,a:1}} );
-var rect_2 = _canvas_.interface.part.builder( 'basic', 'rectangle', 'rect_2', { x:110, y:80, height:20, width:20, colour:{r:0.75,g:0.75,b:0.75,a:1}} );
-_canvas_.system.pane.mm.append( rect_1 );
-_canvas_.system.pane.mm.append( rect_2 );
+    _canvas_.core.render.active(true);
+    _canvas_.core.viewport.stopMouseScroll(true);
 
-var cn_reg_2 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode', 'test_connectionNode3', { 
-    x:10-40*0.25, y:60-40*0.25, width:40, height:40, cableConnectionPosition:{x:0.75,y:0.5}, cableVersion:2, 
-    style:{ dim:{r:1,g:0.75,b:0.75,a:0}, glow:{r:0,g:0,b:0,a:0} }
-} );
-var cn_reg_3 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode', 'test_connectionNode4', { 
-    x:110+40*0.75, y:80+40*0.75, width:40, height:40, angle:Math.PI, cableConnectionPosition:{x:0.75,y:0.5}, cableVersion:2, 
-    style:{ dim:{r:1,g:0.75,b:0.75,a:0}, glow:{r:0,g:0,b:0,a:0} }
-} );
-_canvas_.system.pane.mm.append( cn_reg_2 );
-_canvas_.system.pane.mm.append( cn_reg_3 );
-cn_reg_2.connectTo(cn_reg_3);
+});

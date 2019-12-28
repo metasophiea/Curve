@@ -1,10 +1,11 @@
-this.universalreadout = function(x,y,a){
+this.universalreadout = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
     };
     var design = {
-        name: 'universalreadout',
+        name: name,
+        model: 'universalreadout',
         category:'misc',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -76,14 +77,15 @@ this.universalreadout.metadata = {
 
 
 
-this.universalreadout2 = function(x,y,a){
+this.universalreadout2 = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         text:{colour:{r:0,g:0,b:0,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
     };
 
     var design = {
-        name: 'universalreadout2',
+        name: name,
+        model: 'universalreadout2',
         category:'misc',
         collection: 'alpha',
         x:x, y:y, a:a,

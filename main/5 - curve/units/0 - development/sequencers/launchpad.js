@@ -1,4 +1,4 @@
-this.launchpad = function(x,y,a){
+this.launchpad = function(name,x,y,a){
     var values = {
         xCount:8, yCount:8,
     };
@@ -19,7 +19,8 @@ this.launchpad = function(x,y,a){
         },
     };
     var design = {
-        name: 'launchpad',
+        name: name,
+        model: 'launchpad',
         category:'sequencers',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -34,9 +35,9 @@ this.launchpad = function(x,y,a){
                 {collection:'dynamic', type:'connectionNode_data', name:'prevPage_input', data:{ x: 125, y: 35, width: 5, height: 10 }},
             //pulse
                 {collection:'control', type:'button_rectangle',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
-            //rastorgrid
+            //checkboxgrid
                 {collection:'basic', type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, colour:style.grid.backing}},
-                {collection:'control', type:'rastorgrid',name:'rastorgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
+                {collection:'control', type:'checkboxgrid',name:'checkboxgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
             //page select
                 {collection:'display', type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5}},
                 {collection:'control', type:'button_rectangle',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
@@ -67,8 +68,8 @@ this.launchpad = function(x,y,a){
     //internal functions
         function lightLine(){
             for(var a = 0; a < values.yCount; a++){
-                object.elements.rastorgrid.rastorgrid.light(object.internalCircuits.previousPosition(),a,false);
-                object.elements.rastorgrid.rastorgrid.light(object.internalCircuits.position(),a,true);
+                object.elements.checkboxgrid.checkboxgrid.light(object.internalCircuits.previousPosition(),a,false);
+                object.elements.checkboxgrid.checkboxgrid.light(object.internalCircuits.position(),a,true);
             }
         }
         function pageChange(data){
@@ -76,9 +77,9 @@ this.launchpad = function(x,y,a){
             var newPage = object.internalCircuits.exportPage();
 
             if(newPage == undefined){
-                object.elements.rastorgrid.rastorgrid.clear();
+                object.elements.checkboxgrid.checkboxgrid.clear();
             }else{
-                object.elements.rastorgrid.rastorgrid.set(newPage);
+                object.elements.checkboxgrid.checkboxgrid.set(newPage);
             }
         }
 
@@ -96,7 +97,7 @@ this.launchpad = function(x,y,a){
         object.elements.connectionNode_data.nextPage_input.onreceivedata = function(){object.internalCircuits.incPage();};
         object.elements.connectionNode_data.prevPage_input.onreceivedata = function(){object.internalCircuits.decPage();};
         object.elements.button_rectangle.pulse_button.onpress = function(){object.internalCircuits.inc();lightLine();};
-        object.elements.rastorgrid.rastorgrid.onchange = function(data){object.internalCircuits.importPage(data);};
+        object.elements.checkboxgrid.checkboxgrid.onchange = function(data){object.internalCircuits.importPage(data);};
         object.elements.button_rectangle.nextPage.onpress = function(){object.internalCircuits.incPage();};
         object.elements.button_rectangle.prevPage.onpress = function(){object.internalCircuits.decPage();};
 

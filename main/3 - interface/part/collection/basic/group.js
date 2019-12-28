@@ -1,17 +1,19 @@
-this.group = function( name=null, x=0, y=0, angle=0, ignored=false ){
-    var temp = _canvas_.core.shape.create('group');
-    temp.name = name;
-    temp.ignored = ignored;
+this.group = function(name=null, x=0, y=0, angle=0, ignored=false, clipActive=false){
+    dev.log.partBasic('.group('+name+','+x+','+y+','+angle+','+ignored+')'); //#development
 
-    temp.stopAttributeStartedExtremityUpdate = true;
-    temp.x(x); 
-    temp.y(y);
-    temp.angle(angle);
-    temp.stopAttributeStartedExtremityUpdate = false;
-
-    return temp;
+    const element = _canvas_.core.element.create('group',name);
+    element.unifiedAttribute({
+        x:x, 
+        y:y, 
+        angle:angle, 
+        ignored:ignored,
+        clipActive:clipActive,
+    });
+    return element;
 }
 
 interfacePart.partLibrary.basic.group = function(name,data){ 
-    return interfacePart.collection.basic.group( name, data.x, data.y, data.angle, data.ignored );
+    return interfacePart.collection.basic.group(
+        name, data.x, data.y, data.angle, data.ignored, data.clipActive,
+    );
 };

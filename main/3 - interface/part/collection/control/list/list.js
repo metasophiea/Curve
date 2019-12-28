@@ -38,57 +38,57 @@ this.list = function(
     default_text_colour__hover_glow_select=                     {r:0.2,g:0.2,b:0.2,a:1},
     default_text_colour__hover_glow_select_press=               {r:0.2,g:0.2,b:0.2,a:1},
 
-    default_backing__off__colour=                               {r:180/255,g:180/255,b:180/255,a:1},
-    default_backing__off__lineColour=                           {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__off__lineThickness=                        0,
-    default_backing__up__colour=                                {r:200/255,g:200/255,b:200/255,a:1},
-    default_backing__up__lineColour=                            {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__up__lineThickness=                         0,
-    default_backing__press__colour=                             {r:230/255,g:230/255,b:230/255,a:1},
-    default_backing__press__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__press__lineThickness=                      0,
-    default_backing__select__colour=                            {r:220/255,g:220/255,b:220/255,a:1},
-    default_backing__select__lineColour=                        {r:120/255,g:120/255,b:120/255,a:1},
-    default_backing__select__lineThickness=                     0,
-    default_backing__select_press__colour=                      {r:230/255,g:230/255,b:230/255,a:1},
-    default_backing__select_press__lineColour=                  {r:120/255,g:120/255,b:120/255,a:1},
-    default_backing__select_press__lineThickness=               0,
-    default_backing__glow__colour=                              {r:220/255,g:220/255,b:220/255,a:1},
-    default_backing__glow__lineColour=                          {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__glow__lineThickness=                       0,
-    default_backing__glow_press__colour=                        {r:250/255,g:250/255,b:250/255,a:1},
-    default_backing__glow_press__lineColour=                    {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__glow_press__lineThickness=                 0,
-    default_backing__glow_select__colour=                       {r:220/255,g:220/255,b:220/255,a:1},
-    default_backing__glow_select__lineColour=                   {r:120/255,g:120/255,b:120/255,a:1},
-    default_backing__glow_select__lineThickness=                0,
-    default_backing__glow_select_press__colour=                 {r:250/255,g:250/255,b:250/255,a:1},
-    default_backing__glow_select_press__lineColour=             {r:120/255,g:120/255,b:120/255,a:1},
-    default_backing__glow_select_press__lineThickness=          0,
-    default_backing__hover__colour=                             {r:220/255,g:220/255,b:220/255,a:1},
-    default_backing__hover__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__hover__lineThickness=                      0,
-    default_backing__hover_press__colour=                       {r:240/255,g:240/255,b:240/255,a:1},
-    default_backing__hover_press__lineColour=                   {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__hover_press__lineThickness=                0,
-    default_backing__hover_select__colour=                      {r:220/255,g:220/255,b:220/255,a:1},
-    default_backing__hover_select__lineColour=                  {r:120/255,g:120/255,b:120/255,a:1},
-    default_backing__hover_select__lineThickness=               0,
-    default_backing__hover_select_press__colour=                {r:240/255,g:240/255,b:240/255,a:1},
-    default_backing__hover_select_press__lineColour=            {r:120/255,g:120/255,b:120/255,a:1},
-    default_backing__hover_select_press__lineThickness=         0,
-    default_backing__hover_glow__colour=                        {r:250/255,g:250/255,b:250/255,a:1},
-    default_backing__hover_glow__lineColour=                    {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__hover_glow__lineThickness=                 0,
-    default_backing__hover_glow_press__colour=                  {r:250/255,g:250/255,b:250/255,a:1},
-    default_backing__hover_glow_press__lineColour=              {r:0/255,g:0/255,b:0/255,a:0},
-    default_backing__hover_glow_press__lineThickness=           0,
-    default_backing__hover_glow_select__colour=                 {r:240/255,g:240/255,b:240/255,a:1},
-    default_backing__hover_glow_select__lineColour=             {r:120/255,g:120/255,b:120/255,a:1},
-    default_backing__hover_glow_select__lineThickness=          0,
-    default_backing__hover_glow_select_press__colour=           {r:250/255,g:250/255,b:250/255,a:1},
-    default_backing__hover_glow_select_press__lineColour=       {r:120/255,g:120/255,b:120/255,a:1},
-    default_backing__hover_glow_select_press__lineThickness=    0,
+    default_item__off__colour=                               {r:180/255,g:180/255,b:180/255,a:1},
+    default_item__off__lineColour=                           {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__off__lineThickness=                        0,
+    default_item__up__colour=                                {r:200/255,g:200/255,b:200/255,a:1},
+    default_item__up__lineColour=                            {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__up__lineThickness=                         0,
+    default_item__press__colour=                             {r:230/255,g:230/255,b:230/255,a:1},
+    default_item__press__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__press__lineThickness=                      0,
+    default_item__select__colour=                            {r:220/255,g:220/255,b:220/255,a:1},
+    default_item__select__lineColour=                        {r:120/255,g:120/255,b:120/255,a:1},
+    default_item__select__lineThickness=                     0,
+    default_item__select_press__colour=                      {r:230/255,g:230/255,b:230/255,a:1},
+    default_item__select_press__lineColour=                  {r:120/255,g:120/255,b:120/255,a:1},
+    default_item__select_press__lineThickness=               0,
+    default_item__glow__colour=                              {r:220/255,g:220/255,b:220/255,a:1},
+    default_item__glow__lineColour=                          {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__glow__lineThickness=                       0,
+    default_item__glow_press__colour=                        {r:250/255,g:250/255,b:250/255,a:1},
+    default_item__glow_press__lineColour=                    {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__glow_press__lineThickness=                 0,
+    default_item__glow_select__colour=                       {r:220/255,g:220/255,b:220/255,a:1},
+    default_item__glow_select__lineColour=                   {r:120/255,g:120/255,b:120/255,a:1},
+    default_item__glow_select__lineThickness=                0,
+    default_item__glow_select_press__colour=                 {r:250/255,g:250/255,b:250/255,a:1},
+    default_item__glow_select_press__lineColour=             {r:120/255,g:120/255,b:120/255,a:1},
+    default_item__glow_select_press__lineThickness=          0,
+    default_item__hover__colour=                             {r:220/255,g:220/255,b:220/255,a:1},
+    default_item__hover__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__hover__lineThickness=                      0,
+    default_item__hover_press__colour=                       {r:240/255,g:240/255,b:240/255,a:1},
+    default_item__hover_press__lineColour=                   {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__hover_press__lineThickness=                0,
+    default_item__hover_select__colour=                      {r:220/255,g:220/255,b:220/255,a:1},
+    default_item__hover_select__lineColour=                  {r:120/255,g:120/255,b:120/255,a:1},
+    default_item__hover_select__lineThickness=               0,
+    default_item__hover_select_press__colour=                {r:240/255,g:240/255,b:240/255,a:1},
+    default_item__hover_select_press__lineColour=            {r:120/255,g:120/255,b:120/255,a:1},
+    default_item__hover_select_press__lineThickness=         0,
+    default_item__hover_glow__colour=                        {r:250/255,g:250/255,b:250/255,a:1},
+    default_item__hover_glow__lineColour=                    {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__hover_glow__lineThickness=                 0,
+    default_item__hover_glow_press__colour=                  {r:250/255,g:250/255,b:250/255,a:1},
+    default_item__hover_glow_press__lineColour=              {r:0/255,g:0/255,b:0/255,a:0},
+    default_item__hover_glow_press__lineThickness=           0,
+    default_item__hover_glow_select__colour=                 {r:240/255,g:240/255,b:240/255,a:1},
+    default_item__hover_glow_select__lineColour=             {r:120/255,g:120/255,b:120/255,a:1},
+    default_item__hover_glow_select__lineThickness=          0,
+    default_item__hover_glow_select_press__colour=           {r:250/255,g:250/255,b:250/255,a:1},
+    default_item__hover_glow_select_press__lineColour=       {r:120/255,g:120/255,b:120/255,a:1},
+    default_item__hover_glow_select_press__lineThickness=    0,
 
     subList_arrowMux=1,
     space_height=10/16,
@@ -107,18 +107,20 @@ this.list = function(
     onselection=function(a){/*console.log('onselection >',a);*/},
     onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
 ){
+    dev.log.partControl('.list(...)'); //#development
+
     //state
-        var self = this;
-        var itemArray = [];
-        var calculatedListHeight = 0;
-        var state = {
+        let self = this;
+        let itemArray = [];
+        let calculatedListHeight = 0;
+        const state = {
             position:0,
             lastNonShiftClicked:0,
             selectedItems:[],
         };
 
     //default style
-        var style = {
+        const style = {
             default:{
                 heightLimit:heightLimit, widthLimit:widthLimit,
                 backgroundColour:backgroundColour,
@@ -154,57 +156,57 @@ this.list = function(
                 text_colour__hover_glow_select:default_text_colour__hover_glow_select,
                 text_colour__hover_glow_select_press:default_text_colour__hover_glow_select_press,
 
-                item__off__colour:                            default_backing__off__colour,
-                item__off__lineColour:                        default_backing__off__lineColour,
-                item__off__lineThickness:                     default_backing__off__lineThickness,
-                item__up__colour:                             default_backing__up__colour,
-                item__up__lineColour:                         default_backing__up__lineColour,
-                item__up__lineThickness:                      default_backing__up__lineThickness,
-                item__press__colour:                          default_backing__press__colour,
-                item__press__lineColour:                      default_backing__press__lineColour,
-                item__press__lineThickness:                   default_backing__press__lineThickness,
-                item__select__colour:                         default_backing__select__colour,
-                item__select__lineColour:                     default_backing__select__lineColour,
-                item__select__lineThickness:                  default_backing__select__lineThickness,
-                item__select_press__colour:                   default_backing__select_press__colour,
-                item__select_press__lineColour:               default_backing__select_press__lineColour,
-                item__select_press__lineThickness:            default_backing__select_press__lineThickness,
-                item__glow__colour:                           default_backing__glow__colour,
-                item__glow__lineColour:                       default_backing__glow__lineColour,
-                item__glow__lineThickness:                    default_backing__glow__lineThickness,
-                item__glow_press__colour:                     default_backing__glow_press__colour,
-                item__glow_press__lineColour:                 default_backing__glow_press__lineColour,
-                item__glow_press__lineThickness:              default_backing__glow_press__lineThickness,
-                item__glow_select__colour:                    default_backing__glow_select__colour,
-                item__glow_select__lineColour:                default_backing__glow_select__lineColour,
-                item__glow_select__lineThickness:             default_backing__glow_select__lineThickness,
-                item__glow_select_press__colour:              default_backing__glow_select_press__colour,
-                item__glow_select_press__lineColour:          default_backing__glow_select_press__lineColour,
-                item__glow_select_press__lineThickness:       default_backing__glow_select_press__lineThickness,
-                item__hover__colour:                          default_backing__hover__colour,
-                item__hover__lineColour:                      default_backing__hover__lineColour,
-                item__hover__lineThickness:                   default_backing__hover__lineThickness,
-                item__hover_press__colour:                    default_backing__hover_press__colour,
-                item__hover_press__lineColour:                default_backing__hover_press__lineColour,
-                item__hover_press__lineThickness:             default_backing__hover_press__lineThickness,
-                item__hover_select__colour:                   default_backing__hover_select__colour,
-                item__hover_select__lineColour:               default_backing__hover_select__lineColour,
-                item__hover_select__lineThickness:            default_backing__hover_select__lineThickness,
-                item__hover_select_press__colour:             default_backing__hover_select_press__colour,
-                item__hover_select_press__lineColour:         default_backing__hover_select_press__lineColour,
-                item__hover_select_press__lineThickness:      default_backing__hover_select_press__lineThickness,
-                item__hover_glow__colour:                     default_backing__hover_glow__colour,
-                item__hover_glow__lineColour:                 default_backing__hover_glow__lineColour,
-                item__hover_glow__lineThickness:              default_backing__hover_glow__lineThickness,
-                item__hover_glow_press__colour:               default_backing__hover_glow_press__colour,
-                item__hover_glow_press__lineColour:           default_backing__hover_glow_press__lineColour,
-                item__hover_glow_press__lineThickness:        default_backing__hover_glow_press__lineThickness,
-                item__hover_glow_select__colour:              default_backing__hover_glow_select__colour,
-                item__hover_glow_select__lineColour:          default_backing__hover_glow_select__lineColour,
-                item__hover_glow_select__lineThickness:       default_backing__hover_glow_select__lineThickness,
-                item__hover_glow_select_press__colour:        default_backing__hover_glow_select_press__colour,
-                item__hover_glow_select_press__lineColour:    default_backing__hover_glow_select_press__lineColour,
-                item__hover_glow_select_press__lineThickness: default_backing__hover_glow_select_press__lineThickness,
+                item__off__colour:                            default_item__off__colour,
+                item__off__lineColour:                        default_item__off__lineColour,
+                item__off__lineThickness:                     default_item__off__lineThickness,
+                item__up__colour:                             default_item__up__colour,
+                item__up__lineColour:                         default_item__up__lineColour,
+                item__up__lineThickness:                      default_item__up__lineThickness,
+                item__press__colour:                          default_item__press__colour,
+                item__press__lineColour:                      default_item__press__lineColour,
+                item__press__lineThickness:                   default_item__press__lineThickness,
+                item__select__colour:                         default_item__select__colour,
+                item__select__lineColour:                     default_item__select__lineColour,
+                item__select__lineThickness:                  default_item__select__lineThickness,
+                item__select_press__colour:                   default_item__select_press__colour,
+                item__select_press__lineColour:               default_item__select_press__lineColour,
+                item__select_press__lineThickness:            default_item__select_press__lineThickness,
+                item__glow__colour:                           default_item__glow__colour,
+                item__glow__lineColour:                       default_item__glow__lineColour,
+                item__glow__lineThickness:                    default_item__glow__lineThickness,
+                item__glow_press__colour:                     default_item__glow_press__colour,
+                item__glow_press__lineColour:                 default_item__glow_press__lineColour,
+                item__glow_press__lineThickness:              default_item__glow_press__lineThickness,
+                item__glow_select__colour:                    default_item__glow_select__colour,
+                item__glow_select__lineColour:                default_item__glow_select__lineColour,
+                item__glow_select__lineThickness:             default_item__glow_select__lineThickness,
+                item__glow_select_press__colour:              default_item__glow_select_press__colour,
+                item__glow_select_press__lineColour:          default_item__glow_select_press__lineColour,
+                item__glow_select_press__lineThickness:       default_item__glow_select_press__lineThickness,
+                item__hover__colour:                          default_item__hover__colour,
+                item__hover__lineColour:                      default_item__hover__lineColour,
+                item__hover__lineThickness:                   default_item__hover__lineThickness,
+                item__hover_press__colour:                    default_item__hover_press__colour,
+                item__hover_press__lineColour:                default_item__hover_press__lineColour,
+                item__hover_press__lineThickness:             default_item__hover_press__lineThickness,
+                item__hover_select__colour:                   default_item__hover_select__colour,
+                item__hover_select__lineColour:               default_item__hover_select__lineColour,
+                item__hover_select__lineThickness:            default_item__hover_select__lineThickness,
+                item__hover_select_press__colour:             default_item__hover_select_press__colour,
+                item__hover_select_press__lineColour:         default_item__hover_select_press__lineColour,
+                item__hover_select_press__lineThickness:      default_item__hover_select_press__lineThickness,
+                item__hover_glow__colour:                     default_item__hover_glow__colour,
+                item__hover_glow__lineColour:                 default_item__hover_glow__lineColour,
+                item__hover_glow__lineThickness:              default_item__hover_glow__lineThickness,
+                item__hover_glow_press__colour:               default_item__hover_glow_press__colour,
+                item__hover_glow_press__lineColour:           default_item__hover_glow_press__lineColour,
+                item__hover_glow_press__lineThickness:        default_item__hover_glow_press__lineThickness,
+                item__hover_glow_select__colour:              default_item__hover_glow_select__colour,
+                item__hover_glow_select__lineColour:          default_item__hover_glow_select__lineColour,
+                item__hover_glow_select__lineThickness:       default_item__hover_glow_select__lineThickness,
+                item__hover_glow_select_press__colour:        default_item__hover_glow_select_press__colour,
+                item__hover_glow_select_press__lineColour:    default_item__hover_glow_select_press__lineColour,
+                item__hover_glow_select_press__lineThickness: default_item__hover_glow_select_press__lineThickness,
             },
             space:{
                 height:space_height,
@@ -221,8 +223,9 @@ this.list = function(
                 lineMux:textBreak_lineMux,
             },
             checkbox:{},
-            item:{},
+            button:{},
             list:{
+                heightLimit:-1,
                 arrowMux:subList_arrowMux,
                 space_height:space_height,
                 break_height:break_height,
@@ -238,13 +241,18 @@ this.list = function(
         function generateListContent(listItems=[]){
             function def(i,t){ return i[t]==undefined ? (style[i.type][t]==undefined ? style.default[t] : style[i.type][t]) : i[t]; }
 
-            var output = {elements:[], calculatedListHeight:0};
-            var xOffset = style.default.widthLimit < 0 ? 0 : (style.default.widthLimit-style.default.width)/2;
+            const output = {elements:[], calculatedListHeight:0};
+            const xOffset = style.default.widthLimit < 0 ? 0 : (style.default.widthLimit-style.default.width)/2;
 
             listItems.forEach((item,index) => {
                 if(index != 0){output.calculatedListHeight += style.default.itemSpacingHeight;}
 
-                var newItem;
+                if(item.type == 'item'){
+                    console.warn('"item" item isn\'t an item type you can use for an item. Switching to "button" which is probably what you were looking for');
+                    item.type = 'button';
+                }
+
+                let newItem;
                 if(item.type == 'text'){
                     newItem = self.list.itemTypes.text(
                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
@@ -253,7 +261,7 @@ this.list = function(
                         def(item,'interCharacterSpacing'), def(item,'item__up__colour'),
                     );
                 }else if(item.type == 'space'){
-                    newItem = self.list.itemTypes.space(index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height') );
+                    newItem = self.list.itemTypes.space(index, xOffset, output.calculatedListHeight, def(item,'height') );
                 }else if(item.type == 'break'){
                     newItem = self.list.itemTypes.break(
                         index, xOffset, output.calculatedListHeight, def(item,'width'), 
@@ -347,8 +355,8 @@ this.list = function(
 
                         item.updateFunction, item.onclickFunction,
                     );
-                }else if(item.type == 'item'){
-                    newItem = self.list.itemTypes.item(
+                }else if(item.type == 'button'){
+                    newItem = self.list.itemTypes.button(
                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
                         (item.text?item.text:item.text_left), item.text_centre, item.text_right,
                         def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'),
@@ -436,7 +444,7 @@ this.list = function(
                         function(obj,event){ object.select(index,false,event,false); },
                     );
                 }else if(item.type == 'list'){
-                    var newItem = self.list.itemTypes.list(
+                    newItem = self.list.itemTypes.list(
                         subListGroup,
                         index, xOffset, output.calculatedListHeight,
                     
@@ -532,7 +540,7 @@ this.list = function(
                             item.interactable,
                     
                             item.itemWidth,
-                            -1,
+                            def(item,'heightLimit'),
                             def(item,'widthLimit'),
                             def(item,'backgroundColour'),
                             def(item,'backgroundMarkingColour'),
@@ -556,6 +564,7 @@ this.list = function(
                             item.onpositionchange,
                     );
                 }else{ //unknown item
+                    output.calculatedListHeight -= style.default.itemSpacingHeight;
                     console.warn('interface part "list" :: error : unknown list item type:',item);
                     return;
                 }
@@ -579,12 +588,15 @@ this.list = function(
             calculatedListHeight = results.calculatedListHeight;
             itemArray = results.elements;
 
-            backing.width(style.default.widthLimit<0?style.default.width:style.default.widthLimit);
-            backing.height(style.default.heightLimit<0?calculatedListHeight:style.default.heightLimit);
-            cover.width(style.default.widthLimit<0?style.default.width:style.default.widthLimit);
-            cover.height(style.default.heightLimit<0?calculatedListHeight:style.default.heightLimit);
-            stencil.width(style.default.widthLimit<0?style.default.width:style.default.widthLimit);
-            stencil.height(style.default.heightLimit<0?calculatedListHeight:style.default.heightLimit);
+            const widthToUse = style.default.widthLimit < 0 ? style.default.width : style.default.widthLimit;
+            backing.width(widthToUse);
+            cover.width(widthToUse);
+            stencil.width(widthToUse);
+
+            const heightToUse = style.default.heightLimit < 0 || style.default.heightLimit > calculatedListHeight ? calculatedListHeight : style.default.heightLimit;
+            backing.height(heightToUse);
+            cover.height(heightToUse);
+            stencil.height(heightToUse);
 
             itemCollection.clear();
             results.elements.forEach(element => itemCollection.append(element));
@@ -592,38 +604,38 @@ this.list = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+            const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
             //backing
-                var backing = interfacePart.builder('basic','rectangle','backing',{colour:style.default.backgroundColour});
+                const backing = interfacePart.builder('basic','rectangle','backing',{colour:style.default.backgroundColour});
                 object.append(backing);
             //stenciled group
-                var stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
+                const stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
                 object.append(stenciledGroup);
             //sub list group
-                var subListGroup = interfacePart.builder('basic','group','subListGroup');
+                const subListGroup = interfacePart.builder('basic','group','subListGroup');
                 object.append(subListGroup);
             //item collection
-                var itemCollection = interfacePart.builder('basic','group','itemCollection');
+                const itemCollection = interfacePart.builder('basic','group','itemCollection');
                 stenciledGroup.append(itemCollection);
             //cover
-                var cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
+                const cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
                 stenciledGroup.append(cover);
             //stencil
-                var stencil = interfacePart.builder('basic','rectangle','stencil');
+                const stencil = interfacePart.builder('basic','rectangle','stencil');
                 stenciledGroup.stencil(stencil);
                 stenciledGroup.clipActive(true);
 
     //interaction
-        cover.onwheel = function(x,y,event){
+        cover.attachCallback('onwheel', function(x,y,event){
             if(!interactable || !active){return;}
-            var move = event.deltaY/100;
+            const move = -event.wheelDelta/100;
             object.position( object.position() + move/10 );
             itemArray.forEach(item => {
                 if(item.forceMouseLeave != undefined){
                     item.forceMouseLeave();
                 }
             });
-        };
+        } );
 
     //controls
         object.position = function(a,update=true){
@@ -633,7 +645,7 @@ this.list = function(
             state.position = a;
 
             if(style.default.heightLimit < 0){return;}
-            var movementSpace = calculatedListHeight - style.default.heightLimit;
+            const movementSpace = calculatedListHeight - style.default.heightLimit;
             itemCollection.y( -a*movementSpace );
             
             if(update&&this.onpositionchange){this.onpositionchange(a);}
@@ -647,7 +659,7 @@ this.list = function(
                         if(value && !state.selectedItems.includes(a) ){
                             //deselect all other items
                                 while( state.selectedItems.length > 0 ){
-                                    itemCollection.children()[state.selectedItems[0]].select(false,undefined,undefined);
+                                    itemCollection.getChildren()[state.selectedItems[0]].select(false,undefined,undefined);
                                     state.selectedItems.shift();
                                 }
 
@@ -670,16 +682,16 @@ this.list = function(
                             //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
                                 a = itemCollection.getChildIndexByName(a);
 
-                                var min = Math.min(state.lastNonShiftClicked, a);
-                                var max = Math.max(state.lastNonShiftClicked, a);
-                                for(var b = 0; b < itemArray.length; b++){
+                                let min = Math.min(state.lastNonShiftClicked, a);
+                                let max = Math.max(state.lastNonShiftClicked, a);
+                                for(let b = 0; b < itemArray.length; b++){
                                     if( itemArray[b].name == ''+min ){min = b;}
                                     if( itemArray[b].name == ''+max ){max = b;}
                                 }
 
                             //deselect all outside the range
                                 state.selectedItems = [];
-                                for(var b = 0; b < itemArray.length; b++){
+                                for(let b = 0; b < itemArray.length; b++){
                                     if( b > max || b < min ){
                                         if( itemArray[b].select != undefined && itemArray[b].select() ){
                                             itemArray[b].select(false,undefined,false);
@@ -688,7 +700,7 @@ this.list = function(
                                 }
 
                             //select those within the range (that aren't already selected)
-                                for(var b = min; b <= max; b++){
+                                for(let b = min; b <= max; b++){
                                     if( itemArray[b].select != undefined && !itemArray[b].select() ){
                                         itemArray[b].select(true,undefined,false);
                                         state.selectedItems.push(b);
@@ -708,6 +720,9 @@ this.list = function(
         object.add = function(item){
             list.push(item);
             refresh();
+        };
+        object.getList = function(){
+            return itemArray;
         };
         object.remove = function(a){
             list.splice(a,1);
@@ -747,33 +762,38 @@ this.list = function(
     return object;
 };
 this.list.itemTypes = {};
-this.list.itemTypes.space = function( index, x, y, width, height ){
-    var newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
+this.list.itemTypes.space = function( index, x, y, height ){
+    dev.log.partControl('.list.itemTypes.space(...)'); //#development
+
+    const newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
     return {item:newItem,height:height};
 };
 this.list.itemTypes.break = function( index, x, y, width, height, colour, lineMux){
-    var newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
-    var rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:colour });
+    dev.log.partControl('.list.itemTypes.break(...)'); //#development
+
+    const newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
+    const rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:colour });
     newItem.append(rectangle);
 
     return {item:newItem,height:height};
 };
 this.list.itemTypes.textbreak = function( index, x, y, width, height, text, fontColour, printingMode, font, spacing, interCharacterSpacing, textToLineSpacing, textHeightMux, lineMux ){
-    var newItem = interfacePart.builder('basic','group',index+'_textbreak',{x:x,y:y});
-    var rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:fontColour });
+    dev.log.partControl('.list.itemTypes.textbreak(...)'); //#development
+
+    const newItem = interfacePart.builder('basic','group',index+'_textbreak',{x:x,y:y});
+    const rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:fontColour });
     newItem.append(rectangle);
-    var text = interfacePart.builder('basic','text', 'text', {
+    const textElement = interfacePart.builder('basic','text', 'text', {
         y:height/2, width:height*textHeightMux, height:height*textHeightMux, 
         printingMode:printingMode,
         text:text, font:font, colour:fontColour, spacing:spacing, 
         interCharacterSpacing:interCharacterSpacing
     });
-    text.onFontUpdateCallback = function(){
-        rectangle.x( text.resultingWidth() + textToLineSpacing );
-        rectangle.width( width - text.resultingWidth() - textToLineSpacing );
-    };
-    text.onFontUpdateCallback();
-    newItem.append(text);
+    textElement.attachCallback('onFontUpdateCallback', function(){
+        rectangle.x( textElement.resultingWidth() + textToLineSpacing );
+        rectangle.width( width - textElement.resultingWidth() - textToLineSpacing );
+    } );
+    newItem.append(textElement);
 
     return {item:newItem,height:height};
 }
@@ -782,12 +802,14 @@ this.list.itemTypes.text = function(
     text_left, text_centre, text_right,
     size, font, fontColour, spacing, interCharacterSpacing, itemColour
 ){
-    var newItem = interfacePart.builder('basic','group',index+'_text',{x:x,y:y});
-    var backing = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:itemColour });
+    dev.log.partControl('.list.itemTypes.text(...)'); //#development
+
+    const newItem = interfacePart.builder('basic','group',index+'_text',{x:x,y:y});
+    const backing = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:itemColour });
     newItem.append(backing);
 
     if(text_left != undefined){
-        var text = interfacePart.builder('basic','text', 'text_left', {
+        const text = interfacePart.builder('basic','text', 'text_left', {
             x:itemHorizontalPadding, y:height/2, width:size, height:size, 
             printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'middle'},
             text:text_left, font:font, colour:fontColour, spacing:spacing, 
@@ -796,7 +818,7 @@ this.list.itemTypes.text = function(
         newItem.append(text);
     }
     if(text_centre != undefined){
-        var text = interfacePart.builder('basic','text', 'text_centre', {
+        const text = interfacePart.builder('basic','text', 'text_centre', {
             x:width/2, y:height/2, width:size, height:size, 
             printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
             text:text_centre, font:font, colour:fontColour, spacing:spacing, 
@@ -805,7 +827,7 @@ this.list.itemTypes.text = function(
         newItem.append(text);
     }
     if(text_right != undefined){
-        var text = interfacePart.builder('basic','text', 'text_right', {
+        const text = interfacePart.builder('basic','text', 'text_right', {
             x:width-itemHorizontalPadding, y:height/2, width:size, height:size, 
             printingMode:{widthCalculation:'absolute', horizontal:'right', vertical:'middle'},
             text:text_right, font:font, colour:fontColour, spacing:spacing, 
@@ -894,9 +916,11 @@ this.list.itemTypes.checkbox = function(
 
     updateFunction, onclickFunction,
 ){
-    var newItem = interfacePart.builder('basic','group',index+'_checkbox',{x:x,y:y});
+    dev.log.partControl('.list.itemTypes.checkbox(...)'); //#development
+
+    const newItem = interfacePart.builder('basic','group',index+'_checkbox',{x:x,y:y});
         newItem.state = false;
-    var button = interfacePart.builder('control', 'button_rectangle', 'button', {
+    const button = interfacePart.builder('control', 'button_rectangle', 'button', {
         width:width, height:height,
         text_left:text_left,
         text_centre:text_centre,
@@ -983,16 +1007,16 @@ this.list.itemTypes.checkbox = function(
         },
     });
     newItem.append(button);
-    var tick = interfacePart.builder('basic', 'circle', 'tick', {
+    const tick = interfacePart.builder('basic', 'circle', 'tick', {
         x:width-height/2, y:height/2, radius:height/4, colour:{r:0,g:0,b:0,a:0},
     });
     newItem.append(tick);
-        var tickState = { hovering:false, glowing:false, selected:false, pressed:false };
+        const tickState = { hovering:false, glowing:false, selected:false, pressed:false };
         function updateTickColour(){
-            if(!newItem.state){ tick.colour = {r:0,g:0,b:0,a:0}; return; }
-            if(!active){ tick.colour = text_colour__off; return; }
+            if(!newItem.state){ tick.colour({r:0,g:0,b:0,a:0}); return; }
+            if(!active){ tick.colour(text_colour__off); return; }
 
-            var styles = [
+            const styles = [
                 text_colour__up,
                 text_colour__press,
                 text_colour__select,
@@ -1014,8 +1038,8 @@ this.list.itemTypes.checkbox = function(
             if(!hoverable && tickState.hovering ){ tickState.hovering = false; }
             if(!selectable && tickState.selected ){ tickState.selected = false; }
 
-            var i = tickState.hovering*8 + tickState.glowing*4 + tickState.selected*2 + (pressable && tickState.pressed)*1;
-            tick.colour = styles[i];
+            const i = tickState.hovering*8 + tickState.glowing*4 + tickState.selected*2 + (pressable && tickState.pressed)*1;
+            tick.colour(styles[i]);
         } updateTickColour();
         button.onenter = function(){tickState.hovering = true; updateTickColour();};
         button.onleave = function(){tickState.hovering = false; updateTickColour();};
@@ -1041,7 +1065,7 @@ this.list.itemTypes.checkbox = function(
 
     return {item:newItem,height:height};
 };
-this.list.itemTypes.item = function(
+this.list.itemTypes.button = function(
     index, x, y, width, height, itemHorizontalPadding, 
     text_left, text_centre, text_right,
     fontSize, font, spacing, interCharacterSpacing,
@@ -1125,7 +1149,9 @@ this.list.itemTypes.item = function(
     onselect,
     ondeselect,
 ){
-    var button_rectangle = interfacePart.builder('control', 'button_rectangle', index+'_item', {
+    dev.log.partControl('.list.itemTypes.button(...)'); //#development
+
+    const button_rectangle = interfacePart.builder('control', 'button_rectangle', index+'_button', {
         x:x,y:y,
         width:width, height:height,
         text_left:text_left,
@@ -1336,8 +1362,10 @@ this.list.itemTypes.list = function(
         onselection,
         onpositionchange,
 ){
-    var newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
-    var button = interfacePart.builder('control', 'button_rectangle', 'button', {
+    dev.log.partControl('.list.itemTypes.list(...)'); //#development
+
+    const newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
+    const button = interfacePart.builder('control', 'button_rectangle', 'button', {
         width:width, height:height,
         text_left:text_left,
         text_centre:text_centre,
@@ -1424,7 +1452,7 @@ this.list.itemTypes.list = function(
         },
     });
     newItem.append(button);
-    var arrow = interfacePart.builder('basic', 'polygon', 'arrow', {
+    const arrow = interfacePart.builder('basic', 'polygon', 'arrow', {
         pointsAsXYArray:[ 
             {x:width-fontSize*arrowMux-itemHorizontalPadding,y:(height-fontSize*arrowMux)/2}, 
             {x:width-fontSize*arrowMux-itemHorizontalPadding,y:(height+fontSize*arrowMux)/2}, 
@@ -1433,11 +1461,11 @@ this.list.itemTypes.list = function(
         colour:text_colour__up,
     });
     newItem.append(arrow);
-        var arrowState = { hovering:false, glowing:false, selected:false, pressed:false };
+        const arrowState = { hovering:false, glowing:false, selected:false, pressed:false };
         function updateArrowColour(){
-            if(!active){ arrow.colour = text_colour__off; return; }
+            if(!active){ arrow.colour(text_colour__off); return; }
 
-            var styles = [
+            const styles = [
                 text_colour__up,
                 text_colour__press,
                 text_colour__select,
@@ -1458,15 +1486,15 @@ this.list.itemTypes.list = function(
 
             if(!hoverable && arrowState.hovering ){ arrowState.hovering = false; }
 
-            var i = arrowState.hovering*8 + arrowState.glowing*4 + arrowState.selected*2 + (pressable && arrowState.pressed)*1;
-            arrow.colour = styles[i];
+            const i = arrowState.hovering*8 + arrowState.glowing*4 + arrowState.selected*2 + (pressable && arrowState.pressed)*1;
+            arrow.colour(styles[i]);
         } updateArrowColour();
         button.onenter = function(){arrowState.hovering = true; updateArrowColour();};
         button.onleave = function(){arrowState.hovering = false; updateArrowColour();};
         button.onpress = function(){arrowState.pressed = true; updateArrowColour();};
         button.onrelease = function(){arrowState.pressed = false; updateArrowColour();};
 
-    var sublist;
+    let sublist;
 
     newItem.open = function(yOffset){
         if(this.isOpen){return;}
@@ -1511,57 +1539,57 @@ this.list.itemTypes.list = function(
             default_text_colour__hover_glow_select:text_colour__hover_glow_select,
             default_text_colour__hover_glow_select_press:text_colour__hover_glow_select_press,
       
-            default_backing__off__colour:item__off__colour,
-            default_backing__off__lineColour:item__off__lineColour,
-            default_backing__off__lineThickness:item__off__lineThickness,
-            default_backing__up__colour:item__up__colour,
-            default_backing__up__lineColour:item__up__lineColour,
-            default_backing__up__lineThickness:item__up__lineThickness,
-            default_backing__press__colour:item__press__colour,
-            default_backing__press__lineColour:item__press__lineColour,
-            default_backing__press__lineThickness:item__press__lineThickness,
-            default_backing__select__colour:item__select__colour,
-            default_backing__select__lineColour:item__select__lineColour,
-            default_backing__select__lineThickness:item__select__lineThickness,
-            default_backing__select_press__colour:item__select_press__colour,
-            default_backing__select_press__lineColour:item__select_press__lineColour,
-            default_backing__select_press__lineThickness:item__select_press__lineThickness,
-            default_backing__glow__colour:item__glow__colour,
-            default_backing__glow__lineColour:item__glow__lineColour,
-            default_backing__glow__lineThickness:item__glow__lineThickness,
-            default_backing__glow_press__colour:item__glow_press__colour,
-            default_backing__glow_press__lineColour:item__glow_press__lineColour,
-            default_backing__glow_press__lineThickness:item__glow_press__lineThickness,
-            default_backing__glow_select__colour:item__glow_select__colour,
-            default_backing__glow_select__lineColour:item__glow_select__lineColour,
-            default_backing__glow_select__lineThickness:item__glow_select__lineThickness,
-            default_backing__glow_select_press__colour:item__glow_select_press__colour,
-            default_backing__glow_select_press__lineColour:item__glow_select_press__lineColour,
-            default_backing__glow_select_press__lineThickness:item__glow_select_press__lineThickness,
-            default_backing__hover__colour:item__hover__colour,
-            default_backing__hover__lineColour:item__hover__lineColour,
-            default_backing__hover__lineThickness:item__hover__lineThickness,
-            default_backing__hover_press__colour:item__hover_press__colour,
-            default_backing__hover_press__lineColour:item__hover_press__lineColour,
-            default_backing__hover_press__lineThickness:item__hover_press__lineThickness,
-            default_backing__hover_select__colour:item__hover_select__colour,
-            default_backing__hover_select__lineColour:item__hover_select__lineColour,
-            default_backing__hover_select__lineThickness:item__hover_select__lineThickness,
-            default_backing__hover_select_press__colour:item__hover_select_press__colour,
-            default_backing__hover_select_press__lineColour:item__hover_select_press__lineColour,
-            default_backing__hover_select_press__lineThickness:item__hover_select_press__lineThickness,
-            default_backing__hover_glow__colour:item__hover_glow__colour,
-            default_backing__hover_glow__lineColour:item__hover_glow__lineColour,
-            default_backing__hover_glow__lineThickness:item__hover_glow__lineThickness,
-            default_backing__hover_glow_press__colour:item__hover_glow_press__colour,
-            default_backing__hover_glow_press__lineColour:item__hover_glow_press__lineColour,
-            default_backing__hover_glow_press__lineThickness:item__hover_glow_press__lineThickness,
-            default_backing__hover_glow_select__colour:item__hover_glow_select__colour,
-            default_backing__hover_glow_select__lineColour:item__hover_glow_select__lineColour,
-            default_backing__hover_glow_select__lineThickness:item__hover_glow_select__lineThickness,
-            default_backing__hover_glow_select_press__colour:item__hover_glow_select_press__colour,
-            default_backing__hover_glow_select_press__lineColour:item__hover_glow_select_press__lineColour,
-            default_backing__hover_glow_select_press__lineThickness:item__hover_glow_select_press__lineThickness,
+            default_item__off__colour:item__off__colour,
+            default_item__off__lineColour:item__off__lineColour,
+            default_item__off__lineThickness:item__off__lineThickness,
+            default_item__up__colour:item__up__colour,
+            default_item__up__lineColour:item__up__lineColour,
+            default_item__up__lineThickness:item__up__lineThickness,
+            default_item__press__colour:item__press__colour,
+            default_item__press__lineColour:item__press__lineColour,
+            default_item__press__lineThickness:item__press__lineThickness,
+            default_item__select__colour:item__select__colour,
+            default_item__select__lineColour:item__select__lineColour,
+            default_item__select__lineThickness:item__select__lineThickness,
+            default_item__select_press__colour:item__select_press__colour,
+            default_item__select_press__lineColour:item__select_press__lineColour,
+            default_item__select_press__lineThickness:item__select_press__lineThickness,
+            default_item__glow__colour:item__glow__colour,
+            default_item__glow__lineColour:item__glow__lineColour,
+            default_item__glow__lineThickness:item__glow__lineThickness,
+            default_item__glow_press__colour:item__glow_press__colour,
+            default_item__glow_press__lineColour:item__glow_press__lineColour,
+            default_item__glow_press__lineThickness:item__glow_press__lineThickness,
+            default_item__glow_select__colour:item__glow_select__colour,
+            default_item__glow_select__lineColour:item__glow_select__lineColour,
+            default_item__glow_select__lineThickness:item__glow_select__lineThickness,
+            default_item__glow_select_press__colour:item__glow_select_press__colour,
+            default_item__glow_select_press__lineColour:item__glow_select_press__lineColour,
+            default_item__glow_select_press__lineThickness:item__glow_select_press__lineThickness,
+            default_item__hover__colour:item__hover__colour,
+            default_item__hover__lineColour:item__hover__lineColour,
+            default_item__hover__lineThickness:item__hover__lineThickness,
+            default_item__hover_press__colour:item__hover_press__colour,
+            default_item__hover_press__lineColour:item__hover_press__lineColour,
+            default_item__hover_press__lineThickness:item__hover_press__lineThickness,
+            default_item__hover_select__colour:item__hover_select__colour,
+            default_item__hover_select__lineColour:item__hover_select__lineColour,
+            default_item__hover_select__lineThickness:item__hover_select__lineThickness,
+            default_item__hover_select_press__colour:item__hover_select_press__colour,
+            default_item__hover_select_press__lineColour:item__hover_select_press__lineColour,
+            default_item__hover_select_press__lineThickness:item__hover_select_press__lineThickness,
+            default_item__hover_glow__colour:item__hover_glow__colour,
+            default_item__hover_glow__lineColour:item__hover_glow__lineColour,
+            default_item__hover_glow__lineThickness:item__hover_glow__lineThickness,
+            default_item__hover_glow_press__colour:item__hover_glow_press__colour,
+            default_item__hover_glow_press__lineColour:item__hover_glow_press__lineColour,
+            default_item__hover_glow_press__lineThickness:item__hover_glow_press__lineThickness,
+            default_item__hover_glow_select__colour:item__hover_glow_select__colour,
+            default_item__hover_glow_select__lineColour:item__hover_glow_select__lineColour,
+            default_item__hover_glow_select__lineThickness:item__hover_glow_select__lineThickness,
+            default_item__hover_glow_select_press__colour:item__hover_glow_select_press__colour,
+            default_item__hover_glow_select_press__lineColour:item__hover_glow_select_press__lineColour,
+            default_item__hover_glow_select_press__lineThickness:item__hover_glow_select_press__lineThickness,
         
             subList_arrowMux:arrowMux,
             space_height:space_height,
@@ -1591,7 +1619,7 @@ this.list.itemTypes.list = function(
     };
 
     button.onselect = function(){
-        var yOffset = buttonClick(true);
+        const yOffset = buttonClick(true);
         newItem.open(yOffset);
         arrowState.selected = true; 
         updateArrowColour();
@@ -1647,57 +1675,57 @@ interfacePart.partLibrary.control.list = function(name,data){
         data.default_text_colour__hover_glow_select,
         data.default_text_colour__hover_glow_select_press,
     
-        data.default_backing__off__colour,
-        data.default_backing__off__lineColour,
-        data.default_backing__off__lineThickness,
-        data.default_backing__up__colour,
-        data.default_backing__up__lineColour,
-        data.default_backing__up__lineThickness,
-        data.default_backing__press__colour,
-        data.default_backing__press__lineColour,
-        data.default_backing__press__lineThickness,
-        data.default_backing__select__colour,
-        data.default_backing__select__lineColour,
-        data.default_backing__select__lineThickness,
-        data.default_backing__select_press__colour,
-        data.default_backing__select_press__lineColour,
-        data.default_backing__select_press__lineThickness,
-        data.default_backing__glow__colour,
-        data.default_backing__glow__lineColour,
-        data.default_backing__glow__lineThickness,
-        data.default_backing__glow_press__colour,
-        data.default_backing__glow_press__lineColour,
-        data.default_backing__glow_press__lineThickness,
-        data.default_backing__glow_select__colour,
-        data.default_backing__glow_select__lineColour,
-        data.default_backing__glow_select__lineThickness,
-        data.default_backing__glow_select_press__colour,
-        data.default_backing__glow_select_press__lineColour,
-        data.default_backing__glow_select_press__lineThickness,
-        data.default_backing__hover__colour,
-        data.default_backing__hover__lineColour,
-        data.default_backing__hover__lineThickness,
-        data.default_backing__hover_press__colour,
-        data.default_backing__hover_press__lineColour,
-        data.default_backing__hover_press__lineThickness,
-        data.default_backing__hover_select__colour,
-        data.default_backing__hover_select__lineColour,
-        data.default_backing__hover_select__lineThickness,
-        data.default_backing__hover_select_press__colour,
-        data.default_backing__hover_select_press__lineColour,
-        data.default_backing__hover_select_press__lineThickness,
-        data.default_backing__hover_glow__colour,
-        data.default_backing__hover_glow__lineColour,
-        data.default_backing__hover_glow__lineThickness,
-        data.default_backing__hover_glow_press__colour,
-        data.default_backing__hover_glow_press__lineColour,
-        data.default_backing__hover_glow_press__lineThickness,
-        data.default_backing__hover_glow_select__colour,
-        data.default_backing__hover_glow_select__lineColour,
-        data.default_backing__hover_glow_select__lineThickness,
-        data.default_backing__hover_glow_select_press__colour,
-        data.default_backing__hover_glow_select_press__lineColour,
-        data.default_backing__hover_glow_select_press__lineThickness,
+        data.default_item__off__colour,
+        data.default_item__off__lineColour,
+        data.default_item__off__lineThickness,
+        data.default_item__up__colour,
+        data.default_item__up__lineColour,
+        data.default_item__up__lineThickness,
+        data.default_item__press__colour,
+        data.default_item__press__lineColour,
+        data.default_item__press__lineThickness,
+        data.default_item__select__colour,
+        data.default_item__select__lineColour,
+        data.default_item__select__lineThickness,
+        data.default_item__select_press__colour,
+        data.default_item__select_press__lineColour,
+        data.default_item__select_press__lineThickness,
+        data.default_item__glow__colour,
+        data.default_item__glow__lineColour,
+        data.default_item__glow__lineThickness,
+        data.default_item__glow_press__colour,
+        data.default_item__glow_press__lineColour,
+        data.default_item__glow_press__lineThickness,
+        data.default_item__glow_select__colour,
+        data.default_item__glow_select__lineColour,
+        data.default_item__glow_select__lineThickness,
+        data.default_item__glow_select_press__colour,
+        data.default_item__glow_select_press__lineColour,
+        data.default_item__glow_select_press__lineThickness,
+        data.default_item__hover__colour,
+        data.default_item__hover__lineColour,
+        data.default_item__hover__lineThickness,
+        data.default_item__hover_press__colour,
+        data.default_item__hover_press__lineColour,
+        data.default_item__hover_press__lineThickness,
+        data.default_item__hover_select__colour,
+        data.default_item__hover_select__lineColour,
+        data.default_item__hover_select__lineThickness,
+        data.default_item__hover_select_press__colour,
+        data.default_item__hover_select_press__lineColour,
+        data.default_item__hover_select_press__lineThickness,
+        data.default_item__hover_glow__colour,
+        data.default_item__hover_glow__lineColour,
+        data.default_item__hover_glow__lineThickness,
+        data.default_item__hover_glow_press__colour,
+        data.default_item__hover_glow_press__lineColour,
+        data.default_item__hover_glow_press__lineThickness,
+        data.default_item__hover_glow_select__colour,
+        data.default_item__hover_glow_select__lineColour,
+        data.default_item__hover_glow_select__lineThickness,
+        data.default_item__hover_glow_select_press__colour,
+        data.default_item__hover_glow_select_press__lineColour,
+        data.default_item__hover_glow_select_press__lineThickness,
     
         data.subList_arrowMux,
         data.space_height,

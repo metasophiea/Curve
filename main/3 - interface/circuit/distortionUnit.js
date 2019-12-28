@@ -2,11 +2,11 @@ this.distortionUnit = function(
     context,
 ){
     //flow chain
-    var flow = {
-        inAggregator: {},
-        distortionNode: {},
-        outAggregator: {},
-    };
+        const flow = {
+            inAggregator: {},
+            distortionNode: {},
+            outAggregator: {},
+        };
 
     //inAggregator
         flow.inAggregator.gain = 0;

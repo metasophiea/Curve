@@ -4,11 +4,11 @@
 {{include:../../main/3 - interface/main.js}}
 {{include:../../main/4 - control/main.js}}
 
-{{include:1.js}} //menubar test
+// {{include:0.js}}
+// {{include:1.js}} //sample menubar
 // {{include:2.js}} //query string
-// {{include:3.js}}
-// {{include:4.js}}
 
-// {{include:control.selection.js}} //selection
-// {{include:control.scene.js}} //scene
-// {{include:control.actionRegistry.js}} //actionRegistry
+
+{{include:control.selection.js}}
+{{include:control.scene.js}}
+{{include:control.actionRegistry.js}}

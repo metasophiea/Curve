@@ -1,12 +1,12 @@
-this.voltage_dial = function(x,y,angle){
+this.voltage_dial = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'voltage_dial/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file:{ width:275, height:260 },
                     design:{ width:4.25, height:4 },
                 };
@@ -23,8 +23,9 @@ this.voltage_dial = function(x,y,angle){
 
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'voltage_dial',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'voltage_dial',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -39,7 +40,7 @@ this.voltage_dial = function(x,y,angle){
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                 },
-                {collection:'control', type:'dial_colourWithIndent_continuous',name:'theDial',data:{
+                {collection:'control', type:'dial_2_continuous',name:'theDial',data:{
                     x:20, y:20, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial,
                 }},
             ]
@@ -48,16 +49,16 @@ this.voltage_dial = function(x,y,angle){
     
     //wiring
         //hid
-            object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){ object.elements.connectionNode_voltage.out.set( value ); };
+            object.elements.dial_2_continuous.theDial.onchange = function(value){ object.elements.connectionNode_voltage.out.set( value ); };
 
         //import/export
             object.exportData = function(){
                 return {
-                    state:object.elements.dial_colourWithIndent_continuous.theDial.get()
+                    state:object.elements.dial_2_continuous.theDial.get()
                 };
             };
             object.importData = function(data){
-                object.elements.dial_colourWithIndent_continuous.theDial.set(data.state);
+                object.elements.dial_2_continuous.theDial.set(data.state);
             };
         
     return object;

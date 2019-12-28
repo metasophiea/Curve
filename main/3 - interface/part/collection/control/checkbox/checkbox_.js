@@ -6,16 +6,18 @@ this.checkbox_ = function(
 
     subject
 ){
+    dev.log.partControl('.checkbox_(...)'); //#development
+
     if(subject == undefined){console.warn('checkbox_ : No subject provided');}
 
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+            const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //subject
             object.append(subject);
 
     //state
-        var state = {
+        const state = {
             checked:false,
             glowing:false,
         };
@@ -27,7 +29,7 @@ this.checkbox_ = function(
             
             object.updateGraphics(state);
     
-            if(update&&this.onchange){ this.onchange(value); }
+            if(update && this.onchange){ this.onchange(value); }
         };
         object.light = function(a){
             if(a == undefined){ return state.glowing; }
@@ -37,16 +39,17 @@ this.checkbox_ = function(
             object.updateGraphics(state);
         };
         object.interactable = function(bool){
-            if(bool==undefined){return interactable;}
+            if(bool == undefined){return interactable;}
             interactable = bool;
         };
 
     //interactivity
-        subject.cover.onclick = function(){
+        subject.cover.attachCallback('onclick', (x,y,event) => { 
             if(!interactable){return;}
             object.set(!object.get());
-        };
-        subject.cover.onmousedown = function(){};
+        });
+        subject.cover.attachCallback('onmousedown', () => {});
+        subject.cover.attachCallback('onmouseup', () => {});
 
     //callbacks
         object.onchange = onchange;

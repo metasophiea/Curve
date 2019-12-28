@@ -1,12 +1,13 @@
-this.testUnit_4 = function(x,y,angle){
-    var shape = [
+this.testUnit_4 = function(name,x,y,angle){
+    const shape = [
         {x:0,y:0},
         {x:400,y:200},
         {x:400,y:400},
         {x:0,y:400}
     ];
-    var design = {
-        name: 'testUnit_4',
+    const design = {
+        name: name,
+        model: 'testUnit_4',
         collection: 'test',
         x:x, y:y, angle:angle,
         space:shape,
@@ -17,7 +18,7 @@ this.testUnit_4 = function(x,y,angle){
     };
 
     //main object
-        var object = interface.unit.builder(design);
+        const object = interface.unit.builder(design);
     
     return object;
 };

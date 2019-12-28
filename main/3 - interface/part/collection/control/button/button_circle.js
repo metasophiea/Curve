@@ -5,7 +5,7 @@ this.button_circle = function(
     
     active=true, hoverable=true, selectable=false, pressable=true,
 
-    text_font = 'Arial',
+    text_font='Arial',
     text_size=2.5,
     text_spacing=0.1,
     text_interCharacterSpacing=0,
@@ -89,14 +89,16 @@ this.button_circle = function(
     onselect = function(event){},
     ondeselect = function(event){},
 ){
+    dev.log.partControl('.button_circle(...)'); //#development
+
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('basic','group',name+'subGroup',{});
+            const subject = interfacePart.builder('basic','group',name+'subGroup',{});
         //backing
-            var backing = interfacePart.builder('basic','circleWithOutline','backing',{radius:radius, colour:backing__off__colour, thickness:5 });
+            const backing = interfacePart.builder('basic','circleWithOutline','backing',{radius:radius, colour:backing__off__colour, thickness:5 });
             subject.append(backing);
         //text
-            var text_centre = interfacePart.builder('basic','text','centre', {
+            const textCentreElement = interfacePart.builder('basic','text','centre', {
                 text:text_centre, 
                 width:text_size,
                 height:text_size,
@@ -106,13 +108,13 @@ this.button_circle = function(
                 spacing:text_spacing,
                 interCharacterSpacing:text_interCharacterSpacing,
             });
-            subject.append(text_centre);
+            subject.append(textCentreElement);
         //cover
             subject.cover = interfacePart.builder('basic','circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic button part
-        var object = interfacePart.builder(
+        const object = interfacePart.builder(
             'control', 'button_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
@@ -133,16 +135,14 @@ this.button_circle = function(
     //graphical state adjust
         object.activateGraphicalState = function(state){
             if(!active){ 
-                text_centre.colour(text__off__colour);
-                text_left.colour(text__off__colour);
-                text_right.colour(text__off__colour);
+                textCentreElement.colour(text__off__colour);
                 backing.colour = backing__off__colour;
                 backing.lineColour = backing__off__lineColour;
                 backing.thickness( backing__off__lineThickness );
                 return;
             }
 
-            var styles = [
+            const styles = [
                 { text_colour:text__up__colour,                      colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
                 { text_colour:text__press__colour,                   colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
                 { text_colour:text__select__colour,                  colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
@@ -164,11 +164,11 @@ this.button_circle = function(
             if(!hoverable && state.hovering ){ state.hovering = false; }
             if(!selectable && state.selected ){ state.selected = false; }
 
-            var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
-            text_centre.colour(styles[i].text_colour);
-            backing.colour = styles[i].colour;
-            backing.lineColour = styles[i].lineColour;
-            backing.thickness( styles[i].lineThickness );
+            const i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+            textCentreElement.colour(styles[i].text_colour);
+            backing.colour(styles[i].colour);
+            backing.lineColour(styles[i].lineColour);
+            backing.thickness(styles[i].lineThickness);
         };
         object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
 

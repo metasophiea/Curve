@@ -1,12 +1,12 @@
-this.multiplexer_8 = function(x,y,angle){
+this.multiplexer_8 = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'multiplexer/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = {
+                const div = 10;
+                const measurement = {
                     file: { width:200, height:500 },
                     design: { width:2, height:5 },
                 };
@@ -25,8 +25,9 @@ this.multiplexer_8 = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'multiplexer_8',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'multiplexer_8',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -80,7 +81,7 @@ this.multiplexer_8 = function(x,y,angle){
         });
 
     //circuitry
-        var state = {
+        const state = {
             channelCount:8,
             previousPosition:-1,
             position:0,

@@ -1,4 +1,4 @@
-this.audioScope = function(x,y,a){
+this.audioScope = function(name,x,y,a){
     var attributes = {
         framerateLimits: {min:1, max:30}
     };
@@ -18,7 +18,8 @@ this.audioScope = function(x,y,a){
         },
     };
     var design = {
-        name:'audioScope',
+        name:name,
+        model:'audioScope',
         category:'humanOutputDevices',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -28,7 +29,7 @@ this.audioScope = function(x,y,a){
             {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}], colour:style.background }},
 
             {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ x:195, y:5, width:10, height:20 }},
-            {collection:'display', type:'grapher_audioScope_static', name:'waveport', data:{ x:5, y:5, width:150, height:100 }},
+            {collection:'display', type:'grapher_audioScope', name:'waveport', data:{ x:5, y:5, width:150, height:100, static:true }},
             {collection:'control', type:'button_rectangle', name:'holdKey', data:{ x:160, y:5, width:30, height:20, style:style.button }},
 
             {collection:'basic', type:'text', name:'framerate_name', data:{x: 175, y: 68, text: 'framerate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
@@ -46,19 +47,19 @@ this.audioScope = function(x,y,a){
         var object = _canvas_.interface.unit.builder(design);
     
     //circuitry
-        object.elements.button_rectangle.holdKey.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
-        object.elements.button_rectangle.holdKey.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
-        object.elements.connectionNode_audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
+        object.elements.button_rectangle.holdKey.onpress = function(){object.elements.grapher_audioScope.waveport.stop();};
+        object.elements.button_rectangle.holdKey.onrelease = function(){object.elements.grapher_audioScope.waveport.start();};
+        object.elements.connectionNode_audio.input.out().connect(object.elements.grapher_audioScope.waveport.getNode());
 
     //wiring
         object.elements.dial_continuous.framerate.onchange = function(a){
-            object.elements.grapher_audioScope_static.waveport.refreshRate(
+            object.elements.grapher_audioScope.waveport.refreshRate(
                 attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
             );
         };
 
     //setup
-        object.elements.grapher_audioScope_static.waveport.start();
+        object.elements.grapher_audioScope.waveport.start();
         object.elements.dial_continuous.framerate.set(0);
 
     return object;

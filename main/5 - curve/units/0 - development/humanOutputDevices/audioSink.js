@@ -1,4 +1,4 @@
-this.audioSink = function(x,y,a){
+this.audioSink = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         level:{
@@ -10,7 +10,8 @@ this.audioSink = function(x,y,a){
         },
     };
     var design = {
-        name:'audioSink',
+        name:name,
+        model:'audioSink',
         category:'humanOutputDevices',
         collection: 'alpha',
         x:x, y:y, a:a,

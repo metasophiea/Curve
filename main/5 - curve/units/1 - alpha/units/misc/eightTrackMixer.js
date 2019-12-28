@@ -1,12 +1,12 @@
-this.eightTrackMixer = function(x,y,angle){
+this.eightTrackMixer = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:1550, height:830 },
                     design: { width:25.5, height:13.5 },
                 };
@@ -22,8 +22,9 @@ this.eightTrackMixer = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'eightTrackMixer',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'eightTrackMixer',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -43,10 +44,10 @@ this.eightTrackMixer = function(x,y,angle){
                 },
             ].concat(
                 (function(){
-                    var newElements = [];
-                    for(var a = 0; a < 8; a++){
+                    const newElements = [];
+                    for(let a = 0; a < 8; a++){
                         newElements.push(
-                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_panner_'+a,data:{
+                            {collection:'control', type:'dial_2_continuous',name:'dial_panner_'+a,data:{
                                 x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5, style:unitStyle.dial[a],
                             }},
                         );
@@ -78,20 +79,20 @@ this.eightTrackMixer = function(x,y,angle){
         });
 
     //circuitry
-        var audioLanes = []
-        for(var a = 0; a < 8; a++){
+        const audioLanes = []
+        for(let a = 0; a < 8; a++){
             audioLanes.push( new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2) );
         }
 
     //wiring
         //hid
-            for(var a = 0; a < 8; a++){
+            for(let a = 0; a < 8; a++){
                 object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
                     return function(value){
                         audioLanes[a].inGain(2*(1-value));
                     }
                 }(a);
-                object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
+                object.elements.dial_2_continuous['dial_panner_'+a].onchange = function(a){
                     return function(value){
                         audioLanes[a].outGain(0,1-value);
                         audioLanes[a].outGain(1,value);
@@ -100,7 +101,7 @@ this.eightTrackMixer = function(x,y,angle){
 
                 object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
                     return function(value){
-                        object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].set(value);
+                        object.elements.dial_2_continuous['dial_panner_'+a].set(value);
                     }
                 }(a);
                 object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
@@ -110,7 +111,7 @@ this.eightTrackMixer = function(x,y,angle){
                 }(a);
             }
         //io
-            for(var a = 0; a < 8; a++){
+            for(let a = 0; a < 8; a++){
                 object.elements.connectionNode_audio['input_'+a].out().connect(audioLanes[a].in());
                 audioLanes[a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
                 audioLanes[a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
@@ -127,9 +128,9 @@ this.eightTrackMixer = function(x,y,angle){
             },
             pan:function(track,value){
                 if(value == undefined){
-                    return object.elements.dial_colourWithIndent_continuous['dial_panner_'+track].get();
+                    return object.elements.dial_2_continuous['dial_panner_'+track].get();
                 }else{
-                    object.elements.dial_colourWithIndent_continuous['dial_panner_'+track].set(value);
+                    object.elements.dial_2_continuous['dial_panner_'+track].set(value);
                 }
             },
         };
@@ -147,7 +148,7 @@ this.eightTrackMixer = function(x,y,angle){
         };
 
     //setup
-        for(var a = 0; a < 8; a++){
+        for(let a = 0; a < 8; a++){
             object.i.gain(a,0.5);
             object.i.pan(a,0.5);
         }

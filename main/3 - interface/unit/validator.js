@@ -1,6 +1,7 @@
+//this is a little bit nonsencey
 this.validator = function(unit,describe=false){
-    var normalFontColour = '#987aa1';
-    var badFontColour = '#db6060';
+    const normalFontColour = '#987aa1';
+    const badFontColour = '#db6060';
 
     if(!describe){
         // return {

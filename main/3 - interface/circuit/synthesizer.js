@@ -7,7 +7,7 @@ this.synthesizer = function(
     detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
 ){
     //flow chain
-        var flow = {
+        const flow = {
             OSCmaker:{},
             liveOscillators: {},
             wobbler_detune: {},
@@ -75,13 +75,13 @@ this.synthesizer = function(
         flow.wobbler_detune.start = function(){
             if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
             flow.wobbler_detune.interval = setInterval(function(){
-                var OSCs = Object.keys(flow.liveOscillators);
+                const OSCs = Object.keys(flow.liveOscillators);
                 if(flow.wobbler_detune.phase){
-                    for(var b = 0; b < OSCs.length; b++){ 
+                    for(let b = 0; b < OSCs.length; b++){ 
                         flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
                     }
                 }else{
-                    for(var b = 0; b < OSCs.length; b++){ 
+                    for(let b = 0; b < OSCs.length; b++){ 
                         flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
                     }
                 }
@@ -154,8 +154,8 @@ this.synthesizer = function(
             }
         };
         this.panic = function(){
-            var OSCs = Object.keys(flow.liveOscillators);
-            for(var a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+            const OSCs = Object.keys(flow.liveOscillators);
+            for(let a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
         };
         this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
         this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
@@ -175,12 +175,12 @@ this.synthesizer = function(
             if(target==null){return flow.OSCmaker.detune;}
 
             //change stored value for any new oscillators that are made
-                var start = flow.OSCmaker.detune;
-                var mux = target-start;
-                var stepsPerSecond = Math.round(Math.abs(mux));
-                var totalSteps = stepsPerSecond*time;
+                const start = flow.OSCmaker.detune;
+                const mux = target-start;
+                const stepsPerSecond = Math.round(Math.abs(mux));
+                const totalSteps = stepsPerSecond*time;
 
-                var steps = [1];
+                let steps = [1];
                 switch(curve){
                     case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
                     case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
@@ -189,15 +189,15 @@ this.synthesizer = function(
                 }
                 
                 if(steps.length != 0){
-                    var interval = setInterval(function(){
+                    const interval = setInterval(function(){
                         flow.OSCmaker.detune = start+(steps.shift()*mux);
                         if(steps.length == 0){clearInterval(interval);}
                     },1000/stepsPerSecond);
                 }
 
             //instruct liveOscillators to adjust their values
-                var OSCs = Object.keys(flow.liveOscillators);
-                for(var b = 0; b < OSCs.length; b++){ 
+                const OSCs = Object.keys(flow.liveOscillators);
+                for(let b = 0; b < OSCs.length; b++){ 
                     flow.liveOscillators[OSCs[b]].detune(target,time,curve);
                 }
         };

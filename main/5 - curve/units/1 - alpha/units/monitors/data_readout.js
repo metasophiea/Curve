@@ -1,12 +1,12 @@
-this.data_readout = function(x,y,angle){
+this.data_readout = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:1220, height:920 },
                     design: { width:20, height:15 },
                 };
@@ -21,8 +21,9 @@ this.data_readout = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'data_readout',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'data_readout',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -41,28 +42,28 @@ this.data_readout = function(x,y,angle){
         });
 
     //circuitry
-        var lineCount = 0;
-        var maxLineCount = 25;
-        var lines = [];
-        var lineElements = [];
-        var textStyle = {
+        let lineCount = 0;
+        let maxLineCount = 25;
+        const lines = [];
+        let lineElements = [];
+        const textStyle = {
             colour:{r:1,g:1,b:1,a:1}, 
             size:4, 
             font:'defaultThin', 
             printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}
         };
-        var maxPrintingWidth = 175;
+        const maxPrintingWidth = 175;
 
         function printLine(line){
             //add the new text to the list, and if the list becomes too long, remove the oldest item
                 lines.unshift( { prefix:(lineCount++)+':/> ', line:line } );
 
             //empty screen of text
-                for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
+                for(let a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
                 lineElements = [];
 
             //write all lines to screen
-                for(var a = 0; a < lines.length; a++){
+                for(let a = 0; a < lines.length; a++){
                     lineElements[a] = _canvas_.interface.part.builder('basic','text','screenText_'+a,{ 
                         x:12.5, y:12.5 + a*5, 
                         width:textStyle.size,
@@ -74,7 +75,7 @@ this.data_readout = function(x,y,angle){
                     });
 
                     //check the width of the created line, trim characters off until its within the defined width (storing the characters)
-                    var leftOvers = '';
+                    let leftOvers = '';
                     while( lineElements[a].resultingWidth() > maxPrintingWidth ){
                         leftOvers = lineElements[a].string().substring(lineElements[a].string().length-1) + leftOvers;
                         lineElements[a].string( lineElements[a].string().slice(0,-1) );

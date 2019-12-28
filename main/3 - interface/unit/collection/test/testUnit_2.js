@@ -1,6 +1,7 @@
-this.testUnit_2 = function(x,y,angle){
-    var design = {
-        name: 'testUnit_2',
+this.testUnit_2 = function(name,x,y,angle){
+    const design = {
+        name: name,
+        model: 'testUnit_2',
         collection: 'test',
         x:x, y:y, angle:angle,
         space: [
@@ -17,7 +18,7 @@ this.testUnit_2 = function(x,y,angle){
     };
 
     //main object
-        var object = interface.unit.builder(design);
+        const object = interface.unit.builder(design);
     
     return object;
 };

@@ -25,9 +25,9 @@
                     audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
                 break;
                 case 's':
-                    var mux = target - audioParam.value;
-                    var array = library.math.curveGenerator.s(10);
-                    for(var a = 0; a < array.length; a++){
+                    const mux = target - audioParam.value;
+                    const array = library.math.curveGenerator.s(10);
+                    for(let a = 0; a < array.length; a++){
                         array[a] = audioParam.value + array[a]*mux;
                     }
                     audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
@@ -45,7 +45,7 @@
     this.loadAudioFile = function(callback,type='file',url=''){
         switch(type){
             case 'url': 
-                var request = new XMLHttpRequest();
+                const request = new XMLHttpRequest();
                 request.open('GET', url, true);
                 request.responseType = 'arraybuffer';
                 request.onload = function(){
@@ -60,11 +60,11 @@
                 request.send();
             break;
             case 'file': default:
-                var inputObject = document.createElement('input');
+                const inputObject = document.createElement('input');
                 inputObject.type = 'file';
                 inputObject.onchange = function(){
-                    var file = this.files[0];
-                    var fileReader = new FileReader();
+                    const file = this.files[0];
+                    const fileReader = new FileReader();
                     fileReader.readAsArrayBuffer(file);
                     fileReader.onload = function(data){
                         library.audio.context.decodeAudioData(data.target.result, function(buffer){
@@ -83,17 +83,17 @@
         }
     };
     this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
-        var waveform = audioBuffer.getChannelData(0);
-        // var channelCount = audioBuffer.numberOfChannels;
+        const waveform = audioBuffer.getChannelData(0);
+        // const channelCount = audioBuffer.numberOfChannels;
     
         bounds.start = bounds.start ? bounds.start : 0;
         bounds.end = bounds.end ? bounds.end : 1;
-        var start = audioBuffer.length*bounds.start;
-        var end = audioBuffer.length*bounds.end;
-        var step = (end - start)/resolution;
+        const start = audioBuffer.length*bounds.start;
+        const end = audioBuffer.length*bounds.end;
+        const step = (end - start)/resolution;
     
-        var outputArray = [];
-        for(var a = start; a < end; a+=Math.round(step)){
+        const outputArray = [];
+        for(let a = start; a < end; a+=Math.round(step)){
             outputArray.push( 
                 library.math.largestValueFound(
                     waveform.slice(a, a+Math.round(step))
@@ -104,7 +104,7 @@
         return outputArray;
     };
     this.loadBuffer = function(context, data, destination, onended){
-        var temp = context.createBufferSource();
+        const temp = context.createBufferSource();
         temp.buffer = data;
         temp.connect(destination);
         temp.onended = onended;
@@ -151,21 +151,21 @@
         //generate forward index
         // eg. {... '4C':261.6, '4C#':277.2 ...}
             this.names_frequencies = {};
-            var octaves = Object.entries(this.names_frequencies_split);
-            for(var a = 0; a < octaves.length; a++){
-                var names = Object.entries(this.names_frequencies_split[a]);
-                for(var b = 0; b < names.length; b++){
+            const octaves = Object.entries(this.names_frequencies_split);
+            for(let a = 0; a < octaves.length; a++){
+                const names = Object.entries(this.names_frequencies_split[a]);
+                for(let b = 0; b < names.length; b++){
                     this.names_frequencies[ octaves[a][0]+names[b][0] ] = names[b][1];
                 }
             }
         //generate backward index
         // eg. {... 261.6:'4C', 277.2:'4C#' ...}
             this.frequencies_names = {};
-            var temp = Object.entries(this.names_frequencies);
-            for(var a = 0; a < temp.length; a++){ this.frequencies_names[temp[a][1]] = temp[a][0]; }
+            const temp = Object.entries(this.names_frequencies);
+            for(let a = 0; a < temp.length; a++){ this.frequencies_names[temp[a][1]] = temp[a][0]; }
 
     //generate midi notes index
-        var temp = [
+        const temp = [
             '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
             '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
             '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
@@ -178,13 +178,13 @@
         ];
         //generate forward index
             this.midinumbers_names = {};
-            for(var a = 0; a < temp.length; a++){
+            for(let a = 0; a < temp.length; a++){
                 this.midinumbers_names[a+24] = temp[a];
             }
         //generate backward index
             this.names_midinumbers = {};
-            var temp = Object.entries(this.midinumbers_names);
-            for(var a = 0; a < temp.length; a++){ 
+            const temp = Object.entries(this.midinumbers_names);
+            for(let a = 0; a < temp.length; a++){ 
                 this.names_midinumbers[temp[a][1]] = parseInt(temp[a][0]);
             }
 

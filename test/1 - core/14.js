@@ -1,71 +1,64 @@
-function adjustShapeCount(newShapeCount){
-    var currentCount = _canvas_.core.arrangement.get().children().length;
+var group_1;
+var rectangle_1;
 
-    if( newShapeCount > currentCount ){
-        for(var a = 0; a < newShapeCount - currentCount; a++){
-            var tmp = _canvas_.core.shape.create('rectangle');
-                tmp.name = 'rectangle_'+(currentCount+a);
-                tmp.stopAttributeStartedExtremityUpdate = true;
-                tmp.x(10+Math.random()*500);
-                tmp.y(10+Math.random()*500); 
-                tmp.width(10);
-                tmp.height(10);
-                tmp.stopAttributeStartedExtremityUpdate = false;
-                tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
-                _canvas_.core.arrangement.append(tmp);
-        }
-    }
-    else if( newShapeCount < currentCount ){
-        for(var a = currentCount-1; a > newShapeCount-1; a--){
-            _canvas_.core.arrangement.get().remove(
-                _canvas_.core.arrangement.get().getChildByName('rectangle_'+a)
-            );
-        }
-    }
-}
+_canvas_.core.go.add( function(){ 
+    group_1 = _canvas_.core.element.create('group','group_1');
+    _canvas_.core.arrangement.append(group_1);
 
 
+    rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_1.attachCallback('onadd',() => {console.log('rectangle_1:onadd');});
+    rectangle_1.attachCallback('onremove',() => {console.log('rectangle_1:onremove');});
 
+    setTimeout(() => {
+        console.log( '-> printouts' );
+        console.log('group_1.ignored() :',group_1.ignored());
+        console.log('group_1.x() :',group_1.x());
+        console.log('group_1.y() :',group_1.y());
+        console.log('group_1.angle() :',group_1.angle());
+        console.log('group_1.scale() :',group_1.scale());
+        console.log('group_1.static() :',group_1.static());
+        console.log('group_1.getChildren() :',group_1.getChildren());
+        console.log('group_1.stencil() :',group_1.stencil());
+        console.log('group_1.clipActive() :',group_1.clipActive());
+        console.log('group_1.unifiedAttribute() :',group_1.unifiedAttribute());
+    },500);
 
+    setTimeout(() => {
+        console.log('');
+        console.log( '-> append rectangle_1' );
+        group_1.append(rectangle_1);
+    },1000);
 
+    setTimeout(() => {
+        console.log('');
+        console.log('group_1.getChildren() :',group_1.getChildren());
+    },1500);
 
+    setTimeout(() => {
+        console.log('');
+        console.log( '-> append rectangle_1 (there should be an error)' );
+        group_1.append(rectangle_1);
+    },2000);
 
+    setTimeout(() => {
+        console.log('');
+        console.log('group_1.getChildren() :',group_1.getChildren());
+    },2500);
 
+    setTimeout(() => {
+        console.log('');
+        console.log('group_1.contains() :',group_1.contains());
+    },3000);
 
+    setTimeout(() => {
+        console.log('');
+        console.log( '-> remove rectangle_1' );
+        group_1.remove(rectangle_1);
+    },3400);
 
-
-
-var shapeCount = 0;
-var shapeCountStats = {max:0,rollingAverage:0,rollingAverageBuffer:[],rollingAverageBufferLength:100};
-
-_canvas_.core.render.active(true);
-_canvas_.core.stats.active(true);
-var averages = [];
-var rollingAverage = 0;
-var interval = setInterval(function(){
-    var tmp = _canvas_.core.stats.getReport();
-    averages.push(tmp.framesPerSecond);
-    console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
-
-    if(shapeCount > shapeCountStats.max){shapeCountStats.max = shapeCount;}
-    shapeCountStats.rollingAverageBuffer.push(shapeCount); if(shapeCountStats.rollingAverageBuffer.length > shapeCountStats.rollingAverageBufferLength){shapeCountStats.rollingAverageBuffer.shift();}
-    console.log( 'current shape count:',shapeCount, 'highest shape count:',shapeCountStats.max, 'rolling average:',_canvas_.library.math.averageArray(shapeCountStats.rollingAverageBuffer));
-
-    if(tmp.framesPerSecond > 40){
-        shapeCount += 100;
-    }else{
-        shapeCount -= 100;
-    }
-    adjustShapeCount(shapeCount);
-},100);
-function stop(){ clearInterval(interval); }
-
-
-
-
-
-
-
-
-_canvas_.library._control.logflow.active(true);
-console.log( _canvas_.library._control.logflow.printResults() );
+    setTimeout(() => {
+        console.log('');
+        console.log('group_1.getChildren() :',group_1.getChildren());
+    },4000);
+} );

@@ -1,12 +1,12 @@
-this.amplifier = function(x,y,angle){
+this.amplifier = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'amplifier/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:935, height:860 },
                     design: { width:15.5, height:14.25 },
                 };
@@ -19,8 +19,9 @@ this.amplifier = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'amplifier',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'amplifier',
             x:x, y:y, angle:angle,
             space:[
                 {x:0,                                              y:0},
@@ -47,7 +48,7 @@ this.amplifier = function(x,y,angle){
         });
 
     //circuitry
-        var flow = {
+        const flow = {
             destination:null,
             stereoCombiner: null,
             pan_left:null, pan_right:null,

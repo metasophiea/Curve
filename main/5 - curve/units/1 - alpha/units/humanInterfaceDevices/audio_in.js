@@ -1,12 +1,12 @@
-this.audio_in = function(x,y,angle,setupConnect=true){
+this.audio_in = function(name,x,y,angle,setupConnect=true){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'audio_in/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:905, height:320 },
                     design: { width:14.75, height:5 },
                 };
@@ -22,8 +22,9 @@ this.audio_in = function(x,y,angle,setupConnect=true){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'audio_in',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'audio_in',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -44,7 +45,7 @@ this.audio_in = function(x,y,angle,setupConnect=true){
                 {collection:'basic', type:'image', name:'backing', data:{ 
                     x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
                 }},
-                {collection:'control', type:'dial_colourWithIndent_continuous', name:'outputGain',data:{
+                {collection:'control', type:'dial_2_continuous', name:'outputGain',data:{
                     x:20, y:25, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.outputGain,
                 }},
                 {collection:'control', type:'button_image', name:'button_previous', data:{
@@ -60,30 +61,30 @@ this.audio_in = function(x,y,angle,setupConnect=true){
                 {collection:'display', type:'audio_meter_level', name:'audioIn',data:{ 
                     x:37.5+10/16, y:5+10/16, width:11.65-10/8, height:40-10/8
                 }},
-                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'index', data:{
-                    x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, count:11
+                {collection:'display', type:'readout_sixteenSegmentDisplay', name:'index', data:{
+                    x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, static:true, count:11, resolution:5,
                 }},
-                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'text', data:{
-                    x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, count:18
+                {collection:'display', type:'readout_sixteenSegmentDisplay', name:'text', data:{
+                    x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, static:true, count:18, resolution:5,
                 }},
             ]
         });
 
     //circuitry
-        var state = {
+        const state = {
             deviceList:[],
             currentSelection: 0
         };
-        var audioInCircuit = new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect);
+        const audioInCircuit = new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect);
 
         audioInCircuit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );
 
         function selectDevice(a){
             if(state.deviceList.length == 0){
-                object.elements.readout_sixteenSegmentDisplay_static.index.text('');
-                object.elements.readout_sixteenSegmentDisplay_static.index.print();
-                object.elements.readout_sixteenSegmentDisplay_static.text.text(' -- no devices --');
-                object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
+                object.elements.readout_sixteenSegmentDisplay.index.text('');
+                object.elements.readout_sixteenSegmentDisplay.index.print();
+                object.elements.readout_sixteenSegmentDisplay.text.text(' -- no devices --');
+                object.elements.readout_sixteenSegmentDisplay.text.print('smart');
                 return;
             }
             if( a < 0 || a >= state.deviceList.length ){return;}
@@ -91,14 +92,14 @@ this.audio_in = function(x,y,angle,setupConnect=true){
 
             selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
             totalNum=''+state.deviceList.length; while(totalNum.length < 2){ totalNum = '0'+totalNum; }
-            var text = selectionNum+'/'+totalNum; while(text.length < 8){ text = ' '+text; }
-            object.elements.readout_sixteenSegmentDisplay_static.index.text(text);
-            object.elements.readout_sixteenSegmentDisplay_static.index.print();
+            let index_text = selectionNum+'/'+totalNum; while(index_text.length < 8){ index_text = ' '+index_text; }
+            object.elements.readout_sixteenSegmentDisplay.index.text(index_text);
+            object.elements.readout_sixteenSegmentDisplay.index.print();
 
-            var text = state.deviceList[a].deviceId;
-            if(state.deviceList[a].label.length > 0){text = state.deviceList[a].label +' - '+ text;}
-            object.elements.readout_sixteenSegmentDisplay_static.text.text(text);
-            object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
+            let text_text = state.deviceList[a].deviceId;
+            if(state.deviceList[a].label.length > 0){text_text = state.deviceList[a].label +' - '+ text_text;}
+            object.elements.readout_sixteenSegmentDisplay.text.text(text_text);
+            object.elements.readout_sixteenSegmentDisplay.text.print('smart');
 
             audioInCircuit.selectDevice( state.deviceList[a].deviceId );
         }
@@ -107,7 +108,7 @@ this.audio_in = function(x,y,angle,setupConnect=true){
 
     //wiring
         //hid
-            object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){audioInCircuit.gain(value*2);}
+            object.elements.dial_2_continuous.outputGain.onchange = function(value){audioInCircuit.gain(value*2);}
             object.elements.button_image.button_previous.onpress = function(){ decSelection(); };
             object.elements.button_image.button_next.onpress = function(){ incSelection(); };
         //io
@@ -118,23 +119,23 @@ this.audio_in = function(x,y,angle,setupConnect=true){
     //interface
         object.i = {
             gain:function(value){
-                if(value == undefined){return object.elements.dial_colourWithIndent_continuous.outputGain.get();}
-                object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
+                if(value == undefined){return object.elements.dial_2_continuous.outputGain.get();}
+                object.elements.dial_2_continuous.outputGain.set(value);
             },
         };
 
     //import/export
         object.exportData = function(){
-            return { gain: object.elements.dial_colourWithIndent_continuous.outputGain.get() };
+            return { gain: object.elements.dial_2_continuous.outputGain.get() };
         };
         object.importData = function(data){
-            object.elements.dial_colourWithIndent_continuous.outputGain.get( data.gain );
+            object.elements.dial_2_continuous.outputGain.get( data.gain );
         };
     
     //setup
         audioInCircuit.listDevices(function(a){state.deviceList=a;});
         if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
-        object.elements.dial_colourWithIndent_continuous.outputGain.set(0.5);
+        object.elements.dial_2_continuous.outputGain.set(0.5);
         object.elements.audio_meter_level.audioIn.start();
 
     return object;

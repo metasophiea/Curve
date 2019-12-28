@@ -8,12 +8,14 @@ this.slidePanel = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.slidePanel(...)'); //#development
+
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+            const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //slides
-            for(var a = 0; a < count; a++){
-                var temp = interfacePart.builder(
+            for(let a = 0; a < count; a++){
+                const temp = interfacePart.builder(
                     'control', 'slide_continuous', 'slide_'+a, {
                         x:a*(width/count), y:0,
                         width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
@@ -31,7 +33,7 @@ this.slidePanel = function(
             if(bool==undefined){return interactable;}
             interactable = bool;
 
-            for(var a = 0; a < count; a++){
+            for(let a = 0; a < count; a++){
                 object.children()[a].interactable(bool);
             }
         };

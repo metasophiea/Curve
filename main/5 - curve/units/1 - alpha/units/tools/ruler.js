@@ -1,6 +1,6 @@
-this.ruler = function(x,y,angle){
+this.ruler = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //calculation of measurements
                 this.drawingValue = { 
                     width: 50, 
@@ -13,8 +13,9 @@ this.ruler = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'ruler',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'ruler',
             x:x, y:y, angle:angle,
             collisionActive:false,
             space:[
@@ -37,7 +38,7 @@ this.ruler = function(x,y,angle){
                 ].concat(
                     (new Array(100).fill(0)).flatMap((value,index) => {
                         if(index == 0){return [];}
-                        var newMarkings = []
+                        const newMarkings = []
 
                         //centimetres
                             newMarkings.push(

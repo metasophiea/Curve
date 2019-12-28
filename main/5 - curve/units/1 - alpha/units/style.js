@@ -1,5 +1,5 @@
-var imageStoreURL = 'images/units/1 - alpha/';
-var style = {
+const imageStoreURL = '/images/units/1 - alpha/';
+const style = {
     background:{r:70/255,g:70/255,b:70/255,a:1},
     bumper:{r:0.125,g:0.125,b:0.125,a:1},
     textColour:{r:0.7,g:0.7,b:0.7,a:1},
@@ -67,17 +67,3 @@ var style = {
         },
     },
 };
-// var bumperCoverage = {
-//     small:{
-//         length:5,
-//         thickness:5/2,
-//     },
-//     medium:{
-//         length:10,
-//         thickness:10/3,
-//     },
-//     large:{
-//         length:15,
-//         thickness:15/4,
-//     },
-// };

@@ -1,12 +1,12 @@
-this.light_panel_4 = function(x,y,angle){
+this.light_panel_4 = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'light_panel/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = { 
+                const div = 10;
+                const measurement = { 
                     file: { width:550, height:130 },
                     design: { width:5.5, height:1.3 },
                 };
@@ -19,8 +19,9 @@ this.light_panel_4 = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'light_panel_4',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'light_panel_4',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -77,9 +78,9 @@ this.light_panel_4 = function(x,y,angle){
     
     //wiring
         //io
-            for(var a = 0; a <= 3; a++){
+            for(let a = 0; a <= 3; a++){
                 object.io.signal['in_'+a].onchange = (function(a){ return function(value){
-                    var lamp = object.elements.glowbox_image['lamp_'+a];
+                    const lamp = object.elements.glowbox_image['lamp_'+a];
                     value ? lamp.on() : lamp.off();
                 }; })(a);
             }

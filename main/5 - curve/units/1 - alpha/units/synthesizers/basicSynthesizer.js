@@ -1,12 +1,12 @@
-this.basic_synthesizer = function(x,y,angle){
+this.basic_synthesizer = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'basic_synthesizer/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:1115, height:680 },
                     design: { width:18.25, height:11 },
                 };
@@ -37,8 +37,9 @@ this.basic_synthesizer = function(x,y,angle){
         };
 
         //main object creation
-            var object = _canvas_.interface.unit.builder({
-                name:'basic_synthesizer',
+            const object = _canvas_.interface.unit.builder({
+                name:name,
+                model:'basic_synthesizer',
                 x:x, y:y, angle:angle,
                 space:[
                     { x:unitStyle.drawingValue.width*(1/18.5),                        y:0                                                         },
@@ -102,34 +103,34 @@ this.basic_synthesizer = function(x,y,angle){
                     {collection:'basic', type:'image', name:'backing', 
                         data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                     },
-                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
+                    {collection:'control', type:'dial_2_continuous',name:'outputGain',data:{
                         x:20, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0.5, value:0.5, style:unitStyle.outputGain,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'attack',data:{
+                    {collection:'control', type:'dial_2_continuous',name:'attack',data:{
                         x:55, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0, style:unitStyle.attack,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'release',data:{
+                    {collection:'control', type:'dial_2_continuous',name:'release',data:{
                         x:87.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.release,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detune_note',data:{
+                    {collection:'control', type:'dial_2_continuous',name:'detune_note',data:{
                         x:122.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.detune_note,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'detune_octave',data:{
+                    {collection:'control', type:'dial_2_discrete',name:'detune_octave',data:{
                         x:155, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:3, arcDistance:1.2, resetValue:3, optionCount:7, style:unitStyle.detune_octave,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'periodicWaveType',data:{
+                    {collection:'control', type:'dial_2_discrete',name:'periodicWaveType',data:{
                         x:130, y:72.5, radius:32.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.periodicWaveType,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobblePeriod',data:{
+                    {collection:'control', type:'dial_2_continuous',name:'gainWobblePeriod',data:{
                         x:40, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.gainWobblePeriod,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobbleDepth',data:{
+                    {collection:'control', type:'dial_2_continuous',name:'gainWobbleDepth',data:{
                         x:40, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.gainWobbleDepth,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobblePeriod',data:{
+                    {collection:'control', type:'dial_2_continuous',name:'detuneWobblePeriod',data:{
                         x:72.5, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.detuneWobblePeriod,
                     }},
-                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobbleDepth',data:{
+                    {collection:'control', type:'dial_2_continuous',name:'detuneWobbleDepth',data:{
                         x:72.5, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.detuneWobbleDepth,
                     }},
                     {collection:'control', type:'button_circle', name:'panicButton', data:{ 
@@ -139,21 +140,21 @@ this.basic_synthesizer = function(x,y,angle){
             });
 
     //circuitry
-        var detuneLimits = {min:-100, max:100};
-        var synthesizerCircuit = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
+        const detuneLimits = {min:-100, max:100};
+        const synthesizerCircuit = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
 
     //wiring
         //hid
-            object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){ synthesizerCircuit.gain( value ); };
-            object.elements.dial_colourWithIndent_continuous.attack.onchange = function(value){ synthesizerCircuit.attack( value ); };
-            object.elements.dial_colourWithIndent_continuous.release.onchange = function(value){ synthesizerCircuit.release( value ); };
-            object.elements.dial_colourWithIndent_continuous.detune_note.onchange = function(value){ synthesizerCircuit.detune( value*(detuneLimits.max-detuneLimits.min) + detuneLimits.min ); };
-            object.elements.dial_colourWithIndent_discrete.detune_octave.onchange = function(value){ synthesizerCircuit.octave( value-3 ); };
-            object.elements.dial_colourWithIndent_discrete.periodicWaveType.onchange = function(value){ synthesizerCircuit.waveType( ['sine','triangle','square','sawtooth','custom'][value] ); };
-            object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.onchange = function(value){ synthesizerCircuit.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
-            object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.onchange = function(value){ synthesizerCircuit.gainWobbleDepth(value);};
-            object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.onchange = function(value){ synthesizerCircuit.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
-            object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.onchange = function(value){ synthesizerCircuit.detuneWobbleDepth( value*100 ); };
+            object.elements.dial_2_continuous.outputGain.onchange = function(value){ synthesizerCircuit.gain( value ); };
+            object.elements.dial_2_continuous.attack.onchange = function(value){ synthesizerCircuit.attack( value ); };
+            object.elements.dial_2_continuous.release.onchange = function(value){ synthesizerCircuit.release( value ); };
+            object.elements.dial_2_continuous.detune_note.onchange = function(value){ synthesizerCircuit.detune( value*(detuneLimits.max-detuneLimits.min) + detuneLimits.min ); };
+            object.elements.dial_2_discrete.detune_octave.onchange = function(value){ synthesizerCircuit.octave( value-3 ); };
+            object.elements.dial_2_discrete.periodicWaveType.onchange = function(value){ synthesizerCircuit.waveType( ['sine','triangle','square','sawtooth','custom'][value] ); };
+            object.elements.dial_2_continuous.gainWobblePeriod.onchange = function(value){ synthesizerCircuit.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+            object.elements.dial_2_continuous.gainWobbleDepth.onchange = function(value){ synthesizerCircuit.gainWobbleDepth(value);};
+            object.elements.dial_2_continuous.detuneWobblePeriod.onchange = function(value){ synthesizerCircuit.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+            object.elements.dial_2_continuous.detuneWobbleDepth.onchange = function(value){ synthesizerCircuit.detuneWobbleDepth( value*100 ); };
             object.elements.button_circle.panicButton.onpress = function(){ synthesizerCircuit.panic(); };
         //io
             synthesizerCircuit.out().connect( object.io.audio.io_output.in() );
@@ -167,40 +168,40 @@ this.basic_synthesizer = function(x,y,angle){
                 synthesizerCircuit.periodicWave(data);
             };
             object.io.voltage.io_outputGain.onchange = function(value){
-                object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
+                object.elements.dial_2_continuous.outputGain.set(value);
             };
             object.io.voltage.io_attack.onchange = function(value){
-                object.elements.dial_colourWithIndent_continuous.attack.set(value);
+                object.elements.dial_2_continuous.attack.set(value);
             };
             object.io.voltage.io_release.onchange = function(value){
-                object.elements.dial_colourWithIndent_continuous.release.set(value);
+                object.elements.dial_2_continuous.release.set(value);
             };
             object.io.voltage.io_detune_note.onchange = function(value){ 
-                object.elements.dial_colourWithIndent_continuous.detune_note.set(value);
+                object.elements.dial_2_continuous.detune_note.set(value);
             };
             object.io.signal.io_detune_octave_down.onchange = function(value){ if(!value){return;}
-                object.elements.dial_colourWithIndent_discrete.detune_octave.set( object.elements.dial_colourWithIndent_discrete.detune_octave.get() - 1 );
+                object.elements.dial_2_discrete.detune_octave.set( object.elements.dial_2_discrete.detune_octave.get() - 1 );
             };
             object.io.signal.io_detune_octave_up.onchange = function(value){ if(!value){return;}
-                object.elements.dial_colourWithIndent_discrete.detune_octave.set( object.elements.dial_colourWithIndent_discrete.detune_octave.get() + 1 );
+                object.elements.dial_2_discrete.detune_octave.set( object.elements.dial_2_discrete.detune_octave.get() + 1 );
             };
             object.io.voltage.io_gainWobblePeriod.onchange = function(value){
-                object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);
+                object.elements.dial_2_continuous.gainWobblePeriod.set(value);
             };
             object.io.voltage.io_gainWobbleDepth.onchange = function(value){
-                object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);
+                object.elements.dial_2_continuous.gainWobbleDepth.set(value);
             };
             object.io.voltage.io_detuneWobblePeriod.onchange = function(value){
-                object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);
+                object.elements.dial_2_continuous.detuneWobblePeriod.set(value);
             };
             object.io.voltage.io_detuneWobbleDepth.onchange = function(value){
-                object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);
+                object.elements.dial_2_continuous.detuneWobbleDepth.set(value);
             };
             object.io.signal.io_periodicWaveType_down.onchange = function(value){ if(!value){return;}
-                object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() - 1 );
+                object.elements.dial_2_discrete.periodicWaveType.set( object.elements.dial_2_discrete.periodicWaveType.get() - 1 );
             };
             object.io.signal.io_periodicWaveType_up.onchange = function(value){ if(!value){return;}
-                object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() + 1 );
+                object.elements.dial_2_discrete.periodicWaveType.set( object.elements.dial_2_discrete.periodicWaveType.get() + 1 );
             };
             object.io.signal.io_panic.onchange = function(value){ value ? object.elements.button_circle.panicButton.press() : object.elements.button_circle.panicButton.release(); };
 
@@ -212,46 +213,46 @@ this.basic_synthesizer = function(x,y,angle){
         ['gain','attack','release','detune','gainWobblePeriod','gainWobbleDepth','detuneWobblePeriod','detuneWobbleDepth'].forEach(dialName => {
             object.i[dialName] = (function(element){
                 return function(value){ if(value==undefined){return element.get();}else{element.set(value);} }
-            })(object.elements.dial_colourWithIndent_continuous[dialName]);
+            })(object.elements.dial_2_continuous[dialName]);
         });
         ['octave','waveType'].forEach(dialName => {
             object.i[dialName] = (function(element){
                 return function(value){ if(value==undefined){return element.get();}else{element.set(value);} }
-            })(object.elements.dial_colourWithIndent_discrete[dialName]);
+            })(object.elements.dial_2_discrete[dialName]);
         });
 
     //import/export
         object.exportData = function(){
             return {
-                gain: object.elements.dial_colourWithIndent_continuous.outputGain.get(),
-                attack: object.elements.dial_colourWithIndent_continuous.attack.get()*10,
-                release: object.elements.dial_colourWithIndent_continuous.release.get()*10,
-                detune: 100*((object.elements.dial_colourWithIndent_continuous.detune_note.get()*2)-1),
-                octave: object.elements.dial_colourWithIndent_discrete.detune_octave.get()-3,
-                waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_colourWithIndent_discrete.periodicWaveType.get()],
+                gain: object.elements.dial_2_continuous.outputGain.get(),
+                attack: object.elements.dial_2_continuous.attack.get()*10,
+                release: object.elements.dial_2_continuous.release.get()*10,
+                detune: 100*((object.elements.dial_2_continuous.detune_note.get()*2)-1),
+                octave: object.elements.dial_2_discrete.detune_octave.get()-3,
+                waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_2_discrete.periodicWaveType.get()],
                 gainWobble:{
-                    rate: object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.get()*100,
-                    depth: object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.get()
+                    rate: object.elements.dial_2_continuous.gainWobblePeriod.get()*100,
+                    depth: object.elements.dial_2_continuous.gainWobbleDepth.get()
                 },
                 detuneWobble:{
-                    rate: object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.get()*100,
-                    depth: object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.get()
+                    rate: object.elements.dial_2_continuous.detuneWobblePeriod.get()*100,
+                    depth: object.elements.dial_2_continuous.detuneWobbleDepth.get()
                 },
             };
         };
         object.importData = function(data){
             if(data == undefined){return;}
 
-            object.elements.dial_colourWithIndent_continuous.outputGain.set( data.gain );
-            object.elements.dial_colourWithIndent_continuous.attack.set( data.attack/10 );
-            object.elements.dial_colourWithIndent_continuous.release.set( data.release/10 );
-            object.elements.dial_colourWithIndent_continuous.detune_note.set( (1+(data.detune/100))/2 );
-            object.elements.dial_colourWithIndent_discrete.detune_octave.set( data.octave+3 );
-            object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
-            object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set( data.gainWobble.rate/100 );
-            object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set( data.gainWobble.depth );
-            object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set( data.detuneWobble.rate/100 );
-            object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set( data.detuneWobble.depth );
+            object.elements.dial_2_continuous.outputGain.set( data.gain );
+            object.elements.dial_2_continuous.attack.set( data.attack/10 );
+            object.elements.dial_2_continuous.release.set( data.release/10 );
+            object.elements.dial_2_continuous.detune_note.set( (1+(data.detune/100))/2 );
+            object.elements.dial_2_discrete.detune_octave.set( data.octave+3 );
+            object.elements.dial_2_discrete.periodicWaveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+            object.elements.dial_2_continuous.gainWobblePeriod.set( data.gainWobble.rate/100 );
+            object.elements.dial_2_continuous.gainWobbleDepth.set( data.gainWobble.depth );
+            object.elements.dial_2_continuous.detuneWobblePeriod.set( data.detuneWobble.rate/100 );
+            object.elements.dial_2_continuous.detuneWobbleDepth.set( data.detuneWobble.depth );
         };
         
     return object;

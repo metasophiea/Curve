@@ -1,12 +1,12 @@
-this.voltage_combiner = function(x,y,angle){
+this.voltage_combiner = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:260, height:260 },
                     design: { width:4, height:4 },
                 };
@@ -19,8 +19,9 @@ this.voltage_combiner = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'voltage_combiner',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'voltage_combiner',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
@@ -54,8 +55,8 @@ this.voltage_combiner = function(x,y,angle){
         });
 
         //circuitry
-            var mix = 0.5;
-            var inputValue = [0,0];
+            let mix = 0.5;
+            const inputValue = [0,0];
             function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
 
         //wiring

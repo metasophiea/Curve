@@ -1,12 +1,12 @@
-this.data_combiner = function(x,y,angle){
+this.data_combiner = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:320, height:320 },
                     design: { width:5, height:5 },
                 };
@@ -19,8 +19,9 @@ this.data_combiner = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'data_combiner',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'data_combiner',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },

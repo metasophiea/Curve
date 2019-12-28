@@ -1,12 +1,12 @@
-this.audio_scope = function(x,y,angle){
+this.audio_scope = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'audio_scope/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:1220, height:680 },
                     design: { width:20, height:11 },
                 };
@@ -23,8 +23,9 @@ this.audio_scope = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'audio_scope',
+    const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'audio_scope',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                                          y:0                                                                 },
@@ -42,7 +43,7 @@ this.audio_scope = function(x,y,angle){
                 {collection:'basic', type:'image', name:'backing', data:{ 
                     x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
                 }},
-                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_framerate',data:{
+                {collection:'control', type:'dial_2_continuous',name:'dial_framerate',data:{
                     x:173.5, y:42.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial,
                 }},
                 {collection:'control', type:'button_image', name:'hold', data:{
@@ -50,37 +51,37 @@ this.audio_scope = function(x,y,angle){
                     backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png',
                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
                 }},
-                {collection:'display', type:'grapher_audioScope_static', name:'waveport', data:{
-                    x:5, y:5, width:150, height:100, style:unitStyle.waveport,
+                {collection:'display', type:'grapher_audioScope', name:'waveport', data:{
+                    x:5, y:5, width:150, height:100, static:true, style:unitStyle.waveport,
                 }},
             ]
         });
 
     //circuitry
-        var attributes = {
+        const attributes = {
             framerateLimits: {min:1, max:30},
             framerate:1,
         };
 
     //wiring
         //hid
-            object.elements.button_image.hold.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
-            object.elements.button_image.hold.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
-            object.elements.dial_colourWithIndent_continuous.dial_framerate.onchange = function(a){
+            object.elements.button_image.hold.onpress = function(){object.elements.grapher_audioScope.waveport.stop();};
+            object.elements.button_image.hold.onrelease = function(){object.elements.grapher_audioScope.waveport.start();};
+            object.elements.dial_2_continuous.dial_framerate.onchange = function(a){
                 attributes.framerate = attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a);
-                object.elements.grapher_audioScope_static.waveport.refreshRate(attributes.framerate);
+                object.elements.grapher_audioScope.waveport.refreshRate(attributes.framerate);
             };
         //io 
-            object.io.audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
+            object.io.audio.input.out().connect(object.elements.grapher_audioScope.waveport.getNode());
 
     //interface
         object.i = {
             framerate:function(a){
                 if(a==undefined){return attributes.framerate;}
-                object.elements.dial_colourWithIndent_continuous.dial_framerate.set(a/attributes.framerateLimits.max);
+                object.elements.dial_2_continuous.dial_framerate.set(a/attributes.framerateLimits.max);
             },
             sampleWidth:function(a){
-                return object.elements.grapher_audioScope_static.waveport.resolution(a);
+                return object.elements.grapher_audioScope.waveport.resolution(a);
             },
         };
 
@@ -97,8 +98,8 @@ this.audio_scope = function(x,y,angle){
         };
 
     //setup
-        object.elements.grapher_audioScope_static.waveport.start();
-        object.elements.dial_colourWithIndent_continuous.dial_framerate.set(0);
+        object.elements.grapher_audioScope.waveport.start();
+        object.elements.dial_2_continuous.dial_framerate.set(0);
 
     return object;
 };

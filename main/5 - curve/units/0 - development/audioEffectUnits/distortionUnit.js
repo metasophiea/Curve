@@ -1,5 +1,5 @@
-this.distortionUnit = function(x,y,a){
-    var style = {
+this.distortionUnit = function(name,x,y,a){
+    const style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
         h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
@@ -10,8 +10,9 @@ this.distortionUnit = function(x,y,a){
             needle:{r:250/255,g:150/255,b:150/255,a:1},
         }
     };
-    var design = {
-        name:'distortionUnit',
+    const design = {
+        name:name,
+        model:'distortionUnit',
         category:'audioEffectUnits',
         collection:'alpha',
         x:x, y:y, a:a,
@@ -105,7 +106,7 @@ this.distortionUnit = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(design);
+        const object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.importData = function(data){
@@ -150,7 +151,7 @@ this.distortionUnit.metadata = {
     helpURL:'https://curve.metasophiea.com/help/units/alpha/distortionUnit/'
 };
 
-this.distortionUnit_stereo = function(x,y,a){
+this.distortionUnit_stereo = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
@@ -163,7 +164,8 @@ this.distortionUnit_stereo = function(x,y,a){
         }
     };
     var design = {
-        name:'distortionUnit_stereo',
+        name:name,
+        model:'distortionUnit_stereo',
         category:'audioEffectUnits',
         collection:'alpha',
         x:x, y:y, a:a,

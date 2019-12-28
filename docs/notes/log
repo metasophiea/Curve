@@ -7,7 +7,7 @@
     - odd issue with the file opener library function not working. Seems to be
       fixed by making it add the 'input' element to the document body, then
       'clicking' it. The element is removed after a second
-    - setting things over for the switch over
+    - setting things up for the switch over
 
 
 2019-12-26

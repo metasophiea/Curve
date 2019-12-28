@@ -4,18 +4,20 @@ this.checkbox_image = function(
     uncheckURL='', checkURL='', uncheckGlowURL='', checkGlowStyle='',
     onchange = function(){},
 ){
+    dev.log.partControl('.checkbox_image(...)'); //#development
+
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('basic','group',name+'subGroup');
+            const subject = interfacePart.builder('basic','group',name+'subGroup');
         //backing
-            var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:uncheckURL});
+            const backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:uncheckURL});
             subject.append(backing);
         //cover
             subject.cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic checkbox part
-        var object = interfacePart.builder(
+        const object = interfacePart.builder(
             'control', 'checkbox_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 onchange:onchange,
@@ -26,9 +28,9 @@ this.checkbox_image = function(
     //graphical state adjust
         object.updateGraphics = function(state){
             if(state.glowing){
-                backing.imageURL(state.checked ? checkGlowStyle : uncheckGlowURL);
+                backing.url(state.checked ? checkGlowStyle : uncheckGlowURL);
             }else{
-                backing.imageURL(state.checked ? checkURL : uncheckURL);
+                backing.url(state.checked ? checkURL : uncheckURL);
             }
         };
         object.updateGraphics({checked:false,glowing:false});

@@ -1,29 +1,29 @@
-var tmp = _canvas_.core.shape.create('polygon');
-    tmp.name = 'polygon_1';
-    tmp.stopAttributeStartedExtremityUpdate = true;
-    tmp.pointsAsXYArray([ 
-        {x:0,y:0},
-        {x:400,y:200},
-        {x:400,y:400},
-        {x:0,y:400}
+var fontName = new URL(window.location.href).searchParams.get("fontName");
+if(fontName == undefined){fontName = 'Roboto-Regular';}
+var customText = new URL(window.location.href).searchParams.get("text");
+if(customText == undefined){customText = 'CORE';}
 
-        // {x:10,y:80}, 
-        // {x:50,y:80}, 
-        // {x:20,y:100}, 
-        // {x:70,y:140}, 
-        // {x:10,y:140},
-    ]);
-    tmp.stopAttributeStartedExtremityUpdate = false;
-    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
-    tmp.onmousedown = function(){
-        console.log('click');
-        tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
-    };
-    _canvas_.core.arrangement.append(tmp);
+function rc(){return {r:Math.random(),g:Math.random(),b:Math.random(),a:1};}
 
-_canvas_.core.viewport.clickVisibility(true);
-_canvas_.core.render.active(true);
+_canvas_.core.go.add( function(){ 
 
+    let rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_1.unifiedAttribute({ x:10, y:10, width:50, height:50, colour:rc() });
+    _canvas_.core.arrangement.append(rectangle_1);
 
+    let rectangle_2 = _canvas_.core.element.create('rectangle','rectangle_2');
+    rectangle_2.unifiedAttribute({ x:10, y:10, width:50, height:50, colour:rc() });
+    _canvas_.core.arrangement.append(rectangle_2);
 
-console.log(_canvas_.core.arrangement.getElementsUnderPoint(115, 30));
+    let characterString_1 = _canvas_.core.element.create('characterString','characterString_1');
+    _canvas_.core.arrangement.append(characterString_1);
+    characterString_1.unifiedAttribute({
+        string:customText, font:fontName, x:10, y:10, width:50, height:50, colour:rc(),
+        printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'top'},
+    });
+    characterString_1.attachCallback('onFontUpdateCallback',(data) => {
+        rectangle_2.x(10 + characterString_1.resultingWidth());
+        _canvas_.core.render.frame();
+    });
+
+} );

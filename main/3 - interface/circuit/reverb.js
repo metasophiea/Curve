@@ -2,7 +2,7 @@ this.reverbUnit = function(
     context,
 ){
     //flow chain
-        var flow = {
+        const flow = {
             inAggregator: {},
             reverbGain: {}, bypassGain: {},
             reverbNode: {},
@@ -28,7 +28,7 @@ this.reverbUnit = function(
         flow.reverbNode.node = context.createConvolver();
 
         function setReverbType(repoURL,type,callback){
-            var ajaxRequest = new XMLHttpRequest();
+            const ajaxRequest = new XMLHttpRequest();
             ajaxRequest.open('GET', repoURL+type, true);
             ajaxRequest.responseType = 'arraybuffer';
             ajaxRequest.onload = function(){
@@ -47,10 +47,10 @@ this.reverbUnit = function(
             ajaxRequest.send();
         }
         function getReverbTypeList(repoURL,callback=null){
-            var ajaxRequest = new XMLHttpRequest();
+            const ajaxRequest = new XMLHttpRequest();
             ajaxRequest.open('GET', repoURL+'available2.list', true);
             ajaxRequest.onload = function() {
-                var list = ajaxRequest.response.split('\n');
+                const list = ajaxRequest.response.split('\n');
                 
                 list[list.length-1] = list[list.length-1].split(''); 
                 list[list.length-1].pop();

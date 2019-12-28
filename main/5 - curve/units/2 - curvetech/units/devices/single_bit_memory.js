@@ -1,12 +1,12 @@
-this.single_bit_memory = function(x,y,angle){
+this.single_bit_memory = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'single_bit_memory/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = {
+                const div = 10;
+                const measurement = {
                     file: { width:250, height:250 },
                     design: { width:2.5, height:2.5 },
                 };
@@ -19,8 +19,9 @@ this.single_bit_memory = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'single_bit_memory',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'single_bit_memory',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -70,7 +71,7 @@ this.single_bit_memory = function(x,y,angle){
         });
         
         //circuitry
-            var state = {
+            const state = {
                 memory:false,
                 read:false,
                 write:false,

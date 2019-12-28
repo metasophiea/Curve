@@ -1,12 +1,12 @@
-this.audio_recorder = function(x,y,angle){
+this.audio_recorder = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'audio_recorder/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:590, height:260 },
                     design: { width:9.5, height:4 },
                 };
@@ -21,8 +21,9 @@ this.audio_recorder = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'audio_recorder',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'audio_recorder',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -60,8 +61,8 @@ this.audio_recorder = function(x,y,angle){
                     glowURL:unitStyle.imageStoreURL_localPrefix+'light_stopped_active.png',
                     dimURL:unitStyle.imageStoreURL_localPrefix+'light_stopped.png',
                 }},
-                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
-                    x:5+2/3, y:15+2/3, width:78.75, height:8.75, count:15
+                {collection:'display', type:'readout_sixteenSegmentDisplay', name:'time', data:{
+                    x:5+2/3, y:15+2/3, width:78.75, height:8.75, static:true, count:14, decimalPlaces:true, resolution:5,
                 }},
                 {collection:'control', type:'button_image', name:'button_record', data:{
                     x:5, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
@@ -92,25 +93,25 @@ this.audio_recorder = function(x,y,angle){
         });
 
     //circuitry
-        var recorderCircuit = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
+        const recorderCircuit = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
 
         //time readout
             setInterval(function(){
-                var time = recorderCircuit.recordingTime();
-                var decimalValues = time % 1;
-                time = _canvas_.library.math.seconds2time( Math.round(time) );
-
-                object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                    _canvas_.library.misc.padString(time.h,2,'0')+':'+
-                    _canvas_.library.misc.padString(time.m,2,'0')+':'+
-                    _canvas_.library.misc.padString(time.s,2,'0')+'.'+
-                    _canvas_.library.misc.padString((''+decimalValues).slice(2),2,'0')
+                const time = _canvas_.library.math.seconds2time( recorderCircuit.recordingTime() );
+                object.elements.readout_sixteenSegmentDisplay.time.text(
+                    _canvas_.library.misc.padString(
+                        _canvas_.library.misc.padString(time.h,2,'0')+':'+
+                        _canvas_.library.misc.padString(time.m,2,'0')+':'+
+                        _canvas_.library.misc.padString(time.s,2,'0')+'.'+
+                        _canvas_.library.misc.padString(time.ms,2,'0'),
+                        13
+                    )
                 );
-                object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                object.elements.readout_sixteenSegmentDisplay.time.print();
             },100);
 
         //lights
-            var state = 'empty'; //empty - recording - paused - full
+            let state = 'empty'; //empty - recording - paused - full
             function updateLights(action){
                 if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
                 if( action == 'stop' || action == 'save' ){ state = 'full'; }

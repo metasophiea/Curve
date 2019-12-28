@@ -14,11 +14,13 @@ this.button_ = function(
 
     subject
 ){
+    dev.log.partControl('.button_(...)'); //#development
+
     if(subject == undefined){console.warn('button_ : No subject provided');}
 
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+            const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //subject
             object.append(subject);
 
@@ -82,30 +84,25 @@ this.button_ = function(
             if(object.onleave){object.onleave('forced');}
         };
 
-
-
-
     //interactivity
-        subject.cover.onmouseenter = function(x,y,event){
+        subject.cover.attachCallback('onmouseenterelement',(x,y,event) => {
             if(hoverable){ object.state.hovering = true; }
             object.activateGraphicalState(object.state);
             if(object.onenter){object.onenter(event);}
-            if(event.buttons == 1){subject.cover.onmousedown(x,y,event);} 
-        };
-        subject.cover.onmouseleave = function(x,y,event){ 
+            if(event.buttons == 1){subject.cover.getCallback('onmousedown')(x,y,event);} 
+        });
+        subject.cover.attachCallback('onmouseleaveelement',(x,y,event) => {
             if(hoverable){ object.state.hovering = false; }
             object.release(event); 
             object.activateGraphicalState(object.state); 
             if(object.onleave){object.onleave(event);}
-        };
-        subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
-        subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
-        subject.cover.onclick = function(x,y,event){ if(!interactable){return;} object.onpressrelease(event); };
-        subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
+        });
+
+        subject.cover.attachCallback('onmouseup', (x,y,event) => {   if(!interactable){return;} object.release(event); });
+        subject.cover.attachCallback('onmousedown', (x,y,event) => { if(!interactable){return;} object.press(event); });
+        subject.cover.attachCallback('onclick', (x,y,event) => { if(!interactable){return;} object.onpressrelease(event); });
+        subject.cover.attachCallback('ondblclick', (x,y,event) => { if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} });
         
-
-
-
     //callbacks
         object.onenter = onenter;
         object.onleave = onleave;

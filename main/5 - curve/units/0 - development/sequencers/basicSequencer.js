@@ -1,4 +1,4 @@
-this.basicSequencer = function(x,y,a){
+this.basicSequencer = function(name,x,y,a){
     var vals = {
         sequencer:{
             width:64, height:10,
@@ -37,7 +37,8 @@ this.basicSequencer = function(x,y,a){
     };
 
     var design = {
-        name: 'basicSequencer',
+        name: name,
+        model: 'basicSequencer',
         category:'sequencers',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -152,7 +153,7 @@ this.basicSequencer.metadata = {
     helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_pulseOut/'
 };
 
-this.basicSequencer2 = function(x,y,a){
+this.basicSequencer2 = function(name,x,y,a){
     var vals = {
         sequencer:{
             width:64, height:10,
@@ -191,7 +192,8 @@ this.basicSequencer2 = function(x,y,a){
     };
 
     var design = {
-        name: 'basicSequencer2',
+        name: name,
+        model: 'basicSequencer2',
         category:'sequencers',
         collection: 'alpha',
         x:x, y:y, a:a,

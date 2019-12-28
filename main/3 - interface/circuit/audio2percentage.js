@@ -1,6 +1,6 @@
 this.audio2percentage = function(){
     return new function(){
-        var analyser = {
+        const analyser = {
             timeDomainDataArray: null,
             frequencyData: null,
             refreshRate: 30,
@@ -16,14 +16,14 @@ this.audio2percentage = function(){
         this.__render = function(){
                 analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
 
-                var numbers = [];
-                for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
+                const numbers = [];
+                for(let a = 0; a < analyser.timeDomainDataArray.length; a++){
                     numbers.push(
                         analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
                     );
                 }
 
-                var val = 0;
+                let val = 0;
                 numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
 
                 this.newValue(val);

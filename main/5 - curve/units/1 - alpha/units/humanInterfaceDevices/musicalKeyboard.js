@@ -1,12 +1,12 @@
-this.musicalKeyboard = function(x,y,angle){
+this.musicalKeyboard = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:3800, height:800 },
                     design: { width:63.5, height:13 },
                 };
@@ -39,8 +39,9 @@ this.musicalKeyboard = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'musicalKeyboard',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'musicalKeyboard',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -61,19 +62,19 @@ this.musicalKeyboard = function(x,y,angle){
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                 },
-                {collection:'control', type:'dial_colourWithIndent_continuous',name:'velocity',data:{
+                {collection:'control', type:'dial_2_continuous',name:'velocity',data:{
                     x:20, y:110, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.velocityDial,
                 }},
             ].concat(
                 (function(){
-                    var newKeys = [];
+                    const newKeys = [];
 
-                    var keyPattern = 'wbwbwwbwbwbw'.split('');
+                    const keyPattern = 'wbwbwwbwbwbw'.split('');
 
                     //white keys
-                        var whiteOffset = 0;
-                        for(var a = 0; a < unitStyle.keyCount; a++){
-                            var keyType = keyPattern[a%keyPattern.length];
+                        let whiteOffset = 0;
+                        for(let a = 0; a < unitStyle.keyCount; a++){
+                            const keyType = keyPattern[a%keyPattern.length];
 
                             if(keyType == 'w'){
                                 newKeys.unshift(
@@ -95,9 +96,9 @@ this.musicalKeyboard = function(x,y,angle){
                         }
 
                     //black keys
-                        var blackOffset = 0;
-                        for(var a = 0; a < unitStyle.keyCount; a++){
-                            var keyType = keyPattern[a%keyPattern.length];
+                        let blackOffset = 0;
+                        for(let a = 0; a < unitStyle.keyCount; a++){
+                            const keyType = keyPattern[a%keyPattern.length];
 
                             if(keyType == 'b'){
                                 newKeys.unshift(
@@ -126,7 +127,7 @@ this.musicalKeyboard = function(x,y,angle){
         });
 
     //circuitry
-        var state = {
+        const state = {
             midiNumberOffset:60,
             velocity:0,
         };
@@ -144,35 +145,35 @@ this.musicalKeyboard = function(x,y,angle){
 
             object.io.data.midiOut.send('midinumber', { 
                 num:keyNumber+state.midiNumberOffset,
-                velocity: mode == 'press' ? object.elements.dial_colourWithIndent_continuous.velocity.get() : 0,
+                velocity: mode == 'press' ? object.elements.dial_2_continuous.velocity.get() : 0,
             } );
         }
 
     //wiring
         //hid
-            object.elements.dial_colourWithIndent_continuous.velocity.onchange = function(value){ state.velocity = value; };
-            for(var a = 0; a < unitStyle.keyCount; a++){
+            object.elements.dial_2_continuous.velocity.onchange = function(value){ state.velocity = value; };
+            for(let a = 0; a < unitStyle.keyCount; a++){
                 object.elements.button_rectangle['key_'+a].onpress = (function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a);
                 object.elements.button_rectangle['key_'+a].onrelease = (function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a);
             }
 
         //keycapture
-            object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
-            object.elements.image.backing.onkeydown = function(x,y,event){
-                if( this.glyphs.includes(event.key) ){
-                    object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].press();
+            const glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
+            object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
+                if( glyphs.includes(event.key) ){
+                    object.elements.button_rectangle['key_'+glyphs.indexOf(event.key)].press();
                 }
-            };
-            object.elements.image.backing.onkeyup = function(x,y,event){
-                if( this.glyphs.includes(event.key) ){
-                    object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].release();
+            });
+            object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
+                if( glyphs.includes(event.key) ){
+                    object.elements.button_rectangle['key_'+glyphs.indexOf(event.key)].release();
                 }
-            };
+            });
 
         //io
             object.io.data.midiIn.onreceive = function(address, data){ if(address != 'midinumber'){return;} sendMidiData(data.num-state.midiNumberOffset,data.velocity>0?'press':'release'); };
-            object.io.voltage.velocityIn.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); };
-            for(var a = 0; a < unitStyle.keyCount; a++){
+            object.io.voltage.velocityIn.onchange = function(value){ object.elements.dial_2_continuous.velocity.set(value); };
+            for(let a = 0; a < unitStyle.keyCount; a++){
                 object.io.signal['activateKey_'+a].onchange = (function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a);
             }
 
@@ -180,19 +181,19 @@ this.musicalKeyboard = function(x,y,angle){
         object.i = {
             velocity:function(value){ 
                 if(value==undefined){return state.velocity; }
-                object.elements.dial_colourWithIndent_continuous.velocity.set(value);
+                object.elements.dial_2_continuous.velocity.set(value);
             },
             pushKey:function(key){ object.elements.button_rectangle['key_'+key].press(); },
             releaseKey:function(key){ object.elements.button_rectangle['key_'+key].release();},
-            releaseAllKeys:function(){ for(var a = 0; a < keyCount; a++){ object.elements.button_rectangle['key_'+a].release(); } },
+            releaseAllKeys:function(){ for(let a = 0; a < keyCount; a++){ object.elements.button_rectangle['key_'+a].release(); } },
         };
 
     //import/export
         object.exportData = function(){ return {velocity:state.velocity}; };
-        object.importData = function(data){ object.elements.dial_colourWithIndent_continuous.velocity.set(data.velocity); };
+        object.importData = function(data){ object.elements.dial_2_continuous.velocity.set(data.velocity); };
 
     //setup
-        object.elements.dial_colourWithIndent_continuous.velocity.set(0.5);
+        object.elements.dial_2_continuous.velocity.set(0.5);
 
     return object;
 };

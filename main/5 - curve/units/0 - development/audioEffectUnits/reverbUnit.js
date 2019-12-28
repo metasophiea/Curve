@@ -1,4 +1,4 @@
-this.reverbUnit = function(x,y){
+this.reverbUnit = function(name,x,y){
     var state = {
         reverbTypeSelected:0,
         availableTypes:[],
@@ -20,7 +20,8 @@ this.reverbUnit = function(x,y){
         }
     };
     var design = {
-        name:'reverbUnit',
+        name:name,
+        model:'reverbUnit',
         category:'audioEffectUnits',
         collection:'alpha',
         x:x, y:y,
@@ -64,11 +65,11 @@ this.reverbUnit = function(x,y){
                 onpress:function(){ dec10ReverbType(); },
             }},
 
-            {collection:'display', type:'sevenSegmentDisplay_static',name:'tens',data:{
-                x:50, y:12.5, width:12.5, height:25,
+            {collection:'display', type:'sevenSegmentDisplay',name:'tens',data:{
+                x:50, y:12.5, width:12.5, height:25, static:true,
             }},
-            {collection:'display', type:'sevenSegmentDisplay_static',name:'ones',data:{
-                x:37.5, y:12.5, width:12.5, height:25,
+            {collection:'display', type:'sevenSegmentDisplay',name:'ones',data:{
+                x:37.5, y:12.5, width:12.5, height:25, static:true,
             }},
         ]
     };
@@ -101,8 +102,8 @@ this.reverbUnit = function(x,y){
             function setReadout(num){
                 num = ("0" + num).slice(-2);
 
-                object.elements.sevenSegmentDisplay_static.ones.enterCharacter(num[0]);
-                object.elements.sevenSegmentDisplay_static.tens.enterCharacter(num[1]);
+                object.elements.sevenSegmentDisplay.ones.enterCharacter(num[0]);
+                object.elements.sevenSegmentDisplay.tens.enterCharacter(num[1]);
             }
             function setReverbType(a){
                 if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
@@ -141,7 +142,7 @@ this.reverbUnit.metadata = {
     helpURL:'https://curve.metasophiea.com/help/units/alpha/reverbUnit/'
 };
 
-this.reverbUnit_stereo = function(x,y){
+this.reverbUnit_stereo = function(name,x,y){
     var state = {
         reverbTypeSelected:0,
         availableTypes:[],
@@ -163,7 +164,8 @@ this.reverbUnit_stereo = function(x,y){
         }
     };
     var design = {
-        name:'reverbUnit_stereo',
+        name:name,
+        model:'reverbUnit_stereo',
         category:'audioEffectUnits',
         collection:'alpha',
         x:x, y:y,
@@ -209,11 +211,11 @@ this.reverbUnit_stereo = function(x,y){
                 onpress:function(){ dec10ReverbType(); },
             }},
 
-            {collection:'display', type:'sevenSegmentDisplay_static',name:'tens',data:{
-                x:50, y:12.5, width:12.5, height:25,
+            {collection:'display', type:'sevenSegmentDisplay',name:'tens',data:{
+                x:50, y:12.5, width:12.5, height:25, static:true,
             }},
-            {collection:'display', type:'sevenSegmentDisplay_static',name:'ones',data:{
-                x:37.5, y:12.5, width:12.5, height:25,
+            {collection:'display', type:'sevenSegmentDisplay',name:'ones',data:{
+                x:37.5, y:12.5, width:12.5, height:25, static:true,
             }},
         ]
     };
@@ -251,8 +253,8 @@ this.reverbUnit_stereo = function(x,y){
             function setReadout(num){
                 num = ("0" + num).slice(-2);
 
-                object.elements.sevenSegmentDisplay_static.ones.enterCharacter(num[0]);
-                object.elements.sevenSegmentDisplay_static.tens.enterCharacter(num[1]);
+                object.elements.sevenSegmentDisplay.ones.enterCharacter(num[0]);
+                object.elements.sevenSegmentDisplay.tens.enterCharacter(num[1]);
             }
             function setReverbType(a){
                 if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}

@@ -7,7 +7,5 @@
 
 // {{include:1.js}} //development units - all
 // {{include:2.js}} //development units - testing copy/paste
-// {{include:3.js}} //development units - testing image-based units
-// {{include:4.js}} //alpha units
-// {{include:5.js}} //unit validator
-// {{include:6.js}} //curveTech units
+// {{include:3.js}} //alpha units
+// {{include:4.js}} //curveTech units

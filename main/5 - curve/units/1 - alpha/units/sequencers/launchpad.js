@@ -1,12 +1,12 @@
-this.launchpad = function(x,y,angle){
+this.launchpad = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'launchpad/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:1370, height:1200 },
                     design: { width:22.5, height:19.5 },
                 };
@@ -31,8 +31,9 @@ this.launchpad = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'launchpad',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'launchpad',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -90,7 +91,7 @@ this.launchpad = function(x,y,angle){
         });
 
     //circuitry
-        var state = {
+        const state = {
             currentColumn:-1,
             currentPage:0,
             pages:(new Array(8).fill(undefined)).map(() => {
@@ -100,9 +101,9 @@ this.launchpad = function(x,y,angle){
             }),
         };
         function refresh(){
-            for(var y = 0; y < 8; y++){
+            for(let y = 0; y < 8; y++){
                 object.elements.glowbox_circle['LED_'+y].off();
-                for(var x = 0; x < 8; x++){
+                for(let x = 0; x < 8; x++){
                     object.elements.checkbox_rectangle[y+'_'+x].set( state.pages[state.currentPage][y][x] );
                 }
             }
@@ -113,11 +114,11 @@ this.launchpad = function(x,y,angle){
             refresh();
         }
         function changeToColumn(column){
-            if(state.currentColumn != -1){ for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
+            if(state.currentColumn != -1){ for(let y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
 
             state.currentColumn = column;
 
-            for(var y = 0; y < 8; y++){
+            for(let y = 0; y < 8; y++){
                 object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(true);
                 if( !object.elements.connectionNode_signal['output_'+y].read() && !state.pages[state.currentPage][y][state.currentColumn] ){ continue; }
 
@@ -136,7 +137,7 @@ this.launchpad = function(x,y,angle){
             changeToPage(state.currentPage);
         }
         function step(){
-            var tmp = state.currentColumn+1; 
+            let tmp = state.currentColumn+1; 
             if(tmp > 7){tmp = 0;}
             changeToColumn(tmp);
         }
@@ -146,7 +147,7 @@ this.launchpad = function(x,y,angle){
             object.elements.button_image.step.onpress = step;
             object.elements.button_image.upPage.onpress = backPage;
             object.elements.button_image.downPage.onpress = nextPage;
-            for(var y = 0; y < 8; y++){ for(var x = 0; x < 8; x++){
+            for(let y = 0; y < 8; y++){ for(let x = 0; x < 8; x++){
                 object.elements.checkbox_rectangle[y+'_'+x].onchange = (function(x,y){return function(value){ 
                     state.pages[state.currentPage][y][x] = value; 
                 }})(x,y);
@@ -183,11 +184,9 @@ this.launchpad = function(x,y,angle){
             pages:JSON.stringify(state.pages),
         }; };
         object.importData = function(data){
-            state = {
-                currentColumn:data.currentColumn,
-                currentPage:data.currentPage,
-                pages:JSON.parse(data.pages),
-            };
+            state.currentColumn = data.currentColumn;
+            state.currentPage = data.currentPage;
+            state.pages = JSON.parse(data.pages);
             refresh();
         };
 

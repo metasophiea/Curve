@@ -10,21 +10,23 @@ this.checkbox_polygon = function(
     backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
     onchange = function(){},
 ){
+    dev.log.partControl('.checkbox_polygon(...)'); //#development
+
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('basic','group',name+'subGroup',{});
+            const subject = interfacePart.builder('basic','group',name+'subGroup',{});
         //backing
-            var backing = interfacePart.builder('basic','polygon','backing',{pointsAsXYArray:outterPoints, colour:backingStyle});
+            const backing = interfacePart.builder('basic','polygon','backing',{pointsAsXYArray:outterPoints, colour:backingStyle});
             subject.append(backing);
         //check
-            var checkpoly = interfacePart.builder('basic','polygon','checkpoly',{pointsAsXYArray:innerPoints, colour:{r:0,g:0,b:0,a:0}});
+            const checkpoly = interfacePart.builder('basic','polygon','checkpoly',{pointsAsXYArray:innerPoints, colour:{r:0,g:0,b:0,a:0}});
             subject.append(checkpoly);
         //cover
             subject.cover = interfacePart.builder('basic','polygon','cover',{pointsAsXYArray:outterPoints, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic checkbox part
-        var object = interfacePart.builder(
+        const object = interfacePart.builder(
             'control', 'checkbox_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 onchange:onchange,
@@ -35,11 +37,11 @@ this.checkbox_polygon = function(
     //graphical state adjust
         object.updateGraphics = function(state){
             if(state.glowing){
-                backing.colour = backingGlowStyle;
-                checkpoly.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
+                backing.colour(backingGlowStyle);
+                checkpoly.colour(state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0});
             }else{
-                backing.colour = backingStyle;
-                checkpoly.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
+                backing.colour(backingStyle);
+                checkpoly.colour(state.checked ? checkStyle : {r:0,g:0,b:0,a:0});
             }
         };
         object.updateGraphics({checked:false,glowing:false});

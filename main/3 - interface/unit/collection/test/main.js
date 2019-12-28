@@ -1,4 +1,4 @@
-var testUnit = this;
+const testUnit = this;
 
 {{include:testUnit_1.js}}
 {{include:testUnit_2.js}}

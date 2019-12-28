@@ -1,5 +1,5 @@
 workspace.library = new function(){
-    var library = this;
+    const library = this;
     
     this.math = new function(){
         {{include:math.js}}

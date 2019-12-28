@@ -9,27 +9,19 @@ this.dial_discrete_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.dial_discrete_image(...)'); //#development
+
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+            const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         
         //dial
-            var dial = interfacePart.builder('control','dial_continuous_image',name,{
+            const dial = interfacePart.builder('control','dial_continuous_image',name,{
                 x:0, y:0, radius:radius, angle:0, interactable:interactable,
                 startAngle:startAngle, maxAngle:maxAngle,
                 handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
             });
-            //clean out built-in interaction
-            dial.getChildByName('handle').ondblclick = undefined;
-            dial.getChildByName('handle').onwheel = undefined;
-            dial.getChildByName('handle').onmousedown = undefined;
-
             object.append(dial);
-        
-
-
-
-
 
     //graphical adjust
         function set(a,update=true){ 
@@ -43,11 +35,8 @@ this.dial_discrete_image = function(
             dial.set( value/(optionCount-1) );
         };
 
-
-
-
     //methods
-        var grappled = false;
+        let grappled = false;
 
         object.set = function(value,update){
             if(grappled){return;}
@@ -59,13 +48,10 @@ this.dial_discrete_image = function(
             interactable = bool;
         };
 
-
-
-
     //interaction
-        var acc = 0;
+        let acc = 0;
 
-        dial.getChildByName('handle').ondblclick = function(){
+        dial.getChildByName('handle').attachCallback('ondblclick', function(){
             if(!interactable){return;}
             if(resetValue<0){return;}
             if(grappled){return;}
@@ -73,12 +59,12 @@ this.dial_discrete_image = function(
             set(resetValue);
 
             if(object.onrelease != undefined){object.onrelease(value);}
-        };
-        dial.getChildByName('handle').onwheel = function(x,y,event){
+        });
+        dial.getChildByName('handle').attachCallback('onwheel', function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
 
-            var move = event.deltaY/100;
+            const move = event.wheelDelta/100;
 
             acc += move;
             if( Math.abs(acc) >= 1 ){
@@ -86,28 +72,25 @@ this.dial_discrete_image = function(
                 acc = 0;
                 if(object.onrelease != undefined){object.onrelease(value);}
             }
-        };
-        dial.getChildByName('handle').onmousedown = function(x,y,event){
+        });
+        dial.getChildByName('handle').attachCallback('onmousedown', function(x,y,event){
             if(!interactable){return;}
-            var initialValue = value;
-            var initialY = event.Y;
+            const initialValue = value;
+            const initialY = event.Y;
 
             grappled = true;
             _canvas_.system.mouse.mouseInteractionHandler(
-                function(event){
-                    var diff = Math.round( (event.Y - initialY)/25 );
+                function(x,y,event){
+                    const diff = Math.round( (event.Y - initialY)/25 );
                     set( initialValue - diff );
                     if(object.onchange != undefined){object.onchange(value);}
                 },
-                function(event){
+                function(x,y,event){
                     grappled = false;
                     if(object.onrelease != undefined){object.onrelease(value);}
                 }
             );
-        };
-
-
-
+        });
 
     //callbacks
         object.onchange = onchange; 

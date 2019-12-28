@@ -1,12 +1,12 @@
-this.voltage_duplicator = function(x,y,angle){
+this.voltage_duplicator = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:260, height:260 },
                     design: { width:4, height:4 },
                 };
@@ -19,8 +19,9 @@ this.voltage_duplicator = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'voltage_duplicator',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'voltage_duplicator',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                                   },

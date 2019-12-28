@@ -1,5 +1,5 @@
-var imageStoreURL = 'images/units/2 - curvetech/';
-var style = {
+const imageStoreURL = '/images/units/2 - curvetech/';
+const style = {
     primeColour:{
         lightGrey:{r:0.77,g:0.77,b:0.77,a:1},
     },

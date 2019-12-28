@@ -1,4 +1,4 @@
-this.pulseGenerator_hyper = function(x,y,a){
+this.pulseGenerator_hyper = function(name,x,y,a){
     var maxTempo = 999;
 
     var style = {
@@ -12,7 +12,8 @@ this.pulseGenerator_hyper = function(x,y,a){
         }
     };
     var design = {
-        name:'pulseGenerator_hyper',
+        name:name,
+        model:'pulseGenerator_hyper',
         category:'misc',
         collection:'alpha',
         x:x, y:y, a:a,
@@ -48,7 +49,7 @@ this.pulseGenerator_hyper = function(x,y,a){
                 x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {collection:'display', type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay',name:'readout',data:{ x:35, y:10, width:65, height:20, static:true, count:6 }},
         ]
     };
 
@@ -71,10 +72,10 @@ this.pulseGenerator_hyper = function(x,y,a){
         var tempo = 120;
         function updateTempo(newTempo){
             //update readout
-                object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                object.elements.readout_sixteenSegmentDisplay.readout.text(
                     _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
                 );
-                object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                object.elements.readout_sixteenSegmentDisplay.readout.print();
 
             //update interval
                 if(interval){ clearInterval(interval); }
@@ -117,7 +118,7 @@ this.pulseGenerator_hyper.metadata = {
 
 
 
-this.pulseGenerator_signal_hyper = function(x,y,a){
+this.pulseGenerator_signal_hyper = function(name,x,y,a){
     var maxTempo = 999;
 
     var style = {
@@ -131,7 +132,8 @@ this.pulseGenerator_signal_hyper = function(x,y,a){
         }
     };
     var design = {
-        name:'pulseGenerator_signal_hyper',
+        name:name,
+        model:'pulseGenerator_signal_hyper',
         category:'misc',
         collection:'alpha',
         x:x, y:y, a:a,
@@ -167,7 +169,7 @@ this.pulseGenerator_signal_hyper = function(x,y,a){
                 x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {collection:'display', type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay',name:'readout',data:{ x:35, y:10, width:65, height:20, static:true, count:6 }},
         ]
     };
 
@@ -190,10 +192,10 @@ this.pulseGenerator_signal_hyper = function(x,y,a){
         var tempo = 120;
         function updateTempo(newTempo){
             //update readout
-                object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                object.elements.readout_sixteenSegmentDisplay.readout.text(
                     _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
                 );
-                object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                object.elements.readout_sixteenSegmentDisplay.readout.print();
 
             //update interval
                 if(interval){ clearInterval(interval); }
@@ -227,7 +229,7 @@ this.pulseGenerator_signal_hyper.metadata = {
     helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
 };
 
-this.pulseGenerator_voltage_hyper = function(x,y,a){
+this.pulseGenerator_voltage_hyper = function(name,x,y,a){
     var maxTempo = 999;
 
     var style = {
@@ -240,7 +242,8 @@ this.pulseGenerator_voltage_hyper = function(x,y,a){
         }
     };
     var design = {
-        name:'pulseGenerator_voltage_hyper',
+        name:name,
+        model:'pulseGenerator_voltage_hyper',
         category:'misc',
         collection:'alpha',
         x:x, y:y, a:a,
@@ -289,7 +292,7 @@ this.pulseGenerator_voltage_hyper = function(x,y,a){
                 x:50, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {collection:'display', type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:65, y:10, width:65, height:20, count:6 }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay',name:'readout',data:{ x:65, y:10, width:65, height:20, static:true, count:6 }},
         ]
     };
 
@@ -312,10 +315,10 @@ this.pulseGenerator_voltage_hyper = function(x,y,a){
         var tempo = 120;
         function updateTempo(newTempo){
             //update readout
-                object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                object.elements.readout_sixteenSegmentDisplay.readout.text(
                     _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
                 );
-                object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                object.elements.readout_sixteenSegmentDisplay.readout.print();
 
             //update interval
                 if(interval){ clearInterval(interval); }
@@ -349,7 +352,7 @@ this.pulseGenerator_voltage_hyper.metadata = {
     helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
 };
 
-this.pulseGenerator_data_hyper = function(x,y,a){
+this.pulseGenerator_data_hyper = function(name,x,y,a){
     var maxTempo = 999;
 
     var style = {
@@ -363,7 +366,8 @@ this.pulseGenerator_data_hyper = function(x,y,a){
         }
     };
     var design = {
-        name:'pulseGenerator_data_hyper',
+        name:name,
+        model:'pulseGenerator_data_hyper',
         category:'misc',
         collection:'alpha',
         x:x, y:y, a:a,
@@ -399,7 +403,7 @@ this.pulseGenerator_data_hyper = function(x,y,a){
                 x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {collection:'display', type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay',name:'readout',data:{ x:35, y:10, width:65, height:20, static:true, count:6 }},
         ]
     };
 
@@ -422,10 +426,10 @@ this.pulseGenerator_data_hyper = function(x,y,a){
         var tempo = 120;
         function updateTempo(newTempo){
             //update readout
-                object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                object.elements.readout_sixteenSegmentDisplay.readout.text(
                     _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
                 );
-                object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                object.elements.readout_sixteenSegmentDisplay.readout.print();
 
             //update interval
                 if(interval){ clearInterval(interval); }

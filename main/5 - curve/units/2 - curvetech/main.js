@@ -1,4 +1,4 @@
-{{include:*}}
+{{include:units}}
 
 this._collectionData = {
     name:'curveTech',

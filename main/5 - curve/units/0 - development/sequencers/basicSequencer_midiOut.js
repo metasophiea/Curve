@@ -1,4 +1,4 @@
-this.basicSequencer_midiOut = function(x,y,a){
+this.basicSequencer_midiOut = function(name,x,y,a){
     var vals = {
         sequencer:{
             width:64, height:undefined,
@@ -43,7 +43,8 @@ this.basicSequencer_midiOut = function(x,y,a){
     };
 
     var design = {
-        name: 'basicSequencer_midiOut',
+        name: name,
+        model: 'basicSequencer_midiOut',
         category:'sequencers',
         collection: 'alpha',
         x:x, y:y, a:a,

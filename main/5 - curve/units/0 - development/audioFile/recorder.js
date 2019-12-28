@@ -1,4 +1,4 @@
-this.recorder = function(x,y,a){
+this.recorder = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
@@ -10,7 +10,8 @@ this.recorder = function(x,y,a){
         },
     };
     var design = {
-        name: 'recorder',
+        name: name,
+        model: 'recorder',
         category: 'audioFile',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -70,20 +71,20 @@ this.recorder = function(x,y,a){
                 {collection:'basic', type:'text', name:'button_clear_text', data:{x:105, y:30 - style.h2.size/4, text:'clear', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
 
             //time readout
-                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 70, y: 5, angle:0, width:100, height:15, count:11 }},
+                {collection:'display', type:'readout_sixteenSegmentDisplay', name:'time', data:{ x: 70, y: 5, angle:0, width:100, height:15, static:true, count:11 }},
 
             //activity lights
                 //recording
-                    {collection:'display', type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:{r:255/255,g:63/255,b:63/255,a:1}, dim:{r:25/255,g:6/255,b:6/255,a:1}}}},
+                    {collection:'display', type:'glowbox_rectangle', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:{r:255/255,g:63/255,b:63/255,a:1}, dim:{r:25/255,g:6/255,b:6/255,a:1}}}},
                     {collection:'basic', type:'text', name:'activityLight_recording_text', data:{x:12.5, y:12.5 - style.h2.size/4, text:'rec', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                 //paused
-                    {collection:'display', type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:{r:126/255,g:186/255,b:247/255,a:1}, dim:{r:12/255,g:18/255,b:24/255,a:1}}}},
+                    {collection:'display', type:'glowbox_rectangle', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:{r:126/255,g:186/255,b:247/255,a:1}, dim:{r:12/255,g:18/255,b:24/255,a:1}}}},
                     {collection:'basic', type:'text', name:'activityLight_paused_text', data:{x:27.5, y:12.5 - style.h2.size/4, text:'pau', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                 //empty
-                    {collection:'display', type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:{r:199/255,g:249/255,b:244/255,a:1}, dim:{r:19/255,g:24/255,b:24/255,a:1}}}},
+                    {collection:'display', type:'glowbox_rectangle', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:{r:199/255,g:249/255,b:244/255,a:1}, dim:{r:19/255,g:24/255,b:24/255,a:1}}}},
                     {collection:'basic', type:'text', name:'activityLight_empty_text', data:{x:42.5, y:12.5 - style.h2.size/4, text:'emp', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                 //ready to save
-                    {collection:'display', type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:{r:61/255,g:224/255,b:35/255,a:1}, dim:{r:6/255,g:22/255,b:3/255,a:1}}}},
+                    {collection:'display', type:'glowbox_rectangle', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:{r:61/255,g:224/255,b:35/255,a:1}, dim:{r:6/255,g:22/255,b:3/255,a:1}}}},
                     {collection:'basic', type:'text', name:'activityLight_full_text', data:{x:57.5, y:12.5 - style.h2.size/4, text:'ful', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
         ]
     };
@@ -99,13 +100,13 @@ this.recorder = function(x,y,a){
                     var decimalValues = time % 1;
                     time = _canvas_.library.math.seconds2time( Math.round(time) );
 
-                    object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                    object.elements.readout_sixteenSegmentDisplay.time.text(
                         _canvas_.library.misc.padString(time.h,2,'0')+':'+
                         _canvas_.library.misc.padString(time.m,2,'0')+':'+
                         _canvas_.library.misc.padString(time.s,2,'0')+'.'+
                         _canvas_.library.misc.padString((''+decimalValues).slice(2),2,'0')
                     );
-                    object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                    object.elements.readout_sixteenSegmentDisplay.time.print();
                 },100);
             //lights
                 var state = 'empty'; //empty - recording - paused - full
@@ -117,13 +118,13 @@ this.recorder = function(x,y,a){
                     if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
                     else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
 
-                    if(state == 'empty'){object.elements.glowbox_rect.activityLight_empty.on();}else{object.elements.glowbox_rect.activityLight_empty.off();}
-                    if(state == 'recording'){object.elements.glowbox_rect.activityLight_recording.on();}else{object.elements.glowbox_rect.activityLight_recording.off();}
-                    if(state == 'paused'){object.elements.glowbox_rect.activityLight_paused.on();}else{object.elements.glowbox_rect.activityLight_paused.off();}
-                    if(state == 'full'){object.elements.glowbox_rect.activityLight_full.on();}else{object.elements.glowbox_rect.activityLight_full.off();}
+                    if(state == 'empty'){object.elements.glowbox_rectangle.activityLight_empty.on();}else{object.elements.glowbox_rectangle.activityLight_empty.off();}
+                    if(state == 'recording'){object.elements.glowbox_rectangle.activityLight_recording.on();}else{object.elements.glowbox_rectangle.activityLight_recording.off();}
+                    if(state == 'paused'){object.elements.glowbox_rectangle.activityLight_paused.on();}else{object.elements.glowbox_rectangle.activityLight_paused.off();}
+                    if(state == 'full'){object.elements.glowbox_rectangle.activityLight_full.on();}else{object.elements.glowbox_rectangle.activityLight_full.off();}
                 }
                 updateLights('clear');
-                object.elements.glowbox_rect.activityLight_empty.on();
+                object.elements.glowbox_rectangle.activityLight_empty.on();
 
         //audio recorder
             object.recorder = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);

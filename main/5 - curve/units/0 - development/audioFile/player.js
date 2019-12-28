@@ -1,10 +1,10 @@
-this.player = function(x,y,a){
+this.player = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
         h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
         h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-        readout_sixteenSegmentDisplay_static:{background:{r:0/255,g:0/255,b:0/255,a:1}, glow:{r:200/255,g:200/255,b:200/255,a:1},dim:{r:20/255,g:20/255,b:20/255,a:1}},
+        readout_sixteenSegmentDisplay:{background:{r:0/255,g:0/255,b:0/255,a:1}, glow:{r:200/255,g:200/255,b:200/255,a:1},dim:{r:20/255,g:20/255,b:20/255,a:1}},
         button:{
             background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
             background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
@@ -30,7 +30,8 @@ this.player = function(x,y,a){
         },
     };
     var design = {
-        name: 'player',
+        name: name,
+        model: 'player',
         category: 'audioFile',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -56,8 +57,8 @@ this.player = function(x,y,a){
                 {collection:'basic', type:'rectangle', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
                 {collection:'basic', type:'rectangle', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  colour:style.markings.colour }},
                 
-            {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{ x: 30, y: 5, angle:0, width:100, height:20, count:10, style:style.readout_sixteenSegmentDisplay_static }},
-            {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, count:8, style:style.readout_sixteenSegmentDisplay_static }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay', name:'trackNameReadout', data:{ x: 30, y: 5, angle:0, width:100, height:20, static:true, count:10, style:style.readout_sixteenSegmentDisplay }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, static:true, count:8, style:style.readout_sixteenSegmentDisplay }},
 
             {collection:'control', type:'button_rectangle', name:'load', data: { x:5, y: 5, width:20, height:10, style:style.load_button, onpress:function(){ object.i.loadByFile(); } }},
             {collection:'control', type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:10, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
@@ -70,7 +71,6 @@ this.player = function(x,y,a){
             {collection:'control', type:'dial_continuous',name:'rate_dial',data:{ x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, resetValue:0.5 }},
 
             {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:30, width:185, height:45, selectionArea:false, selectionAreaToggle:function(bool){ 
-                console.log(bool); 
                 object.player.loop({active:bool}); 
             } }},
         ]
@@ -85,8 +85,8 @@ this.player = function(x,y,a){
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,0);
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
         
-            object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
-            object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
+            object.elements.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
+            object.elements.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
         }
         
     //circuitry
@@ -103,12 +103,12 @@ this.player = function(x,y,a){
                 //time readout
                     var time = _canvas_.library.math.seconds2time( Math.round(object.player.currentTime()));
 
-                    object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                    object.elements.readout_sixteenSegmentDisplay.time.text(
                         _canvas_.library.misc.padString(time.h,2,'0')+':'+
                         _canvas_.library.misc.padString(time.m,2,'0')+':'+
                         _canvas_.library.misc.padString(time.s,2,'0')
                     );
-                    object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                    object.elements.readout_sixteenSegmentDisplay.time.print();
 
                 //wave box
                     object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,object.player.progress(),false);

@@ -1,4 +1,4 @@
-this.musicalKeyboard = function(x,y,a){
+this.musicalKeyboard = function(name,x,y,a){
     var state = {
         velocity:0.5,
     };
@@ -27,7 +27,8 @@ this.musicalKeyboard = function(x,y,a){
         }
     };
     var design = {
-        name: 'musicalKeyboard',
+        name:name,
+        model: 'musicalKeyboard',
         category:'humanInputDevices',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -74,8 +75,22 @@ this.musicalKeyboard = function(x,y,a){
                         {collection:'control', type:'button_rectangle', name:noteNames[a], data:{
                             x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
                             style:style.keys.white,
-                            onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
-                            onrelease:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:0 } ); },
+                            onpress:(function(name){
+                                return function(){
+                                    object.io.data.midiout.send('midinumber', {
+                                        num:_canvas_.library.audio.name2num(name),
+                                        velocity:state.velocity
+                                    } );
+                                }
+                            })(noteNames[a]),
+                            onrelease:(function(name){
+                                return function(){
+                                    object.io.data.midiout.send('midinumber', {
+                                        num:_canvas_.library.audio.name2num(name),
+                                        velocity:0
+                                    } );
+                                }
+                            })(noteNames[a]),
                         }}
                     );
                     whiteX += whiteKeyWidth;
@@ -89,8 +104,22 @@ this.musicalKeyboard = function(x,y,a){
                         {collection:'control', type:'button_rectangle', name:noteNames[a], data:{
                             x:blackX, y:12.5, width:5, height:30, hoverable:false,
                             style:style.keys.black,
-                            onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
-                            onrelease:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:0 } ); },
+                            onpress:(function(name){
+                                return function(){
+                                    object.io.data.midiout.send('midinumber', { 
+                                        num:_canvas_.library.audio.name2num(name), 
+                                        velocity:state.velocity 
+                                    } );
+                                }
+                            })(noteNames[a]),
+                            onrelease:(function(name){
+                                return function(){
+                                    object.io.data.midiout.send('midinumber', {
+                                        num:_canvas_.library.audio.name2num(name),
+                                        velocity:0
+                                    } );
+                                }
+                            })(noteNames[a]),
                         }}
                     );
                     blackX += whiteKeyWidth;

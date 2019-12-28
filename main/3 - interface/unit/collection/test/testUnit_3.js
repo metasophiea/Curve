@@ -1,6 +1,7 @@
-this.testUnit_3 = function(x,y,angle){
-    var design = {
-        name: 'testUnit_3',
+this.testUnit_3 = function(name,x,y,angle){
+    const design = {
+        name: name,
+        model: 'testUnit_3',
         collection: 'test',
         x:x, y:y, angle:angle,
         space: [
@@ -13,12 +14,12 @@ this.testUnit_3 = function(x,y,angle){
         elements:[
             {collection:'basic', type:'rectangle', name:'testRectangle1', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
             {collection:'basic', type:'rectangle', name:'testRectangle2', data:{ x:10, y:10, width:80, height:80, colour:{r:200/255,g:100/255,b:200/255,a:1} }},
-            {collection:'dynamic', type:'connectionNode', name:'test_connectionNode1', data:{ x:60, y:100, height:20, width:10, angle:Math.PI/2 }},
+            {collection:'dynamic', type:'connectionNode', name:'test_connectionNode1', data:{ cableVersion:2, x:60, y:100, height:20, width:10, angle:Math.PI/2 }},
         ],
     };
 
     //main object
-        var object = interface.unit.builder(design);
+        const object = interface.unit.builder(design);
     
     return object;
 };

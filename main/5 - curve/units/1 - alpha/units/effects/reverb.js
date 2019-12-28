@@ -1,12 +1,12 @@
-this.reverb = function(x,y,angle){
+this.reverb = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'reverb/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:885, height:320 },
                     design: { width:14.5, height:5 },
                 };
@@ -28,8 +28,9 @@ this.reverb = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'reverb',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'reverb',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -59,10 +60,10 @@ this.reverb = function(x,y,angle){
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
                 },
-                {collection:'control', type:'dial_colourWithIndent_continuous',name:'wet',data:{
+                {collection:'control', type:'dial_2_continuous',name:'wet',data:{
                     x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_wet,
                 }},
-                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dry',data:{
+                {collection:'control', type:'dial_2_continuous',name:'dry',data:{
                     x:120, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_dry,
                 }},
                 {collection:'control', type:'button_image', name:'rocker_up', data:{
@@ -75,24 +76,24 @@ this.reverb = function(x,y,angle){
                     backingURL__up:unitStyle.imageStoreURL_localPrefix+'rocker_down_up.png',
                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'rocker_down_down.png',
                 }},
-                {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, style:unitStyle.LCD }},
-                {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, style:unitStyle.LCD }},
+                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, static:true, style:unitStyle.LCD }},
+                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, static:true, style:unitStyle.LCD }},
             ]
         });
 
     //circuitry        
-        var state = {
+        const state = {
             reverbTypeSelected:0,
             availableTypes:[],
             wet:0.5,
             dry:0.5,
         };
-        var reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
+        const reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
             
         //internal functions
-            var loadingScreenIntervalID;
-            var journeyHistory = [];
-            var journey = [
+            let loadingScreenIntervalID;
+            const journeyHistory = [];
+            const journey = [
                 //big loop
                     // ['LCD_1',0],
                     // ['LCD_1',2],
@@ -121,22 +122,22 @@ this.reverb = function(x,y,angle){
                     ['LCD_1',2],
                     ['LCD_1',3],
             ];
-            var step = 0;
+            let step = 0;
             function startReadoutLoadingScreen(){
-                object.elements.sevenSegmentDisplay_static.LCD_10.enterCharacter();
-                object.elements.sevenSegmentDisplay_static.LCD_1.enterCharacter();
+                object.elements.sevenSegmentDisplay.LCD_10.enterCharacter();
+                object.elements.sevenSegmentDisplay.LCD_1.enterCharacter();
                 
                 if(loadingScreenIntervalID != undefined){return;}
                 loadingScreenIntervalID = setInterval(function(){
-                    var data = journey[step++]
+                    const data = journey[step++]
                     if(step >= journey.length){step = 0;}
 
                     if(journeyHistory.length == 3){
-                        var last = journeyHistory.shift();
-                        if(last != undefined){ object.elements.sevenSegmentDisplay_static[last[0]].set(last[1],false); }
+                        const last = journeyHistory.shift();
+                        if(last != undefined){ object.elements.sevenSegmentDisplay[last[0]].set(last[1],false); }
                     }
 
-                    object.elements.sevenSegmentDisplay_static[data[0]].set(data[1],true);
+                    object.elements.sevenSegmentDisplay[data[0]].set(data[1],true);
 
                     journeyHistory.push(data);
                 },1000/20);
@@ -144,14 +145,14 @@ this.reverb = function(x,y,angle){
             function stopReadoutLoadingScreen(){
                 clearInterval(loadingScreenIntervalID);
                 loadingScreenIntervalID = undefined;
-                object.elements.sevenSegmentDisplay_static.LCD_10.enterCharacter();
-                object.elements.sevenSegmentDisplay_static.LCD_1.enterCharacter();
+                object.elements.sevenSegmentDisplay.LCD_10.enterCharacter();
+                object.elements.sevenSegmentDisplay.LCD_1.enterCharacter();
             };
             function setReadout(num){
                 num = ("0" + num).slice(-2);
 
-                object.elements.sevenSegmentDisplay_static.LCD_10.enterCharacter(num[0]);
-                object.elements.sevenSegmentDisplay_static.LCD_1.enterCharacter(num[1]);
+                object.elements.sevenSegmentDisplay.LCD_10.enterCharacter(num[0]);
+                object.elements.sevenSegmentDisplay.LCD_1.enterCharacter(num[1]);
             }
             function setReverbType(a){
                 if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return; }
@@ -169,15 +170,15 @@ this.reverb = function(x,y,angle){
 
     //wiring
         //hid
-            object.elements.dial_colourWithIndent_continuous.wet.onchange = function(value){ state.wet = value; updateWetDry(); };
-            object.elements.dial_colourWithIndent_continuous.dry.onchange = function(value){ state.dry = value; updateWetDry(); };
+            object.elements.dial_2_continuous.wet.onchange = function(value){ state.wet = value; updateWetDry(); };
+            object.elements.dial_2_continuous.dry.onchange = function(value){ state.dry = value; updateWetDry(); };
             object.elements.button_image.rocker_up.onpress = function(){ incReverbType(); };
             object.elements.button_image.rocker_down.onpress = function(){ decReverbType(); };
         //io
             object.io.audio.input.out().connect( reverbCircuit.in() );
             reverbCircuit.out().connect( object.io.audio.output.in() );
-            object.io.voltage.wet_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.wet.set(value); };
-            object.io.voltage.dry_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.dry.set(value); };
+            object.io.voltage.wet_connection.onchange = function(value){ object.elements.dial_2_continuous.wet.set(value); };
+            object.io.voltage.dry_connection.onchange = function(value){ object.elements.dial_2_continuous.dry.set(value); };
             object.io.signal.rocker_down_connection.onchange = function(value){
                 value ? object.elements.button_image.rocker_down.press() : object.elements.button_image.rocker_down.release();
             };
@@ -189,16 +190,16 @@ this.reverb = function(x,y,angle){
         object.i = {
             wet: function(value){
                 if(value == undefined){
-                    return object.elements.dial_colourWithIndent_continuous.wet.get();
+                    return object.elements.dial_2_continuous.wet.get();
                 }else{
-                    object.elements.dial_colourWithIndent_continuous.wet.set(value);
+                    object.elements.dial_2_continuous.wet.set(value);
                 }
             },
             dry: function(value){
                 if(value == undefined){
-                    return object.elements.dial_colourWithIndent_continuous.dry.get();
+                    return object.elements.dial_2_continuous.dry.get();
                 }else{
-                    object.elements.dial_colourWithIndent_continuous.dry.set(value);
+                    object.elements.dial_2_continuous.dry.set(value);
                 }
             },
             reverbNumber: function(number){ if(value == undefined){ return state.reverbTypeSelected; }else{ setReverbType(number); } }
@@ -207,14 +208,14 @@ this.reverb = function(x,y,angle){
     //import/export
         object.exportData = function(){
             return {
-                wet: object.elements.dial_colourWithIndent_continuous.wet.get(),
-                dry: object.elements.dial_colourWithIndent_continuous.dry.get(),
+                wet: object.elements.dial_2_continuous.wet.get(),
+                dry: object.elements.dial_2_continuous.dry.get(),
                 reverbNumber: state.reverbTypeSelected,
             };
         };
         object.importData = function(data){
-            object.elements.dial_colourWithIndent_continuous.wet.set(data.wet);
-            object.elements.dial_colourWithIndent_continuous.dry.set(data.dry);
+            object.elements.dial_2_continuous.wet.set(data.wet);
+            object.elements.dial_2_continuous.dry.set(data.dry);
             state.reverbTypeSelected = data.reverbNumber;
         };
 

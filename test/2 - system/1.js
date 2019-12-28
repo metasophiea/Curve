@@ -1,60 +1,58 @@
-var rect = _canvas_.core.shape.create('rectangle');
-    rect.name = 'testRectangle1';
-    rect.x(0); rect.y(0);
-    rect.width(30); rect.height(30);
-    rect.colour = {r:0,g:1,b:0,a:0.3};
-    _canvas_.system.pane.mm.append(rect);
-var rect = _canvas_.core.shape.create('rectangle');
-    rect.name = 'testRectangle2';
-    rect.x(200); rect.y(0);
-    rect.width(30); rect.height(30);
-    rect.angle(0.2);
-    rect.anchor({x:0.5,y:0.5});
-    rect.colour = {r:0,g:1,b:0,a:0.3};
-    _canvas_.system.pane.mm.append(rect);
+_canvas_.system.go.add( function(){
 
-var img = _canvas_.core.shape.create('image');
-    img.name = 'testImage1';
-    img.x(50); img.y(10);
-    img.width(100); img.height(100);
-    img.angle(-0.2);
-    _canvas_.system.pane.mm.append(img);
+    let rectangle_1 = _canvas_.core.element.create('rectangle','test_rectangle_1');
+    rectangle_1.unifiedAttribute({ 
+        x:0, y:0, width:30, height:30, 
+        colour:{r:0,g:1,b:0,a:0.3},
+    });
+    _canvas_.system.pane.mm.append(rectangle_1);
+    let rectangle_2 = _canvas_.core.element.create('rectangle','test_rectangle_2');
+    rectangle_2.unifiedAttribute({ 
+        x:200, y:0, width:30, height:30, angle:0.2, anchor:{x:0.5,y:0.5},
+        colour:{r:0,g:1,b:0,a:0.3},
+    });
+    _canvas_.system.pane.mm.append(rectangle_2);
 
-var g = _canvas_.core.shape.create('group');
-    g.name = 'testGroup1';
-    g.x(50); g.y(10);
-    g.angle(0.2);
-    _canvas_.system.pane.mm.append(g);
-var rect = _canvas_.core.shape.create('rectangle');
-    rect.name = 'testRectangle1';
-    rect.x(0); rect.y(0);
-    rect.width(30); rect.height(30);
-    rect.colour = {r:0,g:1,b:0,a:0.9};
-    g.append(rect);
-var rect = _canvas_.core.shape.create('rectangle');
-    rect.name = 'testRectangle2';
-    rect.x(40); rect.y(0);
-    rect.width(30); rect.height(30);
-    rect.colour = {r:0,g:1,b:0,a:0.9};
-    g.append(rect);
-var poly = _canvas_.core.shape.create('polygon');
-    poly.name = 'testPolygon1';
-    poly.pointsAsXYArray([{x:0,y:0}, {x:50,y:0}, {x:50,y:50}, {x:40,y:50}, {x:40,y:20}, {x:20,y:20}, {x:20,y:50}, {x:0,y:50}]);
-    g.append(poly);
+    let image_1 = _canvas_.core.element.create('image','test_image_1');
+    image_1.unifiedAttribute({ 
+        x:50, y:10, width:100, height:100, angle:-0.2,
+    });
+    _canvas_.system.pane.mm.append(image_1);
 
-var circ = _canvas_.core.shape.create('circle');
-    circ.name = 'testCircle1';
-    circ.x(100); circ.y(30);
-    circ.radius(15);
-    circ.colour = {r:0,g:0,b:1,a:1};
-    _canvas_.system.pane.mm.append(circ);
+    let group_1 = _canvas_.core.element.create('group','background');
+    group_1.unifiedAttribute({ x:50, y:10, angle:0.2 });
+    _canvas_.system.pane.mm.append(group_1);
+        let rectangle_3 = _canvas_.core.element.create('rectangle','test_rectangle_3');
+        rectangle_3.unifiedAttribute({ 
+            x:0, y:0, width:30, height:30, 
+            colour:{r:0,g:1,b:0,a:0.9},
+        });
+        group_1.append(rectangle_3);
+        let rectangle_4 = _canvas_.core.element.create('rectangle','test_rectangle_4');
+        rectangle_4.unifiedAttribute({ 
+            x:40, y:0, width:30, height:30, 
+            colour:{r:0,g:1,b:0,a:0.9},
+        });
+        group_1.append(rectangle_4);
+        let polygon_1 = _canvas_.core.element.create('polygon','test_polygon_1');
+        polygon_1.unifiedAttribute({ 
+            pointsAsXYArray:[{x:0,y:0}, {x:50,y:0}, {x:50,y:50}, {x:40,y:50}, {x:40,y:20}, {x:20,y:20}, {x:20,y:50}, {x:0,y:50}],
+        });
+        group_1.append(polygon_1);
 
-var text = _canvas_.core.shape.create('characterString');
-    text.name = 'testText1';
-    text.string('Hello');
-    text.x(200); text.y(50);
-    text.angle(0.4);
-    _canvas_.system.pane.mm.append(text);
+    let circle_1 = _canvas_.core.element.create('circle','test_circle_1');
+    circle_1.unifiedAttribute({ 
+        x:100, y:30, radius:15,
+        colour: {r:0,g:0,b:1,a:1},
+    });
+    group_1.append(circle_1);
 
+    let characterString_1 = _canvas_.core.element.create('characterString','test_characterString_1');
+    characterString_1.unifiedAttribute({ 
+        x:200, y:50, string:'Hello', angle:0.4,
+    });
+    group_1.append(characterString_1);
 
-_canvas_.core.render.active(true);
+    setTimeout(_canvas_.core.render.frame,500);
+    setTimeout(_canvas_.core.render.frame,1500);
+} )

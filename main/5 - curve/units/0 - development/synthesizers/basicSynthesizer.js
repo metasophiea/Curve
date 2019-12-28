@@ -1,4 +1,4 @@
-this.basicSynthesizer = function(x,y,a){
+this.basicSynthesizer = function(name,x,y,a){
     var attributes = {
         detuneLimits: {min:-100, max:100}
     };
@@ -50,7 +50,8 @@ this.basicSynthesizer = function(x,y,a){
 
 
     var design = {
-        name:'basicSynthesizer',
+        name:name,
+        model:'basicSynthesizer',
         category:'synthesizers',
         collection: 'alpha',
         x:x, y:y, a:a,

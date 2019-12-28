@@ -1,504 +1,403 @@
-this.list_image = function(
-    name='list_image', 
-    x, y, angle=0, interactable=true, list=[],
-    active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
-    limitHeightTo=-1,limitWidthTo=-1,
+// this.list_image = function(
+//     name='list_image', 
+//     x, y, angle=0, interactable=true,
+//     list=[],
 
-    itemHeight=10, itemWidth=47.5,
-    itemSpacingHeight=0.75,
-    spacingHeight=0.5,
-    breakHeight=0.25,
+//     active=true, multiSelect=false, hoverable=true, selectable=false, pressable=true,
 
-    backingURL, 
-    breakURL,
-    textbreakURL,
-    sublist__up,
-    sublist__hover,
-    sublist__glow,
-    sublist__hover_glow,
-    sublist__hover_glow_press,
+//     heightLimit=-1, widthLimit=-1,
+//     background_url='/images/testImages/expanded-metal-1.jpg',
+//     break_url='/images/testImages/Dore-munchausen-illustration.jpg',
+//     image_url='/images/testImages/mikeandbrian.jpg',
 
-    checkbox_uncheckURL,
-    checkbox_checkURL,
-    checkbox_uncheckGlowURL,
-    checkbox_checkGlowURL,
-    
-    itemURL__off,
-    itemURL__up,
-    itemURL__press,
-    itemURL__select,
-    itemURL__select_press,
-    itemURL__glow,
-    itemURL__glow_press,
-    itemURL__glow_select,
-    itemURL__glow_select_press,
-    itemURL__hover,
-    itemURL__hover_press,
-    itemURL__hover_select,
-    itemURL__hover_select_press,
-    itemURL__hover_glow,
-    itemURL__hover_glow_press,
-    itemURL__hover_glow_select,
-    itemURL__hover_glow_select_press,
+//     default_item_height=10, default_item_width=47.5,
+//     default_item_spacingHeight=3/4,
+//     default_item_horizontalPadding=2,
 
-    onenter=function(a){/*console.log('onenter >',a);*/},
-    onleave=function(a){/*console.log('onleave >',a);*/},
-    onpress=function(a){/*console.log('onpress >',a);*/},
-    ondblpress=function(a){/*console.log('ondblpress >',a);*/},
-    onrelease=function(a){/*console.log('onrelease >',a);*/},
-    onselection=function(a){/*console.log('onselection >',a);*/},
-    onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
-){
-    //state
-        var itemArray = [];
-        var selectedItems = [];
-        var lastNonShiftClicked = 0;
-        var position = 0;
-        var calculatedListHeight = 0;
+//     default_item__off__url=                     '/images/testImages/buttonStates/off.png',
+//     default_item__up__url=                      '/images/testImages/buttonStates/up.png',
+//     default_item__press__url=                   '/images/testImages/buttonStates/press.png',
+//     default_item__select__url=                  '/images/testImages/buttonStates/select.png',
+//     default_item__select_press__url=            '/images/testImages/buttonStates/select_press.png',
+//     default_item__glow__url=                    '/images/testImages/buttonStates/glow.png',
+//     default_item__glow_press__url=              '/images/testImages/buttonStates/glow_press.png',
+//     default_item__glow_select__url=             '/images/testImages/buttonStates/glow_select.png',
+//     default_item__glow_select_press__url=       '/images/testImages/buttonStates/glow_select_press.png',
+//     default_item__hover__url=                   '/images/testImages/buttonStates/hover.png',
+//     default_item__hover_press__url=             '/images/testImages/buttonStates/hover_press.png',
+//     default_item__hover_select__url=            '/images/testImages/buttonStates/hover_select.png',
+//     default_item__hover_select_press__url=      '/images/testImages/buttonStates/hover_select_press.png',
+//     default_item__hover_glow__url=              '/images/testImages/buttonStates/hover_glow.png',
+//     default_item__hover_glow_press__url=        '/images/testImages/buttonStates/hover_glow_press.png',
+//     default_item__hover_glow_select__url=       '/images/testImages/buttonStates/hover_glow_select.png',
+//     default_item__hover_glow_select_press__url= '/images/testImages/buttonStates/hover_glow_select_press.png',
 
-    //genrate list content
-        function generateListContent(listItems=[]){
-            var output = {elements:[], calculatedListHeight:0};
-            var xOffset = limitWidthTo < 0 ? 0 : (limitWidthTo-itemWidth)/2;
+//     space_height=10/16,
+//     break_height=10/8,
+//     break_lineMux=1/5,
 
-            listItems.forEach((item,index) => {
-                if(index != 0){output.calculatedListHeight += itemSpacingHeight;}
+//     onenter=function(a){/*console.log('onenter >',a);*/},
+//     onleave=function(a){/*console.log('onleave >',a);*/},
+//     onpress=function(a){/*console.log('onpress >',a);*/},
+//     ondblpress=function(a){/*console.log('ondblpress >',a);*/},
+//     onrelease=function(a){/*console.log('onrelease >',a);*/},
+//     onselection=function(a){/*console.log('onselection >',a);*/},
+//     onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
+// ){
+//     dev.log.partControl('.list_image(...)'); //#development
 
-                switch(item.type){
-                    case 'space':
-                        var space_group = interfacePart.builder('basic','group',index+'_space');
-                        output.elements.push(space_group);
-                        output.calculatedListHeight += spacingHeight;
-                    break;
-                    case 'break': 
-                        var lineWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
-                        var xPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
+//     //state
+//         let self = this;
+//         let itemArray = [];
+//         let calculatedListHeight = 0;
+//         const state = {
+//             position:0,
+//             lastNonShiftClicked:0,
+//             selectedItems:[],
+//         };
 
-                        var imageBacking = interfacePart.builder('basic','image',index+'_break',{
-                            x:xPosition, y:output.calculatedListHeight+itemSpacingHeight/2,
-                            width:lineWidth, height:breakHeight,
-                            url:breakURL
-                        });
+//     //default style
+//         const style = {
+//             default:{
+//                 heightLimit:heightLimit, widthLimit:widthLimit,
+//                 background_url:background_url,
+//                 break_url:break_url,
+//                 image_url:image_url,
 
-                        output.elements.push(imageBacking);
-                        output.calculatedListHeight += itemSpacingHeight+breakHeight;
-                    break;
-                    case 'textbreak': 
-                        var lineWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
-                        var xPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
-                        var imageBacking = interfacePart.builder('basic','image',index+'_break',{
-                            x:xPosition, y:output.calculatedListHeight,
-                            width:lineWidth, height:itemSpacingHeight+breakHeight,
-                            url:breakURL
-                        });
+//                 height:default_item_height, width:default_item_width,
 
-                        output.elements.push(imageBacking);
-                        output.calculatedListHeight += itemSpacingHeight+breakHeight;
-                    break;
-                    case 'checkbox':
-                        var checkbox = interfacePart.builder( 'control', 'checkbox_image', 'checkbox', {
-                            x:xOffset, y:output.calculatedListHeight,
-                            width:itemWidth, height:itemHeight,
-                            uncheckURL:checkbox_uncheckURL,
-                            checkURL:checkbox_checkURL,
-                            uncheckGlowURL:checkbox_uncheckGlowURL,
-                            checkGlowURL:checkbox_checkGlowURL,
-                        });
-                        if(item.onclickFunction != undefined){
-                            checkbox.onchange = (function(listItem){
-                                return function(value){ listItem.onclickFunction(value);  }
-                            })(item);
-                        }
-                        if(item.updateFunction != undefined){checkbox.set(item.updateFunction());}
+//                 itemSpacingHeight:default_item_spacingHeight,
+//                 itemHorizontalPadding:default_item_horizontalPadding,
 
-                        output.elements.push(checkbox);
-                        output.calculatedListHeight += itemHeight;
-                    break;
-                    case 'list':
-                        var sublistName = 'sublist__'+index+'_list';
-                        var list_group = interfacePart.builder('basic','group',index+'_list');
-                            var button = interfacePart.builder( 'control', 'button_image', 'button', {
-                                x:xOffset, y:output.calculatedListHeight,
-                                width:itemWidth, height:itemHeight, interactable:interactable, 
-
-                                backingURL__off:                        '',
-                                backingURL__up:                         sublist__up,
-                                backingURL__press:                      '',
-                                backingURL__select:                     '',
-                                backingURL__select_press:               '',
-                                backingURL__glow:                       sublist__glow,
-                                backingURL__glow_press:                 '',
-                                backingURL__glow_select:                '',
-                                backingURL__glow_select_press:          '',
-                                backingURL__hover:                      sublist__hover,
-                                backingURL__hover_press:                '',
-                                backingURL__hover_select:               '',
-                                backingURL__hover_select_press:         '',
-                                backingURL__hover_glow:                 sublist__hover_glow,
-                                backingURL__hover_glow_press:           sublist__hover_glow_press,
-                                backingURL__hover_glow_select:          '',
-                                backingURL__hover_glow_select_press:    '',
-                            });
-                            list_group.append(button);
-
-                            button.onpress = (function(sublistName){
-                                return function(){ 
-                                    if( subListGroup.getChildByName(sublistName) != undefined ){
-                                        object.closeAllLists();
-                                    }else if(subListGroup.children().length != 0){
-                                        object.closeAllLists();
-                                        list_group.open();
-                                    }else{
-                                        list_group.open();
-                                    }
-                                }
-                            })(sublistName);
-
-                            list_group.open = (function(sublistName,listItem,y){
-                                return function(){
-                                    list_group.getChildByName('button').glow(true);
-                                    var sublist = _canvas_.interface.part.builder('control', 'list_image', sublistName, {
-                                        x: limitWidthTo<0?itemWidth:limitWidthTo, y:y,
-                                        list: listItem.list,
-
-                                        active:         listItem.active ? listItem.active : active, 
-                                        multiSelect:    listItem.multiSelect ? listItem.multiSelect : multiSelect, 
-                                        hoverable:      listItem.hoverable ? listItem.hoverable : hoverable, 
-                                        selectable:     listItem.selectable ? listItem.selectable : selectable, 
-                                        pressable:      listItem.pressable ? listItem.pressable : pressable,
-
-                                        limitHeightTo:  listItem.limitHeightTo ? listItem.limitHeightTo : -1, 
-                                        limitWidthTo:   listItem.limitWidthTo ? listItem.limitWidthTo : limitWidthTo,
-
-                                        itemHeight:                listItem.itemHeight ? listItem.itemHeight : itemHeight, 
-                                        itemWidth:                 listItem.itemWidth ? listItem.itemWidth : itemWidth, 
-                                        itemSpacingHeight:         listItem.itemSpacingHeight ? listItem.itemSpacingHeight : itemSpacingHeight, 
-                                        spacingHeight:             listItem.spacingHeight ? listItem.spacingHeight : spacingHeight, 
-                                        breakHeight:               listItem.breakHeight ? listItem.breakHeight : breakHeight,
-                                        backingURL:                listItem.backingURL? listItem.backingURL : backingURL, 
-                                        breakURL:                  listItem.breakURL? listItem.breakURL : breakURL,
-                                        textbreakURL:              listItem.textbreakURL? listItem.textbreakURL : textbreakURL,
-                                        sublist__up:               listItem.sublist__up? listItem.sublist__up : sublist__up,
-                                        sublist__hover:            listItem.sublist__hover? listItem.sublist__hover : sublist__hover,
-                                        sublist__glow:             listItem.sublist__glow? listItem.sublist__glow : sublist__glow,
-                                        sublist__hover_glow:       listItem.sublist__hover_glow? listItem.sublist__hover_glow : sublist__hover_glow,
-                                        sublist__hover_glow_press: listItem.sublist__hover_glow_press? listItem.sublist__hover_glow_press : sublist__hover_glow_press,
-
-                                        checkbox_uncheckURL:       listItem.checkbox_uncheckURL ? listItem.checkbox_uncheckURL : checkbox_uncheckURL,
-                                        checkbox_checkURL:         listItem.checkbox_checkURL ? listItem.checkbox_checkURL : checkbox_checkURL,
-                                        checkbox_uncheckGlowURL:   listItem.checkbox_uncheckGlowURL ? listItem.checkbox_uncheckGlowURL : checkbox_uncheckGlowURL,
-                                        checkbox_checkGlowURL:     listItem.checkbox_checkGlowURL ? listItem.checkbox_checkGlowURL : checkbox_checkGlowURL,
-
-                                        itemURL__off:                       listItem.itemURL__off ? listItem.itemURL__off : itemURL__off,
-                                        itemURL__up:                        listItem.itemURL__up ? listItem.itemURL__up : itemURL__up,
-                                        itemURL__press:                     listItem.itemURL__press ? listItem.itemURL__press : itemURL__press,
-                                        itemURL__select:                    listItem.itemURL__select ? listItem.itemURL__select : itemURL__select,
-                                        itemURL__select_press:              listItem.itemURL__select_press ? listItem.itemURL__select_press : itemURL__select_press,
-                                        itemURL__glow:                      listItem.itemURL__glow ? listItem.itemURL__glow : itemURL__glow,
-                                        itemURL__glow_press:                listItem.itemURL__glow_press ? listItem.itemURL__glow_press : itemURL__glow_press,
-                                        itemURL__glow_select:               listItem.itemURL__glow_select ? listItem.itemURL__glow_select : itemURL__glow_select,
-                                        itemURL__glow_select_press:         listItem.itemURL__glow_select_press ? listItem.itemURL__glow_select_press : itemURL__glow_select_press,
-                                        itemURL__hover:                     listItem.itemURL__hover ? listItem.itemURL__hover : itemURL__hover,
-                                        itemURL__hover_press:               listItem.itemURL__hover_press ? listItem.itemURL__hover_press : itemURL__hover_press,
-                                        itemURL__hover_select:              listItem.itemURL__hover_select ? listItem.itemURL__hover_select : itemURL__hover_select,
-                                        itemURL__hover_select_press:        listItem.itemURL__hover_select_press ? listItem.itemURL__hover_select_press : itemURL__hover_select_press,
-                                        itemURL__hover_glow:                listItem.itemURL__hover_glow ? listItem.itemURL__hover_glow : itemURL__hover_glow,
-                                        itemURL__hover_glow_press:          listItem.itemURL__hover_glow_press ? listItem.itemURL__hover_glow_press : itemURL__hover_glow_press,
-                                        itemURL__hover_glow_select:         listItem.itemURL__hover_glow_select ? listItem.itemURL__hover_glow_select : itemURL__hover_glow_select,
-                                        itemURL__hover_glow_select_press:   listItem.itemURL__hover_glow_select_press ? listItem.itemURL__hover_glow_select_press : itemURL__hover_glow_select_press,
-                                    });
-                                    sublist.onenter = function(a){object.onenter([index].concat(a));};
-                                    sublist.onleave = function(a){object.onleave([index].concat(a));};
-                                    sublist.onpress = function(a){object.onpress([index].concat(a));};
-                                    sublist.ondblpress = function(a){object.ondblpress([index].concat(a));};
-                                    sublist.onrelease = function(a){object.onrelease([index].concat(a));};
-                                    subListGroup.append(sublist);
-                                }
-                            })(sublistName,item,output.calculatedListHeight);
-                            list_group.close = function(){
-                                list_group.getChildByName('button').glow(false);
-                                var sublistElement = subListGroup.getChildByName('sublist__'+index+'_list');
-                                if( sublistElement == undefined ){return;}
-                                subListGroup.remove(sublistElement);
-                            };
-
-                        output.elements.push(list_group);
-                        output.calculatedListHeight += itemHeight;
-                    break;
-                    case 'item': 
-                        var name = index+'_item';
-                        var temp = interfacePart.builder('control', 'button_image', name, {
-                            x:xOffset, y:output.calculatedListHeight,
-                            width:itemWidth, height:itemHeight, interactable:interactable, 
-
-                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-
-                            backingURL__off:                     itemURL__off,
-                            backingURL__up:                      itemURL__up,
-                            backingURL__press:                   itemURL__press,
-                            backingURL__select:                  itemURL__select,
-                            backingURL__select_press:            itemURL__select_press,
-                            backingURL__glow:                    itemURL__glow,
-                            backingURL__glow_press:              itemURL__glow_press,
-                            backingURL__glow_select:             itemURL__glow_select,
-                            backingURL__glow_select_press:       itemURL__glow_select_press,
-                            backingURL__hover:                   itemURL__hover,
-                            backingURL__hover_press:             itemURL__hover_press,
-                            backingURL__hover_select:            itemURL__hover_select,
-                            backingURL__hover_select_press:      itemURL__hover_select_press,
-                            backingURL__hover_glow:              itemURL__hover_glow,
-                            backingURL__hover_glow_press:        itemURL__hover_glow_press,
-                            backingURL__hover_glow_select:       itemURL__hover_glow_select,
-                            backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
-                        });
-                        temp.onenter = function(a){ return function(){ object.onenter([a]); } }(index);
-                        temp.onleave = function(a){ return function(){ object.onleave([a]); } }(index);
-                        temp.onpress = function(a){ return function(){ object.onpress([a]); } }(index);
-                        temp.ondblpress = function(a){ return function(){ object.ondblpress([a]); } }(index);
-                        temp.onrelease = function(a){
-                            return function(){
-                                if( list[a].function ){ list[a].function(); }
-                                object.onrelease([a]);
-                            }
-                        }(index);
-                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false);} }(name);
-                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(name);
-
-                        output.elements.push(temp);
-                        output.calculatedListHeight += itemHeight;
-                    break;
-                    default: console.warn('interface part "list" :: error : unknown list item type:',item); break;
-                }
-
-            });
+//                 item__off__url:                     default_item__off__url,
+//                 item__up__url:                      default_item__up__url,
+//                 item__press__url:                   default_item__press__url,
+//                 item__select__url:                  default_item__select__url,
+//                 item__select_press__url:            default_item__select_press__url,
+//                 item__glow__url:                    default_item__glow__url,
+//                 item__glow_press__url:              default_item__glow_press__url,
+//                 item__glow_select__url:             default_item__glow_select__url,
+//                 item__glow_select_press__url:       default_item__glow_select_press__url,
+//                 item__hover__url:                   default_item__hover__url,
+//                 item__hover_press__url:             default_item__hover_press__url,
+//                 item__hover_select__url:            default_item__hover_select__url,
+//                 item__hover_select_press__url:      default_item__hover_select_press__url,
+//                 item__hover_glow__url:              default_item__hover_glow__url,
+//                 item__hover_glow_press__url:        default_item__hover_glow_press__url,
+//                 item__hover_glow_select__url:       default_item__hover_glow_select__url,
+//                 item__hover_glow_select_press__url: default_item__hover_glow_select_press__url,
+//             },
+//             space:{
+//                 height:space_height,
+//             },
+//             image:{},
+//             break:{
+//                 height:break_height,
+//                 lineMux:break_lineMux,
+//             },
+//             checkbox:{},
+//             button:{},
+//             list:{
+//                 heightLimit:-1,
+//                 space_height:space_height,
+//                 break_height:break_height,
+//                 break_lineMux:break_lineMux,
+//             },
+//         };
 
 
-            return output;
-        }
+//     //generate list content
+//         function generateListContent(listItems=[]){
+//             function def(i,t){ return i[t]==undefined ? (style[i.type][t]==undefined ? style.default[t] : style[i.type][t]) : i[t]; }
 
-    //refreshing function
-        function refresh(){
-            itemArray = [];
-            selectedItems = [];
-            lastNonShiftClicked = 0;
-            position = 0;
+//             const output = {elements:[], calculatedListHeight:0};
+//             const xOffset = style.default.widthLimit < 0 ? 0 : (style.default.widthLimit-style.default.width)/2;
+
+//             listItems.forEach((item,index) => {
+//                 if(index != 0){output.calculatedListHeight += style.default.itemSpacingHeight;}
+
+//                 let newItem;
+//                 if(item.type == 'image'){
+//                     newItem = self.list_image.itemTypes.image(
+//                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'image_url'),
+//                     );
+//                 }else if(item.type == 'space'){
+//                     newItem = self.list_image.itemTypes.space(index, xOffset, output.calculatedListHeight, def(item,'height') );
+//                 }else if(item.type == 'break'){
+//                     newItem = self.list_image.itemTypes.break(
+//                         index, xOffset, output.calculatedListHeight, def(item,'width'), 
+//                         def(item,'height'), def(item,'break_url')
+//                     );
+//                 }else if(item.type == 'checkbox'){
+//                     newItem = self.list_image.itemTypes.checkbox(
+//                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
+//                         item.active != undefined ? item.active : active, 
+//                         item.hoverable != undefined ? item.hoverable : hoverable, 
+//                         item.selectable != undefined ? item.selectable : selectable, 
+//                         item.pressable != undefined ? item.pressable : pressable, 
+
+//                         def(item,'item__off__url'),
+//                         def(item,'item__up__url'),
+//                         def(item,'item__press__url'),
+//                         def(item,'item__select__url'),
+//                         def(item,'item__select_press__url'),
+//                         def(item,'item__glow__url'),
+//                         def(item,'item__glow_press__url'),
+//                         def(item,'item__glow_select__url'),
+//                         def(item,'item__glow_select_press__url'),
+//                         def(item,'item__hover__url'),
+//                         def(item,'item__hover_press__url'),
+//                         def(item,'item__hover_select__url'),
+//                         def(item,'item__hover_select_press__url'),
+//                         def(item,'item__hover_glow__url'),
+//                         def(item,'item__hover_glow_press__url'),
+//                         def(item,'item__hover_glow_select__url'),
+//                         def(item,'item__hover_glow_select_press__url'),
+
+//                         item.updateFunction, item.onclickFunction,
+//                     );
+//                 }else if(item.type == 'button'){
+//                     newItem = self.list_image.itemTypes.button(
+//                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
+//                         item.active != undefined ? item.active : active, 
+//                         item.hoverable != undefined ? item.hoverable : hoverable, 
+//                         item.selectable != undefined ? item.selectable : selectable, 
+//                         item.pressable != undefined ? item.pressable : pressable, 
+
+//                         def(item,'item__off__url'),
+//                         def(item,'item__up__url'),
+//                         def(item,'item__press__url'),
+//                         def(item,'item__select__url'),
+//                         def(item,'item__select_press__url'),
+//                         def(item,'item__glow__url'),
+//                         def(item,'item__glow_press__url'),
+//                         def(item,'item__glow_select__url'),
+//                         def(item,'item__glow_select_press__url'),
+//                         def(item,'item__hover__url'),
+//                         def(item,'item__hover_press__url'),
+//                         def(item,'item__hover_select__url'),
+//                         def(item,'item__hover_select_press__url'),
+//                         def(item,'item__hover_glow__url'),
+//                         def(item,'item__hover_glow_press__url'),
+//                         def(item,'item__hover_glow_select__url'),
+//                         def(item,'item__hover_glow_select_press__url'),
+
+//                         function(){ object.onenter([index]); },
+//                         function(){ object.onleave([index]); },
+//                         function(){ object.onpress([index]); },
+//                         function(){ object.ondblpress([index]); },
+//                         function(){ if(item.function){item.function();} object.onrelease([index]); },
+//                         function(obj,event){ object.select(index,true,event,false);} ,
+//                         function(obj,event){ object.select(index,false,event,false); },
+//                     );
+//                 }else if(item.type == 'list'){
+//                     newItem = self.list_image.itemTypes.list(
+//                         subListGroup,
+//                         index, xOffset, output.calculatedListHeight,
+                    
+//                         //internal callbacks
+//                             function(isOpen){
+//                                 if(!isOpen){return;}
+//                                 itemArray.forEach((item,a) => { if(list[a].type == 'list' && a != index && item.isOpen){ item.close(); } });
+//                                 return -state.position * (style.default.heightLimit > 0 && style.default.heightLimit < calculatedListHeight ? (calculatedListHeight-style.default.heightLimit) : calculatedListHeight);
+//                             },
+                        
+//                         //button
+//                             def(item,'width'), def(item,'height'), 
+                    
+//                             def(item,'itemHorizontalPadding'),
+//                             item.active != undefined ? item.active : active, 
+//                             item.hoverable != undefined ? item.hoverable : hoverable, 
+//                             item.pressable != undefined ? item.pressable : pressable, 
+                    
+//                             def(item,'item__off__url'),
+//                             def(item,'item__up__url'),
+//                             def(item,'item__press__url'),
+//                             def(item,'item__select__url'),
+//                             def(item,'item__select_press__url'),
+//                             def(item,'item__glow__url'),
+//                             def(item,'item__glow_press__url'),
+//                             def(item,'item__glow_select__url'),
+//                             def(item,'item__glow_select_press__url'),
+//                             def(item,'item__hover__url'),
+//                             def(item,'item__hover_press__url'),
+//                             def(item,'item__hover_select__url'),
+//                             def(item,'item__hover_select_press__url'),
+//                             def(item,'item__hover_glow__url'),
+//                             def(item,'item__hover_glow_press__url'),
+//                             def(item,'item__hover_glow_select__url'),
+//                             def(item,'item__hover_glow_select_press__url'),
+                    
+//                         //sub list
+//                             item.list,
+//                             item.interactable,
+                    
+//                             item.itemWidth,
+//                             def(item,'heightLimit'),
+//                             def(item,'widthLimit'),
+//                             def(item,'backgroundColour'),
+//                             def(item,'backgroundMarkingColour'),
+                    
+//                             def(item,'default_item_spacingHeight'),
+                    
+//                             def(item,'space_height'),
+//                             def(item,'break_height'),
+//                             def(item,'break_lineMux'),
+                    
+//                             item.onenter,
+//                             item.onleave,
+//                             item.onpress,
+//                             item.ondblpress,
+//                             item.onrelease,
+//                             item.onselection,
+//                             item.onpositionchange,
+//                     );
+//                 }else{ //unknown item
+//                     output.calculatedListHeight -= style.default.itemSpacingHeight;
+//                     console.warn('interface part "list_image" :: error : unknown list item type:',item);
+//                     return;
+//                 }
+
+//                 output.elements.push(newItem.item);
+//                 output.calculatedListHeight += newItem.height;
+//             });
+
+//             return output;
+//         }
+
+//     //refreshing function
+//         function refresh(){
+//             itemArray = [];
+//             calculatedListHeight = 0;
+//             state.selectedItems = [];
+//             state.lastNonShiftClicked = 0;
+//             state.position = 0;
             
-            results = generateListContent(list);
-            calculatedListHeight = results.calculatedListHeight;
-            itemArray = results.elements;
+//             results = generateListContent(list);
+//             calculatedListHeight = results.calculatedListHeight;
+//             itemArray = results.elements;
 
-            backing.width(limitWidthTo<0?itemWidth:limitWidthTo);
-            backing.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
-            cover.width(limitWidthTo<0?itemWidth:limitWidthTo);
-            cover.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
-            stencil.width(limitWidthTo<0?itemWidth:limitWidthTo);
-            stencil.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
+//             const widthToUse = style.default.widthLimit < 0 ? style.default.width : style.default.widthLimit;
+//             backing.width(widthToUse);
+//             cover.width(widthToUse);
+//             stencil.width(widthToUse);
 
-            itemCollection.clear();
-            results.elements.forEach(element => itemCollection.append(element));
-        }
+//             const heightToUse = style.default.heightLimit < 0 || style.default.heightLimit > calculatedListHeight ? calculatedListHeight : style.default.heightLimit;
+//             backing.height(calculatedListHeight);
+//             cover.height(heightToUse);
+//             stencil.height(heightToUse);
 
-    //elements 
-        //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
-        //backing
-            var backing = interfacePart.builder('basic','image','backing',{url:backingURL});
-            object.append(backing);
-        //stenciled group
-            var stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
-            object.append(stenciledGroup);
-        //sub list group
-            var subListGroup = interfacePart.builder('basic','group','subListGroup');
-            object.append(subListGroup);
-        //item collection
-            var itemCollection = interfacePart.builder('basic','group','itemCollection');
-            stenciledGroup.append(itemCollection);
-        //cover
-            var cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
-            stenciledGroup.append(cover);
-        //stencil
-            var stencil = interfacePart.builder('basic','rectangle','stencil');
-            stenciledGroup.stencil(stencil);
-            stenciledGroup.clipActive(true);
+//             itemCollection.clear();
+//             results.elements.forEach(element => itemCollection.append(element));
+//         }
 
-    //interaction
-        cover.onwheel = function(x,y,event){
-            if(!interactable){return;}
-            var move = event.deltaY/100;
-            object.position( object.position() + move/10 );
-            itemArray.forEach(item => {
-                if(item.forceMouseLeave != undefined){
-                    item.forceMouseLeave();
-                }
-            });
-        };
+//     //elements 
+//         //main
+//             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+//             //stenciled group
+//                 const stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
+//                 object.append(stenciledGroup);
+//             //sub list group
+//                 const subListGroup = interfacePart.builder('basic','group','subListGroup');
+//                 object.append(subListGroup);
+//             //backing
+//                 const backing = interfacePart.builder('basic','image','backing',{url:background_url});
+//                 stenciledGroup.append(backing);
+//             //item collection
+//                 const itemCollection = interfacePart.builder('basic','group','itemCollection');
+//                 stenciledGroup.append(itemCollection);
+//             //cover
+//                 const cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
+//                 stenciledGroup.append(cover);
+//             //stencil
+//                 const stencil = interfacePart.builder('basic','rectangle','stencil');
+//                 stenciledGroup.stencil(stencil);
+//                 stenciledGroup.clipActive(true);
 
-    //controls
-        object.position = function(a,update=true){
-            if(a == undefined){return position;}
-            a = a < 0 ? 0 : a;
-            a = a > 1 ? 1 : a;
-            position = a;
+//     refresh();
 
-            if(limitHeightTo < 0){return;}
-            var movementSpace = calculatedListHeight - limitHeightTo;
-            itemCollection.y( -a*movementSpace );
-            
-            if(update&&this.onpositionchange){this.onpositionchange(a);}
-        };
-        object.select = function(a,state,event,update=true){
-            if(!selectable){return;}
+//     return object;
+// };
 
-                if(!multiSelect){
-                //where multi selection is not allowed
-                    //where we want to select an item, which is not already selected
-                        if(state && !selectedItems.includes(a) ){
-                            //deselect all other items
-                                while( selectedItems.length > 0 ){
-                                    itemCollection.getChildByName(selectedItems[0]).select(false,undefined,undefined);
-                                    selectedItems.shift();
-                                }
+// this.list_image.itemTypes = {};
+// this.list_image.itemTypes.space = function(index, x, y, height){
+//     dev.log.partControl('.list_image.itemTypes.space(...)'); //#development
 
-                            //select current item
-                                selectedItems.push(a);
+//     const newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
+//     return {item:newItem,height:height};
+// };
+// this.list_image.itemTypes.break = function(index, x, y, width, height, url){
+//     dev.log.partControl('.list_image.itemTypes.break(...)'); //#development
 
-                    //where we want to deselect an item that is selected
-                        }else if(!state && selectedItems.includes(a)){
-                            selectedItems = [];
-                        }
+//     const newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
+//     const image = interfacePart.builder('basic', 'image', 'image', { width:width, height:height, url:url });
+//     newItem.append(image);
 
-                //do not update the item itself, in the case that it was the item that sent this command
-                //(which would cause a little loop)
-                    if(update){ itemCollection.getChildByName(a).select(true,undefined,false); }
-                }else{
-                //where multi selection is allowed
-                    //where range-selection is to be done
-                        if( event != undefined && event.shiftKey ){
-                            //gather top and bottom item
-                            //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                a = itemCollection.getChildIndexByName(a);
+//     return {item:newItem,height:height};
+// };
+// this.list_image.itemTypes.image = function(index, x, y, width, height, url){
+//     dev.log.partControl('.list_image.itemTypes.image(...)'); //#development
 
-                                var min = Math.min(lastNonShiftClicked, a);
-                                var max = Math.max(lastNonShiftClicked, a);
-                                for(var b = 0; b < itemArray.length; b++){
-                                    if( itemArray[b].name == ''+min ){min = b;}
-                                    if( itemArray[b].name == ''+max ){max = b;}
-                                }
+//     const newItem = interfacePart.builder('basic','group',index+'_image',{x:x,y:y});
+//     const image = interfacePart.builder('basic', 'image', 'image', { width:width, height:height, url:url });
+//     newItem.append(image);
 
-                            //deselect all outside the range
-                                selectedItems = [];
-                                for(var b = 0; b < itemArray.length; b++){
-                                    if( b > max || b < min ){
-                                        if( itemArray[b].select != undefined && itemArray[b].select() ){
-                                            itemArray[b].select(false,undefined,false);
-                                        }
-                                    }
-                                }
+//     return {item:newItem,height:height};
+// };
 
-                            //select those within the range (that aren't already selected)
-                                for(var b = min; b <= max; b++){
-                                    if( itemArray[b].select != undefined && !itemArray[b].select() ){
-                                        itemArray[b].select(true,undefined,false);
-                                        selectedItems.push(b);
-                                    }
-                                }
-                    //where range-selection is not to be done
-                        }else{
-                            if(update){ itemArray[a].select(state); }
-                            if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                            else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                            lastNonShiftClicked = itemCollection.getChildIndexByName(a);
-                        }
-                }
-
-            object.onselection(selectedItems);
-        };
-        object.add = function(item){
-            list.push(item);
-            refresh();
-        };
-        object.remove = function(a){
-            list.splice(a,1);
-            refresh();
-        };
-        object.interactable = function(bool){
-            if(bool==undefined){return interactable;}
-            interactable = bool;
-            refresh();
-        };
-        object.limitHeightTo = function(value){
-            if(value==undefined){return limitHeightTo;}
-            limitHeightTo = value;
-            refresh();
-        };
-        object.closeAllLists = function(){
-            list.forEach((item,index) => {
-                if(item.type != 'list'){return;}
-                itemArray[index].close();
-            });
-        };
-
-    //info
-        object.getCalculatedListHeight = function(){return calculatedListHeight;};
-
-    //callbacks
-        object.onenter = onenter;
-        object.onleave = onleave;
-        object.onpress = onpress;
-        object.ondblpress = ondblpress;
-        object.onrelease = onrelease;
-        object.onselection = onselection;
-        object.onpositionchange = onpositionchange;
-
-    refresh();
-
-    return object;
-};
-
-interfacePart.partLibrary.control.list_image = function(name,data){ return interfacePart.collection.control.list_image(
-    name, data.x, data.y, data.angle, data.interactable, data.list,
-    data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
-    data.limitHeightTo, data.limitWidthTo,
-
-    data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
-
-    data.backingURL, 
-    data.breakURL,
-    data.textbreakURL,
-    data.sublist__up,
-    data.sublist__hover,
-    data.sublist__glow,
-    data.sublist__hover_glow,
-    data.sublist__hover_glow_press,
-
-    data.checkbox_uncheckURL, 
-    data.checkbox_checkURL, 
-    data.checkbox_uncheckGlowURL, 
-    data.checkbox_checkGlowURL,
+// interfacePart.partLibrary.control.list_image = function(name,data){ 
+//     return interfacePart.collection.control.list_image(
+//         name,
+//         data.x, 
+//         data.y, 
+//         data.angle,
+//         data.interactable,
+//         data.list,
     
-    data.itemURL__off,
-    data.itemURL__up,
-    data.itemURL__press,
-    data.itemURL__select,
-    data.itemURL__select_press,
-    data.itemURL__glow,
-    data.itemURL__glow_press,
-    data.itemURL__glow_select,
-    data.itemURL__glow_select_press,
-    data.itemURL__hover,
-    data.itemURL__hover_press,
-    data.itemURL__hover_select,
-    data.itemURL__hover_select_press,
-    data.itemURL__hover_glow,
-    data.itemURL__hover_glow_press,
-    data.itemURL__hover_glow_select,
-    data.itemURL__hover_glow_select_press,
-
-    data.onenter,
-    data.onleave,
-    data.onpress,
-    data.ondblpress,
-    data.onrelease,
-    data.onselection,
-    data.onpositionchange,
-); };
+//         data.active,
+//         data.multiSelect,
+//         data.hoverable,
+//         data.selectable,
+//         data.pressable,
+    
+//         data.heightLimit,
+//         data.widthLimit,
+//         data.background_url,
+//         data.break_url,
+    
+//         data.default_item_height,
+//         data.default_item_width,
+//         data.default_item_spacingHeight,
+//         data.default_item_horizontalPadding,
+    
+//         data.default_item__off__url,
+//         data.default_item__up__url,
+//         data.default_item__press__url,
+//         data.default_item__select__url,
+//         data.default_item__select_press__url,
+//         data.default_item__glow__url,
+//         data.default_item__glow_press__url,
+//         data.default_item__glow_select__url,
+//         data.default_item__glow_select_press__url,
+//         data.default_item__hover__url,
+//         data.default_item__hover_press__url,
+//         data.default_item__hover_select__url,
+//         data.default_item__hover_select_press__url,
+//         data.default_item__hover_glow__url,
+//         data.default_item__hover_glow_press__url,
+//         data.default_item__hover_glow_select__url,
+//         data.default_item__hover_glow_select_press__url,
+    
+//         data.space_height,
+//         data.break_height,
+//         data.break_lineMux,
+    
+//         data.onenter,
+//         data.onleave,
+//         data.onpress,
+//         data.ondblpress,
+//         data.onrelease,
+//         data.onselection,
+//         data.onpositionchange,
+//     );
+// };

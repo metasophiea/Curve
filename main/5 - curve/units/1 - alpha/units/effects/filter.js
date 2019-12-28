@@ -1,12 +1,12 @@
-this.filter = function(x,y,angle){
+this.filter = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'filter/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:620, height:260 },
                     design: { width:10, height:4 },
                 };
@@ -24,8 +24,9 @@ this.filter = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'filter',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'filter',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -43,21 +44,21 @@ this.filter = function(x,y,angle){
                 {collection:'basic', type:'image', name:'backing', data:{ 
                     x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
                 }},
-                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_lowBand',data:{
+                {collection:'control', type:'dial_2_continuous',name:'dial_lowBand',data:{
                     x:17.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_lowBand,
                 }},
-                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_midBand',data:{
+                {collection:'control', type:'dial_2_continuous',name:'dial_midBand',data:{
                     x:47.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_midBand,
                 }},
-                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_highBand',data:{
+                {collection:'control', type:'dial_2_continuous',name:'dial_highBand',data:{
                     x:77.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_highBand,
                 }},
             ]
         });
 
     //circuitry
-        var curvePointExponentialSharpness = 10.586609649448984;
-        var state = {
+        const curvePointExponentialSharpness = 10.586609649448984;
+        const state = {
             currentValues:{
                 gain: [1,1,1],
                 frequency: [250,700,2500],
@@ -69,7 +70,7 @@ this.filter = function(x,y,angle){
                 Q: [0,0.35,0],
             }
         };
-        var filterCircuit = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, 3, true);
+        const filterCircuit = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, 3, true);
 
         function setGain(band,value){ 
             if(band == undefined){return state.currentValues.gain;}
@@ -81,9 +82,9 @@ this.filter = function(x,y,angle){
 
     //wiring
         //hid
-            object.elements.dial_colourWithIndent_continuous.dial_lowBand.onchange = function(value){ setGain(0,value*2); };
-            object.elements.dial_colourWithIndent_continuous.dial_midBand.onchange = function(value){ setGain(1,value*2); };
-            object.elements.dial_colourWithIndent_continuous.dial_highBand.onchange = function(value){ setGain(2,value*2); };
+            object.elements.dial_2_continuous.dial_lowBand.onchange = function(value){ setGain(0,value*2); };
+            object.elements.dial_2_continuous.dial_midBand.onchange = function(value){ setGain(1,value*2); };
+            object.elements.dial_2_continuous.dial_highBand.onchange = function(value){ setGain(2,value*2); };
         //io
             object.io.audio.input.out().connect( filterCircuit.in() );
             filterCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
@@ -91,9 +92,9 @@ this.filter = function(x,y,angle){
     //interface
         object.i = {
             gain:function(band,value){
-                var element = object.elements.dial_colourWithIndent_continuous[ ['dial_lowBand','dial_midBand','dial_highBand'][band] ];
+                const element = object.elements.dial_2_continuous[ ['dial_lowBand','dial_midBand','dial_highBand'][band] ];
                 if(value == undefined){ return element.get(); }
-                element.set(value);
+                element.set(value/2);
             },
             Q:function(band,value){ 
                 if(band == undefined){return state.currentValues.Q;}
@@ -112,10 +113,10 @@ this.filter = function(x,y,angle){
             reset:function(channel){
                 if(channel == undefined){
                     //if no channel if specified, reset all of them
-                    for(var a = 0; a < 3; a++){ object.i.reset(a); }
+                    for(let a = 0; a < 3; a++){ object.i.reset(a); }
                     return;
                 }
-                for(var a = 0; a < 3; a++){
+                for(let a = 0; a < 3; a++){
                     object.i.gain(a,state.defaultValues.gain[a]);
                     object.i.Q(a,state.defaultValues.Q[a]);
                     object.i.frequency(a,state.defaultValues.frequency[a]);
@@ -126,15 +127,15 @@ this.filter = function(x,y,angle){
     //import/export
         object.exportData = function(){
             return {
-                low: object.elements.dial_colourWithIndent_continuous.dial_lowBand.get(),
-                mid: object.elements.dial_colourWithIndent_continuous.dial_midBand.get(),
-                high: object.elements.dial_colourWithIndent_continuous.dial_highBand.get(),
+                low: object.elements.dial_2_continuous.dial_lowBand.get(),
+                mid: object.elements.dial_2_continuous.dial_midBand.get(),
+                high: object.elements.dial_2_continuous.dial_highBand.get(),
             };
         };
         object.importData = function(data){
-            object.elements.dial_colourWithIndent_continuous.dial_lowBand.set( data.low );
-            object.elements.dial_colourWithIndent_continuous.dial_midBand.set( data.mid );
-            object.elements.dial_colourWithIndent_continuous.dial_highBand.set( data.high );
+            object.elements.dial_2_continuous.dial_lowBand.set( data.low );
+            object.elements.dial_2_continuous.dial_midBand.set( data.mid );
+            object.elements.dial_2_continuous.dial_highBand.set( data.high );
         };
 
     //setup

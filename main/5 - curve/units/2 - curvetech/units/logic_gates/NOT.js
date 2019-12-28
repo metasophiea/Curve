@@ -1,12 +1,12 @@
-this.NOT = function(x,y,angle){
+this.NOT = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'logic_gates/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = {
+                const div = 10;
+                const measurement = {
                     file: { width:100, height:100 },
                     design: { width:1, height:1 },
                 };
@@ -19,8 +19,9 @@ this.NOT = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'NOT',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'NOT',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -42,8 +43,8 @@ this.NOT = function(x,y,angle){
         });
     
     //circuitry
-        var currentInputValue = false;
-        // var loopProtection = {
+        let currentInputValue = false;
+        // const loopProtection = {
         //     maxChangesPerSecond:100,
         //     changeCount:0,
         //     interval:setInterval(function(){ 
@@ -51,7 +52,7 @@ this.NOT = function(x,y,angle){
         //         object.io.signal.out.set(!object.io.signal.in.read());
         //     },1000),
         // };
-        var delay = 1;
+        let delay = 1;
         function updateOutput(A){
             if(delay > 0){ 
                 setTimeout(function(){

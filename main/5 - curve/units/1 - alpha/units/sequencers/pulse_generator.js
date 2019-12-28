@@ -1,12 +1,12 @@
-this.pulse_generator = function(x,y,angle){
+this.pulse_generator = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'pulse_generator/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:590, height:260 },
                     design: { width:9.5, height:4 },
                 };
@@ -34,8 +34,9 @@ this.pulse_generator = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'pulse_generator',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'pulse_generator',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                                    y:0                                                      },
@@ -81,8 +82,8 @@ this.pulse_generator = function(x,y,angle){
                     x:6.25, y:12.5, width:12 + 1/3, height:12 + 1/3, url:unitStyle.imageStoreURL_localPrefix+'time_symbol.png'
                 } },
 
-                {collection:'display', type:'readout_sevenSegmentDisplay_static', name:'LCD', data:{ 
-                    x:21.75, y:10.75, width:64, height:18.5, count:6, decimalPlaces:true, style:unitStyle.LCD
+                {collection:'display', type:'readout_sevenSegmentDisplay', name:'LCD', data:{ 
+                    x:21.75, y:10.75, width:64, height:18.5, static:true, count:6, decimalPlaces:true, style:unitStyle.LCD, resolution:5,
                 }},
 
                 {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + 10.85*0, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
@@ -101,7 +102,7 @@ this.pulse_generator = function(x,y,angle){
         });
 
     //circuitry
-        var state = {
+        const state = {
             storedValue: [1,2,0,0,0,0],
             interval: null,
             tempo: 120,
@@ -112,20 +113,20 @@ this.pulse_generator = function(x,y,angle){
                 if(newTempo < 0.001){newTempo = 0.001;}
 
             //update readout
-                var tmp = (''+newTempo).split('.');
-                var string = tmp[0];
+                const readout_tmp = (''+newTempo).split('.');
+                let string = readout_tmp[0];
                 if(newTempo < 100){string = '0' + string;}
                 if(newTempo < 10){string = '0' + string;}
-                if(tmp[1] == undefined){ string += '.000';}
-                else if(tmp[1].length == 1){ string += '.' + tmp[1] + '00';}
-                else if(tmp[1].length == 2){ string += '.' + tmp[1] + '0';}
-                else if(tmp[1].length >= 3){ string += '.' + tmp[1];}
+                if(readout_tmp[1] == undefined){ string += '.000';}
+                else if(readout_tmp[1].length == 1){ string += '.' + readout_tmp[1] + '00';}
+                else if(readout_tmp[1].length == 2){ string += '.' + readout_tmp[1] + '0';}
+                else if(readout_tmp[1].length >= 3){ string += '.' + readout_tmp[1];}
                 if(string.length > 7){ string = string.slice(0,7); }
                 tempoString = string;
                 newTempo = parseFloat(string);
 
-                object.elements.readout_sevenSegmentDisplay_static.LCD.text(string);
-                object.elements.readout_sevenSegmentDisplay_static.LCD.print();
+                object.elements.readout_sevenSegmentDisplay.LCD.text(string);
+                object.elements.readout_sevenSegmentDisplay.LCD.print();
 
             //update interval
                 if(state.interval){ clearInterval(state.interval); }
@@ -151,7 +152,7 @@ this.pulse_generator = function(x,y,angle){
                 state.tempo = newTempo;
 
                 state.storedValue = [0,0,0,0,0,0];
-                var tmp = String(state.tempo).split('');
+                let tmp = String(state.tempo).split('');
                 
                 if(tmp.indexOf('.') == -1){
                     tmp.reverse().forEach((value,index) => { state.storedValue[2-index] = value; });
@@ -168,7 +169,7 @@ this.pulse_generator = function(x,y,angle){
 
     //wiring
         //hid
-            object.elements.button_polygon.sync.onpress = function(){ updateTempo(tempo); };
+            object.elements.button_polygon.sync.onpress = function(){ updateTempo(state.tempo); };
             ['100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up'].forEach((buttonName,index) => {
                 object.elements.button_image[buttonName].onpress = function(){ state.storedValue[index] = state.storedValue[index] == 9 ? 0 : state.storedValue[index]+1; updateUsingStoredValue(); };
             });

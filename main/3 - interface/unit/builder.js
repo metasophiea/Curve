@@ -16,20 +16,19 @@
     }
 */
 this.builder = function(design){
-
     //input check
         if(design.x == undefined){ design.x = 0; }
         if(design.y == undefined){ design.y = 0; }
         if(design.angle == undefined){ design.angle = 0; }
 
     //main group
-        var unit = _canvas_.interface.part.builder('basic','group',design.name,{x:design.x, y:design.y, angle:design.angle});
-        unit.model = design.name;
+        const unit = _canvas_.interface.part.builder('basic','group',design.name,{x:design.x, y:design.y, angle:design.angle});
+        unit.model = design.model;
         unit.collisionActive = design.collisionActive == undefined ? true : design.collisionActive;
 
     //generate parts and append to main group
         unit.elements = {};
-        for(var a = 0; a < design.elements.length; a++){
+        for(let a = 0; a < design.elements.length; a++){
             //check for arguments
             if(design.elements[a].collection == undefined){console.warn('Interface Unit Builder :: collection name missing'); break;}
             if(design.elements[a].type == undefined){console.warn('Interface Unit Builder :: type name missing'); break;}
@@ -43,7 +42,7 @@ this.builder = function(design){
                 }    
 
             //produce and append part
-                var newPart = _canvas_.interface.part.builder( design.elements[a].collection, design.elements[a].type, design.elements[a].name, design.elements[a].data );
+                const newPart = _canvas_.interface.part.builder( design.elements[a].collection, design.elements[a].type, design.elements[a].name, design.elements[a].data );
                 unit.append(newPart);
 
             //add part to element tree
@@ -55,18 +54,17 @@ this.builder = function(design){
         unit.io = {};
         [
             {key:'_', name:'connectionNode'},
-            {key:'_', name:'connectionNode2'},
             {key:'signal', name:'connectionNode_signal'},
             {key:'voltage', name:'connectionNode_voltage'},
             {key:'data', name:'connectionNode_data'},
             {key:'audio', name:'connectionNode_audio'},
         ].forEach(function(type){
             if(!unit.elements[type.name]){return;}
-            var keys = Object.keys(unit.elements[type.name]);
-            for(var a = 0; a < keys.length; a++){
-                var part = unit.elements[type.name][keys[a]];
+            const keys = Object.keys(unit.elements[type.name]);
+            for(let a = 0; a < keys.length; a++){
+                const part = unit.elements[type.name][keys[a]];
                 if( unit.io[type.key] == undefined ){ unit.io[type.key] = {}; }
-                unit.io[type.key][part.name] = part;
+                unit.io[type.key][part.getName()] = part;
             }
         });
 
@@ -99,7 +97,7 @@ this.builder = function(design){
         unit.space.originalPoints = design.space;
         function generatePersonalSpace(){
             unit.space.points = design.space.map(a => {
-                var tmp = _canvas_.library.math.cartesianAngleAdjust(a.x,a.y,unit.angle())
+                const tmp = _canvas_.library.math.cartesianAngleAdjust(a.x,a.y,unit.angle())
                 tmp.x += design.x;
                 tmp.y += design.y;
                 return tmp;
@@ -123,7 +121,7 @@ this.builder = function(design){
             }
 
     //setup unit movement snapping
-        var snapping = {active:false,x:10,y:10,angle:Math.PI/8};
+        const snapping = {active:false,x:10,y:10,angle:Math.PI/8};
         unit.snappingActive = function(bool){ if(bool == undefined){return snapping.active;} snapping.active = bool; };
         unit.snappingX = function(newX){ if(newX == undefined){return snapping.x;} snapping.x = newX; };
         unit.snappingY = function(newY){ if(newY == undefined){return snapping.y;} snapping.y = newY; };
@@ -159,17 +157,16 @@ this.builder = function(design){
         };
         unit.ioRedraw = function(){
             if( unit.io ){
-                var connectionTypes = Object.keys( unit.io );
-                for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
-                    var connectionNodes = unit.io[connectionTypes[connectionType]];
-                    var nodeNames = Object.keys( connectionNodes );
-                    for(var b = 0; b < nodeNames.length; b++){
+                const connectionTypes = Object.keys( unit.io );
+                for(let connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                    const connectionNodes = unit.io[connectionTypes[connectionType]];
+                    const nodeNames = Object.keys( connectionNodes );
+                    for(let b = 0; b < nodeNames.length; b++){
                         connectionNodes[nodeNames[b]].draw();
                     }
                 }
             }
         };
-
 
     //disable all control parts method
         unit.interactable = function(bool){

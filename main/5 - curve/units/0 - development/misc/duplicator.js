@@ -1,10 +1,11 @@
-this.signal_duplicator = function(x,y,a){
+this.signal_duplicator = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         markings:{r:150/255,g:150/255,b:150/255,a:1},
     };
     var design = {
-        name: 'signal_duplicator',
+        name:name,
+        model: 'signal_duplicator',
         category:'misc',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -40,13 +41,14 @@ this.signal_duplicator.metadata = {
     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
 };
 
-this.voltage_duplicator = function(x,y,a){
+this.voltage_duplicator = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         markings:{r:150/255,g:150/255,b:150/255,a:1},
     };
     var design = {
-        name: 'voltage_duplicator',
+        name:name,
+        model: 'voltage_duplicator',
         category:'misc',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -82,13 +84,14 @@ this.voltage_duplicator.metadata = {
     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
 };
 
-this.audio_duplicator = function(x,y,a){
+this.audio_duplicator = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         markings:{r:150/255,g:150/255,b:150/255,a:1},
     };
     var design = {
-        name: 'audio_duplicator',
+        name:name,
+        model: 'audio_duplicator',
         category:'misc',
         collection: 'alpha',
         x:x, y:y, a:a,
@@ -124,13 +127,14 @@ this.audio_duplicator.metadata = {
     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
 };
 
-this.data_duplicator = function(x,y,a){
+this.data_duplicator = function(name,x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         markings:{r:150/255,g:150/255,b:150/255,a:1},
     };
     var design = {
-        name:'data_duplicator',
+        name:name,
+        model:'data_duplicator',
         category:'misc',
         collection: 'alpha',
         x:x, y:y, a:a,

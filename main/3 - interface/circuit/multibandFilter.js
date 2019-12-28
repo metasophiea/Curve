@@ -2,13 +2,13 @@ this.multibandFilter = function(
     context, bandcount, frames=false
 ){
     //saved values
-        var saved = {
+        const saved = {
             settings:[], //{Q, gain, frequency, fresh(bool)}
             responses:[], //{magResponse, phaseResponse, frequencyArray}
         };
 
     //flow chain
-        var flow = {
+        const flow = {
             inAggregator: {},
             filterNodes: [],
             gainNodes: [],
@@ -22,7 +22,7 @@ this.multibandFilter = function(
 
         //filterNodes
             function makeGenericFilter(type){
-                var temp = { frequency:110, Q:0.1, node:context.createBiquadFilter() };
+                const temp = { frequency:110, Q:0.1, node:context.createBiquadFilter() };
                 temp.node.type = type;
                 _canvas_.library.audio.changeAudioParam(context, temp.node.frequency,110,0.01,'instant',true);
                 _canvas_.library.audio.changeAudioParam(context, temp.node.Q,0.1,0.01,'instant',true);
@@ -34,17 +34,17 @@ this.multibandFilter = function(
                 //lowpass
                     flow.filterNodes.push(makeGenericFilter('lowpass'));
                 //bands
-                    for(var a = 1; a < bandcount-1; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                    for(let a = 1; a < bandcount-1; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
                 //highpass
                     flow.filterNodes.push(makeGenericFilter('highpass'));
             }else{
                 //bands
-                    for(var a = 0; a < bandcount; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                    for(let a = 0; a < bandcount; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
             }
 
         //gainNodes
-            for(var a = 0; a < bandcount; a++){
-                var temp = { gain:1, node:context.createGain() };
+            for(let a = 0; a < bandcount; a++){
+                const temp = { gain:1, node:context.createGain() };
                 _canvas_.library.audio.changeAudioParam(context, temp.node.gain, temp.gain, 0.01, 'instant', true);
                 flow.gainNodes.push(temp);
                 saved.settings[a] = { Q:0.1, gain:1, frequency:110, fresh:true };
@@ -57,7 +57,7 @@ this.multibandFilter = function(
 
 
     //do connections
-        for(var a = 0; a < bandcount; a++){
+        for(let a = 0; a < bandcount; a++){
             flow.inAggregator.node.connect(flow.filterNodes[a].node);
             flow.filterNodes[a].node.connect(flow.gainNodes[a].node);
             flow.gainNodes[a].node.connect(flow.outAggregator.node);
@@ -113,9 +113,9 @@ this.multibandFilter = function(
                 }
 
             //do full calculation of band, save and return
-                var Float32_frequencyArray = new Float32Array(frequencyArray);
-                var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                const Float32_frequencyArray = new Float32Array(frequencyArray);
+                const magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                const phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
                 flow.filterNodes[band].node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
 
                 saved.responses[band] = {

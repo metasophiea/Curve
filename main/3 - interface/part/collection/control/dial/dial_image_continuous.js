@@ -9,6 +9,8 @@ this.dial_continuous_image = function(
     onchange=function(){},
     onrelease=function(){},
 ){
+    dev.log.partControl('.dial_continuous_image(...)'); //#development
+
     //default to non-image version if image links are missing
         if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
             return this.dial_continuous(
@@ -20,28 +22,25 @@ this.dial_continuous_image = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+            const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
+            const slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
             object.append(slot);
 
         //handle
-            var handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+            const handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
             object.append(handle);
 
         //needle group
-            var needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
+            const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
             object.append(needleGroup);
 
             //needle
-                var needleWidth = radius/5;
-                var needleLength = radius;
-                var needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
+                const needleWidth = radius/5;
+                const needleLength = radius;
+                const needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
                     needleGroup.append(needle);
-
-
-
 
     //graphical adjust
         function set(a,update=true){
@@ -55,11 +54,8 @@ this.dial_continuous_image = function(
             handle.angle(startAngle + maxAngle*value);
         }
 
-
-
-
     //methods
-        var grappled = false;
+        let grappled = false;
 
         object.set = function(value,update){
             if(grappled){return;}
@@ -71,13 +67,10 @@ this.dial_continuous_image = function(
             interactable = bool;
         };
 
-
-
-
     //interaction
-        var turningSpeed = radius*4;
+        const turningSpeed = radius*32;
         
-        handle.ondblclick = function(){
+        handle.attachCallback('ondblclick', function(){
             if(!interactable){return;}
             if(resetValue<0){return;}
             if(grappled){return;}
@@ -85,39 +78,36 @@ this.dial_continuous_image = function(
             set(resetValue); 
 
             if(object.onrelease != undefined){object.onrelease(value);}
-        };
-        handle.onwheel = function(x,y,event){
+        });
+        handle.attachCallback('onwheel', function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
             
-            var move = event.deltaY/100;
-            var globalScale = _canvas_.core.viewport.scale();
+            const move = event.wheelDelta/100;
+            const globalScale = _canvas_.core.viewport.scale();
             set( value - move/(10*globalScale) );
 
             if(object.onrelease != undefined){object.onrelease(value);}
-        };
-        handle.onmousedown = function(x,y,event){
+        });
+        handle.attachCallback('onmousedown', function(x,y,event){
             if(!interactable){return;}
-            var initialValue = value;
-            var initialY = event.Y;
+            const initialValue = value;
+            const initialY = event.Y;
 
             grappled = true;
             _canvas_.system.mouse.mouseInteractionHandler(
-                function(event){
-                    var value = initialValue;
-                    var numerator = event.Y - initialY;
-                    var divider = _canvas_.core.viewport.scale();
+                function(x,y,event){
+                    const value = initialValue;
+                    const numerator = event.Y - initialY;
+                    const divider = _canvas_.core.viewport.scale();
                     set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                 },
-                function(event){
+                function(x,y,event){
                     grappled = false;
                     if(object.onrelease != undefined){object.onrelease(value);}
                 }
             );
-        };
-
-
-
+        });
 
     //callbacks
         object.onchange = onchange; 

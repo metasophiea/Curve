@@ -33,7 +33,7 @@ Recently (24/4/2019) I finished my overhaul of the graphical backend of the proj
 ## The Future
 I'm currently working on a webWorker version of the rendering engine, which should relieve the main thread from having to handle both rendering _and_ the actual events of created systems. Things are going pretty well so far, and you can check out the progress over in the workshop. Compatibility isn't great (it seems that only Chrome supports the "OffscreenCanvas" object that's central to the whole thing working) though I'm feeling good about it being fixed in future versions of Firefox and other browsers..hopefully.
 
-This newer version does come with a number of changes that makes it noticeably different to the version which came before - aside from the webWorker of course - including lots more logging, an update to the compilation scripts a removal of some older code which was used by 'legacy' components, and a number of other smaller changes. All great stuff.
+This newer version does come with a number of changes that makes it noticeably different to the version which came before - aside from the webWorker of course - including lots more logging, an update to the compilation scripts, a removal of some older code which was used by 'legacy' components, and a number of other smaller changes. All great stuff.
 
 ## Interesting Links
 - [Dev Mode](https://curve.metasophiea.com?dev)

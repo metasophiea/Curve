@@ -1,4 +1,4 @@
-this.filterUnit = function(x,y,a){
+this.filterUnit = function(name,x,y,a){
     var state = {
         freqRange:{ low:0.1, high:20000, },
         graphDetail:3,
@@ -20,7 +20,8 @@ this.filterUnit = function(x,y,a){
         }
     };
     var design = {
-        name:'filterUnit',
+        name:name,
+        model:'filterUnit',
         category:'audioEffectUnits',
         collection:'alpha',
         x:x, y:y, angle:a,
@@ -32,7 +33,7 @@ this.filterUnit = function(x,y,a){
             {collection:'dynamic', type:'connectionNode_audio', name:'audioIn', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
             {collection:'dynamic', type:'connectionNode_audio', name:'audioOut', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
         
-            {collection:'display', type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
+            {collection:'display', type:'grapher', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15, static:true,
                 style:{
                     foregrounds:style.graph.foregroundlines, 
                     background_colour:style.graph.backgroundlines.colour, 
@@ -125,7 +126,7 @@ this.filterUnit = function(x,y,a){
             }
             function updateGraph(){
                 var temp = getFrequencyAndLocationArray();
-                object.elements.grapher_static.graph.draw( object.filterCircuit.measureFrequencyResponse_values(temp.frequency)[0], temp.location );
+                object.elements.grapher.graph.drawForeground( object.filterCircuit.measureFrequencyResponse_values(temp.frequency)[0], temp.location );
             };
         
         //wiring
@@ -138,9 +139,9 @@ this.filterUnit = function(x,y,a){
         var arrays = getFrequencyAndLocationArray();
         arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
         arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
-        object.elements.grapher_static.graph.viewbox({bottom:0, top:2, left:0, right:1});
-        object.elements.grapher_static.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
-        object.elements.grapher_static.graph.verticalMarkings({
+        object.elements.grapher.graph.viewbox({bottom:0, top:2, left:0, right:1});
+        object.elements.grapher.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
+        object.elements.grapher.graph.verticalMarkings({
             points:arrays.location,
             printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a :'').slice(0,arrays.frequency.length-1).concat(''), //only print the factors of 10, leaving everything else as an empty string
             textPosition:{x:-0.0025,y:1.99},
@@ -151,6 +152,7 @@ this.filterUnit = function(x,y,a){
         object.elements.dial_continuous.Q_dial.set(0);
         object.elements.dial_continuous.gain_dial.set(0.1);
         object.elements.dial_continuous.frequency_dial.set(0.5);
+        object.elements.grapher.graph.drawBackground();
         setTimeout(updateGraph,100);
 
     return object;
@@ -161,7 +163,7 @@ this.filterUnit.metadata = {
     helpURL:'https://curve.metasophiea.com/help/units/alpha/filterUnit/'
 };
 
-this.filterUnit_stereo = function(x,y,a){
+this.filterUnit_stereo = function(name,x,y,a){
     var state = {
         freqRange:{ low:0.1, high:20000, },
         graphDetail:3,
@@ -183,7 +185,8 @@ this.filterUnit_stereo = function(x,y,a){
         }
     };
     var design = {
-        name:'filterUnit_stereo',
+        name:name,
+        model:'filterUnit_stereo',
         category:'audioEffectUnits',
         collection:'alpha',
         x:x, y:y, angle:a,
@@ -197,7 +200,7 @@ this.filterUnit_stereo = function(x,y,a){
 
             {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
         
-            {collection:'display', type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
+            {collection:'display', type:'grapher', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15, static:true,
                 style:{
                     foregrounds:style.graph.foregroundlines, 
                     background_colour:style.graph.backgroundlines.colour, 
@@ -294,7 +297,7 @@ this.filterUnit_stereo = function(x,y,a){
             }
             function updateGraph(){
                 var temp = getFrequencyAndLocationArray();
-                object.elements.grapher_static.graph.draw( object.filterCircuit_R.measureFrequencyResponse_values(temp.frequency)[0], temp.location );
+                object.elements.grapher.graph.draw( object.filterCircuit_R.measureFrequencyResponse_values(temp.frequency)[0], temp.location );
             };
         
         //wiring
@@ -323,9 +326,9 @@ this.filterUnit_stereo = function(x,y,a){
         var arrays = getFrequencyAndLocationArray();
         arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
         arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
-        object.elements.grapher_static.graph.viewbox({bottom:0, top:2, left:0, right:1});
-        object.elements.grapher_static.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
-        object.elements.grapher_static.graph.verticalMarkings({
+        object.elements.grapher.graph.viewbox({bottom:0, top:2, left:0, right:1});
+        object.elements.grapher.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
+        object.elements.grapher.graph.verticalMarkings({
             points:arrays.location,
             printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a :'').slice(0,arrays.frequency.length-1).concat(''), //only print the factors of 10, leaving everything else as an empty string
             textPosition:{x:-0.0025,y:1.99},

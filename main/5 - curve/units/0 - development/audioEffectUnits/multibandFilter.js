@@ -1,4 +1,4 @@
-this.multibandFilter = function(x,y,a){
+this.multibandFilter = function(name,x,y,a){
     var vars = {
         allowUpdate:false,
         freqRange:{ low: 0.1, high: 20000 },
@@ -35,7 +35,7 @@ this.multibandFilter = function(x,y,a){
             {r:255/255,g:255/255,b:255/255,a:0.5},
         ],
 
-        slide:{
+        slide_continuous:{
             handle:{r:240/255,g:240/255,b:240/255,a:1},
             backing:{r:200/255,g:200/255,b:200/255,a:0.5},
             slot:{r:50/255,g:50/255,b:50/255,a:1},
@@ -67,7 +67,8 @@ this.multibandFilter = function(x,y,a){
     var width = 195;
     var height = 255;
     var design = {
-        name: 'multibandFilter',
+        name:name,
+        model: 'multibandFilter',
         category: 'audioEffectUnits',
         collection: 'alpha',
         x:x, y:y, angle:a,
@@ -92,7 +93,7 @@ this.multibandFilter = function(x,y,a){
             {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_0', data:{x:-35, y:15, width:10, height:20, isAudioOutput:true}},
             {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_1', data:{x:-35, y:40, width:10, height:20, isAudioOutput:true}},
             {collection:'control', type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, radius:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
-            {collection:'display', type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:15 }},
+            {collection:'display', type:'grapher', name:'graph', data:{x:10, y:10, width:175, height:75, static:true, style:style.graph, resolution:15 }},
         ]
     };
     //dynamic design
@@ -101,13 +102,13 @@ this.multibandFilter = function(x,y,a){
             //channel strip backing
                 {collection:'basic', type:'rectangle', name:'backing_'+a, data:{ x:13.75+a*22, y:87.5, width:12.5, height:157.5, colour:style.panels[a] }},
             //gain
-                {collection:'control', type:'slide', name:'gainSlide_'+a, data:{ x:15+a*22, y:90, width: 10, height: 80, angle:0, handleHeight:0.05, resetValue:0.5, style:style.slide }},
+                {collection:'control', type:'slide_continuous', name:'gain_slide_continuous_'+a, data:{ x:15+a*22, y:90, width: 10, height: 80, angle:0, handleHeight:0.05, resetValue:0.5, style:style.slide_continuous }},
             //Q
                 {collection:'control', type:'dial_continuous', name:'qDial_'+a, data:{ x:20+a*22, y:180, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
             //frequency
                 {collection:'control', type:'dial_continuous', name:'frequencyDial_'+a, data:{ x:20+a*22, y:200, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
             //frequency readout
-                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'frequencyReadout_'+a, data:{ x:25+a*22, y:212.5, width:30, height:10, count:8, angle:Math.PI/2, resolution:10 }},
+                {collection:'display', type:'readout_sixteenSegmentDisplay', name:'frequencyReadout_'+a, data:{ x:25+a*22, y:212.5, width:30, height:10, static:true, count:8, angle:Math.PI/2, resolution:10 }},
         );
     }
 
@@ -156,10 +157,10 @@ this.multibandFilter = function(x,y,a){
             var frequencyAndLocationArray = getFrequencyAndLocationArray();
                 if(specificBand == undefined){
                     var result = object.filterCircuit_0.measureFrequencyResponse(undefined, frequencyAndLocationArray.frequency);
-                    for(var a = 0; a < vars.channelCount; a++){ object.elements.grapher_static.graph.draw( result[a][0], frequencyAndLocationArray.location, a ); }
+                    for(var a = 0; a < vars.channelCount; a++){ object.elements.grapher.graph.draw( result[a][0], frequencyAndLocationArray.location, a ); }
                 }else{
                     var result = object.filterCircuit_0.measureFrequencyResponse(specificBand, frequencyAndLocationArray.frequency);
-                    object.elements.grapher_static.graph.draw( result[0], frequencyAndLocationArray.location, specificBand);
+                    object.elements.grapher.graph.draw( result[0], frequencyAndLocationArray.location, specificBand);
                 }
         }
 
@@ -172,7 +173,7 @@ this.multibandFilter = function(x,y,a){
         };
 
         for(var a = 0; a < vars.channelCount; a++){
-            object.elements.slide['gainSlide_'+a].onchange = function(a){
+            object.elements.slide_continuous['gain_slide_continuous_'+a].onchange = function(a){
                 return function(value){
                     vars.gain[a] = (1-value)*2;
                     object.filterCircuit_0.gain(a,vars.gain[a]);
@@ -191,8 +192,8 @@ this.multibandFilter = function(x,y,a){
             object.elements.dial_continuous['frequencyDial_'+a].onchange = function(a){
                 return function(value){
                     vars.frequency[a] = value;
-                    object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].text( _canvas_.library.misc.padString( _canvas_.library.math.curvePoint.exponential(value,0,20000,vars.curvePointExponentialSharpness).toFixed(2), 8) );
-                    object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].print('smart');
+                    object.elements.readout_sixteenSegmentDisplay['frequencyReadout_'+a].text( _canvas_.library.misc.padString( _canvas_.library.math.curvePoint.exponential(value,0,20000,vars.curvePointExponentialSharpness).toFixed(2), 8) );
+                    object.elements.readout_sixteenSegmentDisplay['frequencyReadout_'+a].print('smart');
                     object.filterCircuit_0.frequency(a, _canvas_.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
                     object.filterCircuit_1.frequency(a, _canvas_.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
                     updateGraph(a);
@@ -202,7 +203,7 @@ this.multibandFilter = function(x,y,a){
 
     //interface
         object.i = {
-            gain:function(band,value){ if(value == undefined){return object.elements.slide['gainSlide_'+band].get(value);} object.elements.slide['gainSlide_'+band].set(value); },
+            gain:function(band,value){ if(value == undefined){return object.elements.slide_continuous['gain_slide_continuous_'+band].get(value);} object.elements.slide_continuous['gain_slide_continuous_'+band].set(value); },
             Q:function(band,value){ if(value == undefined){return object.elements.dial_continuous['qDial_'+band].get(value);} object.elements.dial_continuous['qDial_'+band].set(value); },
             frequency:function(band,value){ if(value == undefined){return object.elements.dial_continuous['frequencyDial_'+band].get(value);} object.elements.dial_continuous['frequencyDial_'+band].set(value); },
             reset:function(channel){
@@ -213,7 +214,7 @@ this.multibandFilter = function(x,y,a){
                     return;
                 }
                 for(var a = 0; a < vars.channelCount; a++){
-                    object.elements.slide['gainSlide_'+a].set( vars.defaultValues.gain[a] );
+                    object.elements.slide_continuous['gain_slide_continuous_'+a].set( vars.defaultValues.gain[a] );
                     object.elements.dial_continuous['qDial_'+a].set( vars.defaultValues.Q[a] );
                     object.elements.dial_continuous['frequencyDial_'+a].set( vars.defaultValues.frequency[a] );
                 }
@@ -225,9 +226,9 @@ this.multibandFilter = function(x,y,a){
             var arrays = getFrequencyAndLocationArray();
             arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,vars.graphDetail)==0;});
             arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,vars.graphDetail)==0;});
-            object.elements.grapher_static.graph.viewbox({bottom: 0, top: 2, left: 0, right: 1});
-            object.elements.grapher_static.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
-            object.elements.grapher_static.graph.verticalMarkings({
+            object.elements.grapher.graph.viewbox({bottom: 0, top: 2, left: 0, right: 1});
+            object.elements.grapher.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
+            object.elements.grapher.graph.verticalMarkings({
                 points:arrays.location,
                 printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a : '').slice(0,arrays.frequency.length-1).concat(''), //only print the factoirs of 10, leaving everything else as an empty string
                 textPosition:{x:-0.0025,y:1.99},
@@ -236,9 +237,11 @@ this.multibandFilter = function(x,y,a){
 
         //setup default settings, allow graphical updates to occur and update graph
             object.i.reset();
-            setTimeout(function(){object.i.reset();},1); 
-            vars.allowUpdate = true;
-            updateGraph();
+            setTimeout(function(){
+                object.i.reset();
+                vars.allowUpdate = true;
+                updateGraph();
+            },10); 
     
     return object;
 };

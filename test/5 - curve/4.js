@@ -1,39 +1,35 @@
-_canvas_.control.scene.addUnit(10,-135,0,'distortion','alpha');
-_canvas_.control.scene.addUnit(-145,-170,0,'reverb','alpha');
-_canvas_.control.scene.addUnit(-180,240,0,'filter','alpha');
+_canvas_.curve.go.add( function(){
+    _canvas_.control.scene.addUnit(10, 10,0,'button_panel_1','curvetech');
+    _canvas_.control.scene.addUnit(35, 10,0,'button_panel_2','curvetech');
+    _canvas_.control.scene.addUnit(70, 10,0,'button_panel_4','curvetech');
+    _canvas_.control.scene.addUnit(125, 10,0,'button_panel_8','curvetech');
+    _canvas_.control.scene.addUnit(10, 45,0,'light_panel_2','curvetech');
+    _canvas_.control.scene.addUnit(45, 45,0,'light_panel_4','curvetech');
+    _canvas_.control.scene.addUnit(105, 45,0,'light_panel_8','curvetech');
+    _canvas_.control.scene.addUnit(10, 70,0,'multi_option_signal_sender_2','curvetech');
+    _canvas_.control.scene.addUnit(50, 70,0,'multi_option_signal_sender_4','curvetech');
+    _canvas_.control.scene.addUnit(95, 70,0,'multi_option_signal_sender_8','curvetech');
 
-_canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','alpha');
-_canvas_.control.scene.addUnit(175,-95,0,'audio_in','alpha');
-_canvas_.control.scene.addUnit(140,-115,0,'signal_switch','alpha');
-_canvas_.control.scene.addUnit(-235,240,0,'voltage_dial','alpha');
+    _canvas_.control.scene.addUnit(135, 70,0,'REP','curvetech');
+    _canvas_.control.scene.addUnit(150, 70,0,'DUP','curvetech');
+    _canvas_.control.scene.addUnit(135, 90,0,'NOT','curvetech');
+    _canvas_.control.scene.addUnit(165, 70,0,'AND','curvetech');
+    _canvas_.control.scene.addUnit(180, 70,0,'OR','curvetech');
+    _canvas_.control.scene.addUnit(195, 70,0,'XOR','curvetech');
+    _canvas_.control.scene.addUnit(165, 90,0,'NAND','curvetech');
+    _canvas_.control.scene.addUnit(180, 90,0,'NOR','curvetech');
+    _canvas_.control.scene.addUnit(195, 90,0,'XNOR','curvetech');
 
-_canvas_.control.scene.addUnit(500,30,0,'signal_duplicator','alpha');
-_canvas_.control.scene.addUnit(385,30,0,'voltage_duplicator','alpha');
-_canvas_.control.scene.addUnit(435,-35,0,'data_duplicator','alpha');
-_canvas_.control.scene.addUnit(360,-90,0,'audio_duplicator','alpha');
-_canvas_.control.scene.addUnit(445,30,0,'signal_combiner','alpha');
-_canvas_.control.scene.addUnit(330,30,0,'voltage_combiner','alpha');
-_canvas_.control.scene.addUnit(370,-35,0,'data_combiner','alpha');
-_canvas_.control.scene.addUnit(-255,-60,0,'eightTrackMixer','alpha');
-
-_canvas_.control.scene.addUnit(10,-65,0,'amplifier','alpha');
-_canvas_.control.scene.addUnit(370,225,0,'audio_recorder','alpha');
-_canvas_.control.scene.addUnit(-280,85,0,'data_readout','alpha');
-_canvas_.control.scene.addUnit(-230,-110,0,'signal_readout','alpha');
-_canvas_.control.scene.addUnit(85,290,0,'voltage_readout','alpha');
-_canvas_.control.scene.addUnit(165,225,0,'audio_scope','alpha');
-
-_canvas_.control.scene.addUnit(370,275,0,'pulse_generator','alpha');
-_canvas_.control.scene.addUnit(-200,290,0,'eightStepSequencer','alpha');
-_canvas_.control.scene.addUnit(-70,85,0,'launchpad','alpha');
-
-_canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer','alpha');
-_canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','alpha');
-
-// _canvas_.control.scene.addUnit(10,10,0,'ruler','alpha');
+    _canvas_.control.scene.addUnit(10, 110,0,'adder','curvetech');
+    _canvas_.control.scene.addUnit(35, 110,0,'multiplexer_2','curvetech');
+    _canvas_.control.scene.addUnit(65, 110,0,'multiplexer_4','curvetech');
+    _canvas_.control.scene.addUnit(95, 110,0,'multiplexer_8','curvetech');
+    _canvas_.control.scene.addUnit(125, 110,0,'demultiplexer_2','curvetech');
+    _canvas_.control.scene.addUnit(155, 110,0,'demultiplexer_4','curvetech');
+    _canvas_.control.scene.addUnit(185, 110,0,'demultiplexer_8','curvetech');
+    _canvas_.control.scene.addUnit(215, 110,0,'single_bit_memory','curvetech');
 
 
-
-
-// _canvas_.control.viewport.scale(6);
-_canvas_.control.viewport.position(302,208);
+    _canvas_.control.viewport.scale(6);
+    // _canvas_.control.viewport.position(515, -490);
+});

@@ -3,7 +3,7 @@ this.channelMultiplier = function(
 ){
     //flow
         //flow chain
-            var flow = {
+            const flow = {
                 in: {},
                 outs:[],
                 out_0: {}, out_1: {},
@@ -15,8 +15,8 @@ this.channelMultiplier = function(
             _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
 
         //outs
-            for(var a = 0; a < outputCount; a++){
-                var temp = { gain:0.5, node:context.createGain() };
+            for(let a = 0; a < outputCount; a++){
+                const temp = { gain:0.5, node:context.createGain() };
                 _canvas_.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
                 flow.outs.push(temp);
                 flow.in.node.connect(temp.node);

@@ -1,12 +1,12 @@
-this.audio_file_player = function(x,y,angle){
+this.audio_file_player = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'audio_file_player/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:1025, height:305 },
                     design: { width:16.75, height:4.75 },
                 };
@@ -24,8 +24,9 @@ this.audio_file_player = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'audio_file_player',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'audio_file_player',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
@@ -66,14 +67,14 @@ this.audio_file_player = function(x,y,angle){
                     x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
                 }},
 
-                {collection:'control', type:'dial_colourWithIndent_continuous', name:'dial_playbackSpeed',data:{
+                {collection:'control', type:'dial_2_continuous', name:'dial_playbackSpeed',data:{
                     x:125, y:20, radius:67.5/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_playbackSpeed,
                 }},
-                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
-                    x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, count:8
+                {collection:'display', type:'readout_sixteenSegmentDisplay', name:'time', data:{
+                    x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, static:true, count:8, resolution:5,
                 }},
-                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{
-                    x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, count:14
+                {collection:'display', type:'readout_sixteenSegmentDisplay', name:'trackNameReadout', data:{
+                    x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, static:true, count:14, resolution:5,
                 }},
                 {collection:'control', type:'button_image', name:'button_play', data:{
                     x:2.5, y:35, width:10, height:10, hoverable:false, 
@@ -110,13 +111,13 @@ this.audio_file_player = function(x,y,angle){
         });
     
     //circuitry
-        var playerCircuit = new _canvas_.interface.circuit.player2(_canvas_.library.audio.context);
+        const playerCircuit = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
         
         function loadProcess(data){
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( playerCircuit.waveformSegment() );
         
-            object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
-            object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
+            object.elements.readout_sixteenSegmentDisplay.trackNameReadout.text(data.name);
+            object.elements.readout_sixteenSegmentDisplay.trackNameReadout.print('smart');
         }
         function refresh(){
             //check if there's a track at all
@@ -124,26 +125,26 @@ this.audio_file_player = function(x,y,angle){
 
             //time readout
                 if(playerCircuit.concurrentPlayCountLimit() == 1){
-                    var tmp = playerCircuit.currentTime(0);
+                    let tmp = playerCircuit.currentTime(0);
                     if(tmp == -1){tmp = 0;}
-                    var time = _canvas_.library.math.seconds2time( Math.round(tmp));
+                    const time = _canvas_.library.math.seconds2time( Math.round(tmp));
 
-                    object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                    object.elements.readout_sixteenSegmentDisplay.time.text(
                         _canvas_.library.misc.padString(time.h,2,'0')+':'+
                         _canvas_.library.misc.padString(time.m,2,'0')+':'+
                         _canvas_.library.misc.padString(time.s,2,'0')
                     );
-                    object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                    object.elements.readout_sixteenSegmentDisplay.time.print();
                 }else{
-                    object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                    object.elements.readout_sixteenSegmentDisplay.time.text(
                         _canvas_.library.misc.padString(playerCircuit.currentTime().length,8,' ')
                     );
-                    object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                    object.elements.readout_sixteenSegmentDisplay.time.print();
                 }
             
             //waveport
-                var progressList = playerCircuit.progress();
-                var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
+                const progressList = playerCircuit.progress();
+                let needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
 
                 //adjust needles to match player
                     progressList.forEach((needlePosition,index) => {
@@ -153,7 +154,7 @@ this.audio_file_player = function(x,y,angle){
                 //remove unneeded needles
                     while(Object.keys(needleList).length > progressList.length){
                         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select((Object.keys(needleList).length-1),-1,false);
-                        var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
+                        needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
                     }
         }
         setInterval(refresh,1000/30);
@@ -170,7 +171,7 @@ this.audio_file_player = function(x,y,angle){
                     setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
             };
             object.elements.button_image.button_stop.onpress = function(){ playerCircuit.stop(); };
-            object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ playerCircuit.rate( 2*data ); };
+            object.elements.dial_2_continuous.dial_playbackSpeed.onchange = function(data){ playerCircuit.rate( 2*data ); };
             object.elements.checkbox_image.checkbox_loop.onchange = function(bool){ return playerCircuit.loop(bool); };
             object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return playerCircuit.concurrentPlayCountLimit(value ? -1 : 1); };
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
@@ -182,46 +183,46 @@ this.audio_file_player = function(x,y,angle){
                     }
                 }
 
-                var area = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                const area = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
                 if(needle == 'selection_A'){ area.A = value; }
                 if(needle == 'selection_B'){ area.B = value; }
 
                 object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(area.A,area.B,false);
                 if(!object.elements.grapher_waveWorkspace.grapher_waveWorkspace.areaIsActive()){ area.A = 0; area.B = 1; }
-                if(area.A > area.B){ var tmp = area.A; area.A = area.B; area.B = tmp; } //keepin' things straight
+                if(area.A > area.B){ const tmp = area.A; area.A = area.B; area.B = tmp; } //keepin' things straight
                 return playerCircuit.area(area.A,area.B);
             };
         //io
             playerCircuit.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
             playerCircuit.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
             object.io.signal.io_play.onchange = function(value){
-                var part = object.elements.button_image.button_play;
+                const part = object.elements.button_image.button_play;
                 value ? part.press() : part.release();
             };
             object.io.signal.io_stop.onchange = function(value){
-                var part = object.elements.button_image.button_stop;
+                const part = object.elements.button_image.button_stop;
                 value ? part.press() : part.release();
             };
             object.io.signal.io_singleOrInfini.onchange = function(value){
                 if(!value){return;}
-                var part = object.elements.checkbox_image.checkbox_singleOrInfini;
+                const part = object.elements.checkbox_image.checkbox_singleOrInfini;
                 part.set(!part.get());
             };
             object.io.signal.io_loop.onchange = function(value){
                 if(!value){return;}
-                var part = object.elements.checkbox_image.checkbox_loop;
+                const part = object.elements.checkbox_image.checkbox_loop;
                 part.set(!part.get());
             };
             object.io.voltage.io_playbackSpeed.onchange = function(value){
-                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
+                object.elements.dial_2_continuous.dial_playbackSpeed.set(value);
             };
             object.io.voltage.io_waveworkspace_startPosition.onchange = function(value){
-                var current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().B;
+                vconstcurrent = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().B;
                 if(current == undefined){current = 1;}
                 object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(value,current);
             };
             object.io.voltage.io_waveworkspace_endPosition.onchange = function(value){
-                var current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().A;
+                let current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().A;
                 if(current == undefined){current = 0;}
                 object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(current,value);
             };
@@ -248,10 +249,10 @@ this.audio_file_player = function(x,y,angle){
                 object.elements.checkbox_image.checkbox_loop.set(bool);
             },
             rate:function(value){
-                if(value == undefined){ return object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(); }
-                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
+                if(value == undefined){ return object.elements.dial_2_continuous.dial_playbackSpeed.get(); }
+                object.elements.dial_2_continuous.dial_playbackSpeed.set(value);
             },
-            jumpTo:function(needle,position){ playerCircuit.jumpTo(needle,position); },
+            jumpTo:function(needle,position){ playerCircuit.jumpTo(position,needle); },
             concurrentPlayCountLimit:function(value){ return playerCircuit.concurrentPlayCountLimit(value); },
         };
 
@@ -259,7 +260,7 @@ this.audio_file_player = function(x,y,angle){
         object.exportData = function(){
             return{
                 track: playerCircuit.unloadRaw(),
-                rate: object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(),
+                rate: object.elements.dial_2_continuous.dial_playbackSpeed.get(),
                 loopActive: object.elements.checkbox_image.checkbox_loop.get(), 
                 selectedArea: object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(),
                 singleOrInfini: object.elements.checkbox_image.checkbox_singleOrInfini.get(),
@@ -267,7 +268,7 @@ this.audio_file_player = function(x,y,angle){
         };
         object.importData = function(data){
             object.i.loadRaw(data.track);
-            object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(data.rate);
+            object.elements.dial_2_continuous.dial_playbackSpeed.set(data.rate);
             object.elements.checkbox_image.checkbox_loop.set(data.loopActive);
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(data.selectedArea.A,data.selectedArea.B);
             object.elements.checkbox_image.checkbox_singleOrInfini.set(data.singleOrInfini);

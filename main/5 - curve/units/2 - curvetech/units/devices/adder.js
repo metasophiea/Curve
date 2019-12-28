@@ -1,12 +1,12 @@
-this.adder = function(x,y,angle){
+this.adder = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'adder/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = {
+                const div = 10;
+                const measurement = {
                     file: { width:150, height:200 },
                     design: { width:1.5, height:2 },
                 };
@@ -19,8 +19,9 @@ this.adder = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'adder',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'adder',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -51,9 +52,9 @@ this.adder = function(x,y,angle){
         });
 
     //circuitry
-        var currentInputValues = {in_1:false, in_2:false, carry_in:false};
+        const currentInputValues = {in_1:false, in_2:false, carry_in:false};
         function update(){
-            var v = currentInputValues;
+            const v = currentInputValues;
             object.io.signal.out.set( v.in_1 != v.in_2 != v.carry_in );
             object.io.signal.carry_out.set( (v.in_1 && v.in_2) || (v.carry_in && v.in_1) || (v.carry_in && v.in_2) );
         };

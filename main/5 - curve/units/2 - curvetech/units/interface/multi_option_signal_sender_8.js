@@ -1,12 +1,12 @@
-this.multi_option_signal_sender_8 = function(x,y,angle){
+this.multi_option_signal_sender_8 = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'multi_option_signal_sender/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = { 
+                const div = 10;
+                const measurement = { 
                     file: { width:300, height:300 },
                     design: { width:3, height:3 },
                 };
@@ -19,8 +19,9 @@ this.multi_option_signal_sender_8 = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'multi_option_signal_sender_8',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'multi_option_signal_sender_8',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -56,18 +57,18 @@ this.multi_option_signal_sender_8 = function(x,y,angle){
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_backing.png' }
                 },
-                {collection:'control', type:'dial_colourWithIndent_discrete',name:'detune_octave',data:{
+                {collection:'control', type:'dial_2_discrete',name:'detune_octave',data:{
                     x:15, y:15, radius:17.5/2, startAngle:-Math.PI*(1+3/8), maxAngle:Math.PI*(1+3/4), arcDistance:1.2, optionCount:8, style:{handle:style.primeColour.lightGrey},
                 }},
             ]
         });
 
     //circuitry
-        var state = {position:0};
+        const state = {position:0};
     
     //wiring
         //hid
-            object.elements.dial_colourWithIndent_discrete.detune_octave.onchange = function(value){
+            object.elements.dial_2_discrete.detune_octave.onchange = function(value){
                 object.io.signal['out_'+state.position].set(false);
                 state.position = value;
                 object.io.signal['out_'+state.position].set(true);
@@ -77,13 +78,13 @@ this.multi_option_signal_sender_8 = function(x,y,angle){
             object.i = {
                 position:function(value){
                     if(value == undefined){return state.position;}
-                    object.elements.dial_colourWithIndent_discrete.detune_octave.set(value);
+                    object.elements.dial_2_discrete.detune_octave.set(value);
                 }
             };
 
     //import/export
         object.importData = function(data){
-            object.elements.dial_colourWithIndent_discrete.detune_octave.set(data.position);
+            object.elements.dial_2_discrete.detune_octave.set(data.position);
         };
         object.exportData = function(){
             return { position: state.position };

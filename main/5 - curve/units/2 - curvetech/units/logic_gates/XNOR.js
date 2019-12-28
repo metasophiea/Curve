@@ -1,12 +1,12 @@
-this.XNOR = function(x,y,angle){
+this.XNOR = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'logic_gates/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = {
+                const div = 10;
+                const measurement = {
                     file: { width:100, height:100 },
                     design: { width:1, height:1 },
                 };
@@ -19,8 +19,9 @@ this.XNOR = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'XNOR',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'XNOR',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -45,8 +46,8 @@ this.XNOR = function(x,y,angle){
         });
 
     //circuitry
-        var currentInputValues = [false,false];
-        var delay = 1000;
+        const currentInputValues = [false,false];
+        let delay = 1;
         function updateOutput(A,B){
             if(delay > 0){ 
                 setTimeout(function(){

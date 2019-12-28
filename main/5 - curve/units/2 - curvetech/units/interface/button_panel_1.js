@@ -1,12 +1,12 @@
-this.button_panel_1 = function(x,y,angle){
+this.button_panel_1 = function(name,x,y,angle){
     //unitStyle
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
 
             //calculation of measurements
-                var div = 10;
-                var measurement = { 
+                const div = 10;
+                const measurement = { 
                     file: { width:200, height:300 },
                     design: { width:2, height:3 },
                 };
@@ -19,8 +19,9 @@ this.button_panel_1 = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'button_panel_1',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'button_panel_1',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                             y:0                             },
@@ -48,17 +49,17 @@ this.button_panel_1 = function(x,y,angle){
             object.elements.button_image.button.onpress = function(){ object.io.signal.out.set(true); };
             object.elements.button_image.button.onrelease = function(){ object.io.signal.out.set(false); };
         //keycapture
-            object.elements.image.backing.glyphs = [ '1' ]; 
-            object.elements.image.backing.onkeydown = function(x,y,event){
-                if( this.glyphs.includes(event.key) ){
+        const glyphs = [ '1' ]; 
+            object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
+                if( glyphs.includes(event.key) ){
                     object.elements.button_image.button.press();
                 }
-            };
-            object.elements.image.backing.onkeyup = function(x,y,event){
-                if( this.glyphs.includes(event.key) ){
+            });
+            object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
+                if( glyphs.includes(event.key) ){
                     object.elements.button_image.button.release();
                 }
-            };
+            });
 
     //interface
         object.i = {

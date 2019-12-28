@@ -1,12 +1,12 @@
-this.signal_readout = function(x,y,angle){
+this.signal_readout = function(name,x,y,angle){
     //style data
-        var unitStyle = new function(){
+        const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'signal_readout/';
 
             //calculation of measurements
-                var div = 6;
-                var measurement = { 
+                const div = 6;
+                const measurement = { 
                     file: { width:320, height:290 },
                     design: { width:5, height:4.5 },
                 };
@@ -19,8 +19,9 @@ this.signal_readout = function(x,y,angle){
         };
 
     //main object creation
-        var object = _canvas_.interface.unit.builder({
-            name:'signal_readout',
+        const object = _canvas_.interface.unit.builder({
+            name:name,
+            model:'signal_readout',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                              y:0                                               },
