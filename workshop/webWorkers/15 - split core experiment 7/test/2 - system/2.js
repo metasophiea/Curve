@@ -65,11 +65,13 @@ _canvas_.system.go.add( function(){
     setTimeout(_canvas_.core.render.frame,500);
     setTimeout(() => {_canvas_.core.arrangement.printTree('address');},500);
 
+
+
     setTimeout(() => {
-        _canvas_.system.pane.getMiddlegroundPane(_canvas_.system.pane.b).then(result => { if(result){ console.log(result.getName()); } });
-        _canvas_.system.pane.getMiddlegroundPane(testRectangle_middleground_back).then(result => { if(result){ console.log(result.getName()); } });
-        _canvas_.system.pane.getMiddlegroundPane(testRectangle_middleground_middle).then(result => { if(result){ console.log(result.getName()); } });
-        _canvas_.system.pane.getMiddlegroundPane(testRectangle_middleground_front).then(result => { if(result){ console.log(result.getName()); } });
-        _canvas_.system.pane.getMiddlegroundPane(_canvas_.system.pane.f).then(result => { if(result){ console.log(result.getName()); } });
+        console.log( _canvas_.system.pane.getMiddlegroundPane(_canvas_.system.pane.b) );
+        console.log( _canvas_.system.pane.getMiddlegroundPane(testRectangle_middleground_back) );
+        console.log( _canvas_.system.pane.getMiddlegroundPane(testRectangle_middleground_middle) );
+        console.log( _canvas_.system.pane.getMiddlegroundPane(testRectangle_middleground_front) );
+        console.log( _canvas_.system.pane.getMiddlegroundPane(_canvas_.system.pane.f) );
     },1000);
 } );

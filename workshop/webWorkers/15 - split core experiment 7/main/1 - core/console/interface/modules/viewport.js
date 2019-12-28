@@ -3,12 +3,17 @@ this.viewport = new function(){
         position:{x:0,y:0},
         scale:1,
         angle:0,
+        stopMouseScroll:false,
+    };
+    const mouseData = { 
+        x:undefined, 
+        y:undefined, 
     };
 
     //adapter
         this.adapter = new function(){
             this.windowPoint2workspacePoint = function(x,y){
-                dev.log.interface('.viewport.adapter.windowPoint2workspacePoint('+x+','+y+')'); //#development
+                dev.log.interface('.viewport.adapter.windowPoint2workspacePoint(',x,y); //#development
                 const position = cachedValues.position;
                 const scale = cachedValues.scale;
                 const angle = cachedValues.angle;
@@ -41,15 +46,16 @@ this.viewport = new function(){
     this.position = function(x,y){
         if(x==undefined || y==undefined){ return cachedValues.position; }
         cachedValues.position = {x:x,y:y};
-        dev.log.interface('.viewport.position('+x+','+y+')'); //#development
+        dev.log.interface('.viewport.position(',x,y); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('viewport.position',[x,y],resolve);
         });
     };
     this.scale = function(s){
         if(s==undefined){ return cachedValues.scale; }
+        if(s == 0){console.error('cannot set scale to zero');}
         cachedValues.scale = s;
-        dev.log.interface('.viewport.scale('+s+')'); //#development
+        dev.log.interface('.viewport.scale(',s); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('viewport.scale',[s],resolve);
         });
@@ -57,28 +63,29 @@ this.viewport = new function(){
     this.angle = function(a){
         if(a==undefined){ return cachedValues.angle; }
         cachedValues.angle = a;
-        dev.log.interface('.viewport.angle('+a+')'); //#development
+        dev.log.interface('.viewport.angle(',a); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('viewport.angle',[a],resolve);
         });
     };
     this.getElementsUnderPoint = function(x,y){
-        dev.log.interface('.viewport.getElementsUnderPoint('+x+','+y+')'); //#development
+        dev.log.interface('.viewport.getElementsUnderPoint(',x,y); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
         });
     };
     this.getElementsUnderArea = function(points){
-        dev.log.interface('.viewport.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
+        dev.log.interface('.viewport.getElementsUnderArea(',points); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
         });
     };
     this.getMousePosition = function(x,y){
-        dev.log.interface('.viewport.getMousePosition('+x+','+y+')'); //#development
-        return new Promise((resolve, reject) => {
-            communicationModule.run('viewport.getMousePosition',[x,y],resolve);
-        });
+        dev.log.interface('.viewport.getMousePosition(',x,y); //#development
+        if(x == undefined || y == undefined){ return mouseData; }
+        mouseData.x = x;
+        mouseData.y = y;
+        communicationModule.run('viewport.getMousePosition',[x,y]);
     };
     this.getBoundingBox = function(){
         dev.log.interface('.viewport.getBoundingBox()'); //#development
@@ -87,10 +94,10 @@ this.viewport = new function(){
         });
     };
     this.stopMouseScroll = function(bool){
-        dev.log.interface('.viewport.stopMouseScroll('+bool+')'); //#development
-        return new Promise((resolve, reject) => {
-            communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
-        });
+        if(bool==undefined){ return cachedValues.stopMouseScroll; }
+        cachedValues.stopMouseScroll = bool;
+        dev.log.interface('.viewport.stopMouseScroll(',bool); //#development
+        communicationModule.run('viewport.stopMouseScroll',[bool]);
     };
 
     this.cursor = function(type){

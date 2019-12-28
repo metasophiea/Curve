@@ -8,14 +8,14 @@ this.cable = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name);
+            const object = interfacePart.builder('basic','group',name);
         //cable shape
-            var path = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+            const path = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
             object.append(path);
     
     //controls
-        object.activate = function(){ path.colour = glowStyle; };
-        object.deactivate = function(){ path.colour = dimStyle; };
+        object.activate = function(){ path.colour(glowStyle); };
+        object.deactivate = function(){ path.colour(dimStyle); };
         object.draw = function(new_x1,new_y1,new_x2,new_y2){
             x1 = (new_x1!=undefined ? new_x1 : x1); 
             y1 = (new_y1!=undefined ? new_y1 : y1);

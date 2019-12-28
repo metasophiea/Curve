@@ -89,7 +89,7 @@ this.button_ = function(
             if(hoverable){ object.state.hovering = true; }
             object.activateGraphicalState(object.state);
             if(object.onenter){object.onenter(event);}
-            if(event.buttons == 1){subject.cover.onmousedown(x,y,event);} 
+            if(event.buttons == 1){subject.cover.getCallback('onmousedown')(x,y,event);} 
         });
         subject.cover.attachCallback('onmouseleaveelement',(x,y,event) => {
             if(hoverable){ object.state.hovering = false; }

@@ -169,17 +169,15 @@ this.grapher = function(
                                     );
                                 }
                             }else if( layer.y.length == layer.x.length ){ //straight print
-                                for(let a = 0; a < layer.y.length; a++){ 
-                                    frontingCanvas._.moveTo( 
-                                        frontingCanvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
-                                        frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
+                                frontingCanvas._.moveTo( 
+                                    frontingCanvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
+                                    frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
+                                );
+                                for(let a = 1; a < layer.y.length; a++){ 
+                                    frontingCanvas._.lineTo(
+                                        frontingCanvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
+                                        frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
                                     );
-                                    for(let a = 1; a < layer.y.length; a++){ 
-                                        frontingCanvas._.lineTo(
-                                            frontingCanvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
-                                            frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
-                                        );
-                                    }
                                 }
                             }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
     

@@ -1,5 +1,5 @@
 this.functionListRunner = function(list,activeKeys){
-    dev.log.structure('.functionListRunner('+JSON.stringify(list)+','+JSON.stringify(activeKeys)+')'); //#development
+    dev.log.structure('.functionListRunner(',list,activeKeys); //#development
     dev.count('.structure.functionListRunner'); //#development
 
     //function builder for working with the 'functionList' format
@@ -29,7 +29,7 @@ this.functionListRunner = function(list,activeKeys){
 };
 
 this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
-    dev.log.structure('.signalRegistry('+rightLimit+','+bottomLimit+','+signalLengthLimit+')'); //#development
+    dev.log.structure('.signalRegistry(',rightLimit,bottomLimit,signalLengthLimit); //#development
     dev.count('.structure.signalRegistry'); //#development
 
     var signals = [];
@@ -93,11 +93,11 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         ));
     };
     this.import = function(data){
-        dev.log.structure('.signalRegistry.import('+JSON.stringify(data)+')'); //#development
+        dev.log.structure('.signalRegistry.import(',data); //#development
         dev.count('.structure.signalRegistry.import'); //#development
     
-        signals =             JSON.parse(JSON.stringify(data.signals));
-        selectedSignals =     JSON.parse(JSON.stringify(data.selectedSignals));
+        signals =           JSON.parse(JSON.stringify(data.signals));
+        selectedSignals =   JSON.parse(JSON.stringify(data.selectedSignals));
         events =            JSON.parse(JSON.stringify(data.events));
         events_byID =       JSON.parse(JSON.stringify(data.events_byID));
         events_byPosition = JSON.parse(JSON.stringify(data.events_byPosition));
@@ -117,14 +117,14 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         return JSON.parse(JSON.stringify(events));
     };
     this.getSignal = function(id){
-        dev.log.structure('.signalRegistry.getSignal('+id+')'); //#development
+        dev.log.structure('.signalRegistry.getSignal(',id); //#development
         dev.count('.structure.signalRegistry.getSignal'); //#development
     
         if( signals[id] == undefined ){return;}
         return JSON.parse(JSON.stringify(signals[id]));
     };
     this.eventsBetween = function(start,end){
-        dev.log.structure('.signalRegistry.eventsBetween('+start+','+end+')'); //#development
+        dev.log.structure('.signalRegistry.eventsBetween(',start,end); //#development
         dev.count('.structure.signalRegistry.eventsBetween'); //#development
     
         //depending on whether theres an end position or not; get all the events positions that 
@@ -152,7 +152,7 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         });
     };
     this.add = function(data,forceID){
-        dev.log.structure('.signalRegistry.add('+JSON.stringify(data)+','+forceID+')'); //#development
+        dev.log.structure('.signalRegistry.add(',data,forceID); //#development
         dev.count('.structure.signalRegistry.add'); //#development
     
         //clean up data
@@ -212,7 +212,7 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         return newID;
     };
     this.remove = function(id){
-        dev.log.structure('.signalRegistry.remove('+id+')'); //#development
+        dev.log.structure('.signalRegistry.remove(',id); //#development
         dev.count('.structure.signalRegistry.remove'); //#development
     
         if( signals[id] == undefined ){return;}
@@ -230,7 +230,7 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         delete events_byID[id];
     };
     this.update = function(id,data){
-        dev.log.structure('.signalRegistry.update('+id+','+JSON.stringify(data)+')'); //#development
+        dev.log.structure('.signalRegistry.update(',id,data); //#development
         dev.count('.structure.signalRegistry.update'); //#development
     
         //clean input

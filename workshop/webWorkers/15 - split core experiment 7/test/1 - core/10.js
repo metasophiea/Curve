@@ -19,4 +19,6 @@ _canvas_.core.go.add( function(){
     setTimeout(function(){ _canvas_.core.render.frame(); },1500);
     setTimeout(function(){ _canvas_.core.render.frame(); },2000);
     setTimeout(function(){ _canvas_.core.render.frame(); },2500);
+    setTimeout(function(){ _canvas_.core.render.frame(); },3000);
+    setTimeout(function(){ _canvas_.core.render.frame(); },3500);
 } );

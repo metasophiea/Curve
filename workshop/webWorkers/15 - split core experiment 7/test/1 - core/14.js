@@ -5,7 +5,10 @@ _canvas_.core.go.add( function(){
     group_1 = _canvas_.core.element.create('group','group_1');
     _canvas_.core.arrangement.append(group_1);
 
+
     rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_1.attachCallback('onadd',() => {console.log('rectangle_1:onadd');});
+    rectangle_1.attachCallback('onremove',() => {console.log('rectangle_1:onremove');});
 
     setTimeout(() => {
         console.log( '-> printouts' );
@@ -34,7 +37,7 @@ _canvas_.core.go.add( function(){
 
     setTimeout(() => {
         console.log('');
-        console.log( '-> append rectangle_1 (again)' );
+        console.log( '-> append rectangle_1 (there should be an error)' );
         group_1.append(rectangle_1);
     },2000);
 

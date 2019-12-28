@@ -12,6 +12,9 @@ function timeTest(func,loopCount,dataGenerator){
     return endTime - startTime;
 }
 function printResults(functionName,time,cycles,limitedTo=-1){
+    const cycleTime = _canvas_.library.math.seconds2time((time/1000)/((limitedTo > -1 && cycles > limitedTo) ? limitedTo : cycles)); 
+    const cycleTime_formatted = cycleTime.s+'s '+cycleTime.ms+'ms '+cycleTime.µs+'µs '+cycleTime.ns+'ns '+cycleTime.ps+'ps '+cycleTime.fs+'fs';
+
     console.log( 
         _canvas_.library.misc.padString(functionName+':',60),
         _canvas_.library.misc.padString(
@@ -20,10 +23,13 @@ function printResults(functionName,time,cycles,limitedTo=-1){
             ' ',
             'r'
         ),
-        '- average cycle time:'+ (time/1000)/((limitedTo > -1 && cycles > limitedTo) ? limitedTo : cycles) +' seconds'
+        '- average cycle time:'+ cycleTime_formatted +' seconds'
     );
     if(limitedTo > -1 && cycles > limitedTo){
-        console.log( (new Array(60).fill(' ').join(''))+' (projected time to perform '+cycles+' cycles: '+ (time/1000)*(cycles/limitedTo) +' seconds)' );
+        const cycleTime = _canvas_.library.math.seconds2time( (time/1000)*(cycles/limitedTo) ); 
+        const cycleTime_formatted =cycleTime.h+'h '+cycleTime.m+'m '+cycleTime.s+'s '+cycleTime.ms+'ms '+cycleTime.µs+'µs '+cycleTime.ns+'ns '+cycleTime.ps+'ps '+cycleTime.fs+'fs';
+
+        console.log( (new Array(60).fill(' ').join(''))+' (projected time to perform '+cycles+' cycles: '+ cycleTime_formatted +' seconds)' );
     }
 }
 
@@ -51,9 +57,27 @@ printResults('library.math.averagePoint',results,loopCount,limit);
 var results = timeTest(
     _canvas_.library.math.boundingBoxFromPoints,
     loopCount,
+    function(){ return [(new Array(1).fill().map( () => {return {x:Math.random()*100,y:Math.random()*100}} ))]; }
+);
+printResults('library.math.boundingBoxFromPoints (1 point)',results,loopCount);
+var results = timeTest(
+    _canvas_.library.math.boundingBoxFromPoints,
+    loopCount,
+    function(){ return [(new Array(2).fill().map( () => {return {x:Math.random()*100,y:Math.random()*100}} ))]; }
+);
+printResults('library.math.boundingBoxFromPoints (2 points)',results,loopCount);
+var results = timeTest(
+    _canvas_.library.math.boundingBoxFromPoints,
+    loopCount,
+    function(){ return [(new Array(3).fill().map( () => {return {x:Math.random()*100,y:Math.random()*100}} ))]; }
+);
+printResults('library.math.boundingBoxFromPoints (3 points)',results,loopCount);
+var results = timeTest(
+    _canvas_.library.math.boundingBoxFromPoints,
+    loopCount,
     function(){ return [(new Array(1024).fill().map( () => {return {x:Math.random()*100,y:Math.random()*100}} ))]; }
 );
-printResults('library.math.boundingBoxFromPoints',results,loopCount);
+printResults('library.math.boundingBoxFromPoints (1024 points)',results,loopCount);
 
 var results = timeTest(
     _canvas_.library.math.cartesianAngleAdjust,
@@ -147,96 +171,11 @@ var results = timeTest(
 printResults('library.math.curvePoint.exponential',results,loopCount);
 
 var results = timeTest(
-    _canvas_.library.math.detectOverlap.boundingBoxes,
-    loopCount,
-    function(){ return (new Array(2).fill().map( () => { return {topLeft:{x:Math.random(),y:Math.random()},bottomRight:{x:Math.random(),y:Math.random()}}} )); }
-);
-printResults('library.math.detectOverlap.boundingBoxes',results,loopCount);
-
-var results = timeTest(
-    _canvas_.library.math.detectOverlap.pointWithinBoundingBox,
-    loopCount,
-    function(){ return [ {x:Math.random(),y:Math.random()}, {topLeft:{x:Math.random(),y:Math.random()},bottomRight:{x:Math.random(),y:Math.random()}} ]; }
-);
-printResults('library.math.detectOverlap.pointWithinBoundingBox',results,loopCount);
-
-var results = timeTest(
-    _canvas_.library.math.detectOverlap.pointWithinPoly,
-    loopCount,
-    function(){ return [{x:Math.random()*100,y:Math.random()*100},(new Array(1024).fill({x:Math.random()*100,y:Math.random()*100}))]; }
-);
-printResults('library.math.detectOverlap.pointWithinPoly',results,loopCount);
-
-var results = timeTest(
-    _canvas_.library.math.detectOverlap.lineSegments,
-    loopCount,
-    function(){ return (new Array(2).fill().map( () => [{x:Math.random()*100,y:Math.random()*100},{x:Math.random()*100,y:Math.random()*100}] )); }
-);
-printResults('library.math.detectOverlap.lineSegments',results,loopCount);
-
-var limit = 20;
-var results = timeTest(
-    _canvas_.library.math.detectOverlap.overlappingPolygons,
-    loopCount > limit ? limit : loopCount,
-    function(){ return (new Array(2).fill().map( () => (new Array(1024).fill({x:Math.random()*100,y:Math.random()*100})) )); }
-);
-printResults('library.math.detectOverlap.overlappingPolygons',results,loopCount,limit);
-
-var limit = 10;
-var results = timeTest(
-    _canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons,
-    loopCount > limit ? limit : loopCount,
-    function(){ 
-        var poly = {points:(new Array(1024).fill().map( () => {return {x:Math.random()*100,y:Math.random()*100}} ))};
-        poly.boundingBox = _canvas_.library.math.boundingBoxFromPoints(poly.points);
-
-        var polys = (new Array(1024).fill().map(
-            function(){
-                var poly = {points:(new Array(1024).fill().map( () => {return {x:Math.random()*100,y:Math.random()*100}} ))};
-                poly.boundingBox = _canvas_.library.math.boundingBoxFromPoints(poly.points);
-                return poly;
-            }
-        ));
-
-        return [poly,polys];
-    }
-);
-printResults('library.math.detectOverlap.overlappingPolygonWithPolygons',results,loopCount,limit);
-
-var limit = 10;
-var results = timeTest(
-    _canvas_.library.math.detectOverlap.overlappingLineWithPolygons,
-    loopCount > limit ? limit : loopCount,    
-    function(){ 
-        var line = (new Array(2).fill().map( () => [{x:Math.random()*100,y:Math.random()*100},{x:Math.random()*100,y:Math.random()*100}]  ));
-
-        var polys = (new Array(1024).fill().map(
-            function(){
-                var poly = {points:(new Array(1024).fill().map( () => {return {x:Math.random()*100,y:Math.random()*100}} ))};
-                poly.boundingBox = _canvas_.library.math.boundingBoxFromPoints(poly.points);
-                return poly;
-            }
-        ));
-
-        return [line,polys];
-    }
-);
-printResults('library.math.detectOverlap.overlappingLineWithPolygons',results,loopCount,limit);
-
-var results = timeTest(
     _canvas_.library.math.getAngleOfTwoPoints,
     loopCount,
     function(){ return (new Array(2).fill().map( () => {return {x:Math.random()*100,y:Math.random()*100}} )); }
 );
 printResults('library.math.getAngleOfTwoPoints',results,loopCount);
-
-var limit = 500;
-var results = timeTest(
-    _canvas_.library.math.getDifferenceOfArrays,
-    loopCount > limit ? limit : loopCount,
-    function(){ return [(new Array(1024).fill().map( () => Math.random())),(new Array(1024).fill().map( () => Math.random()))]; }
-);
-printResults('library.math.getDifferenceOfArrays',results,loopCount,limit);
 
 var results = timeTest(
     _canvas_.library.math.getIndexOfSequence,
@@ -276,26 +215,18 @@ var results = timeTest(
 printResults('library.math.relativeDistance',results,loopCount);
 
 var results = timeTest(
-    _canvas_.library.math.removeTheseElementsFromThatArray,
-    loopCount,
-    function(){
-        var arr = (new Array(1024).fill().map( () => Math.random() ));
-
-        var index = Math.floor(Math.random()*1024);
-        var length = Math.floor(Math.random()*(1024-index));
-        var seq = arr.slice(index,length);
-
-        return [seq,arr];
-    }
-);
-printResults('library.math.removeTheseElementsFromThatArray',results,loopCount);
-
-var results = timeTest(
     _canvas_.library.math.seconds2time,
     loopCount,
     function(){ return [Math.random()*3600]; }
 );
 printResults('library.math.seconds2time',results,loopCount);
+
+var results = timeTest(
+    _canvas_.library.math.distanceBetweenTwoPoints,
+    loopCount,
+    function(){ return [{x:Math.random()*100,y:Math.random()*100},{x:Math.random()*100,y:Math.random()*100}]; }
+);
+printResults('library.math.distanceBetweenTwoPoints',results,loopCount);
 
 var results = timeTest(
     _canvas_.library.math.cartesian2polar,
@@ -332,11 +263,77 @@ var results = timeTest(
 );
 printResults('library.math.multiBlendColours',results,loopCount);
 
-//polygonToSubTriangles // ear cut is doing all the work here
+////////polygonToSubTriangles // ear cut is doing all the work here
 
-//unionPolygons // PolyBool is doing all the work here
+////////unionPolygons // PolyBool is doing all the work here
 
-var limit = 2;
+var results = timeTest(
+    _canvas_.library.math.detectIntersect.boundingBoxes,
+    loopCount,
+    function(){ return (new Array(2).fill().map( () => { return {topLeft:{x:Math.random(),y:Math.random()},bottomRight:{x:Math.random(),y:Math.random()}}} )); }
+);
+printResults('library.math.detectIntersect.boundingBoxes',results,loopCount);
+
+var results = timeTest(
+    _canvas_.library.math.detectIntersect.pointWithinBoundingBox,
+    loopCount,
+    function(){ return [ {x:Math.random(),y:Math.random()}, {topLeft:{x:Math.random(),y:Math.random()},bottomRight:{x:Math.random(),y:Math.random()}} ]; }
+);
+printResults('library.math.detectIntersect.pointWithinBoundingBox',results,loopCount);
+
+var results = timeTest(
+    _canvas_.library.math.detectIntersect.pointOnLine,
+    loopCount,
+    function(){ return [{x:Math.random()*100,y:Math.random()*100},[{x:Math.random()*100,y:Math.random()*100},{x:Math.random()*100,y:Math.random()*100}]]; }
+);
+printResults('library.math.detectIntersect.pointOnLine',results,loopCount);
+
+var points = (new Array(1024).fill({x:Math.random()*100,y:Math.random()*100}));
+var results = timeTest(
+    _canvas_.library.math.detectIntersect.pointWithinPoly,
+    loopCount,
+    function(){ return [
+        {x:Math.random()*100,y:Math.random()*100},
+        {points:points,boundingBox:_canvas_.library.math.boundingBoxFromPoints(points)}
+    ]; }
+);
+printResults('library.math.detectIntersect.pointWithinPoly',results,loopCount);
+
+var results = timeTest(
+    _canvas_.library.math.detectIntersect.lineOnLine,
+    loopCount,
+    function(){ return (new Array(2).fill().map( () => [{x:Math.random()*100,y:Math.random()*100},{x:Math.random()*100,y:Math.random()*100}] )); }
+);
+printResults('library.math.detectIntersect.lineOnLine',results,loopCount);
+
+var results = timeTest(
+    _canvas_.library.math.detectIntersect.lineOnPoly,
+    loopCount,
+    function(){ 
+        var points = (new Array(1024).fill({x:Math.random()*100,y:Math.random()*100}));
+        return [
+            [{x:Math.random()*100,y:Math.random()*100},{x:Math.random()*100,y:Math.random()*100}],
+            {points:points,boundingBox:_canvas_.library.math.boundingBoxFromPoints(points)}
+        ]; 
+    }
+);
+printResults('library.math.detectIntersect.lineOnPoly',results,loopCount);
+
+var results = timeTest(
+    _canvas_.library.math.detectIntersect.polyOnPoly,
+    loopCount,
+    function(){ 
+        var points_a = (new Array(1024).fill({x:Math.random()*100,y:Math.random()*100}));
+        var points_b = (new Array(1024).fill({x:Math.random()*100,y:Math.random()*100}));
+        return [
+            {points:points_a,boundingBox:_canvas_.library.math.boundingBoxFromPoints(points_a)},
+            {points:points_b,boundingBox:_canvas_.library.math.boundingBoxFromPoints(points_b)}
+        ];
+     }
+);
+printResults('library.math.detectIntersect.polyOnPoly',results,loopCount);
+
+var limit = 4;
 var results = timeTest(
     _canvas_.library.math.pathExtrapolation,
     loopCount > limit ? limit : loopCount,
@@ -348,7 +345,7 @@ var results = timeTest(
 );
 printResults('library.math.pathExtrapolation',results,loopCount,limit);
 
-var limit = 1;
+var limit = 5;
 var results = timeTest(
     _canvas_.library.math.fitPolyIn,
     loopCount > limit ? limit : loopCount,
@@ -368,6 +365,60 @@ var results = timeTest(
     }
 );
 printResults('library.math.fitPolyIn',results,loopCount,limit);
+
+var limit = 100;
+var results = timeTest(
+    _canvas_.library.math.polygonsToVisibilityGraph,
+    loopCount > limit ? limit : loopCount,
+    function(){ 
+        const polyCount = 10;
+        const pointPerPolyCount = 10;
+
+        let field = (new Array(polyCount)).fill().map(() => (
+            new Array(pointPerPolyCount).fill().map( () => ({x:Math.random()*100,y:Math.random()*100}))
+        ));
+
+        field = field.map(a => {
+            return { points: a, boundingBox: _canvas_.library.math.boundingBoxFromPoints(a) };
+        });
+
+        return [field];
+    }
+);
+printResults('library.math.polygonsToVisibilityGraph',results,loopCount,limit);
+
+
+
+
+
+
+
+var results = timeTest(
+    _canvas_.library.misc.removeTheseElementsFromThatArray,
+    loopCount,
+    function(){
+        var arr = (new Array(1024).fill().map( () => Math.random() ));
+
+        var index = Math.floor(Math.random()*1024);
+        var length = Math.floor(Math.random()*(1024-index));
+        var seq = arr.slice(index,length);
+
+        return [seq,arr];
+    }
+);
+printResults('library.misc.removeTheseElementsFromThatArray',results,loopCount);
+
+var limit = 500;
+var results = timeTest(
+    _canvas_.library.misc.getDifferenceOfArrays,
+    loopCount > limit ? limit : loopCount,
+    function(){ return [(new Array(1024).fill().map( () => Math.random())),(new Array(1024).fill().map( () => Math.random()))]; }
+);
+printResults('library.misc.getDifferenceOfArrays',results,loopCount,limit);
+
+
+
+
 
 
 

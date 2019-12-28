@@ -5,7 +5,7 @@ const stats = new function(){
 
     const framesPerSecond = {
         compute:function(timestamp){
-            dev.log.stats('::framesPerSecond.compute('+timestamp+')'); //#development
+            dev.log.stats('::framesPerSecond.compute(',timestamp); //#development
 
             this.frameTimeArray.push( 1000/(timestamp-lastTimestamp) );
             if( this.frameTimeArray.length >= average){ this.frameTimeArray.shift(); }
@@ -20,14 +20,14 @@ const stats = new function(){
     };
 
     this.collect = function(timestamp){
-        dev.log.stats('.collect('+timestamp+')'); //#development
+        dev.log.stats('.collect(',timestamp); //#development
         //if stats are turned off, just bail
             if(!active){return;}
 
         framesPerSecond.compute(timestamp);
     };
     this.active = function(bool){
-        dev.log.stats('.active('+bool+')'); //#development
+        dev.log.stats('.active(',bool); //#development
         if(bool==undefined){return active;} 
         active=bool;
     };

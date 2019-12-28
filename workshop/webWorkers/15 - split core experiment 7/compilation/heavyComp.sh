@@ -1,6 +1,6 @@
 #default values
     removeDev=true
-    nameArray=('core_engine' 'test' 'core' 'system' 'interface')
+    nameArray=('core_engine' 'core' 'system' 'interface' 'control' 'curve')
 
 #input argument gathering
     for ((a = 1; a <= $#; a+=2)); do
@@ -33,6 +33,7 @@
 #assemble master JS files
     echo "running Gravity"
     for name in ${nameArray[@]}; do 
+        echo "-> "$name".js"
         "$dir"/../../../../compilation/gravity "$dir"/../main/$name.js "$dir"/../docs/js/$name.min.js
     done
 
@@ -50,7 +51,7 @@
         cp "$dir"/../docs/js/$name.min.js "$dir"/../docs/js/$name.js
     done
 
-echo "telling core to use core.min.js instead of core.js"
+echo "telling core's engine to use core.min.js instead of core.js"
     for name in ${nameArray[@]}; do 
         awk '{gsub("core_engine.js", "core_engine.min.js", $0); print}' "$dir"/../docs/js/$name.min.js > "$dir"/../docs/js/$name.min.tmp.js
         mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js

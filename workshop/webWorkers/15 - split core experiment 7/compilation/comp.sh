@@ -1,6 +1,6 @@
 #default values
     removeDev=false
-    nameArray=('core_engine' 'test' 'core' 'system' 'interface')
+    nameArray=('core_engine' 'test' 'core' 'system' 'interface' 'control' 'curve')
 
 #input argument gathering
     for ((a = 1; a <= $#; a+=2)); do

@@ -1,13 +1,4 @@
-function executeMethod(id,method,argumentList,postProcessing){
-    return new Promise((resolve, reject) => { 
-        communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
-            if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
-        });
-    });
-}
-
-const missingIdRetryPeriod = 10;
-
+{{include:genericElementProxy.js}}
 
 {{include:group.js}}
 
@@ -24,4 +15,4 @@ const missingIdRetryPeriod = 10;
 {{include:canvas.js}}
 
 {{include:character.js}}
-{{include:characterString.js}}}
+{{include:characterString.js}}

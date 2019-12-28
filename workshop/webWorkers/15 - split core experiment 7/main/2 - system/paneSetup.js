@@ -23,7 +23,6 @@ _canvas_.core.go.add( function(){
 
     //foreground
         _canvas_.system.pane.foreground = _canvas_.core.element.create('group','foreground');
-        _canvas_.system.pane.foreground.ignored(true);
         _canvas_.core.arrangement.append( _canvas_.system.pane.foreground );
 
     //shortcuts
@@ -36,12 +35,11 @@ _canvas_.core.go.add( function(){
 
 //utility
     _canvas_.system.pane.getMiddlegroundPane = function(element){
-        const middlegrounds = [_canvas_.system.pane.mb, _canvas_.system.pane.mm, _canvas_.system.pane.mf];
-
-        return new Promise((resolve, reject) => {
-            _canvas_.core.arrangement.areParents( element, middlegrounds ).then(response => {
-                const index = response.indexOf(0);
-                resolve( index == -1 ? null : middlegrounds[index] );
-            });
-        });
+        let tempElement = element;
+        while(tempElement != undefined){
+            if(tempElement == _canvas_.system.pane.mb){ return _canvas_.system.pane.mb; }
+            if(tempElement == _canvas_.system.pane.mm){ return _canvas_.system.pane.mm; }
+            if(tempElement == _canvas_.system.pane.mf){ return _canvas_.system.pane.mf; }
+            tempElement = tempElement.parent;
+        }
     };

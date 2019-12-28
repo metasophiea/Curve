@@ -1,5 +1,5 @@
 this.padString = function(string,length,padding=' ',paddingSide='l'){
-    dev.log.misc('.padString('+string+','+length+','+padding+','+paddingSide+')'); //#development
+    dev.log.misc('.padString(',string,length,padding,paddingSide); //#development
     dev.count('.misc.padString'); //#development
 
     if(padding.length<1){return string;}
@@ -14,19 +14,19 @@ this.padString = function(string,length,padding=' ',paddingSide='l'){
     return string;
 };
 this.compressString = function(string){
-    dev.log.misc('.compressString('+string+')'); //#development
+    dev.log.misc('.compressString(',string); //#development
     dev.count('.misc.compressString'); //#development
 
     return _thirdparty.lzString.compress(string);
 };
 this.decompressString = function(string){
-    dev.log.misc('.decompressString('+string+')'); //#development
+    dev.log.misc('.decompressString(',string); //#development
     dev.count('.misc.decompressString'); //#development
 
     return _thirdparty.lzString.decompress(string);
 };
 this.serialize = function(data,compress=true){
-    dev.log.misc('.serialize('+JSON.stringify(data)+','+compress+')'); //#development
+    dev.log.misc('.serialize(',data,compress); //#development
     dev.count('.misc.serialize'); //#development
 
     function getType(obj){
@@ -64,7 +64,7 @@ this.serialize = function(data,compress=true){
     return data;
 };
 this.unserialize = function(data,compressed=true){
-    dev.log.misc('.unserialize('+JSON.stringify(data)+','+compressed+')'); //#development
+    dev.log.misc('.unserialize(',data,compressed); //#development
     dev.count('.misc.unserialize'); //#development
 
     if(data === undefined){return undefined;}
@@ -107,26 +107,67 @@ this.unserialize = function(data,compressed=true){
         return value;
     });
 };
+this.packData = function(data,compress=true){
+    dev.log.misc('.packData(',data,compress); //#development
+    dev.count('.misc.packData'); //#development
+    return library.misc.serialize({ 
+        compressed:compress, 
+        data:library.misc.serialize(data,compress)
+    },false);
+};
+this.unpackData = function(data){
+    dev.log.misc('.unpackData(',data); //#development
+    dev.count('.misc.unpackData'); //#development
+
+    //deserialize first layer
+        try{
+            data = library.misc.unserialize(data,false);
+        }catch(e){
+            console.error( "Major error unserializing first layer of file" );
+            console.error(e);
+            return null;
+        }
+
+    //determine if this data is compressed or not
+        const compressed = data.compressed;
+
+    //deserialize second layer (knowing now whether it's compressed or not)
+        try{
+            data = library.misc.unserialize(data.data,compressed);
+        }catch(e){
+            console.error( "Major error unserializing second layer of file" );
+            console.error(e);
+            return null;
+        }
+
+    return data;
+};
 this.openFile = function(callback,readAsType='readAsBinaryString'){
-    dev.log.misc('.openFile('+JSON.stringify(callback)+','+readAsType+')'); //#development
+    dev.log.misc('.openFile(',callback,readAsType); //#development
     dev.count('.misc.openFile'); //#development
 
-    var i = document.createElement('input');
+    const i = document.createElement('input');
     i.type = 'file';
+    i.accept = '.crv';
     i.onchange = function(){
-        var f = new FileReader();
+        dev.log.misc('.openFile::onchange()'); //#development
+        const f = new FileReader();
         switch(readAsType){
             case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
             case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
         }
         f.onloadend = function(){ 
+            dev.log.misc('.openFile::onloadend()'); //#development
             if(callback){callback(f.result);}
         }
     };
+
+    document.body.appendChild(i);
     i.click();
+    setTimeout(() => {document.body.removeChild(i);},1000);
 };
 this.printFile = function(filename,data){
-    dev.log.misc('.printFile('+filename+','+JSON.stringify(data)+')'); //#development
+    dev.log.misc('.printFile(',filename,data); //#development
     dev.count('.misc.printFile'); //#development
 
     var a = document.createElement('a');
@@ -135,12 +176,12 @@ this.printFile = function(filename,data){
     a.click();
 };
 this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
-    dev.log.misc('.loadFileFromURL('+URL+','+JSON.stringify(callback)+','+responseType+','+JSON.stringify(errorCallback)+')'); //#development
+    dev.log.misc('.loadFileFromURL(',URL,callback,responseType,errorCallback); //#development
     dev.count('.misc.loadFileFromURL'); //#development
 
     //responseType: text / arraybuffer / blob / document / json 
 
-    var xhttp = new XMLHttpRequest();
+    const xhttp = new XMLHttpRequest();
     if(callback != undefined){ xhttp.onloadend = a => {
         if(a.target.status == 200){ callback(a.target.response); }
         else{ 
@@ -153,9 +194,94 @@ this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
     xhttp.send();
 };
 this.argumentsToArray = function(argumentsObject){
+    dev.log.misc('.argumentsToArray(',argumentsObject); //#development
+    dev.count('.misc.argumentsToArray'); //#development
     const outputArray = [];
     for(let a = 0; a < argumentsObject.length; a++){
         outputArray.push( argumentsObject[a] );
     }
     return outputArray;
+};
+this.comparer = function(item1,item2){
+    dev.log.misc('.comparer(',item1,item2); //#development
+    dev.count('.misc.comparer'); //#development
+    function getType(obj){
+        return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+    }
+
+    if(getType(item1) != getType(item2)){ return false; }
+    if(typeof item1 == 'boolean' || typeof item1 == 'string'){ return item1 === item2; }
+    if(typeof item1 == 'number'){
+        if( Math.abs(item1) < 1.0e-14 ){item1 = 0;}
+        if( Math.abs(item2) < 1.0e-14 ){item2 = 0;}
+        if( Math.abs(item1 - item2) < 1.0e-14 ){return true;}
+        return item1 === item2;
+    }
+    if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
+    if(getType(item1) == 'function'){
+        item1 = item1.toString();
+        item2 = item2.toString();
+
+        let item1_functionHead = item1.substring(0,item1.indexOf('{'));
+        item1_functionHead = item1_functionHead.substring(item1_functionHead.indexOf('(')+1, item1_functionHead.lastIndexOf(')'));
+        const item1_functionBody = item1.substring(item1.indexOf('{')+1, item1.lastIndexOf('}'));
+
+        let item2_functionHead = item2.substring(0,item2.indexOf('{'));
+        item2_functionHead = item2_functionHead.substring(item2_functionHead.indexOf('(')+1, item2_functionHead.lastIndexOf(')'));
+        const item2_functionBody = item2.substring(item2.indexOf('{')+1, item2.lastIndexOf('}'));
+
+        return item1_functionHead.trim() == item2_functionHead.trim() && item1_functionBody.trim() == item2_functionBody.trim();
+    }
+    if(typeof item1 == 'object'){
+        const keys1 = Object.keys(item1);
+        const keys2 = Object.keys(item2);
+        if(keys1.length != keys2.length){return false;}
+
+        for(let a = 0; a < keys1.length; a++){ 
+            if( keys1.indexOf(keys2[a]) == -1 || !library.misc.comparer(item1[keys1[a]],item2[keys1[a]])){return false;}
+        }
+        return true;
+    }
+    return false;
+};
+this.removeThisFromThatArray = function(item,array){
+    dev.log.misc('.removeThisFromThatArray(',item,array); //#development
+    dev.count('.misc.removeThisFromThatArray'); //#development
+    const index = array.findIndex(a => library.misc.comparer(a,item))
+    if(index == -1){return;}
+    return array.splice(index,1);
+};
+this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+    dev.log.misc('.removeTheseElementsFromThatArray(',theseElements,thatArray); //#development
+    dev.count('.misc.removeTheseElementsFromThatArray'); //#development
+
+    theseElements.forEach(a => library.misc.removeThisFromThatArray(a,thatArray) );
+    return thatArray;
+};
+this.getDifferenceOfArrays = function(array_a,array_b){
+    dev.log.misc('.getDifferenceOfArrays(',array_a,array_b); //#development
+    dev.count('.misc.getDifferenceOfArrays'); //#development
+
+    if(array_a.length == 0 && array_b.length == 0){
+        return {a:[],b:[]};
+    }
+    if(array_a.length == 0){
+        return {a:[],b:array_b};
+    }
+    if(array_b.length == 0){
+        return {a:array_a,b:[]};
+    }
+
+    function arrayRemovals(a,b){
+        a.forEach(item => {
+            let i = b.indexOf(item);
+            if(i != -1){ b.splice(i,1); }
+        });
+        return b;
+    }
+
+    return {
+        a:arrayRemovals(array_b,array_a.slice()),
+        b:arrayRemovals(array_a,array_b.slice())
+    };
 };

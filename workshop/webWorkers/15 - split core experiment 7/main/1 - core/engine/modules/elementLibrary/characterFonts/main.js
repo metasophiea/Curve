@@ -35,7 +35,7 @@ const fontFileNames = [
 ];
 //create locations in the vector library for these fonts
 fontFileNames.forEach(name => {
-    dev.log.elementLibrary('character.vectorLibrary',undefined,' - fontFileNames -> name: '+name); //#development
+    dev.log.elementLibrary.characterFonts('.vectorLibrary - fontFileNames -> name: '+name); //#development
     var libraryEntryName = name.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]; //produce font name from file name
     elementLibrary.character.vectorLibrary[libraryEntryName] = {};
     elementLibrary.character.vectorLibrary[libraryEntryName].fileName = name;
@@ -47,34 +47,34 @@ fontFileNames.forEach(name => {
 
 
 elementLibrary.character.getLoadableFonts = function(){ 
-    dev.log.elementLibrary('character',undefined,'.getLoadableFonts()'); //#development
+    dev.log.elementLibrary.characterFonts('.getLoadableFonts()'); //#development
     var defaultFontNames = ['defaultThick','defaultThin'];
     var loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
     return defaultFontNames.concat(loadableFontNames);
 };
 elementLibrary.character.getLoadedFonts = function(){
-    dev.log.elementLibrary('character',undefined,'.getLoadedFonts()'); //#development
+    dev.log.elementLibrary.characterFonts('.getLoadedFonts()'); //#development
     var defaultFontNames = ['defaultThick','defaultThin'];
     var loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => elementLibrary.character.vectorLibrary[name].isLoaded);
     return defaultFontNames.concat(loadedFontNames);
 };
 
 elementLibrary.character.isApprovedFont = function(fontName){
-    dev.log.elementLibrary('character',undefined,'.isApprovedFont('+fontName+')'); //#development
+    dev.log.elementLibrary.characterFonts('.isApprovedFont(',fontName); //#development
     return elementLibrary.character.vectorLibrary[fontName] != undefined;
 };
 elementLibrary.character.isFontLoaded = function(fontName){ 
-    dev.log.elementLibrary('character',undefined,'.isFontLoaded('+fontName+')'); //#development
+    dev.log.elementLibrary.characterFonts('.isFontLoaded(',fontName); //#development
     if(elementLibrary.character.vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.isFontLoaded : error : unknown font name:',fontName); return false;}
     return elementLibrary.character.vectorLibrary[fontName].isLoaded;
 }
 elementLibrary.character.fontLoadAttempted = function(fontName){ 
-    dev.log.elementLibrary('character',undefined,'.fontLoadAttempted('+fontName+')'); //#development
+    dev.log.elementLibrary.characterFonts('.fontLoadAttempted(',fontName); //#development
     if(elementLibrary.character.vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.fontLoadAttempted : error : unknown font name:',fontName); return false;}
     return elementLibrary.character.vectorLibrary[fontName].loadAttempted;
 }
 elementLibrary.character.loadFont = function(fontName){
-    dev.log.elementLibrary('character',undefined,'.loadFont('+fontName+')'); //#development
+    dev.log.elementLibrary.characterFonts('.loadFont(',fontName); //#development
     if(elementLibrary.character.vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
     var filename = elementLibrary.character.vectorLibrary[fontName].fileName;
 
@@ -97,11 +97,11 @@ elementLibrary.character.loadFont = function(fontName){
             var vectors = library.font.extractGlyphs(fontData,reducedGlyphSet);
             Object.keys(vectors).forEach(glyphName => elementLibrary.character.vectorLibrary[fontName][glyphName] = vectors[glyphName] );
             elementLibrary.character.vectorLibrary[fontName].isLoaded = true;
-            dev.log.elementLibrary('character',undefined,'.loadFont -> loaded font:',filename,'(now named "'+fontName+'")'); //#development
+            dev.log.elementLibrary.characterFonts('.loadFont -> loaded font:',filename,'(now named "'+fontName+'")'); //#development
         }
 
     //load file
-        dev.log.elementLibrary('character',undefined,'.loadFont -> attempting: '+ name,fontFilesLocation+filename); //#development
+        dev.log.elementLibrary.characterFonts('.loadFont -> attempting: '+ name,fontFilesLocation+filename); //#development
         library.misc.loadFileFromURL(fontFilesLocation+filename, func, 'arraybuffer');
 };
 

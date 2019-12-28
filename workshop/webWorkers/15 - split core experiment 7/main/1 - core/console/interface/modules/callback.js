@@ -28,16 +28,16 @@ this.callback = new function(){
         };
     };
     this.getCallback = function(element, callbackType){
-        dev.log.interface('.callback.getCallback('+element+','+callbackType+')'); //#development
+        dev.log.interface('.callback.getCallback(',element,callbackType); //#development
         callbackRegistry.getCallback(element.getId(), callbackType);
     };
     this.attachCallback = function(element, callbackType, callback){
-        dev.log.interface('.callback.attachCallback('+element+','+callbackType+','+callback+')'); //#development
+        dev.log.interface('.callback.attachCallback(',element,callbackType,callback); //#development
         callbackRegistry.register(element.getId(), callbackType, callback);
         communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
     };
     this.removeCallback = function(element, callbackType){
-        dev.log.interface('.callback.removeCallback('+element+','+callbackType+')'); //#development
+        dev.log.interface('.callback.removeCallback(',element,callbackType); //#development
         callbackRegistry.remove(element.getId(), callbackType);
         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
     };
@@ -45,7 +45,7 @@ this.callback = new function(){
     let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
     this.callbackActivationMode = function(mode){
         if(mode==undefined){return callbackActivationMode;}
-        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
+        dev.log.interface('.callback.callbackActivationMode(',mode); //#development
         callbackActivationMode = mode;
     };
 
@@ -71,12 +71,24 @@ this.callback = new function(){
                         wheelDelta: event.wheelDelta,
                         wheelDeltaX: event.wheelDeltaX,
                         wheelDeltaY: event.wheelDeltaY,
+                        altKey: event.altKey,
+                        ctrlKey: event.ctrlKey,
+                        metaKey: event.metaKey,
+                        shiftKey: event.shiftKey,
                     };
                 }else if(event instanceof MouseEvent){
                     sudoEvent = { 
                         X: event.offsetX, 
                         Y: event.offsetY,
+                        altKey: event.altKey,
+                        ctrlKey: event.ctrlKey,
+                        metaKey: event.metaKey,
+                        shiftKey: event.shiftKey,
+                        buttons: event.buttons,
                     };
+                    if(callbackName == 'onmousemove'){
+                        _canvas_.core.viewport.getMousePosition(sudoEvent.X,sudoEvent.Y);
+                    }
                 }else{
                     console.warn('unknown event type: ',event);
                 }

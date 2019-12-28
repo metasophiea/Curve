@@ -19,14 +19,14 @@ this.character = function(_id,_name){
             this.ignored = function(a){
                 if(a==undefined){return ignored;}     
                 ignored = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
             };
             
         //advanced use attributes
@@ -54,60 +54,60 @@ this.character = function(_id,_name){
             this.x = function(a){ 
                 if(a==undefined){return x;} 
                 x = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.y = function(a){ 
                 if(a==undefined){return y;} 
                 y = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.angle = function(a){ 
                 if(a==undefined){return angle;} 
                 angle = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.anchor = function(a){ 
                 if(a==undefined){return anchor;} 
                 anchor = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.anchor('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.width = function(a){
                 if(a==undefined){return width;}  
                 width = a;  
-                dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.height = function(a){
                 if(a==undefined){return height;} 
                 height = a; 
-                dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.font = function(newFont){
                 if(newFont==undefined){return font;}
-                dev.log.elementLibrary(type,self.getAddress(),'.font('+newFont+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
 
                 if( elementLibrary.character.isApprovedFont(newFont) ){
-                    dev.log.elementLibrary(type,self.getAddress(),'.font() -> fontLoadAttempted: '+elementLibrary.character.fontLoadAttempted(newFont)); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+elementLibrary.character.fontLoadAttempted(newFont)); //#development
                     if( !elementLibrary.character.fontLoadAttempted(newFont) ){ elementLibrary.character.loadFont(newFont); }
-                    dev.log.elementLibrary(type,self.getAddress(),'.font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
                     if( !elementLibrary.character.isFontLoaded(newFont) ){
                         setTimeout(function(){ self.font(newFont); },500,newFont);
                         return;
                     }
 
                     font = !elementLibrary.character.isFontLoaded(newFont) ? defaultFontName : newFont;
-                    dev.log.elementLibrary(type,self.getAddress(),'.font() -> font set to: "'+font+'"'); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> font set to: "'+font+'"'); //#development
                 }else{
                     report.warning('elementLibrary.character : error : unknown font:',newFont);
                     font = defaultFontName;
@@ -118,7 +118,7 @@ this.character = function(_id,_name){
             };
             this.character = function(a){
                 if(a==undefined){return character;} 
-                dev.log.elementLibrary(type,self.getAddress(),'.character('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].character(',a); //#development
                 character = a; 
                 if(allowProducePoints){producePoints();}
                 if(allowComputeExtremities){computeExtremities();} 
@@ -129,7 +129,7 @@ this.character = function(_id,_name){
                     horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
                     vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
                 };
-                dev.log.elementLibrary(type,self.getAddress(),'.printingMode('+JSON.stringify(printingMode)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].printingMode(',printingMode); //#development
 
                 if(allowProducePoints){producePoints();}
                 if(allowComputeExtremities){computeExtremities();} 
@@ -137,19 +137,19 @@ this.character = function(_id,_name){
             this.static = function(a){
                 if(a==undefined){return static;}  
                 static = a;  
-                dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
                 if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:static }; } 
-                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowProducePoints = false;
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                     try{
                         self[key](attributes[key]);
                     }catch(err){
@@ -169,9 +169,9 @@ this.character = function(_id,_name){
         this.left = function(){ return vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].left; };
         this.right = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].right; };
         function producePoints(){
-            dev.log.elementLibrary(type,self.getAddress(),'::producePoints()'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints()'); //#development
             points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
-            dev.log.elementLibrary(type,self.getAddress(),'::producePoints -> vectorLibrary['+font+']['+character+']:'+JSON.stringify(vectorLibrary[font][character])); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints -> vectorLibrary['+font+']['+character+']:',vectorLibrary[font][character]); //#development
 
             //adjust for vertical printingMode
                 let horizontalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].right;
@@ -235,12 +235,12 @@ this.character = function(_id,_name){
         const point = { buffer:undefined, attributeLocation:undefined };
         let uniformLocations;
         function updateGLAttributes(context,adjust){
-            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
     
             //buffers
                 //points
                     if(point.buffer == undefined || pointsChanged){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                         point.attributeLocation = context.getAttribLocation(program, "point");
                         point.buffer = context.createBuffer();
                         context.enableVertexAttribArray(point.attributeLocation);
@@ -249,14 +249,14 @@ this.character = function(_id,_name){
                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                         pointsChanged = false;
                     }else{
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                     }
 
             //uniforms
                 if( uniformLocations == undefined ){
-                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                     uniformLocations = {
                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -268,24 +268,24 @@ this.character = function(_id,_name){
                     };
                 }
 
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> dimensions:'+width+' canvas.height:'+height); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> anchor:'+JSON.stringify(anchor)); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> dimensions:'+width+' canvas.height:'+height); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor:'+JSON.stringify(anchor)); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                 context.uniform2f(uniformLocations["dimensions"], width, height);
                 context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
+                context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
         }
         let program;
         function activateGLRender(context,adjust){
-            dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
             if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
 
             context.useProgram(program);
@@ -296,14 +296,14 @@ this.character = function(_id,_name){
 
     //extremities
         function computeExtremities(informParent=true,offset){ 
-            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
                 if(offset == undefined){
                     offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                    dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> no offset provided; generated offset: '+JSON.stringify(offset)); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> no offset provided; generated offset:',offset); //#development
                 }
-                else{ dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> offset provided: '+JSON.stringify(offset)); }//#development
+                else{ dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> offset provided:',offset); }//#development
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const adjusted = { 
@@ -348,7 +348,7 @@ this.character = function(_id,_name){
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
         }
         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-            dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development     
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development     
 
             //combine offset with shape's position, angle and scale to produce adjust value for render
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);

@@ -1,4 +1,150 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-12-28
+  CoreV3
+    - found edge-case error in the pointInPoly detectIntersection function,
+      where the point could be level with a point on the poly. Some extra
+      judgement code seems to have fixed things
+    - odd issue with the file opener library function not working. Seems to be
+      fixed by making it add the 'input' element to the document body, then
+      'clicking' it. The element is removed after a second
+    - setting things over for the switch over
+
+
+2019-12-26
+  CoreV3
+    - readded the curveTech units (there's an issue with the image element when
+      it's given an image with transparency, which seems to not blend with the
+      background at all, instead just with black)
+    - fixed it! I'd misconfigured the webGL blend function
+    - created a single canvas version of the sevenSegmentDisplay readout. Also
+      accidentally removed the other static version, so, this is the static
+      version now. It's pretty nice though
+    - same, but for the sixteenSegmentDisplay readout
+    - unfixed that webGL blend function thing. Seems by adjusting the blend
+      function I knocked the blend function for the rest of the system out too,
+      so, any shape with full transparency (a:0) and any colour, would still
+      render that colour to the screen. Apparently its to do with a bad math
+      function happening behind the scenes. Things are fixed by adding glsl
+      code to the fragment shader, to perform the alpha calculations;
+        outputColor = vec4(colour.rgb*colour.a, colour.a);
+      which seems to be holding up well, though I'll need to copy this change
+      to all the element's fragment shades (except the texture based ones, of
+      course) Hopefully it doesn't have an effect on rendering performance..
+      the calculations are so small, I can't see why; though why am I not
+      doing the calculations in the vector shader instead of the fragment
+      shader? Or in the updateGLAttributes function? Silly brandon
+      ...done! Nothing has changed, as expected
+    - trying for a heavyComp, some things are consts that shouldn't be (I've
+      been a little liberal with the use of consts)
+
+      - results -
+        -> core_engine
+                core_engine.js 1405kb
+                core_engine.min.js 509kb
+                reduced to 36.26% of original size
+        -> core
+                core.js 1329kb
+                core.min.js 357kb
+                reduced to 26.94% of original size
+        -> system
+                system.js 1340kb
+                system.min.js 365kb
+                reduced to 27.25% of original size
+        -> interface
+                interface.js 2360kb
+                interface.min.js 644kb
+                reduced to 27.30% of original size
+        -> control
+                control.js 2494kb
+                control.min.js 697kb
+                reduced to 27.97% of original size
+        -> curve
+                curve.js 3852kb
+                curve.min.js 1237kb
+                reduced to 32.13% of original size
+      
+
+
+2019-12-25
+  CoreV3
+    - christmas update. Things are now 27% more cheerful (though much slower)
+    = fixed that checkbox issue from yesterday
+    - there's something amiss with loading files on chrome that isn't an issue
+      on chromium
+
+
+2019-12-24
+  CoreV3
+    - rewrote the arrangement section of core's console, to be a lot more like
+      the engine and use a group shape for the root, instead of some custom code
+      that looked a lot like the group code and did essentially the same thing
+    - turns out .splice doesn't work how I thought it did. Splicing from position
+      -1, selects the last item in the array. Important note; use
+      'library.misc.removeThisFromThatArray' in future, which is now prepared
+      for this situation
+    - readded most of the development units (I should probably just remove them)
+      and the Alpha collection. Things have been pretty smooth, though I'm a
+      little iffy about the static readouts, as they flicker a little. Also the
+      checkboxes don't stop the mouse actions like they should
+    - ...those readout need looking into. The decimal places looks a bit
+      terrible. This probably calls for a rewrite of the part to not use
+      individual segment displays
+
+
+2019-12-22
+  CoreV3
+    - control layer seems to be all in now (except the gui) some cleaning needed
+    - gui almost in, just some niggly bits to take care of
+    - niggly bits handled, things seem pretty nice now, and all the old tests
+      are working fine..this could call for a next layer
+    - made a start on layer 5; unfortunately it's not the easy plop-in-place
+      that I had hoped for, but with a little rejiggering things should work
+      fine
+    - fixed some edge cases with the detectIntersection functions
+    - added the path finding code ('shortestRouteFromVisibilityGraph') that
+      uses the visibilityGraphs, so now there's a way of finding the shortest
+      path!
+
+
+2019-12-19
+  CoreV3
+    - fixing up some things and moving some code to where I think it fits best.
+      Looks like we're ready for the next layer
+    - "pathExtrapolation" needs to be made faster. I'm convinced that it was
+      much faster before I decided to add that external library for boolean
+      opperations. Perhaps a hybred approach
+    - made a start on the control layer (this one is quite interconnected, so
+      it's a little messy right now)
+
+
+2019-12-18
+  CoreV3
+    - rewrote the group. I'm nervous about it, but all the tests are working
+      fine..
+
+
+2019-12-17
+  CoreV3
+    - further testing to the 'polygonsToVisibilityGraph' and
+      'detectIntersection' sections. It seems pretty solid now
+    - back on the rewrite of the element proxies; re-drafting to a nicer and
+      more private/public focused mode. The rectangle description is now
+      remarkably short; 29 lines, with 16 of those being comments (13 lines)
+    - rewrite going pretty well, I've finished everything but the group.. It's
+      fine, but its a little weird looking.
+
+
+2019-12-16
+  CoreV3
+    - finishing off the 'polygonsToVisibilityGraph' function, fixing up 
+      'detectIntersection' code along the way
+    - added in a few efficiencies to the 'detectIntersection' code (mainly
+      around boundingBox computations and trying to be clever with logic) and in
+      the 'polygonsToVisibilityGraph' (adding code so that it isn’t attempting
+      to scan routes twice) A little tentative as I was rushing a little near
+      the end, but it seems to have sped things up a lot
+
+
 2019-12-15
   CoreV3
     - still on that pathfinding library function thing, but have now improved
@@ -10,6 +156,33 @@
 2019-12-14
   CoreV3
     - started work on a new pathfinding library function
+
+
+2019-12-13
+  CoreV3
+    - finished the rewrite on the way logging is done on the library layer
+    - started a rewrite on the element proxies, using inheritance; which is
+      going really quite well
+
+
+2019-12-12
+  CoreV3
+    - more unit section tests..things are a little slow for my liking. I may
+      have to look into ways of reducing the number of messages travelling to
+      core, and ways of reducing the workload when they get there (I'm mainly
+      thinking about parts like the gauge and meters, which used to use a method
+      to stop the sub parts from running extremity calculations; but really,
+      both those could just be re-written with canvases, which would solve
+      everything just as well)
+    - did a rewrite on the way logging is done on the library layer
+    - started a rewrite on the way logging is done on the library layer
+
+
+2019-12-11
+  CoreV3
+    - added in the last of the connection nodes
+    - started work on the unit section (added the unit builder, validator and
+      a test)
 
 
 2019-12-08

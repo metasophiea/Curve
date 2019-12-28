@@ -9,7 +9,7 @@ _canvas_.core.go.add( function(){
             tickStep:0.02*rectangleCount,
             wavelength:3,
             colour:{
-                current:{r:0.9,g:0,b:0,a:1},
+                current:{r:1,g:1,b:1,a:1},
                 origin:{r:1,g:0,b:0,a:1},
                 destination:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
                 journeyPercentageStepSize:1/40,
@@ -26,7 +26,7 @@ _canvas_.core.go.add( function(){
             tickStep:0.02*rectangleCount,
             wavelength:2,
             colour:{
-                current:{r:0,g:0.9,b:0,a:1},
+                current:{r:1,g:1,b:1,a:1},
                 origin:{r:1,g:1,b:0,a:1},
                 destination:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
                 journeyPercentageStepSize:1/40,
@@ -43,7 +43,7 @@ _canvas_.core.go.add( function(){
             tickStep:0.02*rectangleCount,
             wavelength:1,
             colour:{
-                current:{r:0,g:0,b:0.9,a:1},
+                current:{r:1,g:1,b:1,a:1},
                 origin:{r:1,g:1,b:0,a:1},
                 destination:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
                 journeyPercentageStepSize:1/30,

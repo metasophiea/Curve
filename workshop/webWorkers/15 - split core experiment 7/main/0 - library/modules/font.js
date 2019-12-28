@@ -1,18 +1,18 @@
 this.listAllAvailableGlyphs = function(fontFileData){
-    dev.log.font('.listAllAvailableGlyphs('+JSON.stringify(fontFileData)+')'); //#development
+    dev.log.font('.listAllAvailableGlyphs(',fontFileData); //#development
     dev.count('.font.listAllAvailableGlyphs'); //#development
 
     const font = this.decodeFont(fontFileData);
     return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
 };
 this.decodeFont = function(fontFileData){
-    dev.log.font('.decodeFont('+JSON.stringify(fontFileData)+')'); //#development
+    dev.log.font('.decodeFont(',fontFileData); //#development
     dev.count('.font.decodeFont'); //#development
 
     return _thirdparty.opentype.parse(fontFileData);
 };
 this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
-    dev.log.font('.getAllAvailableGlyphDrawingPaths('+font+','+JSON.stringify(reducedGlyphSet)+')'); //#development
+    dev.log.font('.getAllAvailableGlyphDrawingPaths(',font,reducedGlyphSet); //#development
     dev.count('.font.getAllAvailableGlyphDrawingPaths'); //#development
 
     const glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
@@ -26,7 +26,7 @@ this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
     return outputData;
 };
 this.convertPathToPoints = function(path,detail=2){
-    dev.log.font('.convertPathToPoints('+JSON.stringify(path)+','+detail+')'); //#development
+    dev.log.font('.convertPathToPoints(',path,detail); //#development
     dev.count('.font.convertPathToPoints'); //#development
 
     let output = [];
@@ -71,7 +71,7 @@ this.convertPathToPoints = function(path,detail=2){
     return output;
 };
 this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
-    dev.log.font('.getTrianglesFromGlyphPath('+JSON.stringify(glyphPath)+','+detail+')'); //#development
+    dev.log.font('.getTrianglesFromGlyphPath(',glyphPath,detail); //#development
     dev.count('.font.getTrianglesFromGlyphPath'); //#development
 
     //input checking
@@ -126,7 +126,7 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
         return triangles;
 };
 this.extractGlyphs = function(fontFileData,reducedGlyphSet){
-    dev.log.font('.extractGlyphs('+JSON.stringify(fontFileData)+','+JSON.stringify(reducedGlyphSet)+')'); //#development
+    dev.log.font('.extractGlyphs(',fontFileData,reducedGlyphSet); //#development
     dev.count('.font.extractGlyphs'); //#development
 
     //decode font data
@@ -262,27 +262,27 @@ this.getLoadedFonts = function(){
 };
 
 this.isApprovedFont = function(fontName){
-    dev.log.font('.isApprovedFont('+fontName+')'); //#development
+    dev.log.font('.isApprovedFont(',fontName); //#development
     dev.count('.font.isApprovedFont'); //#development
 
     return vectorLibrary[fontName] != undefined;
 };
 this.isFontLoaded = function(fontName){
-    dev.log.font('.isFontLoaded('+fontName+')'); //#development
+    dev.log.font('.isFontLoaded(',fontName); //#development
     dev.count('.font.isFontLoaded'); //#development
 
     if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
     return vectorLibrary[fontName].isLoaded;
 }
 this.fontLoadAttempted = function(fontName){
-    dev.log.font('.fontLoadAttempted('+fontName+')'); //#development
+    dev.log.font('.fontLoadAttempted(',fontName); //#development
     dev.count('.font.fontLoadAttempted'); //#development
 
     if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
     return vectorLibrary[fontName].loadAttempted;
 }
 this.loadFont = function(fontName,onLoaded=()=>{}){
-    dev.log.font('.loadFont('+fontName+','+JSON.stringify(onLoaded)+')'); //#development
+    dev.log.font('.loadFont(',fontName,onLoaded); //#development
     dev.count('.font.loadFont'); //#development
 
     if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}

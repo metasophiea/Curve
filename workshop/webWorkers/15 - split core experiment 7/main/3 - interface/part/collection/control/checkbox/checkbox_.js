@@ -48,6 +48,8 @@ this.checkbox_ = function(
             if(!interactable){return;}
             object.set(!object.get());
         });
+        subject.cover.attachCallback('onmousedown', () => {});
+        subject.cover.attachCallback('onmouseup', () => {});
 
     //callbacks
         object.onchange = onchange;

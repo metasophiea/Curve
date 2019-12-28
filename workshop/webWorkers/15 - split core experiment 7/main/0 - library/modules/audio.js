@@ -7,7 +7,7 @@
     
 //utility functions
     this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
-        dev.log.audio('.changeAudioParam(-context-,'+JSON.stringify(audioParam)+','+target+','+time+','+curve+','+cancelScheduledValues+')'); //#development
+        dev.log.audio('.changeAudioParam(',context,audioParam,target,time,curve,cancelScheduledValues); //#development
         dev.count('.audio.changeAudioParam'); //#development
     
         if(target==null){return audioParam.value;}
@@ -33,7 +33,7 @@
                     audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
                 break;
                 case 'instant': default:
-                    audioParam.setTargetAtTime(target, context.currentTime, 0.001*10);
+                    audioParam.setTargetAtTime(target, context.currentTime, 0.01);
                 break;
             }
         }catch(e){
@@ -43,7 +43,7 @@
         }
     };
     this.loadAudioFile = function(callback,type='file',url=''){
-        dev.log.audio('.loadAudioFile('+JSON.stringify(callback)+','+type+','+url+')'); //#development
+        dev.log.audio('.loadAudioFile(',callback,type,url); //#development
         dev.count('.audio.loadAudioFile'); //#development
     
         switch(type){
@@ -86,7 +86,7 @@
         }
     };
     this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
-        dev.log.audio('.waveformSegment('+JSON.stringify(audioBuffer)+','+JSON.stringify(bounds)+','+resolution+')'); //#development
+        dev.log.audio('.waveformSegment(',audioBuffer,bounds,resolution); //#development
         dev.count('.audio.waveformSegment'); //#development
     
         const waveform = audioBuffer.getChannelData(0);
@@ -110,7 +110,7 @@
         return outputArray;
     };
     this.loadBuffer = function(context, data, destination, onended){
-        dev.log.audio('.loadBuffer(-context-,'+JSON.stringify(data)+','+destination+','+onended+')'); //#development
+        dev.log.audio('.loadBuffer(',context,data,destination,onended); //#development
         dev.count('.audio.loadBuffer'); //#development
     
         const temp = context.createBufferSource();
@@ -132,7 +132,7 @@
     this.destination.connect(this.context.destination);
     this.destination._gain = 1;
     this.destination.masterGain = function(value){
-        dev.log.audio('.masterGain('+value+')'); //#development
+        dev.log.audio('.masterGain(',value); //#development
         dev.count('.audio.masterGain'); //#development
     
         if(value == undefined){return this.destination._gain;}
@@ -201,39 +201,39 @@
 
     //lead functions
         this.num2name = function(num){ 
-            dev.log.audio('.num2name('+num+')'); //#development
+            dev.log.audio('.num2name(',num); //#development
             dev.count('.audio.num2name'); //#development
     
             return this.midinumbers_names[num];
         };
         this.num2freq = function(num){ 
-            dev.log.audio('.num2freq('+num+')'); //#development
+            dev.log.audio('.num2freq(',num); //#development
             dev.count('.audio.num2freq'); //#development
     
             return this.names_frequencies[this.midinumbers_names[num]];
         };
 
         this.name2num = function(name){ 
-            dev.log.audio('.name2num('+name+')'); //#development
+            dev.log.audio('.name2num(',name); //#development
             dev.count('.audio.name2num'); //#development
     
             return this.names_midinumbers[name];
         };
         this.name2freq = function(name){ 
-            dev.log.audio('.name2freq(-'+name+')'); //#development
+            dev.log.audio('.name2freq(',name); //#development
             dev.count('.audio.name2freq'); //#development
     
             return this.names_frequencies[name];
         };
 
         this.freq2num = function(freq){ 
-            dev.log.audio('.freq2num('+freq+')'); //#development
+            dev.log.audio('.freq2num(',freq); //#development
             dev.count('.audio.freq2num'); //#development
     
             return this.names_midinumbers[this.frequencies_names[freq]];
         };
         this.freq2name = function(freq){ 
-            dev.log.audio('.freq2name(-'+freq+')'); //#development
+            dev.log.audio('.freq2name(',freq); //#development
             dev.count('.audio.freq2name'); //#development
     
             return this.frequencies_names[freq];

@@ -10,7 +10,7 @@ const element = new function(){
             return Object.keys(elementLibrary);
         };
         this.installElement = function(elementName, creatorMethod, allowOverwrite=false){
-            dev.log.element('.installElement('+elementName+','+(typeof creatorMethod == 'function' ? '-creatorMethod-' : undefined)+','+allowOverwrite+')'); //#development
+            dev.log.element('.installElement(',elementName,creatorMethod,allowOverwrite); //#development
 
             if(!allowOverwrite && elementName in elementLibrary){
                 dev.log.element('.installElement -> element "'+elementName+'" is already in the elementLibrary'); //#development
@@ -45,15 +45,15 @@ const element = new function(){
 
         //creation
             this.create_skipDatabase = function(type,name){
-                dev.log.element('.create_skipDatabase('+type+','+name+')'); //#development
+                dev.log.element('.create_skipDatabase(',type,name); //#development
                 return new elementLibrary[type](-1,name);
             };
             this.create = function(type,name){
-                dev.log.element('.create('+type+','+name+')'); //#development
+                dev.log.element('.create(',type,name); //#development
 
-                if(type == undefined){ report.error('elememt.createElement: type argument not provided - element will not be produced'); return; }
-                if(name == undefined){ report.error('elememt.createElement: name argument not provided - element will not be produced'); return; }
-                if(elementLibrary[type] == undefined){ report.error('elememt.createElement: type "'+type+'" does not exist - element will not be produced'); return; }
+                if(type == undefined){ console.error('elememt.createElement: type argument not provided - element will not be produced'); return; }
+                if(name == undefined){ console.error('elememt.createElement: name argument not provided - element will not be produced'); return; }
+                if(elementLibrary[type] == undefined){ console.error('elememt.createElement: type "'+type+'" does not exist - element will not be produced'); return; }
 
                 const newElement_id = generateElementId();
                 createdElements[newElement_id] = new elementLibrary[type](newElement_id,name);
@@ -62,7 +62,7 @@ const element = new function(){
 
         //deletion
             this.delete = function(element){ 
-                dev.log.element('.delete('+element+')'); //#development
+                dev.log.element('.delete(',element); //#development
                 createdElements[getIdFromElement(element)] = undefined;
             };
             this.deleteAllCreated = function(){ 
@@ -72,7 +72,7 @@ const element = new function(){
 
         //other
             this.getTypeById = function(element){ 
-                dev.log.element('.getTypeById('+element+')'); //#development
+                dev.log.element('.getTypeById(',element); //#development
                 return element.getType();
             };
             this._dump = function(){

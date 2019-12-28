@@ -88,8 +88,10 @@ this.player = function(context){
 
             //update playhead position data
                 const currentTime = self.currentTime(playhead);
-                state.playhead[playhead].position = currentTime;
-                state.playhead[playhead].lastSightingTime = context.currentTime;
+                //(playhead must exist)
+                    if(state.playhead[playhead] == undefined){return;}
+                    state.playhead[playhead].position = currentTime;
+                    state.playhead[playhead].lastSightingTime = context.currentTime;
 
             //obviously, if the loop isn't active or the file isn't playing, don't do any of the work
                 if(!state.loop.active || !state.playhead[playhead].playing){return;}

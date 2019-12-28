@@ -31,7 +31,7 @@ this.audio_meter_level = function(
 
     //circuitry
         const converter = interface.circuit.audio2percentage()
-        converter.newValue = function(val){meter.set(val);};
+        converter.newValue = function(val){object.set(val);};
 
     //audio connections
         object.audioIn = function(){ return converter.audioIn() };

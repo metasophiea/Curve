@@ -17,7 +17,7 @@ this.group = function(_id,_name){
             this.ignored = function(a){
                 if(a==undefined){return ignored;}     
                 ignored = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             
@@ -37,52 +37,52 @@ this.group = function(_id,_name){
             this.x = function(a){ 
                 if(a==undefined){return x;}     
                 x = a;     
-                dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.y = function(a){ 
                 if(a==undefined){return y;}     
                 y = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.angle = function(a){ 
                 if(a==undefined){return angle;} 
                 angle = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.heedCamera = function(a){
                 if(a==undefined){return heedCamera;}     
                 heedCamera = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.heedCamera('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].heedCamera(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.static = function(a){
                 if(a==undefined){return static;}  
                 static = a;  
-                dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
                 if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera, static:static }; } 
-                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to ',attributes[key]); //#development
                     try{
                         self[key](attributes[key]);
                     }catch(err){
-                        console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                        console.warn(type,id+'['+self.getAddress()+'].unifiedAttribute -> unknown attribute "'+key+'" which was being set to "',attributes[key]+'"');
                     }
                 });
                 allowComputeExtremities = true;
@@ -113,21 +113,21 @@ this.group = function(_id,_name){
 
         this.children = function(){return children;};
         this.syncChildren = function(foreignChildren){
-            dev.log.elementLibrary(type,self.getAddress(),'.syncChildren('+JSON.stringify(foreignChildren)+')'); //#development
-            dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren(',foreignChildren); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
             this.clear();
-            dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
             foreignChildren.forEach(child => {
                 this.append(child);
             });
-            dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
         };
         this.getChildByName = function(name){return getChildByName(name);};
         this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
         this.contains = function(element){ return checkForElement(element) != undefined; };
         this.append = function(newElement){
-            dev.log.elementLibrary(type,self.getAddress(),'.append('+JSON.stringify(newElement)+')'); //#development
-            dev.log.elementLibrary(type,self.getAddress(),'.append -> children: ['+children.map(child => JSON.stringify(child))+']','newElement.name: '+(newElement!=undefined?newElement.name:'')); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].append(',newElement); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].append -> children:',children,'newElement.name:',newElement); //#development
 
             if( !isValidElement(newElement) ){ return false; } 
 
@@ -140,7 +140,7 @@ this.group = function(_id,_name){
             return true;
         };
         this.prepend = function(newElement){
-            dev.log.elementLibrary(type,self.getAddress(),'.prepend('+JSON.stringify(newElement)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].prepend(',newElement); //#development
 
             if( !isValidElement(newElement) ){ return false; }
 
@@ -153,22 +153,24 @@ this.group = function(_id,_name){
             return true;
         };
         this.remove = function(newElement){
-            dev.log.elementLibrary(type,self.getAddress(),'.remove('+JSON.stringify(newElement)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].remove(',newElement); //#development
             if(newElement == undefined){return;}
-            children.splice(children.indexOf(newElement), 1);
+
+            const index = children.indexOf(newElement);
+            if(index != -1){ children.splice(index,1); }
             augmentExtremities_remove(newElement);
 
             newElement.parent = undefined;
             delete childRegistry[newElement.name];
         };
         this.clear = function(){
-            dev.log.elementLibrary(type,self.getAddress(),'.clear()'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].clear()'); //#development
             children = [];
             childRegistry = {};
             return true;
         };
         this.getElementsUnderPoint = function(x,y){
-            dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderPoint('+x+','+y+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].getElementsUnderPoint(',x,y); //#development
 
             let returnList = [];
 
@@ -190,7 +192,7 @@ this.group = function(_id,_name){
             return returnList;
         };
         this.getElementsUnderArea = function(points){
-            dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderArea('+points+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].getElementsUnderArea(',points); //#development
 
             let returnList = [];
 
@@ -226,35 +228,35 @@ this.group = function(_id,_name){
         const clipping = { stencil:undefined, active:false };
         this.stencil = function(element){
             if(element == undefined){return clipping.stencil;}
-            dev.log.elementLibrary(type,self.getAddress(),'.stencil('+JSON.stringify(element)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].stencil(',element); //#development
             clipping.stencil = element;
             clipping.stencil.parent = this;
             if(clipping.active){ computeExtremities(); }
         };
         this.clipActive = function(bool){
             if(bool == undefined){return clipping.active;}
-            dev.log.elementLibrary(type,self.getAddress(),'.clipActive('+bool+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].clipActive(',bool); //#development
             clipping.active = bool;
             computeExtremities();
         };
 
     //extremities
         function calculateExtremitiesBox(){
-            dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox()'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox()'); //#development
 
             let limits = {left:undefined,right:undefined,top:undefined,bottom:undefined};
             if(children.length == 0){
-                dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> no children'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> no children'); //#development
                 limits = {left:x,right:x,top:y,bottom:y};
             }else{
-                dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> children.length: '+children.length); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> children.length: '+children.length); //#development
                 const firstChild = library.math.boundingBoxFromPoints(children[0].extremities.points);
-                dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> firstChild: '+JSON.stringify(firstChild)); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> firstChild:',firstChild); //#development
                 limits = { left:firstChild.topLeft.x, right:firstChild.bottomRight.x, top:firstChild.bottomRight.y, bottom:firstChild.topLeft.y }
 
                 children.slice(1).forEach(child => {
                     const tmp = library.math.boundingBoxFromPoints(child.extremities.points);
-                    dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> child: '+JSON.stringify(tmp)); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> child:',tmp); //#development
                     if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
                     else if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
                     if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
@@ -263,10 +265,10 @@ this.group = function(_id,_name){
             }
 
             self.extremities.points = [ {x:limits.left,y:limits.top}, {x:limits.right,y:limits.top}, {x:limits.right,y:limits.bottom}, {x:limits.left,y:limits.bottom} ];
-            dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> self.extremities.points: '+JSON.stringify(self.extremities.points)); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> self.extremities.points:',self.extremities.points); //#development
         }
         function updateExtremities(informParent=true){
-            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities('+informParent+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities(',informParent); //#development
            
             //generate extremity points
                 self.extremities.points = [];
@@ -278,17 +280,17 @@ this.group = function(_id,_name){
                 }else{
                     calculateExtremitiesBox();
                 }
-                dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> extremities.points.length: '+self.extremities.points.length); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> extremities.points.length:',self.extremities.points.length); //#development
 
             //generate bounding box from points
                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> self.extremities.boundingBox: '+JSON.stringify(self.extremities.boundingBox)); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
 
             //update parent
                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
         }
         function augmentExtremities(element){
-            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities('+JSON.stringify(element)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities(',element); //#development
 
             //get offset from parent
                 const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
@@ -304,14 +306,14 @@ this.group = function(_id,_name){
                 element.computeExtremities(false,newOffset);
             //augment points list
                 calculateExtremitiesBox();
-                dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities -> extremities.points.length: '+self.extremities.points.length); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities -> extremities.points.length:',self.extremities.points.length); //#development
             //recalculate bounding box
                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
             //inform parent of change
                 if(self.parent){self.parent.updateExtremities();}
         }
         function computeExtremities(informParent=true,offset){
-            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
                 if(offset == undefined){ offset = self.parent && !static? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -331,11 +333,11 @@ this.group = function(_id,_name){
                 updateExtremities(informParent,offset);
         }
         function augmentExtremities_add(element){
-            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add('+JSON.stringify(element)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add(',element); //#development
 
             //get offset from parent
                 const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add -> generated offset: '+JSON.stringify(offset)); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add -> generated offset:',offset); //#development
             //combine offset with group's position, angle and scale to produce new offset for children
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const newOffset = { 
@@ -356,12 +358,12 @@ this.group = function(_id,_name){
                     { x:self.extremities.boundingBox.topLeft.x, y:self.extremities.boundingBox.bottomRight.y },
                 ];
 
-                dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add -> extremities.points.length: '+self.extremities.points.length); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add -> extremities.points.length:',self.extremities.points.length); //#development
             //inform parent of change
                 if(self.parent){self.parent.updateExtremities();}
         }
         function augmentExtremities_remove(element){
-            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove('+JSON.stringify(element)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove(',element); //#development
             //this function assumes that the element has already been removed from the 'children' variable)
             //is the element's bounding box within the bounding box of the group; if so, no recalculation need be done
             //otherwise the element is touching the boundary, in which case search through the children for another 
@@ -378,13 +380,13 @@ this.group = function(_id,_name){
                 }
             };
             if( data.topLeft.x != 0 && data.topLeft.y != 0 && data.bottomRight.x != 0 && data.bottomRight.y != 0 ){
-                dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> easy remove: no changes to the group\'s bounding box required'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> easy remove: no changes to the group\'s bounding box required'); //#development
                 return;
             }else{
                 ['topLeft','bottomRight'].forEach(cornerName => {
                     ['x','y'].forEach(axisName => {
                         if(data[cornerName][axisName] == 0){
-                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> '+cornerName+'_'+axisName+' is at boundary'); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> '+cornerName+'_'+axisName+' is at boundary'); //#development
 
                             let boundaryToucherFound = false;
                             let closestToBoundary = {distance:undefined, position:undefined};
@@ -397,7 +399,7 @@ this.group = function(_id,_name){
                             }
 
                             if(!boundaryToucherFound){
-                                dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> need to adjust the bounding box'); //#development
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> need to adjust the bounding box'); //#development
                                 self.extremities.boundingBox[cornerName][axisName] = closestToBoundary.position;
                             }
                         }
@@ -407,12 +409,12 @@ this.group = function(_id,_name){
         }
 
         this.getOffset = function(){
-            dev.log.elementLibrary(type,self.getAddress(),'.getOffset()'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
 
             let output = {x:0,y:0,scale:1,angle:0};
 
             if(this.parent){
-                dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> parent found'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> parent found'); //#development
                 const offset = this.parent.getOffset();
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 output = { 
@@ -422,11 +424,11 @@ this.group = function(_id,_name){
                     angle: offset.angle + angle,
                 };
             }else{
-                dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> no parent found'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> no parent found'); //#development
                 output = {x:x ,y:y ,scale:scale ,angle:angle};
             }
 
-            dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> output: '+JSON.stringify(output)); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> output:',output); //#development
             return output;
         };
         this.computeExtremities = computeExtremities;
@@ -439,7 +441,7 @@ this.group = function(_id,_name){
             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
         }
         this.render = function(context, offset){
-            dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             //combine offset with group's position, angle and scale to produce new offset for children
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const newOffset = { 
@@ -466,17 +468,17 @@ this.group = function(_id,_name){
             
             //render children
                 children.forEach(function(a){
-                    dev.log.elementLibrary(type,self.getAddress(),'.render -> '+JSON.stringify(clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox())+' / '+JSON.stringify(a.extremities.boundingBox)); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> '+JSON.stringify(clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox())+' / '+JSON.stringify(a.extremities.boundingBox)); //#development
                     if(
                         library.math.detectOverlap.boundingBoxes(
                             clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox(),
                             a.extremities.boundingBox
                         )
                     ){ 
-                        dev.log.elementLibrary(type,self.getAddress(),'.render -> rendering shape: '+a.name); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering shape:',a.name); //#development
                         a.render(context,newOffset);
                     }else{
-                        dev.log.elementLibrary(type,self.getAddress(),'.render -> not rendering shape: '+a.name); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering shape:',a.name); //#development
                     }
                 });
 
@@ -492,24 +494,25 @@ this.group = function(_id,_name){
 
     //info dump
         this._dump = function(){
-            report.info(self.getAddress(),'._dump()');
-            report.info(self.getAddress(),'._dump -> id: '+id);
-            report.info(self.getAddress(),'._dump -> type: '+type);
-            report.info(self.getAddress(),'._dump -> name: '+self.name);
-            report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-            report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-            report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-            report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-            report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-            report.info(self.getAddress(),'._dump -> x: '+x);
-            report.info(self.getAddress(),'._dump -> y: '+y);
-            report.info(self.getAddress(),'._dump -> angle: '+angle);
-            report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> heedCamera: '+heedCamera);
-            report.info(self.getAddress(),'._dump -> static: '+static);
-            report.info(self.getAddress(),'._dump -> children: '+JSON.stringify(children));
-            report.info(self.getAddress(),'._dump -> childRegistry: '+JSON.stringify(childRegistry));
-            report.info(self.getAddress(),'._dump -> clipping: '+JSON.stringify(clipping));
+            console.log(self.getAddress(),'._dump()');
+            console.log(self.getAddress(),'._dump -> id: '+id);
+            console.log(self.getAddress(),'._dump -> type: '+type);
+            console.log(self.getAddress(),'._dump -> name: '+self.name);
+            console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+            console.log(self.getAddress(),'._dump -> parent:',self.parent);
+            console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+            console.log(self.getAddress(),'._dump -> extremities:',self.extremities);
+            console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+            console.log(self.getAddress(),'._dump -> x: '+x);
+            console.log(self.getAddress(),'._dump -> y: '+y);
+            console.log(self.getAddress(),'._dump -> angle: '+angle);
+            console.log(self.getAddress(),'._dump -> scale: '+scale);
+            console.log(self.getAddress(),'._dump -> heedCamera: '+heedCamera);
+            console.log(self.getAddress(),'._dump -> static: '+static);
+            console.log(self.getAddress(),'._dump -> children.length: '+children.length);
+            console.log(self.getAddress(),'._dump -> children:',children);
+            console.log(self.getAddress(),'._dump -> childRegistry:',childRegistry);
+            console.log(self.getAddress(),'._dump -> clipping:',clipping);
         };
     
     //interface

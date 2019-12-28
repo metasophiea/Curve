@@ -1,9 +1,9 @@
 (function() {
     const __canvasPrefix = 'interface';
-    var __canvasElements = document.getElementsByTagName('canvas');
-    for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.length; __canvasElements_count++){
+    const __canvasElements = document.getElementsByTagName('canvas');
+    for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.length; __canvasElements_count++){
         if( __canvasElements[__canvasElements_count].hasAttribute(__canvasPrefix) ){
-            var _canvas_ = __canvasElements[__canvasElements_count];
+            const _canvas_ = __canvasElements[__canvasElements_count];
             _canvas_.layers = new function(){
                 const layerRegistry = {};
             
@@ -19,84 +19,50 @@
                     return Object.keys(layerRegistry).map(key => { return {name:key, data:layerRegistry[key].versionInformation} });
                 };
             };
-            
             _canvas_.library = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
                 const library = this;
-            
+                
                 const dev = {
                     prefix:'library',
-            
-                    countActive:!false,
-                    countMemory:{},
                 
-                    math:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
-                    structure:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
-                    audio:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
-                    font:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
-                    misc:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
+                    active:{ math:false, structure:false, audio:false, font:false, misc:false },
                 
                     log:{
-                        math:function(data){
-                            if(!dev.math.active){return;}
-                            console.log('%c'+dev.prefix+'.math'+(new Array(...arguments).join(' ')), dev.math.fontStyle );
+                        math:function(){
+                            if(!dev.active.math){return;}
+                            console.log( dev.prefix+'.math'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
-                        structure:function(data){
-                            if(!dev.structure.active){return;}
-                            console.log('%c'+dev.prefix+'.structure'+(new Array(...arguments).join(' ')), dev.structure.fontStyle );
+                        structure:function(){
+                            if(!dev.active.structure){return;}
+                            console.log( dev.prefix+'.structure'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
-                        audio:function(data){
-                            if(!dev.audio.active){return;}
-                            console.log('%c'+dev.prefix+'.audio'+(new Array(...arguments).join(' ')), dev.audio.fontStyle );
+                        audio:function(){
+                            if(!dev.active.audio){return;}
+                            console.log( dev.prefix+'.audio'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
-                        font:function(data){
-                            if(!dev.font.active){return;}
-                            console.log('%c'+dev.prefix+'.font'+(new Array(...arguments).join(' ')), dev.font.fontStyle );
+                        font:function(){
+                            if(!dev.active.font){return;}
+                            console.log( dev.prefix+'.font'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
-                        misc:function(data){
-                            if(!dev.misc.active){return;}
-                            console.log('%c'+dev.prefix+'.misc'+(new Array(...arguments).join(' ')), dev.misc.fontStyle );
+                        misc:function(){
+                            if(!dev.active.misc){return;}
+                            console.log( dev.prefix+'.misc'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
                     },
+                
+                    countActive:false,
+                    countMemory:{},
                     count:function(commandTag){
                         if(!dev.countActive){return;}
                         if(commandTag in dev.countMemory){ dev.countMemory[commandTag]++; }
                         else{ dev.countMemory[commandTag] = 1; }
                     },
+                    countResults:function(){return countMemory;},
                 };
-                this.dev = {
-                    countResults:function(){ return dev.countMemory; },
-                    testLoggers:function(){
-                        const math = dev.math.active;
-                        const structure = dev.structure.active;
-                        const audio = dev.audio.active;
-                        const font = dev.font.active;
-                        const misc = dev.misc.active;
-            
-                        dev.math.active = true;
-                        dev.structure.active = true;
-                        dev.audio.active = true;
-                        dev.font.active = true;
-                        dev.misc.active = true;
-            
-                        dev.log.math('.testLoggers -> math');
-                        dev.log.structure('.testLoggers -> structure');
-                        dev.log.audio('.testLoggers -> audio');
-                        dev.log.font('.testLoggers -> font');
-                        dev.log.misc('.testLoggers -> misc');
-            
-                        dev.math.active = math;
-                        dev.structure.active = structure;
-                        dev.audio.active = audio;
-                        dev.font.active = font;
-                        dev.misc.active = misc;
-                    },
-                };
-            
+                
                 this.math = new function(){
                     this.averageArray = function(array){
-                        dev.log.math('.averageArray('+JSON.stringify(array)+')'); //#development
-                        dev.count('.math.averageArray'); //#development
                     
                         // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
                     
@@ -106,18 +72,46 @@
                         return sum/array.length;
                     };
                     this.averagePoint = function(points){
-                        dev.log.math('.averagePoint('+JSON.stringify(points)+')'); //#development
-                        dev.count('.math.averagePoint'); //#development
                     
                         const sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
                         return {x:sum.x/points.length,y:sum.y/points.length};
                     };
                     this.boundingBoxFromPoints = function(points){
-                        dev.log.math('.boundingBoxFromPoints('+JSON.stringify(points)+')'); //#development
-                        dev.count('.math.boundingBoxFromPoints'); //#development
                     
                         if(points.length == 0){
                             return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
+                        }
+                    
+                        if(points.length == 1){
+                            return { topLeft:{x:points[0].x,y:points[0].y}, bottomRight:{x:points[0].x,y:points[0].y} };
+                        }
+                    
+                        if(points.length == 2){
+                            if(points[0].x < points[1].x){
+                                if(points[0].y < points[1].y){
+                                    return {
+                                        topLeft:{x:points[0].x,y:points[0].y},
+                                        bottomRight:{x:points[1].x,y:points[1].y},
+                                    };
+                                }else{
+                                    return {
+                                        topLeft:{x:points[0].x,y:points[1].y},
+                                        bottomRight:{x:points[1].x,y:points[0].y},
+                                    };
+                                }
+                            }else{
+                                if(points[0].y < points[1].y){
+                                    return {
+                                        topLeft:{x:points[1].x,y:points[0].y},
+                                        bottomRight:{x:points[0].x,y:points[1].y},
+                                    };
+                                }else{
+                                    return {
+                                        topLeft:{x:points[1].x,y:points[1].y},
+                                        bottomRight:{x:points[0].x,y:points[0].y},
+                                    };
+                                }
+                            }
                         }
                     
                         let left = points[0].x; let right = points[0].x;
@@ -137,8 +131,6 @@
                         };
                     };
                     this.cartesianAngleAdjust = function(x,y,angle){
-                        dev.log.math('.cartesianAngleAdjust('+x+','+y+','+angle+')'); //#development
-                        dev.count('.math.cartesianAngleAdjust'); //#development
                     
                         // //v1    
                         //     if(angle == 0){ return {x:x,y:y}; }
@@ -156,14 +148,10 @@
                     };
                     this.convertColour = new function(){
                         this.obj2rgba = function(obj){
-                            dev.log.math('.convertColour.obj2rgba('+JSON.stringify(obj)+')'); //#development
-                            dev.count('.math.convertColour.obj2rgba'); //#development
                     
                             return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
                         };
                         this.rgba2obj = function(rgba){
-                            dev.log.math('.convertColour.rgba2obj('+JSON.stringify(rgba)+')'); //#development
-                            dev.count('.convertColour.rgba2obj'); //#development
                     
                             rgba = rgba.split(',');
                             rgba[0] = rgba[0].replace('rgba(', '');
@@ -174,8 +162,6 @@
                     };
                     this.curveGenerator = new function(){
                         this.linear = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.linear('+stepCount+','+start+','+end+')'); //#development
-                            dev.count('.math.curveGenerator.linear'); //#development
                     
                             stepCount = Math.abs(stepCount)-1; var outputArray = [0];
                             for(let a = 1; a < stepCount; a++){ 
@@ -191,8 +177,6 @@
                             return outputArray;
                         };
                         this.sin = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.sin('+stepCount+','+start+','+end+')'); //#development
-                            dev.count('.math.curveGenerator.sin'); //#development
                     
                             stepCount = Math.abs(stepCount) -1;
                             let outputArray = [0];
@@ -211,8 +195,6 @@
                             return outputArray;		
                         };
                         this.cos = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.cos('+stepCount+','+start+','+end+')'); //#development
-                            dev.count('.math.curveGenerator.cos'); //#development
                     
                             stepCount = Math.abs(stepCount) -1;
                             let outputArray = [0];
@@ -231,8 +213,6 @@
                             return outputArray;	
                         };
                         this.s = function(stepCount=2, start=0, end=1, sharpness=8){
-                            dev.log.math('.curveGenerator.s('+stepCount+','+start+','+end+','+sharpness+')'); //#development
-                            dev.count('.math.curveGenerator.s'); //#development
                     
                             if(sharpness == 0){sharpness = 1/1000000;}
                     
@@ -253,8 +233,6 @@
                             return outputArray;
                         };
                         this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
-                            dev.log.math('.curveGenerator.exponential('+stepCount+','+start+','+end+','+sharpness+')'); //#development
-                            dev.count('.math.curveGenerator.exponential'); //#development
                     
                             stepCount = stepCount-1;
                             let outputArray = [];
@@ -275,26 +253,18 @@
                     };
                     this.curvePoint = new function(){
                         this.linear = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.linear('+x+','+start+','+end+')'); //#development
-                            dev.count('.math.curvePoint.linear'); //#development
                     
                             return x *(end-start)+start;
                         };
                         this.sin = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.sin('+x+','+start+','+end+')'); //#development
-                            dev.count('.math.curvePoint.sin'); //#development
                     
                             return Math.sin(Math.PI/2*x) *(end-start)+start;
                         };
                         this.cos = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.cos('+x+','+start+','+end+')'); //#development
-                            dev.count('.math.curvePoint.cos'); //#development
                     
                             return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
                         };
                         this.s = function(x=0.5, start=0, end=1, sharpness=8){
-                            dev.log.math('.curvePoint.s('+x+','+start+','+end+','+sharpness+')'); //#development
-                            dev.count('.math.curvePoint.s'); //#development
                     
                             const temp = library.math.normalizeStretchArray([
                                 1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
@@ -304,8 +274,6 @@
                             return temp[1] *(end-start)+start;
                         };
                         this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
-                            dev.log.math('.curvePoint.exponential('+x+','+start+','+end+','+sharpness+')'); //#development
-                            dev.count('.math.curvePoint.exponential'); //#development
                     
                             const temp = library.math.normalizeStretchArray([
                                 (Math.exp(sharpness*0)-1)/(Math.E-1),
@@ -315,24 +283,508 @@
                             return temp[1] *(end-start)+start;
                         };
                     };
+                    this.getAngleOfTwoPoints = function(point_1,point_2){
+                    
+                        if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
+                    
+                        const xDelta = point_2.x - point_1.x;
+                        const yDelta = point_2.y - point_1.y;
+                        let angle = Math.atan( yDelta/xDelta );
+                    
+                        if(xDelta < 0){ angle = Math.PI + angle; }
+                        else if(yDelta < 0){ angle = Math.PI*2 + angle; }
+                    
+                        return angle;
+                    };
+                    this.getIndexOfSequence = function(array,sequence){ 
+                    
+                        function comp(thing_A,thing_B){
+                            const keys = Object.keys(thing_A);
+                            if(keys.length == 0){ return thing_A == thing_B; }
+                    
+                            for(let a = 0; a < keys.length; a++){
+                                if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
+                                if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
+                            }
+                            return true;
+                        }
+                    
+                        if(array.length == 0 || sequence.length == 0){return undefined;}
+                    
+                        let index = 0;
+                        for(index = 0; index < array.length - sequence.length + 1; index++){
+                            if( comp(array[index], sequence[0]) ){
+                                let match = true;
+                                for(let a = 1; a < sequence.length; a++){
+                                    if( !comp(array[index+a],sequence[a]) ){
+                                        match = false;
+                                        break;
+                                    }
+                                }
+                                if(match){return index;}
+                            }
+                        }
+                    
+                        return undefined;
+                    };
+                    this.largestValueFound = function(array){
+                    
+                        if(array.length == 0){return undefined;}
+                        return array.reduce(function(max,current){
+                            return Math.abs(max) > Math.abs(current) ? max : current;
+                        });
+                    };
+                    this.normalizeStretchArray = function(array){
+                    
+                        //discover the largest number
+                            var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
+                    
+                        //divide everything by this largest number, making everything a ratio of this value 
+                            var dux = Math.abs(array[biggestIndex]);
+                            array = array.map(x => x / dux);
+                    
+                        //stretch the other side of the array to meet 0 or 1
+                            if(array[0] == 0 && array[array.length-1] == 1){return array;}
+                            var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
+                            array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
+                    
+                        return array;
+                    };
+                    this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+                    
+                        const mux = (d - start)/(end - start);
+                        if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
+                        return mux*realLength;
+                    };
+                    this.seconds2time = function(seconds){
+                    
+                        const result = {h:0, m:0, s:0, ms:0, µs:0, ns:0, ps:0, fs:0};
+                        
+                        result.h = Math.floor(seconds/3600);
+                        seconds = seconds - result.h*3600;
+                        if(seconds <= 0){return result;}
+                    
+                        result.m = Math.floor(seconds/60);
+                        seconds = seconds - result.m*60;
+                        if(seconds <= 0){return result;}
+                    
+                        result.s = Math.floor(seconds);
+                        seconds = seconds - result.s;
+                        if(seconds <= 0){return result;}
+                    
+                        result.ms = Math.floor(seconds*1000);
+                        seconds = seconds*1000 - result.ms;
+                        if(seconds <= 0){return result;}
+                    
+                        result.µs = Math.floor(seconds*1000);
+                        seconds = seconds*1000 - result.µs;
+                        if(seconds <= 0){return result;}
+                    
+                        result.ns = Math.floor(seconds*1000);
+                        seconds = seconds*1000 - result.ns;
+                        if(seconds <= 0){return result;}
+                    
+                        result.ps = Math.floor(seconds*1000);
+                        seconds = seconds*1000 - result.ps;
+                        if(seconds <= 0){return result;}
+                    
+                        result.fs = seconds*1000;
+                        
+                        return result;
+                    };
+                    
+                    this.distanceBetweenTwoPoints = function(point_a,point_b){
+                        return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
+                    };
+                    this.cartesian2polar = function(x,y){
+                    
+                        const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
+                    
+                        if(x === 0){
+                            if(y === 0){ang = 0;}
+                            else if(y > 0){ang = 0.5*Math.PI;}
+                            else{ang = 1.5*Math.PI;}
+                        }
+                        else if(y === 0){
+                            if(x >= 0){ang = 0;}else{ang = Math.PI;}
+                        }
+                        else if(x >= 0){ ang = Math.atan(y/x); }
+                        else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
+                    
+                        return {'dis':dis,'ang':ang};
+                    };
+                    this.polar2cartesian = function(angle,distance){
+                    
+                        return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
+                    };
+                    
+                    this.blendColours = function(rgba_1,rgba_2,ratio){
+                    
+                        return {
+                            r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
+                            g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
+                            b: (1-ratio)*rgba_1.b + ratio*rgba_2.b,
+                            a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
+                        };           
+                    };
+                    this.multiBlendColours = function(rgbaList,ratio){
+                    
+                        //special cases
+                            if(ratio == 0){return rgbaList[0];}
+                            if(ratio == 1){return rgbaList[rgbaList.length-1];}
+                        //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+                            const p = ratio*(rgbaList.length-1);
+                            return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+                    };
+                    
+                    
+                    
+                    this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+                    
+                        if(inputFormat == 'flatArray'){
+                            const tmp = [];
+                            for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
+                            regions = [tmp];
+                        }
+                    
+                        const holes = regions.reverse().map(region => region.length);
+                        holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
+                        holes.pop();
+                    
+                        return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+                    };
+                    this.unionPolygons = function(polygon1,polygon2){
+                    
+                        //martinez (not working)
+                        // for(var a = 0; a < polygon1.length; a++){
+                        //     polygon1[a].push( polygon1[a][0] );
+                        // }
+                        // for(var a = 0; a < polygon2.length; a++){
+                        //     polygon2[a].push( polygon2[a][0] );
+                        // }
+                    
+                        // var ans = _thirdparty.martinez.union(
+                        //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
+                        //     polygon2.map(region => region.map(item => [item.x,item.y])  )
+                        // );
+                        // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
+                    
+                        //PolyBool
+                        return _thirdparty.PolyBool.union(
+                            {regions:polygon1.map(region => region.map(item => [item.x,item.y]))}, 
+                            {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
+                        ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
+                    }
+                    
+                    this.detectIntersect = new function(){
+                        this.boundingBoxes = function(box_a, box_b){
+                    
+                            return box_a.bottomRight.y >= box_b.topLeft.y && 
+                                box_a.bottomRight.x >= box_b.topLeft.x && 
+                                box_a.topLeft.y <= box_b.bottomRight.y && 
+                                box_a.topLeft.x <= box_b.bottomRight.x;
+                        };
+                    
+                        this.pointWithinBoundingBox = function(point,box){
+                            return !(
+                                point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
+                                point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
+                            );
+                        };
+                        this.pointOnLine = function(point,line){
+                            
+                            if( 
+                                point.x < line[0].x && point.x < line[1].x ||
+                                point.y < line[0].y && point.y < line[1].y ||
+                                point.x > line[0].x && point.x > line[1].x ||
+                                point.y > line[0].y && point.y > line[1].y
+                            ){return false;}
+                    
+                            if(point.x == line[0].x && point.y == line[0].y){ return true; }
+                            if(point.x == line[1].x && point.y == line[1].y){ return true; }
+                            if(line[0].x == line[1].x && point.x == line[0].x){
+                                return (line[0].y > point.y && point.y > line[1].y) || (line[1].y > point.y && point.y > line[0].y);
+                            }
+                            if(line[0].y == line[1].y && point.y == line[0].y){
+                                return (line[0].x > point.x && point.x > line[1].x) || (line[1].x > point.x && point.x > line[0].x);
+                            }
+                    
+                            return ((line[1].y - line[0].y) / (line[1].x - line[0].x))*(point.x - line[0].x) + line[0].y - point.y == 0;
+                        }
+                        this.pointWithinPoly = function(point,poly){
+                    
+                            if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
+                            if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints([point]), poly.boundingBox ) ){ return 'outside'; }
+                    
+                            // outside / onPoint / onEdge / inside
+                    
+                            //check if the point is on a point of the poly; bail and return 'onPoint'
+                            for(let a = 0; a < poly.points.length; a++){
+                                if( point.x == poly.points[a].x && point.y == poly.points[a].y ){
+                                    return 'onPoint';
+                                }
+                            }
+                    
+                            function pointLevelWithPolyPointChecker(poly,point,a,b){
+                                //only flip, if the point is not perfectly level with point a of the line (the system will come round to having this same point be point b)
+                                //or if you can prove that the two adjacent points are higher and lower than the matching point's level
+                                if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
+                                    return true;
+                                }else if(poly.points[a].y != point.y){
+                                    const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
+                                    const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
+                                    if(
+                                        poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
+                                        poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
+                                    ){
+                                    }else{
+                                        return true;
+                                    }
+                                }else if(poly.points[b].y != point.y){
+                                    const pointInFront = b+1 >= poly.points.length ? 0 : b+1;
+                                    const pointBehind = b-1 <= 0 ? poly.points.length-1 : b-1;
+                                    if(
+                                        poly.points[pointBehind].y <= poly.points[b].y && poly.points[pointInFront].y <= poly.points[b].y ||
+                                        poly.points[pointBehind].y >= poly.points[b].y && poly.points[pointInFront].y >= poly.points[b].y
+                                    ){
+                                    }else{
+                                        return true;
+                                    }
+                                }
+                    
+                                return false;
+                            }
+                    
+                            //Ray casting algorithm
+                            let inside = false;
+                            for(let a = 0, b = poly.points.length - 1; a < poly.points.length; b = a++){
+                    
+                                //point must be on the same level of the line
+                                if( (poly.points[b].y >= point.y && poly.points[a].y <= point.y) || (poly.points[a].y >= point.y && poly.points[b].y <= point.y) ){
+                                    //discover if the point is on the far right of the line
+                                    if( poly.points[a].x < point.x && poly.points[b].x < point.x ){
+                                        //only flip if the line is not perfectly level (which would make the ray skirt the line)
+                                        if( poly.points[a].y != poly.points[b].y ){
+                                            if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
+                                                inside = !inside;
+                                            }
+                                        }
+                    
+                                    //discover if the point is on the far left of the line, skip it if so
+                                    }else if( poly.points[a].x > point.x && poly.points[b].x > point.x ){
+                                        continue;
+                                    }else{
+                                        //calculate what side of the line this point is
+                                            let areaLocation;
+                                            if( poly.points[b].y > poly.points[a].y && poly.points[b].x > poly.points[a].x ){
+                                                areaLocation = (point.x-poly.points[a].x)/(poly.points[b].x-poly.points[a].x) - (point.y-poly.points[a].y)/(poly.points[b].y-poly.points[a].y) + 1;
+                                            }else if( poly.points[b].y <= poly.points[a].y && poly.points[b].x <= poly.points[a].x ){
+                                                areaLocation = (point.x-poly.points[b].x)/(poly.points[a].x-poly.points[b].x) - (point.y-poly.points[b].y)/(poly.points[a].y-poly.points[b].y) + 1;
+                                            }else if( poly.points[b].y > poly.points[a].y && poly.points[b].x < poly.points[a].x ){
+                                                areaLocation = (point.x-poly.points[b].x)/(poly.points[a].x-poly.points[b].x) + (point.y-poly.points[a].y)/(poly.points[b].y-poly.points[a].y);
+                                            }else if( poly.points[b].y <= poly.points[a].y && poly.points[b].x >= poly.points[a].x ){
+                                                areaLocation = (point.x-poly.points[a].x)/(poly.points[b].x-poly.points[a].x) + (point.y-poly.points[b].y)/(poly.points[a].y-poly.points[b].y);
+                                            }
+                    
+                                        //if its on the line, return 'onEdge' immediately, if it's above 1 do a flip
+                                            if( areaLocation == 1 || isNaN(areaLocation) ){
+                                                return 'onEdge';
+                                            }else if(areaLocation > 1){
+                                                if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
+                                                    inside = !inside;
+                                                }
+                                            }
+                                    }
+                                }else{
+                                }
+                            }
+                    
+                            return inside ? 'inside' : 'outside';
+                        };
+                    
+                        this.lineOnLine = function(segment1,segment2){
+                    
+                            if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(segment1), library.math.boundingBoxFromPoints(segment2) ) ){
+                                return {x:undefined, y:undefined, intersect:false, contact:false};
+                            }
+                    
+                            //identical segments
+                            if(
+                                (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
+                                (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
+                            ){
+                                return {x:undefined, y:undefined, intersect:false, contact:true};
+                            }
+                                
+                            //point on point
+                            if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
+                                return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
+                            }
+                            if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
+                                return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
+                            }
+                    
+                            //calculate denominator
+                            const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+                            if(denominator == 0){  return {x:undefined, y:undefined, intersect:false, contact:false}; }
+                                
+                            //point on line
+                            if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){ return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true}; }
+                            if( library.math.detectIntersect.pointOnLine(segment1[1],segment2) ){ return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true}; }
+                            if( library.math.detectIntersect.pointOnLine(segment2[0],segment1) ){ return {x:segment2[0].x, y:segment2[0].y, intersect:false, contact:true}; }
+                            if( library.math.detectIntersect.pointOnLine(segment2[1],segment1) ){ return {x:segment2[1].x, y:segment2[1].y, intersect:false, contact:true}; }
+                    
+                            //produce output
+                            const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+                            const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+                            const intersect = (u1 >= 0 && u1 <= 1) && (u2 >= 0 && u2 <= 1);
+                            return {
+                                x:         (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
+                                y:         (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
+                                intersect: intersect,
+                                contact:   intersect,
+                            };
+                        };
+                        this.lineOnPoly = function(line,poly){
+                    
+                            if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
+                            if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(line), poly.boundingBox ) ){
+                                return { points:[], intersect:false, contact:false };
+                            }
+                    
+                            function oneWhileTheOtherIs(val_1,val_2,a,b){
+                                if( val_1 == a && val_2 == b ){return 1;}
+                                if( val_2 == a && val_1 == b ){return 2;}
+                                return 0;
+                            }
+                            function huntForIntersection(line,polyPoints){
+                                for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
+                                    const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
+                                    if(result.intersect){
+                                        output.points.push({x:result.x,y:result.y});
+                                        output.intersect = true;
+                                        output.contact = true;
+                                    }
+                                }
+                    
+                                //situation where the line passes perfectly through a point on the poly
+                                if(output.points.length == 0){
+                                    for(let a = 0; a < poly.points.length; a++){
+                                        if( poly.points[a].x != line[0].x && poly.points[a].y != line[0].y && poly.points[a].x != line[1].x && poly.points[a].y != line[1].y){
+                                            if( library.math.detectIntersect.pointOnLine(poly.points[a],line) ){
+                                                output.points.push(poly.points[a]);
+                                                output.intersect = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                    
+                            const output = { points:[], contact:false, intersect:false };
+                            const point_a = library.math.detectIntersect.pointWithinPoly(line[0],poly);
+                            const point_b = library.math.detectIntersect.pointWithinPoly(line[1],poly);
+                    
+                            let dir = 0;
+                            if( oneWhileTheOtherIs(point_a,point_b,'outside','outside') ){
+                                huntForIntersection(line,poly.points);
+                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onPoint') ){
+                                huntForIntersection(line,poly.points);
+                                output.points.push(line[dir]);
+                                output.contact = true;
+                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onEdge') ){
+                                huntForIntersection(line,poly.points);
+                                output.points.push(line[dir]);
+                                output.contact = true;
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'outside','inside') ){
+                                huntForIntersection(line,poly.points);
+                                output.intersect = true;
+                                output.contact = true;
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'onPoint','onPoint') ){
+                                output.points = [line[0],line[1]];
+                                output.contact = true;
+                                output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'onPoint','onEdge') ){
+                                output.points = [line[0],line[1]];
+                                output.contact = true;
+                                output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','inside') ){
+                                output.points = [line[dir]];
+                                output.contact = true;
+                                output.intersect = true;
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'onEdge','onEdge') ){
+                                output.points = [line[0],line[1]];
+                                output.contact = true;
+                                output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','inside') ){
+                                output.points = [line[dir]];
+                                output.contact = true;
+                                output.intersect = true;
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'inside','inside') ){
+                                output.intersect = true;
+                                output.contact = false;
+                            }
+                            
+                            return output;
+                        };
+                    
+                        this.polyOnPoly = function(poly_a,poly_b){
+                    
+                            if(poly_a.boundingBox == undefined){ poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points); }
+                            if(poly_b.boundingBox == undefined){ poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points); }
+                            if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
+                                return { points:[], intersect:false, contact:false };
+                            }
+                    
+                            const results = {
+                                points:[],
+                                contact:false,
+                                intersect:false,
+                            };
+                    
+                            //identical polys
+                                const sudo_poly_a_points = Object.assign([],poly_a.points);
+                                poly_b.points.forEach(point_b => {
+                                    const index = sudo_poly_a_points.indexOf(sudo_poly_a_points.find(point_a => point_a.x==point_b.x && point_a.y==point_b.y) );
+                                    if(index != -1){sudo_poly_a_points.splice(index, 1);}
+                                });
+                                if(sudo_poly_a_points.length == 0){
+                                    return {
+                                        points:Object.assign([],poly_a.points),
+                                        contact:true,
+                                        intersect:true,
+                                    };
+                                }
+                    
+                            //find all side intersection points
+                                for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
+                                    const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
+                                    results.points = results.points.concat(tmp.points);
+                                    results.contact = results.contact || tmp.contact;
+                                    results.intersect = results.intersect || tmp.intersect;
+                                }
+                            
+                            //check if poly_a is totally inside poly_b (if necessary)
+                                for(let a = 0; a < poly_b.points.length; a++){
+                                    if( results.intersect ){break;}
+                                    if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) == 'inside' ){   
+                                        results.intersect = true;
+                                    }
+                                }
+                    
+                            return results;
+                        };
+                    };
                     this.detectOverlap = new function(){
                         const detectOverlap = this;
                     
                         this.boundingBoxes = function(a, b){
-                            dev.log.math('.detectOverlap.boundingBoxes('+JSON.stringify(a)+','+JSON.stringify(b)+')'); //#development
-                            dev.count('.math.detectOverlap.boundingBoxes'); //#development
                     
                             return a.bottomRight.y >= b.topLeft.y && 
                                 a.bottomRight.x >= b.topLeft.x && 
                                 a.topLeft.y <= b.bottomRight.y && 
                                 a.topLeft.x <= b.bottomRight.x;
                         };
-                        this.pointOnLine = function(point,line){
-                            return library.math.getAngleOfTwoPoints(line[0],line[1]) == library.math.getAngleOfTwoPoints(point,line[1]);
-                        }
                         this.pointWithinBoundingBox = function(point,box){
-                            dev.log.math('.detectOverlap.pointWithinBoundingBox('+JSON.stringify(point)+','+JSON.stringify(box)+')'); //#development
-                            dev.count('.math.detectOverlap.pointWithinBoundingBox'); //#development
                     
                             return !(
                                 point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
@@ -340,8 +792,6 @@
                             );
                         };
                         this.pointWithinPoly = function(point,points){
-                            dev.log.math('.detectOverlap.pointWithinPoly('+JSON.stringify(point)+','+JSON.stringify(points)+')'); //#development
-                            dev.count('.math.detectOverlap.pointWithinPoly'); //#development
                     
                             //Ray casting algorithm
                             let inside = false;
@@ -378,29 +828,7 @@
                             }
                             return inside;
                         };
-                        this.lineSegments = function(segment1, segment2, countSkirting=true){
-                            dev.log.math('.detectOverlap.lineSegments('+JSON.stringify(segment1)+','+JSON.stringify(segment2)+')'); //#development
-                            dev.count('.math.detectOverlap.lineSegments'); //#development
-                    
-                            if(!countSkirting){
-                                //if one point of a line is on the other line; this is a skirt, return null
-                                    //point on point
-                                        // if(segment1[0] == segment2[0] || segment1[0] == segment2[1] || segment1[1] == segment2[0] || segment1[1] == segment2[1]){
-                                        if(
-                                            segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y || 
-                                            segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y || 
-                                            segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y || 
-                                            segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y
-                                        ){
-                                            return null;
-                                        }
-                                    //point on line
-                                        if( this.pointOnLine(segment1[0],segment2) || this.pointOnLine(segment1[1],segment2) ||
-                                            this.pointOnLine(segment2[0],segment1) || this.pointOnLine(segment2[1],segment1)
-                                        ){
-                                            return null;
-                                        }
-                            }
+                        this.lineSegments = function(segment1, segment2){
                     
                             const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
                             if(denominator == 0){return null;}
@@ -415,8 +843,6 @@
                             };
                         };
                         this.overlappingPolygons = function(points_a,points_b){
-                            dev.log.math('.detectOverlap.overlappingPolygons('+JSON.stringify(points_a)+','+JSON.stringify(points_b)+')'); //#development
-                            dev.count('.math.detectOverlap.overlappingPolygons'); //#development
                     
                             //a point from A is in B
                                 for(let a = 0; a < points_a.length; a++){
@@ -445,8 +871,6 @@
                             return false;
                         };
                         this.overlappingPolygonWithPolygons = function(poly,polys){ 
-                            dev.log.math('.detectOverlap.overlappingPolygonWithPolygons('+JSON.stringify(poly)+','+JSON.stringify(polys)+')'); //#development
-                            dev.count('.math.detectOverlap.overlappingPolygonWithPolygons'); //#development
                     
                             for(let a = 0; a < polys.length; a++){
                                 if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
@@ -457,9 +881,8 @@
                             }
                             return false;
                         };
-                        this.overlappingLineWithPolygon = function(line,poly,returnDetails=false,countSkirting=true){
-                            dev.log.math('.detectOverlap.overlappingLineWithPolygon('+JSON.stringify(line)+','+JSON.stringify(poly)+')'); //#development
-                            dev.count('.math.detectOverlap.overlappingLineWithPolygon'); //#development
+                    
+                        function overlappingLineWithPolygon(line,poly){
                     
                             //go through every side of the poly, and if one of them collides with the line, return true
                             for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
@@ -472,37 +895,13 @@
                                         { x:poly.points[a].x, y:poly.points[a].y },
                                         { x:poly.points[b].x, y:poly.points[b].y }
                                     ],
-                                    countSkirting
                                 );
-                                if(tmp != null && tmp.inSeg1 && tmp.inSeg2){
-                                    return returnDetails ? {x:tmp.x,y:tmp.y} : true;
-                                }
+                                if(tmp != null && tmp.inSeg1 && tmp.inSeg2){ return true; }
                             }
-                            
-                            //check if it is a perfect traversal of the poly
-                                for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
-                                    if( !countSkirting &&
-                                        this.pointOnLine(
-                                            { x: (line.x1+line.x2)/2, y: (line.y1+line.y2)/2, },
-                                            [
-                                                { x:poly.points[a].x, y:poly.points[a].y },
-                                                { x:poly.points[b].x, y:poly.points[b].y }
-                                            ],
-                                        )
-                                    ){
-                                        return returnDetails ? {} : false;
-                                    }
-                                }
                     
-                                if( this.pointWithinPoly({ x: (line.x1+line.x2)/2, y: (line.y1+line.y2)/2, },poly.points) ){
-                                    return returnDetails ? {inSeg1:true,inSeg2:true} : true;
-                                }
-                    
-                            return returnDetails ? {} : false;
+                            return false;
                         };
-                        this.overlappingLineWithPolygons = function(line,polys,returnDetails=false,countSkirting=true){
-                            dev.log.math('.detectOverlap.overlappingLineWithPolygons('+JSON.stringify(line)+','+JSON.stringify(polys)+')'); //#development
-                            dev.count('.math.detectOverlap.overlappingLineWithPolygons'); //#development
+                        this.overlappingLineWithPolygons = function(line,polys){
                     
                             //generate a bounding box for the line
                                 const line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
@@ -525,240 +924,18 @@
                                 const collidingPolyIndexes = [];
                                 polys.forEach((poly,index) => {
                                     if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
-                                    if(returnDetails){
-                                        const result = this.overlappingLineWithPolygon(line,poly,returnDetails,countSkirting);
-                                        if(result.x || result.y){ collidingPolyIndexes.push( {index:index,data:result} ); }
-                                    }else{
-                                        if(this.overlappingLineWithPolygon(line,poly,returnDetails,countSkirting)){ collidingPolyIndexes.push(index); }
-                                    }
+                                    if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
                                 });
                     
                             return collidingPolyIndexes;
                         };
                     };
-                    this.getAngleOfTwoPoints = function(point_1,point_2){
-                        dev.log.math('.getAngleOfTwoPoints('+JSON.stringify(point_1)+','+JSON.stringify(point_2)+')'); //#development
-                        dev.count('.math.getAngleOfTwoPoints'); //#development
                     
-                        if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
-                    
-                        const xDelta = point_2.x - point_1.x;
-                        const yDelta = point_2.y - point_1.y;
-                        let angle = Math.atan( yDelta/xDelta );
-                    
-                        if(xDelta < 0){ angle = Math.PI + angle; }
-                        else if(yDelta < 0){ angle = Math.PI*2 + angle; }
-                    
-                        return angle;
-                    };
-                    this.getDifferenceOfArrays = function(array_a,array_b){
-                        dev.log.math('.getDifferenceOfArrays('+JSON.stringify(array_a)+','+JSON.stringify(array_b)+')'); //#development
-                        dev.count('.math.getDifferenceOfArrays'); //#development
-                    
-                        function arrayRemovals(a,b){
-                            a.forEach(item => {
-                                let i = b.indexOf(item);
-                                if(i != -1){ b.splice(i,1); }
-                            });
-                            return b;
-                        }
-                    
-                        return {
-                            a:arrayRemovals(array_b,array_a.slice()),
-                            b:arrayRemovals(array_a,array_b.slice())
-                        };
-                    };
-                    this.getIndexOfSequence = function(array,sequence){ 
-                        dev.log.math('.getIndexOfSequence('+JSON.stringify(array)+','+JSON.stringify(sequence)+')'); //#development
-                        dev.count('.math.getIndexOfSequence'); //#development
-                    
-                        function comp(thing_A,thing_B){
-                            const keys = Object.keys(thing_A);
-                            if(keys.length == 0){ return thing_A == thing_B; }
-                    
-                            for(let a = 0; a < keys.length; a++){
-                                if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
-                                if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
-                            }
-                            return true;
-                        }
-                    
-                        if(array.length == 0 || sequence.length == 0){return undefined;}
-                    
-                        let index = 0;
-                        for(index = 0; index < array.length - sequence.length + 1; index++){
-                            if( comp(array[index], sequence[0]) ){
-                                let match = true;
-                                for(let a = 1; a < sequence.length; a++){
-                                    if( !comp(array[index+a],sequence[a]) ){
-                                        match = false;
-                                        break;
-                                    }
-                                }
-                                if(match){return index;}
-                            }
-                        }
-                    
-                        return undefined;
-                    };
-                    this.largestValueFound = function(array){
-                        dev.log.math('.largestValueFound('+JSON.stringify(array)+')'); //#development
-                        dev.count('.math.largestValueFound'); //#development
-                    
-                        if(array.length == 0){return undefined;}
-                        return array.reduce(function(max,current){
-                            return Math.abs(max) > Math.abs(current) ? max : current;
-                        });
-                    };
-                    this.normalizeStretchArray = function(array){
-                        dev.log.math('.normalizeStretchArray('+JSON.stringify(array)+')'); //#development
-                        dev.count('.math.normalizeStretchArray'); //#development
-                    
-                        //discover the largest number
-                            var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
-                    
-                        //divide everything by this largest number, making everything a ratio of this value 
-                            var dux = Math.abs(array[biggestIndex]);
-                            array = array.map(x => x / dux);
-                    
-                        //stretch the other side of the array to meet 0 or 1
-                            if(array[0] == 0 && array[array.length-1] == 1){return array;}
-                            var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
-                            array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
-                    
-                        return array;
-                    };
-                    this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
-                        dev.log.math('.relativeDistance('+realLength+','+start+','+end+','+d+','+allowOverflow+')'); //#development
-                        dev.count('.math.relativeDistance'); //#development
-                    
-                        const mux = (d - start)/(end - start);
-                        if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
-                        return mux*realLength;
-                    };
-                    this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
-                        dev.log.math('.removeTheseElementsFromThatArray('+JSON.stringify(theseElements)+','+JSON.stringify(thatArray)+')'); //#development
-                        dev.count('.math.removeTheseElementsFromThatArray'); //#development
-                    
-                        theseElements.forEach(a => thatArray.splice(thatArray.indexOf(a), 1) );
-                        return thatArray;
-                    };
-                    this.seconds2time = function(seconds){
-                        dev.log.math('.seconds2time('+seconds+')'); //#development
-                        dev.count('.math.seconds2time'); //#development
-                    
-                        const result = {h:0, m:0, s:0};
-                        
-                        result.h = Math.floor(seconds/3600);
-                        seconds = seconds - result.h*3600;
-                    
-                        result.m = Math.floor(seconds/60);
-                        seconds = seconds - result.m*60;
-                    
-                        result.s = seconds;
-                    
-                        return result;
-                    };
-                    
-                    this.distanceBetweenTwoPoints = function(point_a,point_b){
-                        return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
-                    };
-                    this.cartesian2polar = function(x,y){
-                        dev.log.math('.cartesian2polar('+x+','+y+')'); //#development
-                        dev.count('.math.cartesian2polar'); //#development
-                    
-                        const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
-                    
-                        if(x === 0){
-                            if(y === 0){ang = 0;}
-                            else if(y > 0){ang = 0.5*Math.PI;}
-                            else{ang = 1.5*Math.PI;}
-                        }
-                        else if(y === 0){
-                            if(x >= 0){ang = 0;}else{ang = Math.PI;}
-                        }
-                        else if(x >= 0){ ang = Math.atan(y/x); }
-                        else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
-                    
-                        return {'dis':dis,'ang':ang};
-                    };
-                    this.polar2cartesian = function(angle,distance){
-                        dev.log.math('.polar2cartesian('+angle+','+distance+')'); //#development
-                        dev.count('.math.polar2cartesian'); //#development
-                    
-                        return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
-                    };
-                    
-                    this.blendColours = function(rgba_1,rgba_2,ratio){
-                        dev.log.math('.blendColours('+JSON.stringify(rgba_1)+','+JSON.stringify(rgba_2)+','+ratio+')'); //#development
-                        dev.count('.math.blendColours'); //#development
-                    
-                        return {
-                            r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
-                            g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
-                            b: (1-ratio)*rgba_1.b + ratio*rgba_2.b,
-                            a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
-                        };           
-                    };
-                    this.multiBlendColours = function(rgbaList,ratio){
-                        dev.log.math('.multiBlendColours('+JSON.stringify(rgbaList)+','+ratio+')'); //#development
-                        dev.count('.math.multiBlendColours'); //#development
-                    
-                        //special cases
-                            if(ratio == 0){return rgbaList[0];}
-                            if(ratio == 1){return rgbaList[rgbaList.length-1];}
-                        //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
-                            const p = ratio*(rgbaList.length-1);
-                            return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
-                    };
-                    
-                    this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
-                        dev.log.math('.polygonToSubTriangles('+JSON.stringify(regions)+','+inputFormat+')'); //#development
-                        dev.count('.math.polygonToSubTriangles'); //#development
-                    
-                        if(inputFormat == 'flatArray'){
-                            const tmp = [];
-                            for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
-                            regions = [tmp];
-                        }
-                    
-                        const holes = regions.reverse().map(region => region.length);
-                        holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
-                        holes.pop();
-                    
-                        return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
-                    };
-                    this.unionPolygons = function(polygon1,polygon2){
-                        dev.log.math('.unionPolygons('+JSON.stringify(polygon1)+','+JSON.stringify(polygon2)+')'); //#development
-                        dev.count('.math.unionPolygons'); //#development
-                    
-                        //martinez (not working)
-                        // for(var a = 0; a < polygon1.length; a++){
-                        //     polygon1[a].push( polygon1[a][0] );
-                        // }
-                        // for(var a = 0; a < polygon2.length; a++){
-                        //     polygon2[a].push( polygon2[a][0] );
-                        // }
-                    
-                        // var ans = _thirdparty.martinez.union(
-                        //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
-                        //     polygon2.map(region => region.map(item => [item.x,item.y])  )
-                        // );
-                        // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
-                    
-                        //PolyBool
-                        return _thirdparty.PolyBool.union(
-                            {regions:polygon1.map(region => region.map(item => [item.x,item.y]))}, 
-                            {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
-                        ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
-                    }
                     this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
-                        dev.log.math('.pathExtrapolation('+JSON.stringify(path),thickness,capType,joinType,loopPath,detail,sharpLimit+')'); //#development
-                        dev.count('.math.pathExtrapolation'); //#development
+                        dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
                     
                         function loopThisPath(path){
-                            dev.log.math('.pathExtrapolation::loopThisPath('+JSON.stringify(path)+')'); //#development
-                            dev.count('.math.pathExtrapolation::loopThisPath'); //#development
+                            dev.log.math('.pathExtrapolation::loopThisPath(',path);
                         
                             const joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
                             let loopingPath = [];
@@ -773,8 +950,7 @@
                             return loopingPath;
                         }
                         function calculateJointData(path,thickness){
-                            dev.log.math('.pathExtrapolation::calculateJointData('+JSON.stringify(path)+','+thickness+')'); //#development
-                            dev.count('.math.pathExtrapolation::calculateJointData'); //#development
+                            dev.log.math('.pathExtrapolation::calculateJointData(',path,thickness);
                         
                             const jointData = [];
                             //parse path
@@ -804,8 +980,7 @@
                             return jointData;
                         }
                         function path_to_rectangleSeries(path,thickness){
-                            dev.log.math('.pathExtrapolation::path_to_rectangleSeries('+JSON.stringify(path)+','+thickness+')'); //#development
-                            dev.count('.math.pathExtrapolation::path_to_rectangleSeries'); //#development
+                            dev.log.math('.pathExtrapolation::path_to_rectangleSeries(',path,thickness);
                         
                             let outputPoints = [];
                             for(let a = 1; a < path.length/2; a++){
@@ -825,8 +1000,6 @@
                         }
                     
                         function flatJoints(jointData,thickness){
-                            dev.log.math('.pathExtrapolation::flatJoints('+JSON.stringify(jointData)+','+thickness+')'); //#development
-                            dev.count('.math.pathExtrapolation::flatJoints'); //#development
                         
                             const polygons = [];
                     
@@ -858,8 +1031,6 @@
                             return polygons;
                         }
                         function roundJoints(jointData,thickness,detail=5){
-                            dev.log.math('.pathExtrapolation::roundJoints('+JSON.stringify(jointData)+','+thickness+','+detail+')'); //#development
-                            dev.count('.math.pathExtrapolation::roundJoints'); //#development
                         
                             const polygons = [];
                             if(detail < 1){detail = 1;}
@@ -909,8 +1080,6 @@
                             return polygons;
                         }
                         function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
-                            dev.log.math('.pathExtrapolation::sharpJoints('+JSON.stringify(jointData)+','+thickness+','+sharpLimit+')'); //#development
-                            dev.count('.math.pathExtrapolation::sharpJoints'); //#development
                         
                             const polygons = [];
                     
@@ -970,8 +1139,6 @@
                         }
                     
                         function roundCaps(jointData,thickness,detail=5){
-                            dev.log.math('.pathExtrapolation::roundCaps('+JSON.stringify(jointData)+','+thickness+','+detail+')'); //#development
-                            dev.count('.math.pathExtrapolation::roundCaps'); //#development
                         
                             if(detail < 1){detail = 1;}
                     
@@ -1014,20 +1181,15 @@
                         //union all polygons, convert to triangles and return
                             return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
                     };
-                    
-                    this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8}){
-                        dev.log.math('.fitPolyIn('+JSON.stringify(freshPoly)+','+JSON.stringify(environmentPolys)+','+JSON.stringify(snapping)+')'); //#development
-                        dev.count('.math.fitPolyIn'); //#development
+
+                    this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},returnPathData=false){
+                        dev.log.math('.fitPolyIn(',freshPoly,environmentPolys,snapping);
                     
                         function applyOffsetToPoints(offset,points){
-                            dev.log.math('.fitPolyIn::applyOffsetToPoints('+JSON.stringify(offset)+JSON.stringify(points)+')'); //#development
-                            dev.count('.math.fitPolyIn::applyOffsetToPoints'); //#development
                         
                             return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
                         };
                         function applyOffsetToPolygon(offset,poly){
-                            dev.log.math('.fitPolyIn::applyOffsetToPolygon('+JSON.stringify(offset)+JSON.stringify(poly)+')'); //#development
-                            dev.count('.math.fitPolyIn::applyOffsetToPolygon'); //#development
                         
                             var newPolygon = { points: applyOffsetToPoints(offset,poly.points), boundingBox:{} };
                             newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
@@ -1159,430 +1321,132 @@
                                 offset = {x:max.x, y:max.y};
                             }
                     
-                        return dev ? {offset:offset,paths:paths} : offset;
-                    };
-                    
-                    // this.pathFinder = function(point_a,point_b,polys,grapher){
-                    //     // return v1(point_a,point_b,polys,grapher);
-                    //     return v2(point_a,point_b,polys,grapher);
-                    
-                    //     function v1(point_a,point_b,polys,grapher){
-                    //         const outputPath = [point_a];
-                    
-                    //         console.log( polys );
-                    
-                    //         //find first collision poly
-                    //             let results = library.math.detectOverlap.overlappingLineWithPolygons( { x1:point_a.x, y1:point_a.y, x2:point_b.x, y2:point_b.y }, polys, true );
-                    //             console.log(results);
-                    //             results.forEach(result => { grapher.drawCircle(result.data.x,result.data.y,2.5,'rgba(255,0,255,1)'); });
-                    //             let collisionPoints = results.map(result => ({x:result.data.x,y:result.data.y}) );
-                    //             // console.log(collisionPoints);
-                    //             let collisionDistances = collisionPoints.map(point => library.math.distanceBetweenTwpPoints(point_a,point) );
-                    //             // console.log(collisionDistances);
-                    //             let smallestCollisionDistanceIndex = collisionDistances.indexOf(Math.min(...collisionDistances));
-                    //             // console.log(smallestCollisionDistanceIndex);
-                    //             let indexOfClosestPoly = results[smallestCollisionDistanceIndex];
-                    //             // console.log(indexOfClosestPoly);
-                    //             let firstCollisionPoly = polys[indexOfClosestPoly.index];
-                    //             // console.log(firstCollisionPoly);
-                    //             let firstCollisionPoint = collisionPoints[smallestCollisionDistanceIndex];
-                    //             // console.log(firstCollisionPoint);
-                    
-                    //         //get articulation point
-                    //             let collisionPoly = firstCollisionPoly;
-                    //             let collisionPoint = firstCollisionPoint;
-                    //             // console.log(collisionPoly.points);
-                    
-                    //             let possiblePoints = [];
-                    //             for(let a = 0; a < collisionPoly.points.length; a++){
-                    //                 let angle = library.math.getAngleOfTwoPoints(collisionPoint,collisionPoly.points[a])-library.math.getAngleOfTwoPoints(collisionPoint,point_b);
-                    //                 if( angle < Math.PI/2 || angle > Math.PI*2 - Math.PI/2 ){
-                    //                     possiblePoints.push({
-                    //                         point:collisionPoly.points[a],
-                    //                         distance:library.math.distanceBetweenTwpPoints(point_a,collisionPoly.points[a])+library.math.distanceBetweenTwpPoints(point_b,collisionPoly.points[a]),
-                    //                     });
-                    //                 }
-                    //             }
-                    //             // console.log(possiblePoints);
-                    //             // console.log(possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance)))));
-                    //             let articulationPoint = possiblePoints[
-                    //                 possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance))))
-                    //             ].point;
-                    //             // console.log(articulationPoint);
-                    //             outputPath.push(articulationPoint);
-                    
-                    //         //find next collision poly
-                    //             results = library.math.detectOverlap.overlappingLineWithPolygons( { x1:articulationPoint.x, y1:articulationPoint.y, x2:point_b.x, y2:point_b.y }, polys, true ).filter(point => {
-                    //                 return point.data.x != articulationPoint.x || point.data.y != articulationPoint.y;
-                    //             });
-                    //             results.forEach(result => { grapher.drawCircle(result.data.x,result.data.y,2.5,'rgba(255,0,255,1)'); });
-                    //             collisionPoints = results.map(result => ({x:result.data.x,y:result.data.y}) );
-                    //             console.log(collisionPoints);
-                    
-                    //         outputPath.push(point_b);
-                    //         return outputPath;
-                    //     }
-                    //     function v2(point_a,point_b,polys,grapher){
-                    
-                    //         function getPointsInBetween(point_a,point_b,polys){
-                    //             //get all collided polys (if none, return empty array)(if the collision point is one of the argument points, ignore that poly)
-                    //                 const collidedPolys = library.math.detectOverlap.overlappingLineWithPolygons( { x1:point_a.x, y1:point_a.y, x2:point_b.x, y2:point_b.y }, polys, true ).filter(poly => {
-                    //                     const ind_a = polys[poly.index].points.indexOf(point_a);
-                    //                     const ind_b = polys[poly.index].points.indexOf(point_b);
-                    //                     if( ind_a != -1 && ind_b != -1 && Math.abs(ind_a - ind_b) != 1){ return true; }
-                    //                     return !(poly.data.x == point_a.x && poly.data.y == point_a.y || poly.data.x == point_b.x && poly.data.y == point_b.y);
-                    //                 });
-                    //                 if(collidedPolys.length == 0){return [];}
-                    //                 collidedPolys.forEach(poly => { grapher.drawCircle(poly.data.x,poly.data.y,2.5,'rgba(255,0,255,1)'); });
-                    
-                    //             //get first collision point and that poly
-                    //                 const collisionPoints = collidedPolys.map(result => ({x:                                                result.data.x,y:result.data.y}) );
-                    //                 const collisionDistances = collisionPoints.map(point => library.math.distanceBetweenTwpPoints(point_a,point) );
-                    //                 const smallestCollisionDistanceIndex = collisionDistances.indexOf(Math.min(...collisionDistances));
-                    //                 const collisionPoint = collisionPoints[smallestCollisionDistanceIndex];
-                    //                 const collisionPoly = polys[collidedPolys[smallestCollisionDistanceIndex].index];
-                    
-                    //             //get articulation point around that poly
-                    //                 const possiblePoints = [];
-                    //                 for(let a = 0; a < collisionPoly.points.length; a++){
-                    //                     const angle = library.math.getAngleOfTwoPoints(collisionPoint,collisionPoly.points[a]) - library.math.getAngleOfTwoPoints(collisionPoint,point_b);
-                    //                     if( angle < Math.PI/2 || angle > Math.PI*2 - Math.PI/2 ){
-                    //                         if(
-                    //                             collisionPoly.points[a].x == point_a.x && collisionPoly.points[a].y == point_a.y ||
-                    //                             collisionPoly.points[a].x == point_b.x && collisionPoly.points[a].y == point_b.y ||
-                    //                             previouslyVisitedPoints.indexOf(collisionPoly.points[a]) != -1
-                    //                         ){
-                    //                             continue;
-                    //                         }
-                    
-                    //                         possiblePoints.push({
-                    //                             point: collisionPoly.points[a],
-                    //                             distance: library.math.distanceBetweenTwpPoints(point_a,collisionPoly.points[a]) + library.math.distanceBetweenTwpPoints(point_b,collisionPoly.points[a]),
-                    //                         });
-                    //                     }
-                    //                 }
-                    //                 const articulationPoint = possiblePoints[
-                    //                     possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance))))
-                    //                 ].point;
-                    //                 previouslyVisitedPoints.push(articulationPoint);
-                    
-                    //             //recursive dive on both sides
-                    //                 const articulationPoints_upstream = getPointsInBetween(point_a,articulationPoint,polys);
-                    //                 const articulationPoints_downstream = getPointsInBetween(articulationPoint,point_b,polys);
-                    
-                    //             return articulationPoints_upstream.concat(articulationPoint).concat(articulationPoints_downstream);
-                    //         };
-                    
-                    //         //get path
-                    //             const previouslyVisitedPoints = [];
-                    //             const path = [point_a].concat(getPointsInBetween(point_a,point_b,polys)).concat(point_b);
-                    
-                    //         //go back over path to remove any detours
-                    //             for(let a = 0; a < path.length-2; a++){
-                    //                 const collisionPoints = library.math.detectOverlap.overlappingLineWithPolygons({ x1:path[a].x, y1:path[a].y, x2:path[a+2].x, y2:path[a+2].y }, polys, true)
-                    //                     .map(i => i.data)
-                    //                     .filter(point => !(point.x == path[a].x && point.y == path[a].y || point.x == path[a+2].x && point.y == path[a+2].y));
-                    //                 if(collisionPoints.length == 0){
-                    //                     path.splice(path.indexOf(path[a+1]),1);
-                    //                     a = -1;
-                    //                 }
-                    //             }
-                    
-                    //         return path;
-                    //     }
-                    // };
-                    this.detectIntersect = new function(){
-                        this.boundingBoxes = function(box_a, box_b){
-                            return box_a.bottomRight.y >= box_b.topLeft.y && 
-                                box_a.bottomRight.x >= box_b.topLeft.x && 
-                                box_a.topLeft.y <= box_b.bottomRight.y && 
-                                box_a.topLeft.x <= box_b.bottomRight.x;
-                        };
-                    
-                        this.pointWithinBoundingBox = function(point,box){
-                            return !(
-                                point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
-                                point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
-                            );
-                        };
-                        this.pointOnLine = function(point,line){
-                            if( 
-                                point.x < line[0].x && point.x < line[1].x ||
-                                point.y < line[0].y && point.y < line[1].y ||
-                                point.x > line[0].x && point.x > line[1].x ||
-                                point.y > line[0].y && point.y > line[1].y
-                            ){return false;}
-                    
-                            if(point.x == line[0].x && point.y == line[0].y){ return true; }
-                            if(point.x == line[1].x && point.y == line[1].y){ return true; }
-                            if(line[0].x == line[1].x && point.x == line[0].x){
-                                return (line[0].y > point.y && point.y > line[1].y) || (line[1].y > point.y && point.y > line[0].y);
-                            }
-                            if(line[0].y == line[1].y && point.y == line[0].y){
-                                return (line[0].x > point.x && point.x > line[1].x) || (line[1].x > point.x && point.x > line[0].x);
-                            }
-                    
-                            return ((line[1].y - line[0].y) / (line[1].x - line[0].x))*(point.x - line[0].x) + line[0].y - point.y == 0;
-                        }
-                        this.pointWithinPoly = function(point,points){
-                            // outside / onPoint / onEdge / inside
-                    
-                            //Ray casting algorithm
-                            let inside = false;
-                            for(let a = 0, b = points.length - 1; a < points.length; b = a++){
-                    
-                                //if the point is on a point of the poly; bail and return 'onPoint'
-                                if( point.x == points[a].x && point.y == points[a].y ){ return 'onPoint'; }
-                    
-                                //point must be on the same level of the line
-                                if( (points[b].y >= point.y && points[a].y <= point.y) || (points[a].y >= point.y && points[b].y <= point.y) ){
-                                    //discover if the point is on the far right of the line
-                                    // console.log( points[a].x, points[b].x, point.x );
-                                    if( points[a].x < point.x && points[b].x < point.x ){
-                                        inside = !inside;
-                                    //discover if the point is on the far left of the line, skip it if so
-                                    }else if( points[a].x > point.x && points[b].x > point.x ){
-                                        continue;
-                                    }else{
-                                        //calculate what side of the line this point is
-                                            let areaLocation;
-                                            if( points[b].y > points[a].y && points[b].x > points[a].x ){
-                                                areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
-                                            }else if( points[b].y <= points[a].y && points[b].x <= points[a].x ){
-                                                areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
-                                            }else if( points[b].y > points[a].y && points[b].x < points[a].x ){
-                                                areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
-                                            }else if( points[b].y <= points[a].y && points[b].x >= points[a].x ){
-                                                areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
-                                            }
-                    
-                                        //if its on the line, return 'onEdge' immediately, if it's just above 1 do a flip
-                                            if( areaLocation == 1 || isNaN(areaLocation) ){
-                                                return 'onEdge';
-                                            }else if(areaLocation > 1){
-                                                inside = !inside;
-                                            }
-                                    }
-                                }
-                            }
-                            return inside ? 'inside' : 'outside';
-                        };
-                    
-                        this.lineOnLine = function(segment1,segment2){
-                            //identical segments
-                                if(
-                                    (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
-                                    (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
-                                ){
-                                    return {x:undefined, y:undefined, intersect:false, contact:true};
-                                }
-                                
-                            //point on point
-                                if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
-                                    return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
-                                }
-                                if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
-                                    return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
-                                }
-                    
-                            const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                            if(denominator == 0){
-                                return {x:undefined, y:undefined, intersect:false, contact:false};
-                            }
-                                
-                            //point on line
-                                if( this.pointOnLine(segment1[0],segment2) ){ return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true}; }
-                                if( this.pointOnLine(segment1[1],segment2) ){ return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true}; }
-                                if( this.pointOnLine(segment2[0],segment1) ){ return {x:segment2[0].x, y:segment2[0].y, intersect:false, contact:true}; }
-                                if( this.pointOnLine(segment2[1],segment1) ){ return {x:segment2[1].x, y:segment2[1].y, intersect:false, contact:true}; }
-                    
-                            const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                            const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                            return {
-                                x:         (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
-                                y:         (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
-                                intersect: (u1 >= 0 && u1 <= 1) && (u2 >= 0 && u2 <= 1),
-                                contact:   (u1 >= 0 && u1 <= 1) && (u2 >= 0 && u2 <= 1),
-                            };
-                        };
-                        this.lineOnPoly  = function(line,poly){
-                            const output = {
-                                points:[],
-                                contact:false,
-                                intersect:false,
-                            };
-                    
-                            const point_a = this.pointWithinPoly(line[0],poly);
-                            const point_b = this.pointWithinPoly(line[1],poly);
-                            // outside / onPoint / onEdge / inside
-                    
-                            function oneWhileTheOtherIs(val_1,val_2,a,b){
-                                if( val_1 == a && val_2 == b ){return 1;}
-                                if( val_2 == a && val_1 == b ){return 2;}
-                                return 0;
-                            }
-                    
-                            let dir = 0;
-                            if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','outside') ){
-                                //go through every side of the poly looking for intersections
-                                    for(let a = poly.length-1, b = 0; b < poly.length; a = b++){
-                                        const result = this.lineOnLine(line,[poly[a],poly[b]]);
-                                        if(result.intersect){
-                                            output.points.push({x:result.x,y:result.y});
-                                            output.intersect = true;
-                                            output.contact = true;
-                                        }
-                                    }
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onPoint') ){
-                                //go through every side of the poly looking for intersections
-                                    for(let a = poly.length-1, b = 0; b < poly.length; a = b++){
-                                        const result = this.lineOnLine(line,[poly[a],poly[b]]);
-                                        if(result.intersect){
-                                            output.points.push({x:result.x,y:result.y});
-                                            output.intersect = true;
-                                            output.contact = true;
-                                        }
-                                    }
-                                output.points.push(line[dir]);
-                                output.contact = true;
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onEdge') ){
-                                //go through every side of the poly looking for intersections
-                                    for(let a = poly.length-1, b = 0; b < poly.length; a = b++){
-                                        const result = this.lineOnLine(line,[poly[a],poly[b]]);
-                                        if(result.intersect){
-                                            output.points.push({x:result.x,y:result.y});
-                                            output.intersect = true;
-                                            output.contact = true;
-                                        }
-                                    }
-                                output.points.push(line[dir]);
-                                output.contact = true;
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','inside') ){
-                                //go through every side of the poly looking for intersections
-                                    for(let a = poly.length-1, b = 0; b < poly.length; a = b++){
-                                        const result = this.lineOnLine(line,[poly[a],poly[b]]);
-                                        if(result.intersect){
-                                            output.points.push({x:result.x,y:result.y});
-                                            output.intersect = true;
-                                        }
-                                    }
-                                    if(output.points.length == 0){
-                                        for(let a = 0; a < poly.length; a++){
-                                            if( this.pointOnLine(poly[a],line) ){
-                                                output.points.push(poly[a]);
-                                                output.intersect = true;
-                                            }
-                                        }
-                                    }
-                    
-                                output.intersect = true;
-                                output.contact = true;
-                    
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','onPoint') ){
-                                output.points = [line[0],line[1]];
-                                output.contact = true;
-                                output.intersect = this.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','onEdge') ){
-                                output.points = [line[0],line[1]];
-                                output.contact = true;
-                                output.intersect = this.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','inside') ){
-                                output.points = [line[dir]];
-                                output.contact = true;
-                                output.intersect = true;
-                    
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','onEdge') ){
-                                output.points = [line[0],line[1]];
-                                output.contact = true;
-                                output.intersect = this.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','inside') ){
-                                output.points = [line[dir]];
-                                output.contact = true;
-                                output.intersect = true;
-                    
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'inside','inside') ){
-                                output.intersect = true;
-                                output.contact = false;
-                            }
-                            
-                            return output;
-                        };
-                    
-                        this.polyOnPoly = function(poly_a,poly_b){
-                            const results = {
-                                points:[],
-                                contact:false,
-                                intersect:false,
-                            };
-                    
-                            //identical polys
-                                const sudo_poly_a = Object.assign([],poly_a);
-                                poly_b.forEach(point_b => {
-                                    const index = sudo_poly_a.indexOf(sudo_poly_a.find(point_a => point_a.x==point_b.x && point_a.y==point_b.y) );
-                                    if(index != -1){sudo_poly_a.splice(index, 1);}
-                                });
-                                if(sudo_poly_a.length == 0){
-                                    return {
-                                        points:Object.assign([],poly_a),
-                                        contact:true,
-                                        intersect:true,
-                                    };
-                                }
-                    
-                            for(let a_a = poly_a.length-1, a_b = 0; a_b < poly_a.length; a_a = a_b++){
-                                const tmp = this.lineOnPoly([poly_a[a_a],poly_a[a_b]],poly_b);
-                                results.points = results.points.concat(tmp.points);
-                                results.contact = results.contact || tmp.contact;
-                                results.intersect = results.intersect || tmp.intersect;
-                            }
-                            for(let b_a = poly_b.length-1, b_b = 0; b_b < poly_b.length; b_a = b_b++){
-                                const tmp = this.lineOnPoly([poly_b[b_a],poly_b[b_b]],poly_a);
-                                results.points = results.points.concat(tmp.points);
-                                results.contact = results.contact || tmp.contact;
-                                results.intersect = results.intersect || tmp.intersect;
-                            }
-                            results.points = results.points.filter((point, index, self) =>
-                                index == self.findIndex((t) => t.x == point.x && t.y == point.y )
-                            );
-                    
-                            return results;
-                        };
+                        return returnPathData ? {offset:offset,paths:paths} : offset;
                     };
                     this.polygonsToVisibilityGraph = function(polys){
                         const graph = polys.flatMap((poly,polyIndex) => {
                             return poly.points.map((point,pointIndex) => ({
                                 polyIndex:polyIndex,
                                 pointIndex:pointIndex,
-                                destination:[ /*{polyIndex:n, pointIndex:n, distance:n} */ ],
+                                destination:[ /*{index:n, polyIndex:n, pointIndex:n, distance:n} */ ],
                             }))
                         });
+                    
+                        const scannedRoutes = {};
                     
                         graph.forEach((graphPoint_source,index_source) => {
                             graph.forEach((graphPoint_destination,index_destination) => {
                                 if(index_source == index_destination){return;}
-                                    const point_source = polys[graphPoint_source.polyIndex].points[graphPoint_source.pointIndex];
-                                    const point_destination = polys[graphPoint_destination.polyIndex].points[graphPoint_destination.pointIndex];
+                                // if( index_source != 4 ){return;} if( index_destination != 1 ){return;}
                     
-                                    let addLine = true;
-                                    for(let a = 0; a < polys.length; a++){
-                                        if( this.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a].points ).intersect ){
-                                            addLine = false;
-                                            break;
-                                        }
-                                    }
+                                const route_source = graphPoint_source.polyIndex+'_'+graphPoint_source.pointIndex;
+                                const route_destination = graphPoint_destination.polyIndex+'_'+graphPoint_destination.pointIndex;
                     
-                                    if(addLine){
-                                        graphPoint_source.destination.push({
-                                            polyIndex:graphPoint_destination.polyIndex,
-                                            pointIndex:graphPoint_destination.pointIndex,
-                                            distance:this.distanceBetweenTwoPoints(point_source,point_destination),
-                                        });
+                                //check to see if we've scanned this route before
+                                if( scannedRoutes[route_destination] != undefined && scannedRoutes[route_destination][route_source] != undefined ){ return; }
+                    
+                                //convert for convenience
+                                const point_source = polys[graphPoint_source.polyIndex].points[graphPoint_source.pointIndex];
+                                const point_destination = polys[graphPoint_destination.polyIndex].points[graphPoint_destination.pointIndex];
+                    
+                                //scan route
+                                let addRoute = true;
+                                for(let a = 0; a < polys.length; a++){
+                                    const result = library.math.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a] );
+                                    if( result.intersect ){
+                                        addRoute = false;
+                                        break;
                                     }
+                                }
+                    
+                                //if route is valid, add to graph
+                                if(addRoute){
+                                    const distance = library.math.distanceBetweenTwoPoints(point_source,point_destination);
+                    
+                                    //forward route
+                                    if(scannedRoutes[route_source] == undefined){ scannedRoutes[route_source] = {}; }
+                                    scannedRoutes[route_source][route_destination] = {
+                                        index: index_destination,
+                                        polyIndex: graphPoint_destination.polyIndex, 
+                                        pointIndex: graphPoint_destination.pointIndex,
+                                        distance: distance,
+                                    };
+                                    graphPoint_source.destination.push( scannedRoutes[route_source][route_destination] );
+                    
+                                    //backward route
+                                    if(scannedRoutes[route_destination] == undefined){ scannedRoutes[route_destination] = {}; }
+                                    scannedRoutes[route_destination][route_source] = {
+                                        index: index_source,
+                                        polyIndex: graphPoint_source.polyIndex, 
+                                        pointIndex: graphPoint_source.pointIndex,
+                                        distance: distance,
+                                    };
+                                    graphPoint_destination.destination.push( scannedRoutes[route_destination][route_source] );
+                                }
                             });
                         });
                     
                         return graph;
                     };
+                    this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
+                    
+                        //set the 'current' location as the start
+                            let current = start;
+                    
+                        //if in a cruel twist of fate, the ending location is the starting location;
+                        //create a new starting location with all the same data, and set that as
+                        //the 'current' location
+                            if(start == end){
+                                visibilityGraph['_'+start] = JSON.parse(JSON.stringify(visibilityGraph[start]));
+                                current = '_'+start;
+                            }
+                    
+                        //generate the location set
+                        //(don't forget to set the current location's distance to zero)
+                            const locationSet = Object.keys(visibilityGraph).map( () => ({ distance:Infinity, visited:false, route:'' }) );
+                            locationSet[current].distance = 0;
+                    
+                        //loop through locations, until the end location has been visited
+                            do{
+                                //update unvisited distance values
+                                    for(let a = 0; a < visibilityGraph[current].destination.length; a++){
+                                        if( locationSet[visibilityGraph[current].destination[a].index].visited ){
+                                            continue;
+                                        }
+                    
+                                        //only update the value if this new value is smaller than the one it already has
+                                        const newValue = locationSet[current].distance + visibilityGraph[current].destination[a].distance;
+                                        if( newValue < locationSet[visibilityGraph[current].destination[a].index].distance ){
+                                            locationSet[visibilityGraph[current].destination[a].index].route = current;
+                                            locationSet[visibilityGraph[current].destination[a].index].distance = newValue;
+                                        }
+                                    }
+                    
+                                //mark current location as visited
+                                    locationSet[current].visited = true;
+                    
+                                //find location with smallest distance value - that is unvisited - and set it as the current
+                                    let smallest = Infinity;
+                                    Object.keys(locationSet).forEach(location => {
+                                        if(!locationSet[location].visited && locationSet[location].distance < smallest ){
+                                            smallest = locationSet[location].distance;
+                                            current = location;
+                                        }
+                                    });
+                            }while( !locationSet[end].visited )
+                        
+                        //go back through the location set to discover the shortest route
+                            let route = [];
+                            current = end;
+                            while(current != start){
+                                route.unshift(parseInt(current));
+                                current = locationSet[current].route;
+                            }
+                            route.unshift(parseInt(current));
+                    
+                        return route;
+                    };
+
                 };
                 this.glsl = new function(){
                     this.geometry = `
@@ -1624,8 +1488,6 @@
                 };
                 this.structure = new function(){
                     this.functionListRunner = function(list,activeKeys){
-                        dev.log.structure('.functionListRunner('+JSON.stringify(list)+','+JSON.stringify(activeKeys)+')'); //#development
-                        dev.count('.structure.functionListRunner'); //#development
                     
                         //function builder for working with the 'functionList' format
                     
@@ -1654,8 +1516,6 @@
                     };
                     
                     this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
-                        dev.log.structure('.signalRegistry('+rightLimit+','+bottomLimit+','+signalLengthLimit+')'); //#development
-                        dev.count('.structure.signalRegistry'); //#development
                     
                         var signals = [];
                         var selectedSignals = [];
@@ -1665,8 +1525,6 @@
                         var positions = [];
                     
                         this.__dump = function(){
-                            dev.log.structure('.signalRegistry.__dump()'); //#development
-                            dev.count('.structure.signalRegistry.__dump'); //#development
                         
                             console.log('---- signalRegistry dump ----');
                     
@@ -1703,8 +1561,6 @@
                         };
                     
                         this.export = function(){
-                            dev.log.structure('.signalRegistry.export()'); //#development
-                            dev.count('.structure.signalRegistry.export'); //#development
                         
                             return JSON.parse(JSON.stringify(
                                 {
@@ -1718,11 +1574,9 @@
                             ));
                         };
                         this.import = function(data){
-                            dev.log.structure('.signalRegistry.import('+JSON.stringify(data)+')'); //#development
-                            dev.count('.structure.signalRegistry.import'); //#development
                         
-                            signals =             JSON.parse(JSON.stringify(data.signals));
-                            selectedSignals =     JSON.parse(JSON.stringify(data.selectedSignals));
+                            signals =           JSON.parse(JSON.stringify(data.signals));
+                            selectedSignals =   JSON.parse(JSON.stringify(data.selectedSignals));
                             events =            JSON.parse(JSON.stringify(data.events));
                             events_byID =       JSON.parse(JSON.stringify(data.events_byID));
                             events_byPosition = JSON.parse(JSON.stringify(data.events_byPosition));
@@ -1730,27 +1584,19 @@
                         };
                     
                         this.getAllSignals = function(){ 
-                            dev.log.structure('.signalRegistry.getAllSignals()'); //#development
-                            dev.count('.structure.signalRegistry.getAllSignals'); //#development
                         
                             return JSON.parse(JSON.stringify(signals));
                         };
                         this.getAllEvents = function(){ 
-                            dev.log.structure('.signalRegistry.getAllEvents()'); //#development
-                            dev.count('.structure.signalRegistry.getAllEvents'); //#development
                         
                             return JSON.parse(JSON.stringify(events));
                         };
                         this.getSignal = function(id){
-                            dev.log.structure('.signalRegistry.getSignal('+id+')'); //#development
-                            dev.count('.structure.signalRegistry.getSignal'); //#development
                         
                             if( signals[id] == undefined ){return;}
                             return JSON.parse(JSON.stringify(signals[id]));
                         };
                         this.eventsBetween = function(start,end){
-                            dev.log.structure('.signalRegistry.eventsBetween('+start+','+end+')'); //#development
-                            dev.count('.structure.signalRegistry.eventsBetween'); //#development
                         
                             //depending on whether theres an end position or not; get all the events positions that 
                             //lie on the start positions, or get all the events that how positions which lie between
@@ -1777,8 +1623,6 @@
                             });
                         };
                         this.add = function(data,forceID){
-                            dev.log.structure('.signalRegistry.add('+JSON.stringify(data)+','+forceID+')'); //#development
-                            dev.count('.structure.signalRegistry.add'); //#development
                         
                             //clean up data
                                 if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
@@ -1837,8 +1681,6 @@
                             return newID;
                         };
                         this.remove = function(id){
-                            dev.log.structure('.signalRegistry.remove('+id+')'); //#development
-                            dev.count('.structure.signalRegistry.remove'); //#development
                         
                             if( signals[id] == undefined ){return;}
                     
@@ -1855,8 +1697,6 @@
                             delete events_byID[id];
                         };
                         this.update = function(id,data){
-                            dev.log.structure('.signalRegistry.update('+id+','+JSON.stringify(data)+')'); //#development
-                            dev.count('.structure.signalRegistry.update'); //#development
                         
                             //clean input
                                 if(data == undefined){return;}
@@ -1886,8 +1726,6 @@
                             this.add(data,id);
                         };
                         this.reset = function(){
-                            dev.log.structure('.signalRegistry.reset()'); //#development
-                            dev.count('.structure.signalRegistry.reset'); //#development
                         
                             signals = [];
                             selectedSignals = [];
@@ -1908,8 +1746,6 @@
                         
                     //utility functions
                         this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
-                            dev.log.audio('.changeAudioParam(-context-,'+JSON.stringify(audioParam)+','+target+','+time+','+curve+','+cancelScheduledValues+')'); //#development
-                            dev.count('.audio.changeAudioParam'); //#development
                         
                             if(target==null){return audioParam.value;}
                         
@@ -1934,7 +1770,7 @@
                                         audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
                                     break;
                                     case 'instant': default:
-                                        audioParam.setTargetAtTime(target, context.currentTime, 0.001*10);
+                                        audioParam.setTargetAtTime(target, context.currentTime, 0.01);
                                     break;
                                 }
                             }catch(e){
@@ -1944,8 +1780,6 @@
                             }
                         };
                         this.loadAudioFile = function(callback,type='file',url=''){
-                            dev.log.audio('.loadAudioFile('+JSON.stringify(callback)+','+type+','+url+')'); //#development
-                            dev.count('.audio.loadAudioFile'); //#development
                         
                             switch(type){
                                 case 'url': 
@@ -1987,8 +1821,6 @@
                             }
                         };
                         this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
-                            dev.log.audio('.waveformSegment('+JSON.stringify(audioBuffer)+','+JSON.stringify(bounds)+','+resolution+')'); //#development
-                            dev.count('.audio.waveformSegment'); //#development
                         
                             const waveform = audioBuffer.getChannelData(0);
                             // var channelCount = audioBuffer.numberOfChannels;
@@ -2011,8 +1843,6 @@
                             return outputArray;
                         };
                         this.loadBuffer = function(context, data, destination, onended){
-                            dev.log.audio('.loadBuffer(-context-,'+JSON.stringify(data)+','+destination+','+onended+')'); //#development
-                            dev.count('.audio.loadBuffer'); //#development
                         
                             const temp = context.createBufferSource();
                             temp.buffer = data;
@@ -2033,8 +1863,6 @@
                         this.destination.connect(this.context.destination);
                         this.destination._gain = 1;
                         this.destination.masterGain = function(value){
-                            dev.log.audio('.masterGain('+value+')'); //#development
-                            dev.count('.audio.masterGain'); //#development
                         
                             if(value == undefined){return this.destination._gain;}
                             this._gain = value;
@@ -2102,61 +1930,43 @@
                     
                         //lead functions
                             this.num2name = function(num){ 
-                                dev.log.audio('.num2name('+num+')'); //#development
-                                dev.count('.audio.num2name'); //#development
                         
                                 return this.midinumbers_names[num];
                             };
                             this.num2freq = function(num){ 
-                                dev.log.audio('.num2freq('+num+')'); //#development
-                                dev.count('.audio.num2freq'); //#development
                         
                                 return this.names_frequencies[this.midinumbers_names[num]];
                             };
                     
                             this.name2num = function(name){ 
-                                dev.log.audio('.name2num('+name+')'); //#development
-                                dev.count('.audio.name2num'); //#development
                         
                                 return this.names_midinumbers[name];
                             };
                             this.name2freq = function(name){ 
-                                dev.log.audio('.name2freq(-'+name+')'); //#development
-                                dev.count('.audio.name2freq'); //#development
                         
                                 return this.names_frequencies[name];
                             };
                     
                             this.freq2num = function(freq){ 
-                                dev.log.audio('.freq2num('+freq+')'); //#development
-                                dev.count('.audio.freq2num'); //#development
                         
                                 return this.names_midinumbers[this.frequencies_names[freq]];
                             };
                             this.freq2name = function(freq){ 
-                                dev.log.audio('.freq2name(-'+freq+')'); //#development
-                                dev.count('.audio.freq2name'); //#development
                         
                                 return this.frequencies_names[freq];
                             };
                 };
                 this.font = new function(){
                     this.listAllAvailableGlyphs = function(fontFileData){
-                        dev.log.font('.listAllAvailableGlyphs('+JSON.stringify(fontFileData)+')'); //#development
-                        dev.count('.font.listAllAvailableGlyphs'); //#development
                     
                         const font = this.decodeFont(fontFileData);
                         return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                     };
                     this.decodeFont = function(fontFileData){
-                        dev.log.font('.decodeFont('+JSON.stringify(fontFileData)+')'); //#development
-                        dev.count('.font.decodeFont'); //#development
                     
                         return _thirdparty.opentype.parse(fontFileData);
                     };
                     this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
-                        dev.log.font('.getAllAvailableGlyphDrawingPaths('+font+','+JSON.stringify(reducedGlyphSet)+')'); //#development
-                        dev.count('.font.getAllAvailableGlyphDrawingPaths'); //#development
                     
                         const glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                         const paths = glyphs.map( a => font.getPath(a,0,0,1) );
@@ -2169,8 +1979,6 @@
                         return outputData;
                     };
                     this.convertPathToPoints = function(path,detail=2){
-                        dev.log.font('.convertPathToPoints('+JSON.stringify(path)+','+detail+')'); //#development
-                        dev.count('.font.convertPathToPoints'); //#development
                     
                         let output = [];
                         let currentPoints = [];
@@ -2214,8 +2022,6 @@
                         return output;
                     };
                     this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
-                        dev.log.font('.getTrianglesFromGlyphPath('+JSON.stringify(glyphPath)+','+detail+')'); //#development
-                        dev.count('.font.getTrianglesFromGlyphPath'); //#development
                     
                         //input checking
                             if(glyphPath.length == 0){return [];}
@@ -2269,8 +2075,6 @@
                             return triangles;
                     };
                     this.extractGlyphs = function(fontFileData,reducedGlyphSet){
-                        dev.log.font('.extractGlyphs('+JSON.stringify(fontFileData)+','+JSON.stringify(reducedGlyphSet)+')'); //#development
-                        dev.count('.font.extractGlyphs'); //#development
                     
                         //decode font data
                             const font = library.font.decodeFont(fontFileData);
@@ -3362,16 +3166,12 @@
                     
                     
                     this.getLoadableFonts = function(){ 
-                        dev.log.font('.getLoadableFonts()'); //#development
-                        dev.count('.font.getLoadableFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
                         const loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
                         return defaultFontNames.concat(loadableFontNames);
                     };
                     this.getLoadedFonts = function(){
-                        dev.log.font('.getLoadedFonts()'); //#development
-                        dev.count('.font.getLoadedFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
                         const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
@@ -3379,28 +3179,20 @@
                     };
                     
                     this.isApprovedFont = function(fontName){
-                        dev.log.font('.isApprovedFont('+fontName+')'); //#development
-                        dev.count('.font.isApprovedFont'); //#development
                     
                         return vectorLibrary[fontName] != undefined;
                     };
                     this.isFontLoaded = function(fontName){
-                        dev.log.font('.isFontLoaded('+fontName+')'); //#development
-                        dev.count('.font.isFontLoaded'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
                         return vectorLibrary[fontName].isLoaded;
                     }
                     this.fontLoadAttempted = function(fontName){
-                        dev.log.font('.fontLoadAttempted('+fontName+')'); //#development
-                        dev.count('.font.fontLoadAttempted'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
                         return vectorLibrary[fontName].loadAttempted;
                     }
                     this.loadFont = function(fontName,onLoaded=()=>{}){
-                        dev.log.font('.loadFont('+fontName+','+JSON.stringify(onLoaded)+')'); //#development
-                        dev.count('.font.loadFont'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
                     
@@ -3435,8 +3227,6 @@
                 };
                 this.misc = new function(){
                     this.padString = function(string,length,padding=' ',paddingSide='l'){
-                        dev.log.misc('.padString('+string+','+length+','+padding+','+paddingSide+')'); //#development
-                        dev.count('.misc.padString'); //#development
                     
                         if(padding.length<1){return string;}
                         string = ''+string;
@@ -3450,20 +3240,14 @@
                         return string;
                     };
                     this.compressString = function(string){
-                        dev.log.misc('.compressString('+string+')'); //#development
-                        dev.count('.misc.compressString'); //#development
                     
                         return _thirdparty.lzString.compress(string);
                     };
                     this.decompressString = function(string){
-                        dev.log.misc('.decompressString('+string+')'); //#development
-                        dev.count('.misc.decompressString'); //#development
                     
                         return _thirdparty.lzString.decompress(string);
                     };
                     this.serialize = function(data,compress=true){
-                        dev.log.misc('.serialize('+JSON.stringify(data)+','+compress+')'); //#development
-                        dev.count('.misc.serialize'); //#development
                     
                         function getType(obj){
                             return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -3500,8 +3284,6 @@
                         return data;
                     };
                     this.unserialize = function(data,compressed=true){
-                        dev.log.misc('.unserialize('+JSON.stringify(data)+','+compressed+')'); //#development
-                        dev.count('.misc.unserialize'); //#development
                     
                         if(data === undefined){return undefined;}
                     
@@ -3543,14 +3325,44 @@
                             return value;
                         });
                     };
-                    this.openFile = function(callback,readAsType='readAsBinaryString'){
-                        dev.log.misc('.openFile('+JSON.stringify(callback)+','+readAsType+')'); //#development
-                        dev.count('.misc.openFile'); //#development
+                    this.packData = function(data,compress=true){
+                        return library.misc.serialize({ 
+                            compressed:compress, 
+                            data:library.misc.serialize(data,compress)
+                        },false);
+                    };
+                    this.unpackData = function(data){
                     
-                        var i = document.createElement('input');
+                        //deserialize first layer
+                            try{
+                                data = library.misc.unserialize(data,false);
+                            }catch(e){
+                                console.error( "Major error unserializing first layer of file" );
+                                console.error(e);
+                                return null;
+                            }
+                    
+                        //determine if this data is compressed or not
+                            const compressed = data.compressed;
+                    
+                        //deserialize second layer (knowing now whether it's compressed or not)
+                            try{
+                                data = library.misc.unserialize(data.data,compressed);
+                            }catch(e){
+                                console.error( "Major error unserializing second layer of file" );
+                                console.error(e);
+                                return null;
+                            }
+                    
+                        return data;
+                    };
+                    this.openFile = function(callback,readAsType='readAsBinaryString'){
+                    
+                        const i = document.createElement('input');
                         i.type = 'file';
+                        i.accept = '.crv';
                         i.onchange = function(){
-                            var f = new FileReader();
+                            const f = new FileReader();
                             switch(readAsType){
                                 case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
                                 case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
@@ -3559,11 +3371,12 @@
                                 if(callback){callback(f.result);}
                             }
                         };
+                    
+                        document.body.appendChild(i);
                         i.click();
+                        setTimeout(() => {document.body.removeChild(i);},1000);
                     };
                     this.printFile = function(filename,data){
-                        dev.log.misc('.printFile('+filename+','+JSON.stringify(data)+')'); //#development
-                        dev.count('.misc.printFile'); //#development
                     
                         var a = document.createElement('a');
                         a.href = URL.createObjectURL(new Blob([data]));
@@ -3571,12 +3384,10 @@
                         a.click();
                     };
                     this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
-                        dev.log.misc('.loadFileFromURL('+URL+','+JSON.stringify(callback)+','+responseType+','+JSON.stringify(errorCallback)+')'); //#development
-                        dev.count('.misc.loadFileFromURL'); //#development
                     
                         //responseType: text / arraybuffer / blob / document / json 
                     
-                        var xhttp = new XMLHttpRequest();
+                        const xhttp = new XMLHttpRequest();
                         if(callback != undefined){ xhttp.onloadend = a => {
                             if(a.target.status == 200){ callback(a.target.response); }
                             else{ 
@@ -3594,6 +3405,81 @@
                             outputArray.push( argumentsObject[a] );
                         }
                         return outputArray;
+                    };
+                    this.comparer = function(item1,item2){
+                        function getType(obj){
+                            return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+                        }
+                    
+                        if(getType(item1) != getType(item2)){ return false; }
+                        if(typeof item1 == 'boolean' || typeof item1 == 'string'){ return item1 === item2; }
+                        if(typeof item1 == 'number'){
+                            if( Math.abs(item1) < 1.0e-14 ){item1 = 0;}
+                            if( Math.abs(item2) < 1.0e-14 ){item2 = 0;}
+                            if( Math.abs(item1 - item2) < 1.0e-14 ){return true;}
+                            return item1 === item2;
+                        }
+                        if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
+                        if(getType(item1) == 'function'){
+                            item1 = item1.toString();
+                            item2 = item2.toString();
+                    
+                            let item1_functionHead = item1.substring(0,item1.indexOf('{'));
+                            item1_functionHead = item1_functionHead.substring(item1_functionHead.indexOf('(')+1, item1_functionHead.lastIndexOf(')'));
+                            const item1_functionBody = item1.substring(item1.indexOf('{')+1, item1.lastIndexOf('}'));
+                    
+                            let item2_functionHead = item2.substring(0,item2.indexOf('{'));
+                            item2_functionHead = item2_functionHead.substring(item2_functionHead.indexOf('(')+1, item2_functionHead.lastIndexOf(')'));
+                            const item2_functionBody = item2.substring(item2.indexOf('{')+1, item2.lastIndexOf('}'));
+                    
+                            return item1_functionHead.trim() == item2_functionHead.trim() && item1_functionBody.trim() == item2_functionBody.trim();
+                        }
+                        if(typeof item1 == 'object'){
+                            const keys1 = Object.keys(item1);
+                            const keys2 = Object.keys(item2);
+                            if(keys1.length != keys2.length){return false;}
+                    
+                            for(let a = 0; a < keys1.length; a++){ 
+                                if( keys1.indexOf(keys2[a]) == -1 || !library.misc.comparer(item1[keys1[a]],item2[keys1[a]])){return false;}
+                            }
+                            return true;
+                        }
+                        return false;
+                    };
+                    this.removeThisFromThatArray = function(item,array){
+                        const index = array.findIndex(a => library.misc.comparer(a,item))
+                        if(index == -1){return;}
+                        return array.splice(index,1);
+                    };
+                    this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+                    
+                        theseElements.forEach(a => library.misc.removeThisFromThatArray(a,thatArray) );
+                        return thatArray;
+                    };
+                    this.getDifferenceOfArrays = function(array_a,array_b){
+                    
+                        if(array_a.length == 0 && array_b.length == 0){
+                            return {a:[],b:[]};
+                        }
+                        if(array_a.length == 0){
+                            return {a:[],b:array_b};
+                        }
+                        if(array_b.length == 0){
+                            return {a:array_a,b:[]};
+                        }
+                    
+                        function arrayRemovals(a,b){
+                            a.forEach(item => {
+                                let i = b.indexOf(item);
+                                if(i != -1){ b.splice(i,1); }
+                            });
+                            return b;
+                        }
+                    
+                        return {
+                            a:arrayRemovals(array_b,array_a.slice()),
+                            b:arrayRemovals(array_a,array_b.slice())
+                        };
                     };
                 };
                 const _thirdparty = new function(){
@@ -21878,9 +21764,8 @@
                     	
                     },{}]},{},[1]);
                 };
-            
-                _canvas_.layers.registerLayerLoaded('library',this);
             };
+            _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
             _canvas_.core = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
                 const core_engine = new Worker("js/core_engine.js");
@@ -21901,25 +21786,18 @@
                     const messagingCallbacks = {};
                 
                     function generateMessageID(){
-                        self.log('::generateMessageID()'); //#development
                         return messageId++;
                     }
                 
                     communicationObject.onmessage = function(encodedPacket){
-                        self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
                         let message = encodedPacket.data;
                 
                         if(message.outgoing){
-                            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
                             if(message.cargo.function in self.function){
-                                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
-                                self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                                 if(message.id == null){
-                                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                                     self.function[message.cargo.function](...message.cargo.arguments);
                                 }else{
-                                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     communicationObject.postMessage({
                                         id:message.id,
                                         outgoing:false,
@@ -21927,35 +21805,25 @@
                                     });
                                 }
                             }else if(message.cargo.function in self.delayedFunction){
-                                self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
-                                self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                                 if(message.id == null){
-                                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                                 }else{
-                                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
                                         communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
                                     }].concat(message.cargo.arguments));
                                 }
                             }else{
-                                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
                             }
                         }else{
-                            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
-                            self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
                             messagingCallbacks[message.id](message.cargo);
                             delete messagingCallbacks[message.id];
                         }
                     };
                     this.run = function(functionName,argumentList=[],callback,transferables){
-                        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
                         let id = null;
                         if(callback != undefined){
-                            self.log('.run -> callback was defined; generating message ID'); //#development
                             id = generateMessageID();
-                            self.log('.run -> message ID:',id); //#development
                             messagingCallbacks[id] = callback;
                         }
                         communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
@@ -21966,72 +21834,187 @@
                 
                 _canvas_.setAttribute('tabIndex',1);
                 
-                const dev = {
-                    prefix:'core_console',
+                const dev = new function(){
+                    const prefix = 'core_console';
+                    const active = {
+                        elementLibrary:{
+                            genericElementProxyTemplate:false,
+                            rectangle:false,
+                            rectangleWithOutline:false,
                 
-                    interface:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
-                    service:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
-                    elementLibrary:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+                            group:false,
+                            circle:false,
+                            circleWithOutline:false,
+                            polygon:false,
+                            polygonWithOutline:false,
+                            path:false,
+                            image:false,
+                            canvas:false,
+                            character:false,
+                            characterString:false,
+                        },
+                        service:false,
+                        interface:false,
+                    };
                 
-                    log:{
-                        interface:function(data){
-                            if(!dev.interface.active){return;}
-                            console.log('%c'+dev.prefix+'.interface'+(new Array(...arguments).join(' ')), dev.interface.fontStyle );
-                        },
-                        elementLibrary:function(data){
-                            if(!dev.elementLibrary.active){return;}
-                            console.log('%c'+dev.prefix+'.interface.elementLibrary'+(new Array(...arguments).join(' ')), dev.elementLibrary.fontStyle );
-                        },
-                        service:function(data){
-                            if(!dev.service.active){return;}
-                            console.log('%c'+dev.prefix+'.service'+(new Array(...arguments).join(' ')), dev.service.fontStyle );
-                        },
-                    },
+                    this.log = {};
+                    Object.entries(active).forEach(entry => {
+                        if(typeof entry[1] == 'object'){
+                            this.log[entry[0]] = {};
+                            Object.keys(active[entry[0]]).forEach(key => {
+                                this.log[entry[0]][key] = function(){
+                                    if(active[entry[0]][key]){ 
+                                        console.log( prefix+'.'+entry[0]+'.'+key+arguments[0], ...(new Array(...arguments).slice(1)) );
+                                    }
+                                };
+                            });
+                        }else{
+                            this.log[entry[0]] = function(){
+                                if(active[entry[0]]){ 
+                                    console.log( prefix+'.'+entry[0]+arguments[0], ...(new Array(...arguments).slice(1)) );
+                                }
+                            };
+                        }
+                    });
+                
+                    const countActive = !false;
+                    const countMemory = {};
+                    this.count = function(commandTag){
+                        if(!countActive){return;}
+                        if(commandTag in countMemory){ countMemory[commandTag]++; }
+                        else{ countMemory[commandTag] = 1; }
+                    };
+                    this.countResults = function(){return countMemory;};
                 };
-                
+
                 let elementRegistry = [];
                 const elementLibrary = new function(){
-                    function executeMethod(id,method,argumentList,postProcessing){
-                        return new Promise((resolve, reject) => { 
-                            communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
-                                if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
-                            });
-                        });
-                    }
-                    
-                    const missingIdRetryPeriod = 10;
-                    
-                    
-                    this.group = function(_name){
-                        dev.log.elementLibrary(' - new group('+_name+')'); //#development
+                    const genericElementProxy = function(_type, _name){
                         const self = this;
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'group';};
-                        this.parent = undefined;
+                        //type
+                            const type = _type;
+                            this.getType = function(){return type;};
                     
-                        const cashedAttributes = {
-                            ignored: false,
+                        //id
+                            let id = -1;
+                            this.getId = function(){return id;};
+                            this.__idReceived = function(){};
+                            this.__id = function(a,updateIdOnly=false){
+                                id = a;
+                                if(updateIdOnly){return;}
+                    
+                                //repush
+                                    _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
+                                    Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(this,entry[0],entry[1]); });
+                                    if(this.__repush != undefined){this.__repush();}
+                    
+                                if(this.__idReceived){this.__idReceived();}
+                            };
+                    
+                        //name
+                            let name = _name;
+                            this.getName = function(){return name;};
+                            // this.setName = function(a){
+                            //     name = a;
+                            // };
+                    
+                        //hierarchy
+                            this.parent = undefined;
+                            this.getAddress = function(){
+                                return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
+                            };
+                            this.getOffset = function(){
+                    
+                                let output = {x:0,y:0,scale:1,angle:0};
+                    
+                                if(this.parent){
+                                    const offset = this.parent.getOffset();
+                                    const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
+                                    output = { 
+                                        x: point.x*offset.scale + offset.x,
+                                        y: point.y*offset.scale + offset.y,
+                                        scale: offset.scale * cashedAttributes.scale,
+                                        angle: offset.angle + cashedAttributes.angle,
+                                    };
+                                }else{
+                                    output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
+                                }
+                    
+                                return output;
+                            };
+                    
+                        //attributes
+                            const cashedAttributes = {};
+                            this.setupSimpleAttribute = function(name,defaultValue){
+                                cashedAttributes[name] = defaultValue;
+                                this[name] = function(a){
+                                    if(a == undefined){ return cashedAttributes[name]; }
+                                    cashedAttributes[name] = a;
+                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[a]); }
+                                };
+                            }
+                            Object.entries({
+                                ignored: false,
+                                scale: 1,
+                                static: false,
+                            }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                            this.unifiedAttribute = function(attributes){
+                                if(attributes == undefined){ return cashedAttributes; }
+                                Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                                if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
+                            };
+                    
+                        //callbacks
+                            const cashedCallbacks = {};
+                            this.getCallback = function(callbackType){
+                                return cashedCallbacks[callbackType];
+                            };
+                            this.attachCallback = function(callbackType, callback){
+                                cashedCallbacks[callbackType] = callback;
+                                if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
+                            }
+                            this.removeCallback = function(callbackType){
+                                delete cashedCallbacks[callbackType];
+                                if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
+                            }
+                    
+                        //info dump
+                            this._dump = function(){
+                                _canvas_.core.element.__executeMethod(id,'_dump',[]);
+                            };
+                    };
+                    
+                    // this.getType
+                    // this.getId
+                    // this.__idReceived
+                    // this.__id
+                    // this.__repush
+                    // this.getName
+                    // this.setName
+                    // this.parent
+                    // this.getAddress
+                    // this.getOffset
+                    // this.setupSimpleAttribute
+                    // this.unifiedAttribute
+                    // this.getCallback
+                    // this.attachCallback
+                    // this.removeCallback
+                    // this._dump
+                    
+                    this.group = function(_name){
+                        genericElementProxy.call(this,'group',_name);
+                    
+                        Object.entries({
                             heedCamera: false,
                             x: 0,
                             y: 0,
                             angle: 0,
-                            scale: 1,
-                            static: false,
                             clipActive: false,
-                        };
-                        const cashedCallbacks = {};
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                    
+                    
+                        const self = this;
                     
                         let children = [];
                         let childRegistry = {};
@@ -22039,18 +22022,15 @@
                     
                         let clearingLock = false;
                         function lockClearingLock(){
-                            dev.log.elementLibrary('['+self.getAddress()+'] - group::lockClearingLock()'); //#development
                             clearingLock = true;
                         }
                         function unlockClearingLock(){
-                            dev.log.elementLibrary('['+self.getAddress()+'] - group::unlockClearingLock()'); //#development
-                            repush(self);
+                            self.__repush();
                             clearingLock = false;
                         }
                     
                         function checkForName(name){ return childRegistry[name] != undefined; }
                         function isValidElement(elementToCheck){
-                            dev.log.elementLibrary('['+self.getAddress()+'] - group::isValidElement({'+'name:'+self.getName()+',id:'+self.getId()+'},{'+'name:'+elementToCheck.getName()+',id:'+elementToCheck.getId()+'})'); //#development
                             if( elementToCheck == undefined ){ return false; }
                             if( elementToCheck.getName() == undefined || elementToCheck.getName().length == 0 ){
                                 console.warn('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
@@ -22064,1669 +22044,384 @@
                             return true;
                         }
                     
-                        function repush(){ 
-                            dev.log.elementLibrary('['+self.getAddress()+'] - group::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                            
+                        this.__repush = function(){
                             if(stencilElement != undefined){
                                 function readdStencil(){
                                     if( stencilElement.getId() == -1 ){ setTimeout(readdStencil,1); }
-                                    else{ _canvas_.core.element.__executeMethod(id,'stencil',[stencilElement.getId()]); }
+                                    else{ _canvas_.core.element.__executeMethod(self.getId(),'stencil',[stencilElement.getId()]); }
                                 }
                                 readdStencil();
                             }
                     
-                            communicationModule.run('element.executeMethod',[id,'clear'],() => {
+                            communicationModule.run('element.executeMethod',[self.getId(),'clear'],() => {
                                 function readdChildren(){
-                                    dev.log.elementLibrary('['+self.getAddress()+'] - group::repush::readdChildren -> self.getName(): '+ self.getName()+' children: ['+children.map(child => child.getId())+']'); //#development
                                     const childIds = children.map(child => child.getId());
                                     if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
-                                    else{ _canvas_.core.element.__executeMethod(id,'syncChildren',[childIds]); }
+                                    else{ _canvas_.core.element.__executeMethod(self.getId(),'syncChildren',[childIds]); }
                                 }
                                 readdChildren();
                             });
-                        }
-                    
-                        // function executeMethod_withReturn(method,argumentList,postProcessing){
-                        //     dev.log.elementLibrary('['+this.getAddress()+'] - group::executeMethod_withReturn('+method+','+JSON.stringify(argumentList)+','+postProcessing+')'); //#development
-                        //     if(id == -1){
-                        //         dev.log.elementLibrary('['+this.getAddress()+'] - group::executeMethod_withReturn -> this element\'s ID is -1, will retry in '+missingIdRetryPeriod+'ms...'); //#development
-                        //         setTimeout(() => {executeMethod_withReturn(method,argumentList,postProcessing);},missingIdRetryPeriod);
-                        //     }else{
-                        //         return new Promise((resolve, reject) => { 
-                        //             communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
-                        //                 if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
-                        //             });
-                        //         });
-                        //     }
-                        // }
-                    
-                        this.getAddress = function(){ 
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
                         };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.heedCamera = function(bool){
-                            if(bool == undefined){ return cashedAttributes.heedCamera; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.heedCamera('+bool+')'); //#development
-                            cashedAttributes.heedCamera = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'heedCamera',[bool]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
+                        
                         this.getChildren = function(){ 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildren()'); //#development
                             return children;
                         };
                         this.getChildByName = function(name){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildByName('+name+')'); //#development
                             return childRegistry[name];
                         };
                         this.getChildIndexByName = function(name){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildIndexByName('+name+')'); //#development
                             return children.indexOf(childRegistry[name]);
                         };
                         this.contains = function(elementToCheck){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.contains('+JSON.stringify(elementToCheck)+')'); //#development
                             return children.indexOf(elementToCheck) != -1;
                         };
                         this.append = function(newElement){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.append('+JSON.stringify(newElement.getName()+newElement.getId())+')'); //#development
                     
                             if( !isValidElement(newElement) ){ return false; }
                             newElement.parent = this;
                             children.push(newElement);
                             childRegistry[newElement.getName()] = newElement;
+                            if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
                     
                             if(clearingLock){ return; }
                     
                             if(newElement.getId() == -1){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> newElement\'s id missing; setting up "__idRecieved" callback..'); //#development
-                                newElement.__idRecieved = function(){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> newElement\'s "__idRecieved" callback ->'); //#development
-                                    if(children.indexOf(newElement) != -1 && id != -1){ 
-                                        dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                                        _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
+                                newElement.__calledBy = this.getAddress();
+                                newElement.__idReceived = function(){
+                                    if(self.getId() != -1){ 
+                                        if(children.indexOf(newElement) != -1){
+                                            _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
+                                        }else{
+                                        }
+                                    }else{
                                     }
                                 };
                             }else{
-                                if(id != -1){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                                    _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
+                                }else{
                                 }
                             }
                         };
                         this.prepend = function(newElement){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend('+JSON.stringify(newElement)+')'); //#development
                     
                             if( !isValidElement(newElement) ){ return false; }
                             newElement.parent = this;
                             children.unshift(newElement);
                             childRegistry[newElement.getName()] = newElement;
+                            if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
                     
                             if(clearingLock){ return; }
                     
                             if(newElement.getId() == -1){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> newElement\'s id missing; setting up "__idRecieved" callback..'); //#development
-                                newElement.__idRecieved = function(){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> newElement\'s "__idRecieved" callback ->'); //#development
-                                    if(children.indexOf(newElement) != -1 && id != -1){ 
-                                        dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                                        _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
+                                newElement.__idReceived = function(){
+                                    if(children.indexOf(newElement) != -1 && self.getId() != -1){ 
+                                        _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
+                                    }else{
                                     }
                                 };
                             }else{
-                                if(id != -1){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                                    _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
+                                }else{
                                 }
                             }
                         };
                         this.remove = function(elementToRemove){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.remove('+elementToRemove.getAddress()+')'); //#development
                             children.splice(children.indexOf(elementToRemove), 1);
                             delete childRegistry[elementToRemove.getName()];
                             elementToRemove.parent = undefined;
+                            if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
                     
                             if(clearingLock){ return; }
                     
                             if(elementToRemove.getId() == -1){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> newElement\'s id missing; setting up "__idRecieved" callback..'); //#development
-                                newElement.__idRecieved = function(){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> newElement\'s "__idRecieved" callback ->'); //#development
-                                    if(children.indexOf(newElement) == -1 && id != -1){ 
-                                        dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                                        _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
+                                elementToRemove.__idReceived = function(){
+                                    if(children.indexOf(elementToRemove) == -1 && self.getId() != -1){ 
+                                        _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                                    }else{
                                     }
                                 };
                             }else{
-                                if(id != -1){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                                    _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                                }else{
                                 }
                             }
                         };
                         this.clear = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.clear()'); //#development
                             children = [];
                             childRegistry = {};
-                            if(id != -1){ 
+                            if(self.getId() != -1){ 
                                 lockClearingLock();
-                                communicationModule.run('element.executeMethod',[id,'clear',[]],()=>{unlockClearingLock();});
+                                communicationModule.run('element.executeMethod',[self.getId(),'clear',[]],unlockClearingLock);
+                            }else{
                             }
                         };
                         this.getElementsUnderPoint = function(x,y){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderPoint('+x+','+y+')'); //#development
-                            if(id != -1){
+                            if(self.getId() != -1){
                                 return new Promise((resolve, reject) => {
-                                    _canvas_.core.element.__executeMethod(id,'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
+                                    _canvas_.core.element.__executeMethod(self.getId(),'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
                                 });
                             }
                         };
-                        // this.getElementsUnderArea = function(points){
-                        //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
-                        //     executeMethod_withReturn('getElementsUnderArea',[points],result => result.map(result => elementRegistry[result]));
-                        // };
-                        // this.getTree = function(){
-                        //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getTree()'); //#development
+                        this.getTree = function(){
                     
-                        //     const result = {name:name, type:this.getType(), id:this.getId(), children:[]};
-                        //     children.forEach(function(a){
-                        //         if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
-                        //         else{ result.children.push({ type:a.getType(), name:a.name, id:a.getId() }); }
-                        //     });
-                        //     return result;
-                        // };
+                            const result = {name:this.getName(), type:this.getType(), id:this.getId(), children:[]};
+                            children.forEach(function(a){
+                                if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
+                                else{ result.children.push({ type:a.getType(), name:a.getName(), id:a.getId() }); }
+                            });
+                            return result;
+                        };
                         this.stencil = function(newStencilElement){
                             if(newStencilElement == undefined){ return stencilElement; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.stencil('+JSON.stringify(newStencilElement)+')'); //#development
                             stencilElement = newStencilElement;
                     
                             if(newStencilElement.getId() == -1){
-                                newStencilElement.__idRecieved = function(){
-                                    if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
+                                newStencilElement.__idReceived = function(){
+                                    if(self.getId() != -1){ _canvas_.core.element.__executeMethod(self.getId(),'stencil', [newStencilElement.getId()]); }
                                 };
                             }else{
-                                if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
+                                if(self.getId() != -1){ _canvas_.core.element.__executeMethod(self.getId(),'stencil', [newStencilElement.getId()]); }
                             }
-                        };
-                        this.clipActive = function(bool){ 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.clipActive('+bool+')'); //#development
-                            if(bool == undefined){ return cashedAttributes.clipActive; } cashedAttributes.clipActive = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'clipActive',[bool]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     
                     this.rectangle = function(_name){
-                        dev.log.elementLibrary(' - new rectangle('+_name+')'); //#development
+                        genericElementProxy.call(this,'rectangle',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'rectangle';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
-                            colour: {r:1,g:0,b:0,a:1},
+                        Object.entries({
                             x: 0,
                             y: 0,
                             angle: 0,
+                            colour: {r:1,g:0,b:0,a:1},
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary('['+self.getAddress()+'] - rectangle::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(newAnchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.rectangleWithOutline = function(_name){
-                        dev.log.elementLibrary(' - new rectangleWithOutline('+_name+')'); //#development
+                        genericElementProxy.call(this,'rectangleWithOutline',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - rectangleWithOutline.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'rectangleWithOutline';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
+                        Object.entries({
                             x: 0,
                             y: 0,
                             angle: 0,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            scale: 1,
                             thickness: 0,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - rectangleWithOutline::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.lineColour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.lineColour; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.lineColour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(newAnchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.thickness = function(number){
-                            if(number == undefined){ return cashedAttributes.thickness; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.thickness('+number+')'); //#development
-                            cashedAttributes.thickness = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.static('+bool+')'); //#development
-                            if(bool == undefined){ return cashedAttributes.static; } cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - rectangleWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - rectangleWithOutline.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - rectangleWithOutline._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.circle = function(_name){
-                        dev.log.elementLibrary(' - new circle('+_name+')'); //#development
+                        genericElementProxy.call(this,'circle',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - circle.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'circle';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
-                            colour: {r:1,g:0,b:0,a:1},
+                        Object.entries({
                             x: 0,
                             y: 0,
+                            colour: {r:1,g:0,b:0,a:1},
                             radius: 10,
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - circle::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - circle.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - circle.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - circle.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - circle.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.radius = function(number){
-                            if(number == undefined){ return cashedAttributes.radius; }
-                            dev.log.elementLibrary(' - circle.radius('+number+')'); //#development
-                            cashedAttributes.radius = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - circle.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - circle.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - circle.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - circle.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - circle.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - circle._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.circleWithOutline = function(_name){
-                        dev.log.elementLibrary(' - new circleWithOutline('+_name+')'); //#development
+                        genericElementProxy.call(this,'circleWithOutline',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - circleWithOutline.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'circleWithOutline';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
+                        Object.entries({
                             x: 0,
                             y: 0,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
                             radius: 10,
-                            scale: 1,
                             thickness: 0,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - circleWithOutline::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - circleWithOutline.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - circleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.lineColour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.lineColour; }
-                            dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.lineColour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - circleWithOutline.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - circleWithOutline.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.radius = function(number){
-                            if(number == undefined){ return cashedAttributes.radius; }
-                            dev.log.elementLibrary(' - circleWithOutline.radius('+number+')'); //#development
-                            cashedAttributes.radius = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - circleWithOutline.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.thickness = function(number){
-                            if(number == undefined){ return cashedAttributes.thickness; }
-                            dev.log.elementLibrary(' - circleWithOutline.thickness('+number+')'); //#development
-                            cashedAttributes.thickness = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - circleWithOutline.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - circleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - circleWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - circleWithOutline.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - circleWithOutline._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.polygon = function(_name){
-                        dev.log.elementLibrary(' - new polygon('+_name+')'); //#development
+                        genericElementProxy.call(this,'polygon',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - polygon.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'polygon';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             points: [], 
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - polygon::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
+                        function XYArrayToPoints(XYArrray){
+                            return XYArrray.flatMap(i => [i.x,i.y]);
                         }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
+                        function pointsToXYArray(points){ 
+                            const output = [];
+                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
                             return output;
+                        }
+                    
+                        this.pointsAsXYArray = function(XYArrray){
+                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                            this.points(XYArrayToPoints(XYArrray));
                         };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - polygon.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - polygon.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.points = function(points){
-                            if(points == undefined){ return cashedAttributes.points; }
-                            dev.log.elementLibrary(' - polygon.points('+JSON.stringify(points)+')'); //#development
-                            cashedAttributes.points = points;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
-                        }; 
-                        this.pointsAsXYArray = function(pointsXY){
-                            function pointsToXYArray(points){ 
-                                const output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-                            if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
-                            dev.log.elementLibrary(' - polygon.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
-                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - polygon.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - polygon.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
+                        const __unifiedAttribute = this.unifiedAttribute;
                         this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - polygon.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - polygon.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - polygon.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - polygon._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
+                            __unifiedAttribute(attributes);
+                            if(attributes.points != undefined){
+                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                                return attributes;
+                            }
+                            if(attributes.pointsAsXYArray != undefined){
+                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                return attributes;
+                            }
                         };
                     };
                     this.polygonWithOutline = function(_name){
-                        dev.log.elementLibrary(' - new polygonWithOutline('+_name+')'); //#development
+                        genericElementProxy.call(this,'polygonWithOutline',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - polygonWithOutline.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'polygonWithOutline';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             lineColour: {r:1,g:0,b:0,a:1},
-                            points: [], 
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
+                            points: [],
+                            thickness: 0,
+                            jointDetail: 25,
+                            jointType: 'sharp',
+                            sharpLimit: 4,
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - polygonWithOutline::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
+                        function XYArrayToPoints(XYArrray){
+                            return XYArrray.flatMap(i => [i.x,i.y]);
                         }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
+                        function pointsToXYArray(points){ 
+                            const output = [];
+                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
                             return output;
+                        }
+                    
+                        this.pointsAsXYArray = function(XYArrray){
+                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                            this.points(XYArrayToPoints(XYArrray));
                         };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - polygonWithOutline.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - polygonWithOutline.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.lineColour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.lineColour; }
-                            dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.lineColour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
-                        };
-                        this.points = function(points){
-                            if(points == undefined){ return cashedAttributes.points; }
-                            dev.log.elementLibrary(' - polygonWithOutline.points('+JSON.stringify(points)+')'); //#development
-                            cashedAttributes.points = points;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
-                        }; 
-                        this.pointsAsXYArray = function(pointsXY){
-                            function pointsToXYArray(points){ 
-                                const output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-                            if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
-                            dev.log.elementLibrary(' - polygonWithOutline.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
-                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - polygonWithOutline.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                    
-                        this.thickness = function(number){
-                            if(number == undefined){ return cashedAttributes.thickness; }
-                            dev.log.elementLibrary(' - polygonWithOutline.thickness('+number+')'); //#development
-                            cashedAttributes.thickness = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
-                        };
-                        this.jointDetail = function(number){
-                            if(number == undefined){ return cashedAttributes.jointDetail; }
-                            dev.log.elementLibrary(' - polygonWithOutline.jointDetail('+number+')'); //#development
-                            cashedAttributes.jointDetail = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
-                        };
-                        this.jointType = function(type){
-                            if(type == undefined){ return cashedAttributes.jointType; }
-                            dev.log.elementLibrary(' - polygonWithOutline.jointType('+type+')'); //#development
-                            cashedAttributes.jointType = type;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
-                        };
-                        this.sharpLimit = function(number){
-                            if(number == undefined){ return cashedAttributes.sharpLimit; }
-                            dev.log.elementLibrary(' - polygonWithOutline.sharpLimit('+number+')'); //#development
-                            cashedAttributes.sharpLimit = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
-                        };
-                    
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - polygonWithOutline.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
+                        const __unifiedAttribute = this.unifiedAttribute;
                         this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - polygonWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - polygonWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - polygonWithOutline.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - polygonWithOutline._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
+                            __unifiedAttribute(attributes);
+                            if(attributes.points != undefined){
+                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                                return attributes;
+                            }
+                            if(attributes.pointsAsXYArray != undefined){
+                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                return attributes;
+                            }
                         };
                     };
                     
                     this.path = function(_name){
-                        dev.log.elementLibrary(' - new path('+_name+')'); //#development
+                        genericElementProxy.call(this,'path',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - path.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'path';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             points: [], 
-                            scale: 1,
                             thickness: 0,
                             capType: 'none',
                             jointDetail: 25,
                             jointType: 'sharp',
                             sharpLimit: 4,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - path::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
+                        function XYArrayToPoints(XYArrray){
+                            return XYArrray.flatMap(i => [i.x,i.y]);
                         }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
+                        function pointsToXYArray(points){ 
+                            const output = [];
+                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
                             return output;
+                        }
+                    
+                        this.pointsAsXYArray = function(XYArrray){
+                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                            this.points(XYArrayToPoints(XYArrray));
                         };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - path.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - path.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.points = function(points){
-                            if(points == undefined){ return cashedAttributes.points; }
-                            dev.log.elementLibrary(' - path.points('+points+')'); //#development
-                            cashedAttributes.points = points;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
-                        }; 
-                        this.pointsAsXYArray = function(pointsXY){
-                            function pointsToXYArray(points){ 
-                                const output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-                            if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
-                            dev.log.elementLibrary(' - path.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
-                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - path.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.looping = function(bool){
-                            if(bool == undefined){ return cashedAttributes.looping; }
-                            dev.log.elementLibrary(' - path.looping('+bool+')'); //#development
-                            cashedAttributes.looping = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'looping',[bool]); }
-                        };
-                        this.thickness = function(number){
-                            if(number == undefined){ return cashedAttributes.thickness; }
-                            dev.log.elementLibrary(' - path.thickness('+number+')'); //#development
-                            cashedAttributes.thickness = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
-                        };
-                        this.capType = function(type){
-                            if(type == undefined){ return cashedAttributes.capType; }
-                            dev.log.elementLibrary(' - path.capType('+type+')'); //#development
-                            cashedAttributes.capType = type;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'capType',[type]); }
-                        };
-                        this.jointType = function(type){
-                            if(type == undefined){ return cashedAttributes.jointType; }
-                            dev.log.elementLibrary(' - path.jointType('+type+')'); //#development
-                            cashedAttributes.jointType = type;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
-                        };
-                        this.jointDetail = function(number){
-                            if(number == undefined){ return cashedAttributes.jointDetail; }
-                            dev.log.elementLibrary(' - path.jointDetail('+number+')'); //#development
-                            cashedAttributes.jointDetail = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
-                        };
-                        this.sharpLimit = function(number){
-                            if(number == undefined){ return cashedAttributes.sharpLimit; }
-                            dev.log.elementLibrary(' - path.sharpLimit('+number+')'); //#development
-                            cashedAttributes.sharpLimit = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - path.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
+                        const __unifiedAttribute = this.unifiedAttribute;
                         this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - path.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - polygonWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - polygonWithOutline.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - path._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
+                            __unifiedAttribute(attributes);
+                            if(attributes.points != undefined){
+                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                                return attributes;
+                            }
+                            if(attributes.pointsAsXYArray != undefined){
+                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                return attributes;
+                            }
                         };
                     };
                     
                     this.image = function(_name){
-                        dev.log.elementLibrary(' - new image('+_name+')'); //#development
+                        genericElementProxy.call(this,'image',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - image.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'image';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             x: 0,
                             y: 0,
                             angle: 0,
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            scale: 1,
-                            static: false,
                             url: '',
                             bitmap: undefined,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - image::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - image.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - image.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - image.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(anchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - image.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - image.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - image.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - image.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
-                        this.url = function(url){
-                            if(url == undefined){ return cashedAttributes.url; }
-                            dev.log.elementLibrary(' - image.url('+url+')'); //#development
-                            cashedAttributes.url = url;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'url',[url]); }
-                        };
-                        this.bitmap = function(bitmap){
-                            if(bitmap == undefined){ return cashedAttributes.bitmap; }
-                            dev.log.elementLibrary(' - image.bitmap('+bitmap+')'); //#development
-                            cashedAttributes.bitmap = bitmap;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'bitmap',[bitmap],undefined,[bitmap]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - image.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - image.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - image.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - image._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.canvas = function(_name){
-                        dev.log.elementLibrary(' - new canvas('+_name+')'); //#development
+                        genericElementProxy.call(this,'canvas',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - canvas.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'canvas';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             x: 0,
                             y: 0,
                             angle: 0,
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - image::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                            self.requestUpdate();
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     
                         //subCanvas
                             const subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1 };
                             subCanvas.context = subCanvas.object.getContext('2d');
                     
-                            function updateDimentions(){
-                                subCanvas.object.setAttribute('width',cashedAttributes.width*subCanvas.resolution);
-                                subCanvas.object.setAttribute('height',cashedAttributes.height*subCanvas.resolution);
+                            function updateDimentions(self){
+                                subCanvas.object.setAttribute('width',self.width()*subCanvas.resolution);
+                                subCanvas.object.setAttribute('height',self.height()*subCanvas.resolution);
                             }
-                            updateDimentions();
+                            updateDimentions(this);
                     
                             this._ = subCanvas.context;
                             this.$ = function(a){return a*subCanvas.resolution;};
                             this.resolution = function(a){
                                 if(a == undefined){return subCanvas.resolution;}
                                 subCanvas.resolution = a;
-                                updateDimentions();
+                                updateDimentions(this);
                             };
                             this.requestUpdate = function(){
                                 createImageBitmap(subCanvas.object).then(bitmap => {
-                                    if(id != -1){ _canvas_.core.element.__executeMethod(id,'imageBitmap',[bitmap],undefined,[bitmap]); }
+                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),'imageBitmap',[bitmap],undefined,[bitmap]); }
                                 });
                             };
                             this.requestUpdate();
+                            this.__repush = function(){ this.requestUpdate(); };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - image.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - image.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - image.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(anchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - image.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            updateDimentions();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - image.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            updateDimentions();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - image.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - image.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
+                    
+                        const __unifiedAttribute = this.unifiedAttribute;
                         this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - image.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             if(attributes.resolution != undefined){
                                 this.resolution(attributes.resolution);
                                 delete attributes.resolution;
                             }
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            updateDimentions();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - canvas._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
+                            __unifiedAttribute(attributes);
+                            updateDimentions(this);
                         };
                     };
                     
                     this.character = function(_name){
-                        dev.log.elementLibrary(' - new character('+_name+')'); //#development
+                        genericElementProxy.call(this,'character',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - character.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'character';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             x: 0,
                             y: 0,
@@ -23737,154 +22432,12 @@
                             font: 'defaultThin',
                             character: '',
                             printingMode: { horizontal:'left', vertical:'bottom' },
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - character::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - character.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - character.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - character.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - character.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - character.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - character.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(anchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary(' - character.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - character.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - character.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.font = function(font){
-                            if(font == undefined){ return cashedAttributes.font; }
-                            dev.log.elementLibrary(' - character.font('+font+')'); //#development
-                            cashedAttributes.font = font;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'font',[font]); }
-                        };
-                        this.character = function(character){
-                            if(character == undefined){ return cashedAttributes.character; }
-                            dev.log.elementLibrary(' - character.character('+character+')'); //#development
-                            cashedAttributes.character = character;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'character',[character]); }
-                        };
-                        this.printingMode = function(printingMode){
-                            if(printingMode == undefined){ return cashedAttributes.printingMode; }
-                            dev.log.elementLibrary(' - character.printingMode('+printingMode+')'); //#development
-                            cashedAttributes.printingMode = printingMode;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'printingMode',[printingMode]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - character.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - character.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - character._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.characterString = function(_name){
-                        dev.log.elementLibrary(' - new characterString('+_name+')'); //#development
+                        genericElementProxy.call(this,'characterString',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - characterString.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'characterString';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             x: 0,
                             y: 0,
@@ -23896,182 +22449,49 @@
                             spacing: 0.5,
                             interCharacterSpacing: 0,
                             printingMode: { widthCalculation:'absolute', horizontal:'left', vertical:'bottom' },
-                            scale: 1,
-                            static: false,
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                    
                         const cashedAttributes_presentationOnly = {
                             resultingWidth: 0, 
                         };
-                        const cashedCallbacks = {};
                         const cashedCallbacks_elementSpecific = {
                             onFontUpdateCallback:function(){},
                         };
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - characterString::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
                         this.__updateValues = function(data){
-                            dev.log.elementLibrary(' - characterString.__updateValues('+JSON.stringify(data)+')'); //#development
                             Object.keys(data).forEach(key => { cashedAttributes_presentationOnly[key] = data[key]; });
                         };
                         this.__runCallback = function(data){
-                            Object.entries(data).forEach(entry => {
-                                if(entry[0] in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[entry[0]](entry[1]); }
+                            Object.entries(data).forEach(([name,values]) => {
+                                if(name in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[name](values); }
                             });
                         };
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
+                        this.resultingWidth = function(){
+                            return cashedAttributes_presentationOnly.resultingWidth;
                         };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - characterString.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){
-                                _canvas_.core.element.__executeMethod(id,'ignored',[bool]);
-                            }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - characterString.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - characterString.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - characterString.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - characterString.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - characterString.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - characterString.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - characterString.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.font = function(font){
-                            if(font == undefined){ return cashedAttributes.font; }
-                            dev.log.elementLibrary(' - characterString.font('+font+')'); //#development
-                            cashedAttributes.font = font;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'font',[font]); }
-                        };
-                        this.string = function(string){
-                            if(string == undefined){ return cashedAttributes.string; }
-                            dev.log.elementLibrary(' - characterString.string('+string+')'); //#development
-                            cashedAttributes.string = string;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'string',[string]); }
-                        };
-                        this.interCharacterSpacing = function(number){
-                            if(number == undefined){ return cashedAttributes.interCharacterSpacing; }
-                            dev.log.elementLibrary(' - characterString.interCharacterSpacing('+number+')'); //#development
-                            cashedAttributes.interCharacterSpacing = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'interCharacterSpacing',[number]); }
-                        };
-                        this.printingMode = function(printingMode){
-                            if(printingMode == undefined){ return cashedAttributes.printingMode; }
-                            dev.log.elementLibrary(' - characterString.printingMode('+printingMode+')'); //#development
-                            cashedAttributes.printingMode = printingMode;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'printingMode',[printingMode]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - characterString.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - characterString.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]); }
-                        };
-                    
+                        const __getCallback = this.getCallback;
                         this.getCallback = function(callbackType){
                             if(callbackType in cashedCallbacks_elementSpecific){
                                 return cashedCallbacks_elementSpecific[callbackType];
                             }
-                    
-                            return cashedCallbacks[callbackType];
+                            __getCallback(callbackType);
                         };
+                        const __attachCallback = this.attachCallback;
                         this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - characterString.attachCallback('+callbackType+','+callback+')'); //#development
                             if(callbackType in cashedCallbacks_elementSpecific){
                                 cashedCallbacks_elementSpecific[callbackType] = callback;
                                 return;
                             }
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
+                            __attachCallback(callbackType);
                         }
+                        const __removeCallback = this.removeCallback;
                         this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - characterString.removeCallback('+callbackType+')'); //#development
                             if(callbackType in cashedCallbacks_elementSpecific){
                                 delete cashedCallbacks_elementSpecific[callbackType];
                                 return;
                             }
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
+                            __removeCallback(callbackType);
                         }
-                    
-                        this.resultingWidth = function(){
-                            dev.log.elementLibrary(' - characterString.resultingWidth()'); //#development
-                            return cashedAttributes_presentationOnly.resultingWidth;
-                        };
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - characterString._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
-                        };
                     };
 
                 };
@@ -24085,50 +22505,42 @@
                 
                 this.meta = new function(){
                     this.areYouReady = function(){
-                        dev.log.interface('.meta.areYouReady()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('areYouReady',[],resolve);
                         });
                     };
                     this.refresh = function(){
-                        dev.log.interface('.meta.refresh()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('refresh',[],resolve);
                         });
                     };
                     this.getElementFromId = function(id){
-                        dev.log.interface('.meta.getElementFromId('+id+')'); //#development
                         return elementRegistry[id];
                     };
                 };
                 
                 this._dump = new function(){
                     this.elememt = function(){
-                        dev.log.interface('._dump.elememt()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.element',[],resolve);
                         });
                     };
                     this.arrangement = function(){
-                        dev.log.interface('._dump.arrangement()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.arrangement',[],resolve);
                         });
                     };
                     this.render = function(){
-                        dev.log.interface('._dump.render()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.render',[],resolve);
                         });
                     };
                     this.viewport = function(){
-                        dev.log.interface('._dump.viewport()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.viewport',[],resolve);
                         });
                     };
                     this.callback = function(){
-                        dev.log.interface('._dump.callback()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.callback',[],resolve);
                         });
@@ -24137,12 +22549,10 @@
                 
                 this.element = new function(){
                     this.getAvailableElements = function(){
-                        dev.log.interface('.element.getAvailableElements()'); //#development
                         return Object.keys(elementLibrary);
                     };
                 
-                    this.create = function(type,name){
-                        dev.log.interface('.element.create('+type+','+name+')'); //#development
+                    this.create = function(type,name,forceId,updateIdOnly){
                 
                         if(elementLibrary[type] == undefined){
                             console.warn('interface.element.create - unknown element type "'+type+'"');
@@ -24150,77 +22560,73 @@
                         }
                 
                         const newElementProxy = new elementLibrary[type](name);
-                        communicationModule.run('element.create', [type,name], id => {
-                            newElementProxy.__id(id);
-                            elementRegistry[id] = newElementProxy;
-                        });
+                        if(forceId == undefined){
+                            communicationModule.run('element.create', [type,name], id => {
+                                newElementProxy.__id(id);
+                                elementRegistry[id] = newElementProxy;
+                            });
+                        }else{
+                            newElementProxy.__id(forceId,updateIdOnly);
+                            elementRegistry[forceId] = newElementProxy;
+                        }
                         return newElementProxy;
                     };
                     this.delete = function(ele){
-                        dev.log.interface('.element.delete('+JSON.stringify(ele)+')'); //#development
                         communicationModule.run('element.delete',[ele.getId()]);
                         elementRegistry[element.getId()] = undefined;
                     };
                     this.deleteAllCreated = function(){
-                        dev.log.interface('.element.deleteAllCreated()'); //#development
                         communicationModule.run('element.deleteAllCreated',[]);
                         elementRegistry = [];
                     };
                 
                     this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
-                        dev.log.interface('.element.__executeMethod('+id+','+attribute+','+JSON.stringify(argumentList)+')'); //#development
                         communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
                     };
                 };
                 this.arrangement = new function(){
+                    const design = self.element.create('group','root',0,true)
+                
                     this.new = function(){
-                        dev.log.interface('.arrangement.new()'); //#development
                         communicationModule.run('arrangement.new');
-                    };
-                    this.prepend = function(element){
-                        dev.log.interface('.arrangement.prepend('+JSON.stringify(element)+')'); //#development
-                        if(element.getId() == -1){
-                            dev.log.interface('.arrangement.prepend -> element ID is -1'); //#development
-                            setTimeout(() => {this.prepend(element);},1);
-                        }else{
-                            dev.log.interface('.arrangement.prepend -> element ID is '+element.getId()); //#development
-                            communicationModule.run('arrangement.prepend',[element.getId()]);
-                        }
-                    };
-                    this.append = function(element){
-                        dev.log.interface('.arrangement.append('+JSON.stringify(element)+')'); //#development
-                        if(element.getId() == -1){
-                            dev.log.interface('.arrangement.append -> element ID is -1'); //#development
-                            setTimeout(() => {this.append(element);},1);
-                        }else{
-                            dev.log.interface('.arrangement.append -> element ID is '+element.getId()); //#development
-                            communicationModule.run('arrangement.append',[element.getId()]);
-                        }
-                    };
-                    this.remove = function(element){
-                        dev.log.interface('.arrangement.remove('+JSON.stringify(element)+')'); //#development
-                        if(element.getId() == -1){
-                            dev.log.interface('.arrangement.remove -> element ID is -1'); //#development
-                            setTimeout(() => {this.remove(element);},1);
-                        }else{
-                            dev.log.interface('.arrangement.remove -> element ID is '+element.getId()); //#development
-                            communicationModule.run('arrangement.remove',[element.getId()]);
-                        }
-                    };
-                    this.clear = function(){
-                        dev.log.interface('.arrangement.clear()'); //#development
-                        communicationModule.run('arrangement.clear');
-                    };
-                    this.getElementByAddress = function(address){
-                        dev.log.interface('.arrangement.getElementByAddress('+address+')'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('arrangement.getElementByAddress',[address],result => {
-                                resolve(elementRegistry[result]);
-                            });
+                        design.clear();
+                        design.unifiedAttribute({
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            scale: 1,
+                            heedCamera: false,
+                            static: false,
                         });
                     };
+                    this.get = function(){
+                        return design;
+                    };
+                    this.prepend = function(element){
+                        return design.prepend(element);
+                    };
+                    this.append = function(element){
+                        return design.append(element);
+                    };
+                    this.remove = function(element){
+                        return design.remove(element);
+                    };
+                    this.clear = function(){
+                        return design.clear();
+                    };
+                    this.getElementByAddress = function(address){
+                        
+                        const route = address.split('/');
+                        route.shift();
+                
+                        let currentObject = design;
+                        route.forEach((a) => {
+                            currentObject = currentObject.getChildByName(a);
+                        });
+                
+                        return currentObject;
+                    };
                     this.getElementsUnderPoint = function(x,y){
-                        dev.log.interface('.arrangement.getElementsUnderPoint('+x+','+y+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.getElementsUnderPoint',[x,y],results => {
                                 resolve(results.map(result => elementRegistry[result]));
@@ -24228,65 +22634,112 @@
                         });
                     };
                     this.getElementsUnderArea = function(points){
-                        dev.log.interface('.arrangement.getElementsUnderArea('+points+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.getElementsUnderArea',[points],results => {
                                 resolve(results.map(result => elementRegistry[result]));
                             });
                         });
                     };
-                    this.printTree = function(mode){
-                        dev.log.interface('.arrangement.printTree('+mode+')'); //#development
-                        communicationModule.run('arrangement.printTree',[mode]);
+                    this.printTree = function(mode='spaced',local=false){
+                
+                        if(local){
+                            function recursivePrint(grouping,prefix=''){
+                                grouping.children.forEach(function(a){
+                                    if(mode == 'spaced'){
+                                        console.log(prefix+' -  '+a.name+' ('+a.id+')');
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
+                                    }else if(mode == 'tabular'){
+                                        console.log(prefix+'\t-\t\t'+a.name+' ('+a.id+')');
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
+                                    }else if(mode == 'address'){
+                                        console.log(prefix+'/'+a.name+' ('+a.id+')');
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
+                                    }
+                                });
+                            }
+                    
+                            if(design.getChildren().length == 0){console.log('-empty-');}
+                            console.log(design.getName()+' ('+design.getId()+')');
+                            recursivePrint(design.getTree(), '');
+                        }else{
+                            communicationModule.run('arrangement.printTree',[mode]);
+                        }
                     };
                     this.areParents = function(element,potentialParents=[]){
-                        dev.log.interface('.arrangement.areParents('+JSON.stringify(element)+','+JSON.stringify(potentialParents)+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.areParents',[element.getId(),potentialParents.map(parent => parent.getId())],resolve);
                         });
                     };
+                    this._dump = function(local=true,engine=true){
+                
+                        if(local){
+                            console.log(design.getAddress(),'._dump()');
+                            console.log(design.getAddress(),'._dump -> id: '+design.getId());
+                            console.log(design.getAddress(),'._dump -> type: '+design.getType());
+                            console.log(design.getAddress(),'._dump -> name: '+design.getName());
+                            console.log(design.getAddress(),'._dump -> address: '+design.getAddress());
+                            console.log(design.getAddress(),'._dump -> parent: ',design.parent);
+                            console.log(design.getAddress(),'._dump -> ignored: '+design.ignored());
+                            console.log(design.getAddress(),'._dump -> x: '+design.x());
+                            console.log(design.getAddress(),'._dump -> y: '+design.y());
+                            console.log(design.getAddress(),'._dump -> angle: '+design.angle());
+                            console.log(design.getAddress(),'._dump -> scale: '+design.scale());
+                            console.log(design.getAddress(),'._dump -> heedCamera: '+design.heedCamera());
+                            console.log(design.getAddress(),'._dump -> static: '+design.static());
+                            console.log(design.getAddress(),'._dump -> children.length: '+design.getChildren().length);
+                            console.log(design.getAddress(),'._dump -> children: ',design.getChildren());
+                            console.log(design.getAddress(),'._dump -> clipActive: '+design.clipActive());
+                        }
+                        if(engine){
+                            _canvas_.core.element.__executeMethod(design.getId(),'_dump',[]);
+                        }
+                    };
                 };
                 this.render = new function(){
+                    const cachedValues = {
+                        clearColour:{r:1,g:1,b:1,a:1},
+                        frameRateLimit:30,
+                        active:false,
+                    };
+                
                     this.refresh = function(){
-                        dev.log.interface('.render.refresh()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.refresh',[],resolve);
                         });
                     };
                     this.clearColour = function(colour){
-                        dev.log.interface('.render.clearColour('+JSON.stringify(colour)+')'); //#development
+                        if(colour == undefined){return cachedValues.clearColour;}
+                        cachedValues.clearColour = colour;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.clearColour',[colour],resolve);
                         });
                     };
                     this.adjustCanvasSize = function(newWidth, newHeight){
-                        dev.log.interface('.render.adjustCanvasSize('+newWidth+','+newHeight+')'); //#development
                         communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
                     };
                     this.getCanvasSize = function(){
-                        dev.log.interface('.render.getCanvasSize()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.getCanvasSize',[],resolve);
                         });
                     };
                     this.activeLimitToFrameRate = function(active){
-                        dev.log.interface('.render.activeLimitToFrameRate('+active+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
                         });
                     };
                     this.frameRateLimit = function(rate){
-                        dev.log.interface('.render.frameRateLimit('+rate+')'); //#development
+                        if(rate == undefined){return cachedValues.frameRateLimit;}
+                        cachedValues.frameRateLimit = rate;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.frameRateLimit',[rate],resolve);
                         });
                     };
                     this.frame = function(){
-                        dev.log.interface('.render.frame()'); //#development
                         communicationModule.run('render.frame',[]);
                     };
                     this.active = function(active){
-                        dev.log.interface('.render.active('+active+')'); //#development
+                        if(active == undefined){return cachedValues.active;}
+                        cachedValues.active = active;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.active',[active],resolve);
                         });
@@ -24298,12 +22751,16 @@
                         position:{x:0,y:0},
                         scale:1,
                         angle:0,
+                        stopMouseScroll:false,
+                    };
+                    const mouseData = { 
+                        x:undefined, 
+                        y:undefined, 
                     };
                 
                     //adapter
                         this.adapter = new function(){
                             this.windowPoint2workspacePoint = function(x,y){
-                                dev.log.interface('.viewport.adapter.windowPoint2workspacePoint('+x+','+y+')'); //#development
                                 const position = cachedValues.position;
                                 const scale = cachedValues.scale;
                                 const angle = cachedValues.angle;
@@ -24330,21 +22787,19 @@
                         };
                 
                     this.refresh = function(){
-                        dev.log.interface('.viewport.refresh()'); //#development
                         communicationModule.run('viewport.refresh',[]);
                     };
                     this.position = function(x,y){
                         if(x==undefined || y==undefined){ return cachedValues.position; }
                         cachedValues.position = {x:x,y:y};
-                        dev.log.interface('.viewport.position('+x+','+y+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.position',[x,y],resolve);
                         });
                     };
                     this.scale = function(s){
                         if(s==undefined){ return cachedValues.scale; }
+                        if(s == 0){console.error('cannot set scale to zero');}
                         cachedValues.scale = s;
-                        dev.log.interface('.viewport.scale('+s+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.scale',[s],resolve);
                         });
@@ -24352,40 +22807,35 @@
                     this.angle = function(a){
                         if(a==undefined){ return cachedValues.angle; }
                         cachedValues.angle = a;
-                        dev.log.interface('.viewport.angle('+a+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.angle',[a],resolve);
                         });
                     };
                     this.getElementsUnderPoint = function(x,y){
-                        dev.log.interface('.viewport.getElementsUnderPoint('+x+','+y+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
                         });
                     };
                     this.getElementsUnderArea = function(points){
-                        dev.log.interface('.viewport.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
                         });
                     };
                     this.getMousePosition = function(x,y){
-                        dev.log.interface('.viewport.getMousePosition('+x+','+y+')'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.getMousePosition',[x,y],resolve);
-                        });
+                        if(x == undefined || y == undefined){ return mouseData; }
+                        mouseData.x = x;
+                        mouseData.y = y;
+                        communicationModule.run('viewport.getMousePosition',[x,y]);
                     };
                     this.getBoundingBox = function(){
-                        dev.log.interface('.viewport.getBoundingBox()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getBoundingBox',[],resolve);
                         });
                     };
                     this.stopMouseScroll = function(bool){
-                        dev.log.interface('.viewport.stopMouseScroll('+bool+')'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
-                        });
+                        if(bool==undefined){ return cachedValues.stopMouseScroll; }
+                        cachedValues.stopMouseScroll = bool;
+                        communicationModule.run('viewport.stopMouseScroll',[bool]);
                     };
                 
                     this.cursor = function(type){
@@ -24396,13 +22846,11 @@
                 };
                 this.stats = new function(){
                     this.active = function(active){
-                        dev.log.interface('.stats.active('+active+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('stats.active',[active],resolve);
                         });
                     };
                     this.getReport = function(){
-                        dev.log.interface('.stats.getReport()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('stats.getReport',[],resolve);
                         });
@@ -24410,7 +22858,6 @@
                 };
                 this.callback = new function(){
                     this.listCallbackTypes = function(){
-                        dev.log.interface('.callback.listCallbackTypes()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('callback.listCallbackTypes',[],resolve);
                         });
@@ -24438,16 +22885,13 @@
                         };
                     };
                     this.getCallback = function(element, callbackType){
-                        dev.log.interface('.callback.getCallback('+element+','+callbackType+')'); //#development
                         callbackRegistry.getCallback(element.getId(), callbackType);
                     };
                     this.attachCallback = function(element, callbackType, callback){
-                        dev.log.interface('.callback.attachCallback('+element+','+callbackType+','+callback+')'); //#development
                         callbackRegistry.register(element.getId(), callbackType, callback);
                         communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
                     };
                     this.removeCallback = function(element, callbackType){
-                        dev.log.interface('.callback.removeCallback('+element+','+callbackType+')'); //#development
                         callbackRegistry.remove(element.getId(), callbackType);
                         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
                     };
@@ -24455,7 +22899,6 @@
                     let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
                     this.callbackActivationMode = function(mode){
                         if(mode==undefined){return callbackActivationMode;}
-                        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
                         callbackActivationMode = mode;
                     };
                 
@@ -24481,12 +22924,24 @@
                                         wheelDelta: event.wheelDelta,
                                         wheelDeltaX: event.wheelDeltaX,
                                         wheelDeltaY: event.wheelDeltaY,
+                                        altKey: event.altKey,
+                                        ctrlKey: event.ctrlKey,
+                                        metaKey: event.metaKey,
+                                        shiftKey: event.shiftKey,
                                     };
                                 }else if(event instanceof MouseEvent){
                                     sudoEvent = { 
                                         X: event.offsetX, 
                                         Y: event.offsetY,
+                                        altKey: event.altKey,
+                                        ctrlKey: event.ctrlKey,
+                                        metaKey: event.metaKey,
+                                        shiftKey: event.shiftKey,
+                                        buttons: event.buttons,
                                     };
+                                    if(callbackName == 'onmousemove'){
+                                        _canvas_.core.viewport.getMousePosition(sudoEvent.X,sudoEvent.Y);
+                                    }
                                 }else{
                                     console.warn('unknown event type: ',event);
                                 }
@@ -24511,69 +22966,57 @@
                 };
 
                 communicationModule.function.go = function(){
-                    dev.log.service('.go()'); //#development
                     _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
                     self.go.__activate();
                 };
                 communicationModule.function.printToScreen = function(imageData){
-                    dev.log.service('.printToScreen(-imageData-)'); //#development
                     _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
                 };
                 // communicationModule.function.onViewportAdjust = function(state){
-                //     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
                 //     console.log('onViewportAdjust -> ',state); /* callback */
                 // };
                 
                 communicationModule.function.updateElement = function(elem, data={}){
-                    dev.log.service('.updateElement('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
                     const proxyElement = _canvas_.core.meta.getElementFromId(elem);
                     if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
                 };
                 communicationModule.function.runElementCallback = function(elem, data={}){
-                    dev.log.service('.runElementCallback('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
                     const proxyElement = _canvas_.core.meta.getElementFromId(elem);
                     if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
                 };
                 
                 communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
                     return attributeNames.map((name,index) => {
                         return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
                     });    
                 };
                 communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
-                    dev.log.service('.setCanvasAttributes('+JSON.stringify(attributes)+','+JSON.stringify(prefixActiveArray)+')'); //#development
                     attributes.map((attribute,index) => {
                         _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
                     });
                 };
                 communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasParentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
                     return attributeNames.map((name,index) => {
                         return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
                     });
                 };
                 
                 communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                    dev.log.service('.getDocumentAttributes('+JSON.stringify(attributeNames)+')'); //#development
                     return attributeNames.map(attribute => {
                         return eval('document.'+attribute);
                     });
                 };
                 communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                    dev.log.service('.setDocumentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+')'); //#development
                     return attributeNames.map((attribute,index) => {
                         eval('document.'+attribute+' = "'+values[index]+'"');
                     });
                 };
                 communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                    dev.log.service('.getWindowAttributes('+JSON.stringify(attributeNames)+')'); //#development
                     return attributeNames.map(attribute => {
                         return eval('window.'+attribute);
                     });
                 };
                 communicationModule.function.setWindowAttributes = function(attributes=[]){
-                    dev.log.service('.setWindowAttributes('+JSON.stringify(attributes)+')'); //#development
                     attributes.map((attribute,index) => {
                         eval('window.'+attribute.name+' = "'+attribute.value+'"');
                     });
@@ -24638,6 +23081,7 @@
                                     _canvas_.onmousemove = mouse.original.onmousemove;
                                     _canvas_.onmouseleave = mouse.original.onmouseleave;
                                     _canvas_.onmouseup = mouse.original.onmouseup;
+                                    _canvas_.onmouseup(event);
                                 };
                                 _canvas_.onmouseleave = _canvas_.onmouseup;
                     };
@@ -24648,7 +23092,7 @@
                     this.setUpCallbacks = function(){
                         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
                             _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
-                                if(elementIds.length == 0){
+                                if(elementIds.relevant.length == 0){
                                     _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
                                 }
                             }
@@ -24744,7 +23188,6 @@
             
                 //foreground
                     _canvas_.system.pane.foreground = _canvas_.core.element.create('group','foreground');
-                    _canvas_.system.pane.foreground.ignored(true);
                     _canvas_.core.arrangement.append( _canvas_.system.pane.foreground );
             
                 //shortcuts
@@ -24757,14 +23200,13 @@
             
             //utility
                 _canvas_.system.pane.getMiddlegroundPane = function(element){
-                    const middlegrounds = [_canvas_.system.pane.mb, _canvas_.system.pane.mm, _canvas_.system.pane.mf];
-            
-                    return new Promise((resolve, reject) => {
-                        _canvas_.core.arrangement.areParents( element, middlegrounds ).then(response => {
-                            const index = response.indexOf(0);
-                            resolve( index == -1 ? null : middlegrounds[index] );
-                        });
-                    });
+                    let tempElement = element;
+                    while(tempElement != undefined){
+                        if(tempElement == _canvas_.system.pane.mb){ return _canvas_.system.pane.mb; }
+                        if(tempElement == _canvas_.system.pane.mm){ return _canvas_.system.pane.mm; }
+                        if(tempElement == _canvas_.system.pane.mf){ return _canvas_.system.pane.mf; }
+                        tempElement = tempElement.parent;
+                    }
                 };
             
             const checkingInterval = setInterval(() => {
@@ -24795,7 +23237,7 @@
                         partBasic:{     prefix:'part.collection.basic',     active:false,   fontStyle:'color:rgb(229, 96, 83);  font-style:italic;' },
                         partDisplay:{   prefix:'part.collection.display',   active:false,   fontStyle:'color:rgb(99, 196, 129); font-style:italic;' },
                         partControl:{   prefix:'part.collection.control',   active:false,   fontStyle:'color:rgb(243, 194, 95); font-style:italic;' },
-                        partDynamic:{   prefix:'part.collection.dynamic',   active:!false,   fontStyle:'color:rgb(24, 53, 157);  font-style:italic;' },
+                        partDynamic:{   prefix:'part.collection.dynamic',   active:false,   fontStyle:'color:rgb(24, 53, 157);  font-style:italic;' },
                         unit:{          prefix:'unit',                      active:false,   fontStyle:'color:rgb(66, 145, 115); font-style:italic;' },
                     },
                     log:{},
@@ -24806,14 +23248,6 @@
                         console.log('%c'+dev.prefix+'.'+dev.channels[channel].prefix+(new Array(...arguments).join(' ')), dev.channels[channel].fontStyle );
                     }
                 });
-                dev.testLoggers = function(){
-                    Object.keys(dev.channels).forEach(channel => {
-                        const temp = dev.circuit[channel];
-                        dev.channels[channel].active = true;
-                        dev.log[channel]('.testLoggers -> '+channel);
-                        dev.channels[channel].active = temp;
-                    });
-                };
             
                 this.go = new function(){
                     const functionList = [];
@@ -25342,7 +23776,6 @@
                             makeDistortionNode();
                     };
                     this.player = function(context){
-                        dev.log.circuit('.player(-context-)'); //#development
                     
                         //state
                             const self = this;
@@ -25385,11 +23818,9 @@
                             
                         //internal functions
                             function unloadRaw(){
-                                dev.log.circuit('.player::unloadRaw()'); //#development
                                 return flow.track;
                             };
                             function loadRaw(data,callback){
-                                dev.log.circuit('.player::loadRaw('+JSON.stringify(data)+','+callback+')'); //#development
                                 if(Object.keys(data).length === 0){return;}
                                 self.stop();
                                 flow.track = data;
@@ -25399,12 +23830,10 @@
                                 callback(data);
                             }
                             function load(type,callback,url=''){
-                                dev.log.circuit('.player::loadRaw('+type+','+callback+','+url+')'); //#development
                                 state.fileLoaded = false;
                                 _canvas_.library.audio.loadAudioFile( function(data){ loadRaw(data,callback) }, type, url);
                             }
                             function generatePlayheadNumber(){
-                                dev.log.circuit('.player::unlogeneratePlayheadNumberadRaw()'); //#development
                                 let num = 0;
                                 while( Object.keys(state.playhead).includes(String(num)) && state.playhead[num] != undefined ){num++;}
                                 return num;
@@ -25414,7 +23843,6 @@
                                     Object.keys(state.playhead).map(key => playheadCompute(parseInt(key)));
                                     return;
                                 }
-                                dev.log.circuit('.player::playheadCompute('+playhead+')'); //#development
                     
                                 //this code is used to update the playhead position as well as to calculate when the loop end will occur, 
                                 //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
@@ -25431,8 +23859,10 @@
                     
                                 //update playhead position data
                                     const currentTime = self.currentTime(playhead);
-                                    state.playhead[playhead].position = currentTime;
-                                    state.playhead[playhead].lastSightingTime = context.currentTime;
+                                    //(playhead must exist)
+                                        if(state.playhead[playhead] == undefined){return;}
+                                        state.playhead[playhead].position = currentTime;
+                                        state.playhead[playhead].lastSightingTime = context.currentTime;
                     
                                 //obviously, if the loop isn't active or the file isn't playing, don't do any of the work
                                     if(!state.loop.active || !state.playhead[playhead].playing){return;}
@@ -25440,8 +23870,6 @@
                                 //calculate time until the timeout should be called
                                     let timeUntil = state.area.actual_end - currentTime;
                                     if(timeUntil < 0){timeUntil = 0;}
-                                    dev.log.circuit('.player::playheadCompute -> timeUntil:'+timeUntil); //#development
-                                    dev.log.circuit('.player::playheadCompute -> state.area.actual_end:'+state.area.actual_end+' currentTime:'+currentTime); //#development
                     
                                 //the callback (which performs the jump to the start of the loop, and recomputes)
                                     state.loop.timeout[playhead] = setTimeout(
@@ -25455,7 +23883,6 @@
                                     );
                             }
                             function jumpToTime(playhead=0,value,doNotActuallyAffectTheAudioBuffer=false){
-                                dev.log.circuit('.player::jumpToTime('+playhead+','+value+','+doNotActuallyAffectTheAudioBuffer+')'); //#development
                                 //check if we should jump at all
                                 //(file must be loaded and playhead must exist)
                                     if(!state.fileLoaded || state.playhead[playhead] == undefined){return;}
@@ -25493,7 +23920,6 @@
                                     Object.keys(state.playhead).map(key => rejigger(parseInt(key)));
                                     return;
                                 }
-                                dev.log.circuit('.player::rejigger('+playhead+')'); //#development
                     
                                 jumpToTime(playhead,state.playhead[playhead].position);
                             }
@@ -25501,40 +23927,26 @@
                         //controls
                             this.concurrentPlayCountLimit = function(value){
                                 if(value == undefined){return state.concurrentPlayCountLimit;}
-                                dev.log.circuit('.player.concurrentPlayCountLimit('+value+')'); //#development
                     
                                 state.concurrentPlayCountLimit = value;
                                 for(let a = value; a < state.playhead.length; a++){ this.stop(a); }
                             };
                         
                             this.unloadRaw = function(){ 
-                                dev.log.circuit('.player.unloadRaw()'); //#development
                                 return unloadRaw(); 
                             };
                             this.loadRaw = function(data,callback){ 
-                                dev.log.circuit('.player.loadRaw('+data+','+callback+')'); //#development
                                 loadRaw(data,callback); 
                             };
                             this.load = function(type,callback,url=''){ 
-                                dev.log.circuit('.player.load('+type+','+callback+','+url+')'); //#development
                                 load(type,callback,url); 
                             };
                     
                             // this.generatePlayheadNumber = function(){ 
-                            //     dev.log.circuit('.player.generatePlayheadNumber()'); //#development
                             //     return generatePlayheadNumber();
                             // };
                     
                             this.start = function(playhead){
-                                dev.log.circuit('.player.start('+playhead+')'); //#development
-                                dev.log.circuit('.player.start -> state.playhead[playhead]: '+JSON.stringify(state.playhead[playhead])); //#development
-                                dev.log.circuit('.player.start -> state.loop.active: '+state.loop.active); //#development
-                                dev.log.circuit('.player.start -> play area'); //#development
-                                dev.log.circuit('.player.start -> - starting from: '+state.area.actual_start+' ('+(state.area.percentage_start*100)+'%)'); //#development
-                                dev.log.circuit('.player.start -> - playing until: '+state.area.actual_end+' ('+(state.area.percentage_end*100)+'%)'); //#development
-                                dev.log.circuit('.player.start -> state.rate: '+state.rate); //#development
-                                dev.log.circuit('.player.start -> state.concurrentPlayCountLimit: '+state.concurrentPlayCountLimit); //#development
-                                dev.log.circuit('.player.start -> state.playhead: '+JSON.stringify(state.playhead)); //#development
                     
                                 //check if we should play at all (file must be loaded)
                                     if(!state.fileLoaded){return;}
@@ -25545,12 +23957,10 @@
                     
                                         playhead = generatePlayheadNumber();
                                         state.playhead[playhead] = { position:0, lastSightingTime:0 };
-                                        dev.log.circuit('.player.start -> playhead: '+playhead); //#development
                                     }
                                 //ensure that the playhead is after the start of the area
                                     if(state.playhead[playhead].position < state.area.actual_start){ state.playhead[playhead].position = state.area.actual_start; }
                                     if(state.playhead[playhead].position > state.area.actual_end){ state.playhead[playhead].position = state.area.actual_start; }
-                                    dev.log.circuit('.player.start -> state.playhead[playhead].position: '+state.playhead[playhead].position); //#development
                                 //load buffer, enter settings and start from playhead position
                                     flow.bufferSource[playhead] = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, (function(playhead){ return function(){self.stop(playhead);};})(playhead));
                                     flow.bufferSource[playhead].loop = state.loop.active;
@@ -25574,7 +23984,6 @@
                                     Object.keys(state.playhead).map(key => self.pause(parseInt(key)));
                                     return;
                                 }
-                                dev.log.circuit('.player.pause('+playhead+','+callback+')'); //#development
                     
                                 //check if we should stop at all (player must be playing)
                                     if( state.playhead[playhead] == undefined || !state.playhead[playhead].playing ){return;}
@@ -25591,7 +24000,6 @@
                                     Object.keys(state.playhead).map(key => self.resume(parseInt(key)));
                                     return;
                                 }
-                                dev.log.circuit('.player.resume('+playhead+')'); //#development
                     
                                 this.start(playhead);
                             };
@@ -25600,7 +24008,6 @@
                                     Object.keys(state.playhead).map(key => self.stop(parseInt(key)));
                                     return;
                                 }
-                                dev.log.circuit('.player.stop('+playhead+','+callback+')'); //#development
                     
                                 //check if we should stop at all (player must be playing)
                                     if( state.playhead[playhead] == undefined || !state.playhead[playhead].playing ){return;}
@@ -25614,13 +24021,11 @@
                                     delete state.playhead[playhead];
                             };
                             this.restart = function(playhead){
-                                dev.log.circuit('.player.restart('+playhead+')'); //#development
                                 this.stop(playhead);
                                 this.start(playhead);
                             };
                     
                             this.jumpTo = function(playhead=0,value=0,percentage=true){
-                                dev.log.circuit('.player.jumpTo('+playhead+','+value+','+percentage+')'); //#development
                                 if(percentage){
                                     value = (value>1 ? 1 : value);
                                     value = (value<0 ? 0 : value);
@@ -25632,7 +24037,6 @@
                             };
                             this.area = function(start,end,percentage=true){
                                 if(start == undefined && end == undefined){ return state.area; }
-                                dev.log.circuit('.player.jumpTo('+start+','+end+','+percentage+')'); //#development
                                 if(start == undefined){ start = percentage ? state.area.percentage_start : state.area.actual_start; }
                                 if(end == undefined){ end = percentage ? state.area.percentage_end : state.area.actual_end; }
                     
@@ -25655,7 +24059,6 @@
                             };
                             this.loop = function(active){
                                 if(active == undefined){return state.loop.active;}
-                                dev.log.circuit('.player.loop('+active+')'); //#development
                     
                                 state.loop.active = active;
                     
@@ -25664,7 +24067,6 @@
                             };
                             this.rate = function(value){
                                 if(value == undefined){return state.rate;}
-                                dev.log.circuit('.player.rate('+value+')'); //#development
                     
                                 playheadCompute();
                                 state.rate = value;
@@ -25673,12 +24075,10 @@
                             };
                     
                             this.createPlayhead = function(position){
-                                dev.log.circuit('.player.createPlayhead('+position+')'); //#development
                                 if(state.concurrentPlayCountLimit != -1 && state.playhead.filter(() => true).length >= state.concurrentPlayCountLimit){ return -1; }
                     
                                 playhead = generatePlayheadNumber();
                                 state.playhead[playhead] = { position:this.duration()*position, lastSightingTime:0 };
-                                dev.log.circuit('.player.createPlayhead -> playhead: '+playhead); //#development
                             };
                     
                         //info
@@ -25687,24 +24087,17 @@
                             this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
                             this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
                             this.currentTime = function(playhead){
-                                dev.log.circuit('.player.currentTime('+playhead+')'); //#development
                                 //check if file is loaded
                                     if(!state.fileLoaded){return -1;}
                                 //if no playhead is selected, do all of them
                                     if(playhead == undefined){ return Object.keys(state.playhead).map(key => self.currentTime(key)); }
                                 //if playback is stopped, return the playhead position, 
-                                    dev.log.circuit('.player.currentTime -> state.playhead[playhead]: '+JSON.stringify(state.playhead[playhead])); //#development
                                     if(state.playhead[playhead] == undefined){return -1;}
                                     if(!state.playhead[playhead].playing){return state.playhead[playhead].position;}
                                 //otherwise, calculate the current position
-                                    dev.log.circuit('.player.currentTime -> '+'state.playhead[playhead].position: '+state.playhead[playhead].position+' state.rate: '+state.rate+' context.currentTime: '+context.currentTime+' state.playhead[playhead].lastSightingTime: '+state.playhead[playhead].lastSightingTime); //#development
-                                    dev.log.circuit('.player.currentTime -> time passed: '+(context.currentTime - state.playhead[playhead].lastSightingTime)); //#development
-                                    dev.log.circuit('.player.currentTime -> file time passed: '+state.rate*(context.currentTime - state.playhead[playhead].lastSightingTime)); //#development
-                                    dev.log.circuit('.player.currentTime -> playhead "'+playhead+'" position: '+(state.playhead[playhead].position + state.rate*(context.currentTime - state.playhead[playhead].lastSightingTime))); //#development
                                     return state.playhead[playhead].position + state.rate*(context.currentTime - state.playhead[playhead].lastSightingTime);
                             };
                             this.progress = function(playhead){
-                                dev.log.circuit('.player.progress('+playhead+')'); //#development
                                 //if no playhead is selected, do all of them
                                     if(playhead == undefined){ return Object.keys(state.playhead).map(key => self.progress(key)); }
                     
@@ -25713,7 +24106,6 @@
                                 return time/this.duration();
                             };
                             this.waveformSegment = function(data={start:0,end:1},resolution){
-                                dev.log.circuit('.player.waveformSegment('+JSON.stringify(data)+','+resolution+')'); //#development
                                 if(data==undefined || !state.fileLoaded){return [];}
                                 return _canvas_.library.audio.waveformSegment(flow.track.buffer, data, resolution);
                             };
@@ -25792,14 +24184,26 @@
                             flow.filterNode.node.connect(flow.outAggregator.node);
                     
                         //input/output node
-                            this.in = function(){return flow.inAggregator.node;}
-                            this.out = function(){return flow.outAggregator.node;}
+                            this.in = function(){
+                                return flow.inAggregator.node;
+                            }
+                            this.out = function(){
+                                return flow.outAggregator.node;
+                            }
                     
                         //methods
-                            this.type = function(type){flow.filterNode.node.type = type;};
-                            this.frequency = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
-                            this.gain = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
-                            this.Q = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
+                            this.type = function(type){
+                                flow.filterNode.node.type = type;
+                            };
+                            this.frequency = function(value){
+                                _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);
+                            };
+                            this.gain = function(value){
+                                _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);
+                            };
+                            this.Q = function(value){
+                                _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);
+                            };
                             this.measureFrequencyResponse = function(start,end,step){
                                 const frequencyArray = [];
                                 for(let a = start; a < end; a += step){frequencyArray.push(a);}
@@ -26051,7 +24455,6 @@
                     
                     this.partLibrary = {};
                     this.builder = function(collection,type,name,data){
-                        dev.log.part('.builder('+collection+','+type+','+name+','+data+')'); //#development
                         if(!data){data={};}
                         if(data.style == undefined){data.style={};}
                     
@@ -26066,7 +24469,6 @@
                         this.basic = new function(){
                             interfacePart.partLibrary.basic = {};
                             this.polygon = function(name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}){
-                                dev.log.partBasic('.polygon('+name+','+JSON.stringify(points)+','+JSON.stringify(pointsAsXYArray)+','+ignored+','+JSON.stringify(colour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('polygon',name);
                                 element.unifiedAttribute({
@@ -26084,7 +24486,6 @@
                                 );
                             };
                             this.rectangleWithOutline = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
-                                dev.log.partBasic('.rectangleWithOutline('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+JSON.stringify(colour)+','+thickness+','+JSON.stringify(lineColour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('rectangleWithOutline',name);
                                 element.unifiedAttribute({
@@ -26108,7 +24509,6 @@
                                 );
                             };
                             this.circle = function(name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}){
-                                dev.log.partBasic('.circle('+name+','+x+','+y+','+radius+','+detail+','+ignored+','+JSON.stringify(colour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('circle',name);
                                 element.unifiedAttribute({
@@ -26128,7 +24528,6 @@
                                 );
                             };
                             this.polygonWithOutline = function(name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
-                                dev.log.partBasic('.polygonWithOutline('+name+','+JSON.stringify(points)+','+JSON.stringify(pointsAsXYArray)+','+ignored+','+JSON.stringify(colour)+','+thickness+','+JSON.stringify(lineColour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('polygonWithOutline',name);
                                 element.unifiedAttribute({
@@ -26148,7 +24547,6 @@
                                 );
                             };
                             this.canvas = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1){
-                                dev.log.partBasic('.canvas('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+resolution+')'); //#development
                                     
                                 const element = _canvas_.core.element.create('canvas',name);
                                 element.unifiedAttribute({
@@ -26170,7 +24568,6 @@
                                 );
                             };
                             this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
-                                dev.log.partBasic('.image('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+url+')'); //#development
                             
                                 const element = _canvas_.core.element.create('image',name);
                                 element.unifiedAttribute({
@@ -26192,7 +24589,6 @@
                                 );
                             };
                             this.path = function(name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[], jointType='sharp', capType='none', looping=false, jointDetail=25, sharpLimit=4){
-                                dev.log.partBasic('.path('+name+','+JSON.stringify(points)+','+thickness+','+ignored+','+JSON.stringify(colour)+','+JSON.stringify(pointsAsXYArray)+','+jointType+','+capType+','+looping+','+jointDetail+','+sharpLimit+')'); //#development
                             
                                 const element = _canvas_.core.element.create('path',name);
                                 element.unifiedAttribute({
@@ -26216,7 +24612,6 @@
                                 );
                             };
                             this.rectangle = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}){
-                                dev.log.partBasic('.rectangle('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+JSON.stringify(colour)+')'); //#development
                                 
                                 const element = _canvas_.core.element.create('rectangle',name);
                                 element.unifiedAttribute({
@@ -26238,7 +24633,6 @@
                                 );
                             };
                             this.group = function(name=null, x=0, y=0, angle=0, ignored=false, clipActive=false){
-                                dev.log.partBasic('.group('+name+','+x+','+y+','+angle+','+ignored+')'); //#development
                             
                                 const element = _canvas_.core.element.create('group',name);
                                 element.unifiedAttribute({
@@ -26257,7 +24651,6 @@
                                 );
                             };
                             this.text = function(name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.5, interCharacterSpacing=0.0){
-                                dev.log.partBasic('.text('+name+','+text+','+x+','+y+','+width+','+height+','+angle+','+ignored+','+JSON.stringify(colour)+','+fontName+','+JSON.stringify(printingMode)+','+spacing+','+interCharacterSpacing+')'); //#development
                             
                                 const element = _canvas_.core.element.create('characterString',name);
                                 element.unifiedAttribute({
@@ -26283,7 +24676,6 @@
                                 );
                             };
                             this.circleWithOutline = function(name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
-                                dev.log.partBasic('.circleWithOutline('+name+','+x+','+y+','+radius+','+detail+','+ignored+','+JSON.stringify(colour)+','+thickness+','+JSON.stringify(lineColour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('circleWithOutline',name);
                                 element.unifiedAttribute({
@@ -26313,7 +24705,6 @@
                                 glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
                                 dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
                             ){
-                                dev.log.partDisplay('.glowbox_rectangle('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                             
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y});
@@ -26322,11 +24713,9 @@
                             
                                 //methods
                                     object.on = function(){
-                                        dev.log.partDisplay('.glowbox_rectangle.on()'); //#development
                                         rectangle.colour(glowStyle);
                                     };
                                     object.off = function(){
-                                        dev.log.partDisplay('.glowbox_rectangle.off()'); //#development
                                         rectangle.colour(dimStyle);
                                     };
                             
@@ -26344,7 +24733,6 @@
                                 glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
                                 dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
                             ){
-                                dev.log.partDisplay('.glowbox_polygon('+name+','+x+','+y+','+JSON.stringify(points)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -26353,11 +24741,9 @@
                             
                                 //methods
                                     object.on = function(){
-                                        dev.log.partDisplay('.glowbox_polygon.on()'); //#development
                                         polygon.colour(glowStyle);
                                     };
                                     object.off = function(){
-                                        dev.log.partDisplay('.glowbox_polygon.off()'); //#development
                                         polygon.colour(dimStyle);
                                     };
                             
@@ -26375,7 +24761,6 @@
                                 glowURL='',
                                 dimURL='',
                             ){
-                                dev.log.partDisplay('.glowbox_image('+name+','+x+','+y+','+width+','+height+','+angle+','+glowURL+','+dimURL+')'); //#development
                                 
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y});
@@ -26384,11 +24769,9 @@
                             
                                 //methods
                                     object.on = function(){
-                                        dev.log.partDisplay('.glowbox_image.on()'); //#development
                                         backing.url(glowURL);
                                     };
                                     object.off = function(){
-                                        dev.log.partDisplay('.glowbox_image.off()'); //#development
                                         backing.url(dimURL);
                                     };
                             
@@ -26406,7 +24789,6 @@
                                 glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
                                 dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
                             ){
-                                dev.log.partDisplay('.glowbox_circle('+name+','+x+','+y+','+radius+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                             
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y});
@@ -26415,11 +24797,9 @@
                             
                                 //methods
                                     object.on = function(){
-                                        dev.log.partDisplay('.glowbox_circle.on()'); //#development
                                         circle.colour(glowStyle);
                                     };
                                     object.off = function(){
-                                        dev.log.partDisplay('.glowbox_circle.off()'); //#development
                                         circle.colour(dimStyle);
                                     };
                             
@@ -26428,7 +24808,7 @@
                             
                             interfacePart.partLibrary.display.glowbox_circle = function(name,data){ 
                                 return interfacePart.collection.display.glowbox_circle(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim
+                                    name, data.x, data.y, data.radius, data.style.glow, data.style.dim
                                 );
                             };
                             this.glowbox_path = function(
@@ -26438,7 +24818,6 @@
                                 glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
                                 dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
                             ){
-                                dev.log.partDisplay('.glowbox_path('+name+','+x+','+y+','+JSON.stringify(points)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -26453,11 +24832,9 @@
                             
                                 //methods
                                     object.on = function(){
-                                        dev.log.partDisplay('.glowbox_path.on()'); //#development
                                         path.colour(glowStyle);
                                     };
                                     object.off = function(){
-                                        dev.log.partDisplay('.glowbox_path.off()'); //#development
                                         path.colour(dimStyle);
                                     };
                             
@@ -26746,17 +25123,15 @@
                                                                 );
                                                             }
                                                         }else if( layer.y.length == layer.x.length ){ //straight print
-                                                            for(let a = 0; a < layer.y.length; a++){ 
-                                                                frontingCanvas._.moveTo( 
-                                                                    frontingCanvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
-                                                                    frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
+                                                            frontingCanvas._.moveTo( 
+                                                                frontingCanvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
+                                                                frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
+                                                            );
+                                                            for(let a = 1; a < layer.y.length; a++){ 
+                                                                frontingCanvas._.lineTo(
+                                                                    frontingCanvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
+                                                                    frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
                                                                 );
-                                                                for(let a = 1; a < layer.y.length; a++){ 
-                                                                    frontingCanvas._.lineTo(
-                                                                        frontingCanvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
-                                                                        frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
-                                                                    );
-                                                                }
                                                             }
                                                         }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
                                 
@@ -27078,11 +25453,6 @@
                                 backingStyle={r:0.04,g:0.04,b:0.04,a:1},
                                 needleColours=[{r:0.98,g:0.98,b:0.98,a:1}],
                             ){
-                                dev.log.partDisplay('.gauge('  //#development
-                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
-                                    +JSON.stringify(needleAngleBounds)+','+JSON.stringify(needleArticulationPoints)  //#development
-                                    +JSON.stringify(backingStyle)+','+JSON.stringify(needleColours)  //#development
-                                +')'); //#development
                                 
                                 const values = [];
                                 const defaultBoundingAngles = {
@@ -27122,7 +25492,6 @@
                                 //methods
                                     object.needle = function(value,layer=0){
                                         if(value==undefined){return values[layer];}
-                                        dev.log.partDisplay('.gauge.needle('+value+','+layer+')');  //#development
                             
                                         value = (value>1 ? 1 : value);
                                         value = (value<0 ? 0 : value);
@@ -27167,12 +25536,6 @@
                                 markingStyle_printingMode={widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
                                 markingStyle_size=2,
                             ){
-                                dev.log.partDisplay('.meter_gauge('  //#development
-                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
-                                    +JSON.stringify(needleAngleBounds)+JSON.stringify(backingStyle)+','+JSON.stringify(needleColours)  //#development
-                                    +JSON.stringify(markings)+','+JSON.stringify(markingStyle_fill)+','+JSON.stringify(markingStyle_font)  //#development
-                                    +JSON.stringify(markingStyle_printingMode)+','+JSON.stringify(markingStyle_size)  //#development
-                                +')'); //#development
                             
                                 const defaultBoundingAngles = {
                                     start:-Math.PI/6,
@@ -27187,7 +25550,6 @@
                                     });
                             
                                     function generateMark(angle,distance,text,name=''){
-                                        dev.log.partDisplay('.meter_gauge::generateMark('+angle+','+distance+','+text+','+name+')');  //#development
                                         const boundingAngles = needleAngleBounds[0] == undefined ? defaultBoundingAngles : needleAngleBounds[0];
                             
                                         const group = interfacePart.builder('basic', 'group', name, {
@@ -27239,7 +25601,6 @@
                             
                                 //method
                                     object.set = function(a){
-                                        dev.log.partDisplay('.meter_gauge.set('+a+')'); //#development
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         if(needleColours.length > 1){ mostRecentSetting = a; }
                                         else{ object.needle(a,0); }
@@ -27273,11 +25634,6 @@
                                 needleColours=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.65,g:0.65,b:0.65,a:1}],
                                 frontingURL,
                             ){
-                                dev.log.partDisplay('.meter_gauge_image('  //#development
-                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
-                                    +JSON.stringify(needleAngleBounds)  //#development
-                                    +JSON.stringify(backingURL)+','+JSON.stringify(needleColours)+','+JSON.stringify(frontingURL)  //#development
-                                +')'); //#development
                                 
                                 //elements
                                     const object = interfacePart.builder('display', 'gauge_image', name, {
@@ -27307,7 +25663,6 @@
                             
                                 //method
                                     object.set = function(a){
-                                        dev.log.partDisplay('.meter_gauge.set('+a+')'); //#development
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         if(needleColours.length > 1){ mostRecentSetting = a; }
                                         else{ object.needle(a,0); }
@@ -27336,11 +25691,6 @@
                                 needleColours=[{r:0.98,g:0.98,b:0.98,a:1}],
                                 frontingURL,
                             ){
-                                dev.log.partDisplay('.gauge_image('  //#development
-                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
-                                    +JSON.stringify(needleAngleBounds)+','+JSON.stringify(needleArticulationPoints)  //#development
-                                    +JSON.stringify(backingURL)+','+JSON.stringify(needleColours)+','+JSON.stringify(frontingURL)  //#development
-                                +')'); //#development
                                 
                                 const values = [];
                                 const defaultBoundingAngles = {
@@ -27385,7 +25735,6 @@
                                 //methods
                                     object.needle = function(value,layer=0){
                                         if(value==undefined){return values[layer];}
-                                        dev.log.partDisplay('.gauge_image.needle('+value+','+layer+')');  //#development
                             
                                         value = (value>1 ? 1 : value);
                                         value = (value<0 ? 0 : value);
@@ -27424,11 +25773,6 @@
                                 markingStyle_printingMode={widthCalculation:'absolute', horizontal:'left', vertical:'top'},
                                 markingStyle_size=2,
                             ){
-                                dev.log.partDisplay('.audio_meter_level('  //#development
-                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
-                                    +JSON.stringify(markings)+','+JSON.stringify(backingStyle)+','+JSON.stringify(levelStyles)  //#development
-                                    +JSON.stringify(markingStyle_fill)+','+JSON.stringify(markingStyle_font)+','+JSON.stringify(markingStyle_printingMode)+','+JSON.stringify(markingStyle_size)  //#development
-                                +')'); //#development
                             
                                 //elements
                                     const object = _canvas_.interface.part.builder('display', 'meter_level', name, {
@@ -27444,18 +25788,16 @@
                             
                                 //circuitry
                                     const converter = interface.circuit.audio2percentage()
-                                    converter.newValue = function(val){meter.set(val);};
+                                    converter.newValue = function(val){object.set(val);};
                             
                                 //audio connections
                                     object.audioIn = function(){ return converter.audioIn() };
                             
                                 //methods
                                     object.start = function(){
-                                        dev.log.partDisplay('.audio_meter_level.start()');  //#development
                                         converter.start();
                                     };
                                     object.stop = function(){
-                                        dev.log.partDisplay('.audio_meter_level.stop()');  //#development
                                         converter.stop();
                                     };
                             
@@ -27481,11 +25823,6 @@
                                 markingStyle_printingMode={widthCalculation:'absolute', horizontal:'left', vertical:'top'},
                                 markingStyle_size=2,
                             ){
-                                dev.log.partDisplay('.meter_level('  //#development
-                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
-                                    +JSON.stringify(markings)+','+JSON.stringify(backingStyle)+','+JSON.stringify(levelStyles)  //#development
-                                    +JSON.stringify(markingStyle_fill)+','+JSON.stringify(markingStyle_font)+','+JSON.stringify(markingStyle_printingMode)+','+JSON.stringify(markingStyle_size)  //#development
-                                +')'); //#development
                             
                                 levelStyles = levelStyles.reverse();
                                 
@@ -27524,7 +25861,6 @@
                                     
                                 //method
                                     object.set = function(a){
-                                        dev.log.partDisplay('.meter_level.set('+a+')'); //#development
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         mostRecentSetting = a;
                                     };
@@ -27545,7 +25881,6 @@
                                 backingStyle={r:0.04,g:0.04,b:0.04,a:1},
                                 levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.78,g:0.78,b:0.78,a:1}]
                             ){
-                                dev.log.partDisplay('.level('+name+','+x+','+y+','+angle+','+width+','+height+','+JSON.stringify(backingStyle)+','+JSON.stringify(levelStyles)+')'); //#development
                                 
                                 const values = [];
                             
@@ -27561,7 +25896,6 @@
                             
                                 //methods
                                     object.layer = function(value,layer){
-                                        dev.log.partDisplay('.level.layer('+value+','+layer+')'); //#development
                                         if(layer == undefined){return values;}
                                         if(value == null){return values[layer];}
                             
@@ -27634,11 +25968,9 @@
                                 //control
                                     object.get = function(x,y){ return pixelValues[x][y]; };
                                     object.set = function(x,y,state){ 
-                                        dev.log.partDisplay('.rastorDisplay.set('+x+','+y+','+state+')');  //#development
                                         pixelValues[x][y] = state; render();
                                     };
                                     object.import = function(data){
-                                        dev.log.partDisplay('.rastorDisplay.import('+JSON.stringify(data)+')');  //#development
                                         for(let x = 0; x < xCount; x++){
                                             for(let y = 0; y < yCount; y++){
                                                 this.set(x,y,data[x][y]);
@@ -27648,7 +25980,6 @@
                                     };
                                     object.export = function(){ return pixelValues; }
                                     object.setAll = function(value){
-                                        dev.log.partDisplay('.rastorDisplay.setAll()');  //#development
                                         for(let x = 0; x < xCount; x++){
                                             for(let y = 0; y < yCount; y++){
                                                 this.set(x,y,value);
@@ -27656,7 +25987,6 @@
                                         }
                                     }
                                     object.test = function(){
-                                        dev.log.partDisplay('.rastorDisplay.test()');  //#development
                                         this.setAll([1,1,1]);
                                         this.set(1,1,[1,0.5,0.5]);
                                         this.set(2,2,[0.5,1,0.5]);
@@ -27674,87 +26004,331 @@
                                 ); 
                             };
                             this.readout_sevenSegmentDisplay = function(
-                                name='readout_sevenSegmentDisplay', static=false, resolution=2, 
-                                x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=false,
+                                name='readout_sevenSegmentDisplay', static=false, resolution=1, 
+                                x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=!false,
                                 backgroundStyle={r:0,g:0,b:0,a:1},
                                 glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
-                                dev.log.partDisplay('.readout_sevenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 //values
                                     let text = '';
                                     let displayInterval = null;
                                     const displayIntervalTime = 150;
-                            
                                 //elements 
-                                    //main
-                                        const object = interfacePart.builder('basic', 'group', name, {x:x, y:y, angle:angle});
-                                    //display units
-                                        const units = (new Array(count)).fill().map((a,index) => {
-                                            return interfacePart.builder('display', 'sevenSegmentDisplay', ''+index, {
-                                                x:(width/count)*index, width:width/count, height:height, 
-                                                static:static, resolution:resolution,
-                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                            });
-                                        });
-                                        units.forEach(element => object.append(element));
-                                    //decimal point
-                                        let decimalPoints = [];
-                                        if(decimalPlaces){
-                                            decimalPoints = (new Array(count)).fill().map((a,index) => {
-                                                return interfacePart.builder('display', 'glowbox_circle', 'decimalPoint_'+index, {
-                                                    x:(width/count)*index, y:height*0.9, radius:((width/count)/8)/2,
-                                                    style:{glow:glowStyle, dim:dimStyle},
-                                                });
-                                            });
-                                            decimalPoints.forEach(element => object.append(element));
-                                        }
+                                    const object = interfacePart.builder('basic','group',name,{x:x, y:y});
                             
-                                //methods
-                                    function print(style,offset=0,dontClear=false){
-                                        dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+','+offset+','+dontClear+')'); //#development
-                                        
-                                        decimalPoints.forEach(point => point.off());
-                                        if(!dontClear){ clearInterval(displayInterval); }
-                            
-                                        switch(style){
-                                            case 'smart':
-                                                if(text.replace('.','').length > units.length){print('r2lSweep');}
-                                                else{print('regular');}
-                                            break;
-                                            case 'r2lSweep':
-                                                var displayStage = -units.length;
-                            
-                                                displayInterval = setInterval(function(){
-                                                    print('regular',-displayStage,true);
-                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=-units.length;}
-                                                },displayIntervalTime);
-                                            break;
-                                            case 'regular': default:
-                                                var textIndex = 0;
-                                                for(var a = offset; a < units.length; a++){
-                                                    if(units[a] == undefined){ textIndex++; continue; }
-                            
-                                                    if(text[textIndex] == '.'){
-                                                        if(decimalPoints[a-1] != undefined){decimalPoints[a-1].on();}
-                                                        a--;
-                                                    }else{ units[a].enterCharacter(text[textIndex]); }
-                                                    textIndex++;
+                                if(static){
+                                    const margin = (width/8) / count;
+                                    const division = (width/8) / count;
+                                    const shapes = {
+                                        segments:{
+                                            points: {
+                                                top:{
+                                                    left:[
+                                                        {x:division*1.0+margin,         y:division*1.0+margin},
+                                                        {x:division*0.5+margin,         y:division*0.5+margin},
+                                                        {x:division*1.0+margin,         y:division*0.0+margin},
+                                                        {x:division*0.0+margin,         y:division*1.0+margin},
+                                                    ],
+                                                    right:[
+                                                        {x:width/count-division*1.0-margin,   y:division*0.0+margin},
+                                                        {x:width/count-division*0.5-margin,   y:division*0.5+margin},
+                                                        {x:width/count-division*1.0-margin,   y:division*1.0+margin},
+                                                        {x:width/count-division*0.0-margin,   y:division*1.0+margin}
+                                                    ]
+                                                },
+                                                middle: {
+                                                    left:[
+                                                        {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                        {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
+                                                        {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                        {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                        {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                    ],
+                                                    right:[
+                                                        {x:width/count-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
+                                                        {x:width/count-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
+                                                        {x:width/count-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                        {x:width/count-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                        {x:width/count-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
+                                                    ]
+                                                },
+                                                bottom: {
+                                                    left:[
+                                                        {x:division*1.0+margin,         y:height-division*1.0-margin},
+                                                        {x:division*0.5+margin,         y:height-division*0.5-margin},
+                                                        {x:division*1.0+margin,         y:height-division*0.0-margin},
+                                                        {x:division*0.0+margin,         y:height-division*1.0-margin},
+                                                    ],
+                                                    right:[
+                                                        {x:width/count-division*1.0-margin,   y:height-division*0.0-margin},
+                                                        {x:width/count-division*0.5-margin,   y:height-division*0.5-margin},
+                                                        {x:width/count-division*1.0-margin,   y:height-division*1.0-margin},
+                                                        {x:width/count-division*0.0-margin,   y:height-division*1.0-margin}
+                                                    ]
                                                 }
-                                            break;
+                                            }
+                                        }
+                                    };
+                                    const segmentPointArray = [
+                                        [
+                                            shapes.segments.points.top.left[0],
+                                            shapes.segments.points.top.right[2],
+                                            shapes.segments.points.top.right[1],
+                                            shapes.segments.points.top.right[0],
+                                            shapes.segments.points.top.left[2],
+                                            shapes.segments.points.top.left[1],
+                                        ],
+                                        [
+                                            shapes.segments.points.top.left[1],
+                                            shapes.segments.points.top.left[3],
+                                            shapes.segments.points.middle.left[3],
+                                            shapes.segments.points.middle.left[1],
+                                            shapes.segments.points.middle.left[0],
+                                            shapes.segments.points.top.left[0],  
+                                        ],
+                                        [
+                                            shapes.segments.points.top.right[1],  
+                                            shapes.segments.points.top.right[3],  
+                                            shapes.segments.points.middle.right[3],
+                                            shapes.segments.points.middle.right[1],
+                                            shapes.segments.points.middle.right[2],
+                                            shapes.segments.points.top.right[2],  
+                                        ],
+                                        [
+                                            shapes.segments.points.middle.left[0], 
+                                            shapes.segments.points.middle.right[2],
+                                            shapes.segments.points.middle.right[1],
+                                            shapes.segments.points.middle.right[0],
+                                            shapes.segments.points.middle.left[2], 
+                                            shapes.segments.points.middle.left[1], 
+                                        ],
+                                        [
+                                            shapes.segments.points.middle.left[1],
+                                            shapes.segments.points.middle.left[4],
+                                            shapes.segments.points.bottom.left[3],
+                                            shapes.segments.points.bottom.left[1],
+                                            shapes.segments.points.bottom.left[0],
+                                            shapes.segments.points.middle.left[2],
+                                        ],
+                                        [
+                                            shapes.segments.points.middle.right[1],
+                                            shapes.segments.points.middle.right[4],
+                                            shapes.segments.points.bottom.right[3],
+                                            shapes.segments.points.bottom.right[1],
+                                            shapes.segments.points.bottom.right[2],
+                                            shapes.segments.points.middle.right[0],
+                                        ],
+                                        [
+                                            shapes.segments.points.bottom.left[0],
+                                            shapes.segments.points.bottom.right[2],
+                                            shapes.segments.points.bottom.right[1],
+                                            shapes.segments.points.bottom.right[0],
+                                            shapes.segments.points.bottom.left[2],
+                                            shapes.segments.points.bottom.left[1],
+                                        ]
+                                    ];
+                                    function getStamp(character){
+                                        
+                                        switch(character){
+                                            case 0: case '0': return [1,1,1,0,1,1,1];
+                                            case 1: case '1': return [0,0,1,0,0,1,0];
+                                            case 2: case '2': return [1,0,1,1,1,0,1];
+                                            case 3: case '3': return [1,0,1,1,0,1,1];
+                                            case 4: case '4': return [0,1,1,1,0,1,0];
+                                            case 5: case '5': return [1,1,0,1,0,1,1];
+                                            case 6: case '6': return [1,1,0,1,1,1,1];
+                                            case 7: case '7': return [1,0,1,0,0,1,0];
+                                            case 8: case '8': return [1,1,1,1,1,1,1];
+                                            case 9: case '9': return [1,1,1,1,0,1,1];
+                                            default: return [0,0,0,0,0,0,0];
                                         }
                                     }
                             
-                                    object.text = function(a){
-                                        if(a==null){return text;}
-                                        dev.log.partDisplay('.readout_sevenSegmentDisplay.text('+a+')'); //#development
-                                        text = a;
-                                    };
-                                    object.print = function(style){
-                                        dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+')'); //#development
-                                        print(style);
-                                    };  
+                                    //values
+                                        const stamps = (new Array(count)).fill().map(() => [0,0,0,0,0,0,0]);
+                                        const decimalPoints = (new Array(count-1)).fill().map(() => false);
+                                        const decimalPointRadius = height*0.05;
+                            
+                                    //elements 
+                                        const canvas = interfacePart.builder('basic','canvas','backing',{ width:width, height:height, colour:backgroundStyle,resolution:resolution });
+                                            object.append(canvas);
+                            
+                                    //internal
+                                        function clear(requestUpdate=true){
+                                            canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
+                                            canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                            if(requestUpdate){canvas.requestUpdate();}
+                                        };
+                                        function drawCharacters(){
+                            
+                                            stamps.forEach((stamp,stampIndex) => {
+                                                const xOffset = stampIndex*(width/count);
+                            
+                                                segmentPointArray.forEach((segmentPoints, segmentPointsIndex) => {
+                                                    canvas._.beginPath(); 
+                                                    canvas._.moveTo(
+                                                        canvas.$(segmentPoints[0].x + xOffset),
+                                                        canvas.$(segmentPoints[0].y)
+                                                    );
+                                                    for(let a = 1; a < segmentPoints.length; a++){
+                                                        canvas._.lineTo(
+                                                            canvas.$(segmentPoints[a].x + xOffset),
+                                                            canvas.$(segmentPoints[a].y)
+                                                        );
+                                                    }
+                                                    canvas._.closePath(); 
+                                                    canvas._.fillStyle = stamp[segmentPointsIndex] == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
+                                                    canvas._.fill(); 
+                                                });
+                                            });
+                            
+                                            if(decimalPlaces){
+                                                decimalPoints.forEach((state,index) => {
+                                                    canvas._.beginPath();
+                                                    canvas._.arc( canvas.$( (index+1)*(width/count) ), canvas.$(height - 2*decimalPointRadius), canvas.$(decimalPointRadius), 0, 2*Math.PI );
+                                                    canvas._.fillStyle = state == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
+                                                    canvas._.fill(); 
+                            
+                                                });
+                                            }
+                            
+                                            canvas.requestUpdate();
+                                        }
+                                        function print(style,offset=0,dontClear=false){
+                                            
+                                            if(decimalPlaces){ decimalPoints.forEach((point,index) => decimalPoints[index] = false); }
+                                            if(!dontClear){ clearInterval(displayInterval); }
+                            
+                                            switch(style){
+                                                case 'smart':
+                                                    if(decimalPlaces){
+                                                        if(text.replace('.','').length > stamps.length){print('r2lSweep');}
+                                                        else{print('regular');}
+                                                    }else{
+                                                        if(text.length > stamps.length){print('r2lSweep');}
+                                                        else{print('regular');}
+                                                    }
+                                                break;
+                                                case 'r2lSweep':
+                                                    let displayStage = -stamps.length;
+                            
+                                                    displayInterval = setInterval(function(){
+                                                        print('regular',-displayStage,true);
+                                                        displayStage++;
+                                                        if(text[displayStage] == "."){
+                                                            displayStage++;
+                                                        }
+                                                        if(displayStage > stamps.length+text.length-1){
+                                                            displayStage=-stamps.length;
+                                                        }
+                                                    },displayIntervalTime);
+                                                break;
+                                                case 'regular': default:
+                                                    let textIndex = 0;
+                                                    for(let a = offset; a < stamps.length; a++){
+                                                        if(stamps[a] == undefined){ textIndex++; continue; }
+                            
+                                                        if(decimalPlaces && text[textIndex] == '.'){
+                                                            if(decimalPoints[a-1] != undefined){
+                                                                decimalPoints[a-1] = true;
+                                                            }
+                                                            a--;
+                                                        }else{
+                                                            stamps[a] = getStamp(text[textIndex]);
+                                                        }
+                                                        textIndex++;
+                                                    }
+                                                break;
+                                            }
+                            
+                                            clear(false);
+                                            drawCharacters();
+                                        }
+                            
+                                    //methods
+                                        object.text = function(a){
+                                            if(a==null){return text;}
+                                            text = a;
+                                        };
+                                        object.print = function(style){
+                                            print(style);
+                                        };  
+                            
+                                    //setup
+                                        clear();
+                                        drawCharacters();
+                                }else{
+                                    //elements 
+                                        //display units
+                                            const units = (new Array(count)).fill().map((a,index) => {
+                                                return interfacePart.builder('display', 'sevenSegmentDisplay', ''+index, {
+                                                    x:(width/count)*index, width:width/count, height:height, 
+                                                    static:static, resolution:resolution,
+                                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                                });
+                                            });
+                                            units.forEach(element => object.append(element));
+                                        //decimal point
+                                            let decimalPoints = [];
+                                            if(decimalPlaces){
+                                                decimalPoints = (new Array(count-1)).fill().map((a,index) => {
+                                                    return interfacePart.builder('display', 'glowbox_circle', 'decimalPoint_'+index, {
+                                                        x:(width/count)*(index+1), y:height*0.9, radius:((width/count)/8)/2,
+                                                        style:{glow:glowStyle, dim:dimStyle},
+                                                    });
+                                                });
+                                                decimalPoints.forEach(element => object.append(element));
+                                            }
+                            
+                                    //methods
+                                        function print(style,offset=0,dontClear=false){
+                                            
+                                            decimalPoints.forEach(point => point.off());
+                                            if(!dontClear){ clearInterval(displayInterval); }
+                            
+                                            switch(style){
+                                                case 'smart':
+                                                    if(decimalPlaces){
+                                                        if(text.replace('.','').length > units.length){print('r2lSweep');}
+                                                        else{print('regular');}
+                                                    }else{
+                                                        if(text.length > units.length){print('r2lSweep');}
+                                                        else{print('regular');}
+                                                    }
+                                                break;
+                                                case 'r2lSweep':
+                                                    var displayStage = -units.length;
+                            
+                                                    displayInterval = setInterval(function(){
+                                                        print('regular',-displayStage,true);
+                                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=-units.length;}
+                                                    },displayIntervalTime);
+                                                break;
+                                                case 'regular': default:
+                                                    var textIndex = 0;
+                                                    for(var a = offset; a < units.length; a++){
+                                                        if(units[a] == undefined){ textIndex++; continue; }
+                            
+                                                        if(decimalPlaces && text[textIndex] == '.'){
+                                                            if(decimalPoints[a-1] != undefined){decimalPoints[a-1].on();}
+                                                            a--;
+                                                        }else{ units[a].enterCharacter(text[textIndex]); }
+                                                        textIndex++;
+                                                    }
+                                                break;
+                                            }
+                                        }
+                            
+                                        object.text = function(a){
+                                            if(a==null){return text;}
+                                            text = a;
+                                        };
+                                        object.print = function(style){
+                                            print(style);
+                                        };  
+                                }
                             
                                 return(object);
                             };
@@ -27772,7 +26346,6 @@
                                 glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
-                                dev.log.partDisplay('.sevenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 const margin = width/8;
                                 const division = width/8;
@@ -27885,7 +26458,6 @@
                                     ]
                                 ];
                                 function getStamp(character){
-                                    dev.log.partDisplay('.sevenSegmentDisplay::getStamp('+character+')'); //#development
                                     
                                     switch(character){
                                         case 0: case '0': return [1,1,1,0,1,1,1];
@@ -27912,14 +26484,12 @@
                             
                                     //graphics
                                         function clear(){
-                                            dev.log.partDisplay('.sevenSegmentDisplay::clear()'); //#development
                             
                                             canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
                                             canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                             canvas.requestUpdate();
                                         };
                                         function drawChar(){
-                                            dev.log.partDisplay('.sevenSegmentDisplay::drawChar()'); //#development
                             
                                             //draw segments in 
                                                 for(let a = 0; a < points.length; a++){
@@ -27937,7 +26507,6 @@
                             
                                     //methods
                                         object.set = function(segment,state){
-                                            dev.log.partDisplay('.sevenSegmentDisplay.set('+segment+','+state+')'); //#development
                                             clear();
                                             stamp[segment] = state;
                                             drawChar();
@@ -27950,7 +26519,6 @@
                                             return stamp[segment].state;
                                         };
                                         object.clear = function(){
-                                            dev.log.partDisplay('.sevenSegmentDisplay.clear()'); //#development
                                             clear();
                                             for(var a = 0; a < stamp.length; a++){
                                                 this.set(a,false);
@@ -27959,7 +26527,6 @@
                                         };
                             
                                         object.enterCharacter = function(char){
-                                            dev.log.partDisplay('.sevenSegmentDisplay.enterCharacter('+char+')'); //#development
                                             stamp = getStamp(char);
                             
                                             clear();
@@ -27989,7 +26556,6 @@
                             
                                         //methods
                                             object.set = function(segment,state){
-                                                dev.log.partDisplay('.sevenSegmentDisplay.set('+segment+','+state+')'); //#development
                                                 segments[segment].state = state;
                                                 if(state){ segments[segment].segment.colour(glowStyle); }
                                                 else{ segments[segment].segment.colour(dimStyle); }
@@ -27998,14 +26564,12 @@
                                                 return segments[segment].state;
                                             };
                                             object.clear = function(){
-                                                dev.log.partDisplay('.sevenSegmentDisplay.clear()'); //#development
                                                 for(var a = 0; a < segments.length; a++){
                                                     this.set(a,false);
                                                 }
                                             };
                             
                                             object.enterCharacter = function(char){
-                                                dev.log.partDisplay('.sevenSegmentDisplay.enterCharacter('+char+')'); //#development
                                                 stamp = getStamp(char);
                             
                                                 for(let a = 0; a < stamp.length; a++){
@@ -28030,7 +26594,6 @@
                                 glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
-                                dev.log.partDisplay('.sixteenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 const margin = width/8;
                                 const division = width/8;
@@ -28256,7 +26819,6 @@
                                     ],
                                 ];
                                 function getStamp(character){
-                                    dev.log.partDisplay('.sevenSegmentDisplay::getStamp('+character+')'); //#development
                             
                                     switch(character){
                                         case '!': 
@@ -28741,14 +27303,12 @@
                             
                                     //graphics
                                         function clear(){
-                                            dev.log.partDisplay('.sixteenSegmentDisplay::clear()'); //#development
                             
                                             canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
                                             canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                             canvas.requestUpdate();
                                         };
                                         function drawChar(){
-                                            dev.log.partDisplay('.sixteenSegmentDisplay::drawChar()'); //#development
                             
                                             //draw segments in 
                                                 for(let a = 0; a < points.length; a++){
@@ -28766,7 +27326,6 @@
                             
                                     //methods
                                         object.set = function(segment,state){
-                                            dev.log.partDisplay('.sixteenSegmentDisplay.set('+segment+','+state+')'); //#development
                                             clear();
                                             stamp[segment] = state;
                                             drawChar();
@@ -28779,7 +27338,6 @@
                                             return stamp[segment].state;
                                         };
                                         object.clear = function(){
-                                            dev.log.partDisplay('.sixteenSegmentDisplay.clear()'); //#development
                                             clear();
                                             for(var a = 0; a < stamp.length; a++){
                                                 this.set(a,false);
@@ -28788,7 +27346,6 @@
                                         };
                             
                                         object.enterCharacter = function(char){
-                                            dev.log.partDisplay('.sixteenSegmentDisplay.enterCharacter('+char+')'); //#development
                                             stamp = getStamp(char);
                             
                                             clear();
@@ -28818,7 +27375,6 @@
                             
                                     //methods
                                         object.set = function(segment,state){
-                                            dev.log.partDisplay('.sixteenSegmentDisplay.set('+segment+','+state+')'); //#development
                                             segments[segment].state = state;
                                             if(state){ segments[segment].segment.colour(glowStyle); }
                                             else{ segments[segment].segment.colour(dimStyle); }
@@ -28827,13 +27383,11 @@
                                             return segments[segment].state;
                                         };
                                         object.clear = function(){
-                                            dev.log.partDisplay('.sixteenSegmentDisplay.clear()'); //#development
                                             for(var a = 0; a < segments.length; a++){
                                                 this.set(a,false);
                                             }
                                         };
                                         object.enterCharacter = function(char){
-                                            dev.log.partDisplay('.sixteenSegmentDisplay.enterCharacter('+char+')'); //#development
                                             stamp = getStamp(char);
                             
                                             for(let a = 0; a < stamp.length; a++){
@@ -28852,13 +27406,12 @@
                                 );
                             };
                             this.readout_sixteenSegmentDisplay = function(
-                                name='readout_sixteenSegmentDisplay', static=false, resolution=2, 
+                                name='readout_sixteenSegmentDisplay', static=false, resolution=1, 
                                 x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=false,
                                 backgroundStyle={r:0,g:0,b:0,a:1},
                                 glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
-                                dev.log.partDisplay('.readout_sixteenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 //values
                                     let text = '';
@@ -28868,71 +27421,889 @@
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic', 'group', name, {x:x, y:y, angle:angle});
-                                    //display units
-                                        const units = (new Array(count)).fill().map((a,index) => {
-                                            return _canvas_.interface.part.builder('display', 'sixteenSegmentDisplay', ''+index, {
-                                                x:(width/count)*index, width:width/count, height:height, 
-                                                static:static, resolution:resolution,
-                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                            });
-                                        });
-                                        units.forEach(element => object.append(element));
-                                    //decimal point
-                                        let decimalPoints = [];
-                                        if(decimalPlaces){
-                                            decimalPoints = (new Array(count)).fill().map((a,index) => {
-                                                return _canvas_.interface.part.builder('display', 'glowbox_circle', 'decimalPoint_'+index, {
-                                                    x:(width/count)*index, y:height*0.9, radius:((width/count)/8)/2,
-                                                    style:{glow:glowStyle, dim:dimStyle},
-                                                });
-                                            });
-                                            decimalPoints.forEach(element => object.append(element));
-                                        }
                             
-                                //methods
-                                    function print(style,offset=0,dontClear=false){
-                                        dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+','+offset+','+dontClear+')'); //#development
-                                        
-                                        decimalPoints.forEach(point => point.off());
-                                        if(!dontClear){ clearInterval(displayInterval); }
-                            
-                                        switch(style){
-                                            case 'smart':
-                                                if(text.replace('.','').length > units.length){print('r2lSweep');}
-                                                else{print('regular');}
-                                            break;
-                                            case 'r2lSweep':
-                                                var displayStage = -units.length;
-                            
-                                                displayInterval = setInterval(function(){
-                                                    print('regular',-displayStage,true);
-                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=-units.length;}
-                                                },displayIntervalTime);
-                                            break;
-                                            case 'regular': default:
-                                                var textIndex = 0;
-                                                for(var a = offset; a < units.length; a++){
-                                                    if(units[a] == undefined){ textIndex++; continue; }
-                            
-                                                    if(text[textIndex] == '.'){
-                                                        if(decimalPoints[a-1] != undefined){decimalPoints[a-1].on();}
-                                                        a--;
-                                                    }else{ units[a].enterCharacter(text[textIndex]); }
-                                                    textIndex++;
+                                if(static){
+                                    const margin = (width/count)/8;
+                                    const division = (width/count)/8;
+                                    const shapes = {
+                                        segments:{
+                                            points: {
+                                                top:{
+                                                    left:[
+                                                        {x:division*0.5+margin,         y:division*0.5+margin},  //centre
+                                                        {x:division*1.0+margin,         y:division*0.0+margin},  //top
+                                                        {x:division*0.0+margin,         y:division*1.0+margin},  //left
+                                                        {x:division*1.0+margin,         y:division*1.0+margin},  //inner point
+                                                        {x:division*1.75+margin,        y:division*1.0+margin},  //inner point right
+                                                        {x:division*1.0+margin,         y:division*1.75+margin}, //inner point down
+                                                    ],
+                                                    centre:[
+                                                        {x:(width/count)/2,                     y:division*0.5+margin}, //central point
+                                                        {x:(width/count)/2-division*0.5,        y:division*1.0+margin}, //lower left
+                                                        {x:(width/count)/2+division*0.5,        y:division*1.0+margin}, //lower right
+                                                        {x:(width/count)/2-division*0.5,        y:division*0.0+margin}, //upper left
+                                                        {x:(width/count)/2+division*0.5,        y:division*0.0+margin}, //upper right
+                                                    ],
+                                                    right:[
+                                                        {x:(width/count)-division*0.5-margin,   y:division*0.5+margin},  //centre
+                                                        {x:(width/count)-division*1.0-margin,   y:division*0.0+margin},  //top
+                                                        {x:(width/count)-division*0.0-margin,   y:division*1.0+margin},  //right
+                                                        {x:(width/count)-division*1.0-margin,   y:division*1.0+margin},  //inner point
+                                                        {x:(width/count)-division*1.0-margin,   y:division*1.75+margin}, //inner point down
+                                                        {x:(width/count)-division*1.75-margin,  y:division*1.0+margin},  //inner point left
+                                                    ]
+                                                },
+                                                middle:{
+                                                    left:[
+                                                        {x:division*0.0+margin,         y:height*0.5-division*0.5}, //top left
+                                                        {x:division*1.0+margin,         y:height*0.5-division*0.5}, //top right
+                                                        {x:division*0.5+margin,         y:height*0.5-division*0.0}, //centre
+                                                        {x:division*0.0+margin,         y:height*0.5+division*0.5}, //bottom left
+                                                        {x:division*1.0+margin,         y:height*0.5+division*0.5}, //bottom right
+                                                    ],
+                                                    centre:[
+                                                        {x:(width/count)/2,                     y:height/2},                //central point
+                                                        {x:(width/count)/2-division*0.5,        y:division*0.5+height/2},   //lower left
+                                                        {x:(width/count)/2-division*0.25,       y:division*1.25+height/2},  //lower left down
+                                                        {x:(width/count)/2-division*1.0,        y:division*0.5+height/2},   //lower left left
+                                                        {x:(width/count)/2+division*0.5,        y:division*0.5+height/2},   //lower right
+                                                        {x:(width/count)/2+division*0.5,        y:division*1.75+height/2},  //lower right down
+                                                        {x:(width/count)/2+division*1.0,        y:division*0.5+height/2},   //lower right right
+                                                        {x:(width/count)/2-division*0.5,        y:-division*0.5+height/2},  //upper left
+                                                        {x:(width/count)/2-division*0.25,       y:-division*1.25+height/2}, //upper left up
+                                                        {x:(width/count)/2-division*1.0,        y:-division*0.25+height/2}, //upper left left
+                                                        {x:(width/count)/2+division*0.5,        y:-division*0.5+height/2},  //upper right
+                                                        {x:(width/count)/2+division*0.5,        y:-division*1.75+height/2}, //upper right up
+                                                        {x:(width/count)/2+division*1.0,        y:-division*0.25+height/2}, //upper right right
+                                                    ],
+                                                    right:[
+                                                        {x:(width/count)-division*1.0-margin,   y:height*0.5-division*0.5}, //top left
+                                                        {x:(width/count)-division*0.0-margin,   y:height*0.5-division*0.5}, //top right
+                                                        {x:(width/count)-division*0.5-margin,   y:height*0.5-division*0.0}, //centre
+                                                        {x:(width/count)-division*1.0-margin,   y:height*0.5+division*0.5}, //bottom left
+                                                        {x:(width/count)-division*0.0-margin,   y:height*0.5+division*0.5}  //bottom right
+                                                    ]
+                                                },
+                                                bottom: {
+                                                    left:[
+                                                        {x:division*0.5+margin,         y:height-division*0.5-margin}, //centre
+                                                        {x:division*0.0+margin,         y:height-division*1.0-margin}, //left
+                                                        {x:division*1.0+margin,         y:height-division*0.0-margin}, //bottom
+                                                        {x:division*1.0+margin,         y:height-division*1.0-margin}, //inner point
+                                                        {x:division*1.0+margin,         y:height-division*1.75-margin},//inner point up
+                                                        {x:division*1.75+margin,        y:height-division*1.0-margin}, //inner point right
+                                                    ],
+                                                    centre:[
+                                                        {x:(width/count)/2-division*0.5,        y:height-division*1.0-margin}, //upper left
+                                                        {x:(width/count)/2+division*0.5,        y:height-division*1.0-margin}, //upper right
+                                                        {x:(width/count)/2,                     y:height-division*0.5-margin}, //central point
+                                                        {x:(width/count)/2-division*0.5,        y:height-division*0.0-margin}, //lower left
+                                                        {x:(width/count)/2+division*0.5,        y:height-division*0.0-margin}, //lower right
+                                                    ],
+                                                    right:[
+                                                        {x:(width/count)-division*0.5-margin,   y:height-division*0.5-margin}, //centre
+                                                        {x:(width/count)-division*0.0-margin,   y:height-division*1.0-margin}, //right
+                                                        {x:(width/count)-division*1.0-margin,   y:height-division*0.0-margin}, //bottom
+                                                        {x:(width/count)-division*1.0-margin,   y:height-division*1.0-margin}, //inner point
+                                                        {x:(width/count)-division*1.0-margin,   y:height-division*1.75-margin},//inner point up
+                                                        {x:(width/count)-division*1.75-margin,  y:height-division*1.0-margin}, //inner point left
+                                                    ]
                                                 }
-                                            break;
+                                            }
+                                        }
+                                    };
+                                    const segmentPointArray = [
+                                        [
+                                            shapes.segments.points.top.left[1],
+                                            shapes.segments.points.top.left[0],
+                                            shapes.segments.points.top.left[3],
+                                            shapes.segments.points.top.centre[1],
+                                            shapes.segments.points.top.centre[0],
+                                            shapes.segments.points.top.centre[3],
+                                        ],
+                                        [
+                                            shapes.segments.points.top.centre[4],
+                                            shapes.segments.points.top.centre[0],
+                                            shapes.segments.points.top.centre[2],
+                                            shapes.segments.points.top.right[3],
+                                            shapes.segments.points.top.right[0],
+                                            shapes.segments.points.top.right[1],
+                                        ],
+                                
+                                        [
+                                            shapes.segments.points.top.left[0],
+                                            shapes.segments.points.top.left[2],
+                                            shapes.segments.points.middle.left[0],
+                                            shapes.segments.points.middle.left[2],
+                                            shapes.segments.points.middle.left[1],
+                                            shapes.segments.points.top.left[3],
+                                        ],
+                                        [
+                                            shapes.segments.points.top.left[4],
+                                            shapes.segments.points.top.left[3],
+                                            shapes.segments.points.top.left[5],
+                                            shapes.segments.points.middle.centre[9],
+                                            shapes.segments.points.middle.centre[7],
+                                            shapes.segments.points.middle.centre[8],
+                                        ],
+                                        [
+                                            shapes.segments.points.top.centre[0],
+                                            shapes.segments.points.top.centre[1],
+                                            shapes.segments.points.middle.centre[7],
+                                            shapes.segments.points.middle.centre[0],
+                                            shapes.segments.points.middle.centre[10],
+                                            shapes.segments.points.top.centre[2],
+                                        ],
+                                        [
+                                            shapes.segments.points.top.right[4],
+                                            shapes.segments.points.top.right[3],
+                                            shapes.segments.points.top.right[5],
+                                            shapes.segments.points.middle.centre[11],
+                                            shapes.segments.points.middle.centre[10],
+                                            shapes.segments.points.middle.centre[12],
+                                        ],
+                                        [
+                                            shapes.segments.points.top.right[0],
+                                            shapes.segments.points.top.right[2],
+                                            shapes.segments.points.middle.right[1],
+                                            shapes.segments.points.middle.right[2],
+                                            shapes.segments.points.middle.right[0],
+                                            shapes.segments.points.top.right[3],
+                                        ],
+                                
+                                        [
+                                            shapes.segments.points.middle.left[4],
+                                            shapes.segments.points.middle.left[2],
+                                            shapes.segments.points.middle.left[1],
+                                            shapes.segments.points.middle.centre[7],
+                                            shapes.segments.points.middle.centre[0],
+                                            shapes.segments.points.middle.centre[1],
+                                        ],
+                                        [
+                                            shapes.segments.points.middle.right[3],
+                                            shapes.segments.points.middle.right[2],
+                                            shapes.segments.points.middle.right[0],
+                                            shapes.segments.points.middle.centre[10],
+                                            shapes.segments.points.middle.centre[0],
+                                            shapes.segments.points.middle.centre[4],
+                                        ],
+                                
+                                        [
+                                            shapes.segments.points.bottom.left[0],
+                                            shapes.segments.points.bottom.left[1],
+                                            shapes.segments.points.middle.left[3],
+                                            shapes.segments.points.middle.left[2],
+                                            shapes.segments.points.middle.left[4],
+                                            shapes.segments.points.bottom.left[3],
+                                        ],
+                                        [
+                                            shapes.segments.points.bottom.left[4],
+                                            shapes.segments.points.bottom.left[3],
+                                            shapes.segments.points.bottom.left[5],
+                                            shapes.segments.points.middle.centre[2],
+                                            shapes.segments.points.middle.centre[1],
+                                            shapes.segments.points.middle.centre[3],
+                                        ],
+                                        [
+                                            shapes.segments.points.bottom.centre[0],
+                                            shapes.segments.points.bottom.centre[2],
+                                            shapes.segments.points.bottom.centre[1],
+                                            shapes.segments.points.middle.centre[4],
+                                            shapes.segments.points.middle.centre[0],
+                                            shapes.segments.points.middle.centre[1],
+                                        ],
+                                        [
+                                            shapes.segments.points.bottom.right[4],
+                                            shapes.segments.points.bottom.right[3],
+                                            shapes.segments.points.bottom.right[5],
+                                            shapes.segments.points.middle.centre[5],
+                                            shapes.segments.points.middle.centre[4],
+                                            shapes.segments.points.middle.centre[6],
+                                        ],
+                                        [
+                                            shapes.segments.points.bottom.right[3],
+                                            shapes.segments.points.middle.right[3],
+                                            shapes.segments.points.middle.right[2],
+                                            shapes.segments.points.middle.right[4],
+                                            shapes.segments.points.bottom.right[1],
+                                            shapes.segments.points.bottom.right[0],
+                                        ],
+                                
+                                        [
+                                            shapes.segments.points.bottom.left[2],
+                                            shapes.segments.points.bottom.left[0],
+                                            shapes.segments.points.bottom.left[3],
+                                            shapes.segments.points.bottom.centre[0],
+                                            shapes.segments.points.bottom.centre[2],
+                                            shapes.segments.points.bottom.centre[3],
+                                        ],
+                                        [
+                                            shapes.segments.points.bottom.right[2],
+                                            shapes.segments.points.bottom.right[0],
+                                            shapes.segments.points.bottom.right[3],
+                                            shapes.segments.points.bottom.centre[1],
+                                            shapes.segments.points.bottom.centre[2],
+                                            shapes.segments.points.bottom.centre[4],
+                                        ],
+                                    ];
+                                    function getStamp(character){
+                                
+                                        switch(character){
+                                            case '!': 
+                                                return [
+                                                    1,1,
+                                                    0,1,1,1,0,
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case '?': 
+                                                return [
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    0,1,
+                                                    0,0,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case '.': 
+                                                return [
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    1,0,
+                                                ]; 
+                                            case ',': 
+                                                return [
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    0,0,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case '\'': 
+                                                return [
+                                                    0,0,
+                                                    1,0,0,0,0,
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case ':':
+                                                return [
+                                                    0,0,
+                                                    0,1,0,1,0,
+                                                    0,0,
+                                                    0,1,0,1,0,
+                                                    0,0,
+                                                ]; 
+                                            case '"': 
+                                                return [
+                                                    0,0,
+                                                    1,0,1,0,0,
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case '_': 
+                                                return [
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case '-': 
+                                                return [
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    1,1,
+                                                    0,0,0,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case '\\': 
+                                                return [
+                                                    0,0,
+                                                    0,1,0,0,0,
+                                                    0,0,
+                                                    0,0,0,1,0,
+                                                    0,0,
+                                                ]; 
+                                            case '/': 
+                                                return [
+                                                    0,0,
+                                                    0,0,0,1,0,
+                                                    0,0,
+                                                    0,1,0,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case '*': 
+                                                return [
+                                                    0,0,
+                                                    0,1,1,1,0,
+                                                    1,1,
+                                                    0,1,1,1,0,
+                                                    0,0,
+                                                ]; 
+                                            case '#': 
+                                                return [
+                                                    1,1,
+                                                    1,0,1,0,1,
+                                                    1,1,
+                                                    1,0,1,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case '<': 
+                                                return [
+                                                    0,0,
+                                                    0,0,0,1,0,
+                                                    0,0,
+                                                    0,0,0,1,0,
+                                                    0,0,
+                                                ]; 
+                                            case '>': 
+                                                return [
+                                                    0,0,
+                                                    0,1,0,0,0,
+                                                    0,0,
+                                                    0,1,0,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case '(': 
+                                                return [
+                                                    0,1,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                    0,0,1,0,0,
+                                                    0,1,
+                                                ]; 
+                                            case ')': 
+                                                return [
+                                                    1,0,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                    0,0,1,0,0,
+                                                    1,0,
+                                                ]; 
+                                            case '[': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    0,0,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case ']': 
+                                                return [
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    0,0,
+                                                    0,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case '{': 
+                                                return [
+                                                    1,1,
+                                                    0,1,0,0,0,
+                                                    1,0,
+                                                    0,1,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case '}': 
+                                                return [
+                                                    1,1,
+                                                    0,0,0,1,0,
+                                                    0,1,
+                                                    0,0,0,1,0,
+                                                    1,1,
+                                                ]; 
+                                
+                                            case '0': case 0: 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,1,1,
+                                                    0,0,
+                                                    1,1,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case '1': case 1: 
+                                                return [
+                                                    1,0,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                    0,0,1,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case '2': case 2: 
+                                                return [
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    0,1,
+                                                    0,1,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case '3': case 3:
+                                                return [
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case '4': case 4:
+                                                return [
+                                                    0,0,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    0,0,
+                                                ]; 
+                                            case '5': case 5:
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case '6': case 6:
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case '7': case 7:
+                                                return [
+                                                    1,1,
+                                                    0,0,0,1,0,
+                                                    0,0,
+                                                    0,1,0,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case '8': case 8:
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case '9': case 9:
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                
+                                            case 'a': case 'A': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    0,0,
+                                                ]; 
+                                            case 'b': case 'B': 
+                                                return [
+                                                    1,1,
+                                                    0,0,1,0,1,
+                                                    0,1,
+                                                    0,0,1,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case 'c': case 'C': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    0,0,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case 'd': case 'D': 
+                                                return [
+                                                    1,1,
+                                                    0,0,1,0,1,
+                                                    0,0,
+                                                    0,0,1,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case 'e': case 'E': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case 'f': case 'F': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case 'g': case 'G': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    0,1,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case 'h': case 'H': 
+                                                return [
+                                                    0,0,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    0,0,
+                                                ]; 
+                                            case 'i': case 'I': 
+                                                return [
+                                                    1,1,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                    0,0,1,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case 'j': case 'J': 
+                                                return [
+                                                    1,1,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                    0,0,1,0,0,
+                                                    1,0,
+                                                ]; 
+                                            case 'k': case 'K': 
+                                                return [
+                                                    0,0,
+                                                    1,0,0,1,0,
+                                                    1,0,
+                                                    1,0,0,1,0,
+                                                    0,0,
+                                                ]; 
+                                            case 'l': case 'L': 
+                                                return [
+                                                    0,0,
+                                                    1,0,0,0,0,
+                                                    0,0,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                            case 'm': case 'M': 
+                                                return [
+                                                    0,0,
+                                                    1,1,0,1,1,
+                                                    0,0,
+                                                    1,0,0,0,1,
+                                                    0,0,
+                                                ]; 
+                                            case 'n': case 'N': 
+                                                return [
+                                                    0,0,
+                                                    1,1,0,0,1,
+                                                    0,0,
+                                                    1,0,0,1,1,
+                                                    0,0,
+                                                ]; 
+                                            case 'o': case 'O': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    0,0,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case 'p': case 'P': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    0,0,
+                                                ];
+                                            case 'q': case 'Q': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    0,0,
+                                                    1,0,0,1,1,
+                                                    1,1,
+                                                ]; 
+                                            case 'r': case 'R': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                    1,0,0,1,0,
+                                                    0,0,
+                                                ]; 
+                                            case 's': case 'S': 
+                                                return [
+                                                    1,1,
+                                                    1,0,0,0,0,
+                                                    1,1,
+                                                    0,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case 't': case 'T': 
+                                                return [
+                                                    1,1,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case 'u': case 'U': 
+                                                return [
+                                                    0,0,
+                                                    1,0,0,0,1,
+                                                    0,0,
+                                                    1,0,0,0,1,
+                                                    1,1,
+                                                ]; 
+                                            case 'v': case 'V': 
+                                                return [
+                                                    0,0,
+                                                    1,0,0,1,0,
+                                                    0,0,
+                                                    1,1,0,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case 'w': case 'W': 
+                                                return [
+                                                    0,0,
+                                                    1,0,0,0,1,
+                                                    0,0,
+                                                    1,1,0,1,1,
+                                                    0,0,
+                                                ]; 
+                                            case 'x': case 'X': 
+                                                return [
+                                                    0,0,
+                                                    0,1,0,1,0,
+                                                    0,0,
+                                                    0,1,0,1,0,
+                                                    0,0,
+                                                ]; 
+                                            case 'y': case 'Y': 
+                                                return [
+                                                    0,0,
+                                                    0,1,0,1,0,
+                                                    0,0,
+                                                    0,0,1,0,0,
+                                                    0,0,
+                                                ]; 
+                                            case 'z': case 'Z': 
+                                                return [
+                                                    1,1,
+                                                    0,0,0,1,0,
+                                                    0,0,
+                                                    0,1,0,0,0,
+                                                    1,1,
+                                                ]; 
+                                
+                                            case 'all': 
+                                                return [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+                                            default:
+                                                return [
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    0,0,
+                                                    0,0,0,0,0,
+                                                    0,0,
+                                                ];
                                         }
                                     }
                             
-                                    object.text = function(a){
-                                        if(a==null){return text;}
-                                        dev.log.partDisplay('.readout_sixteenSegmentDisplay.text('+a+')'); //#development
-                                        text = a;
-                                    };
-                                    object.print = function(style){
-                                        dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development
-                                        print(style);
-                                    };  
+                                    //values
+                                        const stamps = (new Array(count)).fill().map(() => [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+                                        const decimalPoints = (new Array(count-1)).fill().map(() => false);
+                                        const decimalPointRadius = 1.5;
+                            
+                                    //elements 
+                                        const canvas = interfacePart.builder('basic','canvas','backing',{ width:width, height:height, colour:backgroundStyle,resolution:resolution });
+                                            object.append(canvas);
+                            
+                                    //internal
+                                        function clear(requestUpdate=true){
+                                            canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
+                                            canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                            if(requestUpdate){canvas.requestUpdate();}
+                                        };
+                                        function drawCharacters(){
+                            
+                                            stamps.forEach((stamp,stampIndex) => {
+                                                const xOffset = stampIndex*(width/count);
+                            
+                                                segmentPointArray.forEach((segmentPoints, segmentPointsIndex) => {
+                                                    canvas._.beginPath(); 
+                                                    canvas._.moveTo(
+                                                        canvas.$(segmentPoints[0].x + xOffset),
+                                                        canvas.$(segmentPoints[0].y)
+                                                    );
+                                                    for(let a = 1; a < segmentPoints.length; a++){
+                                                        canvas._.lineTo(
+                                                            canvas.$(segmentPoints[a].x + xOffset),
+                                                            canvas.$(segmentPoints[a].y)
+                                                        );
+                                                    }
+                                                    canvas._.closePath(); 
+                                                    canvas._.fillStyle = stamp[segmentPointsIndex] == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
+                                                    canvas._.fill(); 
+                                                });
+                                            });
+                            
+                                            if(decimalPlaces){
+                                                decimalPoints.forEach((state,index) => {
+                                                    canvas._.beginPath();
+                                                    canvas._.arc( canvas.$( (index+1)*(width/count) ), canvas.$(height - 2*decimalPointRadius), canvas.$(decimalPointRadius), 0, 2*Math.PI );
+                                                    canvas._.fillStyle = state == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
+                                                    canvas._.fill(); 
+                            
+                                                });
+                                            }
+                            
+                                            canvas.requestUpdate();
+                                        }
+                                        function print(style,offset=0,dontClear=false){
+                                            
+                                            if(decimalPlaces){ decimalPoints.forEach((point,index) => decimalPoints[index] = false); }
+                                            if(!dontClear){ clearInterval(displayInterval); }
+                            
+                                            switch(style){
+                                                case 'smart':
+                                                    if(decimalPlaces){
+                                                        if(text.replace('.','').length > stamps.length){print('r2lSweep');}
+                                                        else{print('regular');}
+                                                    }else{
+                                                        if(text.length > stamps.length){print('r2lSweep');}
+                                                        else{print('regular');}
+                                                    }
+                                                break;
+                                                case 'r2lSweep':
+                                                    let displayStage = -stamps.length;
+                            
+                                                    displayInterval = setInterval(function(){
+                                                        print('regular',-displayStage,true);
+                                                        displayStage++;
+                                                        if(text[displayStage] == "."){
+                                                            displayStage++;
+                                                        }
+                                                        if(displayStage > stamps.length+text.length-1){
+                                                            displayStage=-stamps.length;
+                                                        }
+                                                    },displayIntervalTime);
+                                                break;
+                                                case 'regular': default:
+                                                    let textIndex = 0;
+                                                    for(let a = offset; a < stamps.length; a++){
+                                                        if(stamps[a] == undefined){ textIndex++; continue; }
+                            
+                                                        if(decimalPlaces && text[textIndex] == '.'){
+                                                            if(decimalPoints[a-1] != undefined){
+                                                                decimalPoints[a-1] = true;
+                                                            }
+                                                            a--;
+                                                        }else{
+                                                            stamps[a] = getStamp(text[textIndex]);
+                                                        }
+                                                        textIndex++;
+                                                    }
+                                                break;
+                                            }
+                            
+                                            clear(false);
+                                            drawCharacters();
+                                        }
+                            
+                                    //methods
+                                        object.text = function(a){
+                                            if(a==null){return text;}
+                                            text = a;
+                                        };
+                                        object.print = function(style){
+                                            print(style);
+                                        };  
+                            
+                                    //setup
+                                        clear();
+                                        drawCharacters();
+                                }else{
+                                    //elements 
+                                        //display units
+                                            const units = (new Array(count)).fill().map((a,index) => {
+                                                return _canvas_.interface.part.builder('display', 'sixteenSegmentDisplay', ''+index, {
+                                                    x:(width/count)*index, width:width/count, height:height, 
+                                                    static:static, resolution:resolution,
+                                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                                });
+                                            });
+                                            units.forEach(element => object.append(element));
+                                        //decimal point
+                                            let decimalPoints = [];
+                                            if(decimalPlaces){
+                                                decimalPoints = (new Array(count-1)).fill().map((a,index) => {
+                                                    return _canvas_.interface.part.builder('display', 'glowbox_circle', 'decimalPoint_'+index, {
+                                                        x:(width/count)*(index+1), y:height*0.9, radius:(height/10)/2,
+                                                        style:{glow:glowStyle, dim:dimStyle},
+                                                    });
+                                                });
+                                                decimalPoints.forEach(element => object.append(element));
+                                            }
+                            
+                                    //methods
+                                        function print(style,offset=0,dontClear=false){
+                                            
+                                            decimalPoints.forEach(point => point.off());
+                                            if(!dontClear){ clearInterval(displayInterval); }
+                            
+                                            switch(style){
+                                                case 'smart':
+                                                    if(decimalPlaces){
+                                                        if(text.replace('.','').length > units.length){print('r2lSweep');}
+                                                        else{print('regular');}
+                                                    }else{
+                                                        if(text.length > units.length){print('r2lSweep');}
+                                                        else{print('regular');}
+                                                    }
+                                                break;
+                                                case 'r2lSweep':
+                                                    var displayStage = -units.length;
+                            
+                                                    displayInterval = setInterval(function(){
+                                                        print('regular',-displayStage,true);
+                                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=-units.length;}
+                                                    },displayIntervalTime);
+                                                break;
+                                                case 'regular': default:
+                                                    var textIndex = 0;
+                                                    for(var a = offset; a < units.length; a++){
+                                                        if(units[a] == undefined){ textIndex++; continue; }
+                            
+                                                        if(decimalPlaces && text[textIndex] == '.'){
+                                                            if(decimalPoints[a-1] != undefined){decimalPoints[a-1].on();}
+                                                            a--;
+                                                        }else{ units[a].enterCharacter(text[textIndex]); }
+                                                        textIndex++;
+                                                    }
+                                                break;
+                                            }
+                                        }
+                            
+                                        object.text = function(a){
+                                            if(a==null){return text;}
+                                            text = a;
+                                        };
+                                        object.print = function(style){
+                                            print(style);
+                                        };  
+                                }
                             
                                 return(object);
                             };
@@ -28956,7 +28327,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.slidePanel_image(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -29142,7 +28512,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.slidePanel(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -29191,7 +28560,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.slide_continuous_image(...)'); //#development
                             
                                 //default to non-image version if handle image link is missing
                                     if(handleURL == undefined){
@@ -29342,7 +28710,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.slide_continuous(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -29482,7 +28849,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.slide_discrete_image(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -29616,7 +28982,6 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
-                                dev.log.partControl('.checkbox_rectangle(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -29673,7 +29038,6 @@
                                 uncheckURL='', checkURL='', uncheckGlowURL='', checkGlowStyle='',
                                 onchange = function(){},
                             ){
-                                dev.log.partControl('.checkbox_image(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -29720,7 +29084,6 @@
                             
                                 subject
                             ){
-                                dev.log.partControl('.checkbox_(...)'); //#development
                             
                                 if(subject == undefined){console.warn('checkbox_ : No subject provided');}
                             
@@ -29762,6 +29125,8 @@
                                         if(!interactable){return;}
                                         object.set(!object.get());
                                     });
+                                    subject.cover.attachCallback('onmousedown', () => {});
+                                    subject.cover.attachCallback('onmouseup', () => {});
                             
                                 //callbacks
                                     object.onchange = onchange;
@@ -29785,7 +29150,6 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
-                                dev.log.partControl('.checkbox_polygon(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -29839,7 +29203,6 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
-                                dev.log.partControl('.checkbox_circle(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -29894,7 +29257,6 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
-                                dev.log.partControl('.checkboxgrid(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -29977,7 +29339,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.dial_continuous_image(...)'); //#development
                             
                                 //default to non-image version if image links are missing
                                     if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
@@ -30108,7 +29469,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.dial_1_discrete(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -30223,7 +29583,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.checkboxgrid(...)'); //#development
                                 
                                 //elements 
                                     //main
@@ -30343,7 +29702,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.dial_discrete_image(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -30457,7 +29815,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.dial_2_discrete(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -30571,7 +29928,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.dial_2_continuous(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -30697,7 +30053,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.rangeslide_image(...)'); //#development
                             
                                 //default to non-image version if handle image link is missing
                                     if(handleURL == undefined){
@@ -30969,7 +30324,6 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                dev.log.partControl('.rangeslide(...)'); //#development
                             
                                 let grappled = false;
                                 const handleNames = ['start','end'];
@@ -31311,7 +30665,6 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
-                                dev.log.partControl('.button_circle(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -31544,7 +30897,6 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
-                                dev.log.partControl('.button_rectangle(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -31734,7 +31086,6 @@
                             
                                 subject
                             ){
-                                dev.log.partControl('.button_(...)'); //#development
                             
                                 if(subject == undefined){console.warn('button_ : No subject provided');}
                             
@@ -31809,7 +31160,7 @@
                                         if(hoverable){ object.state.hovering = true; }
                                         object.activateGraphicalState(object.state);
                                         if(object.onenter){object.onenter(event);}
-                                        if(event.buttons == 1){subject.cover.onmousedown(x,y,event);} 
+                                        if(event.buttons == 1){subject.cover.getCallback('onmousedown')(x,y,event);} 
                                     });
                                     subject.cover.attachCallback('onmouseleaveelement',(x,y,event) => {
                                         if(hoverable){ object.state.hovering = false; }
@@ -31942,7 +31293,6 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
-                                dev.log.partControl('.button_polygon(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -32120,7 +31470,6 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
-                                dev.log.partControl('.button_image(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -32230,7 +31579,6 @@
                                 onrelease=function(needle,value){}, 
                                 selectionAreaToggle=function(bool){},
                             ){
-                                dev.log.partControl('.needleOverlay(...)'); //#development
                             
                                 const needleData = {};
                                 const grappled = {};
@@ -32647,7 +31995,6 @@
                             //     onselection=function(a){/*console.log('onselection >',a);*/},
                             //     onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
                             // ){
-                            //     dev.log.partControl('.list_image(...)'); //#development
                             
                             //     //state
                             //         let self = this;
@@ -32924,13 +32271,11 @@
                             
                             // this.list_image.itemTypes = {};
                             // this.list_image.itemTypes.space = function(index, x, y, height){
-                            //     dev.log.partControl('.list_image.itemTypes.space(...)'); //#development
                             
                             //     const newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
                             //     return {item:newItem,height:height};
                             // };
                             // this.list_image.itemTypes.break = function(index, x, y, width, height, url){
-                            //     dev.log.partControl('.list_image.itemTypes.break(...)'); //#development
                             
                             //     const newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
                             //     const image = interfacePart.builder('basic', 'image', 'image', { width:width, height:height, url:url });
@@ -32939,7 +32284,6 @@
                             //     return {item:newItem,height:height};
                             // };
                             // this.list_image.itemTypes.image = function(index, x, y, width, height, url){
-                            //     dev.log.partControl('.list_image.itemTypes.image(...)'); //#development
                             
                             //     const newItem = interfacePart.builder('basic','group',index+'_image',{x:x,y:y});
                             //     const image = interfacePart.builder('basic', 'image', 'image', { width:width, height:height, url:url });
@@ -33113,7 +32457,6 @@
                                 onselection=function(a){/*console.log('onselection >',a);*/},
                                 onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
                             ){
-                                dev.log.partControl('.list(...)'); //#development
                             
                                 //state
                                     let self = this;
@@ -33769,13 +33112,11 @@
                             };
                             this.list.itemTypes = {};
                             this.list.itemTypes.space = function( index, x, y, height ){
-                                dev.log.partControl('.list.itemTypes.space(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
                                 return {item:newItem,height:height};
                             };
                             this.list.itemTypes.break = function( index, x, y, width, height, colour, lineMux){
-                                dev.log.partControl('.list.itemTypes.break(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
                                 const rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:colour });
@@ -33784,7 +33125,6 @@
                                 return {item:newItem,height:height};
                             };
                             this.list.itemTypes.textbreak = function( index, x, y, width, height, text, fontColour, printingMode, font, spacing, interCharacterSpacing, textToLineSpacing, textHeightMux, lineMux ){
-                                dev.log.partControl('.list.itemTypes.textbreak(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_textbreak',{x:x,y:y});
                                 const rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:fontColour });
@@ -33808,7 +33148,6 @@
                                 text_left, text_centre, text_right,
                                 size, font, fontColour, spacing, interCharacterSpacing, itemColour
                             ){
-                                dev.log.partControl('.list.itemTypes.text(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_text',{x:x,y:y});
                                 const backing = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:itemColour });
@@ -33922,7 +33261,6 @@
                             
                                 updateFunction, onclickFunction,
                             ){
-                                dev.log.partControl('.list.itemTypes.checkbox(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_checkbox',{x:x,y:y});
                                     newItem.state = false;
@@ -34155,7 +33493,6 @@
                                 onselect,
                                 ondeselect,
                             ){
-                                dev.log.partControl('.list.itemTypes.button(...)'); //#development
                             
                                 const button_rectangle = interfacePart.builder('control', 'button_rectangle', index+'_button', {
                                     x:x,y:y,
@@ -34368,7 +33705,6 @@
                                     onselection,
                                     onpositionchange,
                             ){
-                                dev.log.partControl('.list.itemTypes.list(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
                                 const button = interfacePart.builder('control', 'button_rectangle', 'button', {
@@ -34798,7 +34134,6 @@
                                 onchangeviewarea=function(data){},
                                 event=function(events){},
                             ){
-                                dev.log.partControl('.sequencer(...)'); //#development
                             
                                 const self = this;
                             
@@ -34961,7 +34296,6 @@
                                             }
                                     }
                                     function adjustZoom(x,y){
-                                        dev.log.partControl('.sequencer::adjustZoom('+x+','+y+')'); //#development
                                         
                                         if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
                                         const maxZoom = 0.01;
@@ -35104,13 +34438,10 @@
                                             }
                                     }
                                     function makeSignal(line, position, length, strength=signals.defaultStrength){
-                                        dev.log.partControl('.sequencer::makeSignal('+line+','+position+','+length+','+strength+')'); //#development
                             
                                         //register signal and get new id. From the registry, get the approved signal values
                                             const newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
-                                            dev.log.partControl('.sequencer::makeSignal -> newID:'+newID); //#development
                                             const approvedData = signals.signalRegistry.getSignal(newID);
-                                            dev.log.partControl('.sequencer::makeSignal -> approvedData:'+JSON.stringify(approvedData)); //#development
                             
                                         //create graphical signal with approved values and append it to the pane
                                             const newSignalBlock = self.sequencer.signalBlock(
@@ -35527,7 +34858,7 @@
                                                 }
                                 
                                             //reposition graphical playhead
-                                                const playheadObject = workarea.getChildByName('playhead');
+                                                let playheadObject = workarea.getChildByName('playhead');
                                                 if(playhead.position < 0 || playhead.position > xCount){
                                                     //outside viable bounds, so remove
                                                         if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
@@ -35819,7 +35150,6 @@
                                 handleStyle={r:1,g:1,b:0,a:1},
                                 handleWidth=5,
                             ){
-                                dev.log.partControl('.sequencer.signalBlock(...)'); //#development
                             
                                 let selected = false;
                                 const minLength = handleWidth/4;
@@ -35870,7 +35200,6 @@
                                 //controls
                                     object.unit = function(x,y){
                                         if(x == undefined && y == undefined){return {x:unit_x,y:unit_y};}
-                                        dev.log.partControl('.sequencer.signalBlock.unit('+x+','+y+')'); //#development
                             
                                         //(awkward bid for speed)
                                         if( x == undefined ){
@@ -35890,25 +35219,21 @@
                                     };
                                     object.line = function(a){
                                         if(a == undefined){return line;}
-                                        dev.log.partControl('.sequencer.signalBlock.line('+a+')'); //#development
                                         line = a;
                                         updateLine();
                                     };
                                     object.position = function(a){
                                         if(a == undefined){return position;}
-                                        dev.log.partControl('.sequencer.signalBlock.position('+a+')'); //#development
                                         position = a;
                                         updatePosition();
                                     };
                                     object.length = function(a){
                                         if(a == undefined){return length;}
-                                        dev.log.partControl('.sequencer.signalBlock.length('+a+')'); //#development
                                         length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
                                         updateLength();
                                     };
                                     object.strength = function(a){
                                         if(a == undefined){return strength;}
-                                        dev.log.partControl('.sequencer.signalBlock.strength('+a+')'); //#development
                                         a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
                                         strength = a;
                                         currentStyles = {
@@ -35919,7 +35244,6 @@
                                     };
                                     object.glow = function(a){
                                         if(a == undefined){return glow;}
-                                        dev.log.partControl('.sequencer.signalBlock.glow('+a+')'); //#development
                                         glow = a;
                                         if(glow){ 
                                             object.body.colour(currentStyles.glow.colour);
@@ -35933,7 +35257,6 @@
                                     };
                                     object.selected = function(a){
                                         if(a == undefined){return selected;}
-                                        dev.log.partControl('.sequencer.signalBlock.selected('+a+')'); //#development
                                         selected = a;
                                     };
                             
@@ -35964,7 +35287,6 @@
                                 onrelease=function(needle,value){}, 
                                 selectionAreaToggle=function(bool){},
                             ){
-                                dev.log.partControl('.grapher_waveWorkspace(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -36035,6 +35357,173 @@
                         };
                         this.dynamic = new function(){
                             interfacePart.partLibrary.dynamic = {};
+                            this.connectionNode_voltage = function(
+                                name='connectionNode_voltage',
+                                x, y, angle=0, width=20, height=20,
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:0.86,g:1,b:0.86,a:1},
+                                glowStyle={r:0.94,g:0.98,b:0.93,a:1},
+                                cable_dimStyle={r:0.32,g:0.96,b:0.43,a:1},
+                                cable_glowStyle={r:0.62,g:0.98,b:0.68,a:1},
+                                cableConnectionPosition={x:1/2,y:1/2},
+                                cableVersion=1,
+                                onchange=function(value){},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    const object = interfacePart.builder('dynamic','connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
+                                        cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                        onconnect, ondisconnect
+                                    });
+                            
+                                //circuitry
+                                    let localValue = 0;
+                            
+                                    object._getLocalValue = function(){ return localValue; };
+                                    object._update = function(a){
+                                        if(a>0){ object.activate(); }
+                                        else{ object.deactivate(); }
+                                        try{object.onchange(a);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
+                                    }
+                            
+                                    object.set = function(a){
+                                        if(typeof a != 'number'){return;}
+                            
+                                        localValue = a;
+                            
+                                        const val = object.read();
+                                        object._update(val);
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
+                                    };
+                                    object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : 0); };
+                            
+                                    object._onconnect = function(instigator){
+                                        const forignValue = object.getForeignNode()._getLocalValue();
+                                        if(forignValue>0){ object.activate(); }
+                                        try{object.onchange(forignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
+                                    };
+                                    object._ondisconnect = function(instigator){
+                                        if(localValue==0){ object.deactivate(); }
+                                        try{object.onchange(localValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
+                                    };
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.dynamic.connectionNode_voltage = function(name,data){ 
+                                return interfacePart.collection.dynamic.connectionNode_voltage(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
+                                    data.onchange, data.onconnect, data.ondisconnect,
+                                ); 
+                            };
+                            this.connectionNode_audio = function(
+                                name='connectionNode_audio',
+                                x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
+                                isAudioOutput=false, audioContext,
+                                cableConnectionPosition={x:1/2,y:1/2},
+                                cableVersion=1,
+                                dimStyle={r:255/255, g:244/255, b:220/255, a:1},
+                                glowStyle={r:255/255, g:244/255, b:244/255, a:1},
+                                cable_dimStyle={r:247/255, g:146/255, b:84/255, a:1},
+                                cable_glowStyle={r:242/255, g:168/255, b:123/255, a:1},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    const object = interfacePart.builder('dynamic','connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+                                        cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                        onconnect, ondisconnect
+                                    });
+                                    object._direction = isAudioOutput ? 'out' : 'in';
+                            
+                                //circuitry
+                                    object.audioNode = audioContext.createAnalyser();
+                            
+                                    //audio connections
+                                        object.out = function(){return object.audioNode;};
+                                        object.in = function(){return object.audioNode;};
+                            
+                                    object._onconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
+                                    };
+                                    object._ondisconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
+                                    };
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.dynamic.connectionNode_audio = function(name,data){
+                                return interfacePart.collection.dynamic.connectionNode_audio(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableConnectionPosition, data.cableVersion,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                                    data.onconnect, data.ondisconnect,
+                                ); 
+                            };
+                            this.connectionNode_data = function(
+                                name='connectionNode_data',
+                                x, y, angle=0, width=20, height=20, 
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:220/255, g:244/255, b:255/255, a:1},
+                                glowStyle={r:244/255, g:244/255, b:255/255, a:1},
+                                cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
+                                cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
+                                cableConnectionPosition={x:1/2,y:1/2},
+                                cableVersion=1,
+                                onreceive=function(address, data){},
+                                ongive=function(address){},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    const object = interfacePart.builder('dynamic','connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'data',
+                                        cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                        onconnect, ondisconnect
+                                    });
+                            
+                                //circuitry
+                                    object._flash = function(){
+                                        this.activate();
+                                        setTimeout(function(){ object.deactivate(); },100);
+                                    };
+                            
+                                    object.send = function(address,data){
+                                        object._flash();
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
+                            
+                                        if(object.getForeignNode()!=undefined){ try{object.getForeignNode().onreceive(address,data);}catch(error){console.log('connectionNode_data::'+name+' onreceive error:',error);} }
+                                    };
+                                    object.request = function(address){
+                                        object._flash();
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
+                            
+                                        if(object.getForeignNode()!=undefined){ try{object.getForeignNode().ongive(address);}catch(error){console.log('connectionNode_data::'+name+' ongive error:',error);} }
+                                    };
+                            
+                                    object.onreceive = onreceive;
+                                    object.ongive = ongive;
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.dynamic.connectionNode_data = function(name,data){ 
+                                return interfacePart.collection.dynamic.connectionNode_data(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
+                                    data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
+                                ); 
+                            };
                             this.connectionNode = function(
                                 name='connectionNode',
                                 x, y, angle=0, width=20, height=20, type='none', direction='',
@@ -36044,30 +35533,35 @@
                                 cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
                                 cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
                                 cableConnectionPosition={x:1/2,y:1/2},
-                                cableVersion=0, proximityThreshold={distance:15, hysteresisDistance:1},
+                                cableVersion=1, proximityThreshold={distance:15, hysteresisDistance:1},
                                 onconnect=function(instigator){},
                                 ondisconnect=function(instigator){},
                             ){
-                                dev.log.partDynamic('.connectionNode(...)'); //#development
                             
                                 //elements
                                     //main
-                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                        const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
                                         object._connectionNode = true;
                                         object._type = type;
                                         object._direction = direction;
                                     //node
-                                        var rectangle = interfacePart.builder('basic','rectangle','node',{ width:width, height:height, colour:dimStyle });
+                                        const rectangle = interfacePart.builder('basic','rectangle','node',{ width:width, height:height, colour:dimStyle });
                                             object.append(rectangle);
                             
                                 //network functions
-                                    var foreignNode = undefined;
+                                    let foreignNode = undefined;
                             
                                     object._onconnect = function(instigator){};
                                     object._ondisconnect = function(instigator){};
                             
                                     object.isConnected = function(){ return cable != undefined; };
                                     object.canDisconnect = function(){ return this.allowDisconnections() && (foreignNode!=undefined && foreignNode.allowDisconnections()); };
+                                    object.isAppropiateConnectionNode = function(potentialConnectionNode){
+                                        if( object._type != potentialConnectionNode._type ){ return false; }
+                                        if( (object._direction == '' || potentialConnectionNode._direction == '') && object._direction != potentialConnectionNode._direction ){ return false; }
+                                        if( object._direction != '' && (potentialConnectionNode._direction == object._direction) ){ return false; }
+                                        return true;
+                                    };
                                     object.allowConnections = function(bool){
                                         if(bool == undefined){return allowConnections;}
                                         allowConnections = bool;
@@ -36077,11 +35571,11 @@
                                         allowDisconnections = bool;
                                     };
                                     object.connectTo = function(new_foreignNode){
+                            
                                         if( new_foreignNode == undefined){ return; }
                                         if( new_foreignNode == this ){ return; }
                                         if( new_foreignNode._type != this._type ){ return; }
-                                        if( (this._direction == '' || new_foreignNode._direction == '') && this._direction != new_foreignNode._direction){ return; }
-                                        if( this._direction != '' && (new_foreignNode._direction == this._direction) ){ return; }
+                                        if( !this.isAppropiateConnectionNode(new_foreignNode) ){ return; }
                             
                                         if( new_foreignNode == foreignNode ){ return; }
                                         if( new_foreignNode.isConnected() && !new_foreignNode.canDisconnect() ){ return; }
@@ -36118,18 +35612,19 @@
                                     object.getForeignNode = function(){ return foreignNode; };
                             
                                 //cabling
-                                    var cable;
+                                    let cable;
                             
                                     object._addCable = function(){
-                                        var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
-                                        cable = interfacePart.builder('dynamic',tempCableType, tempCableType+'-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+                                        cable = interfacePart.builder('dynamic', 'cable', 'cable-'+object.getAddress().replace(/\//g, '_'),{ 
+                                            x1:0,y1:0,x2:100,y2:100, angle:angle, version:cableVersion, 
+                                            style:{dim:cable_dimStyle, glow:cable_glowStyle}
+                                        });
                                         
                                         foreignNode._receiveCable(cable);
-                                        _canvas_.system.pane.getMiddlegroundPane(this).then(pane => {
-                                            pane.append(cable);
-                                            object.draw();
-                                            if(isActive){ cable.activate(); }
-                                        });
+                                        const pane = _canvas_.system.pane.getMiddlegroundPane(this);
+                                        pane.append(cable);
+                                        object.draw();
+                                        if(isActive){ cable.activate(); }
                                     }
                                     object._receiveCable = function(new_cable){
                                         cable = new_cable;
@@ -36143,43 +35638,37 @@
                                         cable = undefined;
                                     };
                                     object.getAttachmentPoint = function(){
-                                        var offset = object.getOffset();
+                                        const offset = object.getOffset();
+                                        const diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
+                                        const collectedAngle = offset.angle + Math.atan( height/width );
                             
-                                        var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
-                                        var collectedAngle = offset.angle + Math.atan( height/width );
-                            
-                                        var tmp = _canvas_.core.viewport.adapter.windowPoint2workspacePoint( 
-                                            offset.x + (diagonalLength*Math.cos(collectedAngle))*cableConnectionPosition.x*2, 
-                                            offset.y + (diagonalLength*Math.sin(collectedAngle))*cableConnectionPosition.y*2
-                                        );
-                                        tmp.angle = offset.angle;
-                                        return tmp;
+                                        return {
+                                            x: offset.x + (diagonalLength*Math.cos(collectedAngle))*cableConnectionPosition.x*2, 
+                                            y: offset.y + (diagonalLength*Math.sin(collectedAngle))*cableConnectionPosition.y*2,
+                                            angle: offset.angle
+                                        };
                                     };
                                     object.draw = function(){
                                         if( cable == undefined ){return;}
                             
-                                        var pointA = this.getAttachmentPoint();
-                                        var pointB = foreignNode.getAttachmentPoint();
+                                        const pointA = this.getAttachmentPoint();
+                                        const pointB = foreignNode.getAttachmentPoint();
                             
                                         cable.draw(pointA.x,pointA.y,pointB.x,pointB.y,pointA.angle,pointB.angle);
                                     };
                             
                                 //mouse interaction
                                     rectangle.attachCallback('onmousedown', function(x,y,event){
-                                        dev.log.partDynamic('.connectionNode-onmousedown(...)'); //#development
-                                        var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
-                                        var displacedNode = undefined;
+                                        let displacedNode = undefined;
                             
-                                        var liveCable;
+                                        let liveCable;
                                         function createLiveCable(){
-                                            var pointA = object.getAttachmentPoint();
-                                            var liveCable = interfacePart.builder(
-                                                'dynamic',tempCableType,'liveCable-'+object.getAddress().replace(/\//g, '_'),
-                                                { x1:pointA.x,y1:pointA.y,x2:x,y2:y, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
+                                            const pointA = object.getAttachmentPoint();
+                                            const liveCable = interfacePart.builder(
+                                                'dynamic', 'cable','liveCable-'+object.getAddress().replace(/\//g, '_'),
+                                                { x1:pointA.x,y1:pointA.y,x2:x,y2:y, version:cableVersion, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
                                             );
-                                            _canvas_.system.pane.getMiddlegroundPane(object).then(pane => {
-                                                pane.append(liveCable);
-                                            });
+                                            _canvas_.system.pane.getMiddlegroundPane(object).append(liveCable);
                                             return liveCable;
                                         }
                             
@@ -36189,29 +35678,28 @@
                                                 if( object.isConnected() && !object.canDisconnect() ){return;}
                                                 if( object.getForeignNode() != undefined && object.getForeignNode().isConnected() && !object.getForeignNode().canDisconnect() ){return;}
                             
-                                                var mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                                const mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                             
                                                 //gather connection nodes within proximity
-                                                    var nodesWithinProximity = interfacePart.collection.dynamic.connectionNode.registry.map(node => {
+                                                    const nodesWithinProximity = interfacePart.collection.dynamic.connectionNode.registry.map(node => {
                                                         if(node === object){return;}
-                                                        var point = node.getAttachmentPoint();
-                                                        var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                        const point = node.getAttachmentPoint();
+                                                        const distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
                                                         if(distance < proximityThreshold.distance){ return {node:node,distance:distance}; }
                                                     }).filter(item => item!=undefined).sort((a, b) => {return a.distance-b.distance});
-                                                    dev.log.partDynamic('.connectionNode-onmousedown -> '+JSON.stringify(nodesWithinProximity)); //#development
                             
                                                 //select node to snap to
-                                                    var snapToNode = undefined;
+                                                    let snapToNode = undefined;
                                                     if(nodesWithinProximity.length == 0){
                                                         if( object.isConnected() ){
-                                                            var point = object.getForeignNode().getAttachmentPoint();
-                                                            var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                            const point = object.getForeignNode().getAttachmentPoint();
+                                                            const distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
                                                             snapToNode = distance > proximityThreshold.distance + proximityThreshold.hysteresisDistance ? undefined : object.getForeignNode();
                                                         }
                                                     }else if( nodesWithinProximity.length == 1 ){
                                                         if( object.isConnected() ){
-                                                            var point = object.getForeignNode().getAttachmentPoint();
-                                                            var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                            const point = object.getForeignNode().getAttachmentPoint();
+                                                            const distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
                                                             snapToNode = distance > proximityThreshold.distance + proximityThreshold.hysteresisDistance ? nodesWithinProximity[0].node : object.getForeignNode();
                                                         }else{
                                                             snapToNode = nodesWithinProximity[0].node;
@@ -36220,30 +35708,43 @@
                                                         if(!object.isConnected()){
                                                             snapToNode = nodesWithinProximity[0].node;
                                                         }else{
-                                                            var point = object.getForeignNode().getAttachmentPoint();
-                                                            var currentlyConnectedNode = { node:object.getForeignNode(), distance:Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2) };
-                                                            var relevantNodes = nodesWithinProximity.filter(node => node.node != object.getForeignNode() );
+                                                            const point = object.getForeignNode().getAttachmentPoint();
+                                                            const currentlyConnectedNode = { node:object.getForeignNode(), distance:Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2) };
+                                                            const relevantNodes = nodesWithinProximity.filter(node => node.node != object.getForeignNode() );
                             
                                                             snapToNode = currentlyConnectedNode.distance > relevantNodes[0].distance + proximityThreshold.hysteresisDistance ? relevantNodes[0].node : currentlyConnectedNode.node;
                                                         }
                                                     }
                                                 
                                                 //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
-                                                    if( snapToNode == undefined || !snapToNode.allowConnections() || (object._direction != '' && object._direction == snapToNode._direction) ){
+                                                    if( snapToNode == undefined || !snapToNode.allowConnections() || !object.isAppropiateConnectionNode(snapToNode) ){
                                                         if( liveCable == undefined ){
-                                                            if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }else{ object.disconnect(); }
+                                                            if( object.isConnected() && displacedNode!=undefined ){
+                                                                object.getForeignNode().connectTo(displacedNode);
+                                                                displacedNode = undefined;
+                                                            }else{
+                                                                object.disconnect();
+                                                            }
                                                             liveCable = createLiveCable();
                                                         }
                             
-                                                        var thisNode_point = object.getAttachmentPoint();
+                                                        const thisNode_point = object.getAttachmentPoint();
                                                         mousePoint.angle = _canvas_.library.math.getAngleOfTwoPoints(mousePoint,thisNode_point);
                                                         liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle );
                                                     }else{
-                                                        if(liveCable != undefined){ liveCable.parent.remove(liveCable); liveCable = undefined; }
+                                                        if(liveCable != undefined){
+                                                            liveCable.parent.remove(liveCable);
+                                                            liveCable = undefined;
+                                                        }
                             
                                                         if( object.getForeignNode() != snapToNode ){
-                                                            if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }
-                                                            if( snapToNode.isConnected() ){ displacedNode = snapToNode.getForeignNode(); }
+                                                            if( object.isConnected() && displacedNode != undefined ){
+                                                                object.getForeignNode().connectTo(displacedNode);
+                                                                displacedNode = undefined;
+                                                            }
+                                                            if( snapToNode.isConnected() ){
+                                                                displacedNode = snapToNode.getForeignNode();
+                                                            }
                                                             
                                                             object.connectTo(snapToNode);
                                                         }
@@ -36260,14 +35761,14 @@
                                     } );
                             
                                 //graphical
-                                    var isActive = false;
+                                    let isActive = false;
                                     object.activate = function(){ 
-                                        rectangle.colour = glowStyle;
+                                        rectangle.colour(glowStyle);
                                         if(cable!=undefined){ cable.activate(); }
                                         isActive = true;
                                     }
                                     object.deactivate = function(){ 
-                                        rectangle.colour = dimStyle;
+                                        rectangle.colour(dimStyle);
                                         if(cable!=undefined){ cable.deactivate(); }
                                         isActive = false;
                                     }
@@ -36277,15 +35778,15 @@
                                     object.ondisconnect = ondisconnect;
                             
                                 //register self
-                                    object.onadd = function(){
-                                        interfacePart.collection.dynamic.connectionNode.registry.push(this);
-                                    };
-                                    object.onremove = function(){
+                                    object.attachCallback('onadd', function(){
+                                        interfacePart.collection.dynamic.connectionNode.registry.push(object);
+                                    });
+                                    object.attachCallback('onremove', function(){
                                         interfacePart.collection.dynamic.connectionNode.registry.splice(
-                                            interfacePart.collection.dynamic.connectionNode.registry.indexOf(this), 
+                                            interfacePart.collection.dynamic.connectionNode.registry.indexOf(object), 
                                             1
                                         );
-                                    };
+                                    });
                             
                                 return object;
                             };
@@ -36297,24 +35798,88 @@
                                     data.onconnect, data.ondisconnect,
                                 ); 
                             };
+                            this.connectionNode_signal = function(
+                                name='connectionNode_signal',
+                                x, y, angle=0, width=20, height=20,
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:1,g:0.86,b:0.95,a:1},
+                                glowStyle={r:1,g:0.95,b:0.95,a:1},
+                                cable_dimStyle={r:0.96,g:0.32,b:0.57,a:1},
+                                cable_glowStyle={r:0.96,g:0.76,b:0.84,a:1},
+                                cableConnectionPosition={x:1/2,y:1/2},
+                                cableVersion=1,
+                                onchange=function(value){},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    const object = interfacePart.builder('dynamic','connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'signal',
+                                        cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                        onconnect, ondisconnect
+                                    });
+                            
+                                //circuitry
+                                    let localValue = false;
+                            
+                                    object._getLocalValue = function(){ return localValue; };
+                                    object._update = function(){
+                                        const val = object.read();
+                                        if(val){ object.activate(); }
+                                        else{ object.deactivate(); }
+                                        try{object.onchange(val);}catch(error){console.log('connectionNode_signal::'+name+'::onchange error:',error);}
+                                    }
+                            
+                                    object.set = function(a){
+                                        if(typeof a != 'boolean'){return;}
+                            
+                                        localValue = a;
+                            
+                                        object._update();
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(); }
+                                    };
+                                    object.read = function(){ return localValue || (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                            
+                                    object._onconnect = function(instigator){
+                                        if(object.getForeignNode()._getLocalValue()){object.activate();}
+                                        try{object.onchange(object.getForeignNode()._getLocalValue());}catch(error){console.log('connectionNode_signal::'+name+'::onchange error:',error);}
+                                    };
+                                    object._ondisconnect = function(instigator){
+                                        if(!localValue){object.deactivate();}
+                                        try{object.onchange(localValue);}catch(error){console.log('connectionNode_signal::'+name+'::onchange error:',error);}
+                                    };
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){ 
+                                return interfacePart.collection.dynamic.connectionNode_signal(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
+                                    data.onchange, data.onconnect, data.ondisconnect,
+                                ); 
+                            };
                             this.cable = function(
                                 name='cable', 
                                 x1=0, y1=0, x2=0, y2=0,
                                 dimStyle={r:1,g:0,b:0,a:1},
                                 glowStyle={r:1,g:0.39,b:0.39,a:1},
                             ){
-                                dev.log.partDynamic('.cable(...)');  //#development
                             
                                 //elements 
                                     //main
-                                        var object = interfacePart.builder('basic','group',name);
+                                        const object = interfacePart.builder('basic','group',name);
                                     //cable shape
-                                        var path = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+                                        const path = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
                                         object.append(path);
                                 
                                 //controls
-                                    object.activate = function(){ path.colour = glowStyle; };
-                                    object.deactivate = function(){ path.colour = dimStyle; };
+                                    object.activate = function(){ path.colour(glowStyle); };
+                                    object.deactivate = function(){ path.colour(dimStyle); };
                                     object.draw = function(new_x1,new_y1,new_x2,new_y2){
                                         x1 = (new_x1!=undefined ? new_x1 : x1); 
                                         y1 = (new_y1!=undefined ? new_y1 : y1);
@@ -36350,19 +35915,18 @@
                                 dimStyle={r:1,g:0,b:0,a:1},
                                 glowStyle={r:1,g:0.39,b:0.39,a:1},
                             ){
-                                dev.log.partDynamic('.cable2(...)');  //#development
                             
                                 //elements 
                                     //main
-                                        var object = interfacePart.builder('basic','group',name);
+                                        const object = interfacePart.builder('basic','group',name);
                                     //cable shape
-                                        var pathShape = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+                                        const pathShape = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
                                         // var pathShape = interfacePart.builder('pathWithRoundJointsAndEnds','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
                                         object.append(pathShape);
                                 
                                 //controls
-                                    object.activate = function(){ pathShape.colour = glowStyle; };
-                                    object.deactivate = function(){ pathShape.colour = dimStyle; };
+                                    object.activate = function(){ pathShape.colour(glowStyle); };
+                                    object.deactivate = function(){ pathShape.colour(dimStyle); };
                                     object.draw = function(new_x1,new_y1,new_x2,new_y2,new_angle1,new_angle2){
                                         x1 = new_x1==undefined ? x1 : new_x1;
                                         y1 = new_y1==undefined ? y1 : new_y1;
@@ -36371,17 +35935,17 @@
                                         y2 = new_y2==undefined ? y2 : new_y2;
                                         a2 = new_angle2==undefined ? a2 : new_angle2;
                             
-                                        var push = 20;
-                                        var path = [];
+                                        const push = 20;
+                                        const path = [];
                             
                                         //generate initial basic line 
                                             path.push(x1,y1);
                             
-                                            var offset = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
-                                            path.push( x1+offset.x, y1+offset.y );
+                                            const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                                            path.push( x1+offset_1.x, y1+offset_1.y );
                             
-                                            var offset = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
-                                            path.push( x2+offset.x, y2+offset.y );
+                                            const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                                            path.push( x2+offset_2.x, y2+offset_2.y );
                             
                                             path.push(x2,y2);
                             
@@ -36437,6 +36001,831 @@
 
                 };
                 this.unit = new function(){
+                    this.collection = new function(){
+                        this.test = new function(){
+                            var testUnit = this;
+                            
+                            this.testUnit_1 = function(name,x,y,angle){
+                                var design = {
+                                    name: name,
+                                    model: 'testUnit_1',
+                                    collection: 'test',
+                                    x:x, y:y, angle:angle,
+                                    space: [
+                                        {x:-5,y:-5}, 
+                                        {x:280,y:-5}, 
+                                        {x:280,y:30}, 
+                                        {x:605,y:30}, 
+                                        {x:605,y:130}, 
+                                        {x:705,y:130}, 
+                                        {x:705,y:210}, 
+                                        {x:240,y:210}, 
+                                        {x:240,y:325}, 
+                                        {x:430,y:325}, 
+                                        {x:430,y:435}, 
+                                        {x:-5,y:445}
+                                    ],
+                                    // spaceOutline: true,
+                                    elements:[
+                                        //basic
+                                            {collection:'basic', type:'rectangle', name:'testRectangle', data:{ x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1} }},
+                                            {collection:'basic', type:'circle', name:'testCircle', data:{ x:20, y:55, radius:15 }},
+                                            {collection:'basic', type:'polygon', name:'testPolygon', data:{ points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1} }},
+                                            {collection:'basic', type:'path', name:'testPath', data:{ points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1.25, jointType:'round', capType:'round' }},
+                                            {collection:'basic', type:'image', name:'testImage', data:{ x:40, y:40, width:30, height:30, url:'/images/testImages/Dore-munchausen-illustration.jpg' }},
+                                            {collection:'basic', type:'text', name: 'testText', data:{ x:5, y:75, text:'Hello', height:15, width:70, colour:{r:150/255,g:150/255,b:1,a:1} }},
+                                            {collection:'basic', type:'rectangleWithOutline', name:'testRectangleWithOutline', data:{ x:105, y:60, width:30, height:30 }},
+                                            {collection:'basic', type:'circleWithOutline', name:'testCircleWithOutline', data:{ x:90, y:70, radius:10 }},
+                                            {collection:'basic', type:'polygonWithOutline', name:'testPolygonWithOutline', data:{ points:[75,15, 75,55, 115,55], thickness:1, colour:{r:1,g:0,b:0.5,a:1}, lineColour:{r:0,g:0,b:0,a:1} }},
+                                            {collection:'basic', type:'canvas', name:'testCanvas', data:{ x:130, y:5, width:30, height:30 }},
+                                        //display
+                                            {collection:'display', type:'glowbox_rectangle', name:'test_glowbox_rectangle', data:{x:0, y:140}},
+                                            {collection:'display', type:'glowbox_circle', name:'test_glowbox_circle', data:{x:15, y:185}},
+                                            {collection:'display', type:'glowbox_image', name:'test_glowbox_image', data:{x:0, y:200, glowURL:'/images/testImages/Dore-munchausen-illustration.jpg', dimURL:'/images/testImages/mikeandbrian.jpg'}},
+                                            {collection:'display', type:'glowbox_polygon', name:'test_glowbox_polygon', data:{x:0, y:235}},
+                                            {collection:'display', type:'glowbox_path', name:'test_glowbox_path', data:{x:0, y:270}},
+                                            {collection:'display', type:'sevenSegmentDisplay', name:'test_sevenSegmentDisplay', data:{x:35, y:140}},
+                                            {collection:'display', type:'sevenSegmentDisplay', name:'test_sevenSegmentDisplay_static', data:{x:35, y:175, static:true}},
+                                            {collection:'display', type:'sixteenSegmentDisplay', name:'test_sixteenSegmentDisplay', data:{x:60, y:140}},
+                                            {collection:'display', type:'sixteenSegmentDisplay', name:'test_sixteenSegmentDisplay_static', data:{x:60, y:175, static:true}},
+                                            {collection:'display', type:'readout_sevenSegmentDisplay', name:'test_readout_sevenSegmentDisplay', data:{x:85, y:140}},
+                                            {collection:'display', type:'readout_sevenSegmentDisplay', name:'test_readout_sevenSegmentDisplay_static', data:{x:85, y:175, static:true}},
+                                            {collection:'display', type:'readout_sixteenSegmentDisplay', name:'test_readout_sixteenSegmentDisplay', data:{x:190, y:140}},
+                                            {collection:'display', type:'readout_sixteenSegmentDisplay', name:'test_readout_sixteenSegmentDisplay_static', data:{x:190, y:175, static:true}},
+                                            {collection:'display', type:'level', name:'test_level', data:{x:295, y:140}},
+                                            {collection:'display', type:'meter_level', name:'test_meter_level', data:{x:320, y:140}},
+                                            {collection:'display', type:'audio_meter_level', name:'test_audio_meter_level', data:{x:345, y:140}},
+                                            {collection:'display', type:'gauge', name:'test_gauge', data:{x:370, y:140}},
+                                            {collection:'display', type:'gauge_image', name:'test_gauge_image', data:{x:425, y:140, backingURL:'/images/testImages/Dore-munchausen-illustration.jpg'}},
+                                            {collection:'display', type:'meter_gauge', name:'test_meter_gauge', data:{x:370, y:175, markings:{ upper:'...........'.split(''), middle:'.........'.split(''), lower:'.......'.split('') }, style:{markingStyle_font:'defaultThin'}}},
+                                            {collection:'display', type:'meter_gauge_image', name:'test_meter_gauge_image', data:{x:425, y:175, backingURL:'/images/testImages/mikeandbrian.jpg'}},
+                                            {collection:'display', type:'rastorDisplay', name:'test_rastorDisplay', data:{x:480, y:140}},
+                                            {collection:'display', type:'grapher', name:'test_grapher', data:{x:550, y:140}},
+                                            {collection:'display', type:'grapher', name:'test_grapher_static', data:{x:550, y:205, static:true}},
+                                            {collection:'display', type:'grapher_periodicWave', name:'test_grapher_periodicWave', data:{x:675, y:140}},
+                                            {collection:'display', type:'grapher_periodicWave', name:'test_grapher_periodicWave_static', data:{x:675, y:205, static:true}},
+                                            {collection:'display', type:'grapher_audioScope', name:'test_grapher_audioScope', data:{x:800, y:140}},
+                                            {collection:'display', type:'grapher_audioScope', name:'test_grapher_audioScope_static', data:{x:800, y:205, static:true}},
+                                        //control
+                                            {collection:'control', type:'button_rectangle', name:'test_button_rectangle', data:{
+                                                x:0, y:350, text_centre:'rectangle', style:{text__hover__colour:{r:1,g:0,b:0,a:1}}
+                                            } },
+                                            {collection:'control', type:'button_circle', name:'test_button_circle', data:{
+                                                x:15, y:387.5, text_centre:'circle', style:{text__hover__colour:{r:1,g:0,b:0,a:1}}
+                                            } },
+                                            {collection:'control', type:'button_polygon', name:'test_button_polygon', data:{
+                                                x:0,y:405, points:[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}],style:{text__hover__colour:{r:1,g:0,b:0,a:1}},
+                                                text_centre:'polygon'
+                                            } },
+                                            {collection:'control', type:'button_image', name:'test_button_image', data:{
+                                                x:0, y:437.5,
+                                                backingURL__off:'/images/testImages/buttonStates/off.png',
+                                                backingURL__up:'/images/testImages/buttonStates/up.png',
+                                                backingURL__press:'/images/testImages/buttonStates/press.png',
+                                                backingURL__select:'/images/testImages/buttonStates/select.png',
+                                                backingURL__select_press:'/images/testImages/buttonStates/select_press.png',
+                                                backingURL__glow:'/images/testImages/buttonStates/glow.png',
+                                                backingURL__glow_press:'/images/testImages/buttonStates/glow_press.png',
+                                                backingURL__glow_select:'/images/testImages/buttonStates/glow_select.png',
+                                                backingURL__glow_select_press:'/images/testImages/buttonStates/glow_select_press.png',
+                                                backingURL__hover:'/images/testImages/buttonStates/hover.png',
+                                                backingURL__hover_press:'/images/testImages/buttonStates/hover_press.png',
+                                                backingURL__hover_select:'/images/testImages/buttonStates/hover_select.png',
+                                                backingURL__hover_select_press:'/images/testImages/buttonStates/hover_select_press.png',
+                                                backingURL__hover_glow:'/images/testImages/buttonStates/hover_glow.png',
+                                                backingURL__hover_glow_press:'/images/testImages/buttonStates/hover_glow_press.png',
+                                                backingURL__hover_glow_select:'/images/testImages/buttonStates/hover_glow_select.png',
+                                                backingURL__hover_glow_select_press:'/images/testImages/buttonStates/hover_glow_select_press.png',
+                                            } },
+                                            {collection:'control', type:'checkbox_rectangle', name:'test_checkbox_rectangle', data:{x:35, y:350} },
+                                            {collection:'control', type:'checkbox_circle', name:'test_checkbox_circle', data:{x:45, y:387.5} },
+                                            {collection:'control', type:'checkbox_polygon', name:'test_checkbox_polygon', data:{
+                                                x:35, y:405,
+                                                outterPoints:[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
+                                                innerPoints:[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
+                                            } },
+                                            {collection:'control', type:'checkbox_image', name:'test_checkbox_image', data:{
+                                                x:35, y:87.355,
+                                                uncheckURL:'/images/testImages/Dore-munchausen-illustration.jpg',
+                                                checkURL:'/images/testImages/mikeandbrian.jpg',
+                                            } },
+                                            {collection:'control', type:'checkboxgrid', name:'test_checkboxgrid', data:{x:60, y:350} },
+                                            {collection:'control', type:'dial_1_continuous', name:'test_dial_1_continuous', data:{x:160, y:360} },
+                                            {collection:'control', type:'dial_2_continuous', name:'test_dial_2_continuous', data:{x:185, y:360} },
+                                            {collection:'control', type:'dial_1_discrete', name:'test_dial_1_discrete', data:{x:160, y:385} },
+                                            {collection:'control', type:'dial_2_discrete', name:'test_dial_2_discrete', data:{x:185, y:385} },
+                                            {collection:'control', type:'dial_continuous_image', name:'test_dial_continuous_image', data:{
+                                                x:210, y:360, 
+                                                handleURL:'/images/testImages/expanded-metal-1.jpg',
+                                                slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+                                                needleURL:'/images/testImages/41-satin-stainless-steel.jpg',
+                                            } },
+                                            {collection:'control', type:'dial_discrete_image', name:'test_dial_discrete_image', data:{
+                                                x:210, y:385, 
+                                                handleURL:'/images/testImages/expanded-metal-1.jpg',
+                                                slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+                                                needleURL:'/images/testImages/41-satin-stainless-steel.jpg',
+                                            } },
+                                            {collection:'control', type:'slide_continuous', name:'test_slide_continuous', data:{x:230, y:350} },
+                                            {collection:'control', type:'slide_continuous_image', name:'test_slide_continuous_image', data:{
+                                                x:245, y:350,
+                                                handleURL:'/images/testImages/expanded-metal-1.jpg',
+                                                backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+                                            } },
+                                            {collection:'control', type:'slide_discrete', name:'test_slide_discrete', data:{x:260, y:350} },
+                                            {collection:'control', type:'slide_discrete_image', name:'test_slide_discrete_image', data:{
+                                                x:275, y:350,
+                                                handleURL:'/images/testImages/expanded-metal-1.jpg',
+                                                backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+                                            } },
+                                            {collection:'control', type:'slidePanel', name:'test_slidePanel', data:{x:290, y:350} },
+                                            {collection:'control', type:'slidePanel_image', name:'test_slidePanel_image', data:{
+                                                x:375, y:350,
+                                                handleURL:'/images/testImages/expanded-metal-1.jpg',
+                                                backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+                                            } },
+                                            {collection:'control', type:'rangeslide', name:'test_rangeslide', data:{x:460, y:350} },
+                                            {collection:'control', type:'rangeslide_image', name:'test_rangeslide_image', data:{
+                                                x:475, y:350,
+                                                handleURL:'/images/testImages/expanded-metal-1.jpg',
+                                                backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+                                                spanURL:'/images/testImages/dark-background_1048-3848.jpg',
+                                            } },
+                                            {collection:'control', type:'list', name:'test_list', data:{
+                                                x:490, y:350, heightLimit:100, widthLimit:50,
+                                                list:[
+                                                    { type:'space' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                                                    { type:'break' },
+                            
+                                                    { type:'space' },
+                            
+                                                    { type:'textbreak', text:'break 1'},
+                                                    { type:'textbreak', text:'break 2'},
+                                                    { type:'textbreak', text:'break 3'},
+                                                    { type:'textbreak', text:'break 4'},
+                                                    { type:'textbreak', text:'break 5'},
+                                                    { type:'textbreak', text:'break 6'},
+                                                    { type:'textbreak', text:'break 7'},
+                                                    { type:'textbreak', text:'break 8'},
+                                                    { type:'textbreak', text:'break 9'},
+                                                    { type:'textbreak', text:'break 10'},
+                                                    { type:'textbreak', text:'break 11'},
+                                                    { type:'textbreak', text:'break 12'},
+                                                    { type:'textbreak', text:'break 13'},
+                                                    { type:'textbreak', text:'break 14'},
+                                                    { type:'textbreak', text:'break 15'},
+                            
+                                                    { type:'space' },
+                            
+                                                    { type:'text', text_left:'left', text_centre:'1',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'2',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'3',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'4',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'5',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'6',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'7',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'8',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'9',  text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'10', text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'11', text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'12', text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'13', text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'14', text_right:'right' },
+                                                    { type:'text', text_left:'left', text_centre:'15', text_right:'right' },
+                            
+                                                    { type:'space' },
+                            
+                                                    { type:'checkbox', text:'checkable 1',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 2',  updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 3',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 4',  updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 5',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 6',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 7',  updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 8',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 9',  updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 10', updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 11', updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 12', updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 13', updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 14', updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                    { type:'checkbox', text:'checkable 15', updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                            
+                                                    { type:'space' },
+                            
+                                                    { type:'button', text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');}  },
+                                                    { type:'button', text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');}  },
+                                                    { type:'button', text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');}  },
+                                                    { type:'button', text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');}  },
+                                                    { type:'button', text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');}  },
+                                                    { type:'button', text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');}  },
+                                                    { type:'button', text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');}  },
+                                                    { type:'button', text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');}  },
+                                                    { type:'button', text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');}  },
+                                                    { type:'button', text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
+                                                    { type:'button', text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
+                                                    { type:'button', text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
+                                                    { type:'button', text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
+                                                    { type:'button', text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
+                                                    { type:'button', text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
+                            
+                                                    { type:'space' },
+                            
+                                                    { type:'list', text:'sublist 1', list:[
+                                                        { type:'space' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'break' },
+                                                        { type:'space' },
+                                                    ] },
+                                                    { type:'list', text:'sublist 2', heightLimit:100, list:[
+                                                        { type:'space' },
+                                                        { type:'textbreak', text:'break 1'},
+                                                        { type:'textbreak', text:'break 2'},
+                                                        { type:'textbreak', text:'break 3'},
+                                                        { type:'textbreak', text:'break 4'},
+                                                        { type:'textbreak', text:'break 5'},
+                                                        { type:'textbreak', text:'break 6'},
+                                                        { type:'textbreak', text:'break 7'},
+                                                        { type:'textbreak', text:'break 8'},
+                                                        { type:'textbreak', text:'break 9'},
+                                                        { type:'textbreak', text:'break 10'},
+                                                        { type:'textbreak', text:'break 11'},
+                                                        { type:'textbreak', text:'break 12'},
+                                                        { type:'textbreak', text:'break 13'},
+                                                        { type:'textbreak', text:'break 14'},
+                                                        { type:'textbreak', text:'break 15'},
+                                                        { type:'space' },
+                                                    ] },
+                                                    { type:'list', text:'sublist 3', heightLimit:100, list:[
+                                                        { type:'space' },
+                                                        { type:'text', text_left:'left', text_centre:'1',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'2',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'3',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'4',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'5',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'6',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'7',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'8',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'9',  text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'10', text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'11', text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'12', text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'13', text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'14', text_right:'right' },
+                                                        { type:'text', text_left:'left', text_centre:'15', text_right:'right' },
+                                                        { type:'space' },
+                                                    ] },
+                                                    { type:'list', text:'sublist 4', heightLimit:100, list:[
+                                                        { type:'space' },
+                                                        { type:'checkbox', text:'checkable 1',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 2',  updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 3',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 4',  updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 5',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 6',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 7',  updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 8',  updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 9',  updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 10', updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 11', updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 12', updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 13', updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 14', updateFunction:function(){return true;},  onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'checkbox', text:'checkable 15', updateFunction:function(){return false;}, onclickFunction:function(val){console.log('checkbox:',val);} },
+                                                        { type:'space' },
+                                                    ] },
+                                                    { type:'list', text:'sublist 5', heightLimit:100, list:[
+                                                        { type:'space' },
+                                                        { type:'button', text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');}  },
+                                                        { type:'button', text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');}  },
+                                                        { type:'button', text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');}  },
+                                                        { type:'button', text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');}  },
+                                                        { type:'button', text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');}  },
+                                                        { type:'button', text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');}  },
+                                                        { type:'button', text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');}  },
+                                                        { type:'button', text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');}  },
+                                                        { type:'button', text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');}  },
+                                                        { type:'button', text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
+                                                        { type:'button', text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
+                                                        { type:'button', text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
+                                                        { type:'button', text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
+                                                        { type:'button', text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
+                                                        { type:'button', text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
+                                                        { type:'button', text_left:'item16', text_centre:'', text_right:'', function:function(){console.log('item16 function');} },
+                                                        { type:'space' },
+                                                    ] },
+                                                    { type:'space' },
+                                                ]
+                                            } },
+                                            {collection:'control', type:'needleOverlay', name:'test_needleOverlay', data:{x:545, y:350} },
+                                            {collection:'control', type:'grapher_waveWorkspace', name:'test_grapher_waveWorkspace', data:{x:670,y:350} },
+                                            {collection:'control', type:'sequencer', name:'test_sequencer', data:{x:795,y:350,zoomLevel_x:1/2}  },
+                                        //dynamic
+                                            {collection:'dynamic', type:'connectionNode', name:'test_connectionNode1', data:{ x:25, y:535 }},
+                                            {collection:'dynamic', type:'connectionNode', name:'test_connectionNode2', data:{ x:0, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode', name:'test_connectionNode3', data:{ x:50, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'test_connectionNode_signal1', data:{ x:125, y:535 }},
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'test_connectionNode_signal2', data:{ x:100, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'test_connectionNode_signal3', data:{ x:150, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode_voltage', name:'test_connectionNode_voltage1', data:{ x:225, y:535 }},
+                                            {collection:'dynamic', type:'connectionNode_voltage', name:'test_connectionNode_voltage2', data:{ x:200, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode_voltage', name:'test_connectionNode_voltage3', data:{ x:250, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode_data', name:'test_connectionNode_data1', data:{ x:325, y:535 }},
+                                            {collection:'dynamic', type:'connectionNode_data', name:'test_connectionNode_data2', data:{ x:300, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode_data', name:'test_connectionNode_data3', data:{ x:350, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode_audio', name:'test_connectionNode_audio1', data:{ x:425, y:535, isAudioOutput:true}},
+                                            {collection:'dynamic', type:'connectionNode_audio', name:'test_connectionNode_audio2', data:{ x:400, y:585 }},
+                                            {collection:'dynamic', type:'connectionNode_audio', name:'test_connectionNode_audio3', data:{ x:450, y:585 }},
+                                    ],
+                                };
+                            
+                                //main object
+                                    const object = interface.unit.builder(design);
+                            
+                                //playing with the parts
+                                    const $ = object.elements.canvas.testCanvas.$;
+                                    object.elements.canvas.testCanvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.9,g:0.9,b:0.9,a:1});
+                                    object.elements.canvas.testCanvas._.fillRect($(0),$(0),$(30),$(30));
+                                    object.elements.canvas.testCanvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.732,g:0.756,b:0.892,a:1});
+                                    object.elements.canvas.testCanvas._.fillRect($(0),$(0),$(10),$(10));
+                                    object.elements.canvas.testCanvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.107,g:0.722,b:0.945,a:1});
+                                    object.elements.canvas.testCanvas._.fillRect($(20),$(0),$(10),$(10));
+                                    object.elements.canvas.testCanvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.859,g:0.573,b:0.754,a:1});
+                                    object.elements.canvas.testCanvas._.fillRect($(0),$(20),$(10),$(10));
+                                    object.elements.canvas.testCanvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.754,g:0.859,b:0.573,a:1});
+                                    object.elements.canvas.testCanvas._.fillRect($(20),$(20),$(10),$(10));
+                                    object.elements.canvas.testCanvas.requestUpdate();
+                            
+                                    object.elements.needleOverlay.test_needleOverlay.select(0,0.25);
+                                    object.elements.needleOverlay.test_needleOverlay.area(0.5,0.75);
+                                    object.elements.grapher_waveWorkspace.test_grapher_waveWorkspace.select(0,0.2);
+                                    object.elements.grapher_waveWorkspace.test_grapher_waveWorkspace.area(0.5,0.7);
+                                    object.elements.sequencer.test_sequencer.addSignal( 0,0,  10,0.0 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 1,1,  10,0.1 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 2,2,  10,0.2 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 3,3,  10,0.3 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 4,4,  10,0.4 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 5,5,  10,0.5 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 6,6,  10,0.6 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 7,7,  10,0.7 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 8,8,  10,0.8 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 9,9,  10,0.9 );
+                                    object.elements.sequencer.test_sequencer.addSignal( 10,10,10,1.0 );
+                            
+                            
+                            
+                            
+                            
+                                //     object.elements.readout_sixteenSegmentDisplay.test_readout_sixteenSegmentDisplay.text('hello');
+                                //     object.elements.readout_sixteenSegmentDisplay.test_readout_sixteenSegmentDisplay.print();
+                            
+                                //     object.elements.grapher.test_grapher1.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
+                                //     object.elements.grapher.test_grapher1.draw([0,0.25,1],undefined,1);
+                                    
+                                //     object.elements.grapher_periodicWave.test_grapher_periodicWave1.updateBackground();
+                                //     object.elements.grapher_periodicWave.test_grapher_periodicWave1.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
+                                //     object.elements.grapher_periodicWave.test_grapher_periodicWave1.draw();
+                            
+                                //     object.elements.needleOverlay.test_needleOverlay1.select(0.25);
+                                //     object.elements.needleOverlay.test_needleOverlay1.area(0.5,0.75);
+                            
+                                //     object.elements.grapher_waveWorkspace.test_grapher_waveWorkspace1.select(0.25);
+                                //     object.elements.grapher_waveWorkspace.test_grapher_waveWorkspace1.area(0.5,0.75);
+                                    
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 0,0,  10,0.0 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 1,1,  10,0.1 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 2,2,  10,0.2 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 3,3,  10,0.3 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 4,4,  10,0.4 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 5,5,  10,0.5 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 6,6,  10,0.6 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 7,7,  10,0.7 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 8,8,  10,0.8 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 9,9,  10,0.9 );
+                                //     object.elements.sequencer.test_sequencer1.addSignal( 10,10,10,1.0 );
+                                
+                                return object;
+                            };
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            this.testUnit_1.devUnit = true;
+                            this.testUnit_1.metadata = {
+                                name:'Test Unit 1',
+                                helpURL:'https://curve.metasophiea.com/help/units/test/testUnit_1/'
+                            };
+                            this.testUnit_2 = function(name,x,y,angle){
+                                var design = {
+                                    name: name,
+                                    model: 'testUnit_2',
+                                    collection: 'test',
+                                    x:x, y:y, angle:angle,
+                                    space: [
+                                        {x:0,y:0}, 
+                                        {x:100,y:0}, 
+                                        {x:100,y:100}, 
+                                        {x:0,y:100}, 
+                                    ],
+                                    // spaceOutline: true,
+                                    elements:[
+                                        {collection:'basic', type:'rectangle', name:'testRectangle1', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
+                                        {collection:'basic', type:'rectangle', name:'testRectangle2', data:{ x:10, y:10, width:80, height:80, colour:{r:200/255,g:100/255,b:200/255,a:1} }},
+                                    ],
+                                };
+                            
+                                //main object
+                                    var object = interface.unit.builder(design);
+                                
+                                return object;
+                            };
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            this.testUnit_2.devUnit = true;
+                            this.testUnit_2.metadata = {
+                                name:'Test Unit 2',
+                                helpURL:'https://curve.metasophiea.com/help/units/test/testUnit_2/'
+                            };
+                            this.testUnit_3 = function(name,x,y,angle){
+                                var design = {
+                                    name: name,
+                                    model: 'testUnit_3',
+                                    collection: 'test',
+                                    x:x, y:y, angle:angle,
+                                    space: [
+                                        {x:0,y:0}, 
+                                        {x:100,y:0}, 
+                                        {x:100,y:100}, 
+                                        {x:0,y:100}, 
+                                    ],
+                                    spaceOutline: true,
+                                    elements:[
+                                        {collection:'basic', type:'rectangle', name:'testRectangle1', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
+                                        {collection:'basic', type:'rectangle', name:'testRectangle2', data:{ x:10, y:10, width:80, height:80, colour:{r:200/255,g:100/255,b:200/255,a:1} }},
+                                        {collection:'dynamic', type:'connectionNode', name:'test_connectionNode1', data:{ cableVersion:2, x:60, y:100, height:20, width:10, angle:Math.PI/2 }},
+                                    ],
+                                };
+                            
+                                //main object
+                                    var object = interface.unit.builder(design);
+                                
+                                return object;
+                            };
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            this.testUnit_3.devUnit = true;
+                            this.testUnit_3.metadata = {
+                                name:'Test Unit 3',
+                                helpURL:'https://curve.metasophiea.com/help/units/test/testUnit_3/'
+                            };
+                            this.testUnit_4 = function(name,x,y,angle){
+                                var shape = [
+                                    {x:0,y:0},
+                                    {x:400,y:200},
+                                    {x:400,y:400},
+                                    {x:0,y:400}
+                                ];
+                                var design = {
+                                    name: name,
+                                    model: 'testUnit_4',
+                                    collection: 'test',
+                                    x:x, y:y, angle:angle,
+                                    space:shape,
+                                    spaceOutline: true,
+                                    elements:[
+                                        {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:{r:200/255,g:200/255,b:200/255,a:0.1} } },
+                                    ],
+                                };
+                            
+                                //main object
+                                    var object = interface.unit.builder(design);
+                                
+                                return object;
+                            };
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            this.testUnit_4.devUnit = true;
+                            this.testUnit_4.metadata = {
+                                name:'Test Unit 4',
+                                helpURL:'https://curve.metasophiea.com/help/units/test/testUnit_4/'
+                            };
+
+                        };
+                    };
+                    /*
+                        a design
+                        {
+                            name: 'name of unit (unique to collection)',
+                            collection: 'name of the collection to which this unit belongs',
+                            x: 0, y: 0, angle: 0,
+                            space: [{x:0,y:0}, ...], //a collection of points, used to determine the unit's selection/collision area
+                            spaceOutline: true/false, //a helper graphic, which when set to true will draw an outline of the space
+                            elements:[ //a list of all the parts
+                                {
+                                    type:'part type name',
+                                    name:'a unique name',
+                                    data:{}, //data relevant to this part type
+                                }
+                            ] 
+                        }
+                    */
+                    this.builder = function(design){
+                        //input check
+                            if(design.x == undefined){ design.x = 0; }
+                            if(design.y == undefined){ design.y = 0; }
+                            if(design.angle == undefined){ design.angle = 0; }
+                    
+                        //main group
+                            const unit = _canvas_.interface.part.builder('basic','group',design.name,{x:design.x, y:design.y, angle:design.angle});
+                            unit.model = design.model;
+                            unit.collisionActive = design.collisionActive == undefined ? true : design.collisionActive;
+                    
+                        //generate parts and append to main group
+                            unit.elements = {};
+                            for(let a = 0; a < design.elements.length; a++){
+                                //check for arguments
+                                if(design.elements[a].collection == undefined){console.warn('Interface Unit Builder :: collection name missing'); break;}
+                                if(design.elements[a].type == undefined){console.warn('Interface Unit Builder :: type name missing'); break;}
+                                if(design.elements[a].name == undefined){console.warn('Interface Unit Builder :: name name missing'); break;}
+                    
+                    
+                                //check for name collision
+                                    if( unit.getChildByName(design.elements[a].name) != undefined ){
+                                        console.warn('Interface Unit Builder :: error: part with the name "'+design.elements[a].name+'" already exists. Part:',design.elements[a],'will not be added');
+                                        continue;
+                                    }    
+                    
+                                //produce and append part
+                                    const newPart = _canvas_.interface.part.builder( design.elements[a].collection, design.elements[a].type, design.elements[a].name, design.elements[a].data );
+                                    unit.append(newPart);
+                    
+                                //add part to element tree
+                                    if( unit.elements[design.elements[a].type] == undefined ){ unit.elements[design.elements[a].type] = {}; }
+                                    unit.elements[design.elements[a].type][design.elements[a].name] = newPart;
+                            }
+                    
+                        //gather together io ports
+                            unit.io = {};
+                            [
+                                {key:'_', name:'connectionNode'},
+                                {key:'signal', name:'connectionNode_signal'},
+                                {key:'voltage', name:'connectionNode_voltage'},
+                                {key:'data', name:'connectionNode_data'},
+                                {key:'audio', name:'connectionNode_audio'},
+                            ].forEach(function(type){
+                                if(!unit.elements[type.name]){return;}
+                                const keys = Object.keys(unit.elements[type.name]);
+                                for(let a = 0; a < keys.length; a++){
+                                    const part = unit.elements[type.name][keys[a]];
+                                    if( unit.io[type.key] == undefined ){ unit.io[type.key] = {}; }
+                                    unit.io[type.key][part.getName()] = part;
+                                }
+                            });
+                    
+                            unit.disconnectEverything = function(){
+                                for(connectionType in unit.io){
+                                    for(connectionName in unit.io[connectionType]){
+                                        unit.io[connectionType][connectionName].disconnect();
+                                    }
+                                }
+                            };
+                            unit.allowIOConnections = function(bool){
+                                if(bool == undefined){return;}
+                                for(connectionType in unit.io){
+                                    for(connectionName in unit.io[connectionType]){
+                                        unit.io[connectionType][connectionName].allowConnections(bool);
+                                    }
+                                }
+                            };
+                            unit.allowIODisconnections = function(bool){
+                                if(bool == undefined){return;}
+                                for(connectionType in unit.io){
+                                    for(connectionName in unit.io[connectionType]){
+                                        unit.io[connectionType][connectionName].allowDisconnections(bool);
+                                    }
+                                }
+                            };
+                    
+                        //generate unit's personal space
+                            unit.space = {};
+                            unit.space.originalPoints = design.space;
+                            function generatePersonalSpace(){
+                                unit.space.points = design.space.map(a => {
+                                    const tmp = _canvas_.library.math.cartesianAngleAdjust(a.x,a.y,unit.angle())
+                                    tmp.x += design.x;
+                                    tmp.y += design.y;
+                                    return tmp;
+                                } );
+                                unit.space.boundingBox = _canvas_.library.math.boundingBoxFromPoints(unit.space.points);
+                    
+                                //create invisible space shape
+                                if( unit.space.shape != undefined ){
+                                    unit.space.shape.pointsAsXYArray(unit.space.originalPoints);
+                                }else{
+                                    unit.space.shape = _canvas_.interface.part.builder( 'basic', 'polygon', 'personalSpace', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0} } );
+                                    unit.space.shape.unit = unit;
+                                    unit.prepend( unit.space.shape );
+                                }
+                            }
+                            generatePersonalSpace();
+                    
+                            //if requested, add an outline shape
+                                if( design.spaceOutline ){
+                                    unit.append( _canvas_.interface.part.builder( 'basic', 'polygonWithOutline', 'unit.space.shape'+'_Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
+                                }
+                    
+                        //setup unit movement snapping
+                            const snapping = {active:false,x:10,y:10,angle:Math.PI/8};
+                            unit.snappingActive = function(bool){ if(bool == undefined){return snapping.active;} snapping.active = bool; };
+                            unit.snappingX = function(newX){ if(newX == undefined){return snapping.x;} snapping.x = newX; };
+                            unit.snappingY = function(newY){ if(newY == undefined){return snapping.y;} snapping.y = newY; };
+                            unit.snappingAngle = function(newAngle){ if(newAngle == undefined){return snapping.angle;} snapping.angle = newAngle; };
+                    
+                        //augment unit x, y and angle adjustment methods
+                            unit._x = unit.x;
+                            unit._y = unit.y;
+                            unit._angle = unit.angle;
+                            unit.x = function(newX){
+                                if(newX == undefined){ return design.x; }
+                    
+                                design.x = snapping.active ? Math.round(newX/snapping.x)*snapping.x: newX;
+                                unit._x(design.x);
+                    
+                                generatePersonalSpace();
+                            };
+                            unit.y = function(newY){
+                                if(newY == undefined){ return design.y; }
+                    
+                                design.y = snapping.active ? Math.round(newY/snapping.y)*snapping.y: newY;
+                                unit._y(design.y);
+                    
+                                generatePersonalSpace();
+                            };
+                            unit.angle = function(newAngle){
+                                if(newAngle == undefined){ return design.angle; }
+                    
+                                design.angle = snapping.active ? Math.round(newAngle/snapping.angle)*snapping.angle: newAngle;
+                                unit._angle(design.angle);
+                    
+                                generatePersonalSpace();
+                            };
+                            unit.ioRedraw = function(){
+                                if( unit.io ){
+                                    const connectionTypes = Object.keys( unit.io );
+                                    for(let connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                                        const connectionNodes = unit.io[connectionTypes[connectionType]];
+                                        const nodeNames = Object.keys( connectionNodes );
+                                        for(let b = 0; b < nodeNames.length; b++){
+                                            connectionNodes[nodeNames[b]].draw();
+                                        }
+                                    }
+                                }
+                            };
+                    
+                        //disable all control parts method
+                            unit.interactable = function(bool){
+                                if(bool == undefined){return;}
+                                for(partType in unit.elements){
+                                    for(partName in unit.elements[partType]){
+                                        if( unit.elements[partType][partName].interactable ){
+                                            unit.elements[partType][partName].interactable(bool);
+                                        }
+                                    }
+                                }
+                            };
+                    
+                        return unit;
+                    };
+                    //this is a little bit nonsencey
+                    this.validator = function(unit,describe=false){
+                        var normalFontColour = '#987aa1';
+                        var badFontColour = '#db6060';
+                    
+                        if(!describe){
+                            // return {
+                            //     tree:unit.getTree(),
+                            //     devMode:unit.devMode,
+                            //     dotFrame:unit.dotFrame,
+                            //     space:Object.assign({},unit.space),
+                            //     importData:unit.importData!=undefined,
+                            //     exportData:unit.exportData!=undefined,
+                            //     interface:Object.keys(unit.io).map(type => { return {type:type,list:Object.keys(unit.io[type])} })
+                            // };
+                    
+                            if(unit.importData==undefined){ console.log('\t%cimportData missing','color:'+badFontColour); }
+                            if(unit.exportData==undefined){ console.log('\t%cexportData missing','color:'+badFontColour); }
+                            return;
+                        }
+                    
+                    
+                    
+                        console.log('%cinterface.unit.validator', 'font-size:12px; font-weight:bold;');
+                        console.log('\tmodel: %c'+unit.model,'color:'+normalFontColour);
+                        console.log('\tname: %c'+unit.name,'color:'+normalFontColour);
+                        console.log('\taddress: %c'+unit.getAddress(),'color:'+normalFontColour);
+                        console.log('');
+                    
+                    
+                        //check for sub elements
+                            console.log('\tcheck for sub elements');
+                                Object.keys(unit.elements).forEach(type => {
+                                    console.log( '\t\t- '+type );
+                                    Object.keys(unit.elements[type]).forEach(item => {
+                                        console.log( '\t\t\t- '+item );
+                                    });
+                                });
+                            console.log('');
+                        //check if devMode is on
+                            console.log('\tdevMode: %c'+(unit.devMode ? 'active' : 'not active'), 'color:'+normalFontColour);
+                            console.log('');
+                        //check if dotFrame is on
+                            console.log('\tdotFrame: %c'+(unit.dotFrame ? 'active' : 'not active'), 'color:'+normalFontColour);
+                            console.log('');
+                        //check for space
+                            console.log('\tUnit Space');
+                            console.log('\t\tboundingBox:');
+                            console.log('\t\t\ttopLeft',unit.space.boundingBox.topLeft );
+                            console.log('\t\t\tbottomRight',unit.space.boundingBox.bottomRight );
+                            console.log('\t\toriginalPoints');
+                            unit.space.originalPoints.forEach(item => console.log('\t\t\t',item));
+                            console.log('\t\tpoints');
+                            unit.space.points.forEach(item => console.log('\t\t\t',item));
+                            console.log('');
+                        //check for import/export
+                            console.log('\timport/export');
+                            console.log('\t\timportData %c' + (unit.importData == undefined ? 'missing' : 'present'), 'color:'+(unit.importData == undefined ? badFontColour : normalFontColour));
+                            console.log('\t\texportData %c' + (unit.exportData == undefined ? 'missing' : 'present'), 'color:'+(unit.exportData == undefined ? badFontColour : normalFontColour));
+                            console.log('');
+                        //list interface
+                            console.log('\tinterface');
+                            if(unit.i == undefined){
+                                console.log('\t\t- missing -');
+                            }else{
+                                Object.keys(unit.i).forEach(item => {
+                                    console.log( '\t\t- '+item );
+                                });
+                            }
+                            console.log('');
+                        //list io
+                            console.log('\tio');
+                            Object.keys(unit.io).forEach(type => {
+                                console.log( '\t\t- '+type );
+                                Object.keys(unit.io[type]).forEach(item => {
+                                    console.log( '\t\t\t- '+item );
+                                });
+                            });
+                            console.log('');
+                    };
+
                 };
             };
             

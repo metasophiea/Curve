@@ -17,7 +17,7 @@ this.image = function(_id,_name){
             this.ignored = function(a){
                 if(a==undefined){return ignored;}     
                 ignored = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             
@@ -39,49 +39,49 @@ this.image = function(_id,_name){
             this.x = function(a){ 
                 if(a==undefined){return x;}     
                 x = a;     
-                dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.y = function(a){ 
                 if(a==undefined){return y;}     
                 y = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.angle = function(a){ 
                 if(a==undefined){return angle;} 
                 angle = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.anchor = function(a){
                 if(a==undefined){return anchor;} 
                 anchor = a; 
-                dev.log.elementLibrary(type,self.getAddress(),'.anchor('+JSON.stringify(a)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.width = function(a){
                 if(a==undefined){return width;}  
                 width = a;  
-                dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.height = function(a){
                 if(a==undefined){return height;} 
                 height = a; 
-                dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.static = function(a){
                 if(a==undefined){return static;}  
                 static = a;  
-                dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
 
@@ -95,33 +95,42 @@ this.image = function(_id,_name){
                 defaultURL:'/images/noimageimage.png'
             };
             function loadImage(url){
-                dev.log.elementLibrary(type,self.getAddress(),'::loadImage('+url+')'); //#development
-                fetch(url).then( response => {
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url); //#development
 
+                fetch(url).then( response => {
                     if(response.status != 200){
-                        dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> image was not found at url: '+url); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> image was not found at url: '+url); //#development
                         console.warn(type,id,self.getAddress(),'could not find image at: '+url);
+                        console.warn(response);
                         loadImage(image.defaultURL);
                         return;
                     }
 
-                    dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> response: '+JSON.stringify(response)); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> response:',response); //#development
                     response.blob().then(data => {
-                        dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> data: '+JSON.stringify(data)); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> data:',data); //#development
                         createImageBitmap(data).then(bitmap => {
-                            dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> bitmap: '+JSON.stringify(bitmap)); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> bitmap:',bitmap); //#development
                             image.bitmap = bitmap;
                             image.isLoaded = true;
                             image.isChanged = true;
+                        }).catch(error => {
+                            console.error('Image decoding error :: url:',url);
+                            console.error('-- -- -- -- -- -- -- :: response:',response);
+                            console.error('-- -- -- -- -- -- -- :: data:',data);
+                            console.error(error);
+                            loadImage(image.defaultURL);
                         });
                     });
                 });
+
+
                 image.isLoaded = false; 
             }
             setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
 
             this.url = function(a){
-                dev.log.elementLibrary(type,self.getAddress(),'.url('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a); //#development
 
                 if(a==undefined){return image.url;}
                 if(a==image.url){return;} //no need to reload the same image
@@ -132,7 +141,7 @@ this.image = function(_id,_name){
                 loadImage(image.url);
             };
             this.bitmap = function(a){
-                dev.log.elementLibrary(type,self.getAddress(),'.bitmap('+JSON.stringify(a)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].bitmap(',a); //#development
 
                 if(a==undefined){return image.bitmap;}
                 image.bitmap = a;
@@ -145,11 +154,11 @@ this.image = function(_id,_name){
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
                 if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static, url:image.url }; } 
-                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                     try{
                         self[key](attributes[key]);
                     }catch(err){
@@ -213,12 +222,12 @@ this.image = function(_id,_name){
         const point = { buffer:undefined, attributeLocation:undefined };
         let uniformLocations;
         function updateGLAttributes(context,adjust){
-            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
 
             //buffers
                 //points
                     if(point.buffer == undefined){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                         point.attributeLocation = context.getAttribLocation(program, "point");
                         point.buffer = context.createBuffer();
                         context.enableVertexAttribArray(point.attributeLocation);
@@ -226,14 +235,14 @@ this.image = function(_id,_name){
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                     }else{
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                     }
 
                 //texture
                     if(image.isChanged){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating image.textureData...'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating image.textureData...'); //#development
                         image.isChanged = false;
                         image.textureData = context.createTexture();
                         context.bindTexture(context.TEXTURE_2D, image.textureData);
@@ -243,13 +252,13 @@ this.image = function(_id,_name){
                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
                         context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
                     }else{
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating image.textureData...'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating image.textureData...'); //#development
                         context.bindTexture(context.TEXTURE_2D, image.textureData);
                     }
 
             //uniforms
                 if( uniformLocations == undefined ){
-                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                     uniformLocations = {
                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -260,12 +269,12 @@ this.image = function(_id,_name){
                     };
                 }
 
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -275,7 +284,7 @@ this.image = function(_id,_name){
         }
         let program;
         function activateGLRender(context,adjust){
-            dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
             if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
             if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
@@ -287,13 +296,13 @@ this.image = function(_id,_name){
         
     //extremities
         function computeExtremities(informParent=true,offset){
-            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
                 if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> point'+JSON.stringify(point)); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
                 const adjusted = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
@@ -314,8 +323,8 @@ this.image = function(_id,_name){
                     });
                 }
                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.points:'+JSON.stringify(self.extremities.points)); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.boundingBox:'+JSON.stringify(self.extremities.boundingBox)); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
         
             //if told to do so, inform parent (if there is one) that extremities have changed
                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -331,7 +340,7 @@ this.image = function(_id,_name){
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
         };
         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-            dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             //combine offset with shape's position, angle and scale to produce adjust value for render
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const adjust = { 

@@ -1,79 +1,46 @@
 const library = new function(){
     const library = this;
-    
+
     const dev = {
         prefix:'library',
-
-        countActive:!false,
-        countMemory:{},
     
-        math:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
-        structure:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
-        audio:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
-        font:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
-        misc:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
+        active:{ math:false, structure:false, audio:false, font:false, misc:false },
     
         log:{
-            math:function(data){
-                if(!dev.math.active){return;}
-                console.log('%c'+dev.prefix+'.math'+(new Array(...arguments).join(' ')), dev.math.fontStyle );
+            math:function(){
+                if(!dev.active.math){return;}
+                console.log( dev.prefix+'.math'+arguments[0], ...(new Array(...arguments).slice(1)) );
             },
-            structure:function(data){
-                if(!dev.structure.active){return;}
-                console.log('%c'+dev.prefix+'.structure'+(new Array(...arguments).join(' ')), dev.structure.fontStyle );
+            structure:function(){
+                if(!dev.active.structure){return;}
+                console.log( dev.prefix+'.structure'+arguments[0], ...(new Array(...arguments).slice(1)) );
             },
-            audio:function(data){
-                if(!dev.audio.active){return;}
-                console.log('%c'+dev.prefix+'.audio'+(new Array(...arguments).join(' ')), dev.audio.fontStyle );
+            audio:function(){
+                if(!dev.active.audio){return;}
+                console.log( dev.prefix+'.audio'+arguments[0], ...(new Array(...arguments).slice(1)) );
             },
-            font:function(data){
-                if(!dev.font.active){return;}
-                console.log('%c'+dev.prefix+'.font'+(new Array(...arguments).join(' ')), dev.font.fontStyle );
+            font:function(){
+                if(!dev.active.font){return;}
+                console.log( dev.prefix+'.font'+arguments[0], ...(new Array(...arguments).slice(1)) );
             },
-            misc:function(data){
-                if(!dev.misc.active){return;}
-                console.log('%c'+dev.prefix+'.misc'+(new Array(...arguments).join(' ')), dev.misc.fontStyle );
+            misc:function(){
+                if(!dev.active.misc){return;}
+                console.log( dev.prefix+'.misc'+arguments[0], ...(new Array(...arguments).slice(1)) );
             },
         },
+    
+        countActive:false,
+        countMemory:{},
         count:function(commandTag){
             if(!dev.countActive){return;}
             if(commandTag in dev.countMemory){ dev.countMemory[commandTag]++; }
             else{ dev.countMemory[commandTag] = 1; }
         },
-    };
-    this.dev = {
-        countResults:function(){ return dev.countMemory; },
-        testLoggers:function(){
-            const math = dev.math.active;
-            const structure = dev.structure.active;
-            const audio = dev.audio.active;
-            const font = dev.font.active;
-            const misc = dev.misc.active;
-
-            dev.math.active = true;
-            dev.structure.active = true;
-            dev.audio.active = true;
-            dev.font.active = true;
-            dev.misc.active = true;
-
-            dev.log.math('.testLoggers -> math');
-            dev.log.structure('.testLoggers -> structure');
-            dev.log.audio('.testLoggers -> audio');
-            dev.log.font('.testLoggers -> font');
-            dev.log.misc('.testLoggers -> misc');
-
-            dev.math.active = math;
-            dev.structure.active = structure;
-            dev.audio.active = audio;
-            dev.font.active = font;
-            dev.misc.active = misc;
-        },
+        countResults:function(){return countMemory;},
     };
     
     this.math = new function(){
         this.averageArray = function(array){
-            dev.log.math('.averageArray('+JSON.stringify(array)+')'); //#development
-            dev.count('.math.averageArray'); //#development
         
             // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
         
@@ -83,18 +50,46 @@ const library = new function(){
             return sum/array.length;
         };
         this.averagePoint = function(points){
-            dev.log.math('.averagePoint('+JSON.stringify(points)+')'); //#development
-            dev.count('.math.averagePoint'); //#development
         
             const sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
             return {x:sum.x/points.length,y:sum.y/points.length};
         };
         this.boundingBoxFromPoints = function(points){
-            dev.log.math('.boundingBoxFromPoints('+JSON.stringify(points)+')'); //#development
-            dev.count('.math.boundingBoxFromPoints'); //#development
         
             if(points.length == 0){
                 return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
+            }
+        
+            if(points.length == 1){
+                return { topLeft:{x:points[0].x,y:points[0].y}, bottomRight:{x:points[0].x,y:points[0].y} };
+            }
+        
+            if(points.length == 2){
+                if(points[0].x < points[1].x){
+                    if(points[0].y < points[1].y){
+                        return {
+                            topLeft:{x:points[0].x,y:points[0].y},
+                            bottomRight:{x:points[1].x,y:points[1].y},
+                        };
+                    }else{
+                        return {
+                            topLeft:{x:points[0].x,y:points[1].y},
+                            bottomRight:{x:points[1].x,y:points[0].y},
+                        };
+                    }
+                }else{
+                    if(points[0].y < points[1].y){
+                        return {
+                            topLeft:{x:points[1].x,y:points[0].y},
+                            bottomRight:{x:points[0].x,y:points[1].y},
+                        };
+                    }else{
+                        return {
+                            topLeft:{x:points[1].x,y:points[1].y},
+                            bottomRight:{x:points[0].x,y:points[0].y},
+                        };
+                    }
+                }
             }
         
             let left = points[0].x; let right = points[0].x;
@@ -114,8 +109,6 @@ const library = new function(){
             };
         };
         this.cartesianAngleAdjust = function(x,y,angle){
-            dev.log.math('.cartesianAngleAdjust('+x+','+y+','+angle+')'); //#development
-            dev.count('.math.cartesianAngleAdjust'); //#development
         
             // //v1    
             //     if(angle == 0){ return {x:x,y:y}; }
@@ -133,14 +126,10 @@ const library = new function(){
         };
         this.convertColour = new function(){
             this.obj2rgba = function(obj){
-                dev.log.math('.convertColour.obj2rgba('+JSON.stringify(obj)+')'); //#development
-                dev.count('.math.convertColour.obj2rgba'); //#development
         
                 return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
             };
             this.rgba2obj = function(rgba){
-                dev.log.math('.convertColour.rgba2obj('+JSON.stringify(rgba)+')'); //#development
-                dev.count('.convertColour.rgba2obj'); //#development
         
                 rgba = rgba.split(',');
                 rgba[0] = rgba[0].replace('rgba(', '');
@@ -151,8 +140,6 @@ const library = new function(){
         };
         this.curveGenerator = new function(){
             this.linear = function(stepCount=2, start=0, end=1){
-                dev.log.math('.curveGenerator.linear('+stepCount+','+start+','+end+')'); //#development
-                dev.count('.math.curveGenerator.linear'); //#development
         
                 stepCount = Math.abs(stepCount)-1; var outputArray = [0];
                 for(let a = 1; a < stepCount; a++){ 
@@ -168,8 +155,6 @@ const library = new function(){
                 return outputArray;
             };
             this.sin = function(stepCount=2, start=0, end=1){
-                dev.log.math('.curveGenerator.sin('+stepCount+','+start+','+end+')'); //#development
-                dev.count('.math.curveGenerator.sin'); //#development
         
                 stepCount = Math.abs(stepCount) -1;
                 let outputArray = [0];
@@ -188,8 +173,6 @@ const library = new function(){
                 return outputArray;		
             };
             this.cos = function(stepCount=2, start=0, end=1){
-                dev.log.math('.curveGenerator.cos('+stepCount+','+start+','+end+')'); //#development
-                dev.count('.math.curveGenerator.cos'); //#development
         
                 stepCount = Math.abs(stepCount) -1;
                 let outputArray = [0];
@@ -208,8 +191,6 @@ const library = new function(){
                 return outputArray;	
             };
             this.s = function(stepCount=2, start=0, end=1, sharpness=8){
-                dev.log.math('.curveGenerator.s('+stepCount+','+start+','+end+','+sharpness+')'); //#development
-                dev.count('.math.curveGenerator.s'); //#development
         
                 if(sharpness == 0){sharpness = 1/1000000;}
         
@@ -230,8 +211,6 @@ const library = new function(){
                 return outputArray;
             };
             this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
-                dev.log.math('.curveGenerator.exponential('+stepCount+','+start+','+end+','+sharpness+')'); //#development
-                dev.count('.math.curveGenerator.exponential'); //#development
         
                 stepCount = stepCount-1;
                 let outputArray = [];
@@ -252,26 +231,18 @@ const library = new function(){
         };
         this.curvePoint = new function(){
             this.linear = function(x=0.5, start=0, end=1){
-                dev.log.math('.curvePoint.linear('+x+','+start+','+end+')'); //#development
-                dev.count('.math.curvePoint.linear'); //#development
         
                 return x *(end-start)+start;
             };
             this.sin = function(x=0.5, start=0, end=1){
-                dev.log.math('.curvePoint.sin('+x+','+start+','+end+')'); //#development
-                dev.count('.math.curvePoint.sin'); //#development
         
                 return Math.sin(Math.PI/2*x) *(end-start)+start;
             };
             this.cos = function(x=0.5, start=0, end=1){
-                dev.log.math('.curvePoint.cos('+x+','+start+','+end+')'); //#development
-                dev.count('.math.curvePoint.cos'); //#development
         
                 return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
             };
             this.s = function(x=0.5, start=0, end=1, sharpness=8){
-                dev.log.math('.curvePoint.s('+x+','+start+','+end+','+sharpness+')'); //#development
-                dev.count('.math.curvePoint.s'); //#development
         
                 const temp = library.math.normalizeStretchArray([
                     1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
@@ -281,8 +252,6 @@ const library = new function(){
                 return temp[1] *(end-start)+start;
             };
             this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
-                dev.log.math('.curvePoint.exponential('+x+','+start+','+end+','+sharpness+')'); //#development
-                dev.count('.math.curvePoint.exponential'); //#development
         
                 const temp = library.math.normalizeStretchArray([
                     (Math.exp(sharpness*0)-1)/(Math.E-1),
@@ -292,24 +261,508 @@ const library = new function(){
                 return temp[1] *(end-start)+start;
             };
         };
+        this.getAngleOfTwoPoints = function(point_1,point_2){
+        
+            if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
+        
+            const xDelta = point_2.x - point_1.x;
+            const yDelta = point_2.y - point_1.y;
+            let angle = Math.atan( yDelta/xDelta );
+        
+            if(xDelta < 0){ angle = Math.PI + angle; }
+            else if(yDelta < 0){ angle = Math.PI*2 + angle; }
+        
+            return angle;
+        };
+        this.getIndexOfSequence = function(array,sequence){ 
+        
+            function comp(thing_A,thing_B){
+                const keys = Object.keys(thing_A);
+                if(keys.length == 0){ return thing_A == thing_B; }
+        
+                for(let a = 0; a < keys.length; a++){
+                    if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
+                    if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
+                }
+                return true;
+            }
+        
+            if(array.length == 0 || sequence.length == 0){return undefined;}
+        
+            let index = 0;
+            for(index = 0; index < array.length - sequence.length + 1; index++){
+                if( comp(array[index], sequence[0]) ){
+                    let match = true;
+                    for(let a = 1; a < sequence.length; a++){
+                        if( !comp(array[index+a],sequence[a]) ){
+                            match = false;
+                            break;
+                        }
+                    }
+                    if(match){return index;}
+                }
+            }
+        
+            return undefined;
+        };
+        this.largestValueFound = function(array){
+        
+            if(array.length == 0){return undefined;}
+            return array.reduce(function(max,current){
+                return Math.abs(max) > Math.abs(current) ? max : current;
+            });
+        };
+        this.normalizeStretchArray = function(array){
+        
+            //discover the largest number
+                var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
+        
+            //divide everything by this largest number, making everything a ratio of this value 
+                var dux = Math.abs(array[biggestIndex]);
+                array = array.map(x => x / dux);
+        
+            //stretch the other side of the array to meet 0 or 1
+                if(array[0] == 0 && array[array.length-1] == 1){return array;}
+                var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
+                array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
+        
+            return array;
+        };
+        this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+        
+            const mux = (d - start)/(end - start);
+            if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
+            return mux*realLength;
+        };
+        this.seconds2time = function(seconds){
+        
+            const result = {h:0, m:0, s:0, ms:0, µs:0, ns:0, ps:0, fs:0};
+            
+            result.h = Math.floor(seconds/3600);
+            seconds = seconds - result.h*3600;
+            if(seconds <= 0){return result;}
+        
+            result.m = Math.floor(seconds/60);
+            seconds = seconds - result.m*60;
+            if(seconds <= 0){return result;}
+        
+            result.s = Math.floor(seconds);
+            seconds = seconds - result.s;
+            if(seconds <= 0){return result;}
+        
+            result.ms = Math.floor(seconds*1000);
+            seconds = seconds*1000 - result.ms;
+            if(seconds <= 0){return result;}
+        
+            result.µs = Math.floor(seconds*1000);
+            seconds = seconds*1000 - result.µs;
+            if(seconds <= 0){return result;}
+        
+            result.ns = Math.floor(seconds*1000);
+            seconds = seconds*1000 - result.ns;
+            if(seconds <= 0){return result;}
+        
+            result.ps = Math.floor(seconds*1000);
+            seconds = seconds*1000 - result.ps;
+            if(seconds <= 0){return result;}
+        
+            result.fs = seconds*1000;
+            
+            return result;
+        };
+        
+        this.distanceBetweenTwoPoints = function(point_a,point_b){
+            return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
+        };
+        this.cartesian2polar = function(x,y){
+        
+            const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
+        
+            if(x === 0){
+                if(y === 0){ang = 0;}
+                else if(y > 0){ang = 0.5*Math.PI;}
+                else{ang = 1.5*Math.PI;}
+            }
+            else if(y === 0){
+                if(x >= 0){ang = 0;}else{ang = Math.PI;}
+            }
+            else if(x >= 0){ ang = Math.atan(y/x); }
+            else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
+        
+            return {'dis':dis,'ang':ang};
+        };
+        this.polar2cartesian = function(angle,distance){
+        
+            return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
+        };
+        
+        this.blendColours = function(rgba_1,rgba_2,ratio){
+        
+            return {
+                r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
+                g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
+                b: (1-ratio)*rgba_1.b + ratio*rgba_2.b,
+                a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
+            };           
+        };
+        this.multiBlendColours = function(rgbaList,ratio){
+        
+            //special cases
+                if(ratio == 0){return rgbaList[0];}
+                if(ratio == 1){return rgbaList[rgbaList.length-1];}
+            //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+                const p = ratio*(rgbaList.length-1);
+                return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+        };
+        
+        
+        
+        this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+        
+            if(inputFormat == 'flatArray'){
+                const tmp = [];
+                for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
+                regions = [tmp];
+            }
+        
+            const holes = regions.reverse().map(region => region.length);
+            holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
+            holes.pop();
+        
+            return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+        };
+        this.unionPolygons = function(polygon1,polygon2){
+        
+            //martinez (not working)
+            // for(var a = 0; a < polygon1.length; a++){
+            //     polygon1[a].push( polygon1[a][0] );
+            // }
+            // for(var a = 0; a < polygon2.length; a++){
+            //     polygon2[a].push( polygon2[a][0] );
+            // }
+        
+            // var ans = _thirdparty.martinez.union(
+            //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
+            //     polygon2.map(region => region.map(item => [item.x,item.y])  )
+            // );
+            // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
+        
+            //PolyBool
+            return _thirdparty.PolyBool.union(
+                {regions:polygon1.map(region => region.map(item => [item.x,item.y]))}, 
+                {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
+            ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
+        }
+        
+        this.detectIntersect = new function(){
+            this.boundingBoxes = function(box_a, box_b){
+        
+                return box_a.bottomRight.y >= box_b.topLeft.y && 
+                    box_a.bottomRight.x >= box_b.topLeft.x && 
+                    box_a.topLeft.y <= box_b.bottomRight.y && 
+                    box_a.topLeft.x <= box_b.bottomRight.x;
+            };
+        
+            this.pointWithinBoundingBox = function(point,box){
+                return !(
+                    point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
+                    point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
+                );
+            };
+            this.pointOnLine = function(point,line){
+                
+                if( 
+                    point.x < line[0].x && point.x < line[1].x ||
+                    point.y < line[0].y && point.y < line[1].y ||
+                    point.x > line[0].x && point.x > line[1].x ||
+                    point.y > line[0].y && point.y > line[1].y
+                ){return false;}
+        
+                if(point.x == line[0].x && point.y == line[0].y){ return true; }
+                if(point.x == line[1].x && point.y == line[1].y){ return true; }
+                if(line[0].x == line[1].x && point.x == line[0].x){
+                    return (line[0].y > point.y && point.y > line[1].y) || (line[1].y > point.y && point.y > line[0].y);
+                }
+                if(line[0].y == line[1].y && point.y == line[0].y){
+                    return (line[0].x > point.x && point.x > line[1].x) || (line[1].x > point.x && point.x > line[0].x);
+                }
+        
+                return ((line[1].y - line[0].y) / (line[1].x - line[0].x))*(point.x - line[0].x) + line[0].y - point.y == 0;
+            }
+            this.pointWithinPoly = function(point,poly){
+        
+                if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
+                if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints([point]), poly.boundingBox ) ){ return 'outside'; }
+        
+                // outside / onPoint / onEdge / inside
+        
+                //check if the point is on a point of the poly; bail and return 'onPoint'
+                for(let a = 0; a < poly.points.length; a++){
+                    if( point.x == poly.points[a].x && point.y == poly.points[a].y ){
+                        return 'onPoint';
+                    }
+                }
+        
+                function pointLevelWithPolyPointChecker(poly,point,a,b){
+                    //only flip, if the point is not perfectly level with point a of the line (the system will come round to having this same point be point b)
+                    //or if you can prove that the two adjacent points are higher and lower than the matching point's level
+                    if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
+                        return true;
+                    }else if(poly.points[a].y != point.y){
+                        const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
+                        const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
+                        if(
+                            poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
+                            poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
+                        ){
+                        }else{
+                            return true;
+                        }
+                    }else if(poly.points[b].y != point.y){
+                        const pointInFront = b+1 >= poly.points.length ? 0 : b+1;
+                        const pointBehind = b-1 <= 0 ? poly.points.length-1 : b-1;
+                        if(
+                            poly.points[pointBehind].y <= poly.points[b].y && poly.points[pointInFront].y <= poly.points[b].y ||
+                            poly.points[pointBehind].y >= poly.points[b].y && poly.points[pointInFront].y >= poly.points[b].y
+                        ){
+                        }else{
+                            return true;
+                        }
+                    }
+        
+                    return false;
+                }
+        
+                //Ray casting algorithm
+                let inside = false;
+                for(let a = 0, b = poly.points.length - 1; a < poly.points.length; b = a++){
+        
+                    //point must be on the same level of the line
+                    if( (poly.points[b].y >= point.y && poly.points[a].y <= point.y) || (poly.points[a].y >= point.y && poly.points[b].y <= point.y) ){
+                        //discover if the point is on the far right of the line
+                        if( poly.points[a].x < point.x && poly.points[b].x < point.x ){
+                            //only flip if the line is not perfectly level (which would make the ray skirt the line)
+                            if( poly.points[a].y != poly.points[b].y ){
+                                if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
+                                    inside = !inside;
+                                }
+                            }
+        
+                        //discover if the point is on the far left of the line, skip it if so
+                        }else if( poly.points[a].x > point.x && poly.points[b].x > point.x ){
+                            continue;
+                        }else{
+                            //calculate what side of the line this point is
+                                let areaLocation;
+                                if( poly.points[b].y > poly.points[a].y && poly.points[b].x > poly.points[a].x ){
+                                    areaLocation = (point.x-poly.points[a].x)/(poly.points[b].x-poly.points[a].x) - (point.y-poly.points[a].y)/(poly.points[b].y-poly.points[a].y) + 1;
+                                }else if( poly.points[b].y <= poly.points[a].y && poly.points[b].x <= poly.points[a].x ){
+                                    areaLocation = (point.x-poly.points[b].x)/(poly.points[a].x-poly.points[b].x) - (point.y-poly.points[b].y)/(poly.points[a].y-poly.points[b].y) + 1;
+                                }else if( poly.points[b].y > poly.points[a].y && poly.points[b].x < poly.points[a].x ){
+                                    areaLocation = (point.x-poly.points[b].x)/(poly.points[a].x-poly.points[b].x) + (point.y-poly.points[a].y)/(poly.points[b].y-poly.points[a].y);
+                                }else if( poly.points[b].y <= poly.points[a].y && poly.points[b].x >= poly.points[a].x ){
+                                    areaLocation = (point.x-poly.points[a].x)/(poly.points[b].x-poly.points[a].x) + (point.y-poly.points[b].y)/(poly.points[a].y-poly.points[b].y);
+                                }
+        
+                            //if its on the line, return 'onEdge' immediately, if it's above 1 do a flip
+                                if( areaLocation == 1 || isNaN(areaLocation) ){
+                                    return 'onEdge';
+                                }else if(areaLocation > 1){
+                                    if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
+                                        inside = !inside;
+                                    }
+                                }
+                        }
+                    }else{
+                    }
+                }
+        
+                return inside ? 'inside' : 'outside';
+            };
+        
+            this.lineOnLine = function(segment1,segment2){
+        
+                if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(segment1), library.math.boundingBoxFromPoints(segment2) ) ){
+                    return {x:undefined, y:undefined, intersect:false, contact:false};
+                }
+        
+                //identical segments
+                if(
+                    (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
+                    (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
+                ){
+                    return {x:undefined, y:undefined, intersect:false, contact:true};
+                }
+                    
+                //point on point
+                if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
+                    return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
+                }
+                if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
+                    return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
+                }
+        
+                //calculate denominator
+                const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+                if(denominator == 0){  return {x:undefined, y:undefined, intersect:false, contact:false}; }
+                    
+                //point on line
+                if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){ return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true}; }
+                if( library.math.detectIntersect.pointOnLine(segment1[1],segment2) ){ return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true}; }
+                if( library.math.detectIntersect.pointOnLine(segment2[0],segment1) ){ return {x:segment2[0].x, y:segment2[0].y, intersect:false, contact:true}; }
+                if( library.math.detectIntersect.pointOnLine(segment2[1],segment1) ){ return {x:segment2[1].x, y:segment2[1].y, intersect:false, contact:true}; }
+        
+                //produce output
+                const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+                const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+                const intersect = (u1 >= 0 && u1 <= 1) && (u2 >= 0 && u2 <= 1);
+                return {
+                    x:         (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
+                    y:         (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
+                    intersect: intersect,
+                    contact:   intersect,
+                };
+            };
+            this.lineOnPoly = function(line,poly){
+        
+                if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
+                if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(line), poly.boundingBox ) ){
+                    return { points:[], intersect:false, contact:false };
+                }
+        
+                function oneWhileTheOtherIs(val_1,val_2,a,b){
+                    if( val_1 == a && val_2 == b ){return 1;}
+                    if( val_2 == a && val_1 == b ){return 2;}
+                    return 0;
+                }
+                function huntForIntersection(line,polyPoints){
+                    for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
+                        const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
+                        if(result.intersect){
+                            output.points.push({x:result.x,y:result.y});
+                            output.intersect = true;
+                            output.contact = true;
+                        }
+                    }
+        
+                    //situation where the line passes perfectly through a point on the poly
+                    if(output.points.length == 0){
+                        for(let a = 0; a < poly.points.length; a++){
+                            if( poly.points[a].x != line[0].x && poly.points[a].y != line[0].y && poly.points[a].x != line[1].x && poly.points[a].y != line[1].y){
+                                if( library.math.detectIntersect.pointOnLine(poly.points[a],line) ){
+                                    output.points.push(poly.points[a]);
+                                    output.intersect = true;
+                                }
+                            }
+                        }
+                    }
+                }
+        
+                const output = { points:[], contact:false, intersect:false };
+                const point_a = library.math.detectIntersect.pointWithinPoly(line[0],poly);
+                const point_b = library.math.detectIntersect.pointWithinPoly(line[1],poly);
+        
+                let dir = 0;
+                if( oneWhileTheOtherIs(point_a,point_b,'outside','outside') ){
+                    huntForIntersection(line,poly.points);
+                }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onPoint') ){
+                    huntForIntersection(line,poly.points);
+                    output.points.push(line[dir]);
+                    output.contact = true;
+                }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onEdge') ){
+                    huntForIntersection(line,poly.points);
+                    output.points.push(line[dir]);
+                    output.contact = true;
+                }else if( oneWhileTheOtherIs(point_a,point_b,'outside','inside') ){
+                    huntForIntersection(line,poly.points);
+                    output.intersect = true;
+                    output.contact = true;
+                }else if( oneWhileTheOtherIs(point_a,point_b,'onPoint','onPoint') ){
+                    output.points = [line[0],line[1]];
+                    output.contact = true;
+                    output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                }else if( oneWhileTheOtherIs(point_a,point_b,'onPoint','onEdge') ){
+                    output.points = [line[0],line[1]];
+                    output.contact = true;
+                    output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','inside') ){
+                    output.points = [line[dir]];
+                    output.contact = true;
+                    output.intersect = true;
+                }else if( oneWhileTheOtherIs(point_a,point_b,'onEdge','onEdge') ){
+                    output.points = [line[0],line[1]];
+                    output.contact = true;
+                    output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','inside') ){
+                    output.points = [line[dir]];
+                    output.contact = true;
+                    output.intersect = true;
+                }else if( oneWhileTheOtherIs(point_a,point_b,'inside','inside') ){
+                    output.intersect = true;
+                    output.contact = false;
+                }
+                
+                return output;
+            };
+        
+            this.polyOnPoly = function(poly_a,poly_b){
+        
+                if(poly_a.boundingBox == undefined){ poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points); }
+                if(poly_b.boundingBox == undefined){ poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points); }
+                if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
+                    return { points:[], intersect:false, contact:false };
+                }
+        
+                const results = {
+                    points:[],
+                    contact:false,
+                    intersect:false,
+                };
+        
+                //identical polys
+                    const sudo_poly_a_points = Object.assign([],poly_a.points);
+                    poly_b.points.forEach(point_b => {
+                        const index = sudo_poly_a_points.indexOf(sudo_poly_a_points.find(point_a => point_a.x==point_b.x && point_a.y==point_b.y) );
+                        if(index != -1){sudo_poly_a_points.splice(index, 1);}
+                    });
+                    if(sudo_poly_a_points.length == 0){
+                        return {
+                            points:Object.assign([],poly_a.points),
+                            contact:true,
+                            intersect:true,
+                        };
+                    }
+        
+                //find all side intersection points
+                    for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
+                        const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
+                        results.points = results.points.concat(tmp.points);
+                        results.contact = results.contact || tmp.contact;
+                        results.intersect = results.intersect || tmp.intersect;
+                    }
+                
+                //check if poly_a is totally inside poly_b (if necessary)
+                    for(let a = 0; a < poly_b.points.length; a++){
+                        if( results.intersect ){break;}
+                        if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) == 'inside' ){   
+                            results.intersect = true;
+                        }
+                    }
+        
+                return results;
+            };
+        };
         this.detectOverlap = new function(){
             const detectOverlap = this;
         
             this.boundingBoxes = function(a, b){
-                dev.log.math('.detectOverlap.boundingBoxes('+JSON.stringify(a)+','+JSON.stringify(b)+')'); //#development
-                dev.count('.math.detectOverlap.boundingBoxes'); //#development
         
                 return a.bottomRight.y >= b.topLeft.y && 
                     a.bottomRight.x >= b.topLeft.x && 
                     a.topLeft.y <= b.bottomRight.y && 
                     a.topLeft.x <= b.bottomRight.x;
             };
-            this.pointOnLine = function(point,line){
-                return library.math.getAngleOfTwoPoints(line[0],line[1]) == library.math.getAngleOfTwoPoints(point,line[1]);
-            }
             this.pointWithinBoundingBox = function(point,box){
-                dev.log.math('.detectOverlap.pointWithinBoundingBox('+JSON.stringify(point)+','+JSON.stringify(box)+')'); //#development
-                dev.count('.math.detectOverlap.pointWithinBoundingBox'); //#development
         
                 return !(
                     point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
@@ -317,8 +770,6 @@ const library = new function(){
                 );
             };
             this.pointWithinPoly = function(point,points){
-                dev.log.math('.detectOverlap.pointWithinPoly('+JSON.stringify(point)+','+JSON.stringify(points)+')'); //#development
-                dev.count('.math.detectOverlap.pointWithinPoly'); //#development
         
                 //Ray casting algorithm
                 let inside = false;
@@ -355,29 +806,7 @@ const library = new function(){
                 }
                 return inside;
             };
-            this.lineSegments = function(segment1, segment2, countSkirting=true){
-                dev.log.math('.detectOverlap.lineSegments('+JSON.stringify(segment1)+','+JSON.stringify(segment2)+')'); //#development
-                dev.count('.math.detectOverlap.lineSegments'); //#development
-        
-                if(!countSkirting){
-                    //if one point of a line is on the other line; this is a skirt, return null
-                        //point on point
-                            // if(segment1[0] == segment2[0] || segment1[0] == segment2[1] || segment1[1] == segment2[0] || segment1[1] == segment2[1]){
-                            if(
-                                segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y || 
-                                segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y || 
-                                segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y || 
-                                segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y
-                            ){
-                                return null;
-                            }
-                        //point on line
-                            if( this.pointOnLine(segment1[0],segment2) || this.pointOnLine(segment1[1],segment2) ||
-                                this.pointOnLine(segment2[0],segment1) || this.pointOnLine(segment2[1],segment1)
-                            ){
-                                return null;
-                            }
-                }
+            this.lineSegments = function(segment1, segment2){
         
                 const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
                 if(denominator == 0){return null;}
@@ -392,8 +821,6 @@ const library = new function(){
                 };
             };
             this.overlappingPolygons = function(points_a,points_b){
-                dev.log.math('.detectOverlap.overlappingPolygons('+JSON.stringify(points_a)+','+JSON.stringify(points_b)+')'); //#development
-                dev.count('.math.detectOverlap.overlappingPolygons'); //#development
         
                 //a point from A is in B
                     for(let a = 0; a < points_a.length; a++){
@@ -422,8 +849,6 @@ const library = new function(){
                 return false;
             };
             this.overlappingPolygonWithPolygons = function(poly,polys){ 
-                dev.log.math('.detectOverlap.overlappingPolygonWithPolygons('+JSON.stringify(poly)+','+JSON.stringify(polys)+')'); //#development
-                dev.count('.math.detectOverlap.overlappingPolygonWithPolygons'); //#development
         
                 for(let a = 0; a < polys.length; a++){
                     if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
@@ -434,9 +859,8 @@ const library = new function(){
                 }
                 return false;
             };
-            this.overlappingLineWithPolygon = function(line,poly,returnDetails=false,countSkirting=true){
-                dev.log.math('.detectOverlap.overlappingLineWithPolygon('+JSON.stringify(line)+','+JSON.stringify(poly)+')'); //#development
-                dev.count('.math.detectOverlap.overlappingLineWithPolygon'); //#development
+        
+            function overlappingLineWithPolygon(line,poly){
         
                 //go through every side of the poly, and if one of them collides with the line, return true
                 for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
@@ -449,37 +873,13 @@ const library = new function(){
                             { x:poly.points[a].x, y:poly.points[a].y },
                             { x:poly.points[b].x, y:poly.points[b].y }
                         ],
-                        countSkirting
                     );
-                    if(tmp != null && tmp.inSeg1 && tmp.inSeg2){
-                        return returnDetails ? {x:tmp.x,y:tmp.y} : true;
-                    }
+                    if(tmp != null && tmp.inSeg1 && tmp.inSeg2){ return true; }
                 }
-                
-                //check if it is a perfect traversal of the poly
-                    for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
-                        if( !countSkirting &&
-                            this.pointOnLine(
-                                { x: (line.x1+line.x2)/2, y: (line.y1+line.y2)/2, },
-                                [
-                                    { x:poly.points[a].x, y:poly.points[a].y },
-                                    { x:poly.points[b].x, y:poly.points[b].y }
-                                ],
-                            )
-                        ){
-                            return returnDetails ? {} : false;
-                        }
-                    }
         
-                    if( this.pointWithinPoly({ x: (line.x1+line.x2)/2, y: (line.y1+line.y2)/2, },poly.points) ){
-                        return returnDetails ? {inSeg1:true,inSeg2:true} : true;
-                    }
-        
-                return returnDetails ? {} : false;
+                return false;
             };
-            this.overlappingLineWithPolygons = function(line,polys,returnDetails=false,countSkirting=true){
-                dev.log.math('.detectOverlap.overlappingLineWithPolygons('+JSON.stringify(line)+','+JSON.stringify(polys)+')'); //#development
-                dev.count('.math.detectOverlap.overlappingLineWithPolygons'); //#development
+            this.overlappingLineWithPolygons = function(line,polys){
         
                 //generate a bounding box for the line
                     const line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
@@ -502,240 +902,18 @@ const library = new function(){
                     const collidingPolyIndexes = [];
                     polys.forEach((poly,index) => {
                         if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
-                        if(returnDetails){
-                            const result = this.overlappingLineWithPolygon(line,poly,returnDetails,countSkirting);
-                            if(result.x || result.y){ collidingPolyIndexes.push( {index:index,data:result} ); }
-                        }else{
-                            if(this.overlappingLineWithPolygon(line,poly,returnDetails,countSkirting)){ collidingPolyIndexes.push(index); }
-                        }
+                        if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
                     });
         
                 return collidingPolyIndexes;
             };
         };
-        this.getAngleOfTwoPoints = function(point_1,point_2){
-            dev.log.math('.getAngleOfTwoPoints('+JSON.stringify(point_1)+','+JSON.stringify(point_2)+')'); //#development
-            dev.count('.math.getAngleOfTwoPoints'); //#development
         
-            if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
-        
-            const xDelta = point_2.x - point_1.x;
-            const yDelta = point_2.y - point_1.y;
-            let angle = Math.atan( yDelta/xDelta );
-        
-            if(xDelta < 0){ angle = Math.PI + angle; }
-            else if(yDelta < 0){ angle = Math.PI*2 + angle; }
-        
-            return angle;
-        };
-        this.getDifferenceOfArrays = function(array_a,array_b){
-            dev.log.math('.getDifferenceOfArrays('+JSON.stringify(array_a)+','+JSON.stringify(array_b)+')'); //#development
-            dev.count('.math.getDifferenceOfArrays'); //#development
-        
-            function arrayRemovals(a,b){
-                a.forEach(item => {
-                    let i = b.indexOf(item);
-                    if(i != -1){ b.splice(i,1); }
-                });
-                return b;
-            }
-        
-            return {
-                a:arrayRemovals(array_b,array_a.slice()),
-                b:arrayRemovals(array_a,array_b.slice())
-            };
-        };
-        this.getIndexOfSequence = function(array,sequence){ 
-            dev.log.math('.getIndexOfSequence('+JSON.stringify(array)+','+JSON.stringify(sequence)+')'); //#development
-            dev.count('.math.getIndexOfSequence'); //#development
-        
-            function comp(thing_A,thing_B){
-                const keys = Object.keys(thing_A);
-                if(keys.length == 0){ return thing_A == thing_B; }
-        
-                for(let a = 0; a < keys.length; a++){
-                    if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
-                    if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
-                }
-                return true;
-            }
-        
-            if(array.length == 0 || sequence.length == 0){return undefined;}
-        
-            let index = 0;
-            for(index = 0; index < array.length - sequence.length + 1; index++){
-                if( comp(array[index], sequence[0]) ){
-                    let match = true;
-                    for(let a = 1; a < sequence.length; a++){
-                        if( !comp(array[index+a],sequence[a]) ){
-                            match = false;
-                            break;
-                        }
-                    }
-                    if(match){return index;}
-                }
-            }
-        
-            return undefined;
-        };
-        this.largestValueFound = function(array){
-            dev.log.math('.largestValueFound('+JSON.stringify(array)+')'); //#development
-            dev.count('.math.largestValueFound'); //#development
-        
-            if(array.length == 0){return undefined;}
-            return array.reduce(function(max,current){
-                return Math.abs(max) > Math.abs(current) ? max : current;
-            });
-        };
-        this.normalizeStretchArray = function(array){
-            dev.log.math('.normalizeStretchArray('+JSON.stringify(array)+')'); //#development
-            dev.count('.math.normalizeStretchArray'); //#development
-        
-            //discover the largest number
-                var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
-        
-            //divide everything by this largest number, making everything a ratio of this value 
-                var dux = Math.abs(array[biggestIndex]);
-                array = array.map(x => x / dux);
-        
-            //stretch the other side of the array to meet 0 or 1
-                if(array[0] == 0 && array[array.length-1] == 1){return array;}
-                var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
-                array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
-        
-            return array;
-        };
-        this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
-            dev.log.math('.relativeDistance('+realLength+','+start+','+end+','+d+','+allowOverflow+')'); //#development
-            dev.count('.math.relativeDistance'); //#development
-        
-            const mux = (d - start)/(end - start);
-            if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
-            return mux*realLength;
-        };
-        this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
-            dev.log.math('.removeTheseElementsFromThatArray('+JSON.stringify(theseElements)+','+JSON.stringify(thatArray)+')'); //#development
-            dev.count('.math.removeTheseElementsFromThatArray'); //#development
-        
-            theseElements.forEach(a => thatArray.splice(thatArray.indexOf(a), 1) );
-            return thatArray;
-        };
-        this.seconds2time = function(seconds){
-            dev.log.math('.seconds2time('+seconds+')'); //#development
-            dev.count('.math.seconds2time'); //#development
-        
-            const result = {h:0, m:0, s:0};
-            
-            result.h = Math.floor(seconds/3600);
-            seconds = seconds - result.h*3600;
-        
-            result.m = Math.floor(seconds/60);
-            seconds = seconds - result.m*60;
-        
-            result.s = seconds;
-        
-            return result;
-        };
-        
-        this.distanceBetweenTwoPoints = function(point_a,point_b){
-            return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
-        };
-        this.cartesian2polar = function(x,y){
-            dev.log.math('.cartesian2polar('+x+','+y+')'); //#development
-            dev.count('.math.cartesian2polar'); //#development
-        
-            const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
-        
-            if(x === 0){
-                if(y === 0){ang = 0;}
-                else if(y > 0){ang = 0.5*Math.PI;}
-                else{ang = 1.5*Math.PI;}
-            }
-            else if(y === 0){
-                if(x >= 0){ang = 0;}else{ang = Math.PI;}
-            }
-            else if(x >= 0){ ang = Math.atan(y/x); }
-            else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
-        
-            return {'dis':dis,'ang':ang};
-        };
-        this.polar2cartesian = function(angle,distance){
-            dev.log.math('.polar2cartesian('+angle+','+distance+')'); //#development
-            dev.count('.math.polar2cartesian'); //#development
-        
-            return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
-        };
-        
-        this.blendColours = function(rgba_1,rgba_2,ratio){
-            dev.log.math('.blendColours('+JSON.stringify(rgba_1)+','+JSON.stringify(rgba_2)+','+ratio+')'); //#development
-            dev.count('.math.blendColours'); //#development
-        
-            return {
-                r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
-                g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
-                b: (1-ratio)*rgba_1.b + ratio*rgba_2.b,
-                a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
-            };           
-        };
-        this.multiBlendColours = function(rgbaList,ratio){
-            dev.log.math('.multiBlendColours('+JSON.stringify(rgbaList)+','+ratio+')'); //#development
-            dev.count('.math.multiBlendColours'); //#development
-        
-            //special cases
-                if(ratio == 0){return rgbaList[0];}
-                if(ratio == 1){return rgbaList[rgbaList.length-1];}
-            //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
-                const p = ratio*(rgbaList.length-1);
-                return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
-        };
-        
-        this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
-            dev.log.math('.polygonToSubTriangles('+JSON.stringify(regions)+','+inputFormat+')'); //#development
-            dev.count('.math.polygonToSubTriangles'); //#development
-        
-            if(inputFormat == 'flatArray'){
-                const tmp = [];
-                for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
-                regions = [tmp];
-            }
-        
-            const holes = regions.reverse().map(region => region.length);
-            holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
-            holes.pop();
-        
-            return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
-        };
-        this.unionPolygons = function(polygon1,polygon2){
-            dev.log.math('.unionPolygons('+JSON.stringify(polygon1)+','+JSON.stringify(polygon2)+')'); //#development
-            dev.count('.math.unionPolygons'); //#development
-        
-            //martinez (not working)
-            // for(var a = 0; a < polygon1.length; a++){
-            //     polygon1[a].push( polygon1[a][0] );
-            // }
-            // for(var a = 0; a < polygon2.length; a++){
-            //     polygon2[a].push( polygon2[a][0] );
-            // }
-        
-            // var ans = _thirdparty.martinez.union(
-            //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
-            //     polygon2.map(region => region.map(item => [item.x,item.y])  )
-            // );
-            // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
-        
-            //PolyBool
-            return _thirdparty.PolyBool.union(
-                {regions:polygon1.map(region => region.map(item => [item.x,item.y]))}, 
-                {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
-            ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
-        }
         this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
-            dev.log.math('.pathExtrapolation('+JSON.stringify(path),thickness,capType,joinType,loopPath,detail,sharpLimit+')'); //#development
-            dev.count('.math.pathExtrapolation'); //#development
+            dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
         
             function loopThisPath(path){
-                dev.log.math('.pathExtrapolation::loopThisPath('+JSON.stringify(path)+')'); //#development
-                dev.count('.math.pathExtrapolation::loopThisPath'); //#development
+                dev.log.math('.pathExtrapolation::loopThisPath(',path);
             
                 const joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
                 let loopingPath = [];
@@ -750,8 +928,7 @@ const library = new function(){
                 return loopingPath;
             }
             function calculateJointData(path,thickness){
-                dev.log.math('.pathExtrapolation::calculateJointData('+JSON.stringify(path)+','+thickness+')'); //#development
-                dev.count('.math.pathExtrapolation::calculateJointData'); //#development
+                dev.log.math('.pathExtrapolation::calculateJointData(',path,thickness);
             
                 const jointData = [];
                 //parse path
@@ -781,8 +958,7 @@ const library = new function(){
                 return jointData;
             }
             function path_to_rectangleSeries(path,thickness){
-                dev.log.math('.pathExtrapolation::path_to_rectangleSeries('+JSON.stringify(path)+','+thickness+')'); //#development
-                dev.count('.math.pathExtrapolation::path_to_rectangleSeries'); //#development
+                dev.log.math('.pathExtrapolation::path_to_rectangleSeries(',path,thickness);
             
                 let outputPoints = [];
                 for(let a = 1; a < path.length/2; a++){
@@ -802,8 +978,6 @@ const library = new function(){
             }
         
             function flatJoints(jointData,thickness){
-                dev.log.math('.pathExtrapolation::flatJoints('+JSON.stringify(jointData)+','+thickness+')'); //#development
-                dev.count('.math.pathExtrapolation::flatJoints'); //#development
             
                 const polygons = [];
         
@@ -835,8 +1009,6 @@ const library = new function(){
                 return polygons;
             }
             function roundJoints(jointData,thickness,detail=5){
-                dev.log.math('.pathExtrapolation::roundJoints('+JSON.stringify(jointData)+','+thickness+','+detail+')'); //#development
-                dev.count('.math.pathExtrapolation::roundJoints'); //#development
             
                 const polygons = [];
                 if(detail < 1){detail = 1;}
@@ -886,8 +1058,6 @@ const library = new function(){
                 return polygons;
             }
             function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
-                dev.log.math('.pathExtrapolation::sharpJoints('+JSON.stringify(jointData)+','+thickness+','+sharpLimit+')'); //#development
-                dev.count('.math.pathExtrapolation::sharpJoints'); //#development
             
                 const polygons = [];
         
@@ -947,8 +1117,6 @@ const library = new function(){
             }
         
             function roundCaps(jointData,thickness,detail=5){
-                dev.log.math('.pathExtrapolation::roundCaps('+JSON.stringify(jointData)+','+thickness+','+detail+')'); //#development
-                dev.count('.math.pathExtrapolation::roundCaps'); //#development
             
                 if(detail < 1){detail = 1;}
         
@@ -991,20 +1159,15 @@ const library = new function(){
             //union all polygons, convert to triangles and return
                 return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
         };
-        
-        this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8}){
-            dev.log.math('.fitPolyIn('+JSON.stringify(freshPoly)+','+JSON.stringify(environmentPolys)+','+JSON.stringify(snapping)+')'); //#development
-            dev.count('.math.fitPolyIn'); //#development
+
+        this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},returnPathData=false){
+            dev.log.math('.fitPolyIn(',freshPoly,environmentPolys,snapping);
         
             function applyOffsetToPoints(offset,points){
-                dev.log.math('.fitPolyIn::applyOffsetToPoints('+JSON.stringify(offset)+JSON.stringify(points)+')'); //#development
-                dev.count('.math.fitPolyIn::applyOffsetToPoints'); //#development
             
                 return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
             };
             function applyOffsetToPolygon(offset,poly){
-                dev.log.math('.fitPolyIn::applyOffsetToPolygon('+JSON.stringify(offset)+JSON.stringify(poly)+')'); //#development
-                dev.count('.math.fitPolyIn::applyOffsetToPolygon'); //#development
             
                 var newPolygon = { points: applyOffsetToPoints(offset,poly.points), boundingBox:{} };
                 newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
@@ -1136,138 +1299,132 @@ const library = new function(){
                     offset = {x:max.x, y:max.y};
                 }
         
-            return dev ? {offset:offset,paths:paths} : offset;
+            return returnPathData ? {offset:offset,paths:paths} : offset;
         };
+        this.polygonsToVisibilityGraph = function(polys){
+            const graph = polys.flatMap((poly,polyIndex) => {
+                return poly.points.map((point,pointIndex) => ({
+                    polyIndex:polyIndex,
+                    pointIndex:pointIndex,
+                    destination:[ /*{index:n, polyIndex:n, pointIndex:n, distance:n} */ ],
+                }))
+            });
         
-        // this.pathFinder = function(point_a,point_b,polys,grapher){
-        //     // return v1(point_a,point_b,polys,grapher);
-        //     return v2(point_a,point_b,polys,grapher);
+            const scannedRoutes = {};
         
-        //     function v1(point_a,point_b,polys,grapher){
-        //         const outputPath = [point_a];
+            graph.forEach((graphPoint_source,index_source) => {
+                graph.forEach((graphPoint_destination,index_destination) => {
+                    if(index_source == index_destination){return;}
+                    // if( index_source != 4 ){return;} if( index_destination != 1 ){return;}
         
-        //         console.log( polys );
+                    const route_source = graphPoint_source.polyIndex+'_'+graphPoint_source.pointIndex;
+                    const route_destination = graphPoint_destination.polyIndex+'_'+graphPoint_destination.pointIndex;
         
-        //         //find first collision poly
-        //             let results = library.math.detectOverlap.overlappingLineWithPolygons( { x1:point_a.x, y1:point_a.y, x2:point_b.x, y2:point_b.y }, polys, true );
-        //             console.log(results);
-        //             results.forEach(result => { grapher.drawCircle(result.data.x,result.data.y,2.5,'rgba(255,0,255,1)'); });
-        //             let collisionPoints = results.map(result => ({x:result.data.x,y:result.data.y}) );
-        //             // console.log(collisionPoints);
-        //             let collisionDistances = collisionPoints.map(point => library.math.distanceBetweenTwpPoints(point_a,point) );
-        //             // console.log(collisionDistances);
-        //             let smallestCollisionDistanceIndex = collisionDistances.indexOf(Math.min(...collisionDistances));
-        //             // console.log(smallestCollisionDistanceIndex);
-        //             let indexOfClosestPoly = results[smallestCollisionDistanceIndex];
-        //             // console.log(indexOfClosestPoly);
-        //             let firstCollisionPoly = polys[indexOfClosestPoly.index];
-        //             // console.log(firstCollisionPoly);
-        //             let firstCollisionPoint = collisionPoints[smallestCollisionDistanceIndex];
-        //             // console.log(firstCollisionPoint);
+                    //check to see if we've scanned this route before
+                    if( scannedRoutes[route_destination] != undefined && scannedRoutes[route_destination][route_source] != undefined ){ return; }
         
-        //         //get articulation point
-        //             let collisionPoly = firstCollisionPoly;
-        //             let collisionPoint = firstCollisionPoint;
-        //             // console.log(collisionPoly.points);
+                    //convert for convenience
+                    const point_source = polys[graphPoint_source.polyIndex].points[graphPoint_source.pointIndex];
+                    const point_destination = polys[graphPoint_destination.polyIndex].points[graphPoint_destination.pointIndex];
         
-        //             let possiblePoints = [];
-        //             for(let a = 0; a < collisionPoly.points.length; a++){
-        //                 let angle = library.math.getAngleOfTwoPoints(collisionPoint,collisionPoly.points[a])-library.math.getAngleOfTwoPoints(collisionPoint,point_b);
-        //                 if( angle < Math.PI/2 || angle > Math.PI*2 - Math.PI/2 ){
-        //                     possiblePoints.push({
-        //                         point:collisionPoly.points[a],
-        //                         distance:library.math.distanceBetweenTwpPoints(point_a,collisionPoly.points[a])+library.math.distanceBetweenTwpPoints(point_b,collisionPoly.points[a]),
-        //                     });
-        //                 }
-        //             }
-        //             // console.log(possiblePoints);
-        //             // console.log(possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance)))));
-        //             let articulationPoint = possiblePoints[
-        //                 possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance))))
-        //             ].point;
-        //             // console.log(articulationPoint);
-        //             outputPath.push(articulationPoint);
+                    //scan route
+                    let addRoute = true;
+                    for(let a = 0; a < polys.length; a++){
+                        const result = library.math.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a] );
+                        if( result.intersect ){
+                            addRoute = false;
+                            break;
+                        }
+                    }
         
-        //         //find next collision poly
-        //             results = library.math.detectOverlap.overlappingLineWithPolygons( { x1:articulationPoint.x, y1:articulationPoint.y, x2:point_b.x, y2:point_b.y }, polys, true ).filter(point => {
-        //                 return point.data.x != articulationPoint.x || point.data.y != articulationPoint.y;
-        //             });
-        //             results.forEach(result => { grapher.drawCircle(result.data.x,result.data.y,2.5,'rgba(255,0,255,1)'); });
-        //             collisionPoints = results.map(result => ({x:result.data.x,y:result.data.y}) );
-        //             console.log(collisionPoints);
+                    //if route is valid, add to graph
+                    if(addRoute){
+                        const distance = library.math.distanceBetweenTwoPoints(point_source,point_destination);
         
-        //         outputPath.push(point_b);
-        //         return outputPath;
-        //     }
-        //     function v2(point_a,point_b,polys,grapher){
+                        //forward route
+                        if(scannedRoutes[route_source] == undefined){ scannedRoutes[route_source] = {}; }
+                        scannedRoutes[route_source][route_destination] = {
+                            index: index_destination,
+                            polyIndex: graphPoint_destination.polyIndex, 
+                            pointIndex: graphPoint_destination.pointIndex,
+                            distance: distance,
+                        };
+                        graphPoint_source.destination.push( scannedRoutes[route_source][route_destination] );
         
-        //         function getPointsInBetween(point_a,point_b,polys){
-        //             //get all collided polys (if none, return empty array)(if the collision point is one of the argument points, ignore that poly)
-        //                 const collidedPolys = library.math.detectOverlap.overlappingLineWithPolygons( { x1:point_a.x, y1:point_a.y, x2:point_b.x, y2:point_b.y }, polys, true ).filter(poly => {
-        //                     const ind_a = polys[poly.index].points.indexOf(point_a);
-        //                     const ind_b = polys[poly.index].points.indexOf(point_b);
-        //                     if( ind_a != -1 && ind_b != -1 && Math.abs(ind_a - ind_b) != 1){ return true; }
-        //                     return !(poly.data.x == point_a.x && poly.data.y == point_a.y || poly.data.x == point_b.x && poly.data.y == point_b.y);
-        //                 });
-        //                 if(collidedPolys.length == 0){return [];}
-        //                 collidedPolys.forEach(poly => { grapher.drawCircle(poly.data.x,poly.data.y,2.5,'rgba(255,0,255,1)'); });
+                        //backward route
+                        if(scannedRoutes[route_destination] == undefined){ scannedRoutes[route_destination] = {}; }
+                        scannedRoutes[route_destination][route_source] = {
+                            index: index_source,
+                            polyIndex: graphPoint_source.polyIndex, 
+                            pointIndex: graphPoint_source.pointIndex,
+                            distance: distance,
+                        };
+                        graphPoint_destination.destination.push( scannedRoutes[route_destination][route_source] );
+                    }
+                });
+            });
         
-        //             //get first collision point and that poly
-        //                 const collisionPoints = collidedPolys.map(result => ({x:                                                result.data.x,y:result.data.y}) );
-        //                 const collisionDistances = collisionPoints.map(point => library.math.distanceBetweenTwpPoints(point_a,point) );
-        //                 const smallestCollisionDistanceIndex = collisionDistances.indexOf(Math.min(...collisionDistances));
-        //                 const collisionPoint = collisionPoints[smallestCollisionDistanceIndex];
-        //                 const collisionPoly = polys[collidedPolys[smallestCollisionDistanceIndex].index];
+            return graph;
+        };
+        this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
         
-        //             //get articulation point around that poly
-        //                 const possiblePoints = [];
-        //                 for(let a = 0; a < collisionPoly.points.length; a++){
-        //                     const angle = library.math.getAngleOfTwoPoints(collisionPoint,collisionPoly.points[a]) - library.math.getAngleOfTwoPoints(collisionPoint,point_b);
-        //                     if( angle < Math.PI/2 || angle > Math.PI*2 - Math.PI/2 ){
-        //                         if(
-        //                             collisionPoly.points[a].x == point_a.x && collisionPoly.points[a].y == point_a.y ||
-        //                             collisionPoly.points[a].x == point_b.x && collisionPoly.points[a].y == point_b.y ||
-        //                             previouslyVisitedPoints.indexOf(collisionPoly.points[a]) != -1
-        //                         ){
-        //                             continue;
-        //                         }
+            //set the 'current' location as the start
+                let current = start;
         
-        //                         possiblePoints.push({
-        //                             point: collisionPoly.points[a],
-        //                             distance: library.math.distanceBetweenTwpPoints(point_a,collisionPoly.points[a]) + library.math.distanceBetweenTwpPoints(point_b,collisionPoly.points[a]),
-        //                         });
-        //                     }
-        //                 }
-        //                 const articulationPoint = possiblePoints[
-        //                     possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance))))
-        //                 ].point;
-        //                 previouslyVisitedPoints.push(articulationPoint);
+            //if in a cruel twist of fate, the ending location is the starting location;
+            //create a new starting location with all the same data, and set that as
+            //the 'current' location
+                if(start == end){
+                    visibilityGraph['_'+start] = JSON.parse(JSON.stringify(visibilityGraph[start]));
+                    current = '_'+start;
+                }
         
-        //             //recursive dive on both sides
-        //                 const articulationPoints_upstream = getPointsInBetween(point_a,articulationPoint,polys);
-        //                 const articulationPoints_downstream = getPointsInBetween(articulationPoint,point_b,polys);
+            //generate the location set
+            //(don't forget to set the current location's distance to zero)
+                const locationSet = Object.keys(visibilityGraph).map( () => ({ distance:Infinity, visited:false, route:'' }) );
+                locationSet[current].distance = 0;
         
-        //             return articulationPoints_upstream.concat(articulationPoint).concat(articulationPoints_downstream);
-        //         };
+            //loop through locations, until the end location has been visited
+                do{
+                    //update unvisited distance values
+                        for(let a = 0; a < visibilityGraph[current].destination.length; a++){
+                            if( locationSet[visibilityGraph[current].destination[a].index].visited ){
+                                continue;
+                            }
         
-        //         //get path
-        //             const previouslyVisitedPoints = [];
-        //             const path = [point_a].concat(getPointsInBetween(point_a,point_b,polys)).concat(point_b);
+                            //only update the value if this new value is smaller than the one it already has
+                            const newValue = locationSet[current].distance + visibilityGraph[current].destination[a].distance;
+                            if( newValue < locationSet[visibilityGraph[current].destination[a].index].distance ){
+                                locationSet[visibilityGraph[current].destination[a].index].route = current;
+                                locationSet[visibilityGraph[current].destination[a].index].distance = newValue;
+                            }
+                        }
         
-        //         //go back over path to remove any detours
-        //             for(let a = 0; a < path.length-2; a++){
-        //                 const collisionPoints = library.math.detectOverlap.overlappingLineWithPolygons({ x1:path[a].x, y1:path[a].y, x2:path[a+2].x, y2:path[a+2].y }, polys, true)
-        //                     .map(i => i.data)
-        //                     .filter(point => !(point.x == path[a].x && point.y == path[a].y || point.x == path[a+2].x && point.y == path[a+2].y));
-        //                 if(collisionPoints.length == 0){
-        //                     path.splice(path.indexOf(path[a+1]),1);
-        //                     a = -1;
-        //                 }
-        //             }
+                    //mark current location as visited
+                        locationSet[current].visited = true;
         
-        //         return path;
-        //     }
-        // };
+                    //find location with smallest distance value - that is unvisited - and set it as the current
+                        let smallest = Infinity;
+                        Object.keys(locationSet).forEach(location => {
+                            if(!locationSet[location].visited && locationSet[location].distance < smallest ){
+                                smallest = locationSet[location].distance;
+                                current = location;
+                            }
+                        });
+                }while( !locationSet[end].visited )
+            
+            //go back through the location set to discover the shortest route
+                let route = [];
+                current = end;
+                while(current != start){
+                    route.unshift(parseInt(current));
+                    current = locationSet[current].route;
+                }
+                route.unshift(parseInt(current));
+        
+            return route;
+        };
+
     };
     this.glsl = new function(){
         this.geometry = `
@@ -1309,21 +1466,15 @@ const library = new function(){
     };
     this.font = new function(){
         this.listAllAvailableGlyphs = function(fontFileData){
-            dev.log.font('.listAllAvailableGlyphs('+JSON.stringify(fontFileData)+')'); //#development
-            dev.count('.font.listAllAvailableGlyphs'); //#development
         
             const font = this.decodeFont(fontFileData);
             return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
         };
         this.decodeFont = function(fontFileData){
-            dev.log.font('.decodeFont('+JSON.stringify(fontFileData)+')'); //#development
-            dev.count('.font.decodeFont'); //#development
         
             return _thirdparty.opentype.parse(fontFileData);
         };
         this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
-            dev.log.font('.getAllAvailableGlyphDrawingPaths('+font+','+JSON.stringify(reducedGlyphSet)+')'); //#development
-            dev.count('.font.getAllAvailableGlyphDrawingPaths'); //#development
         
             const glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
             const paths = glyphs.map( a => font.getPath(a,0,0,1) );
@@ -1336,8 +1487,6 @@ const library = new function(){
             return outputData;
         };
         this.convertPathToPoints = function(path,detail=2){
-            dev.log.font('.convertPathToPoints('+JSON.stringify(path)+','+detail+')'); //#development
-            dev.count('.font.convertPathToPoints'); //#development
         
             let output = [];
             let currentPoints = [];
@@ -1381,8 +1530,6 @@ const library = new function(){
             return output;
         };
         this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
-            dev.log.font('.getTrianglesFromGlyphPath('+JSON.stringify(glyphPath)+','+detail+')'); //#development
-            dev.count('.font.getTrianglesFromGlyphPath'); //#development
         
             //input checking
                 if(glyphPath.length == 0){return [];}
@@ -1436,8 +1583,6 @@ const library = new function(){
                 return triangles;
         };
         this.extractGlyphs = function(fontFileData,reducedGlyphSet){
-            dev.log.font('.extractGlyphs('+JSON.stringify(fontFileData)+','+JSON.stringify(reducedGlyphSet)+')'); //#development
-            dev.count('.font.extractGlyphs'); //#development
         
             //decode font data
                 const font = library.font.decodeFont(fontFileData);
@@ -2529,16 +2674,12 @@ const library = new function(){
         
         
         this.getLoadableFonts = function(){ 
-            dev.log.font('.getLoadableFonts()'); //#development
-            dev.count('.font.getLoadableFonts'); //#development
         
             const defaultFontNames = ['defaultThick','defaultThin'];
             const loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
             return defaultFontNames.concat(loadableFontNames);
         };
         this.getLoadedFonts = function(){
-            dev.log.font('.getLoadedFonts()'); //#development
-            dev.count('.font.getLoadedFonts'); //#development
         
             const defaultFontNames = ['defaultThick','defaultThin'];
             const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
@@ -2546,28 +2687,20 @@ const library = new function(){
         };
         
         this.isApprovedFont = function(fontName){
-            dev.log.font('.isApprovedFont('+fontName+')'); //#development
-            dev.count('.font.isApprovedFont'); //#development
         
             return vectorLibrary[fontName] != undefined;
         };
         this.isFontLoaded = function(fontName){
-            dev.log.font('.isFontLoaded('+fontName+')'); //#development
-            dev.count('.font.isFontLoaded'); //#development
         
             if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
             return vectorLibrary[fontName].isLoaded;
         }
         this.fontLoadAttempted = function(fontName){
-            dev.log.font('.fontLoadAttempted('+fontName+')'); //#development
-            dev.count('.font.fontLoadAttempted'); //#development
         
             if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
             return vectorLibrary[fontName].loadAttempted;
         }
         this.loadFont = function(fontName,onLoaded=()=>{}){
-            dev.log.font('.loadFont('+fontName+','+JSON.stringify(onLoaded)+')'); //#development
-            dev.count('.font.loadFont'); //#development
         
             if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
         
@@ -2602,8 +2735,6 @@ const library = new function(){
     };
     this.misc = new function(){
         this.padString = function(string,length,padding=' ',paddingSide='l'){
-            dev.log.misc('.padString('+string+','+length+','+padding+','+paddingSide+')'); //#development
-            dev.count('.misc.padString'); //#development
         
             if(padding.length<1){return string;}
             string = ''+string;
@@ -2617,20 +2748,14 @@ const library = new function(){
             return string;
         };
         this.compressString = function(string){
-            dev.log.misc('.compressString('+string+')'); //#development
-            dev.count('.misc.compressString'); //#development
         
             return _thirdparty.lzString.compress(string);
         };
         this.decompressString = function(string){
-            dev.log.misc('.decompressString('+string+')'); //#development
-            dev.count('.misc.decompressString'); //#development
         
             return _thirdparty.lzString.decompress(string);
         };
         this.serialize = function(data,compress=true){
-            dev.log.misc('.serialize('+JSON.stringify(data)+','+compress+')'); //#development
-            dev.count('.misc.serialize'); //#development
         
             function getType(obj){
                 return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -2667,8 +2792,6 @@ const library = new function(){
             return data;
         };
         this.unserialize = function(data,compressed=true){
-            dev.log.misc('.unserialize('+JSON.stringify(data)+','+compressed+')'); //#development
-            dev.count('.misc.unserialize'); //#development
         
             if(data === undefined){return undefined;}
         
@@ -2710,14 +2833,44 @@ const library = new function(){
                 return value;
             });
         };
-        this.openFile = function(callback,readAsType='readAsBinaryString'){
-            dev.log.misc('.openFile('+JSON.stringify(callback)+','+readAsType+')'); //#development
-            dev.count('.misc.openFile'); //#development
+        this.packData = function(data,compress=true){
+            return library.misc.serialize({ 
+                compressed:compress, 
+                data:library.misc.serialize(data,compress)
+            },false);
+        };
+        this.unpackData = function(data){
         
-            var i = document.createElement('input');
+            //deserialize first layer
+                try{
+                    data = library.misc.unserialize(data,false);
+                }catch(e){
+                    console.error( "Major error unserializing first layer of file" );
+                    console.error(e);
+                    return null;
+                }
+        
+            //determine if this data is compressed or not
+                const compressed = data.compressed;
+        
+            //deserialize second layer (knowing now whether it's compressed or not)
+                try{
+                    data = library.misc.unserialize(data.data,compressed);
+                }catch(e){
+                    console.error( "Major error unserializing second layer of file" );
+                    console.error(e);
+                    return null;
+                }
+        
+            return data;
+        };
+        this.openFile = function(callback,readAsType='readAsBinaryString'){
+        
+            const i = document.createElement('input');
             i.type = 'file';
+            i.accept = '.crv';
             i.onchange = function(){
-                var f = new FileReader();
+                const f = new FileReader();
                 switch(readAsType){
                     case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
                     case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
@@ -2726,11 +2879,12 @@ const library = new function(){
                     if(callback){callback(f.result);}
                 }
             };
+        
+            document.body.appendChild(i);
             i.click();
+            setTimeout(() => {document.body.removeChild(i);},1000);
         };
         this.printFile = function(filename,data){
-            dev.log.misc('.printFile('+filename+','+JSON.stringify(data)+')'); //#development
-            dev.count('.misc.printFile'); //#development
         
             var a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([data]));
@@ -2738,12 +2892,10 @@ const library = new function(){
             a.click();
         };
         this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
-            dev.log.misc('.loadFileFromURL('+URL+','+JSON.stringify(callback)+','+responseType+','+JSON.stringify(errorCallback)+')'); //#development
-            dev.count('.misc.loadFileFromURL'); //#development
         
             //responseType: text / arraybuffer / blob / document / json 
         
-            var xhttp = new XMLHttpRequest();
+            const xhttp = new XMLHttpRequest();
             if(callback != undefined){ xhttp.onloadend = a => {
                 if(a.target.status == 200){ callback(a.target.response); }
                 else{ 
@@ -2761,6 +2913,81 @@ const library = new function(){
                 outputArray.push( argumentsObject[a] );
             }
             return outputArray;
+        };
+        this.comparer = function(item1,item2){
+            function getType(obj){
+                return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+            }
+        
+            if(getType(item1) != getType(item2)){ return false; }
+            if(typeof item1 == 'boolean' || typeof item1 == 'string'){ return item1 === item2; }
+            if(typeof item1 == 'number'){
+                if( Math.abs(item1) < 1.0e-14 ){item1 = 0;}
+                if( Math.abs(item2) < 1.0e-14 ){item2 = 0;}
+                if( Math.abs(item1 - item2) < 1.0e-14 ){return true;}
+                return item1 === item2;
+            }
+            if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
+            if(getType(item1) == 'function'){
+                item1 = item1.toString();
+                item2 = item2.toString();
+        
+                let item1_functionHead = item1.substring(0,item1.indexOf('{'));
+                item1_functionHead = item1_functionHead.substring(item1_functionHead.indexOf('(')+1, item1_functionHead.lastIndexOf(')'));
+                const item1_functionBody = item1.substring(item1.indexOf('{')+1, item1.lastIndexOf('}'));
+        
+                let item2_functionHead = item2.substring(0,item2.indexOf('{'));
+                item2_functionHead = item2_functionHead.substring(item2_functionHead.indexOf('(')+1, item2_functionHead.lastIndexOf(')'));
+                const item2_functionBody = item2.substring(item2.indexOf('{')+1, item2.lastIndexOf('}'));
+        
+                return item1_functionHead.trim() == item2_functionHead.trim() && item1_functionBody.trim() == item2_functionBody.trim();
+            }
+            if(typeof item1 == 'object'){
+                const keys1 = Object.keys(item1);
+                const keys2 = Object.keys(item2);
+                if(keys1.length != keys2.length){return false;}
+        
+                for(let a = 0; a < keys1.length; a++){ 
+                    if( keys1.indexOf(keys2[a]) == -1 || !library.misc.comparer(item1[keys1[a]],item2[keys1[a]])){return false;}
+                }
+                return true;
+            }
+            return false;
+        };
+        this.removeThisFromThatArray = function(item,array){
+            const index = array.findIndex(a => library.misc.comparer(a,item))
+            if(index == -1){return;}
+            return array.splice(index,1);
+        };
+        this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+        
+            theseElements.forEach(a => library.misc.removeThisFromThatArray(a,thatArray) );
+            return thatArray;
+        };
+        this.getDifferenceOfArrays = function(array_a,array_b){
+        
+            if(array_a.length == 0 && array_b.length == 0){
+                return {a:[],b:[]};
+            }
+            if(array_a.length == 0){
+                return {a:[],b:array_b};
+            }
+            if(array_b.length == 0){
+                return {a:array_a,b:[]};
+            }
+        
+            function arrayRemovals(a,b){
+                a.forEach(item => {
+                    let i = b.indexOf(item);
+                    if(i != -1){ b.splice(i,1); }
+                });
+                return b;
+            }
+        
+            return {
+                a:arrayRemovals(array_b,array_a.slice()),
+                b:arrayRemovals(array_a,array_b.slice())
+            };
         };
     };
     const _thirdparty = new function(){
@@ -21062,25 +21289,18 @@ const communicationModuleMaker = function(communicationObject,callerName){
     const messagingCallbacks = {};
 
     function generateMessageID(){
-        self.log('::generateMessageID()'); //#development
         return messageId++;
     }
 
     communicationObject.onmessage = function(encodedPacket){
-        self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
         let message = encodedPacket.data;
 
         if(message.outgoing){
-            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
             if(message.cargo.function in self.function){
-                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
-                self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                 if(message.id == null){
-                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                     self.function[message.cargo.function](...message.cargo.arguments);
                 }else{
-                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                     communicationObject.postMessage({
                         id:message.id,
                         outgoing:false,
@@ -21088,35 +21308,25 @@ const communicationModuleMaker = function(communicationObject,callerName){
                     });
                 }
             }else if(message.cargo.function in self.delayedFunction){
-                self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
-                self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                 if(message.id == null){
-                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                 }else{
-                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                     cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
                         communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
                     }].concat(message.cargo.arguments));
                 }
             }else{
-                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
             }
         }else{
-            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
-            self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
             messagingCallbacks[message.id](message.cargo);
             delete messagingCallbacks[message.id];
         }
     };
     this.run = function(functionName,argumentList=[],callback,transferables){
-        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
         let id = null;
         if(callback != undefined){
-            self.log('.run -> callback was defined; generating message ID'); //#development
             id = generateMessageID();
-            self.log('.run -> message ID:',id); //#development
             messagingCallbacks[id] = callback;
         }
         communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
@@ -21124,110 +21334,62 @@ const communicationModuleMaker = function(communicationObject,callerName){
 };
 const communicationModule = new communicationModuleMaker(this,'core_engine');
 
-const dev = {
-    prefix:'core_engine',
+const dev = new function(){
+    const prefix = 'core_engine';
+    const active = {
+        element:false,
+        elementLibrary:{
+            group:false,
+            rectangle:false,
+            rectangleWithOutline:false,
+            circle:false,
+            circleWithOutline:false,
+            polygon:false,
+            polygonWithOutline:false,
+            path:false,
+            image:false,
+            canvas:false,
+            character:false,
+            characterString:false,
+            characterFonts:false,
+        },
+        arrangement:false,
+        render:false,
+        viewport:false,
+        stats:false,
+        callback:false,
+        service:false,
+        interface:false,
+    };
 
-    element:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
-    elementLibrary:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
-    arrangement:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
-    render:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
-    viewport:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
-    stats:{active:false,fontStyle:'color:rgb(24, 53, 157); font-style:italic;'},
-    callback:{active:false,fontStyle:'color:rgb(66, 145, 115); font-style:italic;'},
-    service:{active:false,fontStyle:'color:rgb(145, 125, 124); font-style:italic;'},
-    interface:{active:false,fontStyle:'color:rgb(128, 131, 137); font-style:italic;'},
+    this.log = {};
+    Object.entries(active).forEach(entry => {
+        if(typeof entry[1] == 'object'){
+            this.log[entry[0]] = {};
+            Object.keys(active[entry[0]]).forEach(key => {
+                this.log[entry[0]][key] = function(){
+                    if(active[entry[0]][key]){ 
+                        console.log( prefix+'.'+entry[0]+'.'+key+arguments[0], ...(new Array(...arguments).slice(1)) );
+                    }
+                };
+            });
+        }else{
+            this.log[entry[0]] = function(){
+                if(active[entry[0]]){ 
+                    console.log( prefix+'.'+entry[0]+arguments[0], ...(new Array(...arguments).slice(1)) );
+                }
+            };
+        }
+    });
 
-    log:{
-        element:function(data){
-            if(!dev.element.active){return;}
-            console.log('%c'+dev.prefix+'.element'+(new Array(...arguments).join(' ')), dev.element.fontStyle );
-        },
-        elementLibrary:function(elementType,address,data){
-            if(!dev.elementLibrary.active){return;}
-            address = address != undefined ? '['+address+']' : '';
-            console.log('%c'+dev.prefix+'.elementLibrary.'+elementType+address+(new Array(...arguments).slice(2).join(' ')), dev.elementLibrary.fontStyle );
-        },
-        arrangement:function(data){
-            if(!dev.arrangement.active){return;}
-            console.log('%c'+dev.prefix+'.arrangement'+(new Array(...arguments).join(' ')), dev.arrangement.fontStyle );
-        },
-        render:function(data){
-            if(!dev.render.active){return;}
-            console.log('%c'+dev.prefix+'.render'+(new Array(...arguments).join(' ')), dev.render.fontStyle );
-        },
-        viewport:function(data){
-            if(!dev.viewport.active){return;}
-            console.log('%c'+dev.prefix+'.viewport'+(new Array(...arguments).join(' ')), dev.viewport.fontStyle );
-        },
-        stats:function(data){
-            if(!dev.stats.active){return;}
-            console.log('%c'+dev.prefix+'.stats'+(new Array(...arguments).join(' ')), dev.stats.fontStyle );
-        },
-        callback:function(data){
-            if(!dev.callback.active){return;}
-            console.log('%c'+dev.prefix+'.callback'+(new Array(...arguments).join(' ')), dev.callback.fontStyle );
-        },
-        service:function(data){
-            if(!dev.service.active){return;}
-            console.log('%c'+dev.prefix+'.service'+(new Array(...arguments).join(' ')), dev.service.fontStyle );
-        },
-        interface:function(data){
-            if(!dev.interface.active){return;}
-            console.log('%c'+dev.prefix+'.interface'+(new Array(...arguments).join(' ')), dev.interface.fontStyle );
-        },
-    },
-
-    testLoggers:function(){
-        const element = dev.element.active;
-        const elementLibrary = dev.elementLibrary.active;
-        const arrangement = dev.arrangement.active;
-        const render = dev.render.active;
-        const viewport = dev.viewport.active;
-        const stats = dev.stats.active;
-        const callback = dev.callback.active;
-        const service = dev.service.active;
-        const interface = dev.interface.active;
-
-        dev.element.active = true;
-        dev.elementLibrary.active = true;
-        dev.arrangement.active = true;
-        dev.render.active = true;
-        dev.viewport.active = true;
-        dev.stats.active = true;
-        dev.callback.active = true;
-        dev.service.active = true;
-        dev.interface.active = true;
-
-        dev.log.element('.testLoggers -> element');
-        dev.log.elementLibrary('elementType','/address/goes/here/','.testLoggers -> elementLibrary');
-        dev.log.arrangement('.testLoggers -> arrangement');
-        dev.log.render('.testLoggers -> render');
-        dev.log.viewport('.testLoggers -> viewport');
-        dev.log.stats('.testLoggers -> stats');
-        dev.log.callback('.testLoggers -> callback');
-        dev.log.service('.testLoggers -> service');
-        dev.log.interface('.testLoggers -> interface');
-
-        dev.element.active = element;
-        dev.elementLibrary.active = elementLibrary;
-        dev.arrangement.active = arrangement;
-        dev.render.active = render;
-        dev.viewport.active = viewport;
-        dev.stats.active = stats;
-        dev.callback.active = callback;
-        dev.service.active = service;
-        dev.interface.active = interface;
-    },
-};
-const report = {
-    info:function(){ console.log(...['core_engine.report.info:'].concat(...new Array(...arguments))); },
-    warning:function(){ console.warn(...['core_engine.report.warning:'].concat(...new Array(...arguments))); },
-    error:function(){ console.error(...['core_engine.report.error:'].concat(...new Array(...arguments))); },
-    testReporters:function(){
-        report.info('info');
-        report.warning('warning');
-        report.error('error');
-    },
+    const countActive = !false;
+    const countMemory = {};
+    this.count = function(commandTag){
+        if(!countActive){return;}
+        if(commandTag in countMemory){ countMemory[commandTag]++; }
+        else{ countMemory[commandTag] = 1; }
+    };
+    this.countResults = function(){return countMemory;};
 };
 
 const element = new function(){
@@ -21253,7 +21415,6 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         
@@ -21273,52 +21434,44 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.heedCamera = function(a){
                             if(a==undefined){return heedCamera;}     
                             heedCamera = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.heedCamera('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                    console.warn(type,id+'['+self.getAddress()+'].unifiedAttribute -> unknown attribute "'+key+'" which was being set to "',attributes[key]+'"');
                                 }
                             });
                             allowComputeExtremities = true;
@@ -21349,21 +21502,15 @@ const element = new function(){
             
                     this.children = function(){return children;};
                     this.syncChildren = function(foreignChildren){
-                        dev.log.elementLibrary(type,self.getAddress(),'.syncChildren('+JSON.stringify(foreignChildren)+')'); //#development
-                        dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
                         this.clear();
-                        dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
                         foreignChildren.forEach(child => {
                             this.append(child);
                         });
-                        dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
                     };
                     this.getChildByName = function(name){return getChildByName(name);};
                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
                     this.contains = function(element){ return checkForElement(element) != undefined; };
                     this.append = function(newElement){
-                        dev.log.elementLibrary(type,self.getAddress(),'.append('+JSON.stringify(newElement)+')'); //#development
-                        dev.log.elementLibrary(type,self.getAddress(),'.append -> children: ['+children.map(child => JSON.stringify(child))+']','newElement.name: '+(newElement!=undefined?newElement.name:'')); //#development
             
                         if( !isValidElement(newElement) ){ return false; } 
             
@@ -21376,7 +21523,6 @@ const element = new function(){
                         return true;
                     };
                     this.prepend = function(newElement){
-                        dev.log.elementLibrary(type,self.getAddress(),'.prepend('+JSON.stringify(newElement)+')'); //#development
             
                         if( !isValidElement(newElement) ){ return false; }
             
@@ -21389,22 +21535,21 @@ const element = new function(){
                         return true;
                     };
                     this.remove = function(newElement){
-                        dev.log.elementLibrary(type,self.getAddress(),'.remove('+JSON.stringify(newElement)+')'); //#development
                         if(newElement == undefined){return;}
-                        children.splice(children.indexOf(newElement), 1);
+            
+                        const index = children.indexOf(newElement);
+                        if(index != -1){ children.splice(index,1); }
                         augmentExtremities_remove(newElement);
             
                         newElement.parent = undefined;
                         delete childRegistry[newElement.name];
                     };
                     this.clear = function(){
-                        dev.log.elementLibrary(type,self.getAddress(),'.clear()'); //#development
                         children = [];
                         childRegistry = {};
                         return true;
                     };
                     this.getElementsUnderPoint = function(x,y){
-                        dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderPoint('+x+','+y+')'); //#development
             
                         let returnList = [];
             
@@ -21426,7 +21571,6 @@ const element = new function(){
                         return returnList;
                     };
                     this.getElementsUnderArea = function(points){
-                        dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderArea('+points+')'); //#development
             
                         let returnList = [];
             
@@ -21462,35 +21606,28 @@ const element = new function(){
                     const clipping = { stencil:undefined, active:false };
                     this.stencil = function(element){
                         if(element == undefined){return clipping.stencil;}
-                        dev.log.elementLibrary(type,self.getAddress(),'.stencil('+JSON.stringify(element)+')'); //#development
                         clipping.stencil = element;
                         clipping.stencil.parent = this;
                         if(clipping.active){ computeExtremities(); }
                     };
                     this.clipActive = function(bool){
                         if(bool == undefined){return clipping.active;}
-                        dev.log.elementLibrary(type,self.getAddress(),'.clipActive('+bool+')'); //#development
                         clipping.active = bool;
                         computeExtremities();
                     };
             
                 //extremities
                     function calculateExtremitiesBox(){
-                        dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox()'); //#development
             
                         let limits = {left:undefined,right:undefined,top:undefined,bottom:undefined};
                         if(children.length == 0){
-                            dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> no children'); //#development
                             limits = {left:x,right:x,top:y,bottom:y};
                         }else{
-                            dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> children.length: '+children.length); //#development
                             const firstChild = library.math.boundingBoxFromPoints(children[0].extremities.points);
-                            dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> firstChild: '+JSON.stringify(firstChild)); //#development
                             limits = { left:firstChild.topLeft.x, right:firstChild.bottomRight.x, top:firstChild.bottomRight.y, bottom:firstChild.topLeft.y }
             
                             children.slice(1).forEach(child => {
                                 const tmp = library.math.boundingBoxFromPoints(child.extremities.points);
-                                dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> child: '+JSON.stringify(tmp)); //#development
                                 if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
                                 else if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
                                 if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
@@ -21499,10 +21636,8 @@ const element = new function(){
                         }
             
                         self.extremities.points = [ {x:limits.left,y:limits.top}, {x:limits.right,y:limits.top}, {x:limits.right,y:limits.bottom}, {x:limits.left,y:limits.bottom} ];
-                        dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> self.extremities.points: '+JSON.stringify(self.extremities.points)); //#development
                     }
                     function updateExtremities(informParent=true){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities('+informParent+')'); //#development
                        
                         //generate extremity points
                             self.extremities.points = [];
@@ -21514,17 +21649,14 @@ const element = new function(){
                             }else{
                                 calculateExtremitiesBox();
                             }
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> extremities.points.length: '+self.extremities.points.length); //#development
             
                         //generate bounding box from points
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> self.extremities.boundingBox: '+JSON.stringify(self.extremities.boundingBox)); //#development
             
                         //update parent
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                     }
                     function augmentExtremities(element){
-                        dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities('+JSON.stringify(element)+')'); //#development
             
                         //get offset from parent
                             const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
@@ -21540,14 +21672,12 @@ const element = new function(){
                             element.computeExtremities(false,newOffset);
                         //augment points list
                             calculateExtremitiesBox();
-                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities -> extremities.points.length: '+self.extremities.points.length); //#development
                         //recalculate bounding box
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
                         //inform parent of change
                             if(self.parent){self.parent.updateExtremities();}
                     }
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -21567,11 +21697,9 @@ const element = new function(){
                             updateExtremities(informParent,offset);
                     }
                     function augmentExtremities_add(element){
-                        dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add('+JSON.stringify(element)+')'); //#development
             
                         //get offset from parent
                             const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add -> generated offset: '+JSON.stringify(offset)); //#development
                         //combine offset with group's position, angle and scale to produce new offset for children
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const newOffset = { 
@@ -21592,12 +21720,10 @@ const element = new function(){
                                 { x:self.extremities.boundingBox.topLeft.x, y:self.extremities.boundingBox.bottomRight.y },
                             ];
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add -> extremities.points.length: '+self.extremities.points.length); //#development
                         //inform parent of change
                             if(self.parent){self.parent.updateExtremities();}
                     }
                     function augmentExtremities_remove(element){
-                        dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove('+JSON.stringify(element)+')'); //#development
                         //this function assumes that the element has already been removed from the 'children' variable)
                         //is the element's bounding box within the bounding box of the group; if so, no recalculation need be done
                         //otherwise the element is touching the boundary, in which case search through the children for another 
@@ -21614,13 +21740,11 @@ const element = new function(){
                             }
                         };
                         if( data.topLeft.x != 0 && data.topLeft.y != 0 && data.bottomRight.x != 0 && data.bottomRight.y != 0 ){
-                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> easy remove: no changes to the group\'s bounding box required'); //#development
                             return;
                         }else{
                             ['topLeft','bottomRight'].forEach(cornerName => {
                                 ['x','y'].forEach(axisName => {
                                     if(data[cornerName][axisName] == 0){
-                                        dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> '+cornerName+'_'+axisName+' is at boundary'); //#development
             
                                         let boundaryToucherFound = false;
                                         let closestToBoundary = {distance:undefined, position:undefined};
@@ -21633,7 +21757,6 @@ const element = new function(){
                                         }
             
                                         if(!boundaryToucherFound){
-                                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> need to adjust the bounding box'); //#development
                                             self.extremities.boundingBox[cornerName][axisName] = closestToBoundary.position;
                                         }
                                     }
@@ -21643,12 +21766,10 @@ const element = new function(){
                     }
             
                     this.getOffset = function(){
-                        dev.log.elementLibrary(type,self.getAddress(),'.getOffset()'); //#development
             
                         let output = {x:0,y:0,scale:1,angle:0};
             
                         if(this.parent){
-                            dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> parent found'); //#development
                             const offset = this.parent.getOffset();
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             output = { 
@@ -21658,11 +21779,9 @@ const element = new function(){
                                 angle: offset.angle + angle,
                             };
                         }else{
-                            dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> no parent found'); //#development
                             output = {x:x ,y:y ,scale:scale ,angle:angle};
                         }
             
-                        dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> output: '+JSON.stringify(output)); //#development
                         return output;
                     };
                     this.computeExtremities = computeExtremities;
@@ -21675,7 +21794,6 @@ const element = new function(){
                         render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
                     }
                     this.render = function(context, offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
                         //combine offset with group's position, angle and scale to produce new offset for children
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const newOffset = { 
@@ -21702,17 +21820,14 @@ const element = new function(){
                         
                         //render children
                             children.forEach(function(a){
-                                dev.log.elementLibrary(type,self.getAddress(),'.render -> '+JSON.stringify(clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox())+' / '+JSON.stringify(a.extremities.boundingBox)); //#development
                                 if(
                                     library.math.detectOverlap.boundingBoxes(
                                         clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox(),
                                         a.extremities.boundingBox
                                     )
                                 ){ 
-                                    dev.log.elementLibrary(type,self.getAddress(),'.render -> rendering shape: '+a.name); //#development
                                     a.render(context,newOffset);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'.render -> not rendering shape: '+a.name); //#development
                                 }
                             });
             
@@ -21728,24 +21843,25 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> angle: '+angle);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> heedCamera: '+heedCamera);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
-                        report.info(self.getAddress(),'._dump -> children: '+JSON.stringify(children));
-                        report.info(self.getAddress(),'._dump -> childRegistry: '+JSON.stringify(childRegistry));
-                        report.info(self.getAddress(),'._dump -> clipping: '+JSON.stringify(clipping));
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent:',self.parent);
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities:',self.extremities);
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> x: '+x);
+                        console.log(self.getAddress(),'._dump -> y: '+y);
+                        console.log(self.getAddress(),'._dump -> angle: '+angle);
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump -> heedCamera: '+heedCamera);
+                        console.log(self.getAddress(),'._dump -> static: '+static);
+                        console.log(self.getAddress(),'._dump -> children.length: '+children.length);
+                        console.log(self.getAddress(),'._dump -> children:',children);
+                        console.log(self.getAddress(),'._dump -> childRegistry:',childRegistry);
+                        console.log(self.getAddress(),'._dump -> clipping:',clipping);
                     };
                 
                 //interface
@@ -21799,14 +21915,12 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                         };
                         
                     //advanced use attributes
@@ -21827,64 +21941,54 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.anchor('+JSON.stringify(a)+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                    console.warn(type,id+'['+self.getAddress()+'].unifiedAttribute -> unknown attribute "'+key+'" which was being set to "',attributes[key]);
                                 }
                             });
                             allowComputeExtremities = true;
@@ -21926,22 +22030,20 @@ const element = new function(){
                     `;
                     const fragmentShaderSource = `#version 300 es
                         precision mediump float;
-                        out vec4 outputColor;
+                        out vec4 outputColour;
                         uniform vec4 colour;
                                                                                     
                         void main(){
-                            outputColor = colour;
+                            outputColour = colour;
                         }
                     `;
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -21949,14 +22051,12 @@ const element = new function(){
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
                         
                         //uniforms
                             if(uniformLocations == undefined){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -21968,24 +22068,16 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                             context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                             context.uniform2f(uniformLocations["dimensions"], width, height);
                             context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
+                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                 
                         context.useProgram(program);
@@ -21995,20 +22087,17 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> point'+JSON.stringify(point)); //#development
                             const adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
                                 scale: offset.scale*scale,
                                 angle: -(offset.angle + angle),
                             };
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> adjusted'+JSON.stringify(adjusted)); //#development
                         //calculate points based on the adjusted offset
                             self.extremities.points = [];
                             for(let a = 0; a < points.length; a+=2){
@@ -22023,8 +22112,6 @@ const element = new function(){
                                 });
                             }
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.points:'+JSON.stringify(self.extremities.points)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.boundingBox:'+JSON.stringify(self.extremities.boundingBox)); //#development
                     
                         //if told to do so, inform parent (if there is one) that extremities have changed
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -22040,7 +22127,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -22059,24 +22145,24 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> angle: '+angle);
-                        report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        report.info(self.getAddress(),'._dump -> width: '+width);
-                        report.info(self.getAddress(),'._dump -> height: '+height);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        console.log('['+self.getAddress()+']','._dump()');
+                        console.log('['+self.getAddress()+']','._dump -> id: '+id);
+                        console.log('['+self.getAddress()+']','._dump -> type: '+type);
+                        console.log('['+self.getAddress()+']','._dump -> name: '+self.name);
+                        console.log('['+self.getAddress()+']','._dump -> address: '+'['+self.getAddress()+']');
+                        console.log('['+self.getAddress()+']','._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log('['+self.getAddress()+']','._dump -> dotFrame: '+self.dotFrame);
+                        console.log('['+self.getAddress()+']','._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log('['+self.getAddress()+']','._dump -> ignored: '+ignored);
+                        console.log('['+self.getAddress()+']','._dump -> colour: '+JSON.stringify(colour));
+                        console.log('['+self.getAddress()+']','._dump -> x: '+x);
+                        console.log('['+self.getAddress()+']','._dump -> y: '+y);
+                        console.log('['+self.getAddress()+']','._dump -> angle: '+angle);
+                        console.log('['+self.getAddress()+']','._dump -> anchor: '+JSON.stringify(anchor));
+                        console.log('['+self.getAddress()+']','._dump -> width: '+width);
+                        console.log('['+self.getAddress()+']','._dump -> height: '+height);
+                        console.log('['+self.getAddress()+']','._dump -> scale: '+scale);
+                        console.log('['+self.getAddress()+']','._dump -> static: '+static);
                     };
                 
                 //interface
@@ -22115,20 +22201,17 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.lineColour('+JSON.stringify(a)+')'); //#development
                         };
                         
                     //advanced use attributes
@@ -22151,66 +22234,55 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.anchor('+JSON.stringify(a)+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.thickness = function(a){ 
                             if(a==undefined){return thickness;} 
                             thickness = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.thickness('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, thickness:thickness, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -22313,23 +22385,21 @@ const element = new function(){
                     `;
                     const fragmentShaderSource = `#version 300 es
                         precision mediump float;
-                        out vec4 outputColor;
+                        out vec4 outputColour;
                         in vec4 activeColour;
                                                                                     
                         void main(){
-                            outputColor = activeColour;
+                            outputColour = activeColour;
                         }
                     `;
                     const point = { buffer:undefined, attributeLocation:undefined };
                     const index = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -22337,13 +22407,11 @@ const element = new function(){
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
                             //index
                                 if(index.buffer == undefined){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating index.buffer...'); //#development
                                     index.attributeLocation = context.getAttribLocation(program, "index");
                                     index.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(index.attributeLocation);
@@ -22351,14 +22419,12 @@ const element = new function(){
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating index.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                 }
                             
                         //uniforms
                             if(uniformLocations == undefined){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -22372,15 +22438,6 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> thickness:'+thickness); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> lineColour:'+JSON.stringify(lineColour)); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -22388,12 +22445,11 @@ const element = new function(){
                             context.uniform2f(uniformLocations["dimensions"], width, height);
                             context.uniform1f(uniformLocations["thickness"], thickness);
                             context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
-                            context.uniform4f(uniformLocations["lineColour"], lineColour.r, lineColour.g, lineColour.b, lineColour.a);
+                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
+                            context.uniform4f(uniformLocations["lineColour"], lineColour.r*lineColour.a, lineColour.g*lineColour.a, lineColour.b*lineColour.a, lineColour.a);
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                 
                         context.useProgram(program);
@@ -22403,20 +22459,17 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                                     
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> point'+JSON.stringify(point)); //#development
                             const adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
                                 scale: offset.scale*scale,
                                 angle: -(offset.angle + angle),
                             };
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> adjusted'+JSON.stringify(adjusted)); //#development
                         //calculate points based on the adjusted offset
                             self.extremities.points = [];
                             for(let a = 0; a < points.length; a+=2){
@@ -22431,8 +22484,6 @@ const element = new function(){
                                 });
                             }
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.points:'+JSON.stringify(self.extremities.points)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.boundingBox:'+JSON.stringify(self.extremities.boundingBox)); //#development
                     
                         //if told to do so, inform parent (if there is one) that extremities have changed
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -22448,7 +22499,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -22527,14 +22577,12 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                         };
                         
                     //advanced use attributes
@@ -22554,49 +22602,41 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.radius = function(a){ 
                             if(a==undefined){return radius;} 
                             radius = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.radius('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.detail = function(a){ 
                             if(a==undefined){return detail;}
                             detail = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.detail('+a+')'); //#development
                             calculateCirclePoints();
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -22660,12 +22700,10 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -22674,14 +22712,12 @@ const element = new function(){
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                     pointsChanged = false;
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                         //uniforms
                             if(uniformLocations == undefined){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -22692,18 +22728,12 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> radius:'+radius); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                             context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                             context.uniform1f(uniformLocations["radius"], radius);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
+                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
                     }
                     let program;
                     function activateGLRender(context,adjust){
@@ -22716,7 +22746,6 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
             
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -22751,7 +22780,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
                     };
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){    
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development     
                     
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -22822,20 +22850,17 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.lineColour('+JSON.stringify(a)+')'); //#development
                         };
                     
                     //advanced use attributes
@@ -22856,55 +22881,46 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.radius = function(a){ 
                             if(a==undefined){return radius;} 
                             radius = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.radius('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.detail = function(a){ 
                             if(a==undefined){return detail;}
                             detail = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.detail('+a+')'); //#development
                             calculateCirclePoints();
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.thickness = function(a){ 
                             if(a==undefined){return thickness;} 
                             thickness = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.thickness('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, radius:radius, detail:detail, scale:scale, thickness:thickness, static:static}; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -22988,12 +23004,10 @@ const element = new function(){
                     const index = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -23002,13 +23016,11 @@ const element = new function(){
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                     pointsChanged = false;
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                             }
                             //index
                                 if(index.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating index.buffer...'); //#development
                                     index.attributeLocation = context.getAttribLocation(program, "index");
                                     index.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(index.attributeLocation);
@@ -23016,14 +23028,12 @@ const element = new function(){
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating index.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                 }
             
                         //uniforms
                             if(uniformLocations == undefined){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -23037,28 +23047,18 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> radius:'+radius); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> thickness:'+thickness); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> lineColour:'+JSON.stringify(lineColour)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> indexParting:'+points.length/4); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                             context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                             context.uniform1f(uniformLocations["radius"], radius);
                             context.uniform1f(uniformLocations["thickness"], thickness);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
-                            context.uniform4f(uniformLocations["lineColour"], lineColour.r, lineColour.g, lineColour.b, lineColour.a);
+                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
+                            context.uniform4f(uniformLocations["lineColour"], lineColour.r*lineColour.a, lineColour.g*lineColour.a, lineColour.b*lineColour.a, lineColour.a);
                             context.uniform1f(uniformLocations["indexParting"], points.length/4);
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -23068,7 +23068,6 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
             
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -23103,7 +23102,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
                     };
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -23177,14 +23175,12 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                         };
                         
                     //advanced use attributes
@@ -23201,7 +23197,6 @@ const element = new function(){
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.points('+JSON.stringify(points)+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                         };
@@ -23213,31 +23208,26 @@ const element = new function(){
                             }
             
                             if(a==undefined){ return pointsToXYArray(); }
-                            dev.log.elementLibrary(type,self.getAddress(),'.pointsAsXYArray('+JSON.stringify(a)+')'); //#development
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, points:points, pointsChanged:pointsChanged, scale:scale, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -23284,30 +23274,24 @@ const element = new function(){
                     let drawingPoints = [];
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = library.math.polygonToSubTriangles(points,'flatArray')), context.STATIC_DRAW);
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> points:'+JSON.stringify(points)); //#development
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> drawingPoints:'+JSON.stringify(points)); //#development
                                     pointsChanged = false;
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -23317,20 +23301,14 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                             context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
+                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -23341,7 +23319,6 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
@@ -23366,7 +23343,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -23425,20 +23401,17 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.lineColour('+JSON.stringify(a)+')'); //#development
                         };
                         
                     //advanced use attributes
@@ -23459,7 +23432,6 @@ const element = new function(){
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.points('+JSON.stringify(points)+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                         };
@@ -23471,59 +23443,50 @@ const element = new function(){
                             }
             
                             if(a==undefined){ return pointsToXYArray(); }
-                            dev.log.elementLibrary(type,self.getAddress(),'.pointsAsXYArray('+JSON.stringify(a)+')'); //#development
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.thickness = function(a){
                             if(thickness==undefined){return thickness;}     
                             thickness = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.thickness('+thickness+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                         };
                         this.jointDetail = function(a){
                             if(jointDetail==undefined){return jointDetail;}     
                             jointDetail = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.jointDetail('+jointDetail+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                         };
                         this.jointType = function(a){
                             if(jointType==undefined){return jointType;}     
                             jointType = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.jointType('+jointType+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                         };
                         this.sharpLimit = function(a){
                             if(sharpLimit==undefined){return sharpLimit;}     
                             sharpLimit = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.sharpLimit('+sharpLimit+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -23585,12 +23548,10 @@ const element = new function(){
                     let drawingPoints = [];
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){            
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
                 
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     point.triangles = library.math.polygonToSubTriangles(points,'flatArray');
@@ -23598,16 +23559,12 @@ const element = new function(){
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = point.triangles.concat(loopedLineGenerator())), context.STATIC_DRAW);
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> points:'+JSON.stringify(points)); //#development
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> drawingPoints:'+JSON.stringify(points)); //#development
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
                             //index
                                 if(index.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating index.buffer...'); //#development
                                     index.attributeLocation = context.getAttribLocation(program, "index");
                                     index.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(index.attributeLocation);
@@ -23616,14 +23573,12 @@ const element = new function(){
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:point.triangles.length/2 + loopedLineGenerator().length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                                     pointsChanged = false;
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating index.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -23635,24 +23590,16 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> lineColour:'+JSON.stringify(lineColour)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> indexParting:'+point.triangles.length/2); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                             context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
-                            context.uniform4f(uniformLocations["lineColour"], lineColour.r, lineColour.g, lineColour.b, lineColour.a);
+                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
+                            context.uniform4f(uniformLocations["lineColour"], lineColour.r*lineColour.a, lineColour.g*lineColour.a, lineColour.b*lineColour.a, lineColour.a);
                             context.uniform1f(uniformLocations["indexParting"], point.triangles.length/2);
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -23663,7 +23610,6 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                          
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
@@ -23688,7 +23634,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development     
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -23757,14 +23702,12 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                         };
                         
                     //advanced use attributes
@@ -23787,7 +23730,6 @@ const element = new function(){
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.points('+JSON.stringify(points)+')'); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23800,20 +23742,17 @@ const element = new function(){
                             }
             
                             if(a==undefined){ return pointsToXYArray(); }
-                            dev.log.elementLibrary(type,self.getAddress(),'.pointsAsXYArray('+JSON.stringify(a)+')'); //#development
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.thickness = function(a){
                             if(thickness==undefined){return thickness;}     
                             thickness = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.thickness('+thickness+')'); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23821,7 +23760,6 @@ const element = new function(){
                         this.looping = function(a){
                             if(looping==undefined){return looping;}     
                             looping = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.looping('+looping+')'); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23829,7 +23767,6 @@ const element = new function(){
                         this.capType = function(a){
                             if(capType==undefined){return capType;}     
                             capType = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.capType('+capType+')'); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23837,7 +23774,6 @@ const element = new function(){
                         this.jointType = function(a){
                             if(jointType==undefined){return jointType;}     
                             jointType = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.jointType('+jointType+')'); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23845,7 +23781,6 @@ const element = new function(){
                         this.jointDetail = function(a){
                             if(jointDetail==undefined){return jointDetail;}     
                             jointDetail = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.jointDetail('+jointDetail+')'); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23853,7 +23788,6 @@ const element = new function(){
                         this.sharpLimit = function(a){
                             if(sharpLimit==undefined){return sharpLimit;}     
                             sharpLimit = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.sharpLimit('+sharpLimit+')'); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23861,18 +23795,15 @@ const element = new function(){
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -23887,8 +23818,6 @@ const element = new function(){
                 //webGL rendering functions
                     let generatedPathPolygon = [];
                     function lineGenerator(){ 
-                        dev.log.elementLibrary(type,self.getAddress(),'::lineGenerator()'); //#development
-                        dev.log.elementLibrary(type,self.getAddress(),'::lineGenerator -> '+'['+points+'],'+thickness+','+capType+','+jointType+','+looping+','+jointDetail+','+sharpLimit); //#development
                         return library.math.pathExtrapolation(points,thickness/2,capType,jointType,looping,jointDetail,sharpLimit);
                     }
                     const vertexShaderSource = 
@@ -23924,29 +23853,24 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){        
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
                 
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(generatedPathPolygon), context.STATIC_DRAW);
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> generatedPathPolygon: '+JSON.stringify(generatedPathPolygon)); //#development
                                     pointsChanged = false;
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                         //uniforms
                             if(uniformLocations == undefined){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -23956,20 +23880,14 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                             context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
+                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -23979,7 +23897,6 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
@@ -24004,7 +23921,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development     
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -24076,7 +23992,6 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         
@@ -24098,49 +24013,41 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.anchor('+JSON.stringify(a)+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
@@ -24154,33 +24061,36 @@ const element = new function(){
                             defaultURL:'/images/noimageimage.png'
                         };
                         function loadImage(url){
-                            dev.log.elementLibrary(type,self.getAddress(),'::loadImage('+url+')'); //#development
-                            fetch(url).then( response => {
             
+                            fetch(url).then( response => {
                                 if(response.status != 200){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> image was not found at url: '+url); //#development
                                     console.warn(type,id,self.getAddress(),'could not find image at: '+url);
+                                    console.warn(response);
                                     loadImage(image.defaultURL);
                                     return;
                                 }
             
-                                dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> response: '+JSON.stringify(response)); //#development
                                 response.blob().then(data => {
-                                    dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> data: '+JSON.stringify(data)); //#development
                                     createImageBitmap(data).then(bitmap => {
-                                        dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> bitmap: '+JSON.stringify(bitmap)); //#development
                                         image.bitmap = bitmap;
                                         image.isLoaded = true;
                                         image.isChanged = true;
+                                    }).catch(error => {
+                                        console.error('Image decoding error :: url:',url);
+                                        console.error('-- -- -- -- -- -- -- :: response:',response);
+                                        console.error('-- -- -- -- -- -- -- :: data:',data);
+                                        console.error(error);
+                                        loadImage(image.defaultURL);
                                     });
                                 });
                             });
+            
+            
                             image.isLoaded = false; 
                         }
                         setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
             
                         this.url = function(a){
-                            dev.log.elementLibrary(type,self.getAddress(),'.url('+a+')'); //#development
             
                             if(a==undefined){return image.url;}
                             if(a==image.url){return;} //no need to reload the same image
@@ -24191,7 +24101,6 @@ const element = new function(){
                             loadImage(image.url);
                         };
                         this.bitmap = function(a){
-                            dev.log.elementLibrary(type,self.getAddress(),'.bitmap('+JSON.stringify(a)+')'); //#development
             
                             if(a==undefined){return image.bitmap;}
                             image.bitmap = a;
@@ -24204,11 +24113,9 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static, url:image.url }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -24272,12 +24179,10 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -24285,14 +24190,12 @@ const element = new function(){
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                             //texture
                                 if(image.isChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating image.textureData...'); //#development
                                     image.isChanged = false;
                                     image.textureData = context.createTexture();
                                     context.bindTexture(context.TEXTURE_2D, image.textureData);
@@ -24302,13 +24205,11 @@ const element = new function(){
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
                                     context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating image.textureData...'); //#development
                                     context.bindTexture(context.TEXTURE_2D, image.textureData);
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -24319,12 +24220,6 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -24334,7 +24229,6 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                         
                         if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
@@ -24346,13 +24240,11 @@ const element = new function(){
                     
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> point'+JSON.stringify(point)); //#development
                             const adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
@@ -24373,8 +24265,6 @@ const element = new function(){
                                 });
                             }
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.points:'+JSON.stringify(self.extremities.points)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.boundingBox:'+JSON.stringify(self.extremities.boundingBox)); //#development
                     
                         //if told to do so, inform parent (if there is one) that extremities have changed
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -24390,7 +24280,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     };
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -24470,7 +24359,6 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         
@@ -24492,49 +24380,41 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
-                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.anchor('+JSON.stringify(a)+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
@@ -24548,20 +24428,15 @@ const element = new function(){
                             defaultURL:'/images/noimageimage.png'
                         };
                         function loadImage(url){
-                            dev.log.elementLibrary(type,self.getAddress(),'::loadImage('+url+')'); //#development
                             image.url = url;
                             fetch(url).then( response => {
                                 if(response.status != 200){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> image was not found at url: '+url); //#development
                                     console.warn(type,id,self.getAddress(),'cound not find image at: '+url);
                                     return;
                                 }
             
-                                dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> response: '+JSON.stringify(response)); //#development
                                 response.blob().then(data => {
-                                    dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> data: '+JSON.stringify(data)); //#development
                                     createImageBitmap(data).then(bitmap => {
-                                        dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> bitmap: '+JSON.stringify(bitmap)); //#development
                                         image.bitmap = bitmap;
                                         image.isLoaded = true;
                                         image.isChanged = true;
@@ -24573,7 +24448,6 @@ const element = new function(){
                         setTimeout(()=>{ if(image.bitmap == undefined){ loadImage(image.defaultURL); } },1000);
             
                         this.imageURL = function(a){
-                            dev.log.elementLibrary(type,self.getAddress(),'.imageURL('+a+')'); //#development
             
                             if(a==undefined){return image.url;}
                             if(a==image.url){return;} //no need to reload the same image
@@ -24584,7 +24458,6 @@ const element = new function(){
                             loadImage(image.url);
                         };
                         this.imageBitmap = function(a){
-                            dev.log.elementLibrary(type,self.getAddress(),'.imageBitmap('+JSON.stringify(a)+')'); //#development
             
                             if(a==undefined){return image.bitmap;}
                             image.bitmap = a;
@@ -24597,11 +24470,9 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -24665,12 +24536,10 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -24678,14 +24547,12 @@ const element = new function(){
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                             //texture
                                 if(image.isChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating image.textureData...'); //#development
                                     image.isChanged = false;
                                     image.textureData = context.createTexture();
                                     context.bindTexture(context.TEXTURE_2D, image.textureData);
@@ -24695,13 +24562,11 @@ const element = new function(){
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
                                     context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating image.textureData...'); //#development
                                     context.bindTexture(context.TEXTURE_2D, image.textureData);
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -24712,12 +24577,6 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -24727,7 +24586,6 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                         
                         if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
@@ -24739,13 +24597,11 @@ const element = new function(){
                     
                 //extremities
                     function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> point'+JSON.stringify(point)); //#development
                             const adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
@@ -24766,8 +24622,6 @@ const element = new function(){
                                 });
                             }
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.points:'+JSON.stringify(self.extremities.points)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.boundingBox:'+JSON.stringify(self.extremities.boundingBox)); //#development
                     
                         //if told to do so, inform parent (if there is one) that extremities have changed
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -24783,7 +24637,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     };
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -24862,14 +24715,12 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                         };
                         
                     //advanced use attributes
@@ -24897,60 +24748,49 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;} 
                             x = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;} 
                             y = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.anchor = function(a){ 
                             if(a==undefined){return anchor;} 
                             anchor = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.anchor('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
-                            dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
-                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
                         this.font = function(newFont){
                             if(newFont==undefined){return font;}
-                            dev.log.elementLibrary(type,self.getAddress(),'.font('+newFont+')'); //#development
             
                             if( elementLibrary.character.isApprovedFont(newFont) ){
-                                dev.log.elementLibrary(type,self.getAddress(),'.font() -> fontLoadAttempted: '+elementLibrary.character.fontLoadAttempted(newFont)); //#development
                                 if( !elementLibrary.character.fontLoadAttempted(newFont) ){ elementLibrary.character.loadFont(newFont); }
-                                dev.log.elementLibrary(type,self.getAddress(),'.font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
                                 if( !elementLibrary.character.isFontLoaded(newFont) ){
                                     setTimeout(function(){ self.font(newFont); },500,newFont);
                                     return;
                                 }
             
                                 font = !elementLibrary.character.isFontLoaded(newFont) ? defaultFontName : newFont;
-                                dev.log.elementLibrary(type,self.getAddress(),'.font() -> font set to: "'+font+'"'); //#development
                             }else{
                                 report.warning('elementLibrary.character : error : unknown font:',newFont);
                                 font = defaultFontName;
@@ -24961,7 +24801,6 @@ const element = new function(){
                         };
                         this.character = function(a){
                             if(a==undefined){return character;} 
-                            dev.log.elementLibrary(type,self.getAddress(),'.character('+a+')'); //#development
                             character = a; 
                             if(allowProducePoints){producePoints();}
                             if(allowComputeExtremities){computeExtremities();} 
@@ -24972,7 +24811,6 @@ const element = new function(){
                                 horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
                                 vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
                             };
-                            dev.log.elementLibrary(type,self.getAddress(),'.printingMode('+JSON.stringify(printingMode)+')'); //#development
             
                             if(allowProducePoints){producePoints();}
                             if(allowComputeExtremities){computeExtremities();} 
@@ -24980,19 +24818,16 @@ const element = new function(){
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
-                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:static }; } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowProducePoints = false;
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -25012,9 +24847,7 @@ const element = new function(){
                     this.left = function(){ return vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].left; };
                     this.right = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].right; };
                     function producePoints(){
-                        dev.log.elementLibrary(type,self.getAddress(),'::producePoints()'); //#development
                         points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
-                        dev.log.elementLibrary(type,self.getAddress(),'::producePoints -> vectorLibrary['+font+']['+character+']:'+JSON.stringify(vectorLibrary[font][character])); //#development
             
                         //adjust for vertical printingMode
                             let horizontalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].right;
@@ -25078,12 +24911,10 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
                 
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -25092,14 +24923,12 @@ const element = new function(){
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                     pointsChanged = false;
                                 }else{
-                                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
-                                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -25111,24 +24940,16 @@ const element = new function(){
                                 };
                             }
             
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> dimensions:'+width+' canvas.height:'+height); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> anchor:'+JSON.stringify(anchor)); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                             context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                             context.uniform2f(uniformLocations["dimensions"], width, height);
                             context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
+                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
                     }
                     let program;
                     function activateGLRender(context,adjust){
-                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -25139,14 +24960,11 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){ 
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){
                                 offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                                dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> no offset provided; generated offset: '+JSON.stringify(offset)); //#development
                             }
-                            else{ dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> offset provided: '+JSON.stringify(offset)); }//#development
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjusted = { 
@@ -25191,7 +25009,6 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development     
             
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -25309,35 +25126,27 @@ const element = new function(){
                             this.colour = function(a){
                                 if(a==undefined){return colour;}     
                                 colour = a;
-                                dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
                                 recolourCharacters();
                             };
                             this.width = function(a){
                                 if(a==undefined){return width;}  
                                 width = a;  
-                                dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
                                 if(allowGenerateStringCharacters){generateStringCharacters();} 
                             };
                             this.height = function(a){
                                 if(a==undefined){return height;} 
                                 height = a; 
-                                dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
                                 if(allowGenerateStringCharacters){generateStringCharacters();} 
                             };
                             this.font = function(newFont){
                                 if(newFont==undefined){return font;}
-                                dev.log.elementLibrary(type,self.getAddress(),'.font('+newFont+')'); //#development
                 
                                 if( elementLibrary.character.isApprovedFont(newFont) ){
-                                    dev.log.elementLibrary(type,self.getAddress(),'.font() -> fontLoadAttempted: '+elementLibrary.character.fontLoadAttempted(newFont)); //#development
                                     if( !elementLibrary.character.fontLoadAttempted(newFont) ){ elementLibrary.character.loadFont(newFont); }
-                                    dev.log.elementLibrary(type,self.getAddress(),'.font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
                                     if( !elementLibrary.character.isFontLoaded(newFont) ){ 
                                         const timeoutId = setTimeout(function(){ 
-                                            dev.log.elementLibrary(type,self.getAddress(),'.font() -> internal rerun < '+timeoutId); //#development
                                             self.font(newFont);
                                         }, 100, newFont);
-                                        dev.log.elementLibrary(type,self.getAddress(),'.font() -> internal rerun > '+timeoutId); //#development
                                         return;
                                     }
                 
@@ -25353,19 +25162,16 @@ const element = new function(){
                             this.string = function(a){ 
                                 if(a==undefined){return string;} 
                                 string = a;
-                                dev.log.elementLibrary(type,self.getAddress(),'.string('+a+')'); //#development
                                 if(allowGenerateStringCharacters){generateStringCharacters();} 
                             };
                             this.spacing = function(a){ 
                                 if(a==undefined){return spacing;} 
                                 spacing = a;
-                                dev.log.elementLibrary(type,self.getAddress(),'.spacing('+a+')'); //#development
                                 if(allowGenerateStringCharacters){generateStringCharacters();} 
                             };
                             this.interCharacterSpacing = function(a){
                                 if(a==undefined){return interCharacterSpacing;}
                                 interCharacterSpacing = a;
-                                dev.log.elementLibrary(type,self.getAddress(),'.interCharacterSpacing('+a+')'); //#development
                                 if(allowGenerateStringCharacters){generateStringCharacters();}
                             };
                             this.printingMode = function(a){
@@ -25375,7 +25181,6 @@ const element = new function(){
                                     horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
                                     vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
                                 };
-                                dev.log.elementLibrary(type,self.getAddress(),'.printingMode('+JSON.stringify(printingMode)+')'); //#development
                 
                                 if(allowGenerateStringCharacters){generateStringCharacters();}
                             };
@@ -25397,12 +25202,10 @@ const element = new function(){
                                     innerGroup.unifiedAttribute()
                                 );
                             } 
-                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             allowGenerateStringCharacters = false;
                             ['colour', 'width', 'height', 'font', 'string', 'spacing', 'interCharacterSpacing', 'printingMode' ].forEach(key => {
                                 if(key in attributes){
-                                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                     try{
                                         self[key](attributes[key]);
                                     }catch(err){
@@ -25424,7 +25227,6 @@ const element = new function(){
                         innerGroup.children().forEach(ele => ele.colour(colour));
                     }
                     function generateStringCharacters(){
-                        dev.log.elementLibrary(type,self.getAddress(),'::generateStringCharacters()'); //#development
                         innerGroup.clear();
                         const tmpString = String(string).split('');
                         let characterWidth = width;
@@ -25493,7 +25295,6 @@ const element = new function(){
                     this.getElementsUnderPoint = innerGroup.getElementsUnderPoint;
                     this.getElementsUnderArea = innerGroup.getElementsUnderArea;
                     this.computeExtremities = function(informParent=true,offset){
-                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
             
                         //run computeExtremities on inner group, passing the offset values through
                             innerGroup.computeExtremities(false,offset);
@@ -25501,18 +25302,14 @@ const element = new function(){
                             this.updateExtremities(informParent,offset);
                     }
                     this.updateExtremities = function(informParent=true){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities('+informParent+')'); //#development
                        
                         //grab extremity points and bounding box from inner group
                             self.extremities.points = innerGroup.extremities.points;
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> extremities.points.length: '+self.extremities.points.length); //#development
-                            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> self.extremities.boundingBox: '+JSON.stringify(self.extremities.boundingBox)); //#development
             
                         //update parent
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                     }
                     this.getOffset = function(){
-                        dev.log.elementLibrary(type,self.getAddress(),'.getOffset()'); //#development
                         return this.parent ? this.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                     };
                 //lead render
@@ -25578,7 +25375,6 @@ const element = new function(){
             ];
             //create locations in the vector library for these fonts
             fontFileNames.forEach(name => {
-                dev.log.elementLibrary('character.vectorLibrary',undefined,' - fontFileNames -> name: '+name); //#development
                 var libraryEntryName = name.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]; //produce font name from file name
                 elementLibrary.character.vectorLibrary[libraryEntryName] = {};
                 elementLibrary.character.vectorLibrary[libraryEntryName].fileName = name;
@@ -25590,34 +25386,28 @@ const element = new function(){
             
             
             elementLibrary.character.getLoadableFonts = function(){ 
-                dev.log.elementLibrary('character',undefined,'.getLoadableFonts()'); //#development
                 var defaultFontNames = ['defaultThick','defaultThin'];
                 var loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
                 return defaultFontNames.concat(loadableFontNames);
             };
             elementLibrary.character.getLoadedFonts = function(){
-                dev.log.elementLibrary('character',undefined,'.getLoadedFonts()'); //#development
                 var defaultFontNames = ['defaultThick','defaultThin'];
                 var loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => elementLibrary.character.vectorLibrary[name].isLoaded);
                 return defaultFontNames.concat(loadedFontNames);
             };
             
             elementLibrary.character.isApprovedFont = function(fontName){
-                dev.log.elementLibrary('character',undefined,'.isApprovedFont('+fontName+')'); //#development
                 return elementLibrary.character.vectorLibrary[fontName] != undefined;
             };
             elementLibrary.character.isFontLoaded = function(fontName){ 
-                dev.log.elementLibrary('character',undefined,'.isFontLoaded('+fontName+')'); //#development
                 if(elementLibrary.character.vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.isFontLoaded : error : unknown font name:',fontName); return false;}
                 return elementLibrary.character.vectorLibrary[fontName].isLoaded;
             }
             elementLibrary.character.fontLoadAttempted = function(fontName){ 
-                dev.log.elementLibrary('character',undefined,'.fontLoadAttempted('+fontName+')'); //#development
                 if(elementLibrary.character.vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.fontLoadAttempted : error : unknown font name:',fontName); return false;}
                 return elementLibrary.character.vectorLibrary[fontName].loadAttempted;
             }
             elementLibrary.character.loadFont = function(fontName){
-                dev.log.elementLibrary('character',undefined,'.loadFont('+fontName+')'); //#development
                 if(elementLibrary.character.vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
                 var filename = elementLibrary.character.vectorLibrary[fontName].fileName;
             
@@ -25640,11 +25430,9 @@ const element = new function(){
                         var vectors = library.font.extractGlyphs(fontData,reducedGlyphSet);
                         Object.keys(vectors).forEach(glyphName => elementLibrary.character.vectorLibrary[fontName][glyphName] = vectors[glyphName] );
                         elementLibrary.character.vectorLibrary[fontName].isLoaded = true;
-                        dev.log.elementLibrary('character',undefined,'.loadFont -> loaded font:',filename,'(now named "'+fontName+'")'); //#development
                     }
             
                 //load file
-                    dev.log.elementLibrary('character',undefined,'.loadFont -> attempting: '+ name,fontFilesLocation+filename); //#development
                     library.misc.loadFileFromURL(fontFilesLocation+filename, func, 'arraybuffer');
             };
             
@@ -26629,14 +26417,11 @@ const element = new function(){
         };
         this.__ = elementLibrary;
         this.getAvailableElements = function(){ 
-            dev.log.element('.getAvailableElements()'); //#development
             return Object.keys(elementLibrary);
         };
         this.installElement = function(elementName, creatorMethod, allowOverwrite=false){
-            dev.log.element('.installElement('+elementName+','+(typeof creatorMethod == 'function' ? '-creatorMethod-' : undefined)+','+allowOverwrite+')'); //#development
 
             if(!allowOverwrite && elementName in elementLibrary){
-                dev.log.element('.installElement -> element "'+elementName+'" is already in the elementLibrary'); //#development
                 return false
             }
             elementLibrary[elementName] = creatorMethod;
@@ -26662,21 +26447,18 @@ const element = new function(){
             this.getElementFromId = getElementFromId;
             this.getIdFromElement = getIdFromElement;
             this.getCreatedElements = function(){ 
-                dev.log.element('.getCreatedElements()'); //#development
                 return createdElements;
             };
 
         //creation
             this.create_skipDatabase = function(type,name){
-                dev.log.element('.create_skipDatabase('+type+','+name+')'); //#development
                 return new elementLibrary[type](-1,name);
             };
             this.create = function(type,name){
-                dev.log.element('.create('+type+','+name+')'); //#development
 
-                if(type == undefined){ report.error('elememt.createElement: type argument not provided - element will not be produced'); return; }
-                if(name == undefined){ report.error('elememt.createElement: name argument not provided - element will not be produced'); return; }
-                if(elementLibrary[type] == undefined){ report.error('elememt.createElement: type "'+type+'" does not exist - element will not be produced'); return; }
+                if(type == undefined){ console.error('elememt.createElement: type argument not provided - element will not be produced'); return; }
+                if(name == undefined){ console.error('elememt.createElement: name argument not provided - element will not be produced'); return; }
+                if(elementLibrary[type] == undefined){ console.error('elememt.createElement: type "'+type+'" does not exist - element will not be produced'); return; }
 
                 const newElement_id = generateElementId();
                 createdElements[newElement_id] = new elementLibrary[type](newElement_id,name);
@@ -26685,17 +26467,14 @@ const element = new function(){
 
         //deletion
             this.delete = function(element){ 
-                dev.log.element('.delete('+element+')'); //#development
                 createdElements[getIdFromElement(element)] = undefined;
             };
             this.deleteAllCreated = function(){ 
-                dev.log.element('.deleteAllCreated()'); //#development
                 for(let a = 0; a < createdElements.length; a++){this.delete(getElementFromId(a));}
             };
 
         //other
             this.getTypeById = function(element){ 
-                dev.log.element('.getTypeById('+element+')'); //#development
                 return element.getType();
             };
             this._dump = function(){
@@ -26710,39 +26489,40 @@ const element = new function(){
             };
 };
 const arrangement = new function(){
-    let design = element.create_skipDatabase('group','root');
+    let design = element.create('group','root');
 
     this.new = function(){ 
-        dev.log.arrangement('.new()'); //#development
-        design = core.shape.create('group');
+        design.clear(); 
+
+        design.unifiedAttribute({
+            x: 0,
+            y: 0,
+            angle: 0,
+            scale: 1,
+            heedCamera: false,
+            static: false,
+        });
     };
     this.get = function(){
-        dev.log.arrangement('.get()'); //#development
         return design; 
     };
     this.set = function(arrangement){ 
-        dev.log.arrangement('.set('+JSON.stringify(arrangement)+')'); //#development
         design = arrangement;
     };
     this.prepend = function(element){
-        dev.log.arrangement('.prepend('+JSON.stringify(element)+')'); //#development
         design.prepend(element);
     };
     this.append = function(element){
-        dev.log.arrangement('.append('+JSON.stringify(element)+')'); //#development
         design.append(element);
     };
     this.remove = function(element){ 
-        dev.log.arrangement('.remove('+JSON.stringify(element)+')'); //#development
         design.remove(element); 
     };
     this.clear = function(){ 
-        dev.log.arrangement('.clear()'); //#development
         design.clear(); 
     };
 
     this.getElementByAddress = function(address){
-        dev.log.arrangement('.getElementByAddress('+JSON.stringify(address)+')'); //#development
 
         var route = address.split('/'); 
         route.shift(); 
@@ -26756,11 +26536,9 @@ const arrangement = new function(){
         return currentObject;
     };
     this.getElementsUnderPoint = function(x,y){
-        dev.log.arrangement('.getElementsUnderPoint('+x+','+y+')'); //#development
         return design.getElementsUnderPoint(x,y);
     };
     this.getElementsUnderArea = function(points){ 
-        dev.log.arrangement('.getElementByAddress('+JSON.stringify(points)+')'); //#development
         return design.getElementsUnderArea(points); 
     };
         
@@ -26780,10 +26558,11 @@ const arrangement = new function(){
             });
         }
 
-        recursivePrint(design.getTree(), '/root');
+        if(design.children().length == 0){console.log('-empty-');}
+        console.log(design.name+' ('+design.getId()+')');
+        recursivePrint(design.getTree(), '');
     };
     this.areParents = function(elementId,potentialParents=[]){
-        dev.log.arrangement('.areParents('+elementId+','+JSON.stringify(potentialParents)+')'); //#development
 
         let count = 0;
         let workingElement = element.getElementFromId(elementId);
@@ -26800,7 +26579,6 @@ const arrangement = new function(){
     };
 
     this._dump = function(){ design._dump(); };
-    // this.__ = design;
 };
 const render = new function(){
     const self = this; 
@@ -26821,12 +26599,11 @@ const render = new function(){
 
     //webGL setup
         context.enable(context.BLEND);
-        context.blendFunc(context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+        context.blendFunc(context.ONE, context.ONE_MINUS_SRC_ALPHA);
 
     //webGL program production
-        let storedPrograms = {};
+        const storedPrograms = {};
         this.produceProgram = function(name, vertexShaderSource, fragmentShaderSource){
-            dev.log.render('.produceProgram('+name+','+vertexShaderSource+','+fragmentShaderSource+')'); //#development
             function compileProgram(vertexShaderSource, fragmentShaderSource){
                 function createShader(type, source){
                     let shader = context.createShader(type);
@@ -26853,11 +26630,9 @@ const render = new function(){
             };
 
             if( !(name in storedPrograms) ){
-                dev.log.render('.produceProgram -> program not found; will be compiled and stored as "'+name+'"'); //#development
                 storedPrograms[name] = compileProgram(vertexShaderSource, fragmentShaderSource);
                 context.useProgram(storedPrograms[name]);
             }else{
-                dev.log.render('.produceProgram -> program found; using stored program'); //#development
             }
 
             return storedPrograms[name];
@@ -26865,18 +26640,15 @@ const render = new function(){
 
     //canvas and webGL context adjustment
         this.clearColour = function(colour){
-            dev.log.render('.clearColour('+JSON.stringify(colour)+')'); //#development
             if(colour == undefined){ return clearColour; }
             clearColour = colour;
             context.clearColor(clearColour.r, clearColour.g, clearColour.b, 1);
         };
         this.adjustCanvasSize = function(newWidth, newHeight){
-            dev.log.render('.adjustCanvasSize('+newWidth+','+newHeight+')'); //#development
             let adjustCanvasSize_isBusy = {width:false,height:false};
             isBusy = true;
 
             function updateInternalCanvasSize(direction,newValue){
-                dev.log.render('.adjustCanvasSize::updateInternalCanvasSize('+direction+','+newValue+')'); //#development
                 newValue *= pageData.devicePixelRatio;
                 if(newValue != undefined){
                     if(pageData.currentCanvasSize[direction] != newValue){
@@ -26898,65 +26670,50 @@ const render = new function(){
             //request canvas data from the console, if none is provided in arguments
             // -> argument data > requested data > default data
             function updateSize_arguments(){
-                dev.log.render('.adjustCanvasSize::updateSize_arguments()'); //#development
                 adjustCanvasSize_isBusy = {width:true,height:true};
 
                 if(newWidth != undefined){
                     updateInternalCanvasSize('width',newWidth*pageData.devicePixelRatio);
                 }else{
-                    dev.log.render('.adjustCanvasSize -> argument "newWidth" undefined; trying request...'); //#development
                     updateSize_dataRequest('width');
                 }
                 if(newHeight != undefined){
                     updateInternalCanvasSize('height',newHeight*pageData.devicePixelRatio);
                 }else{
-                    dev.log.render('.adjustCanvasSize -> argument "newHeight" undefined; trying request...'); //#development
                     updateSize_dataRequest('height');
                 }
             }
             function updateSize_dataRequest(direction){
-                dev.log.render('.adjustCanvasSize::updateSize_dataRequest('+direction+')'); //#development
                 const capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
 
                 interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
                     pageData.selectedCanvasSize[direction] = sizes[0];
-                    dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> '+capitalizedDirection+':'+pageData.selectedCanvasSize[direction]); //#development
                     const attribute = pageData.selectedCanvasSize[direction];
 
                     function unparseableErrorMessage(direction,attribute){
                         report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> unparseable format: '+attribute+', will use default instead'); //#development
                         updateSize_usingDefault(direction);
                     }
 
                     if( attribute.indexOf('%') == (attribute.length-1) ){ //percentage
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a percentage'); //#development
                         interface.getCanvasParentAttributes(['offset'+capitalizedDirection]).then(sizes => {
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parent'+capitalizedDirection+':'+sizes[0]); //#development
                             const parentSize = sizes[0];
                             const percent = parseFloat(attribute.slice(0,-1)) / 100;
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parsed percent: '+percent*100); //#development
                             if( isNaN(percent) ){ unparseableErrorMessage(direction,attribute); return; }
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+parentSize*percent); //#development
                             updateInternalCanvasSize(direction,parentSize*percent);
                         });
                     }else if( attribute.indexOf('px') != -1 ){ //px value
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a pixel number'); //#development
                         const val = parseFloat(attribute.slice(0,-2));
                         if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
                         updateInternalCanvasSize(direction,val);
                     }else{ //flat value
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a flat number'); //#development
                         const val = parseFloat(attribute);
                         if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
                         updateInternalCanvasSize(direction,val);
                     }
                 });
             }
             function updateSize_usingDefault(direction){
-                dev.log.render('.adjustCanvasSize::updateSize_usingDefault('+direction+')'); //#development
                 updateInternalCanvasSize(direction,pageData.defaultCanvasSize[direction]);
             }
 
@@ -26966,11 +26723,8 @@ const render = new function(){
             });
         };
         this.refreshCoordinates = function(){
-            dev.log.render('.refreshCoordinates()'); //#development
-            dev.log.render('.refreshCoordinates: -> pageData.devicePixelRatio: '+pageData.devicePixelRatio); //#development
             let w = context.canvas.width;
             let h = context.canvas.height;
-            dev.log.render('.refreshCoordinates: -> w:'+w+' h:'+h); //#development
 
             let x, y, width, height = 0;
             if(pageData.devicePixelRatio == 1){
@@ -26985,13 +26739,11 @@ const render = new function(){
                 height = h*2;
             }
 
-            dev.log.render('.refreshCoordinates: -> context.viewport('+x+', '+y+', '+width+', '+height+')'); //#development
             context.viewport(x, y, width, height);
 
             interface.setCanvasAttributes([{name:'width',value:w/pageData.devicePixelRatio},{name:'height',value:h/pageData.devicePixelRatio}]);
         };
         this.refresh = function(allDoneCallback){
-            dev.log.render('.refresh()'); //#development
             this.clearColour(clearColour);
             this.frameRateLimit(this.frameRateLimit());
             this.adjustCanvasSize();
@@ -27007,12 +26759,10 @@ const render = new function(){
     //frame rate control
         const frameRateControl = {active:false, previousRenderTime:Date.now(), limit:30, interval:0};
         this.activeLimitToFrameRate = function(a){
-            dev.log.render('.activeLimitToFrameRate('+a+')'); //#development
             if(a==undefined){return frameRateControl.active;}
             frameRateControl.active=a
         };
         this.frameRateLimit = function(a){
-            dev.log.render('.frameRateLimit('+a+')'); //#development
             if(a==undefined){ return frameRateControl.limit; }
             frameRateControl.limit=a;
             frameRateControl.interval=1000/frameRateControl.limit;
@@ -27020,14 +26770,12 @@ const render = new function(){
 
     //actual render
         function renderFrame(noClear=false){
-            dev.log.render('::renderFrame('+noClear+')'); //#development
             if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
             arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
             const transferableImage = canvas.transferToImageBitmap();
             interface.printToScreen(transferableImage);
         }
         function animate(timestamp){
-            dev.log.render('::animate('+timestamp+')'); //#development
             animationRequestId = requestAnimationFrame(animate);
 
             //limit frame rate
@@ -27051,11 +26799,9 @@ const render = new function(){
                 stats.collect(timestamp);
         }
         this.frame = function(noClear=false){
-            dev.log.render('.frame('+noClear+')'); //#development
             renderFrame(noClear);
         };
         this.active = function(bool){
-            dev.log.render('.active('+bool+')'); //#development
             if(bool == undefined){return animationRequestId!=undefined;}
 
             if(bool){
@@ -27104,7 +26850,6 @@ const viewport = new function(){
     //adapter
         this.adapter = new function(){
             this.windowPoint2workspacePoint = function(x,y){
-                dev.log.viewport('.adapter.windowPoint2workspacePoint('+x+','+y+')'); //#development
                 const position = viewport.position();
                 const scale = viewport.scale();
                 const angle = viewport.angle();
@@ -27132,14 +26877,12 @@ const viewport = new function(){
 
     //camera position
         this.position = function(x,y){
-            dev.log.viewport('.position('+x+','+y+')'); //#development
             if(x == undefined || y == undefined){return {x:state.position.x,y:state.position.y};}
             state.position.x = x;
             state.position.y = y;
 
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera()){ 
-                    dev.log.viewport('.position -> adjusting: '+JSON.stringify(item)); //#development
                     item.unifiedAttribute({x:state.position.x,y:state.position.y});
                 }
             });
@@ -27149,12 +26892,10 @@ const viewport = new function(){
             self.onCameraAdjust( Object.assign({},state) );
         };
         this.scale = function(s){
-            dev.log.viewport('.scale('+s+')'); //#development
             if(s == undefined){return state.scale;}
             state.scale = s <= 0 ? 1 : s;
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera()){ 
-                    dev.log.viewport('.scale -> adjusting: '+JSON.stringify(item)); //#development
                     item.scale(state.scale);
                 }
             });
@@ -27163,12 +26904,10 @@ const viewport = new function(){
             self.onCameraAdjust( Object.assign({},state) );
         };
         this.angle = function(a){
-            dev.log.viewport('.angle('+a+')'); //#development
             if(a == undefined){return state.angle;}
             state.angle = a;
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera()){ 
-                    dev.log.viewport('.angle -> adjusting: '+JSON.stringify(item)); //#development
                     item.angle(state.angle);
                 }
             });
@@ -27179,18 +26918,15 @@ const viewport = new function(){
 
     //mouse interaction
         this.getElementsUnderPoint = function(x,y){
-            dev.log.viewport('.getElementsUnderPoint('+x+','+y+')'); //#development
             let xy = this.adapter.windowPoint2canvasPoint(x,y);
             return arrangement.getElementUnderPoint(xy.x,xy.y);
         };
         this.getElementsUnderArea = function(points){
-            dev.log.viewport('.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
             return arrangement.getElementsUnderArea(points.map(a => this.adapter.windowPoint2canvasPoint(a.x,a.y)));
         };
  
     //misc
         function calculateViewportExtremities(){
-            dev.log.viewport('::calculateViewportExtremities()'); //#development
             const canvasDimensions = render.getCanvasSize();
 
             //for each corner of the viewport; find out where they lie on the canvas
@@ -27200,25 +26936,20 @@ const viewport = new function(){
                 viewbox.points.br = {x:canvasDimensions.width, y:canvasDimensions.height};
             //calculate a bounding box for the viewport from these points
                 viewbox.boundingBox = library.math.boundingBoxFromPoints([viewbox.points.tl, viewbox.points.tr, viewbox.points.br, viewbox.points.bl]);
-                dev.log.viewport('::calculateViewportExtremities -> viewbox.boundingBox: '+JSON.stringify(viewbox.boundingBox)); //#development
         }
         this.calculateViewportExtremities = calculateViewportExtremities;
         this.refresh = function(){
-            dev.log.viewport('.refresh()'); //#development
             calculateViewportExtremities();
         };
         this.getBoundingBox = function(){ 
-            dev.log.viewport('.getBoundingBox()'); //#development
             return viewbox.boundingBox;
         };
         this.mousePosition = function(x,y){
-            dev.log.viewport('.mousePosition('+x+','+y+')'); //#development
             if(x == undefined || y == undefined){return {x:mouseData.x, y:mouseData.y};}
             mouseData.x = x;
             mouseData.y = y;
         };
         this.stopMouseScroll = function(bool){
-            dev.log.viewport('.stopMouseScroll('+bool+')'); //#development
             if(bool == undefined){return mouseData.stopScrollActive;}
             mouseData.stopScrollActive = bool;
     
@@ -27242,7 +26973,6 @@ const stats = new function(){
 
     const framesPerSecond = {
         compute:function(timestamp){
-            dev.log.stats('::framesPerSecond.compute('+timestamp+')'); //#development
 
             this.frameTimeArray.push( 1000/(timestamp-lastTimestamp) );
             if( this.frameTimeArray.length >= average){ this.frameTimeArray.shift(); }
@@ -27257,19 +26987,16 @@ const stats = new function(){
     };
 
     this.collect = function(timestamp){
-        dev.log.stats('.collect('+timestamp+')'); //#development
         //if stats are turned off, just bail
             if(!active){return;}
 
         framesPerSecond.compute(timestamp);
     };
     this.active = function(bool){
-        dev.log.stats('.active('+bool+')'); //#development
         if(bool==undefined){return active;} 
         active=bool;
     };
     this.getReport = function(){
-        dev.log.stats('.getReport()'); //#development
         return {
             framesPerSecond: framesPerSecond.rate,
         };
@@ -27285,7 +27012,6 @@ const callback = new function(){
         'onkeydown', 'onkeyup',
     ];
     function gatherDetails(event){
-        dev.log.callback('::gatherDetails('+JSON.stringify(event)+')'); //#development
         return {
             point: viewport.adapter.windowPoint2workspacePoint(event.X,event.Y),
             elements: arrangement.getElementsUnderPoint(event.X,event.Y)
@@ -27298,18 +27024,18 @@ const callback = new function(){
                 if(callbackName == 'onmouseenterelement' && all[0] == relevant[0]){
                     self.coupling_out.onmouseleaveelement(x, y, event, {all:all, relevant:[currentlyEnteredElement]});
                     currentlyEnteredElement = relevant[0];
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                 }else if(callbackName == 'onmouseenterelement'){
                     //ignored
                 }else if(callbackName == 'onmouseleaveelement' && all[0] != relevant[0]){
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                     currentlyEnteredElement = all[0];
                     self.coupling_out.onmouseenterelement(x, y, event, {all:all, relevant:[all[0]]});
                 }else if(callbackName == 'onmouseleaveelement'){
                     currentlyEnteredElement = undefined;
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                 }else if(all[0] == relevant[0]){
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                 }
             break;
             case 'firstMatch':
@@ -27326,7 +27052,7 @@ const callback = new function(){
                         }
                     }else if(callbackName == 'onmouseleaveelement'){
                         currentlyEnteredElement = undefined;
-                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                         for(let a = 0; a < all.length; a++){
                             if(all[a].onmouseenterelement != undefined){
                                 currentlyEnteredElement = all[a];
@@ -27335,7 +27061,7 @@ const callback = new function(){
                             }
                         }
                     }else{
-                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                     }
             break;
             case 'allMatches': default:
@@ -27348,16 +27074,13 @@ const callback = new function(){
         return callbacks;
     };
     this.attachCallback = function(element,callbackType){
-        dev.log.callback('.attachCallback('+JSON.stringify(element)+','+callbackType+')'); //#development
         element[callbackType] = true;
     };
     this.removeCallback = function(element,callbackType){
-        dev.log.callback('.removeCallback('+JSON.stringify(element)+','+callbackType+')'); //#development
         element[callbackType] = undefined;
         delete element[callbackType];
     };
     this.callbackActivationMode = function(mode){
-        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
         if(mode==undefined){return callbackActivationMode;}
         callbackActivationMode = mode;
 
@@ -27373,7 +27096,6 @@ const callback = new function(){
             for(let a = 0; a < callbacks.length; a++){
                 this.coupling_in[callbacks[a]] = function(callbackName){
                     return function(event){
-                        dev.log.callback('.coupling_in.'+callbackName+'('+JSON.stringify(event)+')'); //#development
                         const data = gatherDetails(event);
                         activateElementCallback(callbackName, data.point.x, data.point.y, event, data.elements);
                     }
@@ -27398,15 +27120,12 @@ const callback = new function(){
             //onmousemove / onmouseenter / onmouseleave
                 const elementMouseoverList = [];
                 this.coupling_in.onmousemove = function(event){
-                    dev.log.callback('.coupling_in.onmousemove('+JSON.stringify(event)+')'); //#development
                     viewport.mousePosition(event.X,event.Y);
                     const data = gatherDetails(event);
-                    dev.log.callback('.coupling_in.onmousemove -> data.elements.length: '+data.elements.length); //#development
-                    dev.log.callback('.coupling_in.onmousemove -> workspace point: '+JSON.stringify(data.point)); //#development
 
                     //check for onmouseenter / onmouseleave
                         //go through the elementsUnderPoint list, comparing to the element transition list
-                            const diff = library.math.getDifferenceOfArrays(elementMouseoverList,data.elements);
+                            const diff = library.misc.getDifferenceOfArrays(elementMouseoverList,data.elements);
                             //run both onmouseenterelement and onmouseenterelement, only if there's
                             //  elements to report, providing only the relevant set of elements
                             //elements only on elements list; add to elementMouseoverList
@@ -27421,7 +27140,6 @@ const callback = new function(){
 
             //onwheel
                 this.coupling_in.onwheel = function(event){
-                    dev.log.callback('.coupling_in.onwheel('+JSON.stringify(event)+')'); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('onwheel', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onwheel != undefined) ) );
                 };
@@ -27430,10 +27148,8 @@ const callback = new function(){
                 ['onkeydown', 'onkeyup'].forEach(callbackName => {
                     this.coupling_in[callbackName] = function(callback){
                         return function(event){
-                            dev.log.callback('.coupling_in.'+callbackName+'('+JSON.stringify(event)+')'); //#development
                             const p = viewport.mousePosition(); event.X = p.x; event.Y = p.y;
                             const data = gatherDetails(event);
-                            dev.log.callback('.coupling_in.'+callbackName+' -> guessed mouse point: '+JSON.stringify(data.point)); //#development
                             activateElementCallback(callback, data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element[callbackName] != undefined) ) );
 
                         }
@@ -27443,25 +27159,21 @@ const callback = new function(){
             //onmousedown / onmouseup / onclick / ondblclick
                 let elementMouseClickList = [];
                 this.coupling_in.onmousedown = function(event){
-                    dev.log.callback('.coupling_in.onmousedown('+JSON.stringify(event)+')'); //#development
                     const data = gatherDetails(event);
                     elementMouseClickList = data.elements; //save current elements for use in the onclick callback
                     activateElementCallback('onmousedown', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmousedown != undefined) ) );
                 };
                 this.coupling_in.onmouseup = function(event){
-                    dev.log.callback('.coupling_in.onmouseup('+JSON.stringify(event)+')'); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('onmouseup', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmouseup != undefined) ) );
                 };
                 let recentlyClickedDoubleClickableElementList = [];
                 this.coupling_in.onclick = function(event){
-                    dev.log.callback('.coupling_in.onclick('+JSON.stringify(event)+')'); //#development
                     const data = gatherDetails(event);
                     recentlyClickedDoubleClickableElementList = data.elements.filter( element => (element.ondblclick != undefined && elementMouseClickList.includes(element)) );
                     activateElementCallback('onclick', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onclick != undefined && elementMouseClickList.includes(element)) ) );
                 };
                 this.coupling_in.ondblclick = function(event){
-                    dev.log.callback('.coupling_in.ondblclick('+JSON.stringify(event)+')'); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('ondblclick', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.ondblclick != undefined && recentlyClickedDoubleClickableElementList.includes(element)) ) );
                 };
@@ -27477,18 +27189,15 @@ const callback = new function(){
 
 //meta
     communicationModule.function['areYouReady'] = function(){
-        dev.log.service('.areYouReady()'); //#development
         return true;
     };
     communicationModule.delayedFunction['refresh'] = function(responseFunction){
-        dev.log.service('.refresh('+responseFunction+')'); //#development
         render.refresh(() => {
             viewport.refresh();
             responseFunction();
         });
     };
     communicationModule.function['createSetAppend'] = function(type,name,setList,appendingGroup){
-        dev.log.service('.createSetAppend('+type+','+name+','+JSON.stringify(setList)+','+appendingGroup+')'); //#development
 
         const newElement = element.create(type,name);
         const elementId = element.getIdFromElement(newElement);
@@ -27500,29 +27209,23 @@ const callback = new function(){
 
 //_dump
     communicationModule.function['_dump.element'] = function(){
-        dev.log.service('._dump.element()'); //#development
         element._dump();
     };
     communicationModule.function['_dump.arrangement'] = function(){
-        dev.log.service('._dump.arrangement()'); //#development
         arrangement._dump();
     };
     communicationModule.function['_dump.render'] = function(){
-        dev.log.service('._dump.render()'); //#development
         render._dump();
     };
     communicationModule.function['_dump.viewport'] = function(){
-        dev.log.service('._dump.viewport()'); //#development
         viewport._dump();
     };
     communicationModule.function['_dump.callback'] = function(){
-        dev.log.service('._dump.callback()'); //#development
         callback._dump();
     };
 
 //boatload
     communicationModule.function['boatload.element.executeMethod'] = function(containers){
-        dev.log.service('.boatload.element.executeMethod('+JSON.stringify(containers)+')'); //#development
         containers.forEach(container => { 
             communicationModule.function['element.executeMethod'](container.id,container.method,container.argumentList); 
         });
@@ -27530,262 +27233,212 @@ const callback = new function(){
 
 //element
     communicationModule.function['element.getAvailableElements'] = function(){
-        dev.log.service('.element.getAvailableElements()'); //#development
         return element.getAvailableElements();
     };
     communicationModule.function['element.installElement'] = function(elementName,serializedCreatorMethod){
-        dev.log.service('.element.installElement()'); //#development
         return element.installElement(elementName,library.misc.unserialize(serializedCreatorMethod));
     };
     communicationModule.function['element.getCreatedElements'] = function(){
-        dev.log.service('.element.getCreatedElements()'); //#development
         return element.getCreatedElements().map(ele => element.getIdFromElement(ele));
     };
     communicationModule.function['element.create'] = function(type,name){
-        dev.log.service('.element.create('+type+','+name+')'); //#development
         return element.getIdFromElement(element.create(type,name));
     };
     communicationModule.function['element.delete'] = function(id){
-        dev.log.service('.element.delete('+id+')'); //#development
         element.delete(element.getElementFromId(id));
     };
     communicationModule.function['element.deleteAllCreated'] = function(){
-        dev.log.service('.element.deleteAllCreated()'); //#development
         element.deleteAllCreated();
     };
     communicationModule.function['element.getTypeById'] = function(id){
-        dev.log.service('.element.getTypeById('+id+')'); //#development
         return element.getTypeById(element.getElementFromId(id));
     };
     communicationModule.function['element.executeMethod'] = function(id,method,argumentList=[]){
-        dev.log.service('.element.executeMethod('+id+','+method+','+JSON.stringify(argumentList)+')'); //#development
-        if(id == -1){
-            dev.log.service('.element.executeMethod -> id was -1, no action will be attempted'); //#development
+
+        if(id == -1 || id == undefined){
             return null;
         }
-        if(id == undefined){
-            dev.log.service('.element.executeMethod -> id was undefined, no action will be attempted'); //#development
-            return null;
+        try{
+            return element.getElementFromId(id).interface[method](...argumentList);
+        }catch(err){
+            console.error('service.element.executeMethod(',id,method,argumentList);
+            console.error( 'element.getElementFromId('+id+').interface['+method+']:', element.getElementFromId(id).interface[method] );
+            console.error(err);
         }
-        return element.getElementFromId(id).interface[method](...argumentList);
     };
 
 //arrangement
     communicationModule.function['arrangement.new'] = function(){
-        dev.log.service('.arrangement.new()'); //#development
         arrangement.new();
     };
+    communicationModule.function['arrangement.get'] = function(){
+        return arrangement.get().children().map(element.getIdFromElement);
+    };
     communicationModule.function['arrangement.prepend'] = function(id){
-        dev.log.service('.arrangement.prepend('+id+')'); //#development
         arrangement.prepend(element.getElementFromId(id));
     };
     communicationModule.function['arrangement.append'] = function(id){
-        dev.log.service('.arrangement.append('+id+')'); //#development
         arrangement.append(element.getElementFromId(id));
     };
     communicationModule.function['arrangement.remove'] = function(id){
-        dev.log.service('.arrangement.remove('+id+')'); //#development
         arrangement.remove(element.getElementFromId(id));
     };
     communicationModule.function['arrangement.clear'] = function(){
-        dev.log.service('.arrangement.clear()'); //#development
         arrangement.clear();
     };
     communicationModule.function['arrangement.getElementAddress'] = function(id){
-        dev.log.service('.arrangement.getElementAddress('+id+')'); //#development
         return element.getElementFromId(id).getAddress();
     };
     communicationModule.function['arrangement.getElementByAddress'] = function(address){
-        dev.log.service('.arrangement.getElementByAddress('+address+')'); //#development
         return element.getIdFromElement(arrangement.getElementByAddress(address));
     };
     communicationModule.function['arrangement.getElementsUnderPoint'] = function(x,y){
-        dev.log.service('.arrangement.getElementsUnderPoint('+x+','+y+')'); //#development
         return arrangement.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele));
     };
     communicationModule.function['arrangement.getElementsUnderArea'] = function(points){
-        dev.log.service('.arrangement.getElementsUnderArea('+points+')'); //#development
         return arrangement.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele));
     };
     communicationModule.function['arrangement.printTree'] = function(mode){
-        dev.log.service('.arrangement.printTree('+mode+')'); //#development
         arrangement.printTree(mode);
     };
     communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
-        dev.log.service('.arrangement.areParents('+elementId+','+potentialParents+')'); //#development
         return arrangement.areParents(elementId,potentialParents);
     };
 
 //render
     communicationModule.delayedFunction['render.refresh'] = function(responseFunction){
-        dev.log.service('.render.refresh('+responseFunction+')'); //#development
         render.refresh(responseFunction);
     };
     communicationModule.function['render.clearColour'] = function(colour){
-        dev.log.service('.render.clearColour('+colour+')'); //#development
         return render.clearColour(colour);
     };
     communicationModule.function['render.adjustCanvasSize'] = function(newWidth, newHeight){
-        dev.log.service('.render.adjustCanvasSize('+newWidth+','+newHeight+')'); //#development
         render.adjustCanvasSize(newWidth, newHeight);
     };
     communicationModule.function['render.getCanvasSize'] = function(){
-        dev.log.service('.render.getCanvasSize()'); //#development
         return render.getCanvasSize();
     };
     communicationModule.function['render.activeLimitToFrameRate'] = function(active){
-        dev.log.service('.render.activeLimitToFrameRate('+active+')'); //#development
         return render.activeLimitToFrameRate(active);
     };
     communicationModule.function['render.frameRateLimit'] = function(rate){
-        dev.log.service('.render.frameRateLimit('+rate+')'); //#development
         return render.frameRateLimit(rate);
     };
     communicationModule.function['render.frame'] = function(){
-        dev.log.service('.render.frame()'); //#development
         render.frame();
     };
     communicationModule.function['render.active'] = function(active){
-        dev.log.service('.render.active('+active+')'); //#development
         return render.active(active);
     };
 
 //viewport
     communicationModule.function['viewport.refresh'] = function(){
-        dev.log.service('.viewport.refresh()'); //#development
         viewport.refresh();
     };
     communicationModule.function['viewport.position'] = function(x,y){
-        dev.log.service('.viewport.position('+x+','+y+')'); //#development
         return viewport.position(x,y);
     };
     communicationModule.function['viewport.scale'] = function(s){
-        dev.log.service('.viewport.scale('+s+')'); //#development
         return viewport.scale(s);
     };
     communicationModule.function['viewport.angle'] = function(a){
-        dev.log.service('.viewport.angle('+a+')'); //#development
         return viewport.angle(a);
     };
     communicationModule.function['viewport.getElementsUnderPoint'] = function(x,y){
-        dev.log.service('.viewport.getElementsUnderPoint('+x+','+y+')'); //#development
         return viewport.getElementsUnderPoint(x,y);
     };
     communicationModule.function['viewport.getElementsUnderArea'] = function(points){
-        dev.log.service('.viewport.getElementsUnderArea('+points+')'); //#development
         return viewport.getElementsUnderArea(points);
     };
     communicationModule.function['viewport.getMousePosition'] = function(){
-        dev.log.service('.viewport.getMousePosition()'); //#development
         return viewport.mousePosition();
     };
     communicationModule.function['viewport.getBoundingBox'] = function(){
-        dev.log.service('.viewport.getBoundingBox()'); //#development
         return viewport.getBoundingBox();
     };
     communicationModule.function['viewport.stopMouseScroll'] = function(bool){
-        dev.log.service('.viewport.stopMouseScroll('+bool+')'); //#development
         return viewport.stopMouseScroll(bool);
     };
 
 //stats
     communicationModule.function['stats.active'] = function(active){
-        dev.log.service('.stats.active('+active+')'); //#development
         return stats.active(active);
     };
     communicationModule.function['stats.getReport'] = function(){
-        dev.log.service('.stats.getReport()'); //#development
         return stats.getReport();
     };
 
 //callback
     communicationModule.function['callback.listCallbackTypes'] = function(){
-        dev.log.service('.callback.listCallbackTypes()'); //#development
         return callback.listCallbackTypes();
     };
     communicationModule.function['callback.attachCallback'] = function(id, callbackType){
-        dev.log.service('.callback.attachCallback('+id+','+callbackType+')'); //#development
         callback.attachCallback(element.getElementFromId(id),callbackType);
     };
     communicationModule.function['callback.removeCallback'] = function(id, callbackType){
-        dev.log.service('.callback.removeCallback('+id+','+callbackType+')'); //#development
         callback.removeCallback(element.getElementFromId(id),callbackType);
     };
     callback.listCallbackTypes().forEach(callbackName => {
         //for accepting the callback signals from the window's canvas
         communicationModule.function['callback.coupling_in.'+callbackName] = function(event){
-            dev.log.service('.callback.coupling_in.'+callbackName+'('+JSON.stringify(event)+')'); //#development
             callback.coupling_in[callbackName](event);
         };
     });
 const interface = new function(){
     this.go = function(){
-        dev.log.interface('.go()'); //#development
         communicationModule.run('go');
     };
     this.printToScreen = function(imageData){
-        dev.log.interface('.printToScreen(-imageData-)'); //#development
         communicationModule.run('printToScreen',[imageData],undefined,[imageData]);
     };
 
     // this.onViewportAdjust = function(state){
-    //     dev.log.interface('.onViewportAdjust('+state+')'); //#development
     //     communicationModule.run('onViewportAdjust',[state]);
     // };
 
     this.updateElement = function(elem, data={}){
-        dev.log.interface('.updateElement('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
         communicationModule.run('updateElement',[element.getIdFromElement(elem), data]);
     };
     this.runElementCallback = function(elem, data={}){
-        dev.log.interface('.runElementCallback('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
         communicationModule.run('runElementCallback',[element.getIdFromElement(elem), data]);
     };
 
     this.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-        dev.log.interface('.getCanvasAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('getCanvasAttributes',[attributeNames,prefixActiveArray],resolve);
         });
     };
     this.setCanvasAttributes = function(attributeNames=[],values=[],prefixActiveArray=[]){
-        dev.log.interface('.setCanvasAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+','+JSON.stringify(prefixActiveArray)+')'); //#development
         communicationModule.run('setCanvasAttributes',[attributeNames,values,prefixActiveArray]);
     };
 
     this.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-        dev.log.interface('.getCanvasParentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('getCanvasParentAttributes',[attributeNames,prefixActiveArray],resolve);
         });
     };
 
     this.getDocumentAttributes = function(attributeNames=[]){
-        dev.log.interface('.getDocumentAttributes('+JSON.stringify(attributeNames)+')'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('getDocumentAttributes',[attributeNames],resolve);
         });
     };
     this.setDocumentAttributes = function(attributeNames=[],values=[]){
-        dev.log.interface('.setDocumentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+')'); //#development
         communicationModule.run('setDocumentAttributes',[attributeNames,values]);
     };
 
     this.getWindowAttributes = function(attributeNames=[]){
-        dev.log.interface('.getWindowAttributes('+JSON.stringify(attributeNames)+')'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('getWindowAttributes',[attributeNames],resolve);
         });
     };
     this.setWindowAttributes = function(attributeNames=[],values=[]){
-        dev.log.interface('.setWindowAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+')'); //#development
         communicationModule.run('setWindowAttributes',[attributeNames,values]);
     };
 };
 callback.listCallbackTypes().forEach(callbackName => {
     //for sending core's callbacks back out
     callback.coupling_out[callbackName] = function(x, y, event, elements){
-        dev.log.interface('.callback.coupling_out.'+callbackName+'('+x+','+y+','+JSON.stringify(event)+','+JSON.stringify(elements)+')'); //#development
         communicationModule.run('callback.'+callbackName,[x, y, event, {
             all: elements.all.map(ele => element.getIdFromElement(ele)),
             relevant: elements.relevant ? elements.relevant.map(ele => element.getIdFromElement(ele)) : undefined,

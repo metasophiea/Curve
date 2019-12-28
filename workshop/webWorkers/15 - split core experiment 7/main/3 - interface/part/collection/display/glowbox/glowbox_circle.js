@@ -26,6 +26,6 @@ this.glowbox_circle = function(
 
 interfacePart.partLibrary.display.glowbox_circle = function(name,data){ 
     return interfacePart.collection.display.glowbox_circle(
-        name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim
+        name, data.x, data.y, data.radius, data.style.glow, data.style.dim
     );
 };

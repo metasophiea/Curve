@@ -1,28 +1,37 @@
 const arrangement = new function(){
-    let design = element.create_skipDatabase('group','root');
+    let design = element.create('group','root');
 
     this.new = function(){ 
         dev.log.arrangement('.new()'); //#development
-        design = core.shape.create('group');
+        design.clear(); 
+
+        design.unifiedAttribute({
+            x: 0,
+            y: 0,
+            angle: 0,
+            scale: 1,
+            heedCamera: false,
+            static: false,
+        });
     };
     this.get = function(){
         dev.log.arrangement('.get()'); //#development
         return design; 
     };
     this.set = function(arrangement){ 
-        dev.log.arrangement('.set('+JSON.stringify(arrangement)+')'); //#development
+        dev.log.arrangement('.set(',arrangement); //#development
         design = arrangement;
     };
     this.prepend = function(element){
-        dev.log.arrangement('.prepend('+JSON.stringify(element)+')'); //#development
+        dev.log.arrangement('.prepend(',element); //#development
         design.prepend(element);
     };
     this.append = function(element){
-        dev.log.arrangement('.append('+JSON.stringify(element)+')'); //#development
+        dev.log.arrangement('.append(',element); //#development
         design.append(element);
     };
     this.remove = function(element){ 
-        dev.log.arrangement('.remove('+JSON.stringify(element)+')'); //#development
+        dev.log.arrangement('.remove(',element); //#development
         design.remove(element); 
     };
     this.clear = function(){ 
@@ -31,7 +40,7 @@ const arrangement = new function(){
     };
 
     this.getElementByAddress = function(address){
-        dev.log.arrangement('.getElementByAddress('+JSON.stringify(address)+')'); //#development
+        dev.log.arrangement('.getElementByAddress(',address); //#development
 
         var route = address.split('/'); 
         route.shift(); 
@@ -45,11 +54,11 @@ const arrangement = new function(){
         return currentObject;
     };
     this.getElementsUnderPoint = function(x,y){
-        dev.log.arrangement('.getElementsUnderPoint('+x+','+y+')'); //#development
+        dev.log.arrangement('.getElementsUnderPoint(',x,y); //#development
         return design.getElementsUnderPoint(x,y);
     };
     this.getElementsUnderArea = function(points){ 
-        dev.log.arrangement('.getElementByAddress('+JSON.stringify(points)+')'); //#development
+        dev.log.arrangement('.getElementByAddress(',points); //#development
         return design.getElementsUnderArea(points); 
     };
         
@@ -69,10 +78,12 @@ const arrangement = new function(){
             });
         }
 
-        recursivePrint(design.getTree(), '/root');
+        if(design.children().length == 0){console.log('-empty-');}
+        console.log(design.name+' ('+design.getId()+')');
+        recursivePrint(design.getTree(), '');
     };
     this.areParents = function(elementId,potentialParents=[]){
-        dev.log.arrangement('.areParents('+elementId+','+JSON.stringify(potentialParents)+')'); //#development
+        dev.log.arrangement('.areParents(',elementId,potentialParents); //#development
 
         let count = 0;
         let workingElement = element.getElementFromId(elementId);
@@ -89,5 +100,4 @@ const arrangement = new function(){
     };
 
     this._dump = function(){ design._dump(); };
-    // this.__ = design;
 };

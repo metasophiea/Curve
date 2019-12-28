@@ -1,4 +1,4 @@
-_canvas_.interface.go = function(){
+_canvas_.interface.go.add( function(){
     let player_1 = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
     player_1.load('url',function(){},'https://metasophiea.com/apps/partyCalculator/tracks/1-bassSynth_08.wav');
     player_1.out_left().connect(_canvas_.library.audio.destination);
@@ -48,8 +48,8 @@ _canvas_.interface.go = function(){
     },4000);
     setTimeout(function(){
         console.log('-> jump back to start of player_1 and player_2');
-        player_1.jumpTo(0,0);
-        player_2.jumpTo(0,0);
+        player_1.jumpTo(0);
+        player_2.jumpTo(0);
     },4500);
     setTimeout(function(){
         console.log('-> set area of player_1 and player_2 to last half');
@@ -75,4 +75,4 @@ _canvas_.interface.go = function(){
         console.log('-> get waveform segment from player_1');
         console.log( player_1.waveformSegment({start:0,end:0.1}) );
     },8500);
-};
+});

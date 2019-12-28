@@ -9,15 +9,15 @@ this.cable2 = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('basic','group',name);
+            const object = interfacePart.builder('basic','group',name);
         //cable shape
-            var pathShape = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+            const pathShape = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
             // var pathShape = interfacePart.builder('pathWithRoundJointsAndEnds','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
             object.append(pathShape);
     
     //controls
-        object.activate = function(){ pathShape.colour = glowStyle; };
-        object.deactivate = function(){ pathShape.colour = dimStyle; };
+        object.activate = function(){ pathShape.colour(glowStyle); };
+        object.deactivate = function(){ pathShape.colour(dimStyle); };
         object.draw = function(new_x1,new_y1,new_x2,new_y2,new_angle1,new_angle2){
             x1 = new_x1==undefined ? x1 : new_x1;
             y1 = new_y1==undefined ? y1 : new_y1;
@@ -26,17 +26,17 @@ this.cable2 = function(
             y2 = new_y2==undefined ? y2 : new_y2;
             a2 = new_angle2==undefined ? a2 : new_angle2;
 
-            var push = 20;
-            var path = [];
+            const push = 20;
+            const path = [];
 
             //generate initial basic line 
                 path.push(x1,y1);
 
-                var offset = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
-                path.push( x1+offset.x, y1+offset.y );
+                const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                path.push( x1+offset_1.x, y1+offset_1.y );
 
-                var offset = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
-                path.push( x2+offset.x, y2+offset.y );
+                const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                path.push( x2+offset_2.x, y2+offset_2.y );
 
                 path.push(x2,y2);
 

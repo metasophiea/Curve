@@ -22,7 +22,7 @@ _canvas_.core.go.add( function(){
     rectangle_2.unifiedAttribute({ width:30, height:30, colour:{r:0,g:1,b:0,a:1} });
     group_2.append(rectangle_2);
 
-    rectangle_3 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_3 = _canvas_.core.element.create('rectangle','rectangle_3');
     rectangle_3.unifiedAttribute({ x:50, width:30, height:30, colour:{r:0,g:0,b:1,a:1} });
     group_2.append(rectangle_3);
 
@@ -30,9 +30,13 @@ _canvas_.core.go.add( function(){
 
 // _canvas_.core.render.active(true);
 
-setTimeout(()=>{_canvas_.core.arrangement.printTree()},500);
+setTimeout(()=>{
+    console.log('');
+    _canvas_.core.arrangement.printTree('address');
+},500);
 
 setTimeout(()=>{
+    console.log('');
     _canvas_.core.arrangement.areParents(rectangle_3, [rectangle_2,group_2]).then(console.log);
     _canvas_.core.arrangement.areParents(rectangle_3, [group_1]).then(console.log);
     _canvas_.core.arrangement.areParents(rectangle_3, [rectangle_2]).then(console.log);

@@ -18,7 +18,7 @@ const viewport = new function(){
     //adapter
         this.adapter = new function(){
             this.windowPoint2workspacePoint = function(x,y){
-                dev.log.viewport('.adapter.windowPoint2workspacePoint('+x+','+y+')'); //#development
+                dev.log.viewport('.adapter.windowPoint2workspacePoint(',x,y); //#development
                 const position = viewport.position();
                 const scale = viewport.scale();
                 const angle = viewport.angle();
@@ -46,14 +46,14 @@ const viewport = new function(){
 
     //camera position
         this.position = function(x,y){
-            dev.log.viewport('.position('+x+','+y+')'); //#development
+            dev.log.viewport('.position(',x,y); //#development
             if(x == undefined || y == undefined){return {x:state.position.x,y:state.position.y};}
             state.position.x = x;
             state.position.y = y;
 
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera()){ 
-                    dev.log.viewport('.position -> adjusting: '+JSON.stringify(item)); //#development
+                    dev.log.viewport('.position -> adjusting:',item); //#development
                     item.unifiedAttribute({x:state.position.x,y:state.position.y});
                 }
             });
@@ -63,12 +63,12 @@ const viewport = new function(){
             self.onCameraAdjust( Object.assign({},state) );
         };
         this.scale = function(s){
-            dev.log.viewport('.scale('+s+')'); //#development
+            dev.log.viewport('.scale(',s); //#development
             if(s == undefined){return state.scale;}
             state.scale = s <= 0 ? 1 : s;
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera()){ 
-                    dev.log.viewport('.scale -> adjusting: '+JSON.stringify(item)); //#development
+                    dev.log.viewport('.scale -> adjusting:',item); //#development
                     item.scale(state.scale);
                 }
             });
@@ -77,12 +77,12 @@ const viewport = new function(){
             self.onCameraAdjust( Object.assign({},state) );
         };
         this.angle = function(a){
-            dev.log.viewport('.angle('+a+')'); //#development
+            dev.log.viewport('.angle(',a); //#development
             if(a == undefined){return state.angle;}
             state.angle = a;
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera()){ 
-                    dev.log.viewport('.angle -> adjusting: '+JSON.stringify(item)); //#development
+                    dev.log.viewport('.angle -> adjusting:',item); //#development
                     item.angle(state.angle);
                 }
             });
@@ -93,12 +93,12 @@ const viewport = new function(){
 
     //mouse interaction
         this.getElementsUnderPoint = function(x,y){
-            dev.log.viewport('.getElementsUnderPoint('+x+','+y+')'); //#development
+            dev.log.viewport('.getElementsUnderPoint(',x,y); //#development
             let xy = this.adapter.windowPoint2canvasPoint(x,y);
             return arrangement.getElementUnderPoint(xy.x,xy.y);
         };
         this.getElementsUnderArea = function(points){
-            dev.log.viewport('.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
+            dev.log.viewport('.getElementsUnderArea(',points); //#development
             return arrangement.getElementsUnderArea(points.map(a => this.adapter.windowPoint2canvasPoint(a.x,a.y)));
         };
  
@@ -114,7 +114,7 @@ const viewport = new function(){
                 viewbox.points.br = {x:canvasDimensions.width, y:canvasDimensions.height};
             //calculate a bounding box for the viewport from these points
                 viewbox.boundingBox = library.math.boundingBoxFromPoints([viewbox.points.tl, viewbox.points.tr, viewbox.points.br, viewbox.points.bl]);
-                dev.log.viewport('::calculateViewportExtremities -> viewbox.boundingBox: '+JSON.stringify(viewbox.boundingBox)); //#development
+                dev.log.viewport('::calculateViewportExtremities -> viewbox.boundingBox:',viewbox.boundingBox); //#development
         }
         this.calculateViewportExtremities = calculateViewportExtremities;
         this.refresh = function(){
@@ -126,13 +126,13 @@ const viewport = new function(){
             return viewbox.boundingBox;
         };
         this.mousePosition = function(x,y){
-            dev.log.viewport('.mousePosition('+x+','+y+')'); //#development
+            dev.log.viewport('.mousePosition(',x,y); //#development
             if(x == undefined || y == undefined){return {x:mouseData.x, y:mouseData.y};}
             mouseData.x = x;
             mouseData.y = y;
         };
         this.stopMouseScroll = function(bool){
-            dev.log.viewport('.stopMouseScroll('+bool+')'); //#development
+            dev.log.viewport('.stopMouseScroll(',bool); //#development
             if(bool == undefined){return mouseData.stopScrollActive;}
             mouseData.stopScrollActive = bool;
     

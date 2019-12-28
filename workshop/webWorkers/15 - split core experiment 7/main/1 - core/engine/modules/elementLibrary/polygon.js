@@ -17,14 +17,14 @@ this.polygon = function(_id,_name){
             this.ignored = function(a){
                 if(a==undefined){return ignored;}     
                 ignored = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
             };
             
         //advanced use attributes
@@ -41,7 +41,7 @@ this.polygon = function(_id,_name){
             this.points = function(a){
                 if(points==undefined){return points;}     
                 points = a;     
-                dev.log.elementLibrary(type,self.getAddress(),'.points('+JSON.stringify(points)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].points(',points); //#development
                 if(allowComputeExtremities){computeExtremities();}
                 pointsChanged = true;
             };
@@ -53,31 +53,31 @@ this.polygon = function(_id,_name){
                 }
 
                 if(a==undefined){ return pointsToXYArray(); }
-                dev.log.elementLibrary(type,self.getAddress(),'.pointsAsXYArray('+JSON.stringify(a)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
 
                 this.points( a.map((point) => [point.x,point.y]).flat() );
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.static = function(a){
                 if(a==undefined){return static;}  
                 static = a;  
-                dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
                 if(attributes==undefined){ return { ignored:ignored, colour:colour, points:points, pointsChanged:pointsChanged, scale:scale, static:static }; } 
-                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                     try{
                         self[key](attributes[key]);
                     }catch(err){
@@ -124,30 +124,30 @@ this.polygon = function(_id,_name){
         let drawingPoints = [];
         let uniformLocations;
         function updateGLAttributes(context,adjust){
-            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
 
             //buffers
                 //points
                     if(point.buffer == undefined || pointsChanged){
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating point.buffer...'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                         point.attributeLocation = context.getAttribLocation(program, "point");
                         point.buffer = context.createBuffer();
                         context.enableVertexAttribArray(point.attributeLocation);
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = library.math.polygonToSubTriangles(points,'flatArray')), context.STATIC_DRAW);
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> points:'+JSON.stringify(points)); //#development
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> drawingPoints:'+JSON.stringify(points)); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> points:',points); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> drawingPoints:',points); //#development
                         pointsChanged = false;
                     }else{
-                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                     }
 
             //uniforms
                 if( uniformLocations == undefined ){
-                    dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
+                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                     uniformLocations = {
                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -157,20 +157,20 @@ this.polygon = function(_id,_name){
                     };
                 }
 
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
+                context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
         }
         let program;
         function activateGLRender(context,adjust){
-            dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
             if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
 
             context.useProgram(program);
@@ -181,7 +181,7 @@ this.polygon = function(_id,_name){
 
     //extremities
         function computeExtremities(informParent=true,offset){
-            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
                 if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
@@ -206,7 +206,7 @@ this.polygon = function(_id,_name){
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
         }
         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-            dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
 
             //activate shape render code
                 activateGLRender(context,offset);

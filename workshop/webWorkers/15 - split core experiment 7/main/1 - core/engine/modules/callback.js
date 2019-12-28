@@ -8,7 +8,7 @@ const callback = new function(){
         'onkeydown', 'onkeyup',
     ];
     function gatherDetails(event){
-        dev.log.callback('::gatherDetails('+JSON.stringify(event)+')'); //#development
+        dev.log.callback('::gatherDetails(',event); //#development
         return {
             point: viewport.adapter.windowPoint2workspacePoint(event.X,event.Y),
             elements: arrangement.getElementsUnderPoint(event.X,event.Y)
@@ -21,18 +21,18 @@ const callback = new function(){
                 if(callbackName == 'onmouseenterelement' && all[0] == relevant[0]){
                     self.coupling_out.onmouseleaveelement(x, y, event, {all:all, relevant:[currentlyEnteredElement]});
                     currentlyEnteredElement = relevant[0];
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                 }else if(callbackName == 'onmouseenterelement'){
                     //ignored
                 }else if(callbackName == 'onmouseleaveelement' && all[0] != relevant[0]){
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                     currentlyEnteredElement = all[0];
                     self.coupling_out.onmouseenterelement(x, y, event, {all:all, relevant:[all[0]]});
                 }else if(callbackName == 'onmouseleaveelement'){
                     currentlyEnteredElement = undefined;
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                 }else if(all[0] == relevant[0]){
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                 }
             break;
             case 'firstMatch':
@@ -49,7 +49,7 @@ const callback = new function(){
                         }
                     }else if(callbackName == 'onmouseleaveelement'){
                         currentlyEnteredElement = undefined;
-                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                         for(let a = 0; a < all.length; a++){
                             if(all[a].onmouseenterelement != undefined){
                                 currentlyEnteredElement = all[a];
@@ -58,7 +58,7 @@ const callback = new function(){
                             }
                         }
                     }else{
-                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:[relevant[0]]});
+                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                     }
             break;
             case 'allMatches': default:
@@ -71,11 +71,11 @@ const callback = new function(){
         return callbacks;
     };
     this.attachCallback = function(element,callbackType){
-        dev.log.callback('.attachCallback('+JSON.stringify(element)+','+callbackType+')'); //#development
+        dev.log.callback('.attachCallback(',element,callbackType+')'); //#development
         element[callbackType] = true;
     };
     this.removeCallback = function(element,callbackType){
-        dev.log.callback('.removeCallback('+JSON.stringify(element)+','+callbackType+')'); //#development
+        dev.log.callback('.removeCallback(',element,callbackType+')'); //#development
         element[callbackType] = undefined;
         delete element[callbackType];
     };
@@ -96,7 +96,7 @@ const callback = new function(){
             for(let a = 0; a < callbacks.length; a++){
                 this.coupling_in[callbacks[a]] = function(callbackName){
                     return function(event){
-                        dev.log.callback('.coupling_in.'+callbackName+'('+JSON.stringify(event)+')'); //#development
+                        dev.log.callback('.coupling_in.'+callbackName+'(',event); //#development
                         const data = gatherDetails(event);
                         activateElementCallback(callbackName, data.point.x, data.point.y, event, data.elements);
                     }
@@ -121,15 +121,15 @@ const callback = new function(){
             //onmousemove / onmouseenter / onmouseleave
                 const elementMouseoverList = [];
                 this.coupling_in.onmousemove = function(event){
-                    dev.log.callback('.coupling_in.onmousemove('+JSON.stringify(event)+')'); //#development
+                    dev.log.callback('.coupling_in.onmousemove(',event); //#development
                     viewport.mousePosition(event.X,event.Y);
                     const data = gatherDetails(event);
-                    dev.log.callback('.coupling_in.onmousemove -> data.elements.length: '+data.elements.length); //#development
-                    dev.log.callback('.coupling_in.onmousemove -> workspace point: '+JSON.stringify(data.point)); //#development
+                    dev.log.callback('.coupling_in.onmousemove -> data.elements.length:',data.elements.length); //#development
+                    dev.log.callback('.coupling_in.onmousemove -> workspace point:',data.point); //#development
 
                     //check for onmouseenter / onmouseleave
                         //go through the elementsUnderPoint list, comparing to the element transition list
-                            const diff = library.math.getDifferenceOfArrays(elementMouseoverList,data.elements);
+                            const diff = library.misc.getDifferenceOfArrays(elementMouseoverList,data.elements);
                             //run both onmouseenterelement and onmouseenterelement, only if there's
                             //  elements to report, providing only the relevant set of elements
                             //elements only on elements list; add to elementMouseoverList
@@ -144,7 +144,7 @@ const callback = new function(){
 
             //onwheel
                 this.coupling_in.onwheel = function(event){
-                    dev.log.callback('.coupling_in.onwheel('+JSON.stringify(event)+')'); //#development
+                    dev.log.callback('.coupling_in.onwheel(',event); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('onwheel', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onwheel != undefined) ) );
                 };
@@ -153,10 +153,10 @@ const callback = new function(){
                 ['onkeydown', 'onkeyup'].forEach(callbackName => {
                     this.coupling_in[callbackName] = function(callback){
                         return function(event){
-                            dev.log.callback('.coupling_in.'+callbackName+'('+JSON.stringify(event)+')'); //#development
+                            dev.log.callback('.coupling_in.'+callbackName+'(',event); //#development
                             const p = viewport.mousePosition(); event.X = p.x; event.Y = p.y;
                             const data = gatherDetails(event);
-                            dev.log.callback('.coupling_in.'+callbackName+' -> guessed mouse point: '+JSON.stringify(data.point)); //#development
+                            dev.log.callback('.coupling_in.'+callbackName+' -> guessed mouse point:',data.point); //#development
                             activateElementCallback(callback, data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element[callbackName] != undefined) ) );
 
                         }
@@ -166,25 +166,25 @@ const callback = new function(){
             //onmousedown / onmouseup / onclick / ondblclick
                 let elementMouseClickList = [];
                 this.coupling_in.onmousedown = function(event){
-                    dev.log.callback('.coupling_in.onmousedown('+JSON.stringify(event)+')'); //#development
+                    dev.log.callback('.coupling_in.onmousedown(',event); //#development
                     const data = gatherDetails(event);
                     elementMouseClickList = data.elements; //save current elements for use in the onclick callback
                     activateElementCallback('onmousedown', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmousedown != undefined) ) );
                 };
                 this.coupling_in.onmouseup = function(event){
-                    dev.log.callback('.coupling_in.onmouseup('+JSON.stringify(event)+')'); //#development
+                    dev.log.callback('.coupling_in.onmouseup(',event); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('onmouseup', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmouseup != undefined) ) );
                 };
                 let recentlyClickedDoubleClickableElementList = [];
                 this.coupling_in.onclick = function(event){
-                    dev.log.callback('.coupling_in.onclick('+JSON.stringify(event)+')'); //#development
+                    dev.log.callback('.coupling_in.onclick(',event); //#development
                     const data = gatherDetails(event);
                     recentlyClickedDoubleClickableElementList = data.elements.filter( element => (element.ondblclick != undefined && elementMouseClickList.includes(element)) );
                     activateElementCallback('onclick', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onclick != undefined && elementMouseClickList.includes(element)) ) );
                 };
                 this.coupling_in.ondblclick = function(event){
-                    dev.log.callback('.coupling_in.ondblclick('+JSON.stringify(event)+')'); //#development
+                    dev.log.callback('.coupling_in.ondblclick(',event); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('ondblclick', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.ondblclick != undefined && recentlyClickedDoubleClickableElementList.includes(element)) ) );
                 };

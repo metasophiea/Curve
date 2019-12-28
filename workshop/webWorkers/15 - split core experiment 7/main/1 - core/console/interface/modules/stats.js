@@ -1,6 +1,6 @@
 this.stats = new function(){
     this.active = function(active){
-        dev.log.interface('.stats.active('+active+')'); //#development
+        dev.log.interface('.stats.active(',active); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('stats.active',[active],resolve);
         });

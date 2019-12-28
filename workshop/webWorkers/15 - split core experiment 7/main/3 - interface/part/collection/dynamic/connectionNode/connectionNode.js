@@ -7,7 +7,7 @@ this.connectionNode = function(
     cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
     cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
     cableConnectionPosition={x:1/2,y:1/2},
-    cableVersion=0, proximityThreshold={distance:15, hysteresisDistance:1},
+    cableVersion=1, proximityThreshold={distance:15, hysteresisDistance:1},
     onconnect=function(instigator){},
     ondisconnect=function(instigator){},
 ){
@@ -15,22 +15,28 @@ this.connectionNode = function(
 
     //elements
         //main
-            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+            const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
             object._connectionNode = true;
             object._type = type;
             object._direction = direction;
         //node
-            var rectangle = interfacePart.builder('basic','rectangle','node',{ width:width, height:height, colour:dimStyle });
+            const rectangle = interfacePart.builder('basic','rectangle','node',{ width:width, height:height, colour:dimStyle });
                 object.append(rectangle);
 
     //network functions
-        var foreignNode = undefined;
+        let foreignNode = undefined;
 
         object._onconnect = function(instigator){};
         object._ondisconnect = function(instigator){};
 
         object.isConnected = function(){ return cable != undefined; };
         object.canDisconnect = function(){ return this.allowDisconnections() && (foreignNode!=undefined && foreignNode.allowDisconnections()); };
+        object.isAppropiateConnectionNode = function(potentialConnectionNode){
+            if( object._type != potentialConnectionNode._type ){ return false; }
+            if( (object._direction == '' || potentialConnectionNode._direction == '') && object._direction != potentialConnectionNode._direction ){ return false; }
+            if( object._direction != '' && (potentialConnectionNode._direction == object._direction) ){ return false; }
+            return true;
+        };
         object.allowConnections = function(bool){
             if(bool == undefined){return allowConnections;}
             allowConnections = bool;
@@ -40,11 +46,12 @@ this.connectionNode = function(
             allowDisconnections = bool;
         };
         object.connectTo = function(new_foreignNode){
+            dev.log.partDynamic('.connectionNode.connectTo('+(new_foreignNode!=undefined?JSON.stringify(new_foreignNode.getAddress()):'-undefined-')+')'); //#development
+
             if( new_foreignNode == undefined){ return; }
             if( new_foreignNode == this ){ return; }
             if( new_foreignNode._type != this._type ){ return; }
-            if( (this._direction == '' || new_foreignNode._direction == '') && this._direction != new_foreignNode._direction){ return; }
-            if( this._direction != '' && (new_foreignNode._direction == this._direction) ){ return; }
+            if( !this.isAppropiateConnectionNode(new_foreignNode) ){ return; }
 
             if( new_foreignNode == foreignNode ){ return; }
             if( new_foreignNode.isConnected() && !new_foreignNode.canDisconnect() ){ return; }
@@ -81,23 +88,25 @@ this.connectionNode = function(
         object.getForeignNode = function(){ return foreignNode; };
 
     //cabling
-        var cable;
+        let cable;
 
         object._addCable = function(){
-            var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
-            cable = interfacePart.builder('dynamic',tempCableType, tempCableType+'-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+            cable = interfacePart.builder('dynamic', 'cable', 'cable-'+object.getAddress().replace(/\//g, '_'),{ 
+                x1:0,y1:0,x2:100,y2:100, angle:angle, version:cableVersion, 
+                style:{dim:cable_dimStyle, glow:cable_glowStyle}
+            });
             
             foreignNode._receiveCable(cable);
-            _canvas_.system.pane.getMiddlegroundPane(this).then(pane => {
-                pane.append(cable);
-                object.draw();
-                if(isActive){ cable.activate(); }
-            });
+            const pane = _canvas_.system.pane.getMiddlegroundPane(this);
+            pane.append(cable);
+            object.draw();
+            if(isActive){ cable.activate(); }
         }
         object._receiveCable = function(new_cable){
             cable = new_cable;
         };
         object._removeCable = function(){
+            dev.log.partDynamic('.connectionNode._removeCable()'); //#development
             cable.parent.remove(cable);
             cable = undefined;
             foreignNode._loseCable();
@@ -106,23 +115,23 @@ this.connectionNode = function(
             cable = undefined;
         };
         object.getAttachmentPoint = function(){
-            var offset = object.getOffset();
+            dev.log.partDynamic('.connectionNode.getAttachmentPoint()'); //#development
+            const offset = object.getOffset();
+            const diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
+            const collectedAngle = offset.angle + Math.atan( height/width );
+            dev.log.partDynamic('.connectionNode.getAttachmentPoint -> offset:'+JSON.stringify(offset)+' diagonalLength:'+diagonalLength+' collectedAngle:'+collectedAngle); //#development
 
-            var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
-            var collectedAngle = offset.angle + Math.atan( height/width );
-
-            var tmp = _canvas_.core.viewport.adapter.windowPoint2workspacePoint( 
-                offset.x + (diagonalLength*Math.cos(collectedAngle))*cableConnectionPosition.x*2, 
-                offset.y + (diagonalLength*Math.sin(collectedAngle))*cableConnectionPosition.y*2
-            );
-            tmp.angle = offset.angle;
-            return tmp;
+            return {
+                x: offset.x + (diagonalLength*Math.cos(collectedAngle))*cableConnectionPosition.x*2, 
+                y: offset.y + (diagonalLength*Math.sin(collectedAngle))*cableConnectionPosition.y*2,
+                angle: offset.angle
+            };
         };
         object.draw = function(){
             if( cable == undefined ){return;}
 
-            var pointA = this.getAttachmentPoint();
-            var pointB = foreignNode.getAttachmentPoint();
+            const pointA = this.getAttachmentPoint();
+            const pointB = foreignNode.getAttachmentPoint();
 
             cable.draw(pointA.x,pointA.y,pointB.x,pointB.y,pointA.angle,pointB.angle);
         };
@@ -130,19 +139,16 @@ this.connectionNode = function(
     //mouse interaction
         rectangle.attachCallback('onmousedown', function(x,y,event){
             dev.log.partDynamic('.connectionNode-onmousedown(...)'); //#development
-            var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
-            var displacedNode = undefined;
+            let displacedNode = undefined;
 
-            var liveCable;
+            let liveCable;
             function createLiveCable(){
-                var pointA = object.getAttachmentPoint();
-                var liveCable = interfacePart.builder(
-                    'dynamic',tempCableType,'liveCable-'+object.getAddress().replace(/\//g, '_'),
-                    { x1:pointA.x,y1:pointA.y,x2:x,y2:y, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
+                const pointA = object.getAttachmentPoint();
+                const liveCable = interfacePart.builder(
+                    'dynamic', 'cable','liveCable-'+object.getAddress().replace(/\//g, '_'),
+                    { x1:pointA.x,y1:pointA.y,x2:x,y2:y, version:cableVersion, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
                 );
-                _canvas_.system.pane.getMiddlegroundPane(object).then(pane => {
-                    pane.append(liveCable);
-                });
+                _canvas_.system.pane.getMiddlegroundPane(object).append(liveCable);
                 return liveCable;
             }
 
@@ -152,29 +158,30 @@ this.connectionNode = function(
                     if( object.isConnected() && !object.canDisconnect() ){return;}
                     if( object.getForeignNode() != undefined && object.getForeignNode().isConnected() && !object.getForeignNode().canDisconnect() ){return;}
 
-                    var mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                    const mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                    dev.log.partDynamic('.connectionNode-onmousedown -> mousePoint:'+JSON.stringify(mousePoint)); //#development
 
                     //gather connection nodes within proximity
-                        var nodesWithinProximity = interfacePart.collection.dynamic.connectionNode.registry.map(node => {
+                        const nodesWithinProximity = interfacePart.collection.dynamic.connectionNode.registry.map(node => {
                             if(node === object){return;}
-                            var point = node.getAttachmentPoint();
-                            var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                            const point = node.getAttachmentPoint();
+                            const distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
                             if(distance < proximityThreshold.distance){ return {node:node,distance:distance}; }
                         }).filter(item => item!=undefined).sort((a, b) => {return a.distance-b.distance});
-                        dev.log.partDynamic('.connectionNode-onmousedown -> '+JSON.stringify(nodesWithinProximity)); //#development
+                        dev.log.partDynamic('.connectionNode-onmousedown -> nodesWithinProximity:'+JSON.stringify(nodesWithinProximity.map(i => ({distance:i.distance, node:i.node.getAddress()}) ))); //#development
 
                     //select node to snap to
-                        var snapToNode = undefined;
+                        let snapToNode = undefined;
                         if(nodesWithinProximity.length == 0){
                             if( object.isConnected() ){
-                                var point = object.getForeignNode().getAttachmentPoint();
-                                var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                const point = object.getForeignNode().getAttachmentPoint();
+                                const distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
                                 snapToNode = distance > proximityThreshold.distance + proximityThreshold.hysteresisDistance ? undefined : object.getForeignNode();
                             }
                         }else if( nodesWithinProximity.length == 1 ){
                             if( object.isConnected() ){
-                                var point = object.getForeignNode().getAttachmentPoint();
-                                var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                const point = object.getForeignNode().getAttachmentPoint();
+                                const distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
                                 snapToNode = distance > proximityThreshold.distance + proximityThreshold.hysteresisDistance ? nodesWithinProximity[0].node : object.getForeignNode();
                             }else{
                                 snapToNode = nodesWithinProximity[0].node;
@@ -183,30 +190,46 @@ this.connectionNode = function(
                             if(!object.isConnected()){
                                 snapToNode = nodesWithinProximity[0].node;
                             }else{
-                                var point = object.getForeignNode().getAttachmentPoint();
-                                var currentlyConnectedNode = { node:object.getForeignNode(), distance:Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2) };
-                                var relevantNodes = nodesWithinProximity.filter(node => node.node != object.getForeignNode() );
+                                const point = object.getForeignNode().getAttachmentPoint();
+                                const currentlyConnectedNode = { node:object.getForeignNode(), distance:Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2) };
+                                const relevantNodes = nodesWithinProximity.filter(node => node.node != object.getForeignNode() );
 
                                 snapToNode = currentlyConnectedNode.distance > relevantNodes[0].distance + proximityThreshold.hysteresisDistance ? relevantNodes[0].node : currentlyConnectedNode.node;
                             }
                         }
+                        dev.log.partDynamic('.connectionNode-onmousedown -> snapToNode:'+(snapToNode!=undefined?JSON.stringify(snapToNode.getAddress()):'-none-')); //#development
                     
                     //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
-                        if( snapToNode == undefined || !snapToNode.allowConnections() || (object._direction != '' && object._direction == snapToNode._direction) ){
+                        if( snapToNode == undefined || !snapToNode.allowConnections() || !object.isAppropiateConnectionNode(snapToNode) ){
+                            dev.log.partDynamic('.connectionNode-onmousedown -> no node found'); //#development
                             if( liveCable == undefined ){
-                                if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }else{ object.disconnect(); }
+                                if( object.isConnected() && displacedNode!=undefined ){
+                                    object.getForeignNode().connectTo(displacedNode);
+                                    displacedNode = undefined;
+                                }else{
+                                    object.disconnect();
+                                }
                                 liveCable = createLiveCable();
                             }
 
-                            var thisNode_point = object.getAttachmentPoint();
+                            const thisNode_point = object.getAttachmentPoint();
                             mousePoint.angle = _canvas_.library.math.getAngleOfTwoPoints(mousePoint,thisNode_point);
                             liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle );
                         }else{
-                            if(liveCable != undefined){ liveCable.parent.remove(liveCable); liveCable = undefined; }
+                            dev.log.partDynamic('.connectionNode-onmousedown -> node found'); //#development
+                            if(liveCable != undefined){
+                                liveCable.parent.remove(liveCable);
+                                liveCable = undefined;
+                            }
 
                             if( object.getForeignNode() != snapToNode ){
-                                if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }
-                                if( snapToNode.isConnected() ){ displacedNode = snapToNode.getForeignNode(); }
+                                if( object.isConnected() && displacedNode != undefined ){
+                                    object.getForeignNode().connectTo(displacedNode);
+                                    displacedNode = undefined;
+                                }
+                                if( snapToNode.isConnected() ){
+                                    displacedNode = snapToNode.getForeignNode();
+                                }
                                 
                                 object.connectTo(snapToNode);
                             }
@@ -223,14 +246,14 @@ this.connectionNode = function(
         } );
 
     //graphical
-        var isActive = false;
+        let isActive = false;
         object.activate = function(){ 
-            rectangle.colour = glowStyle;
+            rectangle.colour(glowStyle);
             if(cable!=undefined){ cable.activate(); }
             isActive = true;
         }
         object.deactivate = function(){ 
-            rectangle.colour = dimStyle;
+            rectangle.colour(dimStyle);
             if(cable!=undefined){ cable.deactivate(); }
             isActive = false;
         }
@@ -240,15 +263,15 @@ this.connectionNode = function(
         object.ondisconnect = ondisconnect;
 
     //register self
-        object.onadd = function(){
-            interfacePart.collection.dynamic.connectionNode.registry.push(this);
-        };
-        object.onremove = function(){
+        object.attachCallback('onadd', function(){
+            interfacePart.collection.dynamic.connectionNode.registry.push(object);
+        });
+        object.attachCallback('onremove', function(){
             interfacePart.collection.dynamic.connectionNode.registry.splice(
-                interfacePart.collection.dynamic.connectionNode.registry.indexOf(this), 
+                interfacePart.collection.dynamic.connectionNode.registry.indexOf(object), 
                 1
             );
-        };
+        });
 
     return object;
 };

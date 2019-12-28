@@ -44,6 +44,7 @@
                     _canvas_.onmousemove = mouse.original.onmousemove;
                     _canvas_.onmouseleave = mouse.original.onmouseleave;
                     _canvas_.onmouseup = mouse.original.onmouseup;
+                    _canvas_.onmouseup(event);
                 };
                 _canvas_.onmouseleave = _canvas_.onmouseup;
     };
@@ -54,7 +55,7 @@
     this.setUpCallbacks = function(){
         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
             _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
-                if(elementIds.length == 0){
+                if(elementIds.relevant.length == 0){
                     _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
                 }
             }

@@ -4,8 +4,8 @@ this.element = new function(){
         return Object.keys(elementLibrary);
     };
 
-    this.create = function(type,name){
-        dev.log.interface('.element.create('+type+','+name+')'); //#development
+    this.create = function(type,name,forceId,updateIdOnly){
+        dev.log.interface('.element.create(',type,name,forceId,updateIdOnly); //#development
 
         if(elementLibrary[type] == undefined){
             console.warn('interface.element.create - unknown element type "'+type+'"');
@@ -13,14 +13,19 @@ this.element = new function(){
         }
 
         const newElementProxy = new elementLibrary[type](name);
-        communicationModule.run('element.create', [type,name], id => {
-            newElementProxy.__id(id);
-            elementRegistry[id] = newElementProxy;
-        });
+        if(forceId == undefined){
+            communicationModule.run('element.create', [type,name], id => {
+                newElementProxy.__id(id);
+                elementRegistry[id] = newElementProxy;
+            });
+        }else{
+            newElementProxy.__id(forceId,updateIdOnly);
+            elementRegistry[forceId] = newElementProxy;
+        }
         return newElementProxy;
     };
     this.delete = function(ele){
-        dev.log.interface('.element.delete('+JSON.stringify(ele)+')'); //#development
+        dev.log.interface('.element.delete(',ele); //#development
         communicationModule.run('element.delete',[ele.getId()]);
         elementRegistry[element.getId()] = undefined;
     };
@@ -31,7 +36,7 @@ this.element = new function(){
     };
 
     this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
-        dev.log.interface('.element.__executeMethod('+id+','+attribute+','+JSON.stringify(argumentList)+')'); //#development
+        dev.log.interface('.element.__executeMethod(',id,attribute,argumentList,callback,transferables); //#development
         communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
     };
 };

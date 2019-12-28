@@ -10,7 +10,7 @@ _canvas_.interface = new function(){
             partBasic:{     prefix:'part.collection.basic',     active:false,   fontStyle:'color:rgb(229, 96, 83);  font-style:italic;' },
             partDisplay:{   prefix:'part.collection.display',   active:false,   fontStyle:'color:rgb(99, 196, 129); font-style:italic;' },
             partControl:{   prefix:'part.collection.control',   active:false,   fontStyle:'color:rgb(243, 194, 95); font-style:italic;' },
-            partDynamic:{   prefix:'part.collection.dynamic',   active:!false,   fontStyle:'color:rgb(24, 53, 157);  font-style:italic;' },
+            partDynamic:{   prefix:'part.collection.dynamic',   active:false,   fontStyle:'color:rgb(24, 53, 157);  font-style:italic;' },
             unit:{          prefix:'unit',                      active:false,   fontStyle:'color:rgb(66, 145, 115); font-style:italic;' },
         },
         log:{},
@@ -21,14 +21,6 @@ _canvas_.interface = new function(){
             console.log('%c'+dev.prefix+'.'+dev.channels[channel].prefix+(new Array(...arguments).join(' ')), dev.channels[channel].fontStyle );
         }
     });
-    dev.testLoggers = function(){
-        Object.keys(dev.channels).forEach(channel => {
-            const temp = dev.circuit[channel];
-            dev.channels[channel].active = true;
-            dev.log[channel]('.testLoggers -> '+channel);
-            dev.channels[channel].active = temp;
-        });
-    };
 
     this.go = new function(){
         const functionList = [];
@@ -44,7 +36,7 @@ _canvas_.interface = new function(){
         {{include:part/main.js}}
     };
     this.unit = new function(){
-        // {{include:unit/main.js}}
+        {{include:unit/main.js}}
     };
 };
 

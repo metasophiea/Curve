@@ -31,14 +31,26 @@ this.filterUnit = function(
         flow.filterNode.node.connect(flow.outAggregator.node);
 
     //input/output node
-        this.in = function(){return flow.inAggregator.node;}
-        this.out = function(){return flow.outAggregator.node;}
+        this.in = function(){
+            return flow.inAggregator.node;
+        }
+        this.out = function(){
+            return flow.outAggregator.node;
+        }
 
     //methods
-        this.type = function(type){flow.filterNode.node.type = type;};
-        this.frequency = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
-        this.gain = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
-        this.Q = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
+        this.type = function(type){
+            flow.filterNode.node.type = type;
+        };
+        this.frequency = function(value){
+            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);
+        };
+        this.gain = function(value){
+            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);
+        };
+        this.Q = function(value){
+            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);
+        };
         this.measureFrequencyResponse = function(start,end,step){
             const frequencyArray = [];
             for(let a = start; a < end; a += step){frequencyArray.push(a);}

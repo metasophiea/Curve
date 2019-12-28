@@ -3,8 +3,6 @@ function rc(){return {r:Math.random(),g:Math.random(),b:Math.random(),a:1};}
 
 _canvas_.core.go.add( function(){ 
 
-
-
     dynamicGroup = _canvas_.core.element.create('group','dynamicGroup');
     dynamicGroup.unifiedAttribute({ heedCamera:true });
     _canvas_.core.arrangement.append(dynamicGroup);

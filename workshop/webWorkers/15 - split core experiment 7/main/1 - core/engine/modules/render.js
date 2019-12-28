@@ -17,12 +17,12 @@ const render = new function(){
 
     //webGL setup
         context.enable(context.BLEND);
-        context.blendFunc(context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+        context.blendFunc(context.ONE, context.ONE_MINUS_SRC_ALPHA);
 
     //webGL program production
-        let storedPrograms = {};
+        const storedPrograms = {};
         this.produceProgram = function(name, vertexShaderSource, fragmentShaderSource){
-            dev.log.render('.produceProgram('+name+','+vertexShaderSource+','+fragmentShaderSource+')'); //#development
+            dev.log.render('.produceProgram(',name,vertexShaderSource,fragmentShaderSource); //#development
             function compileProgram(vertexShaderSource, fragmentShaderSource){
                 function createShader(type, source){
                     let shader = context.createShader(type);
@@ -61,18 +61,18 @@ const render = new function(){
 
     //canvas and webGL context adjustment
         this.clearColour = function(colour){
-            dev.log.render('.clearColour('+JSON.stringify(colour)+')'); //#development
+            dev.log.render('.clearColour(',colour); //#development
             if(colour == undefined){ return clearColour; }
             clearColour = colour;
             context.clearColor(clearColour.r, clearColour.g, clearColour.b, 1);
         };
         this.adjustCanvasSize = function(newWidth, newHeight){
-            dev.log.render('.adjustCanvasSize('+newWidth+','+newHeight+')'); //#development
+            dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
             let adjustCanvasSize_isBusy = {width:false,height:false};
             isBusy = true;
 
             function updateInternalCanvasSize(direction,newValue){
-                dev.log.render('.adjustCanvasSize::updateInternalCanvasSize('+direction+','+newValue+')'); //#development
+                dev.log.render('.adjustCanvasSize::updateInternalCanvasSize(',direction,newValue); //#development
                 newValue *= pageData.devicePixelRatio;
                 if(newValue != undefined){
                     if(pageData.currentCanvasSize[direction] != newValue){
@@ -111,7 +111,7 @@ const render = new function(){
                 }
             }
             function updateSize_dataRequest(direction){
-                dev.log.render('.adjustCanvasSize::updateSize_dataRequest('+direction+')'); //#development
+                dev.log.render('.adjustCanvasSize::updateSize_dataRequest(',direction); //#development
                 const capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
 
                 interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
@@ -203,12 +203,12 @@ const render = new function(){
     //frame rate control
         const frameRateControl = {active:false, previousRenderTime:Date.now(), limit:30, interval:0};
         this.activeLimitToFrameRate = function(a){
-            dev.log.render('.activeLimitToFrameRate('+a+')'); //#development
+            dev.log.render('.activeLimitToFrameRate(',a); //#development
             if(a==undefined){return frameRateControl.active;}
             frameRateControl.active=a
         };
         this.frameRateLimit = function(a){
-            dev.log.render('.frameRateLimit('+a+')'); //#development
+            dev.log.render('.frameRateLimit(',a); //#development
             if(a==undefined){ return frameRateControl.limit; }
             frameRateControl.limit=a;
             frameRateControl.interval=1000/frameRateControl.limit;
@@ -216,14 +216,14 @@ const render = new function(){
 
     //actual render
         function renderFrame(noClear=false){
-            dev.log.render('::renderFrame('+noClear+')'); //#development
+            dev.log.render('::renderFrame(',noClear); //#development
             if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
             arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
             const transferableImage = canvas.transferToImageBitmap();
             interface.printToScreen(transferableImage);
         }
         function animate(timestamp){
-            dev.log.render('::animate('+timestamp+')'); //#development
+            dev.log.render('::animate(',timestamp); //#development
             animationRequestId = requestAnimationFrame(animate);
 
             //limit frame rate
@@ -247,11 +247,11 @@ const render = new function(){
                 stats.collect(timestamp);
         }
         this.frame = function(noClear=false){
-            dev.log.render('.frame('+noClear+')'); //#development
+            dev.log.render('.frame(',noClear); //#development
             renderFrame(noClear);
         };
         this.active = function(bool){
-            dev.log.render('.active('+bool+')'); //#development
+            dev.log.render('.active(',bool); //#development
             if(bool == undefined){return animationRequestId!=undefined;}
 
             if(bool){

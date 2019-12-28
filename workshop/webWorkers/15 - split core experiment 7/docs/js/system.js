@@ -1,9 +1,9 @@
 (function() {
     const __canvasPrefix = 'system';
-    var __canvasElements = document.getElementsByTagName('canvas');
-    for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.length; __canvasElements_count++){
+    const __canvasElements = document.getElementsByTagName('canvas');
+    for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.length; __canvasElements_count++){
         if( __canvasElements[__canvasElements_count].hasAttribute(__canvasPrefix) ){
-            var _canvas_ = __canvasElements[__canvasElements_count];
+            const _canvas_ = __canvasElements[__canvasElements_count];
             _canvas_.layers = new function(){
                 const layerRegistry = {};
             
@@ -19,84 +19,50 @@
                     return Object.keys(layerRegistry).map(key => { return {name:key, data:layerRegistry[key].versionInformation} });
                 };
             };
-            
             _canvas_.library = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
                 const library = this;
-            
+                
                 const dev = {
                     prefix:'library',
-            
-                    countActive:!false,
-                    countMemory:{},
                 
-                    math:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
-                    structure:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
-                    audio:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
-                    font:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
-                    misc:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
+                    active:{ math:false, structure:false, audio:false, font:false, misc:false },
                 
                     log:{
-                        math:function(data){
-                            if(!dev.math.active){return;}
-                            console.log('%c'+dev.prefix+'.math'+(new Array(...arguments).join(' ')), dev.math.fontStyle );
+                        math:function(){
+                            if(!dev.active.math){return;}
+                            console.log( dev.prefix+'.math'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
-                        structure:function(data){
-                            if(!dev.structure.active){return;}
-                            console.log('%c'+dev.prefix+'.structure'+(new Array(...arguments).join(' ')), dev.structure.fontStyle );
+                        structure:function(){
+                            if(!dev.active.structure){return;}
+                            console.log( dev.prefix+'.structure'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
-                        audio:function(data){
-                            if(!dev.audio.active){return;}
-                            console.log('%c'+dev.prefix+'.audio'+(new Array(...arguments).join(' ')), dev.audio.fontStyle );
+                        audio:function(){
+                            if(!dev.active.audio){return;}
+                            console.log( dev.prefix+'.audio'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
-                        font:function(data){
-                            if(!dev.font.active){return;}
-                            console.log('%c'+dev.prefix+'.font'+(new Array(...arguments).join(' ')), dev.font.fontStyle );
+                        font:function(){
+                            if(!dev.active.font){return;}
+                            console.log( dev.prefix+'.font'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
-                        misc:function(data){
-                            if(!dev.misc.active){return;}
-                            console.log('%c'+dev.prefix+'.misc'+(new Array(...arguments).join(' ')), dev.misc.fontStyle );
+                        misc:function(){
+                            if(!dev.active.misc){return;}
+                            console.log( dev.prefix+'.misc'+arguments[0], ...(new Array(...arguments).slice(1)) );
                         },
                     },
+                
+                    countActive:false,
+                    countMemory:{},
                     count:function(commandTag){
                         if(!dev.countActive){return;}
                         if(commandTag in dev.countMemory){ dev.countMemory[commandTag]++; }
                         else{ dev.countMemory[commandTag] = 1; }
                     },
+                    countResults:function(){return countMemory;},
                 };
-                this.dev = {
-                    countResults:function(){ return dev.countMemory; },
-                    testLoggers:function(){
-                        const math = dev.math.active;
-                        const structure = dev.structure.active;
-                        const audio = dev.audio.active;
-                        const font = dev.font.active;
-                        const misc = dev.misc.active;
-            
-                        dev.math.active = true;
-                        dev.structure.active = true;
-                        dev.audio.active = true;
-                        dev.font.active = true;
-                        dev.misc.active = true;
-            
-                        dev.log.math('.testLoggers -> math');
-                        dev.log.structure('.testLoggers -> structure');
-                        dev.log.audio('.testLoggers -> audio');
-                        dev.log.font('.testLoggers -> font');
-                        dev.log.misc('.testLoggers -> misc');
-            
-                        dev.math.active = math;
-                        dev.structure.active = structure;
-                        dev.audio.active = audio;
-                        dev.font.active = font;
-                        dev.misc.active = misc;
-                    },
-                };
-            
+                
                 this.math = new function(){
                     this.averageArray = function(array){
-                        dev.log.math('.averageArray('+JSON.stringify(array)+')'); //#development
-                        dev.count('.math.averageArray'); //#development
                     
                         // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
                     
@@ -106,18 +72,46 @@
                         return sum/array.length;
                     };
                     this.averagePoint = function(points){
-                        dev.log.math('.averagePoint('+JSON.stringify(points)+')'); //#development
-                        dev.count('.math.averagePoint'); //#development
                     
                         const sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
                         return {x:sum.x/points.length,y:sum.y/points.length};
                     };
                     this.boundingBoxFromPoints = function(points){
-                        dev.log.math('.boundingBoxFromPoints('+JSON.stringify(points)+')'); //#development
-                        dev.count('.math.boundingBoxFromPoints'); //#development
                     
                         if(points.length == 0){
                             return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
+                        }
+                    
+                        if(points.length == 1){
+                            return { topLeft:{x:points[0].x,y:points[0].y}, bottomRight:{x:points[0].x,y:points[0].y} };
+                        }
+                    
+                        if(points.length == 2){
+                            if(points[0].x < points[1].x){
+                                if(points[0].y < points[1].y){
+                                    return {
+                                        topLeft:{x:points[0].x,y:points[0].y},
+                                        bottomRight:{x:points[1].x,y:points[1].y},
+                                    };
+                                }else{
+                                    return {
+                                        topLeft:{x:points[0].x,y:points[1].y},
+                                        bottomRight:{x:points[1].x,y:points[0].y},
+                                    };
+                                }
+                            }else{
+                                if(points[0].y < points[1].y){
+                                    return {
+                                        topLeft:{x:points[1].x,y:points[0].y},
+                                        bottomRight:{x:points[0].x,y:points[1].y},
+                                    };
+                                }else{
+                                    return {
+                                        topLeft:{x:points[1].x,y:points[1].y},
+                                        bottomRight:{x:points[0].x,y:points[0].y},
+                                    };
+                                }
+                            }
                         }
                     
                         let left = points[0].x; let right = points[0].x;
@@ -137,8 +131,6 @@
                         };
                     };
                     this.cartesianAngleAdjust = function(x,y,angle){
-                        dev.log.math('.cartesianAngleAdjust('+x+','+y+','+angle+')'); //#development
-                        dev.count('.math.cartesianAngleAdjust'); //#development
                     
                         // //v1    
                         //     if(angle == 0){ return {x:x,y:y}; }
@@ -156,14 +148,10 @@
                     };
                     this.convertColour = new function(){
                         this.obj2rgba = function(obj){
-                            dev.log.math('.convertColour.obj2rgba('+JSON.stringify(obj)+')'); //#development
-                            dev.count('.math.convertColour.obj2rgba'); //#development
                     
                             return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
                         };
                         this.rgba2obj = function(rgba){
-                            dev.log.math('.convertColour.rgba2obj('+JSON.stringify(rgba)+')'); //#development
-                            dev.count('.convertColour.rgba2obj'); //#development
                     
                             rgba = rgba.split(',');
                             rgba[0] = rgba[0].replace('rgba(', '');
@@ -174,8 +162,6 @@
                     };
                     this.curveGenerator = new function(){
                         this.linear = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.linear('+stepCount+','+start+','+end+')'); //#development
-                            dev.count('.math.curveGenerator.linear'); //#development
                     
                             stepCount = Math.abs(stepCount)-1; var outputArray = [0];
                             for(let a = 1; a < stepCount; a++){ 
@@ -191,8 +177,6 @@
                             return outputArray;
                         };
                         this.sin = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.sin('+stepCount+','+start+','+end+')'); //#development
-                            dev.count('.math.curveGenerator.sin'); //#development
                     
                             stepCount = Math.abs(stepCount) -1;
                             let outputArray = [0];
@@ -211,8 +195,6 @@
                             return outputArray;		
                         };
                         this.cos = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.cos('+stepCount+','+start+','+end+')'); //#development
-                            dev.count('.math.curveGenerator.cos'); //#development
                     
                             stepCount = Math.abs(stepCount) -1;
                             let outputArray = [0];
@@ -231,8 +213,6 @@
                             return outputArray;	
                         };
                         this.s = function(stepCount=2, start=0, end=1, sharpness=8){
-                            dev.log.math('.curveGenerator.s('+stepCount+','+start+','+end+','+sharpness+')'); //#development
-                            dev.count('.math.curveGenerator.s'); //#development
                     
                             if(sharpness == 0){sharpness = 1/1000000;}
                     
@@ -253,8 +233,6 @@
                             return outputArray;
                         };
                         this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
-                            dev.log.math('.curveGenerator.exponential('+stepCount+','+start+','+end+','+sharpness+')'); //#development
-                            dev.count('.math.curveGenerator.exponential'); //#development
                     
                             stepCount = stepCount-1;
                             let outputArray = [];
@@ -275,26 +253,18 @@
                     };
                     this.curvePoint = new function(){
                         this.linear = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.linear('+x+','+start+','+end+')'); //#development
-                            dev.count('.math.curvePoint.linear'); //#development
                     
                             return x *(end-start)+start;
                         };
                         this.sin = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.sin('+x+','+start+','+end+')'); //#development
-                            dev.count('.math.curvePoint.sin'); //#development
                     
                             return Math.sin(Math.PI/2*x) *(end-start)+start;
                         };
                         this.cos = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.cos('+x+','+start+','+end+')'); //#development
-                            dev.count('.math.curvePoint.cos'); //#development
                     
                             return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
                         };
                         this.s = function(x=0.5, start=0, end=1, sharpness=8){
-                            dev.log.math('.curvePoint.s('+x+','+start+','+end+','+sharpness+')'); //#development
-                            dev.count('.math.curvePoint.s'); //#development
                     
                             const temp = library.math.normalizeStretchArray([
                                 1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
@@ -304,8 +274,6 @@
                             return temp[1] *(end-start)+start;
                         };
                         this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
-                            dev.log.math('.curvePoint.exponential('+x+','+start+','+end+','+sharpness+')'); //#development
-                            dev.count('.math.curvePoint.exponential'); //#development
                     
                             const temp = library.math.normalizeStretchArray([
                                 (Math.exp(sharpness*0)-1)/(Math.E-1),
@@ -315,24 +283,508 @@
                             return temp[1] *(end-start)+start;
                         };
                     };
+                    this.getAngleOfTwoPoints = function(point_1,point_2){
+                    
+                        if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
+                    
+                        const xDelta = point_2.x - point_1.x;
+                        const yDelta = point_2.y - point_1.y;
+                        let angle = Math.atan( yDelta/xDelta );
+                    
+                        if(xDelta < 0){ angle = Math.PI + angle; }
+                        else if(yDelta < 0){ angle = Math.PI*2 + angle; }
+                    
+                        return angle;
+                    };
+                    this.getIndexOfSequence = function(array,sequence){ 
+                    
+                        function comp(thing_A,thing_B){
+                            const keys = Object.keys(thing_A);
+                            if(keys.length == 0){ return thing_A == thing_B; }
+                    
+                            for(let a = 0; a < keys.length; a++){
+                                if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
+                                if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
+                            }
+                            return true;
+                        }
+                    
+                        if(array.length == 0 || sequence.length == 0){return undefined;}
+                    
+                        let index = 0;
+                        for(index = 0; index < array.length - sequence.length + 1; index++){
+                            if( comp(array[index], sequence[0]) ){
+                                let match = true;
+                                for(let a = 1; a < sequence.length; a++){
+                                    if( !comp(array[index+a],sequence[a]) ){
+                                        match = false;
+                                        break;
+                                    }
+                                }
+                                if(match){return index;}
+                            }
+                        }
+                    
+                        return undefined;
+                    };
+                    this.largestValueFound = function(array){
+                    
+                        if(array.length == 0){return undefined;}
+                        return array.reduce(function(max,current){
+                            return Math.abs(max) > Math.abs(current) ? max : current;
+                        });
+                    };
+                    this.normalizeStretchArray = function(array){
+                    
+                        //discover the largest number
+                            var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
+                    
+                        //divide everything by this largest number, making everything a ratio of this value 
+                            var dux = Math.abs(array[biggestIndex]);
+                            array = array.map(x => x / dux);
+                    
+                        //stretch the other side of the array to meet 0 or 1
+                            if(array[0] == 0 && array[array.length-1] == 1){return array;}
+                            var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
+                            array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
+                    
+                        return array;
+                    };
+                    this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+                    
+                        const mux = (d - start)/(end - start);
+                        if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
+                        return mux*realLength;
+                    };
+                    this.seconds2time = function(seconds){
+                    
+                        const result = {h:0, m:0, s:0, ms:0, µs:0, ns:0, ps:0, fs:0};
+                        
+                        result.h = Math.floor(seconds/3600);
+                        seconds = seconds - result.h*3600;
+                        if(seconds <= 0){return result;}
+                    
+                        result.m = Math.floor(seconds/60);
+                        seconds = seconds - result.m*60;
+                        if(seconds <= 0){return result;}
+                    
+                        result.s = Math.floor(seconds);
+                        seconds = seconds - result.s;
+                        if(seconds <= 0){return result;}
+                    
+                        result.ms = Math.floor(seconds*1000);
+                        seconds = seconds*1000 - result.ms;
+                        if(seconds <= 0){return result;}
+                    
+                        result.µs = Math.floor(seconds*1000);
+                        seconds = seconds*1000 - result.µs;
+                        if(seconds <= 0){return result;}
+                    
+                        result.ns = Math.floor(seconds*1000);
+                        seconds = seconds*1000 - result.ns;
+                        if(seconds <= 0){return result;}
+                    
+                        result.ps = Math.floor(seconds*1000);
+                        seconds = seconds*1000 - result.ps;
+                        if(seconds <= 0){return result;}
+                    
+                        result.fs = seconds*1000;
+                        
+                        return result;
+                    };
+                    
+                    this.distanceBetweenTwoPoints = function(point_a,point_b){
+                        return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
+                    };
+                    this.cartesian2polar = function(x,y){
+                    
+                        const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
+                    
+                        if(x === 0){
+                            if(y === 0){ang = 0;}
+                            else if(y > 0){ang = 0.5*Math.PI;}
+                            else{ang = 1.5*Math.PI;}
+                        }
+                        else if(y === 0){
+                            if(x >= 0){ang = 0;}else{ang = Math.PI;}
+                        }
+                        else if(x >= 0){ ang = Math.atan(y/x); }
+                        else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
+                    
+                        return {'dis':dis,'ang':ang};
+                    };
+                    this.polar2cartesian = function(angle,distance){
+                    
+                        return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
+                    };
+                    
+                    this.blendColours = function(rgba_1,rgba_2,ratio){
+                    
+                        return {
+                            r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
+                            g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
+                            b: (1-ratio)*rgba_1.b + ratio*rgba_2.b,
+                            a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
+                        };           
+                    };
+                    this.multiBlendColours = function(rgbaList,ratio){
+                    
+                        //special cases
+                            if(ratio == 0){return rgbaList[0];}
+                            if(ratio == 1){return rgbaList[rgbaList.length-1];}
+                        //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+                            const p = ratio*(rgbaList.length-1);
+                            return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+                    };
+                    
+                    
+                    
+                    this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+                    
+                        if(inputFormat == 'flatArray'){
+                            const tmp = [];
+                            for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
+                            regions = [tmp];
+                        }
+                    
+                        const holes = regions.reverse().map(region => region.length);
+                        holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
+                        holes.pop();
+                    
+                        return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+                    };
+                    this.unionPolygons = function(polygon1,polygon2){
+                    
+                        //martinez (not working)
+                        // for(var a = 0; a < polygon1.length; a++){
+                        //     polygon1[a].push( polygon1[a][0] );
+                        // }
+                        // for(var a = 0; a < polygon2.length; a++){
+                        //     polygon2[a].push( polygon2[a][0] );
+                        // }
+                    
+                        // var ans = _thirdparty.martinez.union(
+                        //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
+                        //     polygon2.map(region => region.map(item => [item.x,item.y])  )
+                        // );
+                        // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
+                    
+                        //PolyBool
+                        return _thirdparty.PolyBool.union(
+                            {regions:polygon1.map(region => region.map(item => [item.x,item.y]))}, 
+                            {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
+                        ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
+                    }
+                    
+                    this.detectIntersect = new function(){
+                        this.boundingBoxes = function(box_a, box_b){
+                    
+                            return box_a.bottomRight.y >= box_b.topLeft.y && 
+                                box_a.bottomRight.x >= box_b.topLeft.x && 
+                                box_a.topLeft.y <= box_b.bottomRight.y && 
+                                box_a.topLeft.x <= box_b.bottomRight.x;
+                        };
+                    
+                        this.pointWithinBoundingBox = function(point,box){
+                            return !(
+                                point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
+                                point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
+                            );
+                        };
+                        this.pointOnLine = function(point,line){
+                            
+                            if( 
+                                point.x < line[0].x && point.x < line[1].x ||
+                                point.y < line[0].y && point.y < line[1].y ||
+                                point.x > line[0].x && point.x > line[1].x ||
+                                point.y > line[0].y && point.y > line[1].y
+                            ){return false;}
+                    
+                            if(point.x == line[0].x && point.y == line[0].y){ return true; }
+                            if(point.x == line[1].x && point.y == line[1].y){ return true; }
+                            if(line[0].x == line[1].x && point.x == line[0].x){
+                                return (line[0].y > point.y && point.y > line[1].y) || (line[1].y > point.y && point.y > line[0].y);
+                            }
+                            if(line[0].y == line[1].y && point.y == line[0].y){
+                                return (line[0].x > point.x && point.x > line[1].x) || (line[1].x > point.x && point.x > line[0].x);
+                            }
+                    
+                            return ((line[1].y - line[0].y) / (line[1].x - line[0].x))*(point.x - line[0].x) + line[0].y - point.y == 0;
+                        }
+                        this.pointWithinPoly = function(point,poly){
+                    
+                            if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
+                            if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints([point]), poly.boundingBox ) ){ return 'outside'; }
+                    
+                            // outside / onPoint / onEdge / inside
+                    
+                            //check if the point is on a point of the poly; bail and return 'onPoint'
+                            for(let a = 0; a < poly.points.length; a++){
+                                if( point.x == poly.points[a].x && point.y == poly.points[a].y ){
+                                    return 'onPoint';
+                                }
+                            }
+                    
+                            function pointLevelWithPolyPointChecker(poly,point,a,b){
+                                //only flip, if the point is not perfectly level with point a of the line (the system will come round to having this same point be point b)
+                                //or if you can prove that the two adjacent points are higher and lower than the matching point's level
+                                if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
+                                    return true;
+                                }else if(poly.points[a].y != point.y){
+                                    const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
+                                    const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
+                                    if(
+                                        poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
+                                        poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
+                                    ){
+                                    }else{
+                                        return true;
+                                    }
+                                }else if(poly.points[b].y != point.y){
+                                    const pointInFront = b+1 >= poly.points.length ? 0 : b+1;
+                                    const pointBehind = b-1 <= 0 ? poly.points.length-1 : b-1;
+                                    if(
+                                        poly.points[pointBehind].y <= poly.points[b].y && poly.points[pointInFront].y <= poly.points[b].y ||
+                                        poly.points[pointBehind].y >= poly.points[b].y && poly.points[pointInFront].y >= poly.points[b].y
+                                    ){
+                                    }else{
+                                        return true;
+                                    }
+                                }
+                    
+                                return false;
+                            }
+                    
+                            //Ray casting algorithm
+                            let inside = false;
+                            for(let a = 0, b = poly.points.length - 1; a < poly.points.length; b = a++){
+                    
+                                //point must be on the same level of the line
+                                if( (poly.points[b].y >= point.y && poly.points[a].y <= point.y) || (poly.points[a].y >= point.y && poly.points[b].y <= point.y) ){
+                                    //discover if the point is on the far right of the line
+                                    if( poly.points[a].x < point.x && poly.points[b].x < point.x ){
+                                        //only flip if the line is not perfectly level (which would make the ray skirt the line)
+                                        if( poly.points[a].y != poly.points[b].y ){
+                                            if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
+                                                inside = !inside;
+                                            }
+                                        }
+                    
+                                    //discover if the point is on the far left of the line, skip it if so
+                                    }else if( poly.points[a].x > point.x && poly.points[b].x > point.x ){
+                                        continue;
+                                    }else{
+                                        //calculate what side of the line this point is
+                                            let areaLocation;
+                                            if( poly.points[b].y > poly.points[a].y && poly.points[b].x > poly.points[a].x ){
+                                                areaLocation = (point.x-poly.points[a].x)/(poly.points[b].x-poly.points[a].x) - (point.y-poly.points[a].y)/(poly.points[b].y-poly.points[a].y) + 1;
+                                            }else if( poly.points[b].y <= poly.points[a].y && poly.points[b].x <= poly.points[a].x ){
+                                                areaLocation = (point.x-poly.points[b].x)/(poly.points[a].x-poly.points[b].x) - (point.y-poly.points[b].y)/(poly.points[a].y-poly.points[b].y) + 1;
+                                            }else if( poly.points[b].y > poly.points[a].y && poly.points[b].x < poly.points[a].x ){
+                                                areaLocation = (point.x-poly.points[b].x)/(poly.points[a].x-poly.points[b].x) + (point.y-poly.points[a].y)/(poly.points[b].y-poly.points[a].y);
+                                            }else if( poly.points[b].y <= poly.points[a].y && poly.points[b].x >= poly.points[a].x ){
+                                                areaLocation = (point.x-poly.points[a].x)/(poly.points[b].x-poly.points[a].x) + (point.y-poly.points[b].y)/(poly.points[a].y-poly.points[b].y);
+                                            }
+                    
+                                        //if its on the line, return 'onEdge' immediately, if it's above 1 do a flip
+                                            if( areaLocation == 1 || isNaN(areaLocation) ){
+                                                return 'onEdge';
+                                            }else if(areaLocation > 1){
+                                                if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
+                                                    inside = !inside;
+                                                }
+                                            }
+                                    }
+                                }else{
+                                }
+                            }
+                    
+                            return inside ? 'inside' : 'outside';
+                        };
+                    
+                        this.lineOnLine = function(segment1,segment2){
+                    
+                            if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(segment1), library.math.boundingBoxFromPoints(segment2) ) ){
+                                return {x:undefined, y:undefined, intersect:false, contact:false};
+                            }
+                    
+                            //identical segments
+                            if(
+                                (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
+                                (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
+                            ){
+                                return {x:undefined, y:undefined, intersect:false, contact:true};
+                            }
+                                
+                            //point on point
+                            if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
+                                return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
+                            }
+                            if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
+                                return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
+                            }
+                    
+                            //calculate denominator
+                            const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+                            if(denominator == 0){  return {x:undefined, y:undefined, intersect:false, contact:false}; }
+                                
+                            //point on line
+                            if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){ return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true}; }
+                            if( library.math.detectIntersect.pointOnLine(segment1[1],segment2) ){ return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true}; }
+                            if( library.math.detectIntersect.pointOnLine(segment2[0],segment1) ){ return {x:segment2[0].x, y:segment2[0].y, intersect:false, contact:true}; }
+                            if( library.math.detectIntersect.pointOnLine(segment2[1],segment1) ){ return {x:segment2[1].x, y:segment2[1].y, intersect:false, contact:true}; }
+                    
+                            //produce output
+                            const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+                            const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+                            const intersect = (u1 >= 0 && u1 <= 1) && (u2 >= 0 && u2 <= 1);
+                            return {
+                                x:         (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
+                                y:         (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
+                                intersect: intersect,
+                                contact:   intersect,
+                            };
+                        };
+                        this.lineOnPoly = function(line,poly){
+                    
+                            if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
+                            if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(line), poly.boundingBox ) ){
+                                return { points:[], intersect:false, contact:false };
+                            }
+                    
+                            function oneWhileTheOtherIs(val_1,val_2,a,b){
+                                if( val_1 == a && val_2 == b ){return 1;}
+                                if( val_2 == a && val_1 == b ){return 2;}
+                                return 0;
+                            }
+                            function huntForIntersection(line,polyPoints){
+                                for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
+                                    const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
+                                    if(result.intersect){
+                                        output.points.push({x:result.x,y:result.y});
+                                        output.intersect = true;
+                                        output.contact = true;
+                                    }
+                                }
+                    
+                                //situation where the line passes perfectly through a point on the poly
+                                if(output.points.length == 0){
+                                    for(let a = 0; a < poly.points.length; a++){
+                                        if( poly.points[a].x != line[0].x && poly.points[a].y != line[0].y && poly.points[a].x != line[1].x && poly.points[a].y != line[1].y){
+                                            if( library.math.detectIntersect.pointOnLine(poly.points[a],line) ){
+                                                output.points.push(poly.points[a]);
+                                                output.intersect = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                    
+                            const output = { points:[], contact:false, intersect:false };
+                            const point_a = library.math.detectIntersect.pointWithinPoly(line[0],poly);
+                            const point_b = library.math.detectIntersect.pointWithinPoly(line[1],poly);
+                    
+                            let dir = 0;
+                            if( oneWhileTheOtherIs(point_a,point_b,'outside','outside') ){
+                                huntForIntersection(line,poly.points);
+                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onPoint') ){
+                                huntForIntersection(line,poly.points);
+                                output.points.push(line[dir]);
+                                output.contact = true;
+                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onEdge') ){
+                                huntForIntersection(line,poly.points);
+                                output.points.push(line[dir]);
+                                output.contact = true;
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'outside','inside') ){
+                                huntForIntersection(line,poly.points);
+                                output.intersect = true;
+                                output.contact = true;
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'onPoint','onPoint') ){
+                                output.points = [line[0],line[1]];
+                                output.contact = true;
+                                output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'onPoint','onEdge') ){
+                                output.points = [line[0],line[1]];
+                                output.contact = true;
+                                output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','inside') ){
+                                output.points = [line[dir]];
+                                output.contact = true;
+                                output.intersect = true;
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'onEdge','onEdge') ){
+                                output.points = [line[0],line[1]];
+                                output.contact = true;
+                                output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
+                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','inside') ){
+                                output.points = [line[dir]];
+                                output.contact = true;
+                                output.intersect = true;
+                            }else if( oneWhileTheOtherIs(point_a,point_b,'inside','inside') ){
+                                output.intersect = true;
+                                output.contact = false;
+                            }
+                            
+                            return output;
+                        };
+                    
+                        this.polyOnPoly = function(poly_a,poly_b){
+                    
+                            if(poly_a.boundingBox == undefined){ poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points); }
+                            if(poly_b.boundingBox == undefined){ poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points); }
+                            if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
+                                return { points:[], intersect:false, contact:false };
+                            }
+                    
+                            const results = {
+                                points:[],
+                                contact:false,
+                                intersect:false,
+                            };
+                    
+                            //identical polys
+                                const sudo_poly_a_points = Object.assign([],poly_a.points);
+                                poly_b.points.forEach(point_b => {
+                                    const index = sudo_poly_a_points.indexOf(sudo_poly_a_points.find(point_a => point_a.x==point_b.x && point_a.y==point_b.y) );
+                                    if(index != -1){sudo_poly_a_points.splice(index, 1);}
+                                });
+                                if(sudo_poly_a_points.length == 0){
+                                    return {
+                                        points:Object.assign([],poly_a.points),
+                                        contact:true,
+                                        intersect:true,
+                                    };
+                                }
+                    
+                            //find all side intersection points
+                                for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
+                                    const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
+                                    results.points = results.points.concat(tmp.points);
+                                    results.contact = results.contact || tmp.contact;
+                                    results.intersect = results.intersect || tmp.intersect;
+                                }
+                            
+                            //check if poly_a is totally inside poly_b (if necessary)
+                                for(let a = 0; a < poly_b.points.length; a++){
+                                    if( results.intersect ){break;}
+                                    if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) == 'inside' ){   
+                                        results.intersect = true;
+                                    }
+                                }
+                    
+                            return results;
+                        };
+                    };
                     this.detectOverlap = new function(){
                         const detectOverlap = this;
                     
                         this.boundingBoxes = function(a, b){
-                            dev.log.math('.detectOverlap.boundingBoxes('+JSON.stringify(a)+','+JSON.stringify(b)+')'); //#development
-                            dev.count('.math.detectOverlap.boundingBoxes'); //#development
                     
                             return a.bottomRight.y >= b.topLeft.y && 
                                 a.bottomRight.x >= b.topLeft.x && 
                                 a.topLeft.y <= b.bottomRight.y && 
                                 a.topLeft.x <= b.bottomRight.x;
                         };
-                        this.pointOnLine = function(point,line){
-                            return library.math.getAngleOfTwoPoints(line[0],line[1]) == library.math.getAngleOfTwoPoints(point,line[1]);
-                        }
                         this.pointWithinBoundingBox = function(point,box){
-                            dev.log.math('.detectOverlap.pointWithinBoundingBox('+JSON.stringify(point)+','+JSON.stringify(box)+')'); //#development
-                            dev.count('.math.detectOverlap.pointWithinBoundingBox'); //#development
                     
                             return !(
                                 point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
@@ -340,8 +792,6 @@
                             );
                         };
                         this.pointWithinPoly = function(point,points){
-                            dev.log.math('.detectOverlap.pointWithinPoly('+JSON.stringify(point)+','+JSON.stringify(points)+')'); //#development
-                            dev.count('.math.detectOverlap.pointWithinPoly'); //#development
                     
                             //Ray casting algorithm
                             let inside = false;
@@ -378,29 +828,7 @@
                             }
                             return inside;
                         };
-                        this.lineSegments = function(segment1, segment2, countSkirting=true){
-                            dev.log.math('.detectOverlap.lineSegments('+JSON.stringify(segment1)+','+JSON.stringify(segment2)+')'); //#development
-                            dev.count('.math.detectOverlap.lineSegments'); //#development
-                    
-                            if(!countSkirting){
-                                //if one point of a line is on the other line; this is a skirt, return null
-                                    //point on point
-                                        // if(segment1[0] == segment2[0] || segment1[0] == segment2[1] || segment1[1] == segment2[0] || segment1[1] == segment2[1]){
-                                        if(
-                                            segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y || 
-                                            segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y || 
-                                            segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y || 
-                                            segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y
-                                        ){
-                                            return null;
-                                        }
-                                    //point on line
-                                        if( this.pointOnLine(segment1[0],segment2) || this.pointOnLine(segment1[1],segment2) ||
-                                            this.pointOnLine(segment2[0],segment1) || this.pointOnLine(segment2[1],segment1)
-                                        ){
-                                            return null;
-                                        }
-                            }
+                        this.lineSegments = function(segment1, segment2){
                     
                             const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
                             if(denominator == 0){return null;}
@@ -415,8 +843,6 @@
                             };
                         };
                         this.overlappingPolygons = function(points_a,points_b){
-                            dev.log.math('.detectOverlap.overlappingPolygons('+JSON.stringify(points_a)+','+JSON.stringify(points_b)+')'); //#development
-                            dev.count('.math.detectOverlap.overlappingPolygons'); //#development
                     
                             //a point from A is in B
                                 for(let a = 0; a < points_a.length; a++){
@@ -445,8 +871,6 @@
                             return false;
                         };
                         this.overlappingPolygonWithPolygons = function(poly,polys){ 
-                            dev.log.math('.detectOverlap.overlappingPolygonWithPolygons('+JSON.stringify(poly)+','+JSON.stringify(polys)+')'); //#development
-                            dev.count('.math.detectOverlap.overlappingPolygonWithPolygons'); //#development
                     
                             for(let a = 0; a < polys.length; a++){
                                 if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
@@ -457,9 +881,8 @@
                             }
                             return false;
                         };
-                        this.overlappingLineWithPolygon = function(line,poly,returnDetails=false,countSkirting=true){
-                            dev.log.math('.detectOverlap.overlappingLineWithPolygon('+JSON.stringify(line)+','+JSON.stringify(poly)+')'); //#development
-                            dev.count('.math.detectOverlap.overlappingLineWithPolygon'); //#development
+                    
+                        function overlappingLineWithPolygon(line,poly){
                     
                             //go through every side of the poly, and if one of them collides with the line, return true
                             for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
@@ -472,37 +895,13 @@
                                         { x:poly.points[a].x, y:poly.points[a].y },
                                         { x:poly.points[b].x, y:poly.points[b].y }
                                     ],
-                                    countSkirting
                                 );
-                                if(tmp != null && tmp.inSeg1 && tmp.inSeg2){
-                                    return returnDetails ? {x:tmp.x,y:tmp.y} : true;
-                                }
+                                if(tmp != null && tmp.inSeg1 && tmp.inSeg2){ return true; }
                             }
-                            
-                            //check if it is a perfect traversal of the poly
-                                for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
-                                    if( !countSkirting &&
-                                        this.pointOnLine(
-                                            { x: (line.x1+line.x2)/2, y: (line.y1+line.y2)/2, },
-                                            [
-                                                { x:poly.points[a].x, y:poly.points[a].y },
-                                                { x:poly.points[b].x, y:poly.points[b].y }
-                                            ],
-                                        )
-                                    ){
-                                        return returnDetails ? {} : false;
-                                    }
-                                }
                     
-                                if( this.pointWithinPoly({ x: (line.x1+line.x2)/2, y: (line.y1+line.y2)/2, },poly.points) ){
-                                    return returnDetails ? {inSeg1:true,inSeg2:true} : true;
-                                }
-                    
-                            return returnDetails ? {} : false;
+                            return false;
                         };
-                        this.overlappingLineWithPolygons = function(line,polys,returnDetails=false,countSkirting=true){
-                            dev.log.math('.detectOverlap.overlappingLineWithPolygons('+JSON.stringify(line)+','+JSON.stringify(polys)+')'); //#development
-                            dev.count('.math.detectOverlap.overlappingLineWithPolygons'); //#development
+                        this.overlappingLineWithPolygons = function(line,polys){
                     
                             //generate a bounding box for the line
                                 const line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
@@ -525,240 +924,18 @@
                                 const collidingPolyIndexes = [];
                                 polys.forEach((poly,index) => {
                                     if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
-                                    if(returnDetails){
-                                        const result = this.overlappingLineWithPolygon(line,poly,returnDetails,countSkirting);
-                                        if(result.x || result.y){ collidingPolyIndexes.push( {index:index,data:result} ); }
-                                    }else{
-                                        if(this.overlappingLineWithPolygon(line,poly,returnDetails,countSkirting)){ collidingPolyIndexes.push(index); }
-                                    }
+                                    if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
                                 });
                     
                             return collidingPolyIndexes;
                         };
                     };
-                    this.getAngleOfTwoPoints = function(point_1,point_2){
-                        dev.log.math('.getAngleOfTwoPoints('+JSON.stringify(point_1)+','+JSON.stringify(point_2)+')'); //#development
-                        dev.count('.math.getAngleOfTwoPoints'); //#development
                     
-                        if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
-                    
-                        const xDelta = point_2.x - point_1.x;
-                        const yDelta = point_2.y - point_1.y;
-                        let angle = Math.atan( yDelta/xDelta );
-                    
-                        if(xDelta < 0){ angle = Math.PI + angle; }
-                        else if(yDelta < 0){ angle = Math.PI*2 + angle; }
-                    
-                        return angle;
-                    };
-                    this.getDifferenceOfArrays = function(array_a,array_b){
-                        dev.log.math('.getDifferenceOfArrays('+JSON.stringify(array_a)+','+JSON.stringify(array_b)+')'); //#development
-                        dev.count('.math.getDifferenceOfArrays'); //#development
-                    
-                        function arrayRemovals(a,b){
-                            a.forEach(item => {
-                                let i = b.indexOf(item);
-                                if(i != -1){ b.splice(i,1); }
-                            });
-                            return b;
-                        }
-                    
-                        return {
-                            a:arrayRemovals(array_b,array_a.slice()),
-                            b:arrayRemovals(array_a,array_b.slice())
-                        };
-                    };
-                    this.getIndexOfSequence = function(array,sequence){ 
-                        dev.log.math('.getIndexOfSequence('+JSON.stringify(array)+','+JSON.stringify(sequence)+')'); //#development
-                        dev.count('.math.getIndexOfSequence'); //#development
-                    
-                        function comp(thing_A,thing_B){
-                            const keys = Object.keys(thing_A);
-                            if(keys.length == 0){ return thing_A == thing_B; }
-                    
-                            for(let a = 0; a < keys.length; a++){
-                                if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
-                                if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
-                            }
-                            return true;
-                        }
-                    
-                        if(array.length == 0 || sequence.length == 0){return undefined;}
-                    
-                        let index = 0;
-                        for(index = 0; index < array.length - sequence.length + 1; index++){
-                            if( comp(array[index], sequence[0]) ){
-                                let match = true;
-                                for(let a = 1; a < sequence.length; a++){
-                                    if( !comp(array[index+a],sequence[a]) ){
-                                        match = false;
-                                        break;
-                                    }
-                                }
-                                if(match){return index;}
-                            }
-                        }
-                    
-                        return undefined;
-                    };
-                    this.largestValueFound = function(array){
-                        dev.log.math('.largestValueFound('+JSON.stringify(array)+')'); //#development
-                        dev.count('.math.largestValueFound'); //#development
-                    
-                        if(array.length == 0){return undefined;}
-                        return array.reduce(function(max,current){
-                            return Math.abs(max) > Math.abs(current) ? max : current;
-                        });
-                    };
-                    this.normalizeStretchArray = function(array){
-                        dev.log.math('.normalizeStretchArray('+JSON.stringify(array)+')'); //#development
-                        dev.count('.math.normalizeStretchArray'); //#development
-                    
-                        //discover the largest number
-                            var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
-                    
-                        //divide everything by this largest number, making everything a ratio of this value 
-                            var dux = Math.abs(array[biggestIndex]);
-                            array = array.map(x => x / dux);
-                    
-                        //stretch the other side of the array to meet 0 or 1
-                            if(array[0] == 0 && array[array.length-1] == 1){return array;}
-                            var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
-                            array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
-                    
-                        return array;
-                    };
-                    this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
-                        dev.log.math('.relativeDistance('+realLength+','+start+','+end+','+d+','+allowOverflow+')'); //#development
-                        dev.count('.math.relativeDistance'); //#development
-                    
-                        const mux = (d - start)/(end - start);
-                        if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
-                        return mux*realLength;
-                    };
-                    this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
-                        dev.log.math('.removeTheseElementsFromThatArray('+JSON.stringify(theseElements)+','+JSON.stringify(thatArray)+')'); //#development
-                        dev.count('.math.removeTheseElementsFromThatArray'); //#development
-                    
-                        theseElements.forEach(a => thatArray.splice(thatArray.indexOf(a), 1) );
-                        return thatArray;
-                    };
-                    this.seconds2time = function(seconds){
-                        dev.log.math('.seconds2time('+seconds+')'); //#development
-                        dev.count('.math.seconds2time'); //#development
-                    
-                        const result = {h:0, m:0, s:0};
-                        
-                        result.h = Math.floor(seconds/3600);
-                        seconds = seconds - result.h*3600;
-                    
-                        result.m = Math.floor(seconds/60);
-                        seconds = seconds - result.m*60;
-                    
-                        result.s = seconds;
-                    
-                        return result;
-                    };
-                    
-                    this.distanceBetweenTwoPoints = function(point_a,point_b){
-                        return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
-                    };
-                    this.cartesian2polar = function(x,y){
-                        dev.log.math('.cartesian2polar('+x+','+y+')'); //#development
-                        dev.count('.math.cartesian2polar'); //#development
-                    
-                        const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
-                    
-                        if(x === 0){
-                            if(y === 0){ang = 0;}
-                            else if(y > 0){ang = 0.5*Math.PI;}
-                            else{ang = 1.5*Math.PI;}
-                        }
-                        else if(y === 0){
-                            if(x >= 0){ang = 0;}else{ang = Math.PI;}
-                        }
-                        else if(x >= 0){ ang = Math.atan(y/x); }
-                        else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
-                    
-                        return {'dis':dis,'ang':ang};
-                    };
-                    this.polar2cartesian = function(angle,distance){
-                        dev.log.math('.polar2cartesian('+angle+','+distance+')'); //#development
-                        dev.count('.math.polar2cartesian'); //#development
-                    
-                        return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
-                    };
-                    
-                    this.blendColours = function(rgba_1,rgba_2,ratio){
-                        dev.log.math('.blendColours('+JSON.stringify(rgba_1)+','+JSON.stringify(rgba_2)+','+ratio+')'); //#development
-                        dev.count('.math.blendColours'); //#development
-                    
-                        return {
-                            r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
-                            g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
-                            b: (1-ratio)*rgba_1.b + ratio*rgba_2.b,
-                            a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
-                        };           
-                    };
-                    this.multiBlendColours = function(rgbaList,ratio){
-                        dev.log.math('.multiBlendColours('+JSON.stringify(rgbaList)+','+ratio+')'); //#development
-                        dev.count('.math.multiBlendColours'); //#development
-                    
-                        //special cases
-                            if(ratio == 0){return rgbaList[0];}
-                            if(ratio == 1){return rgbaList[rgbaList.length-1];}
-                        //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
-                            const p = ratio*(rgbaList.length-1);
-                            return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
-                    };
-                    
-                    this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
-                        dev.log.math('.polygonToSubTriangles('+JSON.stringify(regions)+','+inputFormat+')'); //#development
-                        dev.count('.math.polygonToSubTriangles'); //#development
-                    
-                        if(inputFormat == 'flatArray'){
-                            const tmp = [];
-                            for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
-                            regions = [tmp];
-                        }
-                    
-                        const holes = regions.reverse().map(region => region.length);
-                        holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
-                        holes.pop();
-                    
-                        return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
-                    };
-                    this.unionPolygons = function(polygon1,polygon2){
-                        dev.log.math('.unionPolygons('+JSON.stringify(polygon1)+','+JSON.stringify(polygon2)+')'); //#development
-                        dev.count('.math.unionPolygons'); //#development
-                    
-                        //martinez (not working)
-                        // for(var a = 0; a < polygon1.length; a++){
-                        //     polygon1[a].push( polygon1[a][0] );
-                        // }
-                        // for(var a = 0; a < polygon2.length; a++){
-                        //     polygon2[a].push( polygon2[a][0] );
-                        // }
-                    
-                        // var ans = _thirdparty.martinez.union(
-                        //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
-                        //     polygon2.map(region => region.map(item => [item.x,item.y])  )
-                        // );
-                        // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
-                    
-                        //PolyBool
-                        return _thirdparty.PolyBool.union(
-                            {regions:polygon1.map(region => region.map(item => [item.x,item.y]))}, 
-                            {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
-                        ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
-                    }
                     this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
-                        dev.log.math('.pathExtrapolation('+JSON.stringify(path),thickness,capType,joinType,loopPath,detail,sharpLimit+')'); //#development
-                        dev.count('.math.pathExtrapolation'); //#development
+                        dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
                     
                         function loopThisPath(path){
-                            dev.log.math('.pathExtrapolation::loopThisPath('+JSON.stringify(path)+')'); //#development
-                            dev.count('.math.pathExtrapolation::loopThisPath'); //#development
+                            dev.log.math('.pathExtrapolation::loopThisPath(',path);
                         
                             const joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
                             let loopingPath = [];
@@ -773,8 +950,7 @@
                             return loopingPath;
                         }
                         function calculateJointData(path,thickness){
-                            dev.log.math('.pathExtrapolation::calculateJointData('+JSON.stringify(path)+','+thickness+')'); //#development
-                            dev.count('.math.pathExtrapolation::calculateJointData'); //#development
+                            dev.log.math('.pathExtrapolation::calculateJointData(',path,thickness);
                         
                             const jointData = [];
                             //parse path
@@ -804,8 +980,7 @@
                             return jointData;
                         }
                         function path_to_rectangleSeries(path,thickness){
-                            dev.log.math('.pathExtrapolation::path_to_rectangleSeries('+JSON.stringify(path)+','+thickness+')'); //#development
-                            dev.count('.math.pathExtrapolation::path_to_rectangleSeries'); //#development
+                            dev.log.math('.pathExtrapolation::path_to_rectangleSeries(',path,thickness);
                         
                             let outputPoints = [];
                             for(let a = 1; a < path.length/2; a++){
@@ -825,8 +1000,6 @@
                         }
                     
                         function flatJoints(jointData,thickness){
-                            dev.log.math('.pathExtrapolation::flatJoints('+JSON.stringify(jointData)+','+thickness+')'); //#development
-                            dev.count('.math.pathExtrapolation::flatJoints'); //#development
                         
                             const polygons = [];
                     
@@ -858,8 +1031,6 @@
                             return polygons;
                         }
                         function roundJoints(jointData,thickness,detail=5){
-                            dev.log.math('.pathExtrapolation::roundJoints('+JSON.stringify(jointData)+','+thickness+','+detail+')'); //#development
-                            dev.count('.math.pathExtrapolation::roundJoints'); //#development
                         
                             const polygons = [];
                             if(detail < 1){detail = 1;}
@@ -909,8 +1080,6 @@
                             return polygons;
                         }
                         function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
-                            dev.log.math('.pathExtrapolation::sharpJoints('+JSON.stringify(jointData)+','+thickness+','+sharpLimit+')'); //#development
-                            dev.count('.math.pathExtrapolation::sharpJoints'); //#development
                         
                             const polygons = [];
                     
@@ -970,8 +1139,6 @@
                         }
                     
                         function roundCaps(jointData,thickness,detail=5){
-                            dev.log.math('.pathExtrapolation::roundCaps('+JSON.stringify(jointData)+','+thickness+','+detail+')'); //#development
-                            dev.count('.math.pathExtrapolation::roundCaps'); //#development
                         
                             if(detail < 1){detail = 1;}
                     
@@ -1014,20 +1181,15 @@
                         //union all polygons, convert to triangles and return
                             return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
                     };
-                    
-                    this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8}){
-                        dev.log.math('.fitPolyIn('+JSON.stringify(freshPoly)+','+JSON.stringify(environmentPolys)+','+JSON.stringify(snapping)+')'); //#development
-                        dev.count('.math.fitPolyIn'); //#development
+
+                    this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},returnPathData=false){
+                        dev.log.math('.fitPolyIn(',freshPoly,environmentPolys,snapping);
                     
                         function applyOffsetToPoints(offset,points){
-                            dev.log.math('.fitPolyIn::applyOffsetToPoints('+JSON.stringify(offset)+JSON.stringify(points)+')'); //#development
-                            dev.count('.math.fitPolyIn::applyOffsetToPoints'); //#development
                         
                             return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
                         };
                         function applyOffsetToPolygon(offset,poly){
-                            dev.log.math('.fitPolyIn::applyOffsetToPolygon('+JSON.stringify(offset)+JSON.stringify(poly)+')'); //#development
-                            dev.count('.math.fitPolyIn::applyOffsetToPolygon'); //#development
                         
                             var newPolygon = { points: applyOffsetToPoints(offset,poly.points), boundingBox:{} };
                             newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
@@ -1159,430 +1321,132 @@
                                 offset = {x:max.x, y:max.y};
                             }
                     
-                        return dev ? {offset:offset,paths:paths} : offset;
-                    };
-                    
-                    // this.pathFinder = function(point_a,point_b,polys,grapher){
-                    //     // return v1(point_a,point_b,polys,grapher);
-                    //     return v2(point_a,point_b,polys,grapher);
-                    
-                    //     function v1(point_a,point_b,polys,grapher){
-                    //         const outputPath = [point_a];
-                    
-                    //         console.log( polys );
-                    
-                    //         //find first collision poly
-                    //             let results = library.math.detectOverlap.overlappingLineWithPolygons( { x1:point_a.x, y1:point_a.y, x2:point_b.x, y2:point_b.y }, polys, true );
-                    //             console.log(results);
-                    //             results.forEach(result => { grapher.drawCircle(result.data.x,result.data.y,2.5,'rgba(255,0,255,1)'); });
-                    //             let collisionPoints = results.map(result => ({x:result.data.x,y:result.data.y}) );
-                    //             // console.log(collisionPoints);
-                    //             let collisionDistances = collisionPoints.map(point => library.math.distanceBetweenTwpPoints(point_a,point) );
-                    //             // console.log(collisionDistances);
-                    //             let smallestCollisionDistanceIndex = collisionDistances.indexOf(Math.min(...collisionDistances));
-                    //             // console.log(smallestCollisionDistanceIndex);
-                    //             let indexOfClosestPoly = results[smallestCollisionDistanceIndex];
-                    //             // console.log(indexOfClosestPoly);
-                    //             let firstCollisionPoly = polys[indexOfClosestPoly.index];
-                    //             // console.log(firstCollisionPoly);
-                    //             let firstCollisionPoint = collisionPoints[smallestCollisionDistanceIndex];
-                    //             // console.log(firstCollisionPoint);
-                    
-                    //         //get articulation point
-                    //             let collisionPoly = firstCollisionPoly;
-                    //             let collisionPoint = firstCollisionPoint;
-                    //             // console.log(collisionPoly.points);
-                    
-                    //             let possiblePoints = [];
-                    //             for(let a = 0; a < collisionPoly.points.length; a++){
-                    //                 let angle = library.math.getAngleOfTwoPoints(collisionPoint,collisionPoly.points[a])-library.math.getAngleOfTwoPoints(collisionPoint,point_b);
-                    //                 if( angle < Math.PI/2 || angle > Math.PI*2 - Math.PI/2 ){
-                    //                     possiblePoints.push({
-                    //                         point:collisionPoly.points[a],
-                    //                         distance:library.math.distanceBetweenTwpPoints(point_a,collisionPoly.points[a])+library.math.distanceBetweenTwpPoints(point_b,collisionPoly.points[a]),
-                    //                     });
-                    //                 }
-                    //             }
-                    //             // console.log(possiblePoints);
-                    //             // console.log(possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance)))));
-                    //             let articulationPoint = possiblePoints[
-                    //                 possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance))))
-                    //             ].point;
-                    //             // console.log(articulationPoint);
-                    //             outputPath.push(articulationPoint);
-                    
-                    //         //find next collision poly
-                    //             results = library.math.detectOverlap.overlappingLineWithPolygons( { x1:articulationPoint.x, y1:articulationPoint.y, x2:point_b.x, y2:point_b.y }, polys, true ).filter(point => {
-                    //                 return point.data.x != articulationPoint.x || point.data.y != articulationPoint.y;
-                    //             });
-                    //             results.forEach(result => { grapher.drawCircle(result.data.x,result.data.y,2.5,'rgba(255,0,255,1)'); });
-                    //             collisionPoints = results.map(result => ({x:result.data.x,y:result.data.y}) );
-                    //             console.log(collisionPoints);
-                    
-                    //         outputPath.push(point_b);
-                    //         return outputPath;
-                    //     }
-                    //     function v2(point_a,point_b,polys,grapher){
-                    
-                    //         function getPointsInBetween(point_a,point_b,polys){
-                    //             //get all collided polys (if none, return empty array)(if the collision point is one of the argument points, ignore that poly)
-                    //                 const collidedPolys = library.math.detectOverlap.overlappingLineWithPolygons( { x1:point_a.x, y1:point_a.y, x2:point_b.x, y2:point_b.y }, polys, true ).filter(poly => {
-                    //                     const ind_a = polys[poly.index].points.indexOf(point_a);
-                    //                     const ind_b = polys[poly.index].points.indexOf(point_b);
-                    //                     if( ind_a != -1 && ind_b != -1 && Math.abs(ind_a - ind_b) != 1){ return true; }
-                    //                     return !(poly.data.x == point_a.x && poly.data.y == point_a.y || poly.data.x == point_b.x && poly.data.y == point_b.y);
-                    //                 });
-                    //                 if(collidedPolys.length == 0){return [];}
-                    //                 collidedPolys.forEach(poly => { grapher.drawCircle(poly.data.x,poly.data.y,2.5,'rgba(255,0,255,1)'); });
-                    
-                    //             //get first collision point and that poly
-                    //                 const collisionPoints = collidedPolys.map(result => ({x:                                                result.data.x,y:result.data.y}) );
-                    //                 const collisionDistances = collisionPoints.map(point => library.math.distanceBetweenTwpPoints(point_a,point) );
-                    //                 const smallestCollisionDistanceIndex = collisionDistances.indexOf(Math.min(...collisionDistances));
-                    //                 const collisionPoint = collisionPoints[smallestCollisionDistanceIndex];
-                    //                 const collisionPoly = polys[collidedPolys[smallestCollisionDistanceIndex].index];
-                    
-                    //             //get articulation point around that poly
-                    //                 const possiblePoints = [];
-                    //                 for(let a = 0; a < collisionPoly.points.length; a++){
-                    //                     const angle = library.math.getAngleOfTwoPoints(collisionPoint,collisionPoly.points[a]) - library.math.getAngleOfTwoPoints(collisionPoint,point_b);
-                    //                     if( angle < Math.PI/2 || angle > Math.PI*2 - Math.PI/2 ){
-                    //                         if(
-                    //                             collisionPoly.points[a].x == point_a.x && collisionPoly.points[a].y == point_a.y ||
-                    //                             collisionPoly.points[a].x == point_b.x && collisionPoly.points[a].y == point_b.y ||
-                    //                             previouslyVisitedPoints.indexOf(collisionPoly.points[a]) != -1
-                    //                         ){
-                    //                             continue;
-                    //                         }
-                    
-                    //                         possiblePoints.push({
-                    //                             point: collisionPoly.points[a],
-                    //                             distance: library.math.distanceBetweenTwpPoints(point_a,collisionPoly.points[a]) + library.math.distanceBetweenTwpPoints(point_b,collisionPoly.points[a]),
-                    //                         });
-                    //                     }
-                    //                 }
-                    //                 const articulationPoint = possiblePoints[
-                    //                     possiblePoints.map(p => p.distance).indexOf(Math.min(...(possiblePoints.map(p => p.distance))))
-                    //                 ].point;
-                    //                 previouslyVisitedPoints.push(articulationPoint);
-                    
-                    //             //recursive dive on both sides
-                    //                 const articulationPoints_upstream = getPointsInBetween(point_a,articulationPoint,polys);
-                    //                 const articulationPoints_downstream = getPointsInBetween(articulationPoint,point_b,polys);
-                    
-                    //             return articulationPoints_upstream.concat(articulationPoint).concat(articulationPoints_downstream);
-                    //         };
-                    
-                    //         //get path
-                    //             const previouslyVisitedPoints = [];
-                    //             const path = [point_a].concat(getPointsInBetween(point_a,point_b,polys)).concat(point_b);
-                    
-                    //         //go back over path to remove any detours
-                    //             for(let a = 0; a < path.length-2; a++){
-                    //                 const collisionPoints = library.math.detectOverlap.overlappingLineWithPolygons({ x1:path[a].x, y1:path[a].y, x2:path[a+2].x, y2:path[a+2].y }, polys, true)
-                    //                     .map(i => i.data)
-                    //                     .filter(point => !(point.x == path[a].x && point.y == path[a].y || point.x == path[a+2].x && point.y == path[a+2].y));
-                    //                 if(collisionPoints.length == 0){
-                    //                     path.splice(path.indexOf(path[a+1]),1);
-                    //                     a = -1;
-                    //                 }
-                    //             }
-                    
-                    //         return path;
-                    //     }
-                    // };
-                    this.detectIntersect = new function(){
-                        this.boundingBoxes = function(box_a, box_b){
-                            return box_a.bottomRight.y >= box_b.topLeft.y && 
-                                box_a.bottomRight.x >= box_b.topLeft.x && 
-                                box_a.topLeft.y <= box_b.bottomRight.y && 
-                                box_a.topLeft.x <= box_b.bottomRight.x;
-                        };
-                    
-                        this.pointWithinBoundingBox = function(point,box){
-                            return !(
-                                point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
-                                point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
-                            );
-                        };
-                        this.pointOnLine = function(point,line){
-                            if( 
-                                point.x < line[0].x && point.x < line[1].x ||
-                                point.y < line[0].y && point.y < line[1].y ||
-                                point.x > line[0].x && point.x > line[1].x ||
-                                point.y > line[0].y && point.y > line[1].y
-                            ){return false;}
-                    
-                            if(point.x == line[0].x && point.y == line[0].y){ return true; }
-                            if(point.x == line[1].x && point.y == line[1].y){ return true; }
-                            if(line[0].x == line[1].x && point.x == line[0].x){
-                                return (line[0].y > point.y && point.y > line[1].y) || (line[1].y > point.y && point.y > line[0].y);
-                            }
-                            if(line[0].y == line[1].y && point.y == line[0].y){
-                                return (line[0].x > point.x && point.x > line[1].x) || (line[1].x > point.x && point.x > line[0].x);
-                            }
-                    
-                            return ((line[1].y - line[0].y) / (line[1].x - line[0].x))*(point.x - line[0].x) + line[0].y - point.y == 0;
-                        }
-                        this.pointWithinPoly = function(point,points){
-                            // outside / onPoint / onEdge / inside
-                    
-                            //Ray casting algorithm
-                            let inside = false;
-                            for(let a = 0, b = points.length - 1; a < points.length; b = a++){
-                    
-                                //if the point is on a point of the poly; bail and return 'onPoint'
-                                if( point.x == points[a].x && point.y == points[a].y ){ return 'onPoint'; }
-                    
-                                //point must be on the same level of the line
-                                if( (points[b].y >= point.y && points[a].y <= point.y) || (points[a].y >= point.y && points[b].y <= point.y) ){
-                                    //discover if the point is on the far right of the line
-                                    // console.log( points[a].x, points[b].x, point.x );
-                                    if( points[a].x < point.x && points[b].x < point.x ){
-                                        inside = !inside;
-                                    //discover if the point is on the far left of the line, skip it if so
-                                    }else if( points[a].x > point.x && points[b].x > point.x ){
-                                        continue;
-                                    }else{
-                                        //calculate what side of the line this point is
-                                            let areaLocation;
-                                            if( points[b].y > points[a].y && points[b].x > points[a].x ){
-                                                areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
-                                            }else if( points[b].y <= points[a].y && points[b].x <= points[a].x ){
-                                                areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
-                                            }else if( points[b].y > points[a].y && points[b].x < points[a].x ){
-                                                areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
-                                            }else if( points[b].y <= points[a].y && points[b].x >= points[a].x ){
-                                                areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
-                                            }
-                    
-                                        //if its on the line, return 'onEdge' immediately, if it's just above 1 do a flip
-                                            if( areaLocation == 1 || isNaN(areaLocation) ){
-                                                return 'onEdge';
-                                            }else if(areaLocation > 1){
-                                                inside = !inside;
-                                            }
-                                    }
-                                }
-                            }
-                            return inside ? 'inside' : 'outside';
-                        };
-                    
-                        this.lineOnLine = function(segment1,segment2){
-                            //identical segments
-                                if(
-                                    (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
-                                    (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
-                                ){
-                                    return {x:undefined, y:undefined, intersect:false, contact:true};
-                                }
-                                
-                            //point on point
-                                if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
-                                    return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
-                                }
-                                if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
-                                    return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
-                                }
-                    
-                            const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                            if(denominator == 0){
-                                return {x:undefined, y:undefined, intersect:false, contact:false};
-                            }
-                                
-                            //point on line
-                                if( this.pointOnLine(segment1[0],segment2) ){ return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true}; }
-                                if( this.pointOnLine(segment1[1],segment2) ){ return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true}; }
-                                if( this.pointOnLine(segment2[0],segment1) ){ return {x:segment2[0].x, y:segment2[0].y, intersect:false, contact:true}; }
-                                if( this.pointOnLine(segment2[1],segment1) ){ return {x:segment2[1].x, y:segment2[1].y, intersect:false, contact:true}; }
-                    
-                            const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                            const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                            return {
-                                x:         (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
-                                y:         (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
-                                intersect: (u1 >= 0 && u1 <= 1) && (u2 >= 0 && u2 <= 1),
-                                contact:   (u1 >= 0 && u1 <= 1) && (u2 >= 0 && u2 <= 1),
-                            };
-                        };
-                        this.lineOnPoly  = function(line,poly){
-                            const output = {
-                                points:[],
-                                contact:false,
-                                intersect:false,
-                            };
-                    
-                            const point_a = this.pointWithinPoly(line[0],poly);
-                            const point_b = this.pointWithinPoly(line[1],poly);
-                            // outside / onPoint / onEdge / inside
-                    
-                            function oneWhileTheOtherIs(val_1,val_2,a,b){
-                                if( val_1 == a && val_2 == b ){return 1;}
-                                if( val_2 == a && val_1 == b ){return 2;}
-                                return 0;
-                            }
-                    
-                            let dir = 0;
-                            if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','outside') ){
-                                //go through every side of the poly looking for intersections
-                                    for(let a = poly.length-1, b = 0; b < poly.length; a = b++){
-                                        const result = this.lineOnLine(line,[poly[a],poly[b]]);
-                                        if(result.intersect){
-                                            output.points.push({x:result.x,y:result.y});
-                                            output.intersect = true;
-                                            output.contact = true;
-                                        }
-                                    }
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onPoint') ){
-                                //go through every side of the poly looking for intersections
-                                    for(let a = poly.length-1, b = 0; b < poly.length; a = b++){
-                                        const result = this.lineOnLine(line,[poly[a],poly[b]]);
-                                        if(result.intersect){
-                                            output.points.push({x:result.x,y:result.y});
-                                            output.intersect = true;
-                                            output.contact = true;
-                                        }
-                                    }
-                                output.points.push(line[dir]);
-                                output.contact = true;
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onEdge') ){
-                                //go through every side of the poly looking for intersections
-                                    for(let a = poly.length-1, b = 0; b < poly.length; a = b++){
-                                        const result = this.lineOnLine(line,[poly[a],poly[b]]);
-                                        if(result.intersect){
-                                            output.points.push({x:result.x,y:result.y});
-                                            output.intersect = true;
-                                            output.contact = true;
-                                        }
-                                    }
-                                output.points.push(line[dir]);
-                                output.contact = true;
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','inside') ){
-                                //go through every side of the poly looking for intersections
-                                    for(let a = poly.length-1, b = 0; b < poly.length; a = b++){
-                                        const result = this.lineOnLine(line,[poly[a],poly[b]]);
-                                        if(result.intersect){
-                                            output.points.push({x:result.x,y:result.y});
-                                            output.intersect = true;
-                                        }
-                                    }
-                                    if(output.points.length == 0){
-                                        for(let a = 0; a < poly.length; a++){
-                                            if( this.pointOnLine(poly[a],line) ){
-                                                output.points.push(poly[a]);
-                                                output.intersect = true;
-                                            }
-                                        }
-                                    }
-                    
-                                output.intersect = true;
-                                output.contact = true;
-                    
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','onPoint') ){
-                                output.points = [line[0],line[1]];
-                                output.contact = true;
-                                output.intersect = this.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','onEdge') ){
-                                output.points = [line[0],line[1]];
-                                output.contact = true;
-                                output.intersect = this.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','inside') ){
-                                output.points = [line[dir]];
-                                output.contact = true;
-                                output.intersect = true;
-                    
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','onEdge') ){
-                                output.points = [line[0],line[1]];
-                                output.contact = true;
-                                output.intersect = this.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','inside') ){
-                                output.points = [line[dir]];
-                                output.contact = true;
-                                output.intersect = true;
-                    
-                            }else if( dir = oneWhileTheOtherIs(point_a,point_b,'inside','inside') ){
-                                output.intersect = true;
-                                output.contact = false;
-                            }
-                            
-                            return output;
-                        };
-                    
-                        this.polyOnPoly = function(poly_a,poly_b){
-                            const results = {
-                                points:[],
-                                contact:false,
-                                intersect:false,
-                            };
-                    
-                            //identical polys
-                                const sudo_poly_a = Object.assign([],poly_a);
-                                poly_b.forEach(point_b => {
-                                    const index = sudo_poly_a.indexOf(sudo_poly_a.find(point_a => point_a.x==point_b.x && point_a.y==point_b.y) );
-                                    if(index != -1){sudo_poly_a.splice(index, 1);}
-                                });
-                                if(sudo_poly_a.length == 0){
-                                    return {
-                                        points:Object.assign([],poly_a),
-                                        contact:true,
-                                        intersect:true,
-                                    };
-                                }
-                    
-                            for(let a_a = poly_a.length-1, a_b = 0; a_b < poly_a.length; a_a = a_b++){
-                                const tmp = this.lineOnPoly([poly_a[a_a],poly_a[a_b]],poly_b);
-                                results.points = results.points.concat(tmp.points);
-                                results.contact = results.contact || tmp.contact;
-                                results.intersect = results.intersect || tmp.intersect;
-                            }
-                            for(let b_a = poly_b.length-1, b_b = 0; b_b < poly_b.length; b_a = b_b++){
-                                const tmp = this.lineOnPoly([poly_b[b_a],poly_b[b_b]],poly_a);
-                                results.points = results.points.concat(tmp.points);
-                                results.contact = results.contact || tmp.contact;
-                                results.intersect = results.intersect || tmp.intersect;
-                            }
-                            results.points = results.points.filter((point, index, self) =>
-                                index == self.findIndex((t) => t.x == point.x && t.y == point.y )
-                            );
-                    
-                            return results;
-                        };
+                        return returnPathData ? {offset:offset,paths:paths} : offset;
                     };
                     this.polygonsToVisibilityGraph = function(polys){
                         const graph = polys.flatMap((poly,polyIndex) => {
                             return poly.points.map((point,pointIndex) => ({
                                 polyIndex:polyIndex,
                                 pointIndex:pointIndex,
-                                destination:[ /*{polyIndex:n, pointIndex:n, distance:n} */ ],
+                                destination:[ /*{index:n, polyIndex:n, pointIndex:n, distance:n} */ ],
                             }))
                         });
+                    
+                        const scannedRoutes = {};
                     
                         graph.forEach((graphPoint_source,index_source) => {
                             graph.forEach((graphPoint_destination,index_destination) => {
                                 if(index_source == index_destination){return;}
-                                    const point_source = polys[graphPoint_source.polyIndex].points[graphPoint_source.pointIndex];
-                                    const point_destination = polys[graphPoint_destination.polyIndex].points[graphPoint_destination.pointIndex];
+                                // if( index_source != 4 ){return;} if( index_destination != 1 ){return;}
                     
-                                    let addLine = true;
-                                    for(let a = 0; a < polys.length; a++){
-                                        if( this.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a].points ).intersect ){
-                                            addLine = false;
-                                            break;
-                                        }
-                                    }
+                                const route_source = graphPoint_source.polyIndex+'_'+graphPoint_source.pointIndex;
+                                const route_destination = graphPoint_destination.polyIndex+'_'+graphPoint_destination.pointIndex;
                     
-                                    if(addLine){
-                                        graphPoint_source.destination.push({
-                                            polyIndex:graphPoint_destination.polyIndex,
-                                            pointIndex:graphPoint_destination.pointIndex,
-                                            distance:this.distanceBetweenTwoPoints(point_source,point_destination),
-                                        });
+                                //check to see if we've scanned this route before
+                                if( scannedRoutes[route_destination] != undefined && scannedRoutes[route_destination][route_source] != undefined ){ return; }
+                    
+                                //convert for convenience
+                                const point_source = polys[graphPoint_source.polyIndex].points[graphPoint_source.pointIndex];
+                                const point_destination = polys[graphPoint_destination.polyIndex].points[graphPoint_destination.pointIndex];
+                    
+                                //scan route
+                                let addRoute = true;
+                                for(let a = 0; a < polys.length; a++){
+                                    const result = library.math.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a] );
+                                    if( result.intersect ){
+                                        addRoute = false;
+                                        break;
                                     }
+                                }
+                    
+                                //if route is valid, add to graph
+                                if(addRoute){
+                                    const distance = library.math.distanceBetweenTwoPoints(point_source,point_destination);
+                    
+                                    //forward route
+                                    if(scannedRoutes[route_source] == undefined){ scannedRoutes[route_source] = {}; }
+                                    scannedRoutes[route_source][route_destination] = {
+                                        index: index_destination,
+                                        polyIndex: graphPoint_destination.polyIndex, 
+                                        pointIndex: graphPoint_destination.pointIndex,
+                                        distance: distance,
+                                    };
+                                    graphPoint_source.destination.push( scannedRoutes[route_source][route_destination] );
+                    
+                                    //backward route
+                                    if(scannedRoutes[route_destination] == undefined){ scannedRoutes[route_destination] = {}; }
+                                    scannedRoutes[route_destination][route_source] = {
+                                        index: index_source,
+                                        polyIndex: graphPoint_source.polyIndex, 
+                                        pointIndex: graphPoint_source.pointIndex,
+                                        distance: distance,
+                                    };
+                                    graphPoint_destination.destination.push( scannedRoutes[route_destination][route_source] );
+                                }
                             });
                         });
                     
                         return graph;
                     };
+                    this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
+                    
+                        //set the 'current' location as the start
+                            let current = start;
+                    
+                        //if in a cruel twist of fate, the ending location is the starting location;
+                        //create a new starting location with all the same data, and set that as
+                        //the 'current' location
+                            if(start == end){
+                                visibilityGraph['_'+start] = JSON.parse(JSON.stringify(visibilityGraph[start]));
+                                current = '_'+start;
+                            }
+                    
+                        //generate the location set
+                        //(don't forget to set the current location's distance to zero)
+                            const locationSet = Object.keys(visibilityGraph).map( () => ({ distance:Infinity, visited:false, route:'' }) );
+                            locationSet[current].distance = 0;
+                    
+                        //loop through locations, until the end location has been visited
+                            do{
+                                //update unvisited distance values
+                                    for(let a = 0; a < visibilityGraph[current].destination.length; a++){
+                                        if( locationSet[visibilityGraph[current].destination[a].index].visited ){
+                                            continue;
+                                        }
+                    
+                                        //only update the value if this new value is smaller than the one it already has
+                                        const newValue = locationSet[current].distance + visibilityGraph[current].destination[a].distance;
+                                        if( newValue < locationSet[visibilityGraph[current].destination[a].index].distance ){
+                                            locationSet[visibilityGraph[current].destination[a].index].route = current;
+                                            locationSet[visibilityGraph[current].destination[a].index].distance = newValue;
+                                        }
+                                    }
+                    
+                                //mark current location as visited
+                                    locationSet[current].visited = true;
+                    
+                                //find location with smallest distance value - that is unvisited - and set it as the current
+                                    let smallest = Infinity;
+                                    Object.keys(locationSet).forEach(location => {
+                                        if(!locationSet[location].visited && locationSet[location].distance < smallest ){
+                                            smallest = locationSet[location].distance;
+                                            current = location;
+                                        }
+                                    });
+                            }while( !locationSet[end].visited )
+                        
+                        //go back through the location set to discover the shortest route
+                            let route = [];
+                            current = end;
+                            while(current != start){
+                                route.unshift(parseInt(current));
+                                current = locationSet[current].route;
+                            }
+                            route.unshift(parseInt(current));
+                    
+                        return route;
+                    };
+
                 };
                 this.glsl = new function(){
                     this.geometry = `
@@ -1624,8 +1488,6 @@
                 };
                 this.structure = new function(){
                     this.functionListRunner = function(list,activeKeys){
-                        dev.log.structure('.functionListRunner('+JSON.stringify(list)+','+JSON.stringify(activeKeys)+')'); //#development
-                        dev.count('.structure.functionListRunner'); //#development
                     
                         //function builder for working with the 'functionList' format
                     
@@ -1654,8 +1516,6 @@
                     };
                     
                     this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
-                        dev.log.structure('.signalRegistry('+rightLimit+','+bottomLimit+','+signalLengthLimit+')'); //#development
-                        dev.count('.structure.signalRegistry'); //#development
                     
                         var signals = [];
                         var selectedSignals = [];
@@ -1665,8 +1525,6 @@
                         var positions = [];
                     
                         this.__dump = function(){
-                            dev.log.structure('.signalRegistry.__dump()'); //#development
-                            dev.count('.structure.signalRegistry.__dump'); //#development
                         
                             console.log('---- signalRegistry dump ----');
                     
@@ -1703,8 +1561,6 @@
                         };
                     
                         this.export = function(){
-                            dev.log.structure('.signalRegistry.export()'); //#development
-                            dev.count('.structure.signalRegistry.export'); //#development
                         
                             return JSON.parse(JSON.stringify(
                                 {
@@ -1718,11 +1574,9 @@
                             ));
                         };
                         this.import = function(data){
-                            dev.log.structure('.signalRegistry.import('+JSON.stringify(data)+')'); //#development
-                            dev.count('.structure.signalRegistry.import'); //#development
                         
-                            signals =             JSON.parse(JSON.stringify(data.signals));
-                            selectedSignals =     JSON.parse(JSON.stringify(data.selectedSignals));
+                            signals =           JSON.parse(JSON.stringify(data.signals));
+                            selectedSignals =   JSON.parse(JSON.stringify(data.selectedSignals));
                             events =            JSON.parse(JSON.stringify(data.events));
                             events_byID =       JSON.parse(JSON.stringify(data.events_byID));
                             events_byPosition = JSON.parse(JSON.stringify(data.events_byPosition));
@@ -1730,27 +1584,19 @@
                         };
                     
                         this.getAllSignals = function(){ 
-                            dev.log.structure('.signalRegistry.getAllSignals()'); //#development
-                            dev.count('.structure.signalRegistry.getAllSignals'); //#development
                         
                             return JSON.parse(JSON.stringify(signals));
                         };
                         this.getAllEvents = function(){ 
-                            dev.log.structure('.signalRegistry.getAllEvents()'); //#development
-                            dev.count('.structure.signalRegistry.getAllEvents'); //#development
                         
                             return JSON.parse(JSON.stringify(events));
                         };
                         this.getSignal = function(id){
-                            dev.log.structure('.signalRegistry.getSignal('+id+')'); //#development
-                            dev.count('.structure.signalRegistry.getSignal'); //#development
                         
                             if( signals[id] == undefined ){return;}
                             return JSON.parse(JSON.stringify(signals[id]));
                         };
                         this.eventsBetween = function(start,end){
-                            dev.log.structure('.signalRegistry.eventsBetween('+start+','+end+')'); //#development
-                            dev.count('.structure.signalRegistry.eventsBetween'); //#development
                         
                             //depending on whether theres an end position or not; get all the events positions that 
                             //lie on the start positions, or get all the events that how positions which lie between
@@ -1777,8 +1623,6 @@
                             });
                         };
                         this.add = function(data,forceID){
-                            dev.log.structure('.signalRegistry.add('+JSON.stringify(data)+','+forceID+')'); //#development
-                            dev.count('.structure.signalRegistry.add'); //#development
                         
                             //clean up data
                                 if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
@@ -1837,8 +1681,6 @@
                             return newID;
                         };
                         this.remove = function(id){
-                            dev.log.structure('.signalRegistry.remove('+id+')'); //#development
-                            dev.count('.structure.signalRegistry.remove'); //#development
                         
                             if( signals[id] == undefined ){return;}
                     
@@ -1855,8 +1697,6 @@
                             delete events_byID[id];
                         };
                         this.update = function(id,data){
-                            dev.log.structure('.signalRegistry.update('+id+','+JSON.stringify(data)+')'); //#development
-                            dev.count('.structure.signalRegistry.update'); //#development
                         
                             //clean input
                                 if(data == undefined){return;}
@@ -1886,8 +1726,6 @@
                             this.add(data,id);
                         };
                         this.reset = function(){
-                            dev.log.structure('.signalRegistry.reset()'); //#development
-                            dev.count('.structure.signalRegistry.reset'); //#development
                         
                             signals = [];
                             selectedSignals = [];
@@ -1908,8 +1746,6 @@
                         
                     //utility functions
                         this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
-                            dev.log.audio('.changeAudioParam(-context-,'+JSON.stringify(audioParam)+','+target+','+time+','+curve+','+cancelScheduledValues+')'); //#development
-                            dev.count('.audio.changeAudioParam'); //#development
                         
                             if(target==null){return audioParam.value;}
                         
@@ -1934,7 +1770,7 @@
                                         audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
                                     break;
                                     case 'instant': default:
-                                        audioParam.setTargetAtTime(target, context.currentTime, 0.001*10);
+                                        audioParam.setTargetAtTime(target, context.currentTime, 0.01);
                                     break;
                                 }
                             }catch(e){
@@ -1944,8 +1780,6 @@
                             }
                         };
                         this.loadAudioFile = function(callback,type='file',url=''){
-                            dev.log.audio('.loadAudioFile('+JSON.stringify(callback)+','+type+','+url+')'); //#development
-                            dev.count('.audio.loadAudioFile'); //#development
                         
                             switch(type){
                                 case 'url': 
@@ -1987,8 +1821,6 @@
                             }
                         };
                         this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
-                            dev.log.audio('.waveformSegment('+JSON.stringify(audioBuffer)+','+JSON.stringify(bounds)+','+resolution+')'); //#development
-                            dev.count('.audio.waveformSegment'); //#development
                         
                             const waveform = audioBuffer.getChannelData(0);
                             // var channelCount = audioBuffer.numberOfChannels;
@@ -2011,8 +1843,6 @@
                             return outputArray;
                         };
                         this.loadBuffer = function(context, data, destination, onended){
-                            dev.log.audio('.loadBuffer(-context-,'+JSON.stringify(data)+','+destination+','+onended+')'); //#development
-                            dev.count('.audio.loadBuffer'); //#development
                         
                             const temp = context.createBufferSource();
                             temp.buffer = data;
@@ -2033,8 +1863,6 @@
                         this.destination.connect(this.context.destination);
                         this.destination._gain = 1;
                         this.destination.masterGain = function(value){
-                            dev.log.audio('.masterGain('+value+')'); //#development
-                            dev.count('.audio.masterGain'); //#development
                         
                             if(value == undefined){return this.destination._gain;}
                             this._gain = value;
@@ -2102,61 +1930,43 @@
                     
                         //lead functions
                             this.num2name = function(num){ 
-                                dev.log.audio('.num2name('+num+')'); //#development
-                                dev.count('.audio.num2name'); //#development
                         
                                 return this.midinumbers_names[num];
                             };
                             this.num2freq = function(num){ 
-                                dev.log.audio('.num2freq('+num+')'); //#development
-                                dev.count('.audio.num2freq'); //#development
                         
                                 return this.names_frequencies[this.midinumbers_names[num]];
                             };
                     
                             this.name2num = function(name){ 
-                                dev.log.audio('.name2num('+name+')'); //#development
-                                dev.count('.audio.name2num'); //#development
                         
                                 return this.names_midinumbers[name];
                             };
                             this.name2freq = function(name){ 
-                                dev.log.audio('.name2freq(-'+name+')'); //#development
-                                dev.count('.audio.name2freq'); //#development
                         
                                 return this.names_frequencies[name];
                             };
                     
                             this.freq2num = function(freq){ 
-                                dev.log.audio('.freq2num('+freq+')'); //#development
-                                dev.count('.audio.freq2num'); //#development
                         
                                 return this.names_midinumbers[this.frequencies_names[freq]];
                             };
                             this.freq2name = function(freq){ 
-                                dev.log.audio('.freq2name(-'+freq+')'); //#development
-                                dev.count('.audio.freq2name'); //#development
                         
                                 return this.frequencies_names[freq];
                             };
                 };
                 this.font = new function(){
                     this.listAllAvailableGlyphs = function(fontFileData){
-                        dev.log.font('.listAllAvailableGlyphs('+JSON.stringify(fontFileData)+')'); //#development
-                        dev.count('.font.listAllAvailableGlyphs'); //#development
                     
                         const font = this.decodeFont(fontFileData);
                         return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                     };
                     this.decodeFont = function(fontFileData){
-                        dev.log.font('.decodeFont('+JSON.stringify(fontFileData)+')'); //#development
-                        dev.count('.font.decodeFont'); //#development
                     
                         return _thirdparty.opentype.parse(fontFileData);
                     };
                     this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
-                        dev.log.font('.getAllAvailableGlyphDrawingPaths('+font+','+JSON.stringify(reducedGlyphSet)+')'); //#development
-                        dev.count('.font.getAllAvailableGlyphDrawingPaths'); //#development
                     
                         const glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                         const paths = glyphs.map( a => font.getPath(a,0,0,1) );
@@ -2169,8 +1979,6 @@
                         return outputData;
                     };
                     this.convertPathToPoints = function(path,detail=2){
-                        dev.log.font('.convertPathToPoints('+JSON.stringify(path)+','+detail+')'); //#development
-                        dev.count('.font.convertPathToPoints'); //#development
                     
                         let output = [];
                         let currentPoints = [];
@@ -2214,8 +2022,6 @@
                         return output;
                     };
                     this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
-                        dev.log.font('.getTrianglesFromGlyphPath('+JSON.stringify(glyphPath)+','+detail+')'); //#development
-                        dev.count('.font.getTrianglesFromGlyphPath'); //#development
                     
                         //input checking
                             if(glyphPath.length == 0){return [];}
@@ -2269,8 +2075,6 @@
                             return triangles;
                     };
                     this.extractGlyphs = function(fontFileData,reducedGlyphSet){
-                        dev.log.font('.extractGlyphs('+JSON.stringify(fontFileData)+','+JSON.stringify(reducedGlyphSet)+')'); //#development
-                        dev.count('.font.extractGlyphs'); //#development
                     
                         //decode font data
                             const font = library.font.decodeFont(fontFileData);
@@ -3362,16 +3166,12 @@
                     
                     
                     this.getLoadableFonts = function(){ 
-                        dev.log.font('.getLoadableFonts()'); //#development
-                        dev.count('.font.getLoadableFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
                         const loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
                         return defaultFontNames.concat(loadableFontNames);
                     };
                     this.getLoadedFonts = function(){
-                        dev.log.font('.getLoadedFonts()'); //#development
-                        dev.count('.font.getLoadedFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
                         const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
@@ -3379,28 +3179,20 @@
                     };
                     
                     this.isApprovedFont = function(fontName){
-                        dev.log.font('.isApprovedFont('+fontName+')'); //#development
-                        dev.count('.font.isApprovedFont'); //#development
                     
                         return vectorLibrary[fontName] != undefined;
                     };
                     this.isFontLoaded = function(fontName){
-                        dev.log.font('.isFontLoaded('+fontName+')'); //#development
-                        dev.count('.font.isFontLoaded'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
                         return vectorLibrary[fontName].isLoaded;
                     }
                     this.fontLoadAttempted = function(fontName){
-                        dev.log.font('.fontLoadAttempted('+fontName+')'); //#development
-                        dev.count('.font.fontLoadAttempted'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
                         return vectorLibrary[fontName].loadAttempted;
                     }
                     this.loadFont = function(fontName,onLoaded=()=>{}){
-                        dev.log.font('.loadFont('+fontName+','+JSON.stringify(onLoaded)+')'); //#development
-                        dev.count('.font.loadFont'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
                     
@@ -3435,8 +3227,6 @@
                 };
                 this.misc = new function(){
                     this.padString = function(string,length,padding=' ',paddingSide='l'){
-                        dev.log.misc('.padString('+string+','+length+','+padding+','+paddingSide+')'); //#development
-                        dev.count('.misc.padString'); //#development
                     
                         if(padding.length<1){return string;}
                         string = ''+string;
@@ -3450,20 +3240,14 @@
                         return string;
                     };
                     this.compressString = function(string){
-                        dev.log.misc('.compressString('+string+')'); //#development
-                        dev.count('.misc.compressString'); //#development
                     
                         return _thirdparty.lzString.compress(string);
                     };
                     this.decompressString = function(string){
-                        dev.log.misc('.decompressString('+string+')'); //#development
-                        dev.count('.misc.decompressString'); //#development
                     
                         return _thirdparty.lzString.decompress(string);
                     };
                     this.serialize = function(data,compress=true){
-                        dev.log.misc('.serialize('+JSON.stringify(data)+','+compress+')'); //#development
-                        dev.count('.misc.serialize'); //#development
                     
                         function getType(obj){
                             return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -3500,8 +3284,6 @@
                         return data;
                     };
                     this.unserialize = function(data,compressed=true){
-                        dev.log.misc('.unserialize('+JSON.stringify(data)+','+compressed+')'); //#development
-                        dev.count('.misc.unserialize'); //#development
                     
                         if(data === undefined){return undefined;}
                     
@@ -3543,14 +3325,44 @@
                             return value;
                         });
                     };
-                    this.openFile = function(callback,readAsType='readAsBinaryString'){
-                        dev.log.misc('.openFile('+JSON.stringify(callback)+','+readAsType+')'); //#development
-                        dev.count('.misc.openFile'); //#development
+                    this.packData = function(data,compress=true){
+                        return library.misc.serialize({ 
+                            compressed:compress, 
+                            data:library.misc.serialize(data,compress)
+                        },false);
+                    };
+                    this.unpackData = function(data){
                     
-                        var i = document.createElement('input');
+                        //deserialize first layer
+                            try{
+                                data = library.misc.unserialize(data,false);
+                            }catch(e){
+                                console.error( "Major error unserializing first layer of file" );
+                                console.error(e);
+                                return null;
+                            }
+                    
+                        //determine if this data is compressed or not
+                            const compressed = data.compressed;
+                    
+                        //deserialize second layer (knowing now whether it's compressed or not)
+                            try{
+                                data = library.misc.unserialize(data.data,compressed);
+                            }catch(e){
+                                console.error( "Major error unserializing second layer of file" );
+                                console.error(e);
+                                return null;
+                            }
+                    
+                        return data;
+                    };
+                    this.openFile = function(callback,readAsType='readAsBinaryString'){
+                    
+                        const i = document.createElement('input');
                         i.type = 'file';
+                        i.accept = '.crv';
                         i.onchange = function(){
-                            var f = new FileReader();
+                            const f = new FileReader();
                             switch(readAsType){
                                 case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
                                 case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
@@ -3559,11 +3371,12 @@
                                 if(callback){callback(f.result);}
                             }
                         };
+                    
+                        document.body.appendChild(i);
                         i.click();
+                        setTimeout(() => {document.body.removeChild(i);},1000);
                     };
                     this.printFile = function(filename,data){
-                        dev.log.misc('.printFile('+filename+','+JSON.stringify(data)+')'); //#development
-                        dev.count('.misc.printFile'); //#development
                     
                         var a = document.createElement('a');
                         a.href = URL.createObjectURL(new Blob([data]));
@@ -3571,12 +3384,10 @@
                         a.click();
                     };
                     this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
-                        dev.log.misc('.loadFileFromURL('+URL+','+JSON.stringify(callback)+','+responseType+','+JSON.stringify(errorCallback)+')'); //#development
-                        dev.count('.misc.loadFileFromURL'); //#development
                     
                         //responseType: text / arraybuffer / blob / document / json 
                     
-                        var xhttp = new XMLHttpRequest();
+                        const xhttp = new XMLHttpRequest();
                         if(callback != undefined){ xhttp.onloadend = a => {
                             if(a.target.status == 200){ callback(a.target.response); }
                             else{ 
@@ -3594,6 +3405,81 @@
                             outputArray.push( argumentsObject[a] );
                         }
                         return outputArray;
+                    };
+                    this.comparer = function(item1,item2){
+                        function getType(obj){
+                            return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+                        }
+                    
+                        if(getType(item1) != getType(item2)){ return false; }
+                        if(typeof item1 == 'boolean' || typeof item1 == 'string'){ return item1 === item2; }
+                        if(typeof item1 == 'number'){
+                            if( Math.abs(item1) < 1.0e-14 ){item1 = 0;}
+                            if( Math.abs(item2) < 1.0e-14 ){item2 = 0;}
+                            if( Math.abs(item1 - item2) < 1.0e-14 ){return true;}
+                            return item1 === item2;
+                        }
+                        if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
+                        if(getType(item1) == 'function'){
+                            item1 = item1.toString();
+                            item2 = item2.toString();
+                    
+                            let item1_functionHead = item1.substring(0,item1.indexOf('{'));
+                            item1_functionHead = item1_functionHead.substring(item1_functionHead.indexOf('(')+1, item1_functionHead.lastIndexOf(')'));
+                            const item1_functionBody = item1.substring(item1.indexOf('{')+1, item1.lastIndexOf('}'));
+                    
+                            let item2_functionHead = item2.substring(0,item2.indexOf('{'));
+                            item2_functionHead = item2_functionHead.substring(item2_functionHead.indexOf('(')+1, item2_functionHead.lastIndexOf(')'));
+                            const item2_functionBody = item2.substring(item2.indexOf('{')+1, item2.lastIndexOf('}'));
+                    
+                            return item1_functionHead.trim() == item2_functionHead.trim() && item1_functionBody.trim() == item2_functionBody.trim();
+                        }
+                        if(typeof item1 == 'object'){
+                            const keys1 = Object.keys(item1);
+                            const keys2 = Object.keys(item2);
+                            if(keys1.length != keys2.length){return false;}
+                    
+                            for(let a = 0; a < keys1.length; a++){ 
+                                if( keys1.indexOf(keys2[a]) == -1 || !library.misc.comparer(item1[keys1[a]],item2[keys1[a]])){return false;}
+                            }
+                            return true;
+                        }
+                        return false;
+                    };
+                    this.removeThisFromThatArray = function(item,array){
+                        const index = array.findIndex(a => library.misc.comparer(a,item))
+                        if(index == -1){return;}
+                        return array.splice(index,1);
+                    };
+                    this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+                    
+                        theseElements.forEach(a => library.misc.removeThisFromThatArray(a,thatArray) );
+                        return thatArray;
+                    };
+                    this.getDifferenceOfArrays = function(array_a,array_b){
+                    
+                        if(array_a.length == 0 && array_b.length == 0){
+                            return {a:[],b:[]};
+                        }
+                        if(array_a.length == 0){
+                            return {a:[],b:array_b};
+                        }
+                        if(array_b.length == 0){
+                            return {a:array_a,b:[]};
+                        }
+                    
+                        function arrayRemovals(a,b){
+                            a.forEach(item => {
+                                let i = b.indexOf(item);
+                                if(i != -1){ b.splice(i,1); }
+                            });
+                            return b;
+                        }
+                    
+                        return {
+                            a:arrayRemovals(array_b,array_a.slice()),
+                            b:arrayRemovals(array_a,array_b.slice())
+                        };
                     };
                 };
                 const _thirdparty = new function(){
@@ -21878,9 +21764,8 @@
                     	
                     },{}]},{},[1]);
                 };
-            
-                _canvas_.layers.registerLayerLoaded('library',this);
             };
+            _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
             _canvas_.core = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
                 const core_engine = new Worker("js/core_engine.js");
@@ -21901,25 +21786,18 @@
                     const messagingCallbacks = {};
                 
                     function generateMessageID(){
-                        self.log('::generateMessageID()'); //#development
                         return messageId++;
                     }
                 
                     communicationObject.onmessage = function(encodedPacket){
-                        self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
                         let message = encodedPacket.data;
                 
                         if(message.outgoing){
-                            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
                             if(message.cargo.function in self.function){
-                                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
-                                self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                                 if(message.id == null){
-                                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                                     self.function[message.cargo.function](...message.cargo.arguments);
                                 }else{
-                                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     communicationObject.postMessage({
                                         id:message.id,
                                         outgoing:false,
@@ -21927,35 +21805,25 @@
                                     });
                                 }
                             }else if(message.cargo.function in self.delayedFunction){
-                                self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
-                                self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                                 if(message.id == null){
-                                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                                 }else{
-                                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
                                         communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
                                     }].concat(message.cargo.arguments));
                                 }
                             }else{
-                                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
                             }
                         }else{
-                            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
-                            self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
                             messagingCallbacks[message.id](message.cargo);
                             delete messagingCallbacks[message.id];
                         }
                     };
                     this.run = function(functionName,argumentList=[],callback,transferables){
-                        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
                         let id = null;
                         if(callback != undefined){
-                            self.log('.run -> callback was defined; generating message ID'); //#development
                             id = generateMessageID();
-                            self.log('.run -> message ID:',id); //#development
                             messagingCallbacks[id] = callback;
                         }
                         communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
@@ -21966,72 +21834,187 @@
                 
                 _canvas_.setAttribute('tabIndex',1);
                 
-                const dev = {
-                    prefix:'core_console',
+                const dev = new function(){
+                    const prefix = 'core_console';
+                    const active = {
+                        elementLibrary:{
+                            genericElementProxyTemplate:false,
+                            rectangle:false,
+                            rectangleWithOutline:false,
                 
-                    interface:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
-                    service:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
-                    elementLibrary:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+                            group:false,
+                            circle:false,
+                            circleWithOutline:false,
+                            polygon:false,
+                            polygonWithOutline:false,
+                            path:false,
+                            image:false,
+                            canvas:false,
+                            character:false,
+                            characterString:false,
+                        },
+                        service:false,
+                        interface:false,
+                    };
                 
-                    log:{
-                        interface:function(data){
-                            if(!dev.interface.active){return;}
-                            console.log('%c'+dev.prefix+'.interface'+(new Array(...arguments).join(' ')), dev.interface.fontStyle );
-                        },
-                        elementLibrary:function(data){
-                            if(!dev.elementLibrary.active){return;}
-                            console.log('%c'+dev.prefix+'.interface.elementLibrary'+(new Array(...arguments).join(' ')), dev.elementLibrary.fontStyle );
-                        },
-                        service:function(data){
-                            if(!dev.service.active){return;}
-                            console.log('%c'+dev.prefix+'.service'+(new Array(...arguments).join(' ')), dev.service.fontStyle );
-                        },
-                    },
+                    this.log = {};
+                    Object.entries(active).forEach(entry => {
+                        if(typeof entry[1] == 'object'){
+                            this.log[entry[0]] = {};
+                            Object.keys(active[entry[0]]).forEach(key => {
+                                this.log[entry[0]][key] = function(){
+                                    if(active[entry[0]][key]){ 
+                                        console.log( prefix+'.'+entry[0]+'.'+key+arguments[0], ...(new Array(...arguments).slice(1)) );
+                                    }
+                                };
+                            });
+                        }else{
+                            this.log[entry[0]] = function(){
+                                if(active[entry[0]]){ 
+                                    console.log( prefix+'.'+entry[0]+arguments[0], ...(new Array(...arguments).slice(1)) );
+                                }
+                            };
+                        }
+                    });
+                
+                    const countActive = !false;
+                    const countMemory = {};
+                    this.count = function(commandTag){
+                        if(!countActive){return;}
+                        if(commandTag in countMemory){ countMemory[commandTag]++; }
+                        else{ countMemory[commandTag] = 1; }
+                    };
+                    this.countResults = function(){return countMemory;};
                 };
-                
+
                 let elementRegistry = [];
                 const elementLibrary = new function(){
-                    function executeMethod(id,method,argumentList,postProcessing){
-                        return new Promise((resolve, reject) => { 
-                            communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
-                                if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
-                            });
-                        });
-                    }
-                    
-                    const missingIdRetryPeriod = 10;
-                    
-                    
-                    this.group = function(_name){
-                        dev.log.elementLibrary(' - new group('+_name+')'); //#development
+                    const genericElementProxy = function(_type, _name){
                         const self = this;
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'group';};
-                        this.parent = undefined;
+                        //type
+                            const type = _type;
+                            this.getType = function(){return type;};
                     
-                        const cashedAttributes = {
-                            ignored: false,
+                        //id
+                            let id = -1;
+                            this.getId = function(){return id;};
+                            this.__idReceived = function(){};
+                            this.__id = function(a,updateIdOnly=false){
+                                id = a;
+                                if(updateIdOnly){return;}
+                    
+                                //repush
+                                    _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
+                                    Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(this,entry[0],entry[1]); });
+                                    if(this.__repush != undefined){this.__repush();}
+                    
+                                if(this.__idReceived){this.__idReceived();}
+                            };
+                    
+                        //name
+                            let name = _name;
+                            this.getName = function(){return name;};
+                            // this.setName = function(a){
+                            //     name = a;
+                            // };
+                    
+                        //hierarchy
+                            this.parent = undefined;
+                            this.getAddress = function(){
+                                return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
+                            };
+                            this.getOffset = function(){
+                    
+                                let output = {x:0,y:0,scale:1,angle:0};
+                    
+                                if(this.parent){
+                                    const offset = this.parent.getOffset();
+                                    const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
+                                    output = { 
+                                        x: point.x*offset.scale + offset.x,
+                                        y: point.y*offset.scale + offset.y,
+                                        scale: offset.scale * cashedAttributes.scale,
+                                        angle: offset.angle + cashedAttributes.angle,
+                                    };
+                                }else{
+                                    output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
+                                }
+                    
+                                return output;
+                            };
+                    
+                        //attributes
+                            const cashedAttributes = {};
+                            this.setupSimpleAttribute = function(name,defaultValue){
+                                cashedAttributes[name] = defaultValue;
+                                this[name] = function(a){
+                                    if(a == undefined){ return cashedAttributes[name]; }
+                                    cashedAttributes[name] = a;
+                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[a]); }
+                                };
+                            }
+                            Object.entries({
+                                ignored: false,
+                                scale: 1,
+                                static: false,
+                            }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                            this.unifiedAttribute = function(attributes){
+                                if(attributes == undefined){ return cashedAttributes; }
+                                Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                                if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
+                            };
+                    
+                        //callbacks
+                            const cashedCallbacks = {};
+                            this.getCallback = function(callbackType){
+                                return cashedCallbacks[callbackType];
+                            };
+                            this.attachCallback = function(callbackType, callback){
+                                cashedCallbacks[callbackType] = callback;
+                                if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
+                            }
+                            this.removeCallback = function(callbackType){
+                                delete cashedCallbacks[callbackType];
+                                if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
+                            }
+                    
+                        //info dump
+                            this._dump = function(){
+                                _canvas_.core.element.__executeMethod(id,'_dump',[]);
+                            };
+                    };
+                    
+                    // this.getType
+                    // this.getId
+                    // this.__idReceived
+                    // this.__id
+                    // this.__repush
+                    // this.getName
+                    // this.setName
+                    // this.parent
+                    // this.getAddress
+                    // this.getOffset
+                    // this.setupSimpleAttribute
+                    // this.unifiedAttribute
+                    // this.getCallback
+                    // this.attachCallback
+                    // this.removeCallback
+                    // this._dump
+                    
+                    this.group = function(_name){
+                        genericElementProxy.call(this,'group',_name);
+                    
+                        Object.entries({
                             heedCamera: false,
                             x: 0,
                             y: 0,
                             angle: 0,
-                            scale: 1,
-                            static: false,
                             clipActive: false,
-                        };
-                        const cashedCallbacks = {};
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                    
+                    
+                        const self = this;
                     
                         let children = [];
                         let childRegistry = {};
@@ -22039,18 +22022,15 @@
                     
                         let clearingLock = false;
                         function lockClearingLock(){
-                            dev.log.elementLibrary('['+self.getAddress()+'] - group::lockClearingLock()'); //#development
                             clearingLock = true;
                         }
                         function unlockClearingLock(){
-                            dev.log.elementLibrary('['+self.getAddress()+'] - group::unlockClearingLock()'); //#development
-                            repush(self);
+                            self.__repush();
                             clearingLock = false;
                         }
                     
                         function checkForName(name){ return childRegistry[name] != undefined; }
                         function isValidElement(elementToCheck){
-                            dev.log.elementLibrary('['+self.getAddress()+'] - group::isValidElement({'+'name:'+self.getName()+',id:'+self.getId()+'},{'+'name:'+elementToCheck.getName()+',id:'+elementToCheck.getId()+'})'); //#development
                             if( elementToCheck == undefined ){ return false; }
                             if( elementToCheck.getName() == undefined || elementToCheck.getName().length == 0 ){
                                 console.warn('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
@@ -22064,1669 +22044,384 @@
                             return true;
                         }
                     
-                        function repush(){ 
-                            dev.log.elementLibrary('['+self.getAddress()+'] - group::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                            
+                        this.__repush = function(){
                             if(stencilElement != undefined){
                                 function readdStencil(){
                                     if( stencilElement.getId() == -1 ){ setTimeout(readdStencil,1); }
-                                    else{ _canvas_.core.element.__executeMethod(id,'stencil',[stencilElement.getId()]); }
+                                    else{ _canvas_.core.element.__executeMethod(self.getId(),'stencil',[stencilElement.getId()]); }
                                 }
                                 readdStencil();
                             }
                     
-                            communicationModule.run('element.executeMethod',[id,'clear'],() => {
+                            communicationModule.run('element.executeMethod',[self.getId(),'clear'],() => {
                                 function readdChildren(){
-                                    dev.log.elementLibrary('['+self.getAddress()+'] - group::repush::readdChildren -> self.getName(): '+ self.getName()+' children: ['+children.map(child => child.getId())+']'); //#development
                                     const childIds = children.map(child => child.getId());
                                     if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
-                                    else{ _canvas_.core.element.__executeMethod(id,'syncChildren',[childIds]); }
+                                    else{ _canvas_.core.element.__executeMethod(self.getId(),'syncChildren',[childIds]); }
                                 }
                                 readdChildren();
                             });
-                        }
-                    
-                        // function executeMethod_withReturn(method,argumentList,postProcessing){
-                        //     dev.log.elementLibrary('['+this.getAddress()+'] - group::executeMethod_withReturn('+method+','+JSON.stringify(argumentList)+','+postProcessing+')'); //#development
-                        //     if(id == -1){
-                        //         dev.log.elementLibrary('['+this.getAddress()+'] - group::executeMethod_withReturn -> this element\'s ID is -1, will retry in '+missingIdRetryPeriod+'ms...'); //#development
-                        //         setTimeout(() => {executeMethod_withReturn(method,argumentList,postProcessing);},missingIdRetryPeriod);
-                        //     }else{
-                        //         return new Promise((resolve, reject) => { 
-                        //             communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
-                        //                 if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
-                        //             });
-                        //         });
-                        //     }
-                        // }
-                    
-                        this.getAddress = function(){ 
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
                         };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.heedCamera = function(bool){
-                            if(bool == undefined){ return cashedAttributes.heedCamera; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.heedCamera('+bool+')'); //#development
-                            cashedAttributes.heedCamera = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'heedCamera',[bool]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; } 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
+                        
                         this.getChildren = function(){ 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildren()'); //#development
                             return children;
                         };
                         this.getChildByName = function(name){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildByName('+name+')'); //#development
                             return childRegistry[name];
                         };
                         this.getChildIndexByName = function(name){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getChildIndexByName('+name+')'); //#development
                             return children.indexOf(childRegistry[name]);
                         };
                         this.contains = function(elementToCheck){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.contains('+JSON.stringify(elementToCheck)+')'); //#development
                             return children.indexOf(elementToCheck) != -1;
                         };
                         this.append = function(newElement){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.append('+JSON.stringify(newElement.getName()+newElement.getId())+')'); //#development
                     
                             if( !isValidElement(newElement) ){ return false; }
                             newElement.parent = this;
                             children.push(newElement);
                             childRegistry[newElement.getName()] = newElement;
+                            if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
                     
                             if(clearingLock){ return; }
                     
                             if(newElement.getId() == -1){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> newElement\'s id missing; setting up "__idRecieved" callback..'); //#development
-                                newElement.__idRecieved = function(){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> newElement\'s "__idRecieved" callback ->'); //#development
-                                    if(children.indexOf(newElement) != -1 && id != -1){ 
-                                        dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                                        _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
+                                newElement.__calledBy = this.getAddress();
+                                newElement.__idReceived = function(){
+                                    if(self.getId() != -1){ 
+                                        if(children.indexOf(newElement) != -1){
+                                            _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
+                                        }else{
+                                        }
+                                    }else{
                                     }
                                 };
                             }else{
-                                if(id != -1){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.append -> this group\'s id missing; will not send message'); //#development
-                                    _canvas_.core.element.__executeMethod(id,'append', [newElement.getId()]);
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
+                                }else{
                                 }
                             }
                         };
                         this.prepend = function(newElement){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend('+JSON.stringify(newElement)+')'); //#development
                     
                             if( !isValidElement(newElement) ){ return false; }
                             newElement.parent = this;
                             children.unshift(newElement);
                             childRegistry[newElement.getName()] = newElement;
+                            if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
                     
                             if(clearingLock){ return; }
                     
                             if(newElement.getId() == -1){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> newElement\'s id missing; setting up "__idRecieved" callback..'); //#development
-                                newElement.__idRecieved = function(){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> newElement\'s "__idRecieved" callback ->'); //#development
-                                    if(children.indexOf(newElement) != -1 && id != -1){ 
-                                        dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                                        _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
+                                newElement.__idReceived = function(){
+                                    if(children.indexOf(newElement) != -1 && self.getId() != -1){ 
+                                        _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
+                                    }else{
                                     }
                                 };
                             }else{
-                                if(id != -1){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.prepend -> this group\'s id missing; will not send message'); //#development
-                                    _canvas_.core.element.__executeMethod(id,'prepend', [newElement.getId()]);
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
+                                }else{
                                 }
                             }
                         };
                         this.remove = function(elementToRemove){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.remove('+elementToRemove.getAddress()+')'); //#development
                             children.splice(children.indexOf(elementToRemove), 1);
                             delete childRegistry[elementToRemove.getName()];
                             elementToRemove.parent = undefined;
+                            if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
                     
                             if(clearingLock){ return; }
                     
                             if(elementToRemove.getId() == -1){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> newElement\'s id missing; setting up "__idRecieved" callback..'); //#development
-                                newElement.__idRecieved = function(){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> newElement\'s "__idRecieved" callback ->'); //#development
-                                    if(children.indexOf(newElement) == -1 && id != -1){ 
-                                        dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                                        _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
+                                elementToRemove.__idReceived = function(){
+                                    if(children.indexOf(elementToRemove) == -1 && self.getId() != -1){ 
+                                        _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                                    }else{
                                     }
                                 };
                             }else{
-                                if(id != -1){
-                                    dev.log.elementLibrary('['+this.getAddress()+'] - group.remove -> this group\'s id missing; will not send message'); //#development
-                                    _canvas_.core.element.__executeMethod(id,'remove', [elementToRemove.getId()]);
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                                }else{
                                 }
                             }
                         };
                         this.clear = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.clear()'); //#development
                             children = [];
                             childRegistry = {};
-                            if(id != -1){ 
+                            if(self.getId() != -1){ 
                                 lockClearingLock();
-                                communicationModule.run('element.executeMethod',[id,'clear',[]],()=>{unlockClearingLock();});
+                                communicationModule.run('element.executeMethod',[self.getId(),'clear',[]],unlockClearingLock);
+                            }else{
                             }
                         };
                         this.getElementsUnderPoint = function(x,y){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderPoint('+x+','+y+')'); //#development
-                            if(id != -1){
+                            if(self.getId() != -1){
                                 return new Promise((resolve, reject) => {
-                                    _canvas_.core.element.__executeMethod(id,'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
+                                    _canvas_.core.element.__executeMethod(self.getId(),'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
                                 });
                             }
                         };
-                        // this.getElementsUnderArea = function(points){
-                        //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
-                        //     executeMethod_withReturn('getElementsUnderArea',[points],result => result.map(result => elementRegistry[result]));
-                        // };
-                        // this.getTree = function(){
-                        //     dev.log.elementLibrary('['+this.getAddress()+'] - group.getTree()'); //#development
+                        this.getTree = function(){
                     
-                        //     const result = {name:name, type:this.getType(), id:this.getId(), children:[]};
-                        //     children.forEach(function(a){
-                        //         if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
-                        //         else{ result.children.push({ type:a.getType(), name:a.name, id:a.getId() }); }
-                        //     });
-                        //     return result;
-                        // };
+                            const result = {name:this.getName(), type:this.getType(), id:this.getId(), children:[]};
+                            children.forEach(function(a){
+                                if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
+                                else{ result.children.push({ type:a.getType(), name:a.getName(), id:a.getId() }); }
+                            });
+                            return result;
+                        };
                         this.stencil = function(newStencilElement){
                             if(newStencilElement == undefined){ return stencilElement; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.stencil('+JSON.stringify(newStencilElement)+')'); //#development
                             stencilElement = newStencilElement;
                     
                             if(newStencilElement.getId() == -1){
-                                newStencilElement.__idRecieved = function(){
-                                    if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
+                                newStencilElement.__idReceived = function(){
+                                    if(self.getId() != -1){ _canvas_.core.element.__executeMethod(self.getId(),'stencil', [newStencilElement.getId()]); }
                                 };
                             }else{
-                                if(id != -1){ _canvas_.core.element.__executeMethod(id,'stencil', [newStencilElement.getId()]); }
+                                if(self.getId() != -1){ _canvas_.core.element.__executeMethod(self.getId(),'stencil', [newStencilElement.getId()]); }
                             }
-                        };
-                        this.clipActive = function(bool){ 
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.clipActive('+bool+')'); //#development
-                            if(bool == undefined){ return cashedAttributes.clipActive; } cashedAttributes.clipActive = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'clipActive',[bool]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - group._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
                         };
                     };
                     
                     this.rectangle = function(_name){
-                        dev.log.elementLibrary(' - new rectangle('+_name+')'); //#development
+                        genericElementProxy.call(this,'rectangle',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'rectangle';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
-                            colour: {r:1,g:0,b:0,a:1},
+                        Object.entries({
                             x: 0,
                             y: 0,
                             angle: 0,
+                            colour: {r:1,g:0,b:0,a:1},
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary('['+self.getAddress()+'] - rectangle::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(newAnchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - rectangle._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.rectangleWithOutline = function(_name){
-                        dev.log.elementLibrary(' - new rectangleWithOutline('+_name+')'); //#development
+                        genericElementProxy.call(this,'rectangleWithOutline',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - rectangleWithOutline.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'rectangleWithOutline';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
+                        Object.entries({
                             x: 0,
                             y: 0,
                             angle: 0,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            scale: 1,
                             thickness: 0,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - rectangleWithOutline::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.lineColour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.lineColour; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.lineColour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(newAnchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.thickness = function(number){
-                            if(number == undefined){ return cashedAttributes.thickness; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.thickness('+number+')'); //#development
-                            cashedAttributes.thickness = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.static('+bool+')'); //#development
-                            if(bool == undefined){ return cashedAttributes.static; } cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - rectangleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - rectangleWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - rectangleWithOutline.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - rectangleWithOutline._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.circle = function(_name){
-                        dev.log.elementLibrary(' - new circle('+_name+')'); //#development
+                        genericElementProxy.call(this,'circle',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - circle.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'circle';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
-                            colour: {r:1,g:0,b:0,a:1},
+                        Object.entries({
                             x: 0,
                             y: 0,
+                            colour: {r:1,g:0,b:0,a:1},
                             radius: 10,
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - circle::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - circle.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - circle.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - circle.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - circle.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.radius = function(number){
-                            if(number == undefined){ return cashedAttributes.radius; }
-                            dev.log.elementLibrary(' - circle.radius('+number+')'); //#development
-                            cashedAttributes.radius = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - circle.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - circle.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - circle.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - circle.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - circle.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - circle._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.circleWithOutline = function(_name){
-                        dev.log.elementLibrary(' - new circleWithOutline('+_name+')'); //#development
+                        genericElementProxy.call(this,'circleWithOutline',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - circleWithOutline.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'circleWithOutline';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
+                        Object.entries({
                             x: 0,
                             y: 0,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
                             radius: 10,
-                            scale: 1,
                             thickness: 0,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - circleWithOutline::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - circleWithOutline.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - circleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.lineColour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.lineColour; }
-                            dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.lineColour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - circleWithOutline.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - circleWithOutline.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.radius = function(number){
-                            if(number == undefined){ return cashedAttributes.radius; }
-                            dev.log.elementLibrary(' - circleWithOutline.radius('+number+')'); //#development
-                            cashedAttributes.radius = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'radius',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - circleWithOutline.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.thickness = function(number){
-                            if(number == undefined){ return cashedAttributes.thickness; }
-                            dev.log.elementLibrary(' - circleWithOutline.thickness('+number+')'); //#development
-                            cashedAttributes.thickness = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - circleWithOutline.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - circleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - circleWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - circleWithOutline.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - circleWithOutline._dump()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.polygon = function(_name){
-                        dev.log.elementLibrary(' - new polygon('+_name+')'); //#development
+                        genericElementProxy.call(this,'polygon',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - polygon.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'polygon';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             points: [], 
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - polygon::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
+                        function XYArrayToPoints(XYArrray){
+                            return XYArrray.flatMap(i => [i.x,i.y]);
                         }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
+                        function pointsToXYArray(points){ 
+                            const output = [];
+                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
                             return output;
+                        }
+                    
+                        this.pointsAsXYArray = function(XYArrray){
+                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                            this.points(XYArrayToPoints(XYArrray));
                         };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - polygon.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - polygon.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.points = function(points){
-                            if(points == undefined){ return cashedAttributes.points; }
-                            dev.log.elementLibrary(' - polygon.points('+JSON.stringify(points)+')'); //#development
-                            cashedAttributes.points = points;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
-                        }; 
-                        this.pointsAsXYArray = function(pointsXY){
-                            function pointsToXYArray(points){ 
-                                const output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-                            if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
-                            dev.log.elementLibrary(' - polygon.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
-                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - polygon.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - polygon.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
+                        const __unifiedAttribute = this.unifiedAttribute;
                         this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - polygon.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - polygon.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - polygon.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - polygon._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
+                            __unifiedAttribute(attributes);
+                            if(attributes.points != undefined){
+                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                                return attributes;
+                            }
+                            if(attributes.pointsAsXYArray != undefined){
+                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                return attributes;
+                            }
                         };
                     };
                     this.polygonWithOutline = function(_name){
-                        dev.log.elementLibrary(' - new polygonWithOutline('+_name+')'); //#development
+                        genericElementProxy.call(this,'polygonWithOutline',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - polygonWithOutline.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'polygonWithOutline';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             lineColour: {r:1,g:0,b:0,a:1},
-                            points: [], 
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
+                            points: [],
+                            thickness: 0,
+                            jointDetail: 25,
+                            jointType: 'sharp',
+                            sharpLimit: 4,
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - polygonWithOutline::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
+                        function XYArrayToPoints(XYArrray){
+                            return XYArrray.flatMap(i => [i.x,i.y]);
                         }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
+                        function pointsToXYArray(points){ 
+                            const output = [];
+                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
                             return output;
+                        }
+                    
+                        this.pointsAsXYArray = function(XYArrray){
+                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                            this.points(XYArrayToPoints(XYArrray));
                         };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - polygonWithOutline.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - polygonWithOutline.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.lineColour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.lineColour; }
-                            dev.log.elementLibrary(' - circleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.lineColour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'lineColour',[colour]); }
-                        };
-                        this.points = function(points){
-                            if(points == undefined){ return cashedAttributes.points; }
-                            dev.log.elementLibrary(' - polygonWithOutline.points('+JSON.stringify(points)+')'); //#development
-                            cashedAttributes.points = points;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
-                        }; 
-                        this.pointsAsXYArray = function(pointsXY){
-                            function pointsToXYArray(points){ 
-                                const output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-                            if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
-                            dev.log.elementLibrary(' - polygonWithOutline.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
-                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - polygonWithOutline.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                    
-                        this.thickness = function(number){
-                            if(number == undefined){ return cashedAttributes.thickness; }
-                            dev.log.elementLibrary(' - polygonWithOutline.thickness('+number+')'); //#development
-                            cashedAttributes.thickness = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
-                        };
-                        this.jointDetail = function(number){
-                            if(number == undefined){ return cashedAttributes.jointDetail; }
-                            dev.log.elementLibrary(' - polygonWithOutline.jointDetail('+number+')'); //#development
-                            cashedAttributes.jointDetail = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
-                        };
-                        this.jointType = function(type){
-                            if(type == undefined){ return cashedAttributes.jointType; }
-                            dev.log.elementLibrary(' - polygonWithOutline.jointType('+type+')'); //#development
-                            cashedAttributes.jointType = type;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
-                        };
-                        this.sharpLimit = function(number){
-                            if(number == undefined){ return cashedAttributes.sharpLimit; }
-                            dev.log.elementLibrary(' - polygonWithOutline.sharpLimit('+number+')'); //#development
-                            cashedAttributes.sharpLimit = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
-                        };
-                    
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - polygonWithOutline.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
+                        const __unifiedAttribute = this.unifiedAttribute;
                         this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - polygonWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - polygonWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - polygonWithOutline.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - polygonWithOutline._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
+                            __unifiedAttribute(attributes);
+                            if(attributes.points != undefined){
+                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                                return attributes;
+                            }
+                            if(attributes.pointsAsXYArray != undefined){
+                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                return attributes;
+                            }
                         };
                     };
                     
                     this.path = function(_name){
-                        dev.log.elementLibrary(' - new path('+_name+')'); //#development
+                        genericElementProxy.call(this,'path',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - path.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'path';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             points: [], 
-                            scale: 1,
                             thickness: 0,
                             capType: 'none',
                             jointDetail: 25,
                             jointType: 'sharp',
                             sharpLimit: 4,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - path::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
+                        function XYArrayToPoints(XYArrray){
+                            return XYArrray.flatMap(i => [i.x,i.y]);
                         }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
+                        function pointsToXYArray(points){ 
+                            const output = [];
+                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
                             return output;
+                        }
+                    
+                        this.pointsAsXYArray = function(XYArrray){
+                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                            this.points(XYArrayToPoints(XYArrray));
                         };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - path.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - path.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.points = function(points){
-                            if(points == undefined){ return cashedAttributes.points; }
-                            dev.log.elementLibrary(' - path.points('+points+')'); //#development
-                            cashedAttributes.points = points;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'points',[points]); }
-                        }; 
-                        this.pointsAsXYArray = function(pointsXY){
-                            function pointsToXYArray(points){ 
-                                const output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-                            if(pointsXY == undefined){ return pointsToXYArray(cashedAttributes.points); }
-                            dev.log.elementLibrary(' - path.pointsAsXYArray('+JSON.stringify(pointsXY)+')'); //#development
-                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'pointsAsXYArray',[pointsXY]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - path.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.looping = function(bool){
-                            if(bool == undefined){ return cashedAttributes.looping; }
-                            dev.log.elementLibrary(' - path.looping('+bool+')'); //#development
-                            cashedAttributes.looping = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'looping',[bool]); }
-                        };
-                        this.thickness = function(number){
-                            if(number == undefined){ return cashedAttributes.thickness; }
-                            dev.log.elementLibrary(' - path.thickness('+number+')'); //#development
-                            cashedAttributes.thickness = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'thickness',[number]); }
-                        };
-                        this.capType = function(type){
-                            if(type == undefined){ return cashedAttributes.capType; }
-                            dev.log.elementLibrary(' - path.capType('+type+')'); //#development
-                            cashedAttributes.capType = type;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'capType',[type]); }
-                        };
-                        this.jointType = function(type){
-                            if(type == undefined){ return cashedAttributes.jointType; }
-                            dev.log.elementLibrary(' - path.jointType('+type+')'); //#development
-                            cashedAttributes.jointType = type;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointType',[type]); }
-                        };
-                        this.jointDetail = function(number){
-                            if(number == undefined){ return cashedAttributes.jointDetail; }
-                            dev.log.elementLibrary(' - path.jointDetail('+number+')'); //#development
-                            cashedAttributes.jointDetail = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'jointDetail',[number]); }
-                        };
-                        this.sharpLimit = function(number){
-                            if(number == undefined){ return cashedAttributes.sharpLimit; }
-                            dev.log.elementLibrary(' - path.sharpLimit('+number+')'); //#development
-                            cashedAttributes.sharpLimit = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'sharpLimit',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - path.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
+                        const __unifiedAttribute = this.unifiedAttribute;
                         this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - path.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary(' - polygonWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary(' - polygonWithOutline.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - path._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
+                            __unifiedAttribute(attributes);
+                            if(attributes.points != undefined){
+                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                                return attributes;
+                            }
+                            if(attributes.pointsAsXYArray != undefined){
+                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                return attributes;
+                            }
                         };
                     };
                     
                     this.image = function(_name){
-                        dev.log.elementLibrary(' - new image('+_name+')'); //#development
+                        genericElementProxy.call(this,'image',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - image.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'image';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             x: 0,
                             y: 0,
                             angle: 0,
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            scale: 1,
-                            static: false,
                             url: '',
                             bitmap: undefined,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - image::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - image.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - image.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - image.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(anchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - image.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - image.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - image.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - image.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
-                        this.url = function(url){
-                            if(url == undefined){ return cashedAttributes.url; }
-                            dev.log.elementLibrary(' - image.url('+url+')'); //#development
-                            cashedAttributes.url = url;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'url',[url]); }
-                        };
-                        this.bitmap = function(bitmap){
-                            if(bitmap == undefined){ return cashedAttributes.bitmap; }
-                            dev.log.elementLibrary(' - image.bitmap('+bitmap+')'); //#development
-                            cashedAttributes.bitmap = bitmap;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'bitmap',[bitmap],undefined,[bitmap]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - image.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this.getCallback = function(callbackType){
-                            return cashedCallbacks[callbackType];
-                        };
-                        this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - image.attachCallback('+callbackType+','+callback+')'); //#development
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                        }
-                        this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - image.removeCallback('+callbackType+')'); //#development
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                        }
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - image._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.canvas = function(_name){
-                        dev.log.elementLibrary(' - new canvas('+_name+')'); //#development
+                        genericElementProxy.call(this,'canvas',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - canvas.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'canvas';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             x: 0,
                             y: 0,
                             angle: 0,
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - image::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                            self.requestUpdate();
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     
                         //subCanvas
                             const subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1 };
                             subCanvas.context = subCanvas.object.getContext('2d');
                     
-                            function updateDimentions(){
-                                subCanvas.object.setAttribute('width',cashedAttributes.width*subCanvas.resolution);
-                                subCanvas.object.setAttribute('height',cashedAttributes.height*subCanvas.resolution);
+                            function updateDimentions(self){
+                                subCanvas.object.setAttribute('width',self.width()*subCanvas.resolution);
+                                subCanvas.object.setAttribute('height',self.height()*subCanvas.resolution);
                             }
-                            updateDimentions();
+                            updateDimentions(this);
                     
                             this._ = subCanvas.context;
                             this.$ = function(a){return a*subCanvas.resolution;};
                             this.resolution = function(a){
                                 if(a == undefined){return subCanvas.resolution;}
                                 subCanvas.resolution = a;
-                                updateDimentions();
+                                updateDimentions(this);
                             };
                             this.requestUpdate = function(){
                                 createImageBitmap(subCanvas.object).then(bitmap => {
-                                    if(id != -1){ _canvas_.core.element.__executeMethod(id,'imageBitmap',[bitmap],undefined,[bitmap]); }
+                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),'imageBitmap',[bitmap],undefined,[bitmap]); }
                                 });
                             };
                             this.requestUpdate();
+                            this.__repush = function(){ this.requestUpdate(); };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - image.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - image.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - image.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(anchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - image.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            updateDimentions();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - image.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            updateDimentions();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - image.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - image.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
+                    
+                        const __unifiedAttribute = this.unifiedAttribute;
                         this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - image.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
                             if(attributes.resolution != undefined){
                                 this.resolution(attributes.resolution);
                                 delete attributes.resolution;
                             }
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            updateDimentions();
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - canvas._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
+                            __unifiedAttribute(attributes);
+                            updateDimentions(this);
                         };
                     };
                     
                     this.character = function(_name){
-                        dev.log.elementLibrary(' - new character('+_name+')'); //#development
+                        genericElementProxy.call(this,'character',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - character.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'character';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             x: 0,
                             y: 0,
@@ -23737,154 +22432,12 @@
                             font: 'defaultThin',
                             character: '',
                             printingMode: { horizontal:'left', vertical:'bottom' },
-                            scale: 1,
-                            static: false,
-                        };
-                        const cashedCallbacks = {};
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - character::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
-                        };
-                    
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - character.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'ignored',[bool]); }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - character.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - character.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - character.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - character.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - character.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.anchor = function(anchor){
-                            if(anchor == undefined){ return cashedAttributes.anchor; }
-                            dev.log.elementLibrary(' - character.anchor('+anchor+')'); //#development
-                            cashedAttributes.anchor = anchor;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'anchor',[anchor]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - character.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - character.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.font = function(font){
-                            if(font == undefined){ return cashedAttributes.font; }
-                            dev.log.elementLibrary(' - character.font('+font+')'); //#development
-                            cashedAttributes.font = font;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'font',[font]); }
-                        };
-                        this.character = function(character){
-                            if(character == undefined){ return cashedAttributes.character; }
-                            dev.log.elementLibrary(' - character.character('+character+')'); //#development
-                            cashedAttributes.character = character;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'character',[character]); }
-                        };
-                        this.printingMode = function(printingMode){
-                            if(printingMode == undefined){ return cashedAttributes.printingMode; }
-                            dev.log.elementLibrary(' - character.printingMode('+printingMode+')'); //#development
-                            cashedAttributes.printingMode = printingMode;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'printingMode',[printingMode]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - character.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - character.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                        };
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - character._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
                     this.characterString = function(_name){
-                        dev.log.elementLibrary(' - new characterString('+_name+')'); //#development
+                        genericElementProxy.call(this,'characterString',_name);
                     
-                        let id = -1;
-                        this.getId = function(){return id;};
-                        this.__idRecieved = function(){};
-                        this.__id = function(a){
-                            dev.log.elementLibrary(' - characterString.__id('+a+')'); //#development
-                            id = a;
-                            repush(this);
-                            if(this.__idRecieved){this.__idRecieved();}
-                        };
-                        let name = _name;
-                        this.getName = function(){return name;};
-                        this.setName = function(a){name = a;};
-                        this.getType = function(){return 'characterString';};
-                        this.parent = undefined;
-                    
-                        const cashedAttributes = {
-                            ignored: false,
+                        Object.entries({
                             colour: {r:1,g:0,b:0,a:1},
                             x: 0,
                             y: 0,
@@ -23896,182 +22449,49 @@
                             spacing: 0.5,
                             interCharacterSpacing: 0,
                             printingMode: { widthCalculation:'absolute', horizontal:'left', vertical:'bottom' },
-                            scale: 1,
-                            static: false,
-                        };
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                    
                         const cashedAttributes_presentationOnly = {
                             resultingWidth: 0, 
                         };
-                        const cashedCallbacks = {};
                         const cashedCallbacks_elementSpecific = {
                             onFontUpdateCallback:function(){},
                         };
-                    
-                        function repush(self){ 
-                            dev.log.elementLibrary(' - characterString::repush()'); //#development
-                            _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                            Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
-                        }
-                    
                         this.__updateValues = function(data){
-                            dev.log.elementLibrary(' - characterString.__updateValues('+JSON.stringify(data)+')'); //#development
                             Object.keys(data).forEach(key => { cashedAttributes_presentationOnly[key] = data[key]; });
                         };
                         this.__runCallback = function(data){
-                            Object.entries(data).forEach(entry => {
-                                if(entry[0] in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[entry[0]](entry[1]); }
+                            Object.entries(data).forEach(([name,values]) => {
+                                if(name in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[name](values); }
                             });
                         };
-                    
-                        this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
-                        };
-                        this.getOffset = function(){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
-                    
-                            let output = {x:0,y:0,scale:1,angle:0};
-                    
-                            if(this.parent){
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
-                                const offset = this.parent.getOffset();
-                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                output = { 
-                                    x: point.x*offset.scale + offset.x,
-                                    y: point.y*offset.scale + offset.y,
-                                    scale: offset.scale * cashedAttributes.scale,
-                                    angle: offset.angle + cashedAttributes.angle,
-                                };
-                            }else{
-                                dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
-                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                            }
-                    
-                            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
-                            return output;
+                        this.resultingWidth = function(){
+                            return cashedAttributes_presentationOnly.resultingWidth;
                         };
                     
-                        this.ignored = function(bool){
-                            if(bool == undefined){ return cashedAttributes.ignored; }
-                            dev.log.elementLibrary(' - characterString.ignored('+bool+')'); //#development
-                            cashedAttributes.ignored = bool;
-                            if(id != -1){
-                                _canvas_.core.element.__executeMethod(id,'ignored',[bool]);
-                            }
-                        };
-                        this.colour = function(colour){
-                            if(colour == undefined){ return cashedAttributes.colour; }
-                            dev.log.elementLibrary(' - characterString.colour('+JSON.stringify(colour)+')'); //#development
-                            cashedAttributes.colour = colour;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'colour',[colour]); }
-                        };
-                        this.x = function(number){
-                            if(number == undefined){ return cashedAttributes.x; }
-                            dev.log.elementLibrary(' - characterString.x('+number+')'); //#development
-                            cashedAttributes.x = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'x',[number]); }
-                        };
-                        this.y = function(number){
-                            if(number == undefined){ return cashedAttributes.y; }
-                            dev.log.elementLibrary(' - characterString.y('+number+')'); //#development
-                            cashedAttributes.y = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'y',[number]); }
-                        };
-                        this.scale = function(number){
-                            if(number == undefined){ return cashedAttributes.scale; }
-                            dev.log.elementLibrary(' - characterString.scale('+number+')'); //#development
-                            cashedAttributes.scale = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'scale',[number]); }
-                        };
-                        this.angle = function(number){
-                            if(number == undefined){ return cashedAttributes.angle; }
-                            dev.log.elementLibrary(' - characterString.angle('+number+')'); //#development
-                            cashedAttributes.angle = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'angle',[number]); }
-                        };
-                        this.width = function(number){
-                            if(number == undefined){ return cashedAttributes.width; }
-                            dev.log.elementLibrary(' - characterString.width('+number+')'); //#development
-                            cashedAttributes.width = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'width',[number]); }
-                        };
-                        this.height = function(number){
-                            if(number == undefined){ return cashedAttributes.height; }
-                            dev.log.elementLibrary(' - characterString.height('+number+')'); //#development
-                            cashedAttributes.height = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'height',[number]); }
-                        };
-                        this.font = function(font){
-                            if(font == undefined){ return cashedAttributes.font; }
-                            dev.log.elementLibrary(' - characterString.font('+font+')'); //#development
-                            cashedAttributes.font = font;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'font',[font]); }
-                        };
-                        this.string = function(string){
-                            if(string == undefined){ return cashedAttributes.string; }
-                            dev.log.elementLibrary(' - characterString.string('+string+')'); //#development
-                            cashedAttributes.string = string;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'string',[string]); }
-                        };
-                        this.interCharacterSpacing = function(number){
-                            if(number == undefined){ return cashedAttributes.interCharacterSpacing; }
-                            dev.log.elementLibrary(' - characterString.interCharacterSpacing('+number+')'); //#development
-                            cashedAttributes.interCharacterSpacing = number;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'interCharacterSpacing',[number]); }
-                        };
-                        this.printingMode = function(printingMode){
-                            if(printingMode == undefined){ return cashedAttributes.printingMode; }
-                            dev.log.elementLibrary(' - characterString.printingMode('+printingMode+')'); //#development
-                            cashedAttributes.printingMode = printingMode;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'printingMode',[printingMode]); }
-                        };
-                        this.static = function(bool){
-                            if(bool == undefined){ return cashedAttributes.static; }
-                            dev.log.elementLibrary(' - characterString.static('+bool+')'); //#development
-                            cashedAttributes.static = bool;
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'static',[bool]); }
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes == undefined){ return cashedAttributes; }
-                            dev.log.elementLibrary(' - characterString.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]); }
-                        };
-                    
+                        const __getCallback = this.getCallback;
                         this.getCallback = function(callbackType){
                             if(callbackType in cashedCallbacks_elementSpecific){
                                 return cashedCallbacks_elementSpecific[callbackType];
                             }
-                    
-                            return cashedCallbacks[callbackType];
+                            __getCallback(callbackType);
                         };
+                        const __attachCallback = this.attachCallback;
                         this.attachCallback = function(callbackType, callback){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - characterString.attachCallback('+callbackType+','+callback+')'); //#development
                             if(callbackType in cashedCallbacks_elementSpecific){
                                 cashedCallbacks_elementSpecific[callbackType] = callback;
                                 return;
                             }
-                            cashedCallbacks[callbackType] = callback;
-                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
+                            __attachCallback(callbackType);
                         }
+                        const __removeCallback = this.removeCallback;
                         this.removeCallback = function(callbackType){
-                            dev.log.elementLibrary('['+this.getAddress()+'] - characterString.removeCallback('+callbackType+')'); //#development
                             if(callbackType in cashedCallbacks_elementSpecific){
                                 delete cashedCallbacks_elementSpecific[callbackType];
                                 return;
                             }
-                            delete cashedCallbacks[callbackType];
-                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
+                            __removeCallback(callbackType);
                         }
-                    
-                        this.resultingWidth = function(){
-                            dev.log.elementLibrary(' - characterString.resultingWidth()'); //#development
-                            return cashedAttributes_presentationOnly.resultingWidth;
-                        };
-                    
-                        this._dump = function(){
-                            dev.log.elementLibrary(' - characterString._dump()'); //#development
-                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'_dump',[]); }
-                        };
                     };
 
                 };
@@ -24085,50 +22505,42 @@
                 
                 this.meta = new function(){
                     this.areYouReady = function(){
-                        dev.log.interface('.meta.areYouReady()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('areYouReady',[],resolve);
                         });
                     };
                     this.refresh = function(){
-                        dev.log.interface('.meta.refresh()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('refresh',[],resolve);
                         });
                     };
                     this.getElementFromId = function(id){
-                        dev.log.interface('.meta.getElementFromId('+id+')'); //#development
                         return elementRegistry[id];
                     };
                 };
                 
                 this._dump = new function(){
                     this.elememt = function(){
-                        dev.log.interface('._dump.elememt()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.element',[],resolve);
                         });
                     };
                     this.arrangement = function(){
-                        dev.log.interface('._dump.arrangement()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.arrangement',[],resolve);
                         });
                     };
                     this.render = function(){
-                        dev.log.interface('._dump.render()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.render',[],resolve);
                         });
                     };
                     this.viewport = function(){
-                        dev.log.interface('._dump.viewport()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.viewport',[],resolve);
                         });
                     };
                     this.callback = function(){
-                        dev.log.interface('._dump.callback()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.callback',[],resolve);
                         });
@@ -24137,12 +22549,10 @@
                 
                 this.element = new function(){
                     this.getAvailableElements = function(){
-                        dev.log.interface('.element.getAvailableElements()'); //#development
                         return Object.keys(elementLibrary);
                     };
                 
-                    this.create = function(type,name){
-                        dev.log.interface('.element.create('+type+','+name+')'); //#development
+                    this.create = function(type,name,forceId,updateIdOnly){
                 
                         if(elementLibrary[type] == undefined){
                             console.warn('interface.element.create - unknown element type "'+type+'"');
@@ -24150,77 +22560,73 @@
                         }
                 
                         const newElementProxy = new elementLibrary[type](name);
-                        communicationModule.run('element.create', [type,name], id => {
-                            newElementProxy.__id(id);
-                            elementRegistry[id] = newElementProxy;
-                        });
+                        if(forceId == undefined){
+                            communicationModule.run('element.create', [type,name], id => {
+                                newElementProxy.__id(id);
+                                elementRegistry[id] = newElementProxy;
+                            });
+                        }else{
+                            newElementProxy.__id(forceId,updateIdOnly);
+                            elementRegistry[forceId] = newElementProxy;
+                        }
                         return newElementProxy;
                     };
                     this.delete = function(ele){
-                        dev.log.interface('.element.delete('+JSON.stringify(ele)+')'); //#development
                         communicationModule.run('element.delete',[ele.getId()]);
                         elementRegistry[element.getId()] = undefined;
                     };
                     this.deleteAllCreated = function(){
-                        dev.log.interface('.element.deleteAllCreated()'); //#development
                         communicationModule.run('element.deleteAllCreated',[]);
                         elementRegistry = [];
                     };
                 
                     this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
-                        dev.log.interface('.element.__executeMethod('+id+','+attribute+','+JSON.stringify(argumentList)+')'); //#development
                         communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
                     };
                 };
                 this.arrangement = new function(){
+                    const design = self.element.create('group','root',0,true)
+                
                     this.new = function(){
-                        dev.log.interface('.arrangement.new()'); //#development
                         communicationModule.run('arrangement.new');
-                    };
-                    this.prepend = function(element){
-                        dev.log.interface('.arrangement.prepend('+JSON.stringify(element)+')'); //#development
-                        if(element.getId() == -1){
-                            dev.log.interface('.arrangement.prepend -> element ID is -1'); //#development
-                            setTimeout(() => {this.prepend(element);},1);
-                        }else{
-                            dev.log.interface('.arrangement.prepend -> element ID is '+element.getId()); //#development
-                            communicationModule.run('arrangement.prepend',[element.getId()]);
-                        }
-                    };
-                    this.append = function(element){
-                        dev.log.interface('.arrangement.append('+JSON.stringify(element)+')'); //#development
-                        if(element.getId() == -1){
-                            dev.log.interface('.arrangement.append -> element ID is -1'); //#development
-                            setTimeout(() => {this.append(element);},1);
-                        }else{
-                            dev.log.interface('.arrangement.append -> element ID is '+element.getId()); //#development
-                            communicationModule.run('arrangement.append',[element.getId()]);
-                        }
-                    };
-                    this.remove = function(element){
-                        dev.log.interface('.arrangement.remove('+JSON.stringify(element)+')'); //#development
-                        if(element.getId() == -1){
-                            dev.log.interface('.arrangement.remove -> element ID is -1'); //#development
-                            setTimeout(() => {this.remove(element);},1);
-                        }else{
-                            dev.log.interface('.arrangement.remove -> element ID is '+element.getId()); //#development
-                            communicationModule.run('arrangement.remove',[element.getId()]);
-                        }
-                    };
-                    this.clear = function(){
-                        dev.log.interface('.arrangement.clear()'); //#development
-                        communicationModule.run('arrangement.clear');
-                    };
-                    this.getElementByAddress = function(address){
-                        dev.log.interface('.arrangement.getElementByAddress('+address+')'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('arrangement.getElementByAddress',[address],result => {
-                                resolve(elementRegistry[result]);
-                            });
+                        design.clear();
+                        design.unifiedAttribute({
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            scale: 1,
+                            heedCamera: false,
+                            static: false,
                         });
                     };
+                    this.get = function(){
+                        return design;
+                    };
+                    this.prepend = function(element){
+                        return design.prepend(element);
+                    };
+                    this.append = function(element){
+                        return design.append(element);
+                    };
+                    this.remove = function(element){
+                        return design.remove(element);
+                    };
+                    this.clear = function(){
+                        return design.clear();
+                    };
+                    this.getElementByAddress = function(address){
+                        
+                        const route = address.split('/');
+                        route.shift();
+                
+                        let currentObject = design;
+                        route.forEach((a) => {
+                            currentObject = currentObject.getChildByName(a);
+                        });
+                
+                        return currentObject;
+                    };
                     this.getElementsUnderPoint = function(x,y){
-                        dev.log.interface('.arrangement.getElementsUnderPoint('+x+','+y+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.getElementsUnderPoint',[x,y],results => {
                                 resolve(results.map(result => elementRegistry[result]));
@@ -24228,65 +22634,112 @@
                         });
                     };
                     this.getElementsUnderArea = function(points){
-                        dev.log.interface('.arrangement.getElementsUnderArea('+points+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.getElementsUnderArea',[points],results => {
                                 resolve(results.map(result => elementRegistry[result]));
                             });
                         });
                     };
-                    this.printTree = function(mode){
-                        dev.log.interface('.arrangement.printTree('+mode+')'); //#development
-                        communicationModule.run('arrangement.printTree',[mode]);
+                    this.printTree = function(mode='spaced',local=false){
+                
+                        if(local){
+                            function recursivePrint(grouping,prefix=''){
+                                grouping.children.forEach(function(a){
+                                    if(mode == 'spaced'){
+                                        console.log(prefix+' -  '+a.name+' ('+a.id+')');
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
+                                    }else if(mode == 'tabular'){
+                                        console.log(prefix+'\t-\t\t'+a.name+' ('+a.id+')');
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
+                                    }else if(mode == 'address'){
+                                        console.log(prefix+'/'+a.name+' ('+a.id+')');
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
+                                    }
+                                });
+                            }
+                    
+                            if(design.getChildren().length == 0){console.log('-empty-');}
+                            console.log(design.getName()+' ('+design.getId()+')');
+                            recursivePrint(design.getTree(), '');
+                        }else{
+                            communicationModule.run('arrangement.printTree',[mode]);
+                        }
                     };
                     this.areParents = function(element,potentialParents=[]){
-                        dev.log.interface('.arrangement.areParents('+JSON.stringify(element)+','+JSON.stringify(potentialParents)+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.areParents',[element.getId(),potentialParents.map(parent => parent.getId())],resolve);
                         });
                     };
+                    this._dump = function(local=true,engine=true){
+                
+                        if(local){
+                            console.log(design.getAddress(),'._dump()');
+                            console.log(design.getAddress(),'._dump -> id: '+design.getId());
+                            console.log(design.getAddress(),'._dump -> type: '+design.getType());
+                            console.log(design.getAddress(),'._dump -> name: '+design.getName());
+                            console.log(design.getAddress(),'._dump -> address: '+design.getAddress());
+                            console.log(design.getAddress(),'._dump -> parent: ',design.parent);
+                            console.log(design.getAddress(),'._dump -> ignored: '+design.ignored());
+                            console.log(design.getAddress(),'._dump -> x: '+design.x());
+                            console.log(design.getAddress(),'._dump -> y: '+design.y());
+                            console.log(design.getAddress(),'._dump -> angle: '+design.angle());
+                            console.log(design.getAddress(),'._dump -> scale: '+design.scale());
+                            console.log(design.getAddress(),'._dump -> heedCamera: '+design.heedCamera());
+                            console.log(design.getAddress(),'._dump -> static: '+design.static());
+                            console.log(design.getAddress(),'._dump -> children.length: '+design.getChildren().length);
+                            console.log(design.getAddress(),'._dump -> children: ',design.getChildren());
+                            console.log(design.getAddress(),'._dump -> clipActive: '+design.clipActive());
+                        }
+                        if(engine){
+                            _canvas_.core.element.__executeMethod(design.getId(),'_dump',[]);
+                        }
+                    };
                 };
                 this.render = new function(){
+                    const cachedValues = {
+                        clearColour:{r:1,g:1,b:1,a:1},
+                        frameRateLimit:30,
+                        active:false,
+                    };
+                
                     this.refresh = function(){
-                        dev.log.interface('.render.refresh()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.refresh',[],resolve);
                         });
                     };
                     this.clearColour = function(colour){
-                        dev.log.interface('.render.clearColour('+JSON.stringify(colour)+')'); //#development
+                        if(colour == undefined){return cachedValues.clearColour;}
+                        cachedValues.clearColour = colour;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.clearColour',[colour],resolve);
                         });
                     };
                     this.adjustCanvasSize = function(newWidth, newHeight){
-                        dev.log.interface('.render.adjustCanvasSize('+newWidth+','+newHeight+')'); //#development
                         communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
                     };
                     this.getCanvasSize = function(){
-                        dev.log.interface('.render.getCanvasSize()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.getCanvasSize',[],resolve);
                         });
                     };
                     this.activeLimitToFrameRate = function(active){
-                        dev.log.interface('.render.activeLimitToFrameRate('+active+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
                         });
                     };
                     this.frameRateLimit = function(rate){
-                        dev.log.interface('.render.frameRateLimit('+rate+')'); //#development
+                        if(rate == undefined){return cachedValues.frameRateLimit;}
+                        cachedValues.frameRateLimit = rate;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.frameRateLimit',[rate],resolve);
                         });
                     };
                     this.frame = function(){
-                        dev.log.interface('.render.frame()'); //#development
                         communicationModule.run('render.frame',[]);
                     };
                     this.active = function(active){
-                        dev.log.interface('.render.active('+active+')'); //#development
+                        if(active == undefined){return cachedValues.active;}
+                        cachedValues.active = active;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.active',[active],resolve);
                         });
@@ -24298,12 +22751,16 @@
                         position:{x:0,y:0},
                         scale:1,
                         angle:0,
+                        stopMouseScroll:false,
+                    };
+                    const mouseData = { 
+                        x:undefined, 
+                        y:undefined, 
                     };
                 
                     //adapter
                         this.adapter = new function(){
                             this.windowPoint2workspacePoint = function(x,y){
-                                dev.log.interface('.viewport.adapter.windowPoint2workspacePoint('+x+','+y+')'); //#development
                                 const position = cachedValues.position;
                                 const scale = cachedValues.scale;
                                 const angle = cachedValues.angle;
@@ -24330,21 +22787,19 @@
                         };
                 
                     this.refresh = function(){
-                        dev.log.interface('.viewport.refresh()'); //#development
                         communicationModule.run('viewport.refresh',[]);
                     };
                     this.position = function(x,y){
                         if(x==undefined || y==undefined){ return cachedValues.position; }
                         cachedValues.position = {x:x,y:y};
-                        dev.log.interface('.viewport.position('+x+','+y+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.position',[x,y],resolve);
                         });
                     };
                     this.scale = function(s){
                         if(s==undefined){ return cachedValues.scale; }
+                        if(s == 0){console.error('cannot set scale to zero');}
                         cachedValues.scale = s;
-                        dev.log.interface('.viewport.scale('+s+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.scale',[s],resolve);
                         });
@@ -24352,40 +22807,35 @@
                     this.angle = function(a){
                         if(a==undefined){ return cachedValues.angle; }
                         cachedValues.angle = a;
-                        dev.log.interface('.viewport.angle('+a+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.angle',[a],resolve);
                         });
                     };
                     this.getElementsUnderPoint = function(x,y){
-                        dev.log.interface('.viewport.getElementsUnderPoint('+x+','+y+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
                         });
                     };
                     this.getElementsUnderArea = function(points){
-                        dev.log.interface('.viewport.getElementsUnderArea('+JSON.stringify(points)+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
                         });
                     };
                     this.getMousePosition = function(x,y){
-                        dev.log.interface('.viewport.getMousePosition('+x+','+y+')'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.getMousePosition',[x,y],resolve);
-                        });
+                        if(x == undefined || y == undefined){ return mouseData; }
+                        mouseData.x = x;
+                        mouseData.y = y;
+                        communicationModule.run('viewport.getMousePosition',[x,y]);
                     };
                     this.getBoundingBox = function(){
-                        dev.log.interface('.viewport.getBoundingBox()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getBoundingBox',[],resolve);
                         });
                     };
                     this.stopMouseScroll = function(bool){
-                        dev.log.interface('.viewport.stopMouseScroll('+bool+')'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
-                        });
+                        if(bool==undefined){ return cachedValues.stopMouseScroll; }
+                        cachedValues.stopMouseScroll = bool;
+                        communicationModule.run('viewport.stopMouseScroll',[bool]);
                     };
                 
                     this.cursor = function(type){
@@ -24396,13 +22846,11 @@
                 };
                 this.stats = new function(){
                     this.active = function(active){
-                        dev.log.interface('.stats.active('+active+')'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('stats.active',[active],resolve);
                         });
                     };
                     this.getReport = function(){
-                        dev.log.interface('.stats.getReport()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('stats.getReport',[],resolve);
                         });
@@ -24410,7 +22858,6 @@
                 };
                 this.callback = new function(){
                     this.listCallbackTypes = function(){
-                        dev.log.interface('.callback.listCallbackTypes()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('callback.listCallbackTypes',[],resolve);
                         });
@@ -24438,16 +22885,13 @@
                         };
                     };
                     this.getCallback = function(element, callbackType){
-                        dev.log.interface('.callback.getCallback('+element+','+callbackType+')'); //#development
                         callbackRegistry.getCallback(element.getId(), callbackType);
                     };
                     this.attachCallback = function(element, callbackType, callback){
-                        dev.log.interface('.callback.attachCallback('+element+','+callbackType+','+callback+')'); //#development
                         callbackRegistry.register(element.getId(), callbackType, callback);
                         communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
                     };
                     this.removeCallback = function(element, callbackType){
-                        dev.log.interface('.callback.removeCallback('+element+','+callbackType+')'); //#development
                         callbackRegistry.remove(element.getId(), callbackType);
                         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
                     };
@@ -24455,7 +22899,6 @@
                     let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
                     this.callbackActivationMode = function(mode){
                         if(mode==undefined){return callbackActivationMode;}
-                        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
                         callbackActivationMode = mode;
                     };
                 
@@ -24481,12 +22924,24 @@
                                         wheelDelta: event.wheelDelta,
                                         wheelDeltaX: event.wheelDeltaX,
                                         wheelDeltaY: event.wheelDeltaY,
+                                        altKey: event.altKey,
+                                        ctrlKey: event.ctrlKey,
+                                        metaKey: event.metaKey,
+                                        shiftKey: event.shiftKey,
                                     };
                                 }else if(event instanceof MouseEvent){
                                     sudoEvent = { 
                                         X: event.offsetX, 
                                         Y: event.offsetY,
+                                        altKey: event.altKey,
+                                        ctrlKey: event.ctrlKey,
+                                        metaKey: event.metaKey,
+                                        shiftKey: event.shiftKey,
+                                        buttons: event.buttons,
                                     };
+                                    if(callbackName == 'onmousemove'){
+                                        _canvas_.core.viewport.getMousePosition(sudoEvent.X,sudoEvent.Y);
+                                    }
                                 }else{
                                     console.warn('unknown event type: ',event);
                                 }
@@ -24511,69 +22966,57 @@
                 };
 
                 communicationModule.function.go = function(){
-                    dev.log.service('.go()'); //#development
                     _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
                     self.go.__activate();
                 };
                 communicationModule.function.printToScreen = function(imageData){
-                    dev.log.service('.printToScreen(-imageData-)'); //#development
                     _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
                 };
                 // communicationModule.function.onViewportAdjust = function(state){
-                //     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
                 //     console.log('onViewportAdjust -> ',state); /* callback */
                 // };
                 
                 communicationModule.function.updateElement = function(elem, data={}){
-                    dev.log.service('.updateElement('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
                     const proxyElement = _canvas_.core.meta.getElementFromId(elem);
                     if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
                 };
                 communicationModule.function.runElementCallback = function(elem, data={}){
-                    dev.log.service('.runElementCallback('+JSON.stringify(elem)+','+JSON.stringify(data)+')'); //#development
                     const proxyElement = _canvas_.core.meta.getElementFromId(elem);
                     if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
                 };
                 
                 communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
                     return attributeNames.map((name,index) => {
                         return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
                     });    
                 };
                 communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
-                    dev.log.service('.setCanvasAttributes('+JSON.stringify(attributes)+','+JSON.stringify(prefixActiveArray)+')'); //#development
                     attributes.map((attribute,index) => {
                         _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
                     });
                 };
                 communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasParentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(prefixActiveArray)+')'); //#development
                     return attributeNames.map((name,index) => {
                         return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
                     });
                 };
                 
                 communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                    dev.log.service('.getDocumentAttributes('+JSON.stringify(attributeNames)+')'); //#development
                     return attributeNames.map(attribute => {
                         return eval('document.'+attribute);
                     });
                 };
                 communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                    dev.log.service('.setDocumentAttributes('+JSON.stringify(attributeNames)+','+JSON.stringify(values)+')'); //#development
                     return attributeNames.map((attribute,index) => {
                         eval('document.'+attribute+' = "'+values[index]+'"');
                     });
                 };
                 communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                    dev.log.service('.getWindowAttributes('+JSON.stringify(attributeNames)+')'); //#development
                     return attributeNames.map(attribute => {
                         return eval('window.'+attribute);
                     });
                 };
                 communicationModule.function.setWindowAttributes = function(attributes=[]){
-                    dev.log.service('.setWindowAttributes('+JSON.stringify(attributes)+')'); //#development
                     attributes.map((attribute,index) => {
                         eval('window.'+attribute.name+' = "'+attribute.value+'"');
                     });
@@ -24638,6 +23081,7 @@
                                     _canvas_.onmousemove = mouse.original.onmousemove;
                                     _canvas_.onmouseleave = mouse.original.onmouseleave;
                                     _canvas_.onmouseup = mouse.original.onmouseup;
+                                    _canvas_.onmouseup(event);
                                 };
                                 _canvas_.onmouseleave = _canvas_.onmouseup;
                     };
@@ -24648,7 +23092,7 @@
                     this.setUpCallbacks = function(){
                         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
                             _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
-                                if(elementIds.length == 0){
+                                if(elementIds.relevant.length == 0){
                                     _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
                                 }
                             }
@@ -24744,7 +23188,6 @@
             
                 //foreground
                     _canvas_.system.pane.foreground = _canvas_.core.element.create('group','foreground');
-                    _canvas_.system.pane.foreground.ignored(true);
                     _canvas_.core.arrangement.append( _canvas_.system.pane.foreground );
             
                 //shortcuts
@@ -24757,14 +23200,13 @@
             
             //utility
                 _canvas_.system.pane.getMiddlegroundPane = function(element){
-                    const middlegrounds = [_canvas_.system.pane.mb, _canvas_.system.pane.mm, _canvas_.system.pane.mf];
-            
-                    return new Promise((resolve, reject) => {
-                        _canvas_.core.arrangement.areParents( element, middlegrounds ).then(response => {
-                            const index = response.indexOf(0);
-                            resolve( index == -1 ? null : middlegrounds[index] );
-                        });
-                    });
+                    let tempElement = element;
+                    while(tempElement != undefined){
+                        if(tempElement == _canvas_.system.pane.mb){ return _canvas_.system.pane.mb; }
+                        if(tempElement == _canvas_.system.pane.mm){ return _canvas_.system.pane.mm; }
+                        if(tempElement == _canvas_.system.pane.mf){ return _canvas_.system.pane.mf; }
+                        tempElement = tempElement.parent;
+                    }
                 };
             
             const checkingInterval = setInterval(() => {

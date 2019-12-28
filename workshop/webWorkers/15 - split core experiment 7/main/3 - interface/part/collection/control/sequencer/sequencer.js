@@ -774,7 +774,7 @@ this.sequencer = function(
                     }
     
                 //reposition graphical playhead
-                    const playheadObject = workarea.getChildByName('playhead');
+                    let playheadObject = workarea.getChildByName('playhead');
                     if(playhead.position < 0 || playhead.position > xCount){
                         //outside viable bounds, so remove
                             if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
