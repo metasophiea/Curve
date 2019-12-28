@@ -8,6 +8,8 @@
       fixed by making it add the 'input' element to the document body, then
       'clicking' it. The element is removed after a second
     - setting things up for the switch over
+    - performed the switch over and pushed
+    - updated the readme
 
 
 2019-12-26
