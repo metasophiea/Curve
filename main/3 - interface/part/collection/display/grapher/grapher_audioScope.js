@@ -89,10 +89,15 @@ this.grapher_audioScope = function(
             this.start();
         };
 
-    //setup
-        setBackground();
+    //setup/tear down
+        object.oncreate = function(){
+            setBackground();
+        };
+        object.ondelete = function(){
+            object.stop();
+        };
 
-    return(object);
+    return object;
 };
 
 interfacePart.partLibrary.display.grapher_audioScope = function(name,data){ 

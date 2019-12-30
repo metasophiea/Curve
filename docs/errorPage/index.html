@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>Error Page</title>
+        <meta charset="utf-8"></meta>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300&display=swap" rel="stylesheet"> 
+        <style>
+            html, body{
+                margin:10%;
+            }
+            h1 { 
+                margin:0px;
+                font-weight: 300;
+                font-family: Roboto;
+            }
+            h2 { 
+                font-weight: 100;
+                font-family: Roboto;
+            }
+            p { 
+                font-family: Roboto;
+            }
+            #subHeadingHeading {
+                color: rgb(200,100,100);
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <h1 id='mainHeading' ></h1>
+        <h2 id='subHeadingHeading' ></h2>
+        <section id='explanation'></section>
+    </body>
+
+</html>
+
+<script>
+    const explanationLibrary = {
+        OffscreenCanvas:[
+            'Hey everybody. So, it appears that in Brandon\'s insatiable desire for the prowess and speed of his rendering engine; he has left some of us regular people behind. In this particular case, the browser you\'re using to view the site is unable to create the "OffscreenCanvas" which is needed to actually draw what you would see on the screen. Doubtless Brandon has no intention of re-writing things to be more compatible with different browsers, so you\'re just kinda screwed for now.',
+            'To be fair, the website programming standard has had "OffscreenCanvas" in it since at least 2018, so hopefully over time more browsers will be able to run this site. Unfortunately for now, this means that you\'ll need to get Chrome or Chromium, which are the two browsers Brandon develops with and tests on.',
+            'Check out what browsers <i>should</i> be able to create the OffscreenCanvas here <a href="https://caniuse.com/#feat=offscreencanvas">https://caniuse.com/#feat=offscreencanvas</a>',
+            'You can find Chrome pretty easily, you can get Chromium here <a href="https://download-chromium.appspot.com/">https://download-chromium.appspot.com/</a> and ungoogled Chromium here <a href="https://ungoogled-software.github.io/">https://ungoogled-software.github.io/</a>',
+        ],
+    };
+
+    //gather URL data
+        const type = (new URL(window.location.href)).searchParams.get('type');
+        const message= (new URL(window.location.href)).searchParams.get('message');
+
+    //page generation
+        document.getElementById('mainHeading').innerText = type+' Error';
+        document.getElementById('subHeadingHeading').innerText = '"'+message+'"';
+        explanationLibrary[type].forEach(text => {
+            const p = document.createElement('p');
+            p.innerHTML = text;
+            document.getElementById('explanation').appendChild(p);
+        });
+</script>
+

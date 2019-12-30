@@ -71,13 +71,14 @@ this.meter_gauge = function(
 
     //update intervals
         let mostRecentSetting = 0;
+        let interval;
         if(needleColours.length > 1){
             const framesPerSecond = 25;
             const coolDownSpeed = ( 3/4 )/10;
             const coolDownSub = coolDownSpeed/framesPerSecond;
 
             let coolDown = 0;
-            setInterval(function(){
+            interval = setInterval(function(){
                 object.needle(mostRecentSetting,0);
 
                 if(coolDown>0){coolDown-=coolDownSub;}
@@ -93,6 +94,11 @@ this.meter_gauge = function(
             if(a > 1){a = 1;}else if(a < 0){a = 0;}
             if(needleColours.length > 1){ mostRecentSetting = a; }
             else{ object.needle(a,0); }
+        };
+
+    //setup/tear down
+        object.ondelete = function(){
+            clearInterval(interval);
         };
 
     return(object);

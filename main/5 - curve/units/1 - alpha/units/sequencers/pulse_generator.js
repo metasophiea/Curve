@@ -205,8 +205,13 @@ this.pulse_generator = function(name,x,y,angle){
             object.i.tempo(data.tempo);
         };
 
-    //setup
-        updateUsingStoredValue();
+    //oncreate/ondelete
+        object.oncreate = function(){
+            updateUsingStoredValue();
+        };
+        object.ondelete = function(){
+            clearInterval(state.interval);
+        };
 
     return object;
 };

@@ -43,6 +43,10 @@ this.addUnit = function(x,y,a,model,collection,forceName,rectify=true,pane=_canv
     //add it to the pane
         pane.append( tmp );
 
+    //run the unit's onCreate method
+        tmp._oncreate();
+        if(tmp.oncreate){tmp.oncreate();}
+
     //register action
         control.actionRegistry.registerAction(
             {
@@ -75,8 +79,9 @@ this.removeUnit = function(unit){
                 data:this.documentUnits([unit])[0],
             }
         );
-        
+
     //run the unit's onDelete method
+        unit._ondelete();
         if(unit.ondelete){unit.ondelete();}
     //run disconnect on every connection node of this unit
         unit.disconnectEverything();

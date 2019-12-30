@@ -180,5 +180,21 @@ this.builder = function(design){
             }
         };
 
+    //_oncreate/_ondelete
+        unit._oncreate = function(){
+            Object.entries(unit.elements).forEach(([type,parts]) => {
+                Object.entries(parts).forEach(([name,part]) => {
+                    if(part.oncreate){part.oncreate();}
+                });
+            });
+        };
+        unit._ondelete = function(){
+            Object.entries(unit.elements).forEach(([type,parts]) => {
+                Object.entries(parts).forEach(([name,part]) => {
+                    if(part.ondelete){part.ondelete();}
+                });
+            });
+        };
+
     return unit;
 };

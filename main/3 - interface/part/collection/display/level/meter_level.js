@@ -43,7 +43,7 @@ this.meter_level = function(
 
         let coolDown = 0;
         let mostRecentSetting = 0;
-        setInterval(function(){        
+        const interval = setInterval(function(){        
             object.layer(mostRecentSetting,1);
 
             if(coolDown>0){coolDown-=coolDownSub;}
@@ -57,6 +57,11 @@ this.meter_level = function(
             dev.log.partDisplay('.meter_level.set('+a+')'); //#development
             if(a > 1){a = 1;}else if(a < 0){a = 0;}
             mostRecentSetting = a;
+        };
+
+    //setup/tear down
+        object.ondelete = function(){
+            clearInterval(interval);
         };
 
     return(object);

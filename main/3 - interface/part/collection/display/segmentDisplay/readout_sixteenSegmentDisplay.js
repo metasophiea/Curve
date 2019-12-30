@@ -829,11 +829,16 @@ this.readout_sixteenSegmentDisplay = function(
             object.print = function(style){
                 dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development
                 print(style);
-            };  
+            };
 
-        //setup
-            clear();
-            drawCharacters();
+        //setup/tear down
+            object.oncreate = function(){
+                clear();
+                drawCharacters();
+            };
+            object.ondelete = function(){
+                clearInterval(displayInterval);
+            };
     }else{
         //elements 
             //display units

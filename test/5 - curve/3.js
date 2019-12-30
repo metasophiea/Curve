@@ -31,11 +31,11 @@ _canvas_.curve.go.add( function(){
     _canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer','alpha');
     _canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','alpha');
 
-    _canvas_.control.scene.addUnit(10,10,0,'ruler','alpha');
+    // _canvas_.control.scene.addUnit(10,10,0,'ruler','alpha');
 
 
 
 
-    _canvas_.control.viewport.scale(6.5);
-    _canvas_.control.viewport.position(515, -490);
+    // _canvas_.control.viewport.scale(6.5);
+    _canvas_.control.viewport.position(300, 200);
 });

@@ -138,8 +138,10 @@ this.filter = function(name,x,y,angle){
             object.elements.dial_2_continuous.dial_highBand.set( data.high );
         };
 
-    //setup
-        object.i.reset();
+    //setup/tearDown
+        object.oncreate = function(){
+            object.i.reset();
+        };
 
     return object;
 };

@@ -23228,7 +23228,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
                 const interface = this;
             
                 const dev = {
@@ -24939,10 +24939,15 @@
                                         this.start();
                                     };
                             
-                                //setup
-                                    setBackground();
+                                //setup/tear down
+                                    object.oncreate = function(){
+                                        setBackground();
+                                    };
+                                    object.ondelete = function(){
+                                        object.stop();
+                                    };
                             
-                                return(object);
+                                return object;
                             };
                             
                             interfacePart.partLibrary.display.grapher_audioScope = function(name,data){ 
@@ -25585,13 +25590,14 @@
                             
                                 //update intervals
                                     let mostRecentSetting = 0;
+                                    let interval;
                                     if(needleColours.length > 1){
                                         const framesPerSecond = 25;
                                         const coolDownSpeed = ( 3/4 )/10;
                                         const coolDownSub = coolDownSpeed/framesPerSecond;
                             
                                         let coolDown = 0;
-                                        setInterval(function(){
+                                        interval = setInterval(function(){
                                             object.needle(mostRecentSetting,0);
                             
                                             if(coolDown>0){coolDown-=coolDownSub;}
@@ -25606,6 +25612,11 @@
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         if(needleColours.length > 1){ mostRecentSetting = a; }
                                         else{ object.needle(a,0); }
+                                    };
+                            
+                                //setup/tear down
+                                    object.ondelete = function(){
+                                        clearInterval(interval);
                                     };
                             
                                 return(object);
@@ -25647,13 +25658,14 @@
                             
                                 //update intervals
                                     let mostRecentSetting = 0;
+                                    let interval;
                                     if(needleColours.length > 1){
                                         const framesPerSecond = 25;
                                         const coolDownSpeed = ( 3/4 )/10;
                                         const coolDownSub = coolDownSpeed/framesPerSecond;
                             
                                         let coolDown = 0;
-                                        setInterval(function(){        
+                                        interval = setInterval(function(){        
                                             object.needle(mostRecentSetting,0);
                             
                                             if(coolDown>0){coolDown-=coolDownSub;}
@@ -25668,6 +25680,11 @@
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         if(needleColours.length > 1){ mostRecentSetting = a; }
                                         else{ object.needle(a,0); }
+                                    };
+                            
+                                //setup/tear down
+                                    object.ondelete = function(){
+                                        clearInterval(interval);
                                     };
                             
                                 return(object);
@@ -25803,6 +25820,13 @@
                                         converter.stop();
                                     };
                             
+                                //setup/tear down
+                                    object._ondelete = object.ondelete;
+                                    object.ondelete = function(){
+                                        object.stop();
+                                        object._ondelete();
+                                    };
+                            
                                 return(object);
                             };
                             
@@ -25852,7 +25876,7 @@
                             
                                     let coolDown = 0;
                                     let mostRecentSetting = 0;
-                                    setInterval(function(){        
+                                    const interval = setInterval(function(){        
                                         object.layer(mostRecentSetting,1);
                             
                                         if(coolDown>0){coolDown-=coolDownSub;}
@@ -25865,6 +25889,11 @@
                                     object.set = function(a){
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         mostRecentSetting = a;
+                                    };
+                            
+                                //setup/tear down
+                                    object.ondelete = function(){
+                                        clearInterval(interval);
                                     };
                             
                                 return(object);
@@ -26258,9 +26287,14 @@
                                             print(style);
                                         };  
                             
-                                    //setup
-                                        clear();
-                                        drawCharacters();
+                                    //setup/tear down
+                                        object.oncreate = function(){
+                                            clear();
+                                            drawCharacters();
+                                        };
+                                        object.ondelete = function(){
+                                            clearInterval(displayInterval);
+                                        };
                                 }else{
                                     //elements 
                                         //display units
@@ -28231,11 +28265,16 @@
                                         };
                                         object.print = function(style){
                                             print(style);
-                                        };  
+                                        };
                             
-                                    //setup
-                                        clear();
-                                        drawCharacters();
+                                    //setup/tear down
+                                        object.oncreate = function(){
+                                            clear();
+                                            drawCharacters();
+                                        };
+                                        object.ondelete = function(){
+                                            clearInterval(displayInterval);
+                                        };
                                 }else{
                                     //elements 
                                         //display units
@@ -36740,6 +36779,22 @@
                                         }
                                     }
                                 }
+                            };
+                    
+                        //_oncreate/_ondelete
+                            unit._oncreate = function(){
+                                Object.entries(unit.elements).forEach(([type,parts]) => {
+                                    Object.entries(parts).forEach(([name,part]) => {
+                                        if(part.oncreate){part.oncreate();}
+                                    });
+                                });
+                            };
+                            unit._ondelete = function(){
+                                Object.entries(unit.elements).forEach(([type,parts]) => {
+                                    Object.entries(parts).forEach(([name,part]) => {
+                                        if(part.ondelete){part.ondelete();}
+                                    });
+                                });
                             };
                     
                         return unit;

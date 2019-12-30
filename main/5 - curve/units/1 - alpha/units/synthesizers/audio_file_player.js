@@ -157,7 +157,7 @@ this.audio_file_player = function(name,x,y,angle){
                         needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
                     }
         }
-        setInterval(refresh,1000/30);
+        const refreshInterval = setInterval(refresh,1000/30);
 
     //wiring
         //hid
@@ -272,6 +272,11 @@ this.audio_file_player = function(name,x,y,angle){
             object.elements.checkbox_image.checkbox_loop.set(data.loopActive);
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(data.selectedArea.A,data.selectedArea.B);
             object.elements.checkbox_image.checkbox_singleOrInfini.set(data.singleOrInfini);
+        };
+
+    //setup/tearDown
+        object.ondelete = function(){
+            clearInterval(refreshInterval);
         };
 
     return object;

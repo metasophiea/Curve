@@ -46,6 +46,13 @@ this.audio_meter_level = function(
             converter.stop();
         };
 
+    //setup/tear down
+        object._ondelete = object.ondelete;
+        object.ondelete = function(){
+            object.stop();
+            object._ondelete();
+        };
+
     return(object);
 };
 

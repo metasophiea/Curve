@@ -96,7 +96,7 @@ this.audio_recorder = function(name,x,y,angle){
         const recorderCircuit = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
 
         //time readout
-            setInterval(function(){
+            const interval = setInterval(function(){
                 const time = _canvas_.library.math.seconds2time( recorderCircuit.recordingTime() );
                 object.elements.readout_sixteenSegmentDisplay.time.text(
                     _canvas_.library.misc.padString(
@@ -163,6 +163,11 @@ this.audio_recorder = function(name,x,y,angle){
             stop:function(){ object.elements.button_image.button_stop.onpress(); },
             save:function(){ object.elements.button_image.button_save.onpress(); },
             clear:function(){ object.elements.button_image.button_delete.onpress(); },
+        };
+
+    //setup/tearDown
+        object.ondelete = function(){
+            clearInterval(interval);
         };
 
     return object;

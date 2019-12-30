@@ -147,11 +147,13 @@ this.eightTrackMixer = function(name,x,y,angle){
             data.pans.forEach((value,index) => object.i.pan(index,value));
         };
 
-    //setup
-        for(let a = 0; a < 8; a++){
-            object.i.gain(a,0.5);
-            object.i.pan(a,0.5);
-        }
+    //setup/tearDown
+        object.oncreate = function(){
+            for(let a = 0; a < 8; a++){
+                object.i.gain(a,0.5);
+                object.i.pan(a,0.5);
+            }
+        };
 
     return object;
 };

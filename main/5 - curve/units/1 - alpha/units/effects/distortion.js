@@ -144,10 +144,12 @@ this.distortion = function(name,x,y,angle){
             };
         };
 
-    //setup
-        object.elements.dial_2_continuous.resolution.set(0.5);
-        object.elements.dial_2_continuous.inGain.set(0.5);
-        object.elements.dial_2_continuous.outGain.set(1);
+    //setup/tearDown
+        object.oncreate = function(){
+            object.elements.dial_2_continuous.resolution.set(0.5);
+            object.elements.dial_2_continuous.inGain.set(0.5);
+            object.elements.dial_2_continuous.outGain.set(1);
+        };
 
     return object;
 };

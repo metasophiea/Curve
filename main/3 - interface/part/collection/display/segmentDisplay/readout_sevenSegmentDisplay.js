@@ -258,9 +258,14 @@ this.readout_sevenSegmentDisplay = function(
                 print(style);
             };  
 
-        //setup
-            clear();
-            drawCharacters();
+        //setup/tear down
+            object.oncreate = function(){
+                clear();
+                drawCharacters();
+            };
+            object.ondelete = function(){
+                clearInterval(displayInterval);
+            };
     }else{
         //elements 
             //display units

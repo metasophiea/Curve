@@ -1,4 +1,16 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-12-30
+  CoreV3
+    - adding in oncreate and ondelete callbacks to the unit and parts, mainly so
+      that intervals can be stopped when parts or units are removed
+    - updated the parts and units that use intervals, so that those intervals
+      are cleared upon that part or unit's deletion
+    - created a small testing script and an error page for when a browser is
+      incompatible with the site in some way, currently it only deals with
+      OffscreenCanvas errors, but can be easily expanded. Page looks pretty nice
+      too
+
+
 2019-12-28
   CoreV3
     - found edge-case error in the pointInPoly detectIntersection function,

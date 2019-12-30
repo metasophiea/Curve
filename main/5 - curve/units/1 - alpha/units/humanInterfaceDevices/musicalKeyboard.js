@@ -192,8 +192,10 @@ this.musicalKeyboard = function(name,x,y,angle){
         object.exportData = function(){ return {velocity:state.velocity}; };
         object.importData = function(data){ object.elements.dial_2_continuous.velocity.set(data.velocity); };
 
-    //setup
-        object.elements.dial_2_continuous.velocity.set(0.5);
+    //setup/tearDown
+        object.oncreate = function(){
+            object.elements.dial_2_continuous.velocity.set(0.5);
+        };
 
     return object;
 };

@@ -96,10 +96,12 @@ this.audio_scope = function(name,x,y,angle){
             object.i.framerate(data.framerate);
             object.i.sampleWidth(data.sampleWidth);
         };
-
-    //setup
-        object.elements.grapher_audioScope.waveport.start();
-        object.elements.dial_2_continuous.dial_framerate.set(0);
+        
+    //setup/tearDown
+        object.oncreate = function(){
+            object.elements.grapher_audioScope.waveport.start();
+            object.elements.dial_2_continuous.dial_framerate.set(0);
+        };
 
     return object;
 };

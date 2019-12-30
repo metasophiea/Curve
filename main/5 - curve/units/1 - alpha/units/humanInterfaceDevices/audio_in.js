@@ -132,11 +132,13 @@ this.audio_in = function(name,x,y,angle,setupConnect=true){
             object.elements.dial_2_continuous.outputGain.get( data.gain );
         };
     
-    //setup
-        audioInCircuit.listDevices(function(a){state.deviceList=a;});
-        if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
-        object.elements.dial_2_continuous.outputGain.set(0.5);
-        object.elements.audio_meter_level.audioIn.start();
+    //setup/tearDown
+        object.oncreate = function(){
+            audioInCircuit.listDevices(function(a){state.deviceList=a;});
+            if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
+            object.elements.dial_2_continuous.outputGain.set(0.5);
+            object.elements.audio_meter_level.audioIn.start();
+        };
 
     return object;
 };

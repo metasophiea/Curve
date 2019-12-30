@@ -219,8 +219,10 @@ this.reverb = function(name,x,y,angle){
             state.reverbTypeSelected = data.reverbNumber;
         };
 
-    //setup 
-        reverbCircuit.getTypes( a => { state.availableTypes = a; setReverbType(state.reverbTypeSelected); } );
+    //setup/tearDown
+        object.oncreate = function(){
+            reverbCircuit.getTypes( a => { state.availableTypes = a; setReverbType(state.reverbTypeSelected); } );
+        };
 
     return object;
 };

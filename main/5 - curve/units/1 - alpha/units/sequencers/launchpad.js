@@ -190,8 +190,10 @@ this.launchpad = function(name,x,y,angle){
             refresh();
         };
 
-    //setup
-        changeToPage(0);
+    //setup/tearDown
+        object.oncreate = function(){
+            changeToPage(0);
+        };
 
     return object;
 };

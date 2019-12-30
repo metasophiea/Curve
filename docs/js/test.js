@@ -23642,7 +23642,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
                 const interface = this;
             
                 const dev = {
@@ -25424,10 +25424,15 @@
                                         this.start();
                                     };
                             
-                                //setup
-                                    setBackground();
+                                //setup/tear down
+                                    object.oncreate = function(){
+                                        setBackground();
+                                    };
+                                    object.ondelete = function(){
+                                        object.stop();
+                                    };
                             
-                                return(object);
+                                return object;
                             };
                             
                             interfacePart.partLibrary.display.grapher_audioScope = function(name,data){ 
@@ -26083,13 +26088,14 @@
                             
                                 //update intervals
                                     let mostRecentSetting = 0;
+                                    let interval;
                                     if(needleColours.length > 1){
                                         const framesPerSecond = 25;
                                         const coolDownSpeed = ( 3/4 )/10;
                                         const coolDownSub = coolDownSpeed/framesPerSecond;
                             
                                         let coolDown = 0;
-                                        setInterval(function(){
+                                        interval = setInterval(function(){
                                             object.needle(mostRecentSetting,0);
                             
                                             if(coolDown>0){coolDown-=coolDownSub;}
@@ -26105,6 +26111,11 @@
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         if(needleColours.length > 1){ mostRecentSetting = a; }
                                         else{ object.needle(a,0); }
+                                    };
+                            
+                                //setup/tear down
+                                    object.ondelete = function(){
+                                        clearInterval(interval);
                                     };
                             
                                 return(object);
@@ -26151,13 +26162,14 @@
                             
                                 //update intervals
                                     let mostRecentSetting = 0;
+                                    let interval;
                                     if(needleColours.length > 1){
                                         const framesPerSecond = 25;
                                         const coolDownSpeed = ( 3/4 )/10;
                                         const coolDownSub = coolDownSpeed/framesPerSecond;
                             
                                         let coolDown = 0;
-                                        setInterval(function(){        
+                                        interval = setInterval(function(){        
                                             object.needle(mostRecentSetting,0);
                             
                                             if(coolDown>0){coolDown-=coolDownSub;}
@@ -26173,6 +26185,11 @@
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         if(needleColours.length > 1){ mostRecentSetting = a; }
                                         else{ object.needle(a,0); }
+                                    };
+                            
+                                //setup/tear down
+                                    object.ondelete = function(){
+                                        clearInterval(interval);
                                     };
                             
                                 return(object);
@@ -26321,6 +26338,13 @@
                                         converter.stop();
                                     };
                             
+                                //setup/tear down
+                                    object._ondelete = object.ondelete;
+                                    object.ondelete = function(){
+                                        object.stop();
+                                        object._ondelete();
+                                    };
+                            
                                 return(object);
                             };
                             
@@ -26375,7 +26399,7 @@
                             
                                     let coolDown = 0;
                                     let mostRecentSetting = 0;
-                                    setInterval(function(){        
+                                    const interval = setInterval(function(){        
                                         object.layer(mostRecentSetting,1);
                             
                                         if(coolDown>0){coolDown-=coolDownSub;}
@@ -26389,6 +26413,11 @@
                                         dev.log.partDisplay('.meter_level.set('+a+')'); //#development
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         mostRecentSetting = a;
+                                    };
+                            
+                                //setup/tear down
+                                    object.ondelete = function(){
+                                        clearInterval(interval);
                                     };
                             
                                 return(object);
@@ -26795,9 +26824,14 @@
                                             print(style);
                                         };  
                             
-                                    //setup
-                                        clear();
-                                        drawCharacters();
+                                    //setup/tear down
+                                        object.oncreate = function(){
+                                            clear();
+                                            drawCharacters();
+                                        };
+                                        object.ondelete = function(){
+                                            clearInterval(displayInterval);
+                                        };
                                 }else{
                                     //elements 
                                         //display units
@@ -28798,11 +28832,16 @@
                                         object.print = function(style){
                                             dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development
                                             print(style);
-                                        };  
+                                        };
                             
-                                    //setup
-                                        clear();
-                                        drawCharacters();
+                                    //setup/tear down
+                                        object.oncreate = function(){
+                                            clear();
+                                            drawCharacters();
+                                        };
+                                        object.ondelete = function(){
+                                            clearInterval(displayInterval);
+                                        };
                                 }else{
                                     //elements 
                                         //display units
@@ -37376,6 +37415,22 @@
                                 }
                             };
                     
+                        //_oncreate/_ondelete
+                            unit._oncreate = function(){
+                                Object.entries(unit.elements).forEach(([type,parts]) => {
+                                    Object.entries(parts).forEach(([name,part]) => {
+                                        if(part.oncreate){part.oncreate();}
+                                    });
+                                });
+                            };
+                            unit._ondelete = function(){
+                                Object.entries(unit.elements).forEach(([type,parts]) => {
+                                    Object.entries(parts).forEach(([name,part]) => {
+                                        if(part.ondelete){part.ondelete();}
+                                    });
+                                });
+                            };
+                    
                         return unit;
                     };
                     //this is a little bit nonsencey
@@ -37467,7 +37522,7 @@
                 _canvas_.interface.go.__activate();
             } );
             _canvas_.control = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
                 const control = this;
             
                 const dev = {
@@ -38352,6 +38407,10 @@
                         //add it to the pane
                             pane.append( tmp );
                     
+                        //run the unit's onCreate method
+                            tmp._oncreate();
+                            if(tmp.oncreate){tmp.oncreate();}
+                    
                         //register action
                             control.actionRegistry.registerAction(
                                 {
@@ -38384,8 +38443,9 @@
                                     data:this.documentUnits([unit])[0],
                                 }
                             );
-                            
+                    
                         //run the unit's onDelete method
+                            unit._ondelete();
                             if(unit.ondelete){unit.ondelete();}
                         //run disconnect on every connection node of this unit
                             unit.disconnectEverything();
@@ -39532,7 +39592,7 @@
             } );
 
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
                 this.go = new function(){
                     const functionList = [];
             
@@ -45666,11 +45726,13 @@
                                 data.pans.forEach((value,index) => object.i.pan(index,value));
                             };
                     
-                        //setup
-                            for(let a = 0; a < 8; a++){
-                                object.i.gain(a,0.5);
-                                object.i.pan(a,0.5);
-                            }
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                for(let a = 0; a < 8; a++){
+                                    object.i.gain(a,0.5);
+                                    object.i.pan(a,0.5);
+                                }
+                            };
                     
                         return object;
                     };
@@ -45975,10 +46037,12 @@
                                 object.i.framerate(data.framerate);
                                 object.i.sampleWidth(data.sampleWidth);
                             };
-                    
-                        //setup
-                            object.elements.grapher_audioScope.waveport.start();
-                            object.elements.dial_2_continuous.dial_framerate.set(0);
+                            
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                object.elements.grapher_audioScope.waveport.start();
+                                object.elements.dial_2_continuous.dial_framerate.set(0);
+                            };
                     
                         return object;
                     };
@@ -46195,7 +46259,7 @@
                             const recorderCircuit = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
                     
                             //time readout
-                                setInterval(function(){
+                                const interval = setInterval(function(){
                                     const time = _canvas_.library.math.seconds2time( recorderCircuit.recordingTime() );
                                     object.elements.readout_sixteenSegmentDisplay.time.text(
                                         _canvas_.library.misc.padString(
@@ -46262,6 +46326,11 @@
                                 stop:function(){ object.elements.button_image.button_stop.onpress(); },
                                 save:function(){ object.elements.button_image.button_save.onpress(); },
                                 clear:function(){ object.elements.button_image.button_delete.onpress(); },
+                            };
+                    
+                        //setup/tearDown
+                            object.ondelete = function(){
+                                clearInterval(interval);
                             };
                     
                         return object;
@@ -46665,8 +46734,10 @@
                             object.exportData = function(){ return {velocity:state.velocity}; };
                             object.importData = function(data){ object.elements.dial_2_continuous.velocity.set(data.velocity); };
                     
-                        //setup
-                            object.elements.dial_2_continuous.velocity.set(0.5);
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                object.elements.dial_2_continuous.velocity.set(0.5);
+                            };
                     
                         return object;
                     };
@@ -46810,11 +46881,13 @@
                                 object.elements.dial_2_continuous.outputGain.get( data.gain );
                             };
                         
-                        //setup
-                            audioInCircuit.listDevices(function(a){state.deviceList=a;});
-                            if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
-                            object.elements.dial_2_continuous.outputGain.set(0.5);
-                            object.elements.audio_meter_level.audioIn.start();
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                audioInCircuit.listDevices(function(a){state.deviceList=a;});
+                                if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
+                                object.elements.dial_2_continuous.outputGain.set(0.5);
+                                object.elements.audio_meter_level.audioIn.start();
+                            };
                     
                         return object;
                     };
@@ -47381,7 +47454,7 @@
                                             needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
                                         }
                             }
-                            setInterval(refresh,1000/30);
+                            const refreshInterval = setInterval(refresh,1000/30);
                     
                         //wiring
                             //hid
@@ -47496,6 +47569,11 @@
                                 object.elements.checkbox_image.checkbox_loop.set(data.loopActive);
                                 object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(data.selectedArea.A,data.selectedArea.B);
                                 object.elements.checkbox_image.checkbox_singleOrInfini.set(data.singleOrInfini);
+                            };
+                    
+                        //setup/tearDown
+                            object.ondelete = function(){
+                                clearInterval(refreshInterval);
                             };
                     
                         return object;
@@ -47652,10 +47730,12 @@
                                 };
                             };
                     
-                        //setup
-                            object.elements.dial_2_continuous.resolution.set(0.5);
-                            object.elements.dial_2_continuous.inGain.set(0.5);
-                            object.elements.dial_2_continuous.outGain.set(1);
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                object.elements.dial_2_continuous.resolution.set(0.5);
+                                object.elements.dial_2_continuous.inGain.set(0.5);
+                                object.elements.dial_2_continuous.outGain.set(1);
+                            };
                     
                         return object;
                     };
@@ -47887,8 +47967,10 @@
                                 state.reverbTypeSelected = data.reverbNumber;
                             };
                     
-                        //setup 
-                            reverbCircuit.getTypes( a => { state.availableTypes = a; setReverbType(state.reverbTypeSelected); } );
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                reverbCircuit.getTypes( a => { state.availableTypes = a; setReverbType(state.reverbTypeSelected); } );
+                            };
                     
                         return object;
                     };
@@ -48037,8 +48119,10 @@
                                 object.elements.dial_2_continuous.dial_highBand.set( data.high );
                             };
                     
-                        //setup
-                            object.i.reset();
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                object.i.reset();
+                            };
                     
                         return object;
                     };
@@ -48255,8 +48339,13 @@
                                 object.i.tempo(data.tempo);
                             };
                     
-                        //setup
-                            updateUsingStoredValue();
+                        //oncreate/ondelete
+                            object.oncreate = function(){
+                                updateUsingStoredValue();
+                            };
+                            object.ondelete = function(){
+                                clearInterval(state.interval);
+                            };
                     
                         return object;
                     };
@@ -48709,8 +48798,10 @@
                                 refresh();
                             };
                     
-                        //setup
-                            changeToPage(0);
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                changeToPage(0);
+                            };
                     
                         return object;
                     };
