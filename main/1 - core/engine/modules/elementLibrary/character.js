@@ -7,7 +7,6 @@ this.character = function(_id,_name){
             this.getType = function(){return type;}
             const id = _id; 
             this.getId = function(){return id;}
-            const vectorLibrary = elementLibrary.character.vectorLibrary;
             const defaultFontName = 'defaultThin';
 
         //simple attributes
@@ -97,19 +96,19 @@ this.character = function(_id,_name){
                 if(newFont==undefined){return font;}
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
 
-                if( elementLibrary.character.isApprovedFont(newFont) ){
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+elementLibrary.character.fontLoadAttempted(newFont)); //#development
-                    if( !elementLibrary.character.fontLoadAttempted(newFont) ){ elementLibrary.character.loadFont(newFont); }
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
-                    if( !elementLibrary.character.isFontLoaded(newFont) ){
+                if( library.font.isApprovedFont(newFont) ){
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+library.font.fontLoadAttempted(newFont)); //#development
+                    if( !library.font.fontLoadAttempted(newFont) ){ library.font.loadFont(newFont); }
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+library.font.isFontLoaded(newFont)); //#development
+                    if( !library.font.isFontLoaded(newFont) ){
                         setTimeout(function(){ self.font(newFont); },500,newFont);
                         return;
                     }
 
-                    font = !elementLibrary.character.isFontLoaded(newFont) ? defaultFontName : newFont;
+                    font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
                     dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> font set to: "'+font+'"'); //#development
                 }else{
-                    report.warning('elementLibrary.character : error : unknown font:',newFont);
+                    report.warning('library.font : error : unknown font:',newFont);
                     font = defaultFontName;
                 }
 
@@ -164,17 +163,17 @@ this.character = function(_id,_name){
             };
 
     //character data
-        this.top = function(){ return vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].top; };
-        this.bottom = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].bottom; };
-        this.left = function(){ return vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].left; };
-        this.right = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].right; };
+        this.top = function(){ return library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).top; };
+        this.bottom = function(){ return library.font.getVector(font,character) == undefined ? 1 : library.font.getVector(font,character).bottom; };
+        this.left = function(){ return library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).left; };
+        this.right = function(){ return library.font.getVector(font,character) == undefined ? 1 : library.font.getVector(font,character).right; };
         function producePoints(){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints()'); //#development
-            points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
-            dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints -> vectorLibrary['+font+']['+character+']:',vectorLibrary[font][character]); //#development
+            points = (library.font.getVector(font,character) == undefined ? library.font.getVector(font,'default').vector : library.font.getVector(font,character).vector).concat([]); //the concat, differentiates the point data
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints -> library.font.getVector['+font+']['+character+']:',library.font.getVector(font,character)); //#development
 
             //adjust for vertical printingMode
-                let horizontalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].right;
+                let horizontalAdjust = library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).right;
                 if(printingMode.horizontal == 'middle'){ horizontalAdjust = horizontalAdjust/2; }
                 if(printingMode.horizontal != 'left'){
                     for(let a = 0; a < points.length; a+=2){
@@ -183,7 +182,7 @@ this.character = function(_id,_name){
                 }
 
             //adjust for horizontal printingMode
-                let verticalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].top;
+                let verticalAdjust = library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).top;
                 if(printingMode.vertical == 'middle'){ verticalAdjust = verticalAdjust/2; }
                 if(printingMode.vertical != 'bottom'){
                     for(let a = 0; a < points.length; a+=2){

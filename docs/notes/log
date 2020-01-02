@@ -11,6 +11,13 @@
       correctly (there was if-elseif where there shouldn't have been) Along the
       way I noticed some unnecessary 'boundingBoxFromPoints' work being done,
       so that's been removed too
+    - removed duplicated font code from the core layer (it was already in the
+      library, just never used)
+    - guess who hadn't written the if statement that used
+      "detectIntersect.polyOnPoly" correctly in the getTrianglesFromGlyphPath
+      function in the font section of the library, which caused the dots on i
+      and j characters to not show up, and probably other issues I hadn't
+      noticed yet? Not me anyway, that would have been silly
 
 
 2020-01-01

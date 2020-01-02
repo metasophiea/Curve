@@ -31,6 +31,8 @@
     added in some oncreate/ondelete callbacks to clear the intervals of both parts and units when they are deleted (log:2019-12-30)
 [2020-01-02:1] placing the ruler up to the left seems to reduce its clickable area
     there was an issue with how group bounding boxes were being calculated in the engine (log:2020-01-02)
+[2020-01-02:3] i's are missing their dots now?
+    misuse of detectIntersect.polyOnPoly (log:2020-01-02)
 
 [2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
 [2019-08-26:1] (?) connection nodes can work across panes (is it really an issue though?) 

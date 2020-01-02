@@ -109,7 +109,7 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
             paths.forEach(path => {
                 let isHole = false;
                 for(let a = 0; a < segments.length; a++){
-                    if( library.math.detectIntersect.polyOnPoly({points:path},{points:segments[a].path}) ){
+                    if( library.math.detectIntersect.polyOnPoly({points:path},{points:segments[a].path}).intersect ){
                         segments[a].path = segments[a].path.concat(path);
                         segments[a].regions.unshift(path);
                         isHole = true;
@@ -120,10 +120,7 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
             });
 
     //produce triangles from points
-        let triangles = [];
-        segments.forEach(segment => { triangles = triangles.concat( library.math.polygonToSubTriangles(segment.regions) ); });
-
-        return triangles;
+        return segments.flatMap(segment => library.math.polygonToSubTriangles(segment.regions) );
 };
 this.extractGlyphs = function(fontFileData,reducedGlyphSet){
     dev.log.font('.extractGlyphs(',fontFileData,reducedGlyphSet); //#development
@@ -315,3 +312,6 @@ this.loadFont = function(fontName,onLoaded=()=>{}){
             () => { onLoaded(false); },
         );
 };
+this.getVector = function(fontName,character){
+    return vectorLibrary[fontName][character];
+}

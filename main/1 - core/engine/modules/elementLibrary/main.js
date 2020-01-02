@@ -14,4 +14,3 @@
 
 {{include:character.js}}
 {{include:characterString.js}}
-{{include:characterFonts/main.js}}

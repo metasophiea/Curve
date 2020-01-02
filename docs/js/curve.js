@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:1} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
                 const library = this;
                 
                 const dev = {
@@ -1698,7 +1698,7 @@
                                 paths.forEach(path => {
                                     let isHole = false;
                                     for(let a = 0; a < segments.length; a++){
-                                        if( library.math.detectIntersect.polyOnPoly({points:path},{points:segments[a].path}) ){
+                                        if( library.math.detectIntersect.polyOnPoly({points:path},{points:segments[a].path}).intersect ){
                                             segments[a].path = segments[a].path.concat(path);
                                             segments[a].regions.unshift(path);
                                             isHole = true;
@@ -1709,10 +1709,7 @@
                                 });
                     
                         //produce triangles from points
-                            let triangles = [];
-                            segments.forEach(segment => { triangles = triangles.concat( library.math.polygonToSubTriangles(segment.regions) ); });
-                    
-                            return triangles;
+                            return segments.flatMap(segment => library.math.polygonToSubTriangles(segment.regions) );
                     };
                     this.extractGlyphs = function(fontFileData,reducedGlyphSet){
                     
@@ -2864,6 +2861,9 @@
                                 () => { onLoaded(false); },
                             );
                     };
+                    this.getVector = function(fontName,character){
+                        return vectorLibrary[fontName][character];
+                    }
                 };
                 this.misc = new function(){
                     this.padString = function(string,length,padding=' ',paddingSide='l'){

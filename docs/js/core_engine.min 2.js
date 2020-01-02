@@ -5080,7 +5080,7 @@ const library = new function(){
         	}
         
         	/* --------------------------------------------------- *
-        	 * -- uninitialized global data (static structures) -- *
+        	 * -- uninitialized global data (_static structures) -- *
         	 * --------------------------------------------------- */
         
         	var sltree = new Tree();
@@ -21222,7 +21222,7 @@ const dev = new function(){
         stats:false,
         callback:false,
         service:false,
-        interface:false,
+        _interface:false,
     };
 
     this.log = {};
@@ -21293,7 +21293,7 @@ const element = new function(){
                         let angle = 0; 
                         let scale = 1; 
                         let heedCamera = false;
-                        let static = false;
+                        let _static = false;
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
@@ -21319,15 +21319,15 @@ const element = new function(){
                             heedCamera = a;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera, _static:_static }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -21522,7 +21522,7 @@ const element = new function(){
                     function augmentExtremities(element){
             
                         //get offset from parent
-                            const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                            const offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                         //combine offset with group's position, angle and scale to produce new offset for children
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const newOffset = { 
@@ -21543,7 +21543,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
                         
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                            if(offset == undefined){ offset = self.parent && !_static? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //combine offset with group's position, angle and scale to produce new offset for children
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const newOffset = { 
@@ -21562,7 +21562,7 @@ const element = new function(){
                     function augmentExtremities_add(element){
             
                         //get offset from parent
-                            const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                            const offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                         //combine offset with group's position, angle and scale to produce new offset for children
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const newOffset = { 
@@ -21720,22 +21720,22 @@ const element = new function(){
                         console.log(self.getAddress(),'._dump -> angle: '+angle);
                         console.log(self.getAddress(),'._dump -> scale: '+scale);
                         console.log(self.getAddress(),'._dump -> heedCamera: '+heedCamera);
-                        console.log(self.getAddress(),'._dump -> static: '+static);
+                        console.log(self.getAddress(),'._dump -> _static: '+_static);
                         console.log(self.getAddress(),'._dump -> children.length: '+children.length);
                         console.log(self.getAddress(),'._dump -> children:',children);
                         console.log(self.getAddress(),'._dump -> childRegistry:',childRegistry);
                         console.log(self.getAddress(),'._dump -> clipping:',clipping);
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.x = self.x;
                         this.y = self.y;
                         this.angle = self.angle;
                         this.scale = self.scale;
                         this.heedCamera = self.heedCamera;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
             
                         this.getAddress = self.getAddress;
@@ -21800,7 +21800,7 @@ const element = new function(){
                         let width = 10;
                         let height = 10;
                         let scale = 1;
-                        let static = false;
+                        let _static = false;
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
@@ -21836,15 +21836,15 @@ const element = new function(){
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, _static:_static }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -21952,7 +21952,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
                         
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                            if(offset == undefined){ offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjusted = { 
@@ -22025,11 +22025,11 @@ const element = new function(){
                         console.log('['+self.getAddress()+']','._dump -> width: '+width);
                         console.log('['+self.getAddress()+']','._dump -> height: '+height);
                         console.log('['+self.getAddress()+']','._dump -> scale: '+scale);
-                        console.log('['+self.getAddress()+']','._dump -> static: '+static);
+                        console.log('['+self.getAddress()+']','._dump -> _static: '+_static);
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.x = self.x;
@@ -22039,7 +22039,7 @@ const element = new function(){
                         this.width = self.width;
                         this.height = self.height;
                         this.scale = self.scale;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
@@ -22092,7 +22092,7 @@ const element = new function(){
                         let height = 10;
                         let scale = 1;
                         let thickness = 0;
-                        let static = false;
+                        let _static = false;
             
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
@@ -22134,15 +22134,15 @@ const element = new function(){
                             thickness = a;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, thickness:thickness, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, thickness:thickness, _static:_static }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -22324,7 +22324,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
                                     
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                            if(offset == undefined){ offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjusted = { 
@@ -22399,11 +22399,11 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> height: '+height);
                         report.info(self.getAddress(),'._dump -> scale: '+scale);
                         report.info(self.getAddress(),'._dump -> thickness: '+thickness);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.lineColour = self.lineColour;
@@ -22415,7 +22415,7 @@ const element = new function(){
                         this.height = self.height;
                         this.scale = self.scale;
                         this.thickness = self.thickness;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
@@ -22461,7 +22461,7 @@ const element = new function(){
                         let radius = 10;
                         let detail = 25;
                         let scale = 1;
-                        let static = false;
+                        let _static = false;
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
@@ -22488,15 +22488,15 @@ const element = new function(){
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, _static:_static }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -22611,7 +22611,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
             
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                            if(offset == undefined){ offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             let adjusted = { 
@@ -22677,18 +22677,18 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> radius: '+radius);
                         report.info(self.getAddress(),'._dump -> detail: '+detail);
                         report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.x = self.x;
                         this.y = self.y;
                         this.radius = self.radius;
                         this.scale = self.scale;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
@@ -22740,7 +22740,7 @@ const element = new function(){
                         let detail = 25;
                         let scale = 1;
                         let thickness = 0;
-                        let static = false;
+                        let _static = false;
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
@@ -22772,15 +22772,15 @@ const element = new function(){
                             thickness = a;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, radius:radius, detail:detail, scale:scale, thickness:thickness, static:static}; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, radius:radius, detail:detail, scale:scale, thickness:thickness, _static:_static}; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -22933,7 +22933,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
             
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                            if(offset == undefined){ offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjusted = { 
@@ -23000,11 +23000,11 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> detail: '+detail);
                         report.info(self.getAddress(),'._dump -> scale: '+scale);
                         report.info(self.getAddress(),'._dump -> thickness: '+thickness);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.lineColour = self.lineColour;
@@ -23013,7 +23013,7 @@ const element = new function(){
                         this.radius = self.radius;
                         this.scale = self.scale;
                         this.thickness = self.thickness;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
@@ -23056,7 +23056,7 @@ const element = new function(){
                         let points = [];
                         let pointsChanged = true;
                         let scale = 1;
-                        let static = false;
+                        let _static = false;
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
@@ -23079,15 +23079,15 @@ const element = new function(){
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, points:points, pointsChanged:pointsChanged, scale:scale, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, points:points, pointsChanged:pointsChanged, scale:scale, _static:_static }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -23184,7 +23184,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
                         
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                            if(offset == undefined){ offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
                         //calculate points based on the offset
                             self.extremities.points = [];
                             for(let a = 0; a < points.length; a+=2){
@@ -23229,17 +23229,17 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
                         report.info(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
                         report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.points = self.points;
                         this.pointsAsXYArray = self.pointsAsXYArray;
                         this.scale = self.scale;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
@@ -23291,7 +23291,7 @@ const element = new function(){
                         let jointDetail = 25;   
                         let jointType = 'sharp';
                         let sharpLimit = 4;     
-                        let static = false;
+                        let _static = false;
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
@@ -23338,15 +23338,15 @@ const element = new function(){
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, _static:_static }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -23475,7 +23475,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
                          
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                            if(offset == undefined){ offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
                         //calculate points based on the offset
                             self.extremities.points = [];
                             for(let a = 0; a < points.length; a+=2){
@@ -23524,11 +23524,11 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
                         report.info(self.getAddress(),'._dump -> jointType: '+jointType);
                         report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                     };
             
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.lineColour = self.lineColour;
@@ -23539,7 +23539,7 @@ const element = new function(){
                         this.jointDetail = self.jointDetail;
                         this.jointType = self.jointType;
                         this.sharpLimit = self.sharpLimit;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
@@ -23589,7 +23589,7 @@ const element = new function(){
                         let jointType = 'sharp';
                         let jointDetail = 25;
                         let sharpLimit = 4;
-                        let static = false;
+                        let _static = false;
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
@@ -23655,15 +23655,15 @@ const element = new function(){
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, _static:_static }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -23762,7 +23762,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
                         
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                            if(offset == undefined){ offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
                         //calculate points based on the offset
                             self.extremities.points = [];
                             for(let a = 0; a < generatedPathPolygon.length; a+=2){
@@ -23813,11 +23813,11 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> jointType: '+jointType);
                         report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
                         report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                     };
             
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.points = self.points;
@@ -23829,7 +23829,7 @@ const element = new function(){
                         this.jointType = self.jointType;
                         this.jointDetail = self.jointDetail;
                         this.sharpLimit = self.sharpLimit;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
@@ -23872,7 +23872,7 @@ const element = new function(){
                         let width = 10;
                         let height = 10;
                         let scale = 1;
-                        let static = false;
+                        let _static = false;
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
@@ -23908,9 +23908,9 @@ const element = new function(){
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
@@ -23975,7 +23975,7 @@ const element = new function(){
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static, url:image.url }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, _static:_static, url:image.url }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -24105,7 +24105,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
                         
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                            if(offset == undefined){ offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjusted = { 
@@ -24178,12 +24178,12 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> width: '+width);
                         report.info(self.getAddress(),'._dump -> height: '+height);
                         report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                         report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.x = self.x;
                         this.y = self.y;
@@ -24192,7 +24192,7 @@ const element = new function(){
                         this.width = self.width;
                         this.height = self.height;
                         this.scale = self.scale;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.url = self.url;
                         this.bitmap = self.bitmap;
                         this.unifiedAttribute = self.unifiedAttribute;
@@ -24239,7 +24239,7 @@ const element = new function(){
                         let width = 10;
                         let height = 10;
                         let scale = 1;
-                        let static = false;
+                        let _static = false;
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
@@ -24275,9 +24275,9 @@ const element = new function(){
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
@@ -24332,7 +24332,7 @@ const element = new function(){
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, _static:_static }; } 
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
@@ -24462,7 +24462,7 @@ const element = new function(){
                     function computeExtremities(informParent=true,offset){
                         
                         //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                            if(offset == undefined){ offset = self.parent && !self._static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjusted = { 
@@ -24535,11 +24535,11 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> width: '+width);
                         report.info(self.getAddress(),'._dump -> height: '+height);
                         report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.x = self.x;
                         this.y = self.y;
@@ -24548,7 +24548,7 @@ const element = new function(){
                         this.width = self.width;
                         this.height = self.height;
                         this.scale = self.scale;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.imageURL = self.imageURL;
                         this.imageBitmap = self.imageBitmap;
                         this.unifiedAttribute = self.unifiedAttribute;
@@ -24606,7 +24606,7 @@ const element = new function(){
                             horizontal:'left', //left / middle / right
                             vertical:'bottom', //top  / middle / bottom
                         };
-                        let static = false;
+                        let _static = false;
                         this.x = function(a){ 
                             if(a==undefined){return x;} 
                             x = a;
@@ -24677,15 +24677,15 @@ const element = new function(){
                             if(allowProducePoints){producePoints();}
                             if(allowComputeExtremities){computeExtremities();} 
                         };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
+                        this._static = function(a){
+                            if(a==undefined){return _static;}  
+                            _static = a;  
                             if(allowComputeExtremities){computeExtremities();}
                         };
             
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:static }; } 
+                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, _static:_static }; } 
             
                             allowProducePoints = false;
                             allowComputeExtremities = false;
@@ -24825,7 +24825,7 @@ const element = new function(){
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){
-                                offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                                offset = self.parent && !_static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                             }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -24910,11 +24910,11 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> font: '+font);
                         report.info(self.getAddress(),'._dump -> character: '+character);
                         report.info(self.getAddress(),'._dump -> printingMode: '+JSON.stringify(printingMode));
-                        report.info(self.getAddress(),'._dump -> static: '+static);
+                        report.info(self.getAddress(),'._dump -> _static: '+_static);
                     };
                 
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.x = self.x;
@@ -24927,7 +24927,7 @@ const element = new function(){
                         this.font = self.font;
                         this.character = self.character;
                         this.printingMode = self.printingMode;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
@@ -24973,7 +24973,7 @@ const element = new function(){
             
                     //callbacks
                         this.onFontUpdateCallback = function(newFont){
-                            interface.runElementCallback(self, {onFontUpdateCallback:newFont});
+                            _interface.runElementCallback(self, {onFontUpdateCallback:newFont});
                         };
                     
                     //addressing
@@ -25045,7 +25045,7 @@ const element = new function(){
                 
                                 if(allowGenerateStringCharacters){generateStringCharacters();}
                             };
-                        this.static = innerGroup.static;
+                        this._static = innerGroup._static;
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ 
@@ -25142,7 +25142,7 @@ const element = new function(){
                             }
             
                             resultingWidth = cumulativeWidth;
-                            interface.updateElement(self, {resultingWidth:resultingWidth});
+                            _interface.updateElement(self, {resultingWidth:resultingWidth});
             
                         //printingMode - horizontal
                             if( printingMode.horizontal == 'middle' ){ innerGroup.children().forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }
@@ -25178,8 +25178,8 @@ const element = new function(){
                 //info dump
                     this.getTree = innerGroup.getTree;
                     this._dump = innerGroup._dump;
-                //interface
-                    this.interface = new function(){
+                //_interface
+                    this._interface = new function(){
                         this.ignored = self.ignored;
                         this.colour = self.colour;
                         this.x = self.x;
@@ -25192,7 +25192,7 @@ const element = new function(){
                         this.string = self.string;
                         this.interCharacterSpacing = self.interCharacterSpacing;
                         this.printingMode = self.printingMode;
-                        this.static = self.static;
+                        this._static = self._static;
                         this.unifiedAttribute = self.unifiedAttribute;
                         this.getAddress = self.getAddress;
                         this.resultingWidth = self.resultingWidth;
@@ -25286,7 +25286,7 @@ const arrangement = new function(){
             angle: 0,
             scale: 1,
             heedCamera: false,
-            static: false,
+            _static: false,
         });
     };
     this.get = function(){
@@ -25472,7 +25472,7 @@ const render = new function(){
             function updateSize_dataRequest(direction){
                 const capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
 
-                interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
+                _interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
                     pageData.selectedCanvasSize[direction] = sizes[0];
                     const attribute = pageData.selectedCanvasSize[direction];
 
@@ -25482,7 +25482,7 @@ const render = new function(){
                     }
 
                     if( attribute.indexOf('%') == (attribute.length-1) ){ //percentage
-                        interface.getCanvasParentAttributes(['offset'+capitalizedDirection]).then(sizes => {
+                        _interface.getCanvasParentAttributes(['offset'+capitalizedDirection]).then(sizes => {
                             const parentSize = sizes[0];
                             const percent = parseFloat(attribute.slice(0,-1)) / 100;
                             if( isNaN(percent) ){ unparseableErrorMessage(direction,attribute); return; }
@@ -25503,7 +25503,7 @@ const render = new function(){
                 updateInternalCanvasSize(direction,pageData.defaultCanvasSize[direction]);
             }
 
-            interface.getWindowAttributes(['devicePixelRatio']).then(values => {
+            _interface.getWindowAttributes(['devicePixelRatio']).then(values => {
                 pageData.devicePixelRatio = values[0];
                 updateSize_arguments();
             });
@@ -25527,7 +25527,7 @@ const render = new function(){
 
             context.viewport(x, y, width, height);
 
-            interface.setCanvasAttributes([{name:'width',value:w/pageData.devicePixelRatio},{name:'height',value:h/pageData.devicePixelRatio}]);
+            _interface.setCanvasAttributes([{name:'width',value:w/pageData.devicePixelRatio},{name:'height',value:h/pageData.devicePixelRatio}]);
         };
         this.refresh = function(allDoneCallback){
             this.clearColour(clearColour);
@@ -25559,7 +25559,7 @@ const render = new function(){
             if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
             arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
             const transferableImage = canvas.transferToImageBitmap();
-            interface.printToScreen(transferableImage);
+            _interface.printToScreen(transferableImage);
         }
         function animate(timestamp){
             animationRequestId = requestAnimationFrame(animate);
@@ -25740,7 +25740,7 @@ const viewport = new function(){
             mouseData.stopScrollActive = bool;
     
             //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
-            interface.setDocumentAttributes(['body.style.overflow'],['']);
+            _interface.setDocumentAttributes(['body.style.overflow'],['']);
         };
         this._dump = function(){
             report.info('viewport._dump()');
@@ -25893,13 +25893,13 @@ const callback = new function(){
                 this.coupling_in.onmouseenter = function(event){
                     //if appropriate, remove the window scrollbars
                         if(viewport.stopMouseScroll()){ 
-                            interface.setDocumentAttributes(['body.style.overflow'],['hidden']);
+                            _interface.setDocumentAttributes(['body.style.overflow'],['hidden']);
                         }
                 };
                 this.coupling_in.onmouseleave = function(event){
                     //if appropriate, replace the window scrollbars
                         if(viewport.stopMouseScroll()){ 
-                            interface.setDocumentAttributes(['body.style.overflow'],['']);
+                            _interface.setDocumentAttributes(['body.style.overflow'],['']);
                         }
                 };
 
@@ -25989,7 +25989,7 @@ const callback = new function(){
         const elementId = element.getIdFromElement(newElement);
         newElement.unifiedAttribute(setList);
         if(appendingGroup == -1 || appendingGroup == undefined){ arrangement.append(newElement); }
-        else{ element.getElementFromId(appendingGroup).interface['append'](elementId); }
+        else{ element.getElementFromId(appendingGroup)._interface['append'](elementId); }
         return elementId;
     };
 
@@ -26045,10 +26045,10 @@ const callback = new function(){
             return null;
         }
         try{
-            return element.getElementFromId(id).interface[method](...argumentList);
+            return element.getElementFromId(id)._interface[method](...argumentList);
         }catch(err){
             console.error('service.element.executeMethod(',id,method,argumentList);
-            console.error( 'element.getElementFromId('+id+').interface['+method+']:', element.getElementFromId(id).interface[method] );
+            console.error( 'element.getElementFromId('+id+')._interface['+method+']:', element.getElementFromId(id)._interface[method] );
             console.error(err);
         }
     };
@@ -26170,7 +26170,7 @@ const callback = new function(){
             callback.coupling_in[callbackName](event);
         };
     });
-const interface = new function(){
+const _interface = new function(){
     this.go = function(){
         communicationModule.run('go');
     };
@@ -26234,6 +26234,6 @@ callback.listCallbackTypes().forEach(callbackName => {
 
 render.refresh(() => {
     viewport.refresh();
-    interface.go();
+    _interface.go();
 });
 

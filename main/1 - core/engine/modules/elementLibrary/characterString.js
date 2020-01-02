@@ -4,7 +4,6 @@ this.characterString = function(_id,_name){
     //attributes 
         const innerGroup = element.create_skipDatabase('group','innerGroup');
             innerGroup.parent = this;
-        const vectorLibrary = elementLibrary.character.vectorLibrary;
 
         //protected attributes
             const type = 'characterString'; 
@@ -72,11 +71,11 @@ this.characterString = function(_id,_name){
                     if(newFont==undefined){return font;}
                     dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
     
-                    if( elementLibrary.character.isApprovedFont(newFont) ){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+elementLibrary.character.fontLoadAttempted(newFont)); //#development
-                        if( !elementLibrary.character.fontLoadAttempted(newFont) ){ elementLibrary.character.loadFont(newFont); }
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
-                        if( !elementLibrary.character.isFontLoaded(newFont) ){ 
+                    if( library.font.isApprovedFont(newFont) ){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+library.font.fontLoadAttempted(newFont)); //#development
+                        if( !library.font.fontLoadAttempted(newFont) ){ library.font.loadFont(newFont); }
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+library.font.isFontLoaded(newFont)); //#development
+                        if( !library.font.isFontLoaded(newFont) ){ 
                             const timeoutId = setTimeout(function(){ 
                                 dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun < '+timeoutId); //#development
                                 self.font(newFont);
@@ -85,9 +84,9 @@ this.characterString = function(_id,_name){
                             return;
                         }
     
-                        font = !elementLibrary.character.isFontLoaded(newFont) ? defaultFontName : newFont;
+                        font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
                     }else{
-                        report.warning('elementLibrary.character : error : unknown font:',newFont);
+                        report.warning('library.font : error : unknown font:',newFont);
                         font = defaultFontName;
                     }
     
@@ -177,7 +176,7 @@ this.characterString = function(_id,_name){
                 //widthCalculation
                     if(printingMode.widthCalculation == 'filling'){
                         let internalWidth = 0;
-                        tmpString.forEach(a => { internalWidth += vectorLibrary[font][a] ? vectorLibrary[font][a].right : spacing; });
+                        tmpString.forEach(a => { internalWidth += library.font.getVector(font,a) ? library.font.getVector(font,a).right : spacing; });
                         characterWidth = characterWidth/internalWidth;
                     }
                 //vertical
@@ -185,20 +184,20 @@ this.characterString = function(_id,_name){
                     let highestPoint = 0;
                     if( printingMode.vertical == 'top'){ 
                         tmpString.forEach(a => {
-                            const tmp = vectorLibrary[font][a] ? vectorLibrary[font][a].top : 0;
+                            const tmp = library.font.getVector(font,a) ? library.font.getVector(font,a).top : 0;
                             highestPoint = highestPoint > tmp ? tmp : highestPoint;
                         });
                         verticalOffset = height*-highestPoint;
                     }
                     if( printingMode.vertical == 'verymiddle' ){
                         tmpString.forEach(a => {
-                            const tmp = vectorLibrary[font][a] ? vectorLibrary[font][a].top : 0;
+                            const tmp = library.font.getVector(font,a) ? library.font.getVector(font,a).top : 0;
                             highestPoint = highestPoint > tmp ? tmp : highestPoint;
                         });
                         verticalOffset = -(height/2)*highestPoint;
                     }                 
                     if( printingMode.vertical == 'middle' ){
-                        highestPoint = vectorLibrary[font]['o'] ? vectorLibrary[font]['o'].top : 0;
+                        highestPoint = library.font.getVector(font,'o') ? library.font.getVector(font,'o').top : 0;
                         verticalOffset = -(height/2)*highestPoint;
                     }                 
 
