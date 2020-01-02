@@ -138,5 +138,5 @@ this.multiplexer_8 = function(name,x,y,angle){
 this.multiplexer_8.metadata = {
     name:'Multiplexer - Type C',
     category:'devices',
-    helpURL:'/help/units/beta/multiplexer_8/'
+    helpURL:'/help/units/curvetech/multiplexer_8/'
 };

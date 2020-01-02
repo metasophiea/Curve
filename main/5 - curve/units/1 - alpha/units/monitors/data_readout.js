@@ -104,5 +104,5 @@ this.data_readout = function(name,x,y,angle){
 this.data_readout.metadata = {
     name:'Data Readout',
     category:'monitors',
-    helpURL:'/help/units/beta/data_readout/'
+    helpURL:'/help/units/alpha/data_readout/'
 };

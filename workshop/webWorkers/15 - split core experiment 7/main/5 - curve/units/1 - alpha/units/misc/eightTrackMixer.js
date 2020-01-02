@@ -158,5 +158,5 @@ this.eightTrackMixer = function(name,x,y,angle){
 this.eightTrackMixer.metadata = {
     name:'Eight Track Mixer',
     category:'misc',
-    helpURL:'/help/units/beta/eightTrackMixer/'
+    helpURL:'/help/units/alpha/eightTrackMixer/'
 };

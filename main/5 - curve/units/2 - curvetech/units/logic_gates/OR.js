@@ -79,5 +79,5 @@ this.OR = function(name,x,y,angle){
 this.OR.metadata = {
     name:'OR',
     category:'logic_gates',
-    helpURL:'/help/units/beta/OR/'
+    helpURL:'/help/units/curvetech/OR/'
 };

@@ -143,5 +143,5 @@ this.audio_in = function(name,x,y,angle,setupConnect=true){
 this.audio_in.metadata = {
     name:'Audio In',
     category:'humanInterfaceDevices',
-    helpURL:'/help/units/beta/audio_in/'
+    helpURL:'/help/units/alpha/audio_in/'
 };

@@ -227,5 +227,5 @@ this.reverb = function(name,x,y,angle){
 this.reverb.metadata = {
     name:'Reverb',
     category:'effects',
-    helpURL:'/help/units/beta/reverb/'
+    helpURL:'/help/units/alpha/reverb/'
 };

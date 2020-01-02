@@ -9,3 +9,4 @@
 // {{include:2.js}} //development units - testing copy/paste
 // {{include:3.js}} //alpha units
 // {{include:4.js}} //curveTech units
+{{include:5.js}} //harbinger units

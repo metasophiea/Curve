@@ -79,5 +79,5 @@ this.XOR = function(name,x,y,angle){
 this.XOR.metadata = {
     name:'XOR',
     category:'logic_gates',
-    helpURL:'/help/units/beta/XOR/'
+    helpURL:'/help/units/curvetech/XOR/'
 };

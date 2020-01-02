@@ -32,7 +32,6 @@ _canvas_.interface.go.add( function(){
         
         testUnit_3_3.io._.test_connectionNode1.connectTo(testUnit_3_4.io._.test_connectionNode1);
         
-        
         const testUnit_3_5 = _canvas_.interface.unit.collection.test.testUnit_3('testUnit_3_5',10,400);
         _canvas_.system.pane.mm.append( testUnit_3_5 );
         const testUnit_3_6 = _canvas_.interface.unit.collection.test.testUnit_3('testUnit_3_6',200,450);

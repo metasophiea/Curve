@@ -69,5 +69,5 @@ this.voltage_dial = function(name,x,y,angle){
 this.voltage_dial.metadata = {
     name:'Voltage Dial',
     category:'humanInterfaceDevices',
-    helpURL:'/help/units/beta/voltage_dial/'
+    helpURL:'/help/units/alpha/voltage_dial/'
 };

@@ -58,5 +58,5 @@ this.signal_duplicator = function(name,x,y,angle){
 this.signal_duplicator.metadata = {
     name:'Signal Duplicator',
     category:'misc',
-    helpURL:'/help/units/beta/signal_duplicator/'
+    helpURL:'/help/units/alpha/signal_duplicator/'
 };

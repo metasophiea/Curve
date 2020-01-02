@@ -80,5 +80,5 @@ this.multi_option_signal_sender_2 = function(name,x,y,angle){
 this.multi_option_signal_sender_2.metadata = {
     name:'Multi Option Signal Sender - Type A',
     category:'interface',
-    helpURL:'/help/units/beta/multi_option_signal_sender_2/'
+    helpURL:'/help/units/curvetech/multi_option_signal_sender_2/'
 };

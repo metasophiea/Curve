@@ -79,5 +79,5 @@ this.AND = function(name,x,y,angle){
 this.AND.metadata = {
     name:'AND',
     category:'logic_gates',
-    helpURL:'/help/units/beta/AND/'
+    helpURL:'/help/units/curvetech/AND/'
 };

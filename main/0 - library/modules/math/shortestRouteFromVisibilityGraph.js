@@ -1,6 +1,18 @@
 this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
     dev.log.math('.shortestRouteFromVisibilityGraph(',visibilityGraph,start,end); //#development
 
+    //if the starting location or ending location are totally inaccessible, bail on this whole thing
+    //though return the point (if any) that was ok
+        if( visibilityGraph[start].destination.length == 0 && visibilityGraph[end].destination.length == 0 ){
+            return [];
+        }
+        if( visibilityGraph[start].destination.length == 0 ){
+            return [end];
+        }
+        if( visibilityGraph[end].destination.length == 0 ){ 
+            return [start];
+        }
+
     //set the 'current' location as the start
         let current = start;
 
@@ -16,10 +28,16 @@ this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
     //(don't forget to set the current location's distance to zero)
         const locationSet = Object.keys(visibilityGraph).map( () => ({ distance:Infinity, visited:false, route:'' }) );
         locationSet[current].distance = 0;
-        dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#development
+        dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#developments
 
     //loop through locations, until the end location has been visited
+        let limit = 100;
         do{
+            if(limit <= 0){console.error('.shortestRouteFromVisibilityGraph has encountered an overflow'); break;}
+            limit--;
+
+            dev.log.math('.shortestRouteFromVisibilityGraph -> current:',current); //#development
+
             //update unvisited distance values
                 for(let a = 0; a < visibilityGraph[current].destination.length; a++){
                     if( locationSet[visibilityGraph[current].destination[a].index].visited ){

@@ -57,5 +57,5 @@ this.data_combiner = function(name,x,y,angle){
 this.data_combiner.metadata = {
     name:'Data Combiner',
     category:'misc',
-    helpURL:'/help/units/beta/data_combiner/'
+    helpURL:'/help/units/alpha/data_combiner/'
 };

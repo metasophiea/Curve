@@ -130,5 +130,5 @@ this.light_panel_8 = function(name,x,y,angle){
 this.light_panel_8.metadata = {
     name:'Light Panel - Type C',
     category:'interface',
-    helpURL:'/help/units/beta/light_panel_8/'
+    helpURL:'/help/units/curvetech/light_panel_8/'
 };

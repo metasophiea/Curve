@@ -109,7 +109,7 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
             paths.forEach(path => {
                 let isHole = false;
                 for(let a = 0; a < segments.length; a++){
-                    if( library.math.detectOverlap.overlappingPolygons(path,segments[a].path) ){
+                    if( library.math.detectIntersect.polyOnPoly({points:path},{points:segments[a].path}) ){
                         segments[a].path = segments[a].path.concat(path);
                         segments[a].regions.unshift(path);
                         isHole = true;

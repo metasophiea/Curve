@@ -56,5 +56,5 @@ this.voltage_readout = function(name,x,y,angle){
 this.voltage_readout.metadata = {
     name:'Voltage Readout',
     category:'monitors',
-    helpURL:'/help/units/beta/voltage_readout/'
+    helpURL:'/help/units/alpha/voltage_readout/'
 };

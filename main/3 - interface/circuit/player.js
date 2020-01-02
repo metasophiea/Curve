@@ -57,8 +57,10 @@ this.player = function(context){
         }
         function load(type,callback,url=''){
             dev.log.circuit('.player::loadRaw('+type+','+callback+','+url+')'); //#development
-            state.fileLoaded = false;
-            _canvas_.library.audio.loadAudioFile( function(data){ loadRaw(data,callback) }, type, url);
+            _canvas_.library.audio.loadAudioFile( function(data){ 
+                state.fileLoaded = false;
+                loadRaw(data,callback)
+            }, type, url);
         }
         function generatePlayheadNumber(){
             dev.log.circuit('.player::unlogeneratePlayheadNumberadRaw()'); //#development

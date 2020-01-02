@@ -49,6 +49,9 @@ this.dial_1_discrete = function(
             if(bool==undefined){return interactable;}
             interactable = bool;
         };
+        object.nudge = function(amount){
+            set(value+amount);
+        };
 
     //interaction
         let acc = 0;

@@ -67,5 +67,5 @@ this.audio_duplicator = function(name,x,y,angle){
 this.audio_duplicator.metadata = {
     name:'Audio Duplicator',
     category:'misc',
-    helpURL:'/help/units/beta/audio_duplicator/'
+    helpURL:'/help/units/alpha/audio_duplicator/'
 };

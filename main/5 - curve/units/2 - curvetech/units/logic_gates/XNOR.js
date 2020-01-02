@@ -79,5 +79,5 @@ this.XNOR = function(name,x,y,angle){
 this.XNOR.metadata = {
     name:'XNOR',
     category:'logic_gates',
-    helpURL:'/help/units/beta/XNOR/'
+    helpURL:'/help/units/curvetech/XNOR/'
 };

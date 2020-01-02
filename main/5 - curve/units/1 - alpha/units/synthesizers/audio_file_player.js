@@ -161,7 +161,9 @@ this.audio_file_player = function(name,x,y,angle){
 
     //wiring
         //hid
-            object.elements.button_image.button_open.onpress = function(){ playerCircuit.load('file',loadProcess); };
+            object.elements.button_image.button_open.onpress = function(){
+                playerCircuit.load('file',loadProcess);
+            };
             object.elements.button_image.button_play.onpress = function(){
                 if(object.i.concurrentPlayCountLimit() == 1 && playerCircuit.currentTime().length > 0){ playerCircuit.resume(); }
                 else{ playerCircuit.start(); }
@@ -284,5 +286,5 @@ this.audio_file_player = function(name,x,y,angle){
 this.audio_file_player.metadata = {
     name:'Audio File Player',
     category:'synthesizers',
-    helpURL:'/help/units/beta/audio_file_player/'
+    helpURL:'/help/units/alpha/audio_file_player/'
 };

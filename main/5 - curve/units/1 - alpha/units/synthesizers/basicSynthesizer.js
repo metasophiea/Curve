@@ -260,5 +260,5 @@ this.basic_synthesizer = function(name,x,y,angle){
 this.basic_synthesizer.metadata = {
     name:'Basic Synthesizer',
     category:'synthesizers',
-    helpURL:'/help/units/beta/basic_synthesizer/'
+    helpURL:'/help/units/alpha/basic_synthesizer/'
 };

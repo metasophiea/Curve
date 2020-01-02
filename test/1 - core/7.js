@@ -89,6 +89,45 @@ _canvas_.core.go.add( function(){
             _canvas_.core.render.frame();
         }
     );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    let rectangle_5 = _canvas_.core.element.create('rectangle','test_rectangle_5');
+    _canvas_.core.arrangement.append(rectangle_5);
+    rectangle_5.unifiedAttribute({ x:90, y:300, width:250, height:150, angle:1, colour:{r:1,g:0,b:1,a:1} });
+    rectangle_5.attachCallback(
+        'onmouseenterelement',
+        () => {
+            rectangle_5.colour({r:1,g:0.75,b:1,a:1});
+            _canvas_.core.render.frame();
+        }
+    );
+    rectangle_5.attachCallback(
+        'onmouseleaveelement',
+        () => {
+            rectangle_5.colour({r:1,g:0,b:1,a:1});
+            _canvas_.core.render.frame();
+        }
+    );
+
+
+
+
+
+
+
+
     
 } );
 

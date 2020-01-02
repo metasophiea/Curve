@@ -31,6 +31,8 @@ this.render = new function(){
     };
     this.activeLimitToFrameRate = function(active){
         dev.log.interface('.render.activeLimitToFrameRate(',active); //#development
+        if(active == undefined){return cachedValues.active;}
+        cachedValues.active = active;
         return new Promise((resolve, reject) => {
             communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
         });

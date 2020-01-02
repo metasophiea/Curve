@@ -218,5 +218,5 @@ this.pulse_generator = function(name,x,y,angle){
 this.pulse_generator.metadata = {
     name:'Pulse Generator',
     category:'sequencers',
-    helpURL:'/help/units/beta/pulse_generator/'
+    helpURL:'/help/units/alpha/pulse_generator/'
 };

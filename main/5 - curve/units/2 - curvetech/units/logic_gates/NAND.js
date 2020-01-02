@@ -79,5 +79,5 @@ this.NAND = function(name,x,y,angle){
 this.NAND.metadata = {
     name:'NAND',
     category:'logic_gates',
-    helpURL:'/help/units/beta/NAND/'
+    helpURL:'/help/units/curvetech/NAND/'
 };

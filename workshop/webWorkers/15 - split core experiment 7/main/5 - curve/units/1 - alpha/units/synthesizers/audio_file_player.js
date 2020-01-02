@@ -279,5 +279,5 @@ this.audio_file_player = function(name,x,y,angle){
 this.audio_file_player.metadata = {
     name:'Audio File Player',
     category:'synthesizers',
-    helpURL:'/help/units/beta/audio_file_player/'
+    helpURL:'/help/units/alpha/audio_file_player/'
 };

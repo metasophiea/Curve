@@ -154,6 +154,6 @@ this.distortion = function(name,x,y,angle){
 this.distortion.metadata = {
     name:'Distortion',
     category:'effects',
-    helpURL:'/help/units/beta/distortion/'
+    helpURL:'/help/units/alpha/distortion/'
 };
 

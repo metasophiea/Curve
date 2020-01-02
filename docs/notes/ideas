@@ -177,3 +177,4 @@
 - redo Alpha collection to be in the 100x100 pixel-per-cm resolution
 - connection nodes reveal text when moused over (to say what they're named or if they are an input or output)
 - some way of telling when a file is being loaded and the user just needs to wait
+- menubar option for switching between mouse wheel modes

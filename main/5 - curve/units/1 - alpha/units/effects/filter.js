@@ -148,5 +148,5 @@ this.filter = function(name,x,y,angle){
 this.filter.metadata = {
     name:'Filter (unfinished)',
     category:'effects',
-    helpURL:'/help/units/beta/filter/'
+    helpURL:'/help/units/alpha/filter/'
 };

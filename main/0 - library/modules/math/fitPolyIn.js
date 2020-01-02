@@ -16,6 +16,14 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
         newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
         return newPolygon;
     };
+    function polyOnPolys(polygon,environmentPolys){
+        for(let a = 0; a < environmentPolys.length; a++){
+            if(library.math.detectIntersect.polyOnPoly(polygon,environmentPolys[a]).intersect){
+                return true;
+            }
+        }
+        return false;
+    }
 
     
 
@@ -47,7 +55,7 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
                             if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                         
                         //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
-                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                            if(!polyOnPolys(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                 successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
                             }
                     }
@@ -85,7 +93,7 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
                                 if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                         
                             //if offsetting the shape in this way results in no collision; save this offset in 'tmp_successfulOffsets'
-                                if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                if(!polyOnPolys(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                     tmp_successfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                     provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                 }
@@ -124,7 +132,7 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
 
                     //can you make a x movement? you can? then do it
                         if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
-                        if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
+                        if(!polyOnPolys(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
                             max.x = midpoint.x; //too far
                         }else{ 
                             min.x = midpoint.x; //too close
@@ -132,7 +140,7 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
 
                     //can you make a y movement? you can? then do it
                         if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
-                        if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
+                        if(!polyOnPolys(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
                             max.y = midpoint.y; //too far
                         }else{
                             min.y = midpoint.y; //too close

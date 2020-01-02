@@ -118,5 +118,5 @@ this.single_bit_memory = function(name,x,y,angle){
 this.single_bit_memory.metadata = {
     name:'Single Bit Memory',
     category:'devices',
-    helpURL:'/help/units/beta/single_bit_memory/'
+    helpURL:'/help/units/curvetech/single_bit_memory/'
 };

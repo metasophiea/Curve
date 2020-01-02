@@ -82,5 +82,5 @@ this.adder = function(name,x,y,angle){
 this.adder.metadata = {
     name:'Adder',
     category:'devices',
-    helpURL:'/help/units/beta/adder/'
+    helpURL:'/help/units/curvetech/adder/'
 };

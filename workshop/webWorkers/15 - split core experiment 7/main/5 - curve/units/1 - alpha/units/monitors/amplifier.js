@@ -72,5 +72,5 @@ this.amplifier = function(name,x,y,angle){
 this.amplifier.metadata = {
     name:'Amplifier',
     category:'monitors',
-    helpURL:'/help/units/beta/amplifier/'
+    helpURL:'/help/units/alpha/amplifier/'
 };

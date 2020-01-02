@@ -59,5 +59,5 @@ this.voltage_duplicator = function(name,x,y,angle){
 this.voltage_duplicator.metadata = {
     name:'Voltage Duplicator',
     category:'misc',
-    helpURL:'/help/units/beta/voltage_duplicator/'
+    helpURL:'/help/units/alpha/voltage_duplicator/'
 };

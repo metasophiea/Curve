@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:1} };
                 const library = this;
                 
                 const dev = {
@@ -477,7 +477,6 @@
                             {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
                         ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
                     }
-                    
                     this.detectIntersect = new function(){
                         this.boundingBoxes = function(box_a, box_b){
                     
@@ -528,26 +527,17 @@
                             }
                     
                             function pointLevelWithPolyPointChecker(poly,point,a,b){
-                                //only flip, if the point is not perfectly level with point a of the line (the system will come round to having this same point be point b)
-                                //or if you can prove that the two adjacent points are higher and lower than the matching point's level
+                                //only flip, if the point is not perfectly level with point a of the line 
+                                //or if you can prove that the a's two adjacent points are higher and lower than the matching point's level
+                                //(the system will come round to having this same point be point b)
                                 if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
                                     return true;
-                                }else if(poly.points[a].y != point.y){
+                                }else if(poly.points[a].y == point.y){
                                     const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
                                     const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
                                     if(
                                         poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
                                         poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
-                                    ){
-                                    }else{
-                                        return true;
-                                    }
-                                }else if(poly.points[b].y != point.y){
-                                    const pointInFront = b+1 >= poly.points.length ? 0 : b+1;
-                                    const pointBehind = b-1 <= 0 ? poly.points.length-1 : b-1;
-                                    if(
-                                        poly.points[pointBehind].y <= poly.points[b].y && poly.points[pointInFront].y <= poly.points[b].y ||
-                                        poly.points[pointBehind].y >= poly.points[b].y && poly.points[pointInFront].y >= poly.points[b].y
                                     ){
                                     }else{
                                         return true;
@@ -776,163 +766,6 @@
                             return results;
                         };
                     };
-                    this.detectOverlap = new function(){
-                        const detectOverlap = this;
-                    
-                        this.boundingBoxes = function(a, b){
-                    
-                            return a.bottomRight.y >= b.topLeft.y && 
-                                a.bottomRight.x >= b.topLeft.x && 
-                                a.topLeft.y <= b.bottomRight.y && 
-                                a.topLeft.x <= b.bottomRight.x;
-                        };
-                        this.pointWithinBoundingBox = function(point,box){
-                    
-                            return !(
-                                point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
-                                point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
-                            );
-                        };
-                        this.pointWithinPoly = function(point,points){
-                    
-                            //Ray casting algorithm
-                            let inside = false;
-                            for(let a = 0, b = points.length - 1; a < points.length; b = a++){
-                                //if the point is on a point of the poly; bail and return true
-                                if( point.x == points[a].x && point.y == points[a].y ){ return true; }
-                    
-                                //point must be on the same level of the line
-                                if( (points[b].y >= point.y && points[a].y <= point.y) || (points[a].y >= point.y && points[b].y <= point.y) ){
-                                    //discover if the point is on the far right of the line
-                                    if( points[a].x < point.x && points[b].x < point.x ){
-                                        inside = !inside;
-                                    }else{
-                                        //calculate what side of the line this point is
-                                            let areaLocation;
-                                            if( points[b].y > points[a].y && points[b].x > points[a].x ){
-                                                areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
-                                            }else if( points[b].y <= points[a].y && points[b].x <= points[a].x ){
-                                                areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
-                                            }else if( points[b].y > points[a].y && points[b].x < points[a].x ){
-                                                areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
-                                            }else if( points[b].y <= points[a].y && points[b].x >= points[a].x ){
-                                                areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
-                                            }
-                    
-                                        //if its on the line, return true immediatly, if it's just above 1 do a flip
-                                            if( areaLocation == 1 ){
-                                                return true;
-                                            }else if(areaLocation > 1){
-                                                inside = !inside;
-                                            }
-                                    }
-                                }
-                            }
-                            return inside;
-                        };
-                        this.lineSegments = function(segment1, segment2){
-                    
-                            const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                            if(denominator == 0){return null;}
-                    
-                            const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                            const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                            return {
-                                'x':      (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
-                                'y':      (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
-                                'inSeg1': (u1 >= 0 && u1 <= 1),
-                                'inSeg2': (u2 >= 0 && u2 <= 1)
-                            };
-                        };
-                        this.overlappingPolygons = function(points_a,points_b){
-                    
-                            //a point from A is in B
-                                for(let a = 0; a < points_a.length; a++){
-                                    if(detectOverlap.pointWithinPoly(points_a[a],points_b)){ return true; }
-                                }
-                    
-                            //a point from B is in A
-                                for(let a = 0; a < points_b.length; a++){
-                                    if(detectOverlap.pointWithinPoly(points_b[a],points_a)){ return true; }
-                                }
-                    
-                            //side intersection
-                                const a_indexing = Array.apply(null, {length: points_a.length}).map(Number.call, Number).concat([0]);
-                                const b_indexing = Array.apply(null, {length: points_b.length}).map(Number.call, Number).concat([0]);
-                    
-                                for(let a = 0; a < a_indexing.length-1; a++){
-                                    for(let b = 0; b < b_indexing.length-1; b++){
-                                        const tmp = detectOverlap.lineSegments( 
-                                            [ points_a[a_indexing[a]], points_a[a_indexing[a+1]] ],
-                                            [ points_b[b_indexing[b]], points_b[b_indexing[b+1]] ]
-                                        );
-                                        if( tmp != null && tmp.inSeg1 && tmp.inSeg2 ){return true;}
-                                    }
-                                }
-                    
-                            return false;
-                        };
-                        this.overlappingPolygonWithPolygons = function(poly,polys){ 
-                    
-                            for(let a = 0; a < polys.length; a++){
-                                if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
-                                    if(detectOverlap.overlappingPolygons(poly.points, polys[a].points)){
-                                        return true;
-                                    }
-                                }
-                            }
-                            return false;
-                        };
-                    
-                        function overlappingLineWithPolygon(line,poly){
-                    
-                            //go through every side of the poly, and if one of them collides with the line, return true
-                            for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
-                                const tmp = library.math.detectOverlap.lineSegments(
-                                    [
-                                        { x:line.x1, y:line.y1 },
-                                        { x:line.x2, y:line.y2 }
-                                    ],
-                                    [
-                                        { x:poly.points[a].x, y:poly.points[a].y },
-                                        { x:poly.points[b].x, y:poly.points[b].y }
-                                    ],
-                                );
-                                if(tmp != null && tmp.inSeg1 && tmp.inSeg2){ return true; }
-                            }
-                    
-                            return false;
-                        };
-                        this.overlappingLineWithPolygons = function(line,polys){
-                    
-                            //generate a bounding box for the line
-                                const line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
-                                if(line.x1 > line.x2){
-                                    line_boundingBox.topLeft.x = line.x2;
-                                    line_boundingBox.bottomRight.x = line.x1;
-                                }else{
-                                    line_boundingBox.topLeft.x = line.x1;
-                                    line_boundingBox.bottomRight.x = line.x2;
-                                }
-                                if(line.y1 > line.y2){
-                                    line_boundingBox.topLeft.y = line.y2;
-                                    line_boundingBox.bottomRight.y = line.y1;
-                                }else{
-                                    line_boundingBox.topLeft.y = line.y1;
-                                    line_boundingBox.bottomRight.y = line.y2;
-                                }
-                    
-                            //gather the indexes of the polys that collide with this line
-                                const collidingPolyIndexes = [];
-                                polys.forEach((poly,index) => {
-                                    if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
-                                    if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
-                                });
-                    
-                            return collidingPolyIndexes;
-                        };
-                    };
-                    
                     this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
                         dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
                     
@@ -1197,6 +1030,14 @@
                             newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
                             return newPolygon;
                         };
+                        function polyOnPolys(polygon,environmentPolys){
+                            for(let a = 0; a < environmentPolys.length; a++){
+                                if(library.math.detectIntersect.polyOnPoly(polygon,environmentPolys[a]).intersect){
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
                     
                         
                     
@@ -1228,7 +1069,7 @@
                                                 if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                             
                                             //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
-                                                if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                                if(!polyOnPolys(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                                     successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
                                                 }
                                         }
@@ -1266,7 +1107,7 @@
                                                     if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                                             
                                                 //if offsetting the shape in this way results in no collision; save this offset in 'tmp_successfulOffsets'
-                                                    if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                                    if(!polyOnPolys(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                                         tmp_successfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                                         provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                                     }
@@ -1305,7 +1146,7 @@
                     
                                         //can you make a x movement? you can? then do it
                                             if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
-                                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
+                                            if(!polyOnPolys(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
                                                 max.x = midpoint.x; //too far
                                             }else{ 
                                                 min.x = midpoint.x; //too close
@@ -1313,7 +1154,7 @@
                     
                                         //can you make a y movement? you can? then do it
                                             if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
-                                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
+                                            if(!polyOnPolys(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
                                                 max.y = midpoint.y; //too far
                                             }else{
                                                 min.y = midpoint.y; //too close
@@ -1392,6 +1233,18 @@
                     };
                     this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
                     
+                        //if the starting location or ending location are totally inaccessible, bail on this whole thing
+                        //though return the point (if any) that was ok
+                            if( visibilityGraph[start].destination.length == 0 && visibilityGraph[end].destination.length == 0 ){
+                                return [];
+                            }
+                            if( visibilityGraph[start].destination.length == 0 ){
+                                return [end];
+                            }
+                            if( visibilityGraph[end].destination.length == 0 ){ 
+                                return [start];
+                            }
+                    
                         //set the 'current' location as the start
                             let current = start;
                     
@@ -1409,7 +1262,12 @@
                             locationSet[current].distance = 0;
                     
                         //loop through locations, until the end location has been visited
+                            let limit = 100;
                             do{
+                                if(limit <= 0){console.error('.shortestRouteFromVisibilityGraph has encountered an overflow'); break;}
+                                limit--;
+                    
+                    
                                 //update unvisited distance values
                                     for(let a = 0; a < visibilityGraph[current].destination.length; a++){
                                         if( locationSet[visibilityGraph[current].destination[a].index].visited ){
@@ -1738,226 +1596,6 @@
                         };
                     };
                 };
-                this.audio = new function(){
-                    //master context
-                        this.context = new (window.AudioContext || window.webkitAudioContext)();
-                    
-                        
-                    
-                    
-                        
-                    //utility functions
-                        this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
-                        
-                            if(target==null){return audioParam.value;}
-                        
-                            if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
-                        
-                            try{
-                                switch(curve){
-                                    case 'linear': 
-                                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
-                                    break;
-                                    case 'exponential':
-                                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
-                                        if(target == 0){target = 1/10000;}
-                                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
-                                    break;
-                                    case 's':
-                                        const mux = target - audioParam.value;
-                                        const array = library.math.curveGenerator.s(10);
-                                        for(let a = 0; a < array.length; a++){
-                                            array[a] = audioParam.value + array[a]*mux;
-                                        }
-                                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
-                                    break;
-                                    case 'instant': default:
-                                        audioParam.setTargetAtTime(target, context.currentTime, 0.01);
-                                    break;
-                                }
-                            }catch(e){
-                                console.log('could not change param (possibly due to an overlap, or bad target value)');
-                                console.log('audioParam:',audioParam,'target:',target,'time:',time,'curve:',curve,'cancelScheduledValues:',cancelScheduledValues);
-                                console.log(e);
-                            }
-                        };
-                        this.loadAudioFile = function(callback,type='file',url=''){
-                        
-                            switch(type){
-                                case 'url': 
-                                    const request = new XMLHttpRequest();
-                                    request.open('GET', url, true);
-                                    request.responseType = 'arraybuffer';
-                                    request.onload = function(){
-                                        library.audio.context.decodeAudioData(this.response, function(data){
-                                            callback({
-                                                buffer:data,
-                                                name:(url.split('/')).pop(),
-                                                duration:data.duration,
-                                            });
-                                        }, function(e){console.warn("Error with decoding audio data" + e.err);});
-                                    }
-                                    request.send();
-                                break;
-                                case 'file': default:
-                                    const inputObject = document.createElement('input');
-                                    inputObject.type = 'file';
-                                    inputObject.onchange = function(){
-                                        const file = this.files[0];
-                                        const fileReader = new FileReader();
-                                        fileReader.readAsArrayBuffer(file);
-                                        fileReader.onload = function(data){
-                                            library.audio.context.decodeAudioData(data.target.result, function(buffer){
-                                                callback({
-                                                    buffer:buffer,
-                                                    name:file.name,
-                                                    duration:buffer.duration,
-                                                });
-                                            });
-                                            inputObject.remove();
-                                        }
-                                    };
-                                    document.body.appendChild(inputObject);
-                                    inputObject.click();
-                                break;
-                            }
-                        };
-                        this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
-                        
-                            const waveform = audioBuffer.getChannelData(0);
-                            // const channelCount = audioBuffer.numberOfChannels;
-                        
-                            bounds.start = bounds.start ? bounds.start : 0;
-                            bounds.end = bounds.end ? bounds.end : 1;
-                            const start = audioBuffer.length*bounds.start;
-                            const end = audioBuffer.length*bounds.end;
-                            const step = (end - start)/resolution;
-                        
-                            const outputArray = [];
-                            for(let a = start; a < end; a+=Math.round(step)){
-                                outputArray.push( 
-                                    library.math.largestValueFound(
-                                        waveform.slice(a, a+Math.round(step))
-                                    )
-                                );
-                            }
-                        
-                            return outputArray;
-                        };
-                        this.loadBuffer = function(context, data, destination, onended){
-                        
-                            const temp = context.createBufferSource();
-                            temp.buffer = data;
-                            temp.connect(destination);
-                            temp.onended = onended;
-                            return temp;
-                        };
-                        
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    //destination
-                        this.destination = this.context.createGain();
-                        this.destination.connect(this.context.destination);
-                        this.destination._gain = 1;
-                        this.destination.masterGain = function(value){
-                        
-                            if(value == undefined){return this.destination._gain;}
-                            this._gain = value;
-                            library.audio.changeAudioParam(library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
-                        };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    //conversion
-                        //frequencies index
-                            this.names_frequencies_split = {
-                                0:{ 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87  },
-                                1:{ 'C':32.70, 'C#':34.65, 'D':36.71, 'D#':38.89, 'E':41.20, 'F':43.65, 'F#':46.25, 'G':49.00, 'G#':51.91, 'A':55.00, 'A#':58.27, 'B':61.74, },    
-                                2:{ 'C':65.41, 'C#':69.30, 'D':73.42, 'D#':77.78, 'E':82.41, 'F':87.31, 'F#':92.50, 'G':98.00, 'G#':103.8, 'A':110.0, 'A#':116.5, 'B':123.5, },
-                                3:{ 'C':130.8, 'C#':138.6, 'D':146.8, 'D#':155.6, 'E':164.8, 'F':174.6, 'F#':185.0, 'G':196.0, 'G#':207.7, 'A':220.0, 'A#':233.1, 'B':246.9, },    
-                                4:{ 'C':261.6, 'C#':277.2, 'D':293.7, 'D#':311.1, 'E':329.6, 'F':349.2, 'F#':370.0, 'G':392.0, 'G#':415.3, 'A':440.0, 'A#':466.2, 'B':493.9, },
-                                5:{ 'C':523.3, 'C#':554.4, 'D':587.3, 'D#':622.3, 'E':659.3, 'F':698.5, 'F#':740.0, 'G':784.0, 'G#':830.6, 'A':880.0, 'A#':932.3, 'B':987.8, },    
-                                6:{ 'C':1047,  'C#':1109,  'D':1175,  'D#':1245,  'E':1319,  'F':1397,  'F#':1480,  'G':1568,  'G#':1661,  'A':1760,  'A#':1865,  'B':1976,  },
-                                7:{ 'C':2093,  'C#':2217,  'D':2349,  'D#':2489,  'E':2637,  'F':2794,  'F#':2960,  'G':3136,  'G#':3322,  'A':3520,  'A#':3729,  'B':3951,  },    
-                                8:{ 'C':4186,  'C#':4435,  'D':4699,  'D#':4978,  'E':5274,  'F':5588,  'F#':5920,  'G':6272,  'G#':6645,  'A':7040,  'A#':7459,  'B':7902   }, 
-                            };
-                            //generate forward index
-                            // eg. {... '4C':261.6, '4C#':277.2 ...}
-                                this.names_frequencies = {};
-                                Object.entries(this.names_frequencies_split).forEach((octave,index) => {
-                                    Object.entries(this.names_frequencies_split[index]).forEach(name => {
-                                        this.names_frequencies[ octave[0]+name[0] ] = name[1];
-                                    });
-                                });
-                    
-                            //generate backward index
-                            // eg. {... 261.6:'4C', 277.2:'4C#' ...}
-                                this.frequencies_names = {};
-                                Object.entries(this.names_frequencies).forEach(entry => {
-                                    this.frequencies_names[entry[1]] = entry[0];
-                                });
-                    
-                        //generate midi notes index
-                            const noteNames = [
-                                '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
-                                '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
-                                '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
-                                '3C', '3C#', '3D', '3D#', '3E', '3F', '3F#', '3G', '3G#', '3A', '3A#', '3B',
-                                '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B',
-                                '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B',
-                                '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B',
-                                '7C', '7C#', '7D', '7D#', '7E', '7F', '7F#', '7G', '7G#', '7A', '7A#', '7B',
-                                '8C', '8C#', '8D', '8D#', '8E', '8F', '8F#', '8G', '8G#', '8A', '8A#', '8B',
-                            ];
-                            //generate forward index
-                                this.midinumbers_names = {};
-                                noteNames.forEach((entry,index) => {
-                                    this.midinumbers_names[index+24] = entry;
-                                });
-                            //generate backward index
-                                this.names_midinumbers = {};
-                                Object.entries(this.midinumbers_names).forEach(entry => {
-                                    this.names_midinumbers[entry[1]] = parseInt(entry[0]);
-                                });
-                    
-                        //lead functions
-                            this.num2name = function(num){ 
-                        
-                                return this.midinumbers_names[num];
-                            };
-                            this.num2freq = function(num){ 
-                        
-                                return this.names_frequencies[this.midinumbers_names[num]];
-                            };
-                    
-                            this.name2num = function(name){ 
-                        
-                                return this.names_midinumbers[name];
-                            };
-                            this.name2freq = function(name){ 
-                        
-                                return this.names_frequencies[name];
-                            };
-                    
-                            this.freq2num = function(freq){ 
-                        
-                                return this.names_midinumbers[this.frequencies_names[freq]];
-                            };
-                            this.freq2name = function(freq){ 
-                        
-                                return this.frequencies_names[freq];
-                            };
-                };
                 this.font = new function(){
                     this.listAllAvailableGlyphs = function(fontFileData){
                     
@@ -2060,7 +1698,7 @@
                                 paths.forEach(path => {
                                     let isHole = false;
                                     for(let a = 0; a < segments.length; a++){
-                                        if( library.math.detectOverlap.overlappingPolygons(path,segments[a].path) ){
+                                        if( library.math.detectIntersect.polyOnPoly({points:path},{points:segments[a].path}) ){
                                             segments[a].path = segments[a].path.concat(path);
                                             segments[a].regions.unshift(path);
                                             isHole = true;
@@ -3358,11 +2996,14 @@
                     
                         return data;
                     };
-                    this.openFile = function(callback,readAsType='readAsBinaryString'){
+                    this.openFile = function(callback,readAsType='readAsBinaryString',fileType){
                     
                         const i = document.createElement('input');
                         i.type = 'file';
-                        i.accept = '.crv';
+                        i.accept = fileType;
+                        i.onload = function(){
+                            console.log('onload');
+                        };
                         i.onchange = function(){
                             const f = new FileReader();
                             switch(readAsType){
@@ -3370,7 +3011,7 @@
                                 case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
                             }
                             f.onloadend = function(){ 
-                                if(callback){callback(f.result);}
+                                if(callback){callback(f.result,i.files[0]);}
                             }
                         };
                     
@@ -3483,6 +3124,215 @@
                             b:arrayRemovals(array_a,array_b.slice())
                         };
                     };
+                };
+                this.audio = new function(){
+                    //master context
+                        this.context = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                        
+                    
+                    
+                        
+                    //utility functions
+                        this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+                        
+                            if(target==null){return audioParam.value;}
+                        
+                            if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
+                        
+                            try{
+                                switch(curve){
+                                    case 'linear': 
+                                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                                    break;
+                                    case 'exponential':
+                                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                                        if(target == 0){target = 1/10000;}
+                                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                                    break;
+                                    case 's':
+                                        const mux = target - audioParam.value;
+                                        const array = library.math.curveGenerator.s(10);
+                                        for(let a = 0; a < array.length; a++){
+                                            array[a] = audioParam.value + array[a]*mux;
+                                        }
+                                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                                    break;
+                                    case 'instant': default:
+                                        audioParam.setTargetAtTime(target, context.currentTime, 0.01);
+                                    break;
+                                }
+                            }catch(e){
+                                console.log('could not change param (possibly due to an overlap, or bad target value)');
+                                console.log('audioParam:',audioParam,'target:',target,'time:',time,'curve:',curve,'cancelScheduledValues:',cancelScheduledValues);
+                                console.log(e);
+                            }
+                        };
+                        this.loadAudioFile = function(callback,type='file',url=''){
+                    
+                            if(callback == undefined){
+                                return;
+                            }
+                        
+                            switch(type){
+                                case 'url': 
+                                    library.misc.loadFileFromURL(
+                                        url, 
+                                        data => {
+                                            library.audio.context.decodeAudioData(data, function(data){
+                                                callback({ buffer:data, name:(url.split('/')).pop(), duration:data.duration });
+                                            });
+                                        },
+                                        'arraybuffer'
+                                    );
+                                break;
+                                case 'file': default:
+                                    library.misc.openFile(
+                                        (data,file) => {
+                                            library.audio.context.decodeAudioData(data, function(buffer){
+                                                callback({ buffer:buffer, name:file.name, duration:buffer.duration });
+                                            });
+                                        },
+                                        'readAsArrayBuffer'
+                                    );
+                                break;
+                            }
+                        };
+                        this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
+                        
+                            const waveform = audioBuffer.getChannelData(0);
+                            // const channelCount = audioBuffer.numberOfChannels;
+                        
+                            bounds.start = bounds.start ? bounds.start : 0;
+                            bounds.end = bounds.end ? bounds.end : 1;
+                            const start = audioBuffer.length*bounds.start;
+                            const end = audioBuffer.length*bounds.end;
+                            const step = (end - start)/resolution;
+                        
+                            const outputArray = [];
+                            for(let a = start; a < end; a+=Math.round(step)){
+                                outputArray.push( 
+                                    library.math.largestValueFound(
+                                        waveform.slice(a, a+Math.round(step))
+                                    )
+                                );
+                            }
+                        
+                            return outputArray;
+                        };
+                        this.loadBuffer = function(context, data, destination, onended){
+                        
+                            const temp = context.createBufferSource();
+                            temp.buffer = data;
+                            temp.connect(destination);
+                            temp.onended = onended;
+                            return temp;
+                        };
+                        
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    //destination
+                        this.destination = this.context.createGain();
+                        this.destination.connect(this.context.destination);
+                        this.destination._gain = 1;
+                        this.destination.masterGain = function(value){
+                        
+                            if(value == undefined){return this.destination._gain;}
+                            this._gain = value;
+                            library.audio.changeAudioParam(library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
+                        };
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    //conversion
+                        //frequencies index
+                            this.names_frequencies_split = {
+                                0:{ 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87  },
+                                1:{ 'C':32.70, 'C#':34.65, 'D':36.71, 'D#':38.89, 'E':41.20, 'F':43.65, 'F#':46.25, 'G':49.00, 'G#':51.91, 'A':55.00, 'A#':58.27, 'B':61.74, },    
+                                2:{ 'C':65.41, 'C#':69.30, 'D':73.42, 'D#':77.78, 'E':82.41, 'F':87.31, 'F#':92.50, 'G':98.00, 'G#':103.8, 'A':110.0, 'A#':116.5, 'B':123.5, },
+                                3:{ 'C':130.8, 'C#':138.6, 'D':146.8, 'D#':155.6, 'E':164.8, 'F':174.6, 'F#':185.0, 'G':196.0, 'G#':207.7, 'A':220.0, 'A#':233.1, 'B':246.9, },    
+                                4:{ 'C':261.6, 'C#':277.2, 'D':293.7, 'D#':311.1, 'E':329.6, 'F':349.2, 'F#':370.0, 'G':392.0, 'G#':415.3, 'A':440.0, 'A#':466.2, 'B':493.9, },
+                                5:{ 'C':523.3, 'C#':554.4, 'D':587.3, 'D#':622.3, 'E':659.3, 'F':698.5, 'F#':740.0, 'G':784.0, 'G#':830.6, 'A':880.0, 'A#':932.3, 'B':987.8, },    
+                                6:{ 'C':1047,  'C#':1109,  'D':1175,  'D#':1245,  'E':1319,  'F':1397,  'F#':1480,  'G':1568,  'G#':1661,  'A':1760,  'A#':1865,  'B':1976,  },
+                                7:{ 'C':2093,  'C#':2217,  'D':2349,  'D#':2489,  'E':2637,  'F':2794,  'F#':2960,  'G':3136,  'G#':3322,  'A':3520,  'A#':3729,  'B':3951,  },    
+                                8:{ 'C':4186,  'C#':4435,  'D':4699,  'D#':4978,  'E':5274,  'F':5588,  'F#':5920,  'G':6272,  'G#':6645,  'A':7040,  'A#':7459,  'B':7902   }, 
+                            };
+                            //generate forward index
+                            // eg. {... '4C':261.6, '4C#':277.2 ...}
+                                this.names_frequencies = {};
+                                Object.entries(this.names_frequencies_split).forEach((octave,index) => {
+                                    Object.entries(this.names_frequencies_split[index]).forEach(name => {
+                                        this.names_frequencies[ octave[0]+name[0] ] = name[1];
+                                    });
+                                });
+                    
+                            //generate backward index
+                            // eg. {... 261.6:'4C', 277.2:'4C#' ...}
+                                this.frequencies_names = {};
+                                Object.entries(this.names_frequencies).forEach(entry => {
+                                    this.frequencies_names[entry[1]] = entry[0];
+                                });
+                    
+                        //generate midi notes index
+                            const noteNames = [
+                                '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
+                                '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
+                                '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
+                                '3C', '3C#', '3D', '3D#', '3E', '3F', '3F#', '3G', '3G#', '3A', '3A#', '3B',
+                                '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B',
+                                '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B',
+                                '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B',
+                                '7C', '7C#', '7D', '7D#', '7E', '7F', '7F#', '7G', '7G#', '7A', '7A#', '7B',
+                                '8C', '8C#', '8D', '8D#', '8E', '8F', '8F#', '8G', '8G#', '8A', '8A#', '8B',
+                            ];
+                            //generate forward index
+                                this.midinumbers_names = {};
+                                noteNames.forEach((entry,index) => {
+                                    this.midinumbers_names[index+24] = entry;
+                                });
+                            //generate backward index
+                                this.names_midinumbers = {};
+                                Object.entries(this.midinumbers_names).forEach(entry => {
+                                    this.names_midinumbers[entry[1]] = parseInt(entry[0]);
+                                });
+                    
+                        //lead functions
+                            this.num2name = function(num){ 
+                        
+                                return this.midinumbers_names[num];
+                            };
+                            this.num2freq = function(num){ 
+                        
+                                return this.names_frequencies[this.midinumbers_names[num]];
+                            };
+                    
+                            this.name2num = function(name){ 
+                        
+                                return this.names_midinumbers[name];
+                            };
+                            this.name2freq = function(name){ 
+                        
+                                return this.names_frequencies[name];
+                            };
+                    
+                            this.freq2num = function(freq){ 
+                        
+                                return this.names_midinumbers[this.frequencies_names[freq]];
+                            };
+                            this.freq2name = function(freq){ 
+                        
+                                return this.frequencies_names[freq];
+                            };
                 };
                 const _thirdparty = new function(){
                     const thirdparty = this;
@@ -21769,7 +21619,7 @@
             };
             _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
                 const core_engine = new Worker("js/core_engine.js");
                 const self = this;
                 
@@ -22725,6 +22575,8 @@
                         });
                     };
                     this.activeLimitToFrameRate = function(active){
+                        if(active == undefined){return cachedValues.active;}
+                        cachedValues.active = active;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
                         });
@@ -23228,7 +23080,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
                 const interface = this;
             
                 const dev = {
@@ -23832,8 +23684,10 @@
                                 callback(data);
                             }
                             function load(type,callback,url=''){
-                                state.fileLoaded = false;
-                                _canvas_.library.audio.loadAudioFile( function(data){ loadRaw(data,callback) }, type, url);
+                                _canvas_.library.audio.loadAudioFile( function(data){ 
+                                    state.fileLoaded = false;
+                                    loadRaw(data,callback)
+                                }, type, url);
                             }
                             function generatePlayheadNumber(){
                                 let num = 0;
@@ -24845,7 +24699,9 @@
                             
                             interfacePart.partLibrary.display.glowbox_path = function(name,data){ 
                                 return interfacePart.collection.display.glowbox_path(
-                                    name, data.x, data.y, data.points, data.angle, data.style.glow, data.style.dim
+                                    name, data.x, data.y, data.points, data.angle, 
+                                    data.looping, data.jointType, data.capType,
+                                    data.style.glow, data.style.dim
                                 );
                             };
                             this.grapher_audioScope = function(
@@ -29149,6 +29005,9 @@
                                 
                                         if(update && this.onchange){ this.onchange(value); }
                                     };
+                                    object.toggle = function(){
+                                        object.set(!object.get());
+                                    };
                                     object.light = function(a){
                                         if(a == undefined){ return state.glowing; }
                             
@@ -29382,35 +29241,46 @@
                             ){
                             
                                 //default to non-image version if image links are missing
-                                    if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
-                                        return this.dial_continuous(
+                                    if(handleURL == undefined && slotURL == undefined && needleURL == undefined){
+                                        return this.dial_1_continuous(
                                             name, x, y, radius, angle, interactable, value, resetValue, startAngle, maxAngle,
                                             undefined, undefined, undefined,
                                             onchange, onrelease
                                         );
                                     }
                             
+                            
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
                                     
                                     //slot
-                                        const slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
-                                        object.append(slot);
+                                        if(slotURL != undefined){
+                                            const slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
+                                            object.append(slot);
+                                        }
                             
                                     //handle
-                                        const handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+                                        let handle;
+                                        if(handleURL != undefined){
+                                            handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+                                        }else{
+                                            handle = interfacePart.builder('basic','circle','handle',{radius:radius, detail:50, colour:{r:0,g:0,b:0,a:0}});
+                                        }
                                         object.append(handle);
                             
                                     //needle group
-                                        const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
-                                        object.append(needleGroup);
+                                        if(needleURL != undefined){
+                                            const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
+                                            object.append(needleGroup);
                             
-                                        //needle
-                                            const needleWidth = radius/5;
-                                            const needleLength = radius;
-                                            const needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
-                                                needleGroup.append(needle);
+                                            //needle
+                                                const needleWidth = radius/5;
+                                                const needleLength = radius;
+                                                const needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
+                                                    needleGroup.append(needle);
+                                        }
                             
                                 //graphical adjust
                                     function set(a,update=true){
@@ -29420,8 +29290,8 @@
                                         if(update && object.onchange != undefined){object.onchange(a);}
                             
                                         value = a;
-                                        needleGroup.angle(startAngle + maxAngle*value);
-                                        handle.angle(startAngle + maxAngle*value);
+                                        if(needleURL != undefined){ needleGroup.angle(startAngle + maxAngle*value); }
+                                        if(handle != undefined){ handle.angle(startAngle + maxAngle*value); }
                                     }
                             
                                 //methods
@@ -29546,6 +29416,9 @@
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
+                                    };
+                                    object.nudge = function(amount){
+                                        set(value+amount);
                                     };
                             
                                 //interaction
@@ -29780,6 +29653,9 @@
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
                                     };
+                                    object.nudge = function(amount){
+                                        set(value+amount);
+                                    };
                             
                                 //interaction
                                     let acc = 0;
@@ -29892,6 +29768,9 @@
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
+                                    };
+                                    object.nudge = function(amount){
+                                        set(value+amount);
                                     };
                             
                                 //interaction
@@ -35769,7 +35648,7 @@
                             
                                                         const thisNode_point = object.getAttachmentPoint();
                                                         mousePoint.angle = _canvas_.library.math.getAngleOfTwoPoints(mousePoint,thisNode_point);
-                                                        liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle );
+                                                        liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle, false );
                                                     }else{
                                                         if(liveCable != undefined){
                                                             liveCable.parent.remove(liveCable);
@@ -35947,13 +35826,14 @@
                                         ); 
                                 }
                             };
-                            
                             this.cable2 = function(
                                 name='cable2', 
                                 x1=0, y1=0, x2=0, y2=0, a1=0, a2=0,
                                 dimStyle={r:1,g:0,b:0,a:1},
                                 glowStyle={r:1,g:0.39,b:0.39,a:1},
                             ){
+                            
+                                const push = 20;
                             
                                 //elements 
                                     //main
@@ -35965,7 +35845,7 @@
                                 //controls
                                     object.activate = function(){ pathShape.colour(glowStyle); };
                                     object.deactivate = function(){ pathShape.colour(dimStyle); };
-                                    object.draw = function(new_x1,new_y1,new_x2,new_y2,new_angle1,new_angle2){
+                                    object.draw = function(new_x1,new_y1,new_x2,new_y2,new_angle1,new_angle2,avoidUnits=true,generateVisibilityGraph=true){
                                         x1 = new_x1==undefined ? x1 : new_x1;
                                         y1 = new_y1==undefined ? y1 : new_y1;
                                         a1 = new_angle1==undefined ? a1 : new_angle1;
@@ -35973,59 +35853,91 @@
                                         y2 = new_y2==undefined ? y2 : new_y2;
                                         a2 = new_angle2==undefined ? a2 : new_angle2;
                             
-                                        const push = 20;
-                                        const path = [];
+                                        const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                                        const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                                        pathShape.points([
+                                            x1,y1,
+                                            x1+offset_1.x, y1+offset_1.y,
+                                            x2+offset_2.x, y2+offset_2.y,
+                                            x2,y2,
+                                        ]);
                             
-                                        //generate initial basic line 
-                                            path.push(x1,y1);
+                                        // //if we're not to avoid units, just calculate the simple line between the two points (with push of course)
+                                        //     if(!avoidUnits){
+                                        //         const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                                        //         const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                                        //         pathShape.points([
+                                        //             x1,y1,
+                                        //             x1+offset_1.x, y1+offset_1.y,
+                                        //             x2+offset_2.x, y2+offset_2.y,
+                                        //             x2,y2,
+                                        //         ]);
+                                        //         return;
+                                        //     }
                             
-                                            const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
-                                            path.push( x1+offset_1.x, y1+offset_1.y );
+                                        // //calculate route while avoiding units
+                                        //     let path = [];
+                                        //     function calculateRoute(startPoint,endPoint,environment){
+                                        //         //generate visibility graph
+                                        //             const path = [];
+                                        //             const startAndEndPoints = [ [startPoint], [endPoint] ].map(points => ({points:points, boundingBox:_canvas_.library.math.boundingBoxFromPoints(points)}) );
+                                        //             const field = startAndEndPoints.concat(environment);
+                                        //             const visibilityGraph = _canvas_.library.math.polygonsToVisibilityGraph( field );
                             
-                                            const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
-                                            path.push( x2+offset_2.x, y2+offset_2.y );
+                                        //         //determine shortest route from visibility graph
+                                        //             let generatedPath = _canvas_.library.math.shortestRouteFromVisibilityGraph(visibilityGraph, 0, 1);
+                                        //             if(generatedPath.length == 1){
+                                        //                 return generatedPath;
+                                        //             }
+                                        //             generatedPath.forEach(index => {
+                                        //                 const tmp = visibilityGraph[index];
+                                        //                 const point = field[tmp.polyIndex].points[tmp.pointIndex];
+                                        //                 path.push(point.x,point.y);
+                                        //             });
                             
-                                            path.push(x2,y2);
+                                        //         return path;
+                                        //     }
                             
-                                        // //go through each segment to improve the line, so that it does not collide with any unit
-                                        //     //gather together the relevant units 
-                                        //     var otherUnits = _canvas_.system.pane.getMiddlegroundPane(this).children().filter(a => !a._isCable).map(a => a.space);
+                                        //     //place initial point
+                                        //         path.push(x1,y1);
                             
-                                        //     //run though the cable to see what segments collide with units
-                                        //         for(var a = 0; a < path.length-2; a +=2){
-                                        //             //get cable segment
-                                        //             let segment = {x1:path[a],y1:path[a+1],x2:path[a+2],y2:path[a+3]};
-                            
-                                        //             //get the units this segment collides with
-                                        //             let collidingPolys = _canvas_.library.math.detectOverlap.overlappingLineWithPolygons(segment,otherUnits).map(a => otherUnits[a]);
+                                        //         if( _canvas_.system.pane.getMiddlegroundPane(this) == undefined ){ 
+                                        //             pathShape.points( [x1,y1,x2,y2] );
+                                        //             return;
                                         //         }
                             
+                                        //         const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                                        //         const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                                        //         const environment = _canvas_.system.pane.getMiddlegroundPane(this).getChildren().filter(a => !a._isCable).map(a => a.space);
+                                        //         const generatedPath = calculateRoute( {x:x1+offset_1.x, y:y1+offset_1.y}, {x:x2+offset_2.x, y:y2+offset_2.y}, environment );
+                                        //         if(generatedPath.length == 0){
+                                        //         }else if(generatedPath.length == 1){
+                                        //             if(generatedPath[0] == 0){
+                                        //                 const offset_2 = _canvas_.library.math.cartesianAngleAdjust(0,0,a2);
+                                        //             }
+                                        //             if(generatedPath[0] == 1){
+                                        //                 const offset_1 = _canvas_.library.math.cartesianAngleAdjust(0,0,a1);
+                                        //             }
+                                        //             if(generatedPath[0] != 0 && generatedPath[0] != 1){
+                                        //                 console.error('cable2.draw: major error: unknown path point in error');
+                                        //                 pathShape.points( [x1,y1,x2,y2] );
+                                        //                 return;
+                                        //             }
                             
+                                        //             const secondGeneratedPath = calculateRoute( {x:x1+offset_1.x, y:y1+offset_1.y}, {x:x2+offset_2.x, y:y2+offset_2.y}, environment );
+                                        //             if(secondGeneratedPath.length == 1){
+                                        //                 pathShape.points( [x1,y1,x2,y2] );
+                                        //                 return;
+                                        //             }
+                                        //             path = path.concat( secondGeneratedPath );
+                                        //         }else{
+                                        //             path = path.concat( generatedPath );
+                                        //         }
                             
+                                        //     //place final point
+                                        //         path.push(x2,y2);
                             
-                                            // for(var a = 0; a < path.length-2; a +=2){
-                                            //     let line = {x1:path[a],y1:path[a+1],x2:path[a+2],y2:path[a+3]}; //console.log(line);
-                                            //     let collidingPolys = _canvas_.library.math.detectOverlap.overlappingLineWithPolygons(line,otherUnits);
-                            
-                                            //     if(collidingPolys.length > 0){
-                                            //         collidingPolys.forEach(a => {
-                                            //             console.log(a,line);
-                                            //             otherUnits[a].points.forEach(point => {
-                            
-                                            //             });
-                                            //             // console.log(a,otherUnits[a].points);
-                                            //             console.log('');
-                            
-                            
-                            
-                                            //         });
-                                            //         path.splice(a+2,0,300,550);
-                                            //     }
-                                            // }
-                            
-                                        // console.log('');
-                                        // console.log(path);
-                                        pathShape.points(path);
+                                        //     pathShape.points(path);
                                     };
                                     object.draw();
                             
@@ -36033,6 +35945,11 @@
                                     object._isCable = true;
                             
                                 return object;
+                            };
+                            this.cable2.visibilityGraph = [];
+                            this.cable2.globalDraw = function(pane=_canvas_.system.pane.mm){
+                                // pane.getChildren().filter(a => a._isCable).forEach(cable => cable.draw());
+                                // pane.getChildren().filter(a => a._isCable).forEach(cable => cable.draw(undefined,undefined,undefined,undefined,undefined,undefined,undefined,false));
                             };
                         };
                     };
@@ -36888,7 +36805,7 @@
                 _canvas_.interface.go.__activate();
             } );
             _canvas_.control = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
                 const control = this;
             
                 const dev = {
@@ -38594,7 +38511,7 @@
                                                     unit.ioRedraw();
                                             }
                                         },
-                                        function(event){}
+                                        function(x,y,event){}
                                     );
                     
                                 return true;

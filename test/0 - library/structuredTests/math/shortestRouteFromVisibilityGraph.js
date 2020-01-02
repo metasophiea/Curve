@@ -1,4 +1,4 @@
-const point_a = {x:10,y:10};
+const point_a = {x:150,y:150};
 const point_b = {x:490,y:490};
 let field = [
     [point_a],

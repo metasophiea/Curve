@@ -142,13 +142,16 @@ this.unpackData = function(data){
 
     return data;
 };
-this.openFile = function(callback,readAsType='readAsBinaryString'){
+this.openFile = function(callback,readAsType='readAsBinaryString',fileType){
     dev.log.misc('.openFile(',callback,readAsType); //#development
     dev.count('.misc.openFile'); //#development
 
     const i = document.createElement('input');
     i.type = 'file';
-    i.accept = '.crv';
+    i.accept = fileType;
+    i.onload = function(){
+        console.log('onload');
+    };
     i.onchange = function(){
         dev.log.misc('.openFile::onchange()'); //#development
         const f = new FileReader();
@@ -158,7 +161,7 @@ this.openFile = function(callback,readAsType='readAsBinaryString'){
         }
         f.onloadend = function(){ 
             dev.log.misc('.openFile::onloadend()'); //#development
-            if(callback){callback(f.result);}
+            if(callback){callback(f.result,i.files[0]);}
         }
     };
 

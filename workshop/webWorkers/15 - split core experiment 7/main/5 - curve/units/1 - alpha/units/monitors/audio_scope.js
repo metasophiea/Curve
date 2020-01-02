@@ -106,5 +106,5 @@ this.audio_scope = function(name,x,y,angle){
 this.audio_scope.metadata = {
     name:'Audio Scope',
     category:'monitors',
-    helpURL:'/help/units/beta/audio_scope/'
+    helpURL:'/help/units/alpha/audio_scope/'
 };

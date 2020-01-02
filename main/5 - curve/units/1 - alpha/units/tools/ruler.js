@@ -123,5 +123,5 @@ this.ruler = function(name,x,y,angle){
 this.ruler.metadata = {
     name:'Ruler',
     category:'tools',
-    helpURL:'/help/units/beta/ruler/'
+    helpURL:'/help/units/alpha/ruler/'
 };

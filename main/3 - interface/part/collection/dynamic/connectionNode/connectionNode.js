@@ -214,7 +214,7 @@ this.connectionNode = function(
 
                             const thisNode_point = object.getAttachmentPoint();
                             mousePoint.angle = _canvas_.library.math.getAngleOfTwoPoints(mousePoint,thisNode_point);
-                            liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle );
+                            liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle, false );
                         }else{
                             dev.log.partDynamic('.connectionNode-onmousedown -> node found'); //#development
                             if(liveCable != undefined){

@@ -198,5 +198,5 @@ this.launchpad = function(name,x,y,angle){
 this.launchpad.metadata = {
     name:'Launchpad',
     category:'sequencers',
-    helpURL:'/help/units/beta/launchpad/'
+    helpURL:'/help/units/alpha/launchpad/'
 };

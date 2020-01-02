@@ -12,35 +12,46 @@ this.dial_continuous_image = function(
     dev.log.partControl('.dial_continuous_image(...)'); //#development
 
     //default to non-image version if image links are missing
-        if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
-            return this.dial_continuous(
+        if(handleURL == undefined && slotURL == undefined && needleURL == undefined){
+            return this.dial_1_continuous(
                 name, x, y, radius, angle, interactable, value, resetValue, startAngle, maxAngle,
                 undefined, undefined, undefined,
                 onchange, onrelease
             );
         }
 
+
+
     //elements 
         //main
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         
         //slot
-            const slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
-            object.append(slot);
+            if(slotURL != undefined){
+                const slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
+                object.append(slot);
+            }
 
         //handle
-            const handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+            let handle;
+            if(handleURL != undefined){
+                handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+            }else{
+                handle = interfacePart.builder('basic','circle','handle',{radius:radius, detail:50, colour:{r:0,g:0,b:0,a:0}});
+            }
             object.append(handle);
 
         //needle group
-            const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
-            object.append(needleGroup);
+            if(needleURL != undefined){
+                const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
+                object.append(needleGroup);
 
-            //needle
-                const needleWidth = radius/5;
-                const needleLength = radius;
-                const needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
-                    needleGroup.append(needle);
+                //needle
+                    const needleWidth = radius/5;
+                    const needleLength = radius;
+                    const needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
+                        needleGroup.append(needle);
+            }
 
     //graphical adjust
         function set(a,update=true){
@@ -50,8 +61,8 @@ this.dial_continuous_image = function(
             if(update && object.onchange != undefined){object.onchange(a);}
 
             value = a;
-            needleGroup.angle(startAngle + maxAngle*value);
-            handle.angle(startAngle + maxAngle*value);
+            if(needleURL != undefined){ needleGroup.angle(startAngle + maxAngle*value); }
+            if(handle != undefined){ handle.angle(startAngle + maxAngle*value); }
         }
 
     //methods

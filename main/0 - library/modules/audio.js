@@ -45,43 +45,33 @@
     this.loadAudioFile = function(callback,type='file',url=''){
         dev.log.audio('.loadAudioFile(',callback,type,url); //#development
         dev.count('.audio.loadAudioFile'); //#development
+
+        if(callback == undefined){
+            dev.log.audio('.loadAudioFile -> no callback provided; result has nowhere to go, so it will not be done'); //#development
+            return;
+        }
     
         switch(type){
             case 'url': 
-                const request = new XMLHttpRequest();
-                request.open('GET', url, true);
-                request.responseType = 'arraybuffer';
-                request.onload = function(){
-                    library.audio.context.decodeAudioData(this.response, function(data){
-                        callback({
-                            buffer:data,
-                            name:(url.split('/')).pop(),
-                            duration:data.duration,
+                library.misc.loadFileFromURL(
+                    url, 
+                    data => {
+                        library.audio.context.decodeAudioData(data, function(data){
+                            callback({ buffer:data, name:(url.split('/')).pop(), duration:data.duration });
                         });
-                    }, function(e){console.warn("Error with decoding audio data" + e.err);});
-                }
-                request.send();
+                    },
+                    'arraybuffer'
+                );
             break;
             case 'file': default:
-                const inputObject = document.createElement('input');
-                inputObject.type = 'file';
-                inputObject.onchange = function(){
-                    const file = this.files[0];
-                    const fileReader = new FileReader();
-                    fileReader.readAsArrayBuffer(file);
-                    fileReader.onload = function(data){
-                        library.audio.context.decodeAudioData(data.target.result, function(buffer){
-                            callback({
-                                buffer:buffer,
-                                name:file.name,
-                                duration:buffer.duration,
-                            });
+                library.misc.openFile(
+                    (data,file) => {
+                        library.audio.context.decodeAudioData(data, function(buffer){
+                            callback({ buffer:buffer, name:file.name, duration:buffer.duration });
                         });
-                        inputObject.remove();
-                    }
-                };
-                document.body.appendChild(inputObject);
-                inputObject.click();
+                    },
+                    'readAsArrayBuffer'
+                );
             break;
         }
     };

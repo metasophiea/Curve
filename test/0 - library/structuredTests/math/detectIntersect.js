@@ -75,6 +75,8 @@ console.log('%c- detectIntersect', 'font-weight: bold;');
                 {point:{x:5,y:5},                  poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},             result:'inside'},
                 {point:{x:420,y:410},              poly:{points:[{x:300,y:360},{x:300,y:410},{x:350,y:410},{x:350,y:360}]}, result:'outside'},
                 {point:{x:420,y:190},              poly:{points:[{x:300,y:360},{x:300,y:410},{x:350,y:410},{x:350,y:360}]}, result:'outside'},
+                {point:{x:75,y:20},                poly:{points:[{x:50,y:0},{x:100,y:50},{x:50,y:100},{x:0,y:50}]},         result:'outside'},
+                {point:{x:-380,y:-380},            poly:{points:[{x:0,y:0},{x:-400,y:0},{x:-400,y:-400},{x:0,y:-400}]},     result:'inside'},
             ];
             testingPairs.forEach(pair => {
                 tester( _canvas_.library.math.detectIntersect.pointWithinPoly( pair.point, pair.poly ), pair.result );

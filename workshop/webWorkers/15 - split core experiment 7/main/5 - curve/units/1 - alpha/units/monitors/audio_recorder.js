@@ -170,5 +170,5 @@ this.audio_recorder = function(name,x,y,angle){
 this.audio_recorder.metadata = {
     name:'Audio Recorder',
     category:'monitors',
-    helpURL:'/help/units/beta/audio_recorder/'
+    helpURL:'/help/units/alpha/audio_recorder/'
 };

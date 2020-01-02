@@ -33,6 +33,8 @@ this.glowbox_path = function(
 
 interfacePart.partLibrary.display.glowbox_path = function(name,data){ 
     return interfacePart.collection.display.glowbox_path(
-        name, data.x, data.y, data.points, data.angle, data.style.glow, data.style.dim
+        name, data.x, data.y, data.points, data.angle, 
+        data.looping, data.jointType, data.capType,
+        data.style.glow, data.style.dim
     );
 };

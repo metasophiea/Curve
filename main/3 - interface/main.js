@@ -1,5 +1,5 @@
 _canvas_.interface = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
     const interface = this;
 
     const dev = {

@@ -85,5 +85,5 @@ this.voltage_combiner = function(name,x,y,angle){
 this.voltage_combiner.metadata = {
     name:'Voltage Combiner',
     category:'misc',
-    helpURL:'/help/units/beta/voltage_combiner/'
+    helpURL:'/help/units/alpha/voltage_combiner/'
 };

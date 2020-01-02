@@ -57,30 +57,19 @@ this.detectIntersect = new function(){
         }
 
         function pointLevelWithPolyPointChecker(poly,point,a,b){
-            //only flip, if the point is not perfectly level with point a of the line (the system will come round to having this same point be point b)
-            //or if you can prove that the two adjacent points are higher and lower than the matching point's level
+            dev.log.math('.detectIntersect.pointWithinPoly::pointLevelWithPolyPointChecker(',poly,point,a,b); //#development
+            //only flip, if the point is not perfectly level with point a of the line 
+            //or if you can prove that the a's two adjacent points are higher and lower than the matching point's level
+            //(the system will come round to having this same point be point b)
             if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
                 return true;
-            }else if(poly.points[a].y != point.y){
+            }else if(poly.points[a].y == point.y){
                 dev.log.math('.detectIntersect.pointWithinPoly -> point is perfectly level with a point on the poly (line point a)'); //#development
                 const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
                 const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
                 if(
                     poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
                     poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
-                ){
-                    dev.log.math('.detectIntersect.pointWithinPoly -> all above or all below; no need for a flip'); //#development
-                }else{
-                    dev.log.math('.detectIntersect.pointWithinPoly -> crossing fround; time for a flip'); //#development
-                    return true;
-                }
-            }else if(poly.points[b].y != point.y){
-                dev.log.math('.detectIntersect.pointWithinPoly -> point is perfectly level with a point on the poly (line point b)'); //#development
-                const pointInFront = b+1 >= poly.points.length ? 0 : b+1;
-                const pointBehind = b-1 <= 0 ? poly.points.length-1 : b-1;
-                if(
-                    poly.points[pointBehind].y <= poly.points[b].y && poly.points[pointInFront].y <= poly.points[b].y ||
-                    poly.points[pointBehind].y >= poly.points[b].y && poly.points[pointInFront].y >= poly.points[b].y
                 ){
                     dev.log.math('.detectIntersect.pointWithinPoly -> all above or all below; no need for a flip'); //#development
                 }else{
@@ -95,7 +84,7 @@ this.detectIntersect = new function(){
         //Ray casting algorithm
         let inside = false;
         for(let a = 0, b = poly.points.length - 1; a < poly.points.length; b = a++){
-            dev.log.math('.detectIntersect.pointWithinPoly -> poly.points[a]:',poly.points[a],'poly.points[b]:',poly.points[b]); //#development
+            dev.log.math('.detectIntersect.pointWithinPoly -> point:',point,'poly.points[a]:',poly.points[a],'poly.points[b]:',poly.points[b]); //#development
 
             //point must be on the same level of the line
             if( (poly.points[b].y >= point.y && poly.points[a].y <= point.y) || (poly.points[a].y >= point.y && poly.points[b].y <= point.y) ){

@@ -29,6 +29,8 @@
     seem to play nicer in new version
 [2019-12-28:1] created units that have intervals, don't have those intervals deleted when the unit is; so, that processing work is still being done. The units just need to use the ondelete callback more
     added in some oncreate/ondelete callbacks to clear the intervals of both parts and units when they are deleted (log:2019-12-30)
+[2020-01-02:1] placing the ruler up to the left seems to reduce its clickable area
+    there was an issue with how group bounding boxes were being calculated in the engine (log:2020-01-02)
 
 [2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
 [2019-08-26:1] (?) connection nodes can work across panes (is it really an issue though?) 
@@ -37,3 +39,4 @@
 [2019-09-26:2] sometimes the camera panning gets stuck on
 [2019-10-06:1] sometimes the scene loader doesn't do anything
 [2019-10-19:3] sometimes the alt key gets stuck on (you can recreate it by pressing the key then clicking a different window in the OS)
+[2020-01-02:2] the audio file player can have its playback speed set to 0, or some very low value. The causes system slowdown when it's triggered alot in this state

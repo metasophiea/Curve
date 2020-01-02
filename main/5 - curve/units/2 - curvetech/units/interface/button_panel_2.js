@@ -82,5 +82,5 @@ this.button_panel_2 = function(name,x,y,angle){
 this.button_panel_2.metadata = {
     name:'Button Panel - Type B',
     category:'interface',
-    helpURL:'/help/units/beta/button_panel_2/'
+    helpURL:'/help/units/curvetech/button_panel_2/'
 };

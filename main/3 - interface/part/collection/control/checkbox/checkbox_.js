@@ -31,6 +31,9 @@ this.checkbox_ = function(
     
             if(update && this.onchange){ this.onchange(value); }
         };
+        object.toggle = function(){
+            object.set(!object.get());
+        };
         object.light = function(a){
             if(a == undefined){ return state.glowing; }
 

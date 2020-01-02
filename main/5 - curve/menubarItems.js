@@ -140,8 +140,8 @@ _canvas_.control.go.add( function(){
                 breakHeight: 0.5,
                 spaceHeight: 1,
                 itemList:[
-                    { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
-                    { type:'checkbox', text:'dark mode', 
+                    { type:'checkbox', text:'Snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
+                    { type:'checkbox', text:'Dark Mode', 
                         updateFunction:function(){return _canvas_.control.gui.style.currentStyleMode == 'dark';}, 
                         onclickFunction:function(val){
                             if(val){ _canvas_.control.gui.style.darkMode(); }
@@ -183,11 +183,17 @@ _canvas_.control.go.add( function(){
                     spaceHeight: 1,
                     itemList:[
                         {type:'button', text_left:'Release All Keyboard Keys', function:function(){ _canvas_.system.keyboard.releaseAll(); } },
+                        {type:'checkbox', text_left:'Limit Frame Rate (30fps)', 
+                            updateFunction:_canvas_.core.render.activeLimitToFrameRate, 
+                            onclickFunction:function(val){_canvas_.core.render.activeLimitToFrameRate(val);}
+                        },
                         {type:'break'}
                     ].concat(
                         _canvas_.layers.getVersionInformation().map(item => {
                             if(item.name[0] == '_'){ item.name = item.name.substr(1); }
-                            return {name:item.name,date:item.data.lastDateModified.y+'/'+item.data.lastDateModified.m+'/'+item.data.lastDateModified.d}
+                            return {
+                                name:item.name,date:item.data.lastDateModified.y+'/'+_canvas_.library.misc.padString(item.data.lastDateModified.m,2,'0')+'/'+_canvas_.library.misc.padString(item.data.lastDateModified.d,2,'0')
+                            }
                         } ).map( item => ({type:'text', text_left:item.name, text_centre:'-', text_right:item.date})
                         ).reverse()
                     )

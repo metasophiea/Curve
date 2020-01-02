@@ -71,5 +71,5 @@ this.REP = function(name,x,y,angle){
 this.REP.metadata = {
     name:'REP',
     category:'logic_gates',
-    helpURL:'/help/units/beta/REP/'
+    helpURL:'/help/units/curvetech/REP/'
 };

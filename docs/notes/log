@@ -1,4 +1,48 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-01-02
+  CoreV3
+    - seems Harbinger have opened a shop in town, currently they're only selling
+      the MRD-16 (Mini Rhythm Designer) which is a pretty nifty sequencer
+    - added 'nudge' method to the discrete dials
+    - added 'toggle' method to the checkboxes
+    - fixed bug with core_engine's group element, where the
+      'calculateExtremitiesBox' function wasn't calculating the limits
+      correctly. Simply, the collection of if statements were not set up
+      correctly (there was if-elseif where there shouldn't have been) Along the
+      way I noticed some unnecessary 'boundingBoxFromPoints' work being done,
+      so that's been removed too
+
+
+2020-01-01
+  CoreV3
+    - core.render.activeLimitToFrameRate didn't have the cached values
+      implemented. However, that has changed now
+    - added a "Limit Frame Rate" option to the Dev menubar panel
+    - improved the date strings in the Dev menubar panel, so that they can
+      handle days and months with single digits (automatically adding the
+      leading zeros)
+    - fixed issue with detectIntersect.pointOnPoly (same issue as last time in
+      fact, seems when a point is perfectly level with a point of the poly
+      things get confusing...I'd messed up the solution to this by making it
+      judge each point twice, thus flips would occur twice)
+    - updated fitPolyIn to use detectIntersect instead of detectOverlap,
+      along with other sections that were still using detectOverlap
+    - updated shortestRouteFromVisibilityGraph to return an empty route when one
+      can't be found
+    - commented out all of detectOverlap (I really should just dump it)
+    - made initial attempts to bring in the cable routing code. So far, it works
+      but feels messy. The system must calculate the visibilityGraph every time
+      for each cable draw
+    - ...processing is pretty heavy, so I've disabled cable routing for now
+    - fixed issue with audio_file_player unit where if you pressed the 'load
+      file' button, but then canceled out of the file chooser; the unit would
+      be unable to play the previously loaded audio. Seems the load process in
+      the circuitry set the 'is file loaded' flag to false before attempting the
+      file load. I've fixed this by only setting that flag when the file has been
+      loaded and is to be processed into the circuitry
+    - did some new artwork for a new unit
+
+
 2019-12-30
   CoreV3
     - adding in oncreate and ondelete callbacks to the unit and parts, mainly so

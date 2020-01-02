@@ -58,5 +58,5 @@ this.signal_readout = function(name,x,y,angle){
 this.signal_readout.metadata = {
     name:'Signal Readout',
     category:'monitors',
-    helpURL:'/help/units/beta/signal_readout/'
+    helpURL:'/help/units/alpha/signal_readout/'
 };

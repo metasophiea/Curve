@@ -15,8 +15,8 @@ _canvas_.curve.go.add( function(){
     //     console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
     // },1000);
 
-    _canvas_.core.render.activeLimitToFrameRate(true);
-    _canvas_.core.render.frameRateLimit(25);
+    // _canvas_.core.render.activeLimitToFrameRate(true);
+    // _canvas_.core.render.frameRateLimit(25);
 
 
 

@@ -114,5 +114,5 @@ this.multiplexer_2 = function(name,x,y,angle){
 this.multiplexer_2.metadata = {
     name:'Multiplexer - Type A',
     category:'devices',
-    helpURL:'/help/units/beta/multiplexer_2/'
+    helpURL:'/help/units/curvetech/multiplexer_2/'
 };

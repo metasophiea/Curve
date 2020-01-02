@@ -173,7 +173,7 @@ this.functionList.onmousedown.push(
                                 unit.ioRedraw();
                         }
                     },
-                    function(event){}
+                    function(x,y,event){}
                 );
 
             return true;

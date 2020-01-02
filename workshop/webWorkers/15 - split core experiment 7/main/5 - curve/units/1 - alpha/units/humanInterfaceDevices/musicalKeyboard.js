@@ -200,5 +200,5 @@ this.musicalKeyboard = function(name,x,y,angle){
 this.musicalKeyboard.metadata = {
     name:'Musical Keyboard',
     category:'humanInterfaceDevices',
-    helpURL:'/help/units/beta/musicalKeyboard/'
+    helpURL:'/help/units/alpha/musicalKeyboard/'
 };

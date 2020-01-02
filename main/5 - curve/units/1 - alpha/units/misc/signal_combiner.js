@@ -59,5 +59,5 @@ this.signal_combiner= function(name,x,y,angle){
 this.signal_combiner.metadata = {
     name:'Signal Combiner',
     category:'misc',
-    helpURL:'/help/units/beta/signal_combiner/'
+    helpURL:'/help/units/alpha/signal_combiner/'
 };

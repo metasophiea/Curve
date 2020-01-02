@@ -79,5 +79,5 @@ this.NOR = function(name,x,y,angle){
 this.NOR.metadata = {
     name:'NOR',
     category:'logic_gates',
-    helpURL:'/help/units/beta/NOR/'
+    helpURL:'/help/units/curvetech/NOR/'
 };

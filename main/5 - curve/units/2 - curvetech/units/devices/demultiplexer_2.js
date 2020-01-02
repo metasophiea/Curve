@@ -120,5 +120,5 @@ this.demultiplexer_2 = function(name,x,y,angle){
 this.demultiplexer_2.metadata = {
     name:'Demultiplexer - Type A',
     category:'devices',
-    helpURL:'/help/units/beta/demultiplexer_2/'
+    helpURL:'/help/units/curvetech/demultiplexer_2/'
 };

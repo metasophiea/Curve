@@ -248,5 +248,5 @@ this.eightStepSequencer = function(name,x,y,angle){
 this.eightStepSequencer.metadata = {
     name:'Eight Step Sequencer',
     category:'sequencers',
-    helpURL:'/help/units/beta/eightStepSequencer/'
+    helpURL:'/help/units/alpha/eightStepSequencer/'
 };

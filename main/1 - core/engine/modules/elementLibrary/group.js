@@ -180,13 +180,13 @@ this.group = function(_id,_name){
                     if( children[a].ignored() ){ continue; }
 
                 //if the point is not within this child's bounding box, just move on to the next one
-                    if( !library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, children[a].extremities.boundingBox ) ){ continue; }
+                    if( !library.math.detectIntersect.pointWithinBoundingBox( {x:x,y:y}, children[a].extremities.boundingBox ) ){ continue; }
 
                 //if the child is a group type; pass this point to it's "getElementsUnderPoint" function and collect the results, then move on to the next item
                     if( children[a].getType() == 'group' ){ returnList = returnList.concat( children[a].getElementsUnderPoint(x,y) ); continue; }
 
                 //if this point exists within the child; add it to the results list
-                    if( library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, children[a].extremities.points ) ){ returnList = returnList.concat( children[a] ); }
+                    if( library.math.detectIntersect.pointWithinPoly( {x:x,y:y}, {points:children[a].extremities.points} ) != 'outside' ){ returnList = returnList.concat( children[a] ); }
             }
 
             return returnList;
@@ -202,13 +202,13 @@ this.group = function(_id,_name){
                     if( children[a].ignored() ){ continue; }
 
                 //if the area does not overlap with this child's bounding box, just move on to the next one
-                    if( !library.math.detectOverlap.boundingBoxes( library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){ continue; }
+                    if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){ continue; }
 
                 //if the child is a group type; pass this area to it's "getElementsUnderArea" function and collect the results, then move on to the next item
                     if( children[a].getType() == 'group' ){ returnList = returnList.concat( item.getElementUnderArea(points) ); continue; }
 
                 //if this area overlaps with the child; add it to the results list
-                    if( library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){ returnList = returnList.concat( children[a] ); }
+                    if( library.math.detectIntersect.polyOnPoly({points:points}, {points:item.extremities.points}) ){ returnList = returnList.concat( children[a] ); }
             }
 
             return returnList;
@@ -250,17 +250,17 @@ this.group = function(_id,_name){
                 limits = {left:x,right:x,top:y,bottom:y};
             }else{
                 dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> children.length: '+children.length); //#development
-                const firstChild = library.math.boundingBoxFromPoints(children[0].extremities.points);
+                const firstChild = children[0].extremities.boundingBox;
                 dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> firstChild:',firstChild); //#development
                 limits = { left:firstChild.topLeft.x, right:firstChild.bottomRight.x, top:firstChild.bottomRight.y, bottom:firstChild.topLeft.y }
 
                 children.slice(1).forEach(child => {
-                    const tmp = library.math.boundingBoxFromPoints(child.extremities.points);
+                    const tmp = child.extremities.boundingBox;
                     dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> child:',tmp); //#development
                     if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
-                    else if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
+                    if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
                     if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
-                    else if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
+                    if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
                 });
             }
 
@@ -470,7 +470,7 @@ this.group = function(_id,_name){
                 children.forEach(function(a){
                     dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> '+JSON.stringify(clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox())+' / '+JSON.stringify(a.extremities.boundingBox)); //#development
                     if(
-                        library.math.detectOverlap.boundingBoxes(
+                        library.math.detectIntersect.boundingBoxes(
                             clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox(),
                             a.extremities.boundingBox
                         )

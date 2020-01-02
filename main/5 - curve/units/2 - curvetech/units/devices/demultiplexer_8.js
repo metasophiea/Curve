@@ -144,5 +144,5 @@ this.demultiplexer_8 = function(name,x,y,angle){
 this.demultiplexer_8.metadata = {
     name:'Demultiplexer - Type C',
     category:'devices',
-    helpURL:'/help/units/beta/demultiplexer_8/'
+    helpURL:'/help/units/curvetech/demultiplexer_8/'
 };

@@ -76,5 +76,5 @@ this.DUP = function(name,x,y,angle){
 this.DUP.metadata = {
     name:'DUP',
     category:'logic_gates',
-    helpURL:'/help/units/beta/DUP/'
+    helpURL:'/help/units/curvetech/DUP/'
 };

@@ -73,7 +73,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:1} };
                 const library = this;
                 
                 const dev = {
@@ -588,7 +588,6 @@
                             {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
                         ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
                     }
-                    
                     this.detectIntersect = new function(){
                         this.boundingBoxes = function(box_a, box_b){
                             dev.log.math('.detectIntersect.boundingBoxes(',box_a,box_b); //#development
@@ -648,30 +647,19 @@
                             }
                     
                             function pointLevelWithPolyPointChecker(poly,point,a,b){
-                                //only flip, if the point is not perfectly level with point a of the line (the system will come round to having this same point be point b)
-                                //or if you can prove that the two adjacent points are higher and lower than the matching point's level
+                                dev.log.math('.detectIntersect.pointWithinPoly::pointLevelWithPolyPointChecker(',poly,point,a,b); //#development
+                                //only flip, if the point is not perfectly level with point a of the line 
+                                //or if you can prove that the a's two adjacent points are higher and lower than the matching point's level
+                                //(the system will come round to having this same point be point b)
                                 if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
                                     return true;
-                                }else if(poly.points[a].y != point.y){
+                                }else if(poly.points[a].y == point.y){
                                     dev.log.math('.detectIntersect.pointWithinPoly -> point is perfectly level with a point on the poly (line point a)'); //#development
                                     const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
                                     const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
                                     if(
                                         poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
                                         poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
-                                    ){
-                                        dev.log.math('.detectIntersect.pointWithinPoly -> all above or all below; no need for a flip'); //#development
-                                    }else{
-                                        dev.log.math('.detectIntersect.pointWithinPoly -> crossing fround; time for a flip'); //#development
-                                        return true;
-                                    }
-                                }else if(poly.points[b].y != point.y){
-                                    dev.log.math('.detectIntersect.pointWithinPoly -> point is perfectly level with a point on the poly (line point b)'); //#development
-                                    const pointInFront = b+1 >= poly.points.length ? 0 : b+1;
-                                    const pointBehind = b-1 <= 0 ? poly.points.length-1 : b-1;
-                                    if(
-                                        poly.points[pointBehind].y <= poly.points[b].y && poly.points[pointInFront].y <= poly.points[b].y ||
-                                        poly.points[pointBehind].y >= poly.points[b].y && poly.points[pointInFront].y >= poly.points[b].y
                                     ){
                                         dev.log.math('.detectIntersect.pointWithinPoly -> all above or all below; no need for a flip'); //#development
                                     }else{
@@ -686,7 +674,7 @@
                             //Ray casting algorithm
                             let inside = false;
                             for(let a = 0, b = poly.points.length - 1; a < poly.points.length; b = a++){
-                                dev.log.math('.detectIntersect.pointWithinPoly -> poly.points[a]:',poly.points[a],'poly.points[b]:',poly.points[b]); //#development
+                                dev.log.math('.detectIntersect.pointWithinPoly -> point:',point,'poly.points[a]:',poly.points[a],'poly.points[b]:',poly.points[b]); //#development
                     
                                 //point must be on the same level of the line
                                 if( (poly.points[b].y >= point.y && poly.points[a].y <= point.y) || (poly.points[a].y >= point.y && poly.points[b].y <= point.y) ){
@@ -921,179 +909,6 @@
                             return results;
                         };
                     };
-                    this.detectOverlap = new function(){
-                        const detectOverlap = this;
-                    
-                        this.boundingBoxes = function(a, b){
-                            dev.log.math('.detectOverlap.boundingBoxes(',a,b); //#development
-                            dev.count('.math.detectOverlap.boundingBoxes'); //#development
-                    
-                            return a.bottomRight.y >= b.topLeft.y && 
-                                a.bottomRight.x >= b.topLeft.x && 
-                                a.topLeft.y <= b.bottomRight.y && 
-                                a.topLeft.x <= b.bottomRight.x;
-                        };
-                        this.pointWithinBoundingBox = function(point,box){
-                            dev.log.math('.detectOverlap.pointWithinBoundingBox(',point,box); //#development
-                            dev.count('.math.detectOverlap.pointWithinBoundingBox'); //#development
-                    
-                            return !(
-                                point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
-                                point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
-                            );
-                        };
-                        this.pointWithinPoly = function(point,points){
-                            dev.log.math('.detectOverlap.pointWithinPoly(',point,points); //#development
-                            dev.count('.math.detectOverlap.pointWithinPoly'); //#development
-                    
-                            //Ray casting algorithm
-                            let inside = false;
-                            for(let a = 0, b = points.length - 1; a < points.length; b = a++){
-                                //if the point is on a point of the poly; bail and return true
-                                if( point.x == points[a].x && point.y == points[a].y ){ return true; }
-                    
-                                //point must be on the same level of the line
-                                if( (points[b].y >= point.y && points[a].y <= point.y) || (points[a].y >= point.y && points[b].y <= point.y) ){
-                                    //discover if the point is on the far right of the line
-                                    if( points[a].x < point.x && points[b].x < point.x ){
-                                        inside = !inside;
-                                    }else{
-                                        //calculate what side of the line this point is
-                                            let areaLocation;
-                                            if( points[b].y > points[a].y && points[b].x > points[a].x ){
-                                                areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
-                                            }else if( points[b].y <= points[a].y && points[b].x <= points[a].x ){
-                                                areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
-                                            }else if( points[b].y > points[a].y && points[b].x < points[a].x ){
-                                                areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
-                                            }else if( points[b].y <= points[a].y && points[b].x >= points[a].x ){
-                                                areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
-                                            }
-                    
-                                        //if its on the line, return true immediatly, if it's just above 1 do a flip
-                                            if( areaLocation == 1 ){
-                                                return true;
-                                            }else if(areaLocation > 1){
-                                                inside = !inside;
-                                            }
-                                    }
-                                }
-                            }
-                            return inside;
-                        };
-                        this.lineSegments = function(segment1, segment2){
-                            dev.log.math('.detectOverlap.lineSegments(',segment1,segment2); //#development
-                            dev.count('.math.detectOverlap.lineSegments'); //#development
-                    
-                            const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                            if(denominator == 0){return null;}
-                    
-                            const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                            const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                            return {
-                                'x':      (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
-                                'y':      (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
-                                'inSeg1': (u1 >= 0 && u1 <= 1),
-                                'inSeg2': (u2 >= 0 && u2 <= 1)
-                            };
-                        };
-                        this.overlappingPolygons = function(points_a,points_b){
-                            dev.log.math('.detectOverlap.overlappingPolygons(',points_a,points_b); //#development
-                            dev.count('.math.detectOverlap.overlappingPolygons'); //#development
-                    
-                            //a point from A is in B
-                                for(let a = 0; a < points_a.length; a++){
-                                    if(detectOverlap.pointWithinPoly(points_a[a],points_b)){ return true; }
-                                }
-                    
-                            //a point from B is in A
-                                for(let a = 0; a < points_b.length; a++){
-                                    if(detectOverlap.pointWithinPoly(points_b[a],points_a)){ return true; }
-                                }
-                    
-                            //side intersection
-                                const a_indexing = Array.apply(null, {length: points_a.length}).map(Number.call, Number).concat([0]);
-                                const b_indexing = Array.apply(null, {length: points_b.length}).map(Number.call, Number).concat([0]);
-                    
-                                for(let a = 0; a < a_indexing.length-1; a++){
-                                    for(let b = 0; b < b_indexing.length-1; b++){
-                                        const tmp = detectOverlap.lineSegments( 
-                                            [ points_a[a_indexing[a]], points_a[a_indexing[a+1]] ],
-                                            [ points_b[b_indexing[b]], points_b[b_indexing[b+1]] ]
-                                        );
-                                        if( tmp != null && tmp.inSeg1 && tmp.inSeg2 ){return true;}
-                                    }
-                                }
-                    
-                            return false;
-                        };
-                        this.overlappingPolygonWithPolygons = function(poly,polys){ 
-                            dev.log.math('.detectOverlap.overlappingPolygonWithPolygons(',poly,polys); //#development
-                            dev.count('.math.detectOverlap.overlappingPolygonWithPolygons'); //#development
-                    
-                            for(let a = 0; a < polys.length; a++){
-                                if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
-                                    if(detectOverlap.overlappingPolygons(poly.points, polys[a].points)){
-                                        return true;
-                                    }
-                                }
-                            }
-                            return false;
-                        };
-                    
-                        function overlappingLineWithPolygon(line,poly){
-                            dev.log.math('.detectOverlap::overlappingLineWithPolygon(',line,poly); //#development
-                            dev.count('.math.detectOverlap::overlappingLineWithPolygon'); //#development
-                    
-                            //go through every side of the poly, and if one of them collides with the line, return true
-                            for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
-                                const tmp = library.math.detectOverlap.lineSegments(
-                                    [
-                                        { x:line.x1, y:line.y1 },
-                                        { x:line.x2, y:line.y2 }
-                                    ],
-                                    [
-                                        { x:poly.points[a].x, y:poly.points[a].y },
-                                        { x:poly.points[b].x, y:poly.points[b].y }
-                                    ],
-                                );
-                                if(tmp != null && tmp.inSeg1 && tmp.inSeg2){ return true; }
-                            }
-                    
-                            return false;
-                        };
-                        this.overlappingLineWithPolygons = function(line,polys){
-                            dev.log.math('.detectOverlap.overlappingLineWithPolygons(',line,polys); //#development
-                            dev.count('.math.detectOverlap.overlappingLineWithPolygons'); //#development
-                    
-                            //generate a bounding box for the line
-                                const line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
-                                if(line.x1 > line.x2){
-                                    line_boundingBox.topLeft.x = line.x2;
-                                    line_boundingBox.bottomRight.x = line.x1;
-                                }else{
-                                    line_boundingBox.topLeft.x = line.x1;
-                                    line_boundingBox.bottomRight.x = line.x2;
-                                }
-                                if(line.y1 > line.y2){
-                                    line_boundingBox.topLeft.y = line.y2;
-                                    line_boundingBox.bottomRight.y = line.y1;
-                                }else{
-                                    line_boundingBox.topLeft.y = line.y1;
-                                    line_boundingBox.bottomRight.y = line.y2;
-                                }
-                    
-                            //gather the indexes of the polys that collide with this line
-                                const collidingPolyIndexes = [];
-                                polys.forEach((poly,index) => {
-                                    if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
-                                    if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
-                                });
-                    
-                            return collidingPolyIndexes;
-                        };
-                    };
-                    
                     this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
                         dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
                         dev.count('.math.pathExtrapolation'); //#development
@@ -1375,6 +1190,14 @@
                             newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
                             return newPolygon;
                         };
+                        function polyOnPolys(polygon,environmentPolys){
+                            for(let a = 0; a < environmentPolys.length; a++){
+                                if(library.math.detectIntersect.polyOnPoly(polygon,environmentPolys[a]).intersect){
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
                     
                         
                     
@@ -1406,7 +1229,7 @@
                                                 if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                             
                                             //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
-                                                if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                                if(!polyOnPolys(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                                     successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
                                                 }
                                         }
@@ -1444,7 +1267,7 @@
                                                     if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                                             
                                                 //if offsetting the shape in this way results in no collision; save this offset in 'tmp_successfulOffsets'
-                                                    if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                                    if(!polyOnPolys(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                                         tmp_successfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                                         provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                                     }
@@ -1483,7 +1306,7 @@
                     
                                         //can you make a x movement? you can? then do it
                                             if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
-                                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
+                                            if(!polyOnPolys(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
                                                 max.x = midpoint.x; //too far
                                             }else{ 
                                                 min.x = midpoint.x; //too close
@@ -1491,7 +1314,7 @@
                     
                                         //can you make a y movement? you can? then do it
                                             if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
-                                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
+                                            if(!polyOnPolys(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
                                                 max.y = midpoint.y; //too far
                                             }else{
                                                 min.y = midpoint.y; //too close
@@ -1576,6 +1399,18 @@
                     this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
                         dev.log.math('.shortestRouteFromVisibilityGraph(',visibilityGraph,start,end); //#development
                     
+                        //if the starting location or ending location are totally inaccessible, bail on this whole thing
+                        //though return the point (if any) that was ok
+                            if( visibilityGraph[start].destination.length == 0 && visibilityGraph[end].destination.length == 0 ){
+                                return [];
+                            }
+                            if( visibilityGraph[start].destination.length == 0 ){
+                                return [end];
+                            }
+                            if( visibilityGraph[end].destination.length == 0 ){ 
+                                return [start];
+                            }
+                    
                         //set the 'current' location as the start
                             let current = start;
                     
@@ -1591,10 +1426,16 @@
                         //(don't forget to set the current location's distance to zero)
                             const locationSet = Object.keys(visibilityGraph).map( () => ({ distance:Infinity, visited:false, route:'' }) );
                             locationSet[current].distance = 0;
-                            dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#development
+                            dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#developments
                     
                         //loop through locations, until the end location has been visited
+                            let limit = 100;
                             do{
+                                if(limit <= 0){console.error('.shortestRouteFromVisibilityGraph has encountered an overflow'); break;}
+                                limit--;
+                    
+                                dev.log.math('.shortestRouteFromVisibilityGraph -> current:',current); //#development
+                    
                                 //update unvisited distance values
                                     for(let a = 0; a < visibilityGraph[current].destination.length; a++){
                                         if( locationSet[visibilityGraph[current].destination[a].index].visited ){
@@ -1950,248 +1791,6 @@
                         };
                     };
                 };
-                this.audio = new function(){
-                    //master context
-                        this.context = new (window.AudioContext || window.webkitAudioContext)();
-                    
-                        
-                    
-                    
-                        
-                    //utility functions
-                        this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
-                            dev.log.audio('.changeAudioParam(',context,audioParam,target,time,curve,cancelScheduledValues); //#development
-                            dev.count('.audio.changeAudioParam'); //#development
-                        
-                            if(target==null){return audioParam.value;}
-                        
-                            if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
-                        
-                            try{
-                                switch(curve){
-                                    case 'linear': 
-                                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
-                                    break;
-                                    case 'exponential':
-                                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
-                                        if(target == 0){target = 1/10000;}
-                                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
-                                    break;
-                                    case 's':
-                                        const mux = target - audioParam.value;
-                                        const array = library.math.curveGenerator.s(10);
-                                        for(let a = 0; a < array.length; a++){
-                                            array[a] = audioParam.value + array[a]*mux;
-                                        }
-                                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
-                                    break;
-                                    case 'instant': default:
-                                        audioParam.setTargetAtTime(target, context.currentTime, 0.01);
-                                    break;
-                                }
-                            }catch(e){
-                                console.log('could not change param (possibly due to an overlap, or bad target value)');
-                                console.log('audioParam:',audioParam,'target:',target,'time:',time,'curve:',curve,'cancelScheduledValues:',cancelScheduledValues);
-                                console.log(e);
-                            }
-                        };
-                        this.loadAudioFile = function(callback,type='file',url=''){
-                            dev.log.audio('.loadAudioFile(',callback,type,url); //#development
-                            dev.count('.audio.loadAudioFile'); //#development
-                        
-                            switch(type){
-                                case 'url': 
-                                    const request = new XMLHttpRequest();
-                                    request.open('GET', url, true);
-                                    request.responseType = 'arraybuffer';
-                                    request.onload = function(){
-                                        library.audio.context.decodeAudioData(this.response, function(data){
-                                            callback({
-                                                buffer:data,
-                                                name:(url.split('/')).pop(),
-                                                duration:data.duration,
-                                            });
-                                        }, function(e){console.warn("Error with decoding audio data" + e.err);});
-                                    }
-                                    request.send();
-                                break;
-                                case 'file': default:
-                                    const inputObject = document.createElement('input');
-                                    inputObject.type = 'file';
-                                    inputObject.onchange = function(){
-                                        const file = this.files[0];
-                                        const fileReader = new FileReader();
-                                        fileReader.readAsArrayBuffer(file);
-                                        fileReader.onload = function(data){
-                                            library.audio.context.decodeAudioData(data.target.result, function(buffer){
-                                                callback({
-                                                    buffer:buffer,
-                                                    name:file.name,
-                                                    duration:buffer.duration,
-                                                });
-                                            });
-                                            inputObject.remove();
-                                        }
-                                    };
-                                    document.body.appendChild(inputObject);
-                                    inputObject.click();
-                                break;
-                            }
-                        };
-                        this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
-                            dev.log.audio('.waveformSegment(',audioBuffer,bounds,resolution); //#development
-                            dev.count('.audio.waveformSegment'); //#development
-                        
-                            const waveform = audioBuffer.getChannelData(0);
-                            // const channelCount = audioBuffer.numberOfChannels;
-                        
-                            bounds.start = bounds.start ? bounds.start : 0;
-                            bounds.end = bounds.end ? bounds.end : 1;
-                            const start = audioBuffer.length*bounds.start;
-                            const end = audioBuffer.length*bounds.end;
-                            const step = (end - start)/resolution;
-                        
-                            const outputArray = [];
-                            for(let a = start; a < end; a+=Math.round(step)){
-                                outputArray.push( 
-                                    library.math.largestValueFound(
-                                        waveform.slice(a, a+Math.round(step))
-                                    )
-                                );
-                            }
-                        
-                            return outputArray;
-                        };
-                        this.loadBuffer = function(context, data, destination, onended){
-                            dev.log.audio('.loadBuffer(',context,data,destination,onended); //#development
-                            dev.count('.audio.loadBuffer'); //#development
-                        
-                            const temp = context.createBufferSource();
-                            temp.buffer = data;
-                            temp.connect(destination);
-                            temp.onended = onended;
-                            return temp;
-                        };
-                        
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    //destination
-                        this.destination = this.context.createGain();
-                        this.destination.connect(this.context.destination);
-                        this.destination._gain = 1;
-                        this.destination.masterGain = function(value){
-                            dev.log.audio('.masterGain(',value); //#development
-                            dev.count('.audio.masterGain'); //#development
-                        
-                            if(value == undefined){return this.destination._gain;}
-                            this._gain = value;
-                            library.audio.changeAudioParam(library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
-                        };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    //conversion
-                        //frequencies index
-                            this.names_frequencies_split = {
-                                0:{ 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87  },
-                                1:{ 'C':32.70, 'C#':34.65, 'D':36.71, 'D#':38.89, 'E':41.20, 'F':43.65, 'F#':46.25, 'G':49.00, 'G#':51.91, 'A':55.00, 'A#':58.27, 'B':61.74, },    
-                                2:{ 'C':65.41, 'C#':69.30, 'D':73.42, 'D#':77.78, 'E':82.41, 'F':87.31, 'F#':92.50, 'G':98.00, 'G#':103.8, 'A':110.0, 'A#':116.5, 'B':123.5, },
-                                3:{ 'C':130.8, 'C#':138.6, 'D':146.8, 'D#':155.6, 'E':164.8, 'F':174.6, 'F#':185.0, 'G':196.0, 'G#':207.7, 'A':220.0, 'A#':233.1, 'B':246.9, },    
-                                4:{ 'C':261.6, 'C#':277.2, 'D':293.7, 'D#':311.1, 'E':329.6, 'F':349.2, 'F#':370.0, 'G':392.0, 'G#':415.3, 'A':440.0, 'A#':466.2, 'B':493.9, },
-                                5:{ 'C':523.3, 'C#':554.4, 'D':587.3, 'D#':622.3, 'E':659.3, 'F':698.5, 'F#':740.0, 'G':784.0, 'G#':830.6, 'A':880.0, 'A#':932.3, 'B':987.8, },    
-                                6:{ 'C':1047,  'C#':1109,  'D':1175,  'D#':1245,  'E':1319,  'F':1397,  'F#':1480,  'G':1568,  'G#':1661,  'A':1760,  'A#':1865,  'B':1976,  },
-                                7:{ 'C':2093,  'C#':2217,  'D':2349,  'D#':2489,  'E':2637,  'F':2794,  'F#':2960,  'G':3136,  'G#':3322,  'A':3520,  'A#':3729,  'B':3951,  },    
-                                8:{ 'C':4186,  'C#':4435,  'D':4699,  'D#':4978,  'E':5274,  'F':5588,  'F#':5920,  'G':6272,  'G#':6645,  'A':7040,  'A#':7459,  'B':7902   }, 
-                            };
-                            //generate forward index
-                            // eg. {... '4C':261.6, '4C#':277.2 ...}
-                                this.names_frequencies = {};
-                                Object.entries(this.names_frequencies_split).forEach((octave,index) => {
-                                    Object.entries(this.names_frequencies_split[index]).forEach(name => {
-                                        this.names_frequencies[ octave[0]+name[0] ] = name[1];
-                                    });
-                                });
-                    
-                            //generate backward index
-                            // eg. {... 261.6:'4C', 277.2:'4C#' ...}
-                                this.frequencies_names = {};
-                                Object.entries(this.names_frequencies).forEach(entry => {
-                                    this.frequencies_names[entry[1]] = entry[0];
-                                });
-                    
-                        //generate midi notes index
-                            const noteNames = [
-                                '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
-                                '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
-                                '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
-                                '3C', '3C#', '3D', '3D#', '3E', '3F', '3F#', '3G', '3G#', '3A', '3A#', '3B',
-                                '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B',
-                                '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B',
-                                '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B',
-                                '7C', '7C#', '7D', '7D#', '7E', '7F', '7F#', '7G', '7G#', '7A', '7A#', '7B',
-                                '8C', '8C#', '8D', '8D#', '8E', '8F', '8F#', '8G', '8G#', '8A', '8A#', '8B',
-                            ];
-                            //generate forward index
-                                this.midinumbers_names = {};
-                                noteNames.forEach((entry,index) => {
-                                    this.midinumbers_names[index+24] = entry;
-                                });
-                            //generate backward index
-                                this.names_midinumbers = {};
-                                Object.entries(this.midinumbers_names).forEach(entry => {
-                                    this.names_midinumbers[entry[1]] = parseInt(entry[0]);
-                                });
-                    
-                        //lead functions
-                            this.num2name = function(num){ 
-                                dev.log.audio('.num2name(',num); //#development
-                                dev.count('.audio.num2name'); //#development
-                        
-                                return this.midinumbers_names[num];
-                            };
-                            this.num2freq = function(num){ 
-                                dev.log.audio('.num2freq(',num); //#development
-                                dev.count('.audio.num2freq'); //#development
-                        
-                                return this.names_frequencies[this.midinumbers_names[num]];
-                            };
-                    
-                            this.name2num = function(name){ 
-                                dev.log.audio('.name2num(',name); //#development
-                                dev.count('.audio.name2num'); //#development
-                        
-                                return this.names_midinumbers[name];
-                            };
-                            this.name2freq = function(name){ 
-                                dev.log.audio('.name2freq(',name); //#development
-                                dev.count('.audio.name2freq'); //#development
-                        
-                                return this.names_frequencies[name];
-                            };
-                    
-                            this.freq2num = function(freq){ 
-                                dev.log.audio('.freq2num(',freq); //#development
-                                dev.count('.audio.freq2num'); //#development
-                        
-                                return this.names_midinumbers[this.frequencies_names[freq]];
-                            };
-                            this.freq2name = function(freq){ 
-                                dev.log.audio('.freq2name(',freq); //#development
-                                dev.count('.audio.freq2name'); //#development
-                        
-                                return this.frequencies_names[freq];
-                            };
-                };
                 this.font = new function(){
                     this.listAllAvailableGlyphs = function(fontFileData){
                         dev.log.font('.listAllAvailableGlyphs(',fontFileData); //#development
@@ -2304,7 +1903,7 @@
                                 paths.forEach(path => {
                                     let isHole = false;
                                     for(let a = 0; a < segments.length; a++){
-                                        if( library.math.detectOverlap.overlappingPolygons(path,segments[a].path) ){
+                                        if( library.math.detectIntersect.polyOnPoly({points:path},{points:segments[a].path}) ){
                                             segments[a].path = segments[a].path.concat(path);
                                             segments[a].regions.unshift(path);
                                             isHole = true;
@@ -3630,13 +3229,16 @@
                     
                         return data;
                     };
-                    this.openFile = function(callback,readAsType='readAsBinaryString'){
+                    this.openFile = function(callback,readAsType='readAsBinaryString',fileType){
                         dev.log.misc('.openFile(',callback,readAsType); //#development
                         dev.count('.misc.openFile'); //#development
                     
                         const i = document.createElement('input');
                         i.type = 'file';
-                        i.accept = '.crv';
+                        i.accept = fileType;
+                        i.onload = function(){
+                            console.log('onload');
+                        };
                         i.onchange = function(){
                             dev.log.misc('.openFile::onchange()'); //#development
                             const f = new FileReader();
@@ -3646,7 +3248,7 @@
                             }
                             f.onloadend = function(){ 
                                 dev.log.misc('.openFile::onloadend()'); //#development
-                                if(callback){callback(f.result);}
+                                if(callback){callback(f.result,i.files[0]);}
                             }
                         };
                     
@@ -3773,6 +3375,238 @@
                             b:arrayRemovals(array_a,array_b.slice())
                         };
                     };
+                };
+                this.audio = new function(){
+                    //master context
+                        this.context = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                        
+                    
+                    
+                        
+                    //utility functions
+                        this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+                            dev.log.audio('.changeAudioParam(',context,audioParam,target,time,curve,cancelScheduledValues); //#development
+                            dev.count('.audio.changeAudioParam'); //#development
+                        
+                            if(target==null){return audioParam.value;}
+                        
+                            if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
+                        
+                            try{
+                                switch(curve){
+                                    case 'linear': 
+                                        audioParam.linearRampToValueAtTime(target, context.currentTime+time);
+                                    break;
+                                    case 'exponential':
+                                        console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
+                                        if(target == 0){target = 1/10000;}
+                                        audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
+                                    break;
+                                    case 's':
+                                        const mux = target - audioParam.value;
+                                        const array = library.math.curveGenerator.s(10);
+                                        for(let a = 0; a < array.length; a++){
+                                            array[a] = audioParam.value + array[a]*mux;
+                                        }
+                                        audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
+                                    break;
+                                    case 'instant': default:
+                                        audioParam.setTargetAtTime(target, context.currentTime, 0.01);
+                                    break;
+                                }
+                            }catch(e){
+                                console.log('could not change param (possibly due to an overlap, or bad target value)');
+                                console.log('audioParam:',audioParam,'target:',target,'time:',time,'curve:',curve,'cancelScheduledValues:',cancelScheduledValues);
+                                console.log(e);
+                            }
+                        };
+                        this.loadAudioFile = function(callback,type='file',url=''){
+                            dev.log.audio('.loadAudioFile(',callback,type,url); //#development
+                            dev.count('.audio.loadAudioFile'); //#development
+                    
+                            if(callback == undefined){
+                                dev.log.audio('.loadAudioFile -> no callback provided; result has nowhere to go, so it will not be done'); //#development
+                                return;
+                            }
+                        
+                            switch(type){
+                                case 'url': 
+                                    library.misc.loadFileFromURL(
+                                        url, 
+                                        data => {
+                                            library.audio.context.decodeAudioData(data, function(data){
+                                                callback({ buffer:data, name:(url.split('/')).pop(), duration:data.duration });
+                                            });
+                                        },
+                                        'arraybuffer'
+                                    );
+                                break;
+                                case 'file': default:
+                                    library.misc.openFile(
+                                        (data,file) => {
+                                            library.audio.context.decodeAudioData(data, function(buffer){
+                                                callback({ buffer:buffer, name:file.name, duration:buffer.duration });
+                                            });
+                                        },
+                                        'readAsArrayBuffer'
+                                    );
+                                break;
+                            }
+                        };
+                        this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
+                            dev.log.audio('.waveformSegment(',audioBuffer,bounds,resolution); //#development
+                            dev.count('.audio.waveformSegment'); //#development
+                        
+                            const waveform = audioBuffer.getChannelData(0);
+                            // const channelCount = audioBuffer.numberOfChannels;
+                        
+                            bounds.start = bounds.start ? bounds.start : 0;
+                            bounds.end = bounds.end ? bounds.end : 1;
+                            const start = audioBuffer.length*bounds.start;
+                            const end = audioBuffer.length*bounds.end;
+                            const step = (end - start)/resolution;
+                        
+                            const outputArray = [];
+                            for(let a = start; a < end; a+=Math.round(step)){
+                                outputArray.push( 
+                                    library.math.largestValueFound(
+                                        waveform.slice(a, a+Math.round(step))
+                                    )
+                                );
+                            }
+                        
+                            return outputArray;
+                        };
+                        this.loadBuffer = function(context, data, destination, onended){
+                            dev.log.audio('.loadBuffer(',context,data,destination,onended); //#development
+                            dev.count('.audio.loadBuffer'); //#development
+                        
+                            const temp = context.createBufferSource();
+                            temp.buffer = data;
+                            temp.connect(destination);
+                            temp.onended = onended;
+                            return temp;
+                        };
+                        
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    //destination
+                        this.destination = this.context.createGain();
+                        this.destination.connect(this.context.destination);
+                        this.destination._gain = 1;
+                        this.destination.masterGain = function(value){
+                            dev.log.audio('.masterGain(',value); //#development
+                            dev.count('.audio.masterGain'); //#development
+                        
+                            if(value == undefined){return this.destination._gain;}
+                            this._gain = value;
+                            library.audio.changeAudioParam(library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
+                        };
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    //conversion
+                        //frequencies index
+                            this.names_frequencies_split = {
+                                0:{ 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87  },
+                                1:{ 'C':32.70, 'C#':34.65, 'D':36.71, 'D#':38.89, 'E':41.20, 'F':43.65, 'F#':46.25, 'G':49.00, 'G#':51.91, 'A':55.00, 'A#':58.27, 'B':61.74, },    
+                                2:{ 'C':65.41, 'C#':69.30, 'D':73.42, 'D#':77.78, 'E':82.41, 'F':87.31, 'F#':92.50, 'G':98.00, 'G#':103.8, 'A':110.0, 'A#':116.5, 'B':123.5, },
+                                3:{ 'C':130.8, 'C#':138.6, 'D':146.8, 'D#':155.6, 'E':164.8, 'F':174.6, 'F#':185.0, 'G':196.0, 'G#':207.7, 'A':220.0, 'A#':233.1, 'B':246.9, },    
+                                4:{ 'C':261.6, 'C#':277.2, 'D':293.7, 'D#':311.1, 'E':329.6, 'F':349.2, 'F#':370.0, 'G':392.0, 'G#':415.3, 'A':440.0, 'A#':466.2, 'B':493.9, },
+                                5:{ 'C':523.3, 'C#':554.4, 'D':587.3, 'D#':622.3, 'E':659.3, 'F':698.5, 'F#':740.0, 'G':784.0, 'G#':830.6, 'A':880.0, 'A#':932.3, 'B':987.8, },    
+                                6:{ 'C':1047,  'C#':1109,  'D':1175,  'D#':1245,  'E':1319,  'F':1397,  'F#':1480,  'G':1568,  'G#':1661,  'A':1760,  'A#':1865,  'B':1976,  },
+                                7:{ 'C':2093,  'C#':2217,  'D':2349,  'D#':2489,  'E':2637,  'F':2794,  'F#':2960,  'G':3136,  'G#':3322,  'A':3520,  'A#':3729,  'B':3951,  },    
+                                8:{ 'C':4186,  'C#':4435,  'D':4699,  'D#':4978,  'E':5274,  'F':5588,  'F#':5920,  'G':6272,  'G#':6645,  'A':7040,  'A#':7459,  'B':7902   }, 
+                            };
+                            //generate forward index
+                            // eg. {... '4C':261.6, '4C#':277.2 ...}
+                                this.names_frequencies = {};
+                                Object.entries(this.names_frequencies_split).forEach((octave,index) => {
+                                    Object.entries(this.names_frequencies_split[index]).forEach(name => {
+                                        this.names_frequencies[ octave[0]+name[0] ] = name[1];
+                                    });
+                                });
+                    
+                            //generate backward index
+                            // eg. {... 261.6:'4C', 277.2:'4C#' ...}
+                                this.frequencies_names = {};
+                                Object.entries(this.names_frequencies).forEach(entry => {
+                                    this.frequencies_names[entry[1]] = entry[0];
+                                });
+                    
+                        //generate midi notes index
+                            const noteNames = [
+                                '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
+                                '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
+                                '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
+                                '3C', '3C#', '3D', '3D#', '3E', '3F', '3F#', '3G', '3G#', '3A', '3A#', '3B',
+                                '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B',
+                                '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B',
+                                '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B',
+                                '7C', '7C#', '7D', '7D#', '7E', '7F', '7F#', '7G', '7G#', '7A', '7A#', '7B',
+                                '8C', '8C#', '8D', '8D#', '8E', '8F', '8F#', '8G', '8G#', '8A', '8A#', '8B',
+                            ];
+                            //generate forward index
+                                this.midinumbers_names = {};
+                                noteNames.forEach((entry,index) => {
+                                    this.midinumbers_names[index+24] = entry;
+                                });
+                            //generate backward index
+                                this.names_midinumbers = {};
+                                Object.entries(this.midinumbers_names).forEach(entry => {
+                                    this.names_midinumbers[entry[1]] = parseInt(entry[0]);
+                                });
+                    
+                        //lead functions
+                            this.num2name = function(num){ 
+                                dev.log.audio('.num2name(',num); //#development
+                                dev.count('.audio.num2name'); //#development
+                        
+                                return this.midinumbers_names[num];
+                            };
+                            this.num2freq = function(num){ 
+                                dev.log.audio('.num2freq(',num); //#development
+                                dev.count('.audio.num2freq'); //#development
+                        
+                                return this.names_frequencies[this.midinumbers_names[num]];
+                            };
+                    
+                            this.name2num = function(name){ 
+                                dev.log.audio('.name2num(',name); //#development
+                                dev.count('.audio.name2num'); //#development
+                        
+                                return this.names_midinumbers[name];
+                            };
+                            this.name2freq = function(name){ 
+                                dev.log.audio('.name2freq(',name); //#development
+                                dev.count('.audio.name2freq'); //#development
+                        
+                                return this.names_frequencies[name];
+                            };
+                    
+                            this.freq2num = function(freq){ 
+                                dev.log.audio('.freq2num(',freq); //#development
+                                dev.count('.audio.freq2num'); //#development
+                        
+                                return this.names_midinumbers[this.frequencies_names[freq]];
+                            };
+                            this.freq2name = function(freq){ 
+                                dev.log.audio('.freq2name(',freq); //#development
+                                dev.count('.audio.freq2name'); //#development
+                        
+                                return this.frequencies_names[freq];
+                            };
                 };
                 const _thirdparty = new function(){
                     const thirdparty = this;
@@ -22059,7 +21893,7 @@
             };
             _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
                 const core_engine = new Worker("js/core_engine.js");
                 const self = this;
                 
@@ -23107,6 +22941,8 @@
                     };
                     this.activeLimitToFrameRate = function(active){
                         dev.log.interface('.render.activeLimitToFrameRate(',active); //#development
+                        if(active == undefined){return cachedValues.active;}
+                        cachedValues.active = active;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
                         });
@@ -23642,7 +23478,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
                 const interface = this;
             
                 const dev = {
@@ -24250,8 +24086,10 @@
                             }
                             function load(type,callback,url=''){
                                 dev.log.circuit('.player::loadRaw('+type+','+callback+','+url+')'); //#development
-                                state.fileLoaded = false;
-                                _canvas_.library.audio.loadAudioFile( function(data){ loadRaw(data,callback) }, type, url);
+                                _canvas_.library.audio.loadAudioFile( function(data){ 
+                                    state.fileLoaded = false;
+                                    loadRaw(data,callback)
+                                }, type, url);
                             }
                             function generatePlayheadNumber(){
                                 dev.log.circuit('.player::unlogeneratePlayheadNumberadRaw()'); //#development
@@ -25330,7 +25168,9 @@
                             
                             interfacePart.partLibrary.display.glowbox_path = function(name,data){ 
                                 return interfacePart.collection.display.glowbox_path(
-                                    name, data.x, data.y, data.points, data.angle, data.style.glow, data.style.dim
+                                    name, data.x, data.y, data.points, data.angle, 
+                                    data.looping, data.jointType, data.capType,
+                                    data.style.glow, data.style.dim
                                 );
                             };
                             this.grapher_audioScope = function(
@@ -29727,6 +29567,9 @@
                                 
                                         if(update && this.onchange){ this.onchange(value); }
                                     };
+                                    object.toggle = function(){
+                                        object.set(!object.get());
+                                    };
                                     object.light = function(a){
                                         if(a == undefined){ return state.glowing; }
                             
@@ -29964,35 +29807,46 @@
                                 dev.log.partControl('.dial_continuous_image(...)'); //#development
                             
                                 //default to non-image version if image links are missing
-                                    if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
-                                        return this.dial_continuous(
+                                    if(handleURL == undefined && slotURL == undefined && needleURL == undefined){
+                                        return this.dial_1_continuous(
                                             name, x, y, radius, angle, interactable, value, resetValue, startAngle, maxAngle,
                                             undefined, undefined, undefined,
                                             onchange, onrelease
                                         );
                                     }
                             
+                            
+                            
                                 //elements 
                                     //main
                                         const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
                                     
                                     //slot
-                                        const slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
-                                        object.append(slot);
+                                        if(slotURL != undefined){
+                                            const slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
+                                            object.append(slot);
+                                        }
                             
                                     //handle
-                                        const handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+                                        let handle;
+                                        if(handleURL != undefined){
+                                            handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+                                        }else{
+                                            handle = interfacePart.builder('basic','circle','handle',{radius:radius, detail:50, colour:{r:0,g:0,b:0,a:0}});
+                                        }
                                         object.append(handle);
                             
                                     //needle group
-                                        const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
-                                        object.append(needleGroup);
+                                        if(needleURL != undefined){
+                                            const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
+                                            object.append(needleGroup);
                             
-                                        //needle
-                                            const needleWidth = radius/5;
-                                            const needleLength = radius;
-                                            const needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
-                                                needleGroup.append(needle);
+                                            //needle
+                                                const needleWidth = radius/5;
+                                                const needleLength = radius;
+                                                const needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
+                                                    needleGroup.append(needle);
+                                        }
                             
                                 //graphical adjust
                                     function set(a,update=true){
@@ -30002,8 +29856,8 @@
                                         if(update && object.onchange != undefined){object.onchange(a);}
                             
                                         value = a;
-                                        needleGroup.angle(startAngle + maxAngle*value);
-                                        handle.angle(startAngle + maxAngle*value);
+                                        if(needleURL != undefined){ needleGroup.angle(startAngle + maxAngle*value); }
+                                        if(handle != undefined){ handle.angle(startAngle + maxAngle*value); }
                                     }
                             
                                 //methods
@@ -30129,6 +29983,9 @@
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
+                                    };
+                                    object.nudge = function(amount){
+                                        set(value+amount);
                                     };
                             
                                 //interaction
@@ -30365,6 +30222,9 @@
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
                                     };
+                                    object.nudge = function(amount){
+                                        set(value+amount);
+                                    };
                             
                                 //interaction
                                     let acc = 0;
@@ -30478,6 +30338,9 @@
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
+                                    };
+                                    object.nudge = function(amount){
+                                        set(value+amount);
                                     };
                             
                                 //interaction
@@ -36400,7 +36263,7 @@
                             
                                                         const thisNode_point = object.getAttachmentPoint();
                                                         mousePoint.angle = _canvas_.library.math.getAngleOfTwoPoints(mousePoint,thisNode_point);
-                                                        liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle );
+                                                        liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle, false );
                                                     }else{
                                                         dev.log.partDynamic('.connectionNode-onmousedown -> node found'); //#development
                                                         if(liveCable != undefined){
@@ -36580,7 +36443,6 @@
                                         ); 
                                 }
                             };
-                            
                             this.cable2 = function(
                                 name='cable2', 
                                 x1=0, y1=0, x2=0, y2=0, a1=0, a2=0,
@@ -36588,6 +36450,8 @@
                                 glowStyle={r:1,g:0.39,b:0.39,a:1},
                             ){
                                 dev.log.partDynamic('.cable2(...)');  //#development
+                            
+                                const push = 20;
                             
                                 //elements 
                                     //main
@@ -36599,7 +36463,7 @@
                                 //controls
                                     object.activate = function(){ pathShape.colour(glowStyle); };
                                     object.deactivate = function(){ pathShape.colour(dimStyle); };
-                                    object.draw = function(new_x1,new_y1,new_x2,new_y2,new_angle1,new_angle2){
+                                    object.draw = function(new_x1,new_y1,new_x2,new_y2,new_angle1,new_angle2,avoidUnits=true,generateVisibilityGraph=true){
                                         x1 = new_x1==undefined ? x1 : new_x1;
                                         y1 = new_y1==undefined ? y1 : new_y1;
                                         a1 = new_angle1==undefined ? a1 : new_angle1;
@@ -36607,59 +36471,91 @@
                                         y2 = new_y2==undefined ? y2 : new_y2;
                                         a2 = new_angle2==undefined ? a2 : new_angle2;
                             
-                                        const push = 20;
-                                        const path = [];
+                                        const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                                        const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                                        pathShape.points([
+                                            x1,y1,
+                                            x1+offset_1.x, y1+offset_1.y,
+                                            x2+offset_2.x, y2+offset_2.y,
+                                            x2,y2,
+                                        ]);
                             
-                                        //generate initial basic line 
-                                            path.push(x1,y1);
+                                        // //if we're not to avoid units, just calculate the simple line between the two points (with push of course)
+                                        //     if(!avoidUnits){
+                                        //         const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                                        //         const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                                        //         pathShape.points([
+                                        //             x1,y1,
+                                        //             x1+offset_1.x, y1+offset_1.y,
+                                        //             x2+offset_2.x, y2+offset_2.y,
+                                        //             x2,y2,
+                                        //         ]);
+                                        //         return;
+                                        //     }
                             
-                                            const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
-                                            path.push( x1+offset_1.x, y1+offset_1.y );
+                                        // //calculate route while avoiding units
+                                        //     let path = [];
+                                        //     function calculateRoute(startPoint,endPoint,environment){
+                                        //         //generate visibility graph
+                                        //             const path = [];
+                                        //             const startAndEndPoints = [ [startPoint], [endPoint] ].map(points => ({points:points, boundingBox:_canvas_.library.math.boundingBoxFromPoints(points)}) );
+                                        //             const field = startAndEndPoints.concat(environment);
+                                        //             const visibilityGraph = _canvas_.library.math.polygonsToVisibilityGraph( field );
                             
-                                            const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
-                                            path.push( x2+offset_2.x, y2+offset_2.y );
+                                        //         //determine shortest route from visibility graph
+                                        //             let generatedPath = _canvas_.library.math.shortestRouteFromVisibilityGraph(visibilityGraph, 0, 1);
+                                        //             if(generatedPath.length == 1){
+                                        //                 return generatedPath;
+                                        //             }
+                                        //             generatedPath.forEach(index => {
+                                        //                 const tmp = visibilityGraph[index];
+                                        //                 const point = field[tmp.polyIndex].points[tmp.pointIndex];
+                                        //                 path.push(point.x,point.y);
+                                        //             });
                             
-                                            path.push(x2,y2);
+                                        //         return path;
+                                        //     }
                             
-                                        // //go through each segment to improve the line, so that it does not collide with any unit
-                                        //     //gather together the relevant units 
-                                        //     var otherUnits = _canvas_.system.pane.getMiddlegroundPane(this).children().filter(a => !a._isCable).map(a => a.space);
+                                        //     //place initial point
+                                        //         path.push(x1,y1);
                             
-                                        //     //run though the cable to see what segments collide with units
-                                        //         for(var a = 0; a < path.length-2; a +=2){
-                                        //             //get cable segment
-                                        //             let segment = {x1:path[a],y1:path[a+1],x2:path[a+2],y2:path[a+3]};
-                            
-                                        //             //get the units this segment collides with
-                                        //             let collidingPolys = _canvas_.library.math.detectOverlap.overlappingLineWithPolygons(segment,otherUnits).map(a => otherUnits[a]);
+                                        //         if( _canvas_.system.pane.getMiddlegroundPane(this) == undefined ){ 
+                                        //             pathShape.points( [x1,y1,x2,y2] );
+                                        //             return;
                                         //         }
                             
+                                        //         const offset_1 = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);
+                                        //         const offset_2 = _canvas_.library.math.cartesianAngleAdjust(push,0,a2);
+                                        //         const environment = _canvas_.system.pane.getMiddlegroundPane(this).getChildren().filter(a => !a._isCable).map(a => a.space);
+                                        //         const generatedPath = calculateRoute( {x:x1+offset_1.x, y:y1+offset_1.y}, {x:x2+offset_2.x, y:y2+offset_2.y}, environment );
+                                        //         if(generatedPath.length == 0){
+                                        //         }else if(generatedPath.length == 1){
+                                        //             if(generatedPath[0] == 0){
+                                        //                 const offset_2 = _canvas_.library.math.cartesianAngleAdjust(0,0,a2);
+                                        //             }
+                                        //             if(generatedPath[0] == 1){
+                                        //                 const offset_1 = _canvas_.library.math.cartesianAngleAdjust(0,0,a1);
+                                        //             }
+                                        //             if(generatedPath[0] != 0 && generatedPath[0] != 1){
+                                        //                 console.error('cable2.draw: major error: unknown path point in error');
+                                        //                 pathShape.points( [x1,y1,x2,y2] );
+                                        //                 return;
+                                        //             }
                             
+                                        //             const secondGeneratedPath = calculateRoute( {x:x1+offset_1.x, y:y1+offset_1.y}, {x:x2+offset_2.x, y:y2+offset_2.y}, environment );
+                                        //             if(secondGeneratedPath.length == 1){
+                                        //                 pathShape.points( [x1,y1,x2,y2] );
+                                        //                 return;
+                                        //             }
+                                        //             path = path.concat( secondGeneratedPath );
+                                        //         }else{
+                                        //             path = path.concat( generatedPath );
+                                        //         }
                             
+                                        //     //place final point
+                                        //         path.push(x2,y2);
                             
-                                            // for(var a = 0; a < path.length-2; a +=2){
-                                            //     let line = {x1:path[a],y1:path[a+1],x2:path[a+2],y2:path[a+3]}; //console.log(line);
-                                            //     let collidingPolys = _canvas_.library.math.detectOverlap.overlappingLineWithPolygons(line,otherUnits);
-                            
-                                            //     if(collidingPolys.length > 0){
-                                            //         collidingPolys.forEach(a => {
-                                            //             console.log(a,line);
-                                            //             otherUnits[a].points.forEach(point => {
-                            
-                                            //             });
-                                            //             // console.log(a,otherUnits[a].points);
-                                            //             console.log('');
-                            
-                            
-                            
-                                            //         });
-                                            //         path.splice(a+2,0,300,550);
-                                            //     }
-                                            // }
-                            
-                                        // console.log('');
-                                        // console.log(path);
-                                        pathShape.points(path);
+                                        //     pathShape.points(path);
                                     };
                                     object.draw();
                             
@@ -36667,6 +36563,11 @@
                                     object._isCable = true;
                             
                                 return object;
+                            };
+                            this.cable2.visibilityGraph = [];
+                            this.cable2.globalDraw = function(pane=_canvas_.system.pane.mm){
+                                // pane.getChildren().filter(a => a._isCable).forEach(cable => cable.draw());
+                                // pane.getChildren().filter(a => a._isCable).forEach(cable => cable.draw(undefined,undefined,undefined,undefined,undefined,undefined,undefined,false));
                             };
                         };
                     };
@@ -37522,7 +37423,7 @@
                 _canvas_.interface.go.__activate();
             } );
             _canvas_.control = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
                 const control = this;
             
                 const dev = {
@@ -39302,7 +39203,7 @@
                                                     unit.ioRedraw();
                                             }
                                         },
-                                        function(event){}
+                                        function(x,y,event){}
                                     );
                     
                                 return true;
@@ -39592,7 +39493,7 @@
             } );
 
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:30} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
                 this.go = new function(){
                     const functionList = [];
             
@@ -45186,7 +45087,7 @@
                     this.voltage_combiner.metadata = {
                         name:'Voltage Combiner',
                         category:'misc',
-                        helpURL:'/help/units/beta/voltage_combiner/'
+                        helpURL:'/help/units/alpha/voltage_combiner/'
                     };
 
                     this.audio_duplicator = function(name,x,y,angle){
@@ -45258,7 +45159,7 @@
                     this.audio_duplicator.metadata = {
                         name:'Audio Duplicator',
                         category:'misc',
-                        helpURL:'/help/units/beta/audio_duplicator/'
+                        helpURL:'/help/units/alpha/audio_duplicator/'
                     };
                     this.data_combiner = function(name,x,y,angle){
                         //style data
@@ -45319,7 +45220,7 @@
                     this.data_combiner.metadata = {
                         name:'Data Combiner',
                         category:'misc',
-                        helpURL:'/help/units/beta/data_combiner/'
+                        helpURL:'/help/units/alpha/data_combiner/'
                     };
                     this.signal_combiner= function(name,x,y,angle){
                         //style data
@@ -45382,7 +45283,7 @@
                     this.signal_combiner.metadata = {
                         name:'Signal Combiner',
                         category:'misc',
-                        helpURL:'/help/units/beta/signal_combiner/'
+                        helpURL:'/help/units/alpha/signal_combiner/'
                     };
                     this.signal_duplicator = function(name,x,y,angle){
                         //style data
@@ -45444,7 +45345,7 @@
                     this.signal_duplicator.metadata = {
                         name:'Signal Duplicator',
                         category:'misc',
-                        helpURL:'/help/units/beta/signal_duplicator/'
+                        helpURL:'/help/units/alpha/signal_duplicator/'
                     };
                     this.voltage_duplicator = function(name,x,y,angle){
                         //style data
@@ -45507,7 +45408,7 @@
                     this.voltage_duplicator.metadata = {
                         name:'Voltage Duplicator',
                         category:'misc',
-                        helpURL:'/help/units/beta/voltage_duplicator/'
+                        helpURL:'/help/units/alpha/voltage_duplicator/'
                     };
                     this.data_duplicator = function(name,x,y,angle){
                         //style data
@@ -45575,7 +45476,7 @@
                     this.data_duplicator.metadata = {
                         name:'Data Duplicator',
                         category:'misc',
-                        helpURL:'/help/units/beta/data_duplicator/'
+                        helpURL:'/help/units/alpha/data_duplicator/'
                     };
                     this.eightTrackMixer = function(name,x,y,angle){
                         //style data
@@ -45739,7 +45640,7 @@
                     this.eightTrackMixer.metadata = {
                         name:'Eight Track Mixer',
                         category:'misc',
-                        helpURL:'/help/units/beta/eightTrackMixer/'
+                        helpURL:'/help/units/alpha/eightTrackMixer/'
                     };
                     this.signal_readout = function(name,x,y,angle){
                         //style data
@@ -45801,7 +45702,7 @@
                     this.signal_readout.metadata = {
                         name:'Signal Readout',
                         category:'monitors',
-                        helpURL:'/help/units/beta/signal_readout/'
+                        helpURL:'/help/units/alpha/signal_readout/'
                     };
                     this.amplifier = function(name,x,y,angle){
                         //style data
@@ -45877,7 +45778,7 @@
                     this.amplifier.metadata = {
                         name:'Amplifier',
                         category:'monitors',
-                        helpURL:'/help/units/beta/amplifier/'
+                        helpURL:'/help/units/alpha/amplifier/'
                     };
                     this.voltage_readout = function(name,x,y,angle){
                         //style data
@@ -45937,7 +45838,7 @@
                     this.voltage_readout.metadata = {
                         name:'Voltage Readout',
                         category:'monitors',
-                        helpURL:'/help/units/beta/voltage_readout/'
+                        helpURL:'/help/units/alpha/voltage_readout/'
                     };
                     this.audio_scope = function(name,x,y,angle){
                         //style data
@@ -46049,7 +45950,7 @@
                     this.audio_scope.metadata = {
                         name:'Audio Scope',
                         category:'monitors',
-                        helpURL:'/help/units/beta/audio_scope/'
+                        helpURL:'/help/units/alpha/audio_scope/'
                     };
 
                     this.data_readout = function(name,x,y,angle){
@@ -46158,7 +46059,7 @@
                     this.data_readout.metadata = {
                         name:'Data Readout',
                         category:'monitors',
-                        helpURL:'/help/units/beta/data_readout/'
+                        helpURL:'/help/units/alpha/data_readout/'
                     };
 
                     this.audio_recorder = function(name,x,y,angle){
@@ -46338,7 +46239,7 @@
                     this.audio_recorder.metadata = {
                         name:'Audio Recorder',
                         category:'monitors',
-                        helpURL:'/help/units/beta/audio_recorder/'
+                        helpURL:'/help/units/alpha/audio_recorder/'
                     };
                     this.ruler = function(name,x,y,angle){
                         //style data
@@ -46465,7 +46366,7 @@
                     this.ruler.metadata = {
                         name:'Ruler',
                         category:'tools',
-                        helpURL:'/help/units/beta/ruler/'
+                        helpURL:'/help/units/alpha/ruler/'
                     };
                     this.voltage_dial = function(name,x,y,angle){
                         //style data
@@ -46538,7 +46439,7 @@
                     this.voltage_dial.metadata = {
                         name:'Voltage Dial',
                         category:'humanInterfaceDevices',
-                        helpURL:'/help/units/beta/voltage_dial/'
+                        helpURL:'/help/units/alpha/voltage_dial/'
                     };
                     this.musicalKeyboard = function(name,x,y,angle){
                         //style data
@@ -46744,7 +46645,7 @@
                     this.musicalKeyboard.metadata = {
                         name:'Musical Keyboard',
                         category:'humanInterfaceDevices',
-                        helpURL:'/help/units/beta/musicalKeyboard/'
+                        helpURL:'/help/units/alpha/musicalKeyboard/'
                     };
 
                     this.audio_in = function(name,x,y,angle,setupConnect=true){
@@ -46894,7 +46795,7 @@
                     this.audio_in.metadata = {
                         name:'Audio In',
                         category:'humanInterfaceDevices',
-                        helpURL:'/help/units/beta/audio_in/'
+                        helpURL:'/help/units/alpha/audio_in/'
                     };
                     this.signal_switch = function(name,x,y,angle){
                         //style data
@@ -46960,7 +46861,7 @@
                     this.signal_switch.metadata = {
                         name:'Signal Switch',
                         category:'humanInterfaceDevices',
-                        helpURL:'/help/units/beta/signal_switch/'
+                        helpURL:'/help/units/alpha/signal_switch/'
                     };
                     const imageStoreURL = '/images/units/1 - alpha/';
                     const style = {
@@ -47293,7 +47194,7 @@
                     this.basic_synthesizer.metadata = {
                         name:'Basic Synthesizer',
                         category:'synthesizers',
-                        helpURL:'/help/units/beta/basic_synthesizer/'
+                        helpURL:'/help/units/alpha/basic_synthesizer/'
                     };
                     this.audio_file_player = function(name,x,y,angle){
                         //style data
@@ -47458,7 +47359,9 @@
                     
                         //wiring
                             //hid
-                                object.elements.button_image.button_open.onpress = function(){ playerCircuit.load('file',loadProcess); };
+                                object.elements.button_image.button_open.onpress = function(){
+                                    playerCircuit.load('file',loadProcess);
+                                };
                                 object.elements.button_image.button_play.onpress = function(){
                                     if(object.i.concurrentPlayCountLimit() == 1 && playerCircuit.currentTime().length > 0){ playerCircuit.resume(); }
                                     else{ playerCircuit.start(); }
@@ -47581,7 +47484,7 @@
                     this.audio_file_player.metadata = {
                         name:'Audio File Player',
                         category:'synthesizers',
-                        helpURL:'/help/units/beta/audio_file_player/'
+                        helpURL:'/help/units/alpha/audio_file_player/'
                     };
 
                     this.distortion = function(name,x,y,angle){
@@ -47742,7 +47645,7 @@
                     this.distortion.metadata = {
                         name:'Distortion',
                         category:'effects',
-                        helpURL:'/help/units/beta/distortion/'
+                        helpURL:'/help/units/alpha/distortion/'
                     };
                     
 
@@ -47977,7 +47880,7 @@
                     this.reverb.metadata = {
                         name:'Reverb',
                         category:'effects',
-                        helpURL:'/help/units/beta/reverb/'
+                        helpURL:'/help/units/alpha/reverb/'
                     };
                     this.filter = function(name,x,y,angle){
                         //style data
@@ -48129,7 +48032,7 @@
                     this.filter.metadata = {
                         name:'Filter (unfinished)',
                         category:'effects',
-                        helpURL:'/help/units/beta/filter/'
+                        helpURL:'/help/units/alpha/filter/'
                     };
 
                     this.pulse_generator = function(name,x,y,angle){
@@ -48352,7 +48255,7 @@
                     this.pulse_generator.metadata = {
                         name:'Pulse Generator',
                         category:'sequencers',
-                        helpURL:'/help/units/beta/pulse_generator/'
+                        helpURL:'/help/units/alpha/pulse_generator/'
                     };
                     this.eightStepSequencer = function(name,x,y,angle){
                         //style data
@@ -48604,7 +48507,7 @@
                     this.eightStepSequencer.metadata = {
                         name:'Eight Step Sequencer',
                         category:'sequencers',
-                        helpURL:'/help/units/beta/eightStepSequencer/'
+                        helpURL:'/help/units/alpha/eightStepSequencer/'
                     };
                     this.launchpad = function(name,x,y,angle){
                         //style data
@@ -48808,7 +48711,7 @@
                     this.launchpad.metadata = {
                         name:'Launchpad',
                         category:'sequencers',
-                        helpURL:'/help/units/beta/launchpad/'
+                        helpURL:'/help/units/alpha/launchpad/'
                     };
                     
                     this._collectionData = {
@@ -48967,7 +48870,7 @@
                     this.light_panel_8.metadata = {
                         name:'Light Panel - Type C',
                         category:'interface',
-                        helpURL:'/help/units/beta/light_panel_8/'
+                        helpURL:'/help/units/curvetech/light_panel_8/'
                     };
                     this.button_panel_1 = function(name,x,y,angle){
                         //unitStyle
@@ -49043,7 +48946,7 @@
                     this.button_panel_1.metadata = {
                         name:'Button Panel - Type A',
                         category:'interface',
-                        helpURL:'/help/units/beta/button_panel_1/'
+                        helpURL:'/help/units/curvetech/button_panel_1/'
                     };
                     this.multi_option_signal_sender_8 = function(name,x,y,angle){
                         //unitStyle
@@ -49145,7 +49048,7 @@
                     this.multi_option_signal_sender_8.metadata = {
                         name:'Multi Option Signal Sender - Type C',
                         category:'interface',
-                        helpURL:'/help/units/beta/multi_option_signal_sender_8/'
+                        helpURL:'/help/units/curvetech/multi_option_signal_sender_8/'
                     };
                     this.button_panel_4 = function(name,x,y,angle){
                         //unitStyle
@@ -49251,7 +49154,7 @@
                     this.button_panel_4.metadata = {
                         name:'Button Panel - Type C',
                         category:'interface',
-                        helpURL:'/help/units/beta/button_panel_4/'
+                        helpURL:'/help/units/curvetech/button_panel_4/'
                     };
                     this.light_panel_2 = function(name,x,y,angle){
                         //unitStyle
@@ -49325,7 +49228,7 @@
                     this.light_panel_2.metadata = {
                         name:'Light Panel - Type A',
                         category:'interface',
-                        helpURL:'/help/units/beta/light_panel_2/'
+                        helpURL:'/help/units/curvetech/light_panel_2/'
                     };
                     this.multi_option_signal_sender_2 = function(name,x,y,angle){
                         //unitStyle
@@ -49409,7 +49312,7 @@
                     this.multi_option_signal_sender_2.metadata = {
                         name:'Multi Option Signal Sender - Type A',
                         category:'interface',
-                        helpURL:'/help/units/beta/multi_option_signal_sender_2/'
+                        helpURL:'/help/units/curvetech/multi_option_signal_sender_2/'
                     };
                     this.light_panel_4 = function(name,x,y,angle){
                         //unitStyle
@@ -49503,7 +49406,7 @@
                     this.light_panel_4.metadata = {
                         name:'Light Panel - Type B',
                         category:'interface',
-                        helpURL:'/help/units/beta/light_panel_4/'
+                        helpURL:'/help/units/curvetech/light_panel_4/'
                     };
                     this.button_panel_8 = function(name,x,y,angle){
                         //unitStyle
@@ -49649,7 +49552,7 @@
                     this.button_panel_8.metadata = {
                         name:'Button Panel - Type D',
                         category:'interface',
-                        helpURL:'/help/units/beta/button_panel_8/'
+                        helpURL:'/help/units/curvetech/button_panel_8/'
                     };
                     this.multi_option_signal_sender_4 = function(name,x,y,angle){
                         //unitStyle
@@ -49739,7 +49642,7 @@
                     this.multi_option_signal_sender_4.metadata = {
                         name:'Multi Option Signal Sender - Type B',
                         category:'interface',
-                        helpURL:'/help/units/beta/multi_option_signal_sender_4/'
+                        helpURL:'/help/units/curvetech/multi_option_signal_sender_4/'
                     };
                     this.button_panel_2 = function(name,x,y,angle){
                         //unitStyle
@@ -49825,7 +49728,7 @@
                     this.button_panel_2.metadata = {
                         name:'Button Panel - Type B',
                         category:'interface',
-                        helpURL:'/help/units/beta/button_panel_2/'
+                        helpURL:'/help/units/curvetech/button_panel_2/'
                     };
                     const imageStoreURL = '/images/units/2 - curvetech/';
                     const style = {
@@ -49941,7 +49844,7 @@
                     this.OR.metadata = {
                         name:'OR',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/OR/'
+                        helpURL:'/help/units/curvetech/OR/'
                     };
                     this.NOR = function(name,x,y,angle){
                         //unitStyle
@@ -50024,7 +49927,7 @@
                     this.NOR.metadata = {
                         name:'NOR',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/NOR/'
+                        helpURL:'/help/units/curvetech/NOR/'
                     };
                     this.DUP = function(name,x,y,angle){
                         //unitStyle
@@ -50104,7 +50007,7 @@
                     this.DUP.metadata = {
                         name:'DUP',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/DUP/'
+                        helpURL:'/help/units/curvetech/DUP/'
                     };
                     this.AND = function(name,x,y,angle){
                         //unitStyle
@@ -50187,7 +50090,7 @@
                     this.AND.metadata = {
                         name:'AND',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/AND/'
+                        helpURL:'/help/units/curvetech/AND/'
                     };
                     this.REP = function(name,x,y,angle){
                         //unitStyle
@@ -50262,7 +50165,7 @@
                     this.REP.metadata = {
                         name:'REP',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/REP/'
+                        helpURL:'/help/units/curvetech/REP/'
                     };
                     this.NAND = function(name,x,y,angle){
                         //unitStyle
@@ -50345,7 +50248,7 @@
                     this.NAND.metadata = {
                         name:'NAND',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/NAND/'
+                        helpURL:'/help/units/curvetech/NAND/'
                     };
                     this.XNOR = function(name,x,y,angle){
                         //unitStyle
@@ -50428,7 +50331,7 @@
                     this.XNOR.metadata = {
                         name:'XNOR',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/XNOR/'
+                        helpURL:'/help/units/curvetech/XNOR/'
                     };
                     this.NOT = function(name,x,y,angle){
                         //unitStyle
@@ -50515,7 +50418,7 @@
                     this.NOT.metadata = {
                         name:'NOT',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/NOT/'
+                        helpURL:'/help/units/curvetech/NOT/'
                     };
                     this.XOR = function(name,x,y,angle){
                         //unitStyle
@@ -50598,7 +50501,7 @@
                     this.XOR.metadata = {
                         name:'XOR',
                         category:'logic_gates',
-                        helpURL:'/help/units/beta/XOR/'
+                        helpURL:'/help/units/curvetech/XOR/'
                     };
                     this.demultiplexer_4 = function(name,x,y,angle){
                         //unitStyle
@@ -50730,7 +50633,7 @@
                     this.demultiplexer_4.metadata = {
                         name:'Demultiplexer - Type B',
                         category:'devices',
-                        helpURL:'/help/units/beta/demultiplexer_4/'
+                        helpURL:'/help/units/curvetech/demultiplexer_4/'
                     };
                     this.multiplexer_4 = function(name,x,y,angle){
                         //unitStyle
@@ -50856,7 +50759,7 @@
                     this.multiplexer_4.metadata = {
                         name:'Multiplexer - Type B',
                         category:'devices',
-                        helpURL:'/help/units/beta/multiplexer_4/'
+                        helpURL:'/help/units/curvetech/multiplexer_4/'
                     };
                     this.adder = function(name,x,y,angle){
                         //unitStyle
@@ -50942,7 +50845,7 @@
                     this.adder.metadata = {
                         name:'Adder',
                         category:'devices',
-                        helpURL:'/help/units/beta/adder/'
+                        helpURL:'/help/units/curvetech/adder/'
                     };
                     this.demultiplexer_8 = function(name,x,y,angle){
                         //unitStyle
@@ -51090,7 +50993,7 @@
                     this.demultiplexer_8.metadata = {
                         name:'Demultiplexer - Type C',
                         category:'devices',
-                        helpURL:'/help/units/beta/demultiplexer_8/'
+                        helpURL:'/help/units/curvetech/demultiplexer_8/'
                     };
                     this.multiplexer_2 = function(name,x,y,angle){
                         //unitStyle
@@ -51208,7 +51111,7 @@
                     this.multiplexer_2.metadata = {
                         name:'Multiplexer - Type A',
                         category:'devices',
-                        helpURL:'/help/units/beta/multiplexer_2/'
+                        helpURL:'/help/units/curvetech/multiplexer_2/'
                     };
                     this.single_bit_memory = function(name,x,y,angle){
                         //unitStyle
@@ -51330,7 +51233,7 @@
                     this.single_bit_memory.metadata = {
                         name:'Single Bit Memory',
                         category:'devices',
-                        helpURL:'/help/units/beta/single_bit_memory/'
+                        helpURL:'/help/units/curvetech/single_bit_memory/'
                     };
                     this.multiplexer_8 = function(name,x,y,angle){
                         //unitStyle
@@ -51472,7 +51375,7 @@
                     this.multiplexer_8.metadata = {
                         name:'Multiplexer - Type C',
                         category:'devices',
-                        helpURL:'/help/units/beta/multiplexer_8/'
+                        helpURL:'/help/units/curvetech/multiplexer_8/'
                     };
                     this.demultiplexer_2 = function(name,x,y,angle){
                         //unitStyle
@@ -51596,7 +51499,7 @@
                     this.demultiplexer_2.metadata = {
                         name:'Demultiplexer - Type A',
                         category:'devices',
-                        helpURL:'/help/units/beta/demultiplexer_2/'
+                        helpURL:'/help/units/curvetech/demultiplexer_2/'
                     };
                     
                     this._collectionData = {
@@ -51614,12 +51517,620 @@
                         devices:{ printingName:'Devices',itemWidth:175},
                     };
                 };
+                this.harbinger = new function(){
+                    this['mrd-16'] = function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'mrd-16/';
+                    
+                                //calculation of measurements
+                                    const div = 10;
+                                    const measurement = { 
+                                        file: { width:2500, height:520 },
+                                        design: { width:25, height:5.2 },
+                                    };
+                    
+                                    this.offset = {x:2.5,y:1};
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //colours
+                                    this.selectorLEDstyle = {
+                                        glow:{r:1,g:0.5,b:0.5,a:1},
+                                        dim:{r:1,g:1,b:1,a:1},
+                                    };
+                                    this.channelLEDstyle = {
+                                        glow:{r:1,g:0,b:0,a:1},
+                                        dim:{r:0.85,g:0.6,b:0.6,a:1},
+                                    };
+                                    this.selectorStepLEDstyle = {
+                                        glow:{r:1,g:1,b:1,a:1},
+                                        dim:{r:0.5,g:0.5,b:0.5,a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'mrd-16',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                    {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                    {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                    {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                ],
+                                elements:
+                                    (new Array(8)).fill().flatMap((item,index) => {
+                                        return [
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'signal_out_'+index, data:{ 
+                                                x:5 + index*20, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_out_'+index, data:{ 
+                                                x:5 + index*20, y:5, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                            }},
+                                        ];
+                                    }).concat(
+                                        [
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'pulseIn', data:{ 
+                                                x:unitStyle.drawingValue.width - unitStyle.offset.x, y:30, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                    
+                                            {collection:'basic', type:'image', name:'backing', 
+                                                data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                            },
+                    
+                                            {collection:'control', type:'checkbox_image', name:'signal', data:{
+                                                x:5, y:7.5, width:6, height:15,
+                                                checkURL:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
+                                                uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
+                                            }},
+                                            {collection:'control', type:'checkbox_image', name:'voltage', data:{
+                                                x:14, y:7.5, width:6, height:15,
+                                                checkURL:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
+                                                uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'channel_left', data:{
+                                                x:23, y:7.5, width:6, height:15, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_row_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_row_down.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'channel_right', data:{
+                                                x:38, y:22.5, width:6, height:15, angle:Math.PI, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_row_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_row_down.png',
+                                            }},
+                                            {collection:'control', type:'checkbox_image', name:'unify', data:{
+                                                x:41, y:7.5, width:6, height:15,
+                                                checkURL:unitStyle.imageStoreURL_localPrefix+'button_unify_on.png',
+                                                uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_unify_off.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'page_up', data:{
+                                                x:50, y:7.5, width:15, height:6, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_up_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_up_down.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'page_down', data:{
+                                                x:50, y:16.5, width:15, height:6, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_down_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_down_down.png',
+                                            }},
+                                            {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
+                                                x:68.5, y:8, width:7, height:14, static:true, resolution:5,
+                                            }},
+                                            {collection:'control', type:'button_image', name:'clear', data:{
+                                                x:79, y:7.5, width:6, height:15, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_clear_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_clear_down.png',
+                                            }},
+                                            {collection:'control', type:'dial_discrete_image', name:'releaseLength', data:{
+                                                x:95.5, y:15, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
+                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'step', data:{
+                                                x:106, y:7.5, width:15, height:15, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_step_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_step_down.png',
+                                            }},
+                                            {collection:'control', type:'dial_discrete_image', name:'direction', data:{
+                                                x:131.75, y:15, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
+                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                            }},
+                                        ]
+                                    ).concat(
+                                        (new Array(16)).fill().flatMap((item,index) => {
+                                            return [
+                                                {collection:'display', type:'glowbox_rectangle', name:'selectorStepLED_'+index, data:{
+                                                    x:7.5 + index*15, y:45, width:5, height:2.5, style:unitStyle.selectorStepLEDstyle,
+                                                }},
+                                            ];
+                                        })
+                                    ).concat(
+                                        (new Array(8)).fill().flatMap((item,index) => {
+                                            return [
+                                                {collection:'display', type:'glowbox_path', name:'channelLED_'+index, data:{
+                                                    x:5 + index*20, y:3.5, points:[{x:0,y:0},{x:10,y:0}], capType:'round', style:unitStyle.channelLEDstyle
+                                                }},
+                                            ]
+                                        })
+                                    ).concat(
+                                        (new Array(4)).fill().flatMap((item,index) => {
+                                            return [
+                                                {collection:'control', type:'button_image', name:'selector_'+index, data:{
+                                                    x:5 + index*15, y:25, width:10, height:20, hoverable:false,
+                                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_1_up.png',
+                                                    backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_1_down.png',
+                                                }},
+                                                {collection:'display', type:'glowbox_circle', name:'selectorLED_'+index, data:{
+                                                    x:10 + index*15, y:30, radius:2, style:unitStyle.selectorLEDstyle,
+                                                }},
+                                                {collection:'control', type:'button_image', name:'selector_'+(index+4), data:{
+                                                    x:5 + (index+4)*15, y:25, width:10, height:20, hoverable:false,
+                                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_2_up.png',
+                                                    backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_2_down.png',
+                                                }},
+                                                {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+4), data:{
+                                                    x:10 + (index+4)*15, y:30, radius:2, style:unitStyle.selectorLEDstyle,
+                                                }},
+                                                {collection:'control', type:'button_image', name:'selector_'+(index+8), data:{
+                                                    x:5 + (index+8)*15, y:25, width:10, height:20, hoverable:false,
+                                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_3_up.png',
+                                                    backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_3_down.png',
+                                                }},
+                                                {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+8), data:{
+                                                    x:10 + (index+8)*15, y:30, radius:2, style:unitStyle.selectorLEDstyle,
+                                                }},
+                                                {collection:'control', type:'button_image', name:'selector_'+(index+12), data:{
+                                                    x:5 + (index+12)*15, y:25, width:10, height:20, hoverable:false,
+                                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_4_up.png',
+                                                    backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_4_down.png',
+                                                }},
+                                                {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+12), data:{
+                                                    x:10 + (index+12)*15, y:30, radius:2, style:unitStyle.selectorLEDstyle,
+                                                }},
+                                            ];
+                                        })
+                                    )
+                            });
+                    
+                        //circuitry
+                            const state = {
+                                outputMode:'signal', //signal / voltage
+                                step:0, 
+                                direction:'l2r', //l2r / r2l / bounce / random
+                                bounceDirection:1,
+                                currentChannel:0,
+                                unifyChannels:false,
+                                channel:[],
+                                currentlySoundingChannels:[0,0,0,0,0,0,0,0],
+                                release:1,
+                            };
+                            for(let a = 0; a < 8; a++){
+                                state.channel.push(
+                                    {
+                                        currentPage:0,
+                                        pages:(new Array(10)).fill().map(() => (new Array(16)).fill().map(() => false) )
+                                    }
+                                );
+                            }
+                    
+                            function setOutputConnectionNodes(mode){
+                                if(mode != 'signal' && mode != 'voltage'){return;}
+                                if(state.outputMode == mode){return;}
+                                state.outputMode = mode;
+                    
+                                const duration = 500;
+                                const detail = 30;
+                                const zero2five = _canvas_.library.math.curveGenerator.s(detail,0,5);
+                                const five2zero = _canvas_.library.math.curveGenerator.s(detail,5,0);
+                    
+                                if(mode == 'signal'){
+                                    object.elements.checkbox_image.signal.set(true);
+                                    object.elements.checkbox_image.voltage.set(false);
+                                    for(let a = 0; a < 8; a++){
+                                        object.elements.connectionNode_voltage['voltage_out_'+a].disconnect();
+                                        object.elements.connectionNode_voltage['voltage_out_'+a].set(0);
+                                        
+                                        for(let b = 0; b < detail; b++){
+                                            setTimeout(()=>{
+                                                object.elements.connectionNode_signal['signal_out_'+a].y(five2zero[b]);
+                                                object.elements.connectionNode_voltage['voltage_out_'+a].y(zero2five[b]);
+                                            },
+                                            (duration/detail)*b);
+                                        }
+                                        
+                                    }
+                                }else if(mode == 'voltage'){
+                                    object.elements.checkbox_image.signal.set(false);
+                                    object.elements.checkbox_image.voltage.set(true);
+                                    for(let a = 0; a < 8; a++){
+                                        object.elements.connectionNode_signal['signal_out_'+a].disconnect();
+                                        object.elements.connectionNode_signal['signal_out_'+a].set(false);
+                                        for(let b = 0; b < detail; b++){
+                                            setTimeout(()=>{
+                                                object.elements.connectionNode_signal['signal_out_'+a].y(zero2five[b]);
+                                                object.elements.connectionNode_voltage['voltage_out_'+a].y(five2zero[b]);
+                                            },
+                                            (duration/detail)*b);
+                                        }
+                                    }
+                                }
+                            }
+                            function refreshLEDS(){
+                                //channel
+                                    for(let a = 0; a < 8; a++){
+                                        object.elements.glowbox_path['channelLED_'+a].off();
+                                    }
+                                    object.elements.glowbox_path['channelLED_'+state.currentChannel].on();
+                    
+                                //page
+                                    const page = state.channel[state.currentChannel].currentPage;
+                                    object.elements.sevenSegmentDisplay.page.enterCharacter(page);
+                                    
+                                //selector
+                                    for(let a = 0; a < 16; a++){
+                                        if( state.channel[state.currentChannel].pages[page][a] ){
+                                            object.elements.glowbox_circle['selectorLED_'+a].on();
+                                        }else{
+                                            object.elements.glowbox_circle['selectorLED_'+a].off();
+                                        }
+                                    }
+                    
+                                //step
+                                    for(let a = 0; a < 16; a++){
+                                        object.elements.glowbox_rectangle['selectorStepLED_'+a].off();
+                                    }
+                                    object.elements.glowbox_rectangle['selectorStepLED_'+state.step].on();
+                            }
+                            function setChannel(channel){
+                                if(channel == undefined){ return state.currentChannel; }
+                                state.currentChannel = channel;
+                                refreshLEDS();
+                            }
+                            function step(){
+                                switch(state.direction){
+                                    case 'l2r':
+                                        state.step++;
+                                        if(state.step > 15){state.step = 0;}
+                                    break;
+                                    case 'r2l': 
+                                        state.step--;
+                                        if(state.step < 0){state.step = 15;}
+                                    break;
+                                    case 'bounce':
+                                        if(state.step == 0){state.bounceDirection = 1;}
+                                        if(state.step == 15){state.bounceDirection = -1;}
+                                        state.step += state.bounceDirection;
+                                    break;
+                                    case 'random': 
+                                        state.step = Math.floor(Math.random()*16);
+                                    break;
+                                }
+                    
+                                state.currentlySoundingChannels = state.currentlySoundingChannels.map((item,index) => {
+                                    if(item == 0){return 0;}
+                                    if(item == 1){
+                                        if( state.outputMode == 'signal' ){
+                                            object.elements.connectionNode_signal['signal_out_'+index].set( false );
+                                        }else if( state.outputMode == 'voltage' ){
+                                            object.elements.connectionNode_voltage['voltage_out_'+index].set( 0 );
+                                        }
+                                        return 0;
+                                    }
+                                    if(item > 1){
+                                        return item - 1;
+                                    }
+                                });
+                                for(let a = 0; a < 8; a++){
+                                    if( state.channel[a].pages[state.channel[a].currentPage][state.step] && state.currentlySoundingChannels[a] == 0 ){
+                                        if( state.outputMode == 'signal' ){
+                                            object.elements.connectionNode_signal['signal_out_'+a].set( true );
+                                        }else if( state.outputMode == 'voltage' ){
+                                            object.elements.connectionNode_voltage['voltage_out_'+a].set( 1 );
+                                        }
+                                        state.currentlySoundingChannels[a] = state.release;
+                                    }
+                                }
+                                
+                                refreshLEDS();
+                            }
+                    
+                        //wiring
+                            //hid
+                                object.elements.checkbox_image.signal.onchange = function(state){
+                                    if(state){
+                                        setOutputConnectionNodes('signal');
+                                    }
+                                };
+                                object.elements.checkbox_image.voltage.onchange = function(state){
+                                    if(state){
+                                        setOutputConnectionNodes('voltage');
+                                    }
+                                };
+                                object.elements.button_image.channel_left.onpress = function(){
+                                    state.currentChannel--;
+                                    if(state.currentChannel < 0){state.currentChannel = 7;}
+                                    refreshLEDS();
+                                };
+                                object.elements.button_image.channel_right.onpress = function(){
+                                    state.currentChannel++;
+                                    if(state.currentChannel > 7){state.currentChannel = 0;}
+                                    refreshLEDS();
+                                };
+                                for(let a = 0; a < 16; a++){
+                                    object.elements.button_image['selector_'+a].onpress = function(){
+                                        const page = state.channel[state.currentChannel].currentPage;
+                                        state.channel[state.currentChannel].pages[page][a] = !state.channel[state.currentChannel].pages[page][a];
+                                        refreshLEDS();
+                                    };
+                                }
+                                object.elements.button_image.page_up.onpress = function(){
+                                    state.channel[state.currentChannel].currentPage++;
+                                    if(state.channel[state.currentChannel].currentPage > 7){state.channel[state.currentChannel].currentPage = 0;}
+                    
+                                    if(state.unifyChannels){
+                                        for(let a = 0; a < 8; a++){
+                                            state.channel[a].currentPage = state.channel[state.currentChannel].currentPage;
+                                        }
+                                    }
+                    
+                                    refreshLEDS();
+                                };
+                                object.elements.button_image.page_down.onpress = function(){
+                                    state.channel[state.currentChannel].currentPage--;
+                                    if(state.channel[state.currentChannel].currentPage < 0){state.channel[state.currentChannel].currentPage = 7;}
+                    
+                                    if(state.unifyChannels){
+                                        for(let a = 0; a < 8; a++){
+                                            state.channel[a].currentPage = state.channel[state.currentChannel].currentPage;
+                                        }
+                                    }
+                    
+                                    refreshLEDS();
+                                };
+                                object.elements.checkbox_image.unify.onchange = function(bool){
+                                    state.unifyChannels = bool;
+                                };
+                                object.elements.button_image.clear.onpress = function(){
+                                    const page = state.channel[state.currentChannel].currentPage;
+                                    for(let a = 0; a < 16; a++){
+                                        state.channel[state.currentChannel].pages[page][a] = false;
+                                    }
+                                    if(state.unifyChannels){
+                                        for(let a = 0; a < 8; a++){
+                                            for(let b = 0; b < 16; b++){
+                                                state.channel[a].pages[page][b] = false;
+                                            }
+                                        }
+                                    }
+                                    refreshLEDS();
+                                };
+                                object.elements.dial_discrete_image.releaseLength.onchange = function(value){
+                                    state.release = value+1;
+                                };
+                                object.elements.button_image.step.onpress = function(){
+                                    step();
+                                };
+                                object.elements.dial_discrete_image.direction.onchange = function(value){
+                                    state.direction = ['l2r','r2l','bounce','random'][value];
+                                };
+                    
+                            //keycapture
+                                object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
+                                    switch(event.key){
+                                        case '1': setChannel(0); break;
+                                        case '2': setChannel(1); break;
+                                        case '3': setChannel(2); break;
+                                        case '4': setChannel(3); break;
+                                        case '5': setChannel(4); break;
+                                        case '6': setChannel(5); break;
+                                        case '7': setChannel(6); break;
+                                        case '8': setChannel(7); break;
+                    
+                                        case '9': object.elements.dial_discrete_image.releaseLength.nudge(-1); break;
+                                        case '0': object.elements.dial_discrete_image.releaseLength.nudge(1);  break;
+                                        case '-': object.elements.dial_discrete_image.direction.nudge(-1); break;
+                                        case '=': object.elements.dial_discrete_image.direction.nudge(1);  break;
+                    
+                                        case '.': 
+                                            if(state.outputMode == 'signal'){ setOutputConnectionNodes('voltage'); }
+                                            else if(state.outputMode == 'voltage'){ setOutputConnectionNodes('signal'); }
+                                        break;
+                                        case '/': object.elements.checkbox_image.unify.toggle(); break;
+                                        case ';': object.elements.button_image.clear.press(); break;
+                                        case 'Enter': step(); break;
+                    
+                                        case 'q': state.channel[state.currentChannel].currentPage = 0; refreshLEDS(); break;
+                                        case 'w': state.channel[state.currentChannel].currentPage = 1; refreshLEDS(); break;
+                                        case 'e': state.channel[state.currentChannel].currentPage = 2; refreshLEDS(); break;
+                                        case 'r': state.channel[state.currentChannel].currentPage = 3; refreshLEDS(); break;
+                                        case 't': state.channel[state.currentChannel].currentPage = 4; refreshLEDS(); break;
+                                        case 'y': state.channel[state.currentChannel].currentPage = 5; refreshLEDS(); break;
+                                        case 'u': state.channel[state.currentChannel].currentPage = 6; refreshLEDS(); break;
+                                        case 'i': state.channel[state.currentChannel].currentPage = 7; refreshLEDS(); break;
+                                        case 'o': state.channel[state.currentChannel].currentPage = 8; refreshLEDS(); break;
+                                        case 'p': state.channel[state.currentChannel].currentPage = 9; refreshLEDS(); break;
+                    
+                                        case 'a': object.elements.button_image['selector_0'].press();  break;
+                                        case 's': object.elements.button_image['selector_1'].press();  break;
+                                        case 'd': object.elements.button_image['selector_2'].press();  break;
+                                        case 'f': object.elements.button_image['selector_3'].press();  break;
+                                        case 'g': object.elements.button_image['selector_4'].press();  break;
+                                        case 'h': object.elements.button_image['selector_5'].press();  break;
+                                        case 'j': object.elements.button_image['selector_6'].press();  break;
+                                        case 'k': object.elements.button_image['selector_7'].press();  break;
+                                        case '`': object.elements.button_image['selector_8'].press();  break;
+                                        case 'z': object.elements.button_image['selector_9'].press();  break;
+                                        case 'x': object.elements.button_image['selector_10'].press(); break;
+                                        case 'c': object.elements.button_image['selector_11'].press(); break;
+                                        case 'v': object.elements.button_image['selector_12'].press(); break;
+                                        case 'b': object.elements.button_image['selector_13'].press(); break;
+                                        case 'n': object.elements.button_image['selector_14'].press(); break;
+                                        case 'm': object.elements.button_image['selector_15'].press(); break;
+                                    }
+                                });
+                                object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
+                                    switch(event.key){
+                                        case ';': object.elements.button_image.clear.release(); break;
+                    
+                                        case 'a': object.elements.button_image['selector_0'].release();  break;
+                                        case 's': object.elements.button_image['selector_1'].release();  break;
+                                        case 'd': object.elements.button_image['selector_2'].release();  break;
+                                        case 'f': object.elements.button_image['selector_3'].release();  break;
+                                        case 'g': object.elements.button_image['selector_4'].release();  break;
+                                        case 'h': object.elements.button_image['selector_5'].release();  break;
+                                        case 'j': object.elements.button_image['selector_6'].release();  break;
+                                        case 'k': object.elements.button_image['selector_7'].release();  break;
+                                        case '`': object.elements.button_image['selector_8'].release();  break;
+                                        case 'z': object.elements.button_image['selector_9'].release();  break;
+                                        case 'x': object.elements.button_image['selector_10'].release(); break;
+                                        case 'c': object.elements.button_image['selector_11'].release(); break;
+                                        case 'v': object.elements.button_image['selector_12'].release(); break;
+                                        case 'b': object.elements.button_image['selector_13'].release(); break;
+                                        case 'n': object.elements.button_image['selector_14'].release(); break;
+                                        case 'm': object.elements.button_image['selector_15'].release(); break;
+                                    }
+                                });
+                    
+                            //io
+                                object.io.signal.pulseIn.onchange = function(value){
+                                    if(!value){return}
+                                    step();
+                                } 
+                    
+                        //interface
+                            object.i = {
+                                outputMode:function(mode){
+                                    if(mode == undefined){ return state.outputMode; }
+                                    setOutputConnectionNodes(mode);
+                                },
+                                step:function(){
+                                    step();
+                                },
+                                currentChannel:function(channel){
+                                    if(channel == undefined){ return state.currentChannel; }
+                                    if(channel > 7 || channel < 0){return;}
+                                    state.currentChannel = channel;
+                                    refreshLEDS();
+                                },
+                                currentPage:function(channel, page){
+                                    if(channel == undefined){ return; }
+                                    if(page == undefined){ return state.channel[channel].currentPage; }
+                                    if(page > 9 || page < 0){return;}
+                                    state.channel[channel].currentPage = page;
+                                    refreshLEDS();
+                                },
+                                pageData:function(channel, page, data){
+                                    if(channel == undefined){ return; }
+                                    if(page == undefined){ return state.channel[channel].pages; }
+                                    if(data == undefined){ return state.channel[channel].pages[page]; }
+                                    state.channel[channel].pages[page] = data;
+                                    refreshLEDS();
+                                },
+                                clear:function(){
+                                    object.elements.button_image.clear.press();
+                                    object.elements.button_image.clear.release();
+                                },
+                                unify:function(bool){
+                                    if(bool == undefined){ return state.unifyChannels; }
+                                    object.elements.checkbox_image.unify.set(bool);
+                                },
+                                release:function(value){
+                                    if(value == undefined){ return state.release-1; }
+                                    object.elements.dial_discrete_image.releaseLength.set(value);
+                                },
+                                direction:function(mode){
+                                    if(mode == undefined){ return state.direction; }
+                                    object.elements.dial_discrete_image.direction.set( ['l2r','r2l','bounce','random'].indexOf(mode) );
+                                },
+                            };
+                    
+                        //import/export
+                            object.exportData = function(){
+                                return JSON.stringify(state);
+                            };
+                            object.importData = function(data){
+                                data = JSON.parse(data);
+                                state.outputMode = data.outputMode;
+                                state.step = data.step;
+                                state.direction = data.direction;
+                                state.bounceDirection = data.bounceDirection;
+                                state.currentChannel = data.currentChannel;
+                                state.unifyChannels = data.unifyChannels;
+                                state.channel = data.channel;
+                                state.currentlySoundingChannels = data.currentlySoundingChannels;
+                                state.release = data.release;
+                                refreshLEDS();
+                            };
+                    
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                object.elements.checkbox_image.signal.set(true);
+                                setChannel(0);
+                            };
+                    
+                        return object;
+                    };
+                    this['mrd-16'].metadata = {
+                        name:'MRD-16',
+                        category:'sequencers',
+                        helpURL:'/help/units/harbinger/mrd-16/'
+                    };
+                    const imageStoreURL = '/images/units/3 - harbinger/';
+                    const style = {
+                        primeColour:{
+                            lightGrey:{r:0.77,g:0.77,b:0.77,a:1},
+                        },
+                    
+                        connectionNode:{
+                            signal:{
+                                dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                cable_dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                cable_glow:{r:237/255,g:154/255,b:132/255,a:1},
+                            },
+                            voltage:{
+                                dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                cable_dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                cable_glow:{r:210/255,g:255/255,b:165/255,a:1},
+                            },
+                            data:{
+                                dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                cable_dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                cable_glow:{r:168/255,g:208/255,b:255/255,a:1},
+                            },
+                            audio:{
+                                dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                cable_dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                cable_glow:{r:247/255,g:203/255,b:133/255,a:1},
+                            },
+                        },
+                    };
+                    
+                    this._collectionData = {
+                        name:'Harbinger',
+                        itemWidth:210,
+                        categoryOrder:[
+                            'sequencers',
+                        ],   
+                    };
+                    this._categoryData = {
+                        sequencers:{ printingName:'Sequencers',itemWidth:175},
+                    };
+                };
             };
             
             _canvas_.interface.unit.collection.metadata = {
                 mainList:[
                     'alpha',
                     'curvetech',
+                    'harbinger',
                 ],
                 devList:[
                     'development',
@@ -51767,8 +52278,8 @@
                             breakHeight: 0.5,
                             spaceHeight: 1,
                             itemList:[
-                                { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
-                                { type:'checkbox', text:'dark mode', 
+                                { type:'checkbox', text:'Snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
+                                { type:'checkbox', text:'Dark Mode', 
                                     updateFunction:function(){return _canvas_.control.gui.style.currentStyleMode == 'dark';}, 
                                     onclickFunction:function(val){
                                         if(val){ _canvas_.control.gui.style.darkMode(); }
@@ -51810,11 +52321,17 @@
                                 spaceHeight: 1,
                                 itemList:[
                                     {type:'button', text_left:'Release All Keyboard Keys', function:function(){ _canvas_.system.keyboard.releaseAll(); } },
+                                    {type:'checkbox', text_left:'Limit Frame Rate (30fps)', 
+                                        updateFunction:_canvas_.core.render.activeLimitToFrameRate, 
+                                        onclickFunction:function(val){_canvas_.core.render.activeLimitToFrameRate(val);}
+                                    },
                                     {type:'break'}
                                 ].concat(
                                     _canvas_.layers.getVersionInformation().map(item => {
                                         if(item.name[0] == '_'){ item.name = item.name.substr(1); }
-                                        return {name:item.name,date:item.data.lastDateModified.y+'/'+item.data.lastDateModified.m+'/'+item.data.lastDateModified.d}
+                                        return {
+                                            name:item.name,date:item.data.lastDateModified.y+'/'+_canvas_.library.misc.padString(item.data.lastDateModified.m,2,'0')+'/'+_canvas_.library.misc.padString(item.data.lastDateModified.d,2,'0')
+                                        }
                                     } ).map( item => ({type:'text', text_left:item.name, text_centre:'-', text_right:item.date})
                                     ).reverse()
                                 )
@@ -51827,6 +52344,13 @@
             });
 
             
+            _canvas_.curve.go.add( function(){
+                _canvas_.control.scene.addUnit(10,10,0,'mrd-16','harbinger');
+            
+            
+                _canvas_.control.viewport.scale(5);
+                // _canvas_.control.viewport.position(515, -490);
+            });
 
 
         }

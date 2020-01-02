@@ -1,4 +1,4 @@
-this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:1} };
 const library = this;
 
 {{include:dev.js}}
@@ -12,14 +12,14 @@ this.glsl = new function(){
 this.structure = new function(){
     {{include:modules/structure.js}}
 };
-this.audio = new function(){
-    {{include:modules/audio.js}}
-};
 this.font = new function(){
     {{include:modules/font.js}}
 };
 this.misc = new function(){
     {{include:modules/misc.js}}
+};
+this.audio = new function(){
+    {{include:modules/audio.js}}
 };
 const _thirdparty = new function(){
     const thirdparty = this;

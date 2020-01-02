@@ -64,5 +64,5 @@ this.data_duplicator = function(name,x,y,angle){
 this.data_duplicator.metadata = {
     name:'Data Duplicator',
     category:'misc',
-    helpURL:'/help/units/beta/data_duplicator/'
+    helpURL:'/help/units/alpha/data_duplicator/'
 };

@@ -455,7 +455,6 @@ const library = new function(){
                 {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
             ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
         }
-        
         this.detectIntersect = new function(){
             this.boundingBoxes = function(box_a, box_b){
         
@@ -506,26 +505,17 @@ const library = new function(){
                 }
         
                 function pointLevelWithPolyPointChecker(poly,point,a,b){
-                    //only flip, if the point is not perfectly level with point a of the line (the system will come round to having this same point be point b)
-                    //or if you can prove that the two adjacent points are higher and lower than the matching point's level
+                    //only flip, if the point is not perfectly level with point a of the line 
+                    //or if you can prove that the a's two adjacent points are higher and lower than the matching point's level
+                    //(the system will come round to having this same point be point b)
                     if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
                         return true;
-                    }else if(poly.points[a].y != point.y){
+                    }else if(poly.points[a].y == point.y){
                         const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
                         const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
                         if(
                             poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
                             poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
-                        ){
-                        }else{
-                            return true;
-                        }
-                    }else if(poly.points[b].y != point.y){
-                        const pointInFront = b+1 >= poly.points.length ? 0 : b+1;
-                        const pointBehind = b-1 <= 0 ? poly.points.length-1 : b-1;
-                        if(
-                            poly.points[pointBehind].y <= poly.points[b].y && poly.points[pointInFront].y <= poly.points[b].y ||
-                            poly.points[pointBehind].y >= poly.points[b].y && poly.points[pointInFront].y >= poly.points[b].y
                         ){
                         }else{
                             return true;
@@ -754,163 +744,6 @@ const library = new function(){
                 return results;
             };
         };
-        this.detectOverlap = new function(){
-            const detectOverlap = this;
-        
-            this.boundingBoxes = function(a, b){
-        
-                return a.bottomRight.y >= b.topLeft.y && 
-                    a.bottomRight.x >= b.topLeft.x && 
-                    a.topLeft.y <= b.bottomRight.y && 
-                    a.topLeft.x <= b.bottomRight.x;
-            };
-            this.pointWithinBoundingBox = function(point,box){
-        
-                return !(
-                    point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
-                    point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
-                );
-            };
-            this.pointWithinPoly = function(point,points){
-        
-                //Ray casting algorithm
-                let inside = false;
-                for(let a = 0, b = points.length - 1; a < points.length; b = a++){
-                    //if the point is on a point of the poly; bail and return true
-                    if( point.x == points[a].x && point.y == points[a].y ){ return true; }
-        
-                    //point must be on the same level of the line
-                    if( (points[b].y >= point.y && points[a].y <= point.y) || (points[a].y >= point.y && points[b].y <= point.y) ){
-                        //discover if the point is on the far right of the line
-                        if( points[a].x < point.x && points[b].x < point.x ){
-                            inside = !inside;
-                        }else{
-                            //calculate what side of the line this point is
-                                let areaLocation;
-                                if( points[b].y > points[a].y && points[b].x > points[a].x ){
-                                    areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
-                                }else if( points[b].y <= points[a].y && points[b].x <= points[a].x ){
-                                    areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
-                                }else if( points[b].y > points[a].y && points[b].x < points[a].x ){
-                                    areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
-                                }else if( points[b].y <= points[a].y && points[b].x >= points[a].x ){
-                                    areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
-                                }
-        
-                            //if its on the line, return true immediatly, if it's just above 1 do a flip
-                                if( areaLocation == 1 ){
-                                    return true;
-                                }else if(areaLocation > 1){
-                                    inside = !inside;
-                                }
-                        }
-                    }
-                }
-                return inside;
-            };
-            this.lineSegments = function(segment1, segment2){
-        
-                const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                if(denominator == 0){return null;}
-        
-                const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-                return {
-                    'x':      (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
-                    'y':      (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
-                    'inSeg1': (u1 >= 0 && u1 <= 1),
-                    'inSeg2': (u2 >= 0 && u2 <= 1)
-                };
-            };
-            this.overlappingPolygons = function(points_a,points_b){
-        
-                //a point from A is in B
-                    for(let a = 0; a < points_a.length; a++){
-                        if(detectOverlap.pointWithinPoly(points_a[a],points_b)){ return true; }
-                    }
-        
-                //a point from B is in A
-                    for(let a = 0; a < points_b.length; a++){
-                        if(detectOverlap.pointWithinPoly(points_b[a],points_a)){ return true; }
-                    }
-        
-                //side intersection
-                    const a_indexing = Array.apply(null, {length: points_a.length}).map(Number.call, Number).concat([0]);
-                    const b_indexing = Array.apply(null, {length: points_b.length}).map(Number.call, Number).concat([0]);
-        
-                    for(let a = 0; a < a_indexing.length-1; a++){
-                        for(let b = 0; b < b_indexing.length-1; b++){
-                            const tmp = detectOverlap.lineSegments( 
-                                [ points_a[a_indexing[a]], points_a[a_indexing[a+1]] ],
-                                [ points_b[b_indexing[b]], points_b[b_indexing[b+1]] ]
-                            );
-                            if( tmp != null && tmp.inSeg1 && tmp.inSeg2 ){return true;}
-                        }
-                    }
-        
-                return false;
-            };
-            this.overlappingPolygonWithPolygons = function(poly,polys){ 
-        
-                for(let a = 0; a < polys.length; a++){
-                    if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
-                        if(detectOverlap.overlappingPolygons(poly.points, polys[a].points)){
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            };
-        
-            function overlappingLineWithPolygon(line,poly){
-        
-                //go through every side of the poly, and if one of them collides with the line, return true
-                for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
-                    const tmp = library.math.detectOverlap.lineSegments(
-                        [
-                            { x:line.x1, y:line.y1 },
-                            { x:line.x2, y:line.y2 }
-                        ],
-                        [
-                            { x:poly.points[a].x, y:poly.points[a].y },
-                            { x:poly.points[b].x, y:poly.points[b].y }
-                        ],
-                    );
-                    if(tmp != null && tmp.inSeg1 && tmp.inSeg2){ return true; }
-                }
-        
-                return false;
-            };
-            this.overlappingLineWithPolygons = function(line,polys){
-        
-                //generate a bounding box for the line
-                    const line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
-                    if(line.x1 > line.x2){
-                        line_boundingBox.topLeft.x = line.x2;
-                        line_boundingBox.bottomRight.x = line.x1;
-                    }else{
-                        line_boundingBox.topLeft.x = line.x1;
-                        line_boundingBox.bottomRight.x = line.x2;
-                    }
-                    if(line.y1 > line.y2){
-                        line_boundingBox.topLeft.y = line.y2;
-                        line_boundingBox.bottomRight.y = line.y1;
-                    }else{
-                        line_boundingBox.topLeft.y = line.y1;
-                        line_boundingBox.bottomRight.y = line.y2;
-                    }
-        
-                //gather the indexes of the polys that collide with this line
-                    const collidingPolyIndexes = [];
-                    polys.forEach((poly,index) => {
-                        if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
-                        if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
-                    });
-        
-                return collidingPolyIndexes;
-            };
-        };
-        
         this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
             dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
         
@@ -1175,6 +1008,14 @@ const library = new function(){
                 newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
                 return newPolygon;
             };
+            function polyOnPolys(polygon,environmentPolys){
+                for(let a = 0; a < environmentPolys.length; a++){
+                    if(library.math.detectIntersect.polyOnPoly(polygon,environmentPolys[a]).intersect){
+                        return true;
+                    }
+                }
+                return false;
+            }
         
             
         
@@ -1206,7 +1047,7 @@ const library = new function(){
                                     if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                 
                                 //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
-                                    if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                    if(!polyOnPolys(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                         successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
                                     }
                             }
@@ -1244,7 +1085,7 @@ const library = new function(){
                                         if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                                 
                                     //if offsetting the shape in this way results in no collision; save this offset in 'tmp_successfulOffsets'
-                                        if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                        if(!polyOnPolys(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                             tmp_successfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                             provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                         }
@@ -1283,7 +1124,7 @@ const library = new function(){
         
                             //can you make a x movement? you can? then do it
                                 if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
-                                if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
+                                if(!polyOnPolys(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
                                     max.x = midpoint.x; //too far
                                 }else{ 
                                     min.x = midpoint.x; //too close
@@ -1291,7 +1132,7 @@ const library = new function(){
         
                             //can you make a y movement? you can? then do it
                                 if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
-                                if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
+                                if(!polyOnPolys(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
                                     max.y = midpoint.y; //too far
                                 }else{
                                     min.y = midpoint.y; //too close
@@ -1370,6 +1211,18 @@ const library = new function(){
         };
         this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
         
+            //if the starting location or ending location are totally inaccessible, bail on this whole thing
+            //though return the point (if any) that was ok
+                if( visibilityGraph[start].destination.length == 0 && visibilityGraph[end].destination.length == 0 ){
+                    return [];
+                }
+                if( visibilityGraph[start].destination.length == 0 ){
+                    return [end];
+                }
+                if( visibilityGraph[end].destination.length == 0 ){ 
+                    return [start];
+                }
+        
             //set the 'current' location as the start
                 let current = start;
         
@@ -1387,7 +1240,12 @@ const library = new function(){
                 locationSet[current].distance = 0;
         
             //loop through locations, until the end location has been visited
+                let limit = 100;
                 do{
+                    if(limit <= 0){console.error('.shortestRouteFromVisibilityGraph has encountered an overflow'); break;}
+                    limit--;
+        
+        
                     //update unvisited distance values
                         for(let a = 0; a < visibilityGraph[current].destination.length; a++){
                             if( locationSet[visibilityGraph[current].destination[a].index].visited ){
@@ -1568,7 +1426,7 @@ const library = new function(){
                     paths.forEach(path => {
                         let isHole = false;
                         for(let a = 0; a < segments.length; a++){
-                            if( library.math.detectOverlap.overlappingPolygons(path,segments[a].path) ){
+                            if( library.math.detectIntersect.polyOnPoly({points:path},{points:segments[a].path}) ){
                                 segments[a].path = segments[a].path.concat(path);
                                 segments[a].regions.unshift(path);
                                 isHole = true;
@@ -2866,11 +2724,14 @@ const library = new function(){
         
             return data;
         };
-        this.openFile = function(callback,readAsType='readAsBinaryString'){
+        this.openFile = function(callback,readAsType='readAsBinaryString',fileType){
         
             const i = document.createElement('input');
             i.type = 'file';
-            i.accept = '.crv';
+            i.accept = fileType;
+            i.onload = function(){
+                console.log('onload');
+            };
             i.onchange = function(){
                 const f = new FileReader();
                 switch(readAsType){
@@ -2878,7 +2739,7 @@ const library = new function(){
                     case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
                 }
                 f.onloadend = function(){ 
-                    if(callback){callback(f.result);}
+                    if(callback){callback(f.result,i.files[0]);}
                 }
             };
         
@@ -21561,13 +21422,13 @@ const element = new function(){
                                 if( children[a].ignored() ){ continue; }
             
                             //if the point is not within this child's bounding box, just move on to the next one
-                                if( !library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, children[a].extremities.boundingBox ) ){ continue; }
+                                if( !library.math.detectIntersect.pointWithinBoundingBox( {x:x,y:y}, children[a].extremities.boundingBox ) ){ continue; }
             
                             //if the child is a group type; pass this point to it's "getElementsUnderPoint" function and collect the results, then move on to the next item
                                 if( children[a].getType() == 'group' ){ returnList = returnList.concat( children[a].getElementsUnderPoint(x,y) ); continue; }
             
                             //if this point exists within the child; add it to the results list
-                                if( library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, children[a].extremities.points ) ){ returnList = returnList.concat( children[a] ); }
+                                if( library.math.detectIntersect.pointWithinPoly( {x:x,y:y}, {points:children[a].extremities.points} ) != 'outside' ){ returnList = returnList.concat( children[a] ); }
                         }
             
                         return returnList;
@@ -21582,13 +21443,13 @@ const element = new function(){
                                 if( children[a].ignored() ){ continue; }
             
                             //if the area does not overlap with this child's bounding box, just move on to the next one
-                                if( !library.math.detectOverlap.boundingBoxes( library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){ continue; }
+                                if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){ continue; }
             
                             //if the child is a group type; pass this area to it's "getElementsUnderArea" function and collect the results, then move on to the next item
                                 if( children[a].getType() == 'group' ){ returnList = returnList.concat( item.getElementUnderArea(points) ); continue; }
             
                             //if this area overlaps with the child; add it to the results list
-                                if( library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){ returnList = returnList.concat( children[a] ); }
+                                if( library.math.detectIntersect.polyOnPoly({points:points}, {points:item.extremities.points}) ){ returnList = returnList.concat( children[a] ); }
                         }
             
                         return returnList;
@@ -21625,15 +21486,15 @@ const element = new function(){
                         if(children.length == 0){
                             limits = {left:x,right:x,top:y,bottom:y};
                         }else{
-                            const firstChild = library.math.boundingBoxFromPoints(children[0].extremities.points);
+                            const firstChild = children[0].extremities.boundingBox;
                             limits = { left:firstChild.topLeft.x, right:firstChild.bottomRight.x, top:firstChild.bottomRight.y, bottom:firstChild.topLeft.y }
             
                             children.slice(1).forEach(child => {
-                                const tmp = library.math.boundingBoxFromPoints(child.extremities.points);
+                                const tmp = child.extremities.boundingBox;
                                 if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
-                                else if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
+                                if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
                                 if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
-                                else if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
+                                if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
                             });
                         }
             
@@ -21823,7 +21684,7 @@ const element = new function(){
                         //render children
                             children.forEach(function(a){
                                 if(
-                                    library.math.detectOverlap.boundingBoxes(
+                                    library.math.detectIntersect.boundingBoxes(
                                         clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox(),
                                         a.extremities.boundingBox
                                     )

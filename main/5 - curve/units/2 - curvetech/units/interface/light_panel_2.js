@@ -70,5 +70,5 @@ this.light_panel_2 = function(name,x,y,angle){
 this.light_panel_2.metadata = {
     name:'Light Panel - Type A',
     category:'interface',
-    helpURL:'/help/units/beta/light_panel_2/'
+    helpURL:'/help/units/curvetech/light_panel_2/'
 };

@@ -83,5 +83,5 @@ this.NOT = function(name,x,y,angle){
 this.NOT.metadata = {
     name:'NOT',
     category:'logic_gates',
-    helpURL:'/help/units/beta/NOT/'
+    helpURL:'/help/units/curvetech/NOT/'
 };

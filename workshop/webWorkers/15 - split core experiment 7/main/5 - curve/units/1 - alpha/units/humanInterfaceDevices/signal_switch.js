@@ -62,5 +62,5 @@ this.signal_switch = function(name,x,y,angle){
 this.signal_switch.metadata = {
     name:'Signal Switch',
     category:'humanInterfaceDevices',
-    helpURL:'/help/units/beta/signal_switch/'
+    helpURL:'/help/units/alpha/signal_switch/'
 };
