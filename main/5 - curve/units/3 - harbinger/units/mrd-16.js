@@ -2,7 +2,7 @@ this['mrd-16'] = function(name,x,y,angle){
     //style data
         const unitStyle = new function(){
             //image store location URL
-                this.imageStoreURL_localPrefix = imageStoreURL+'mrd-16/';
+                this.imageStoreURL_localPrefix = imageStoreURL+'MRD-16/';
 
             //calculation of measurements
                 const div = 10;
