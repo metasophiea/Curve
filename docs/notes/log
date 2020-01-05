@@ -1,4 +1,35 @@
- ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-01-05
+  CoreV3
+    - added sudo-catagory to curve's menubar creater in the create submenu, so
+      that if you use it ("") the unit is added to the bottom of the main list
+    - added the '^' symbol to library.font's reducedGlyphSet, and both default
+      fonts
+
+
+2020-01-04
+  CoreV3
+    - began work on a drum machine
+    - updated dial_image_discrete's set function, so that it stops when the new
+      value is the same as the old value
+
+
+2020-01-03
+  CoreV3
+    - fixed an issue with the MRD-16 not having the correct address for its
+      images
+    - updated core console's generic element simple attribute updater code so
+      that it doesn't update values to what's already stored in the cache, as
+      there's no need to set things to what they already are
+    - changed the MRD-16 chackbox's to buttons (for the signal/voltage
+      selection) as there was a little issue with clicking the mode that was
+      already selected and somehow having nothing selected
+    - moved drum sounds into a new folder in docs and started putting together
+      a collection of sample sounds (I have '78' and '808'. There's a few more
+      on the way which I'm getting from Logic Pro X..probably questionable
+      legal, but we'll deal with the C&D when it arrives)
+
+
 2020-01-02
   CoreV3
     - seems Harbinger have opened a shop in town, currently they're only selling

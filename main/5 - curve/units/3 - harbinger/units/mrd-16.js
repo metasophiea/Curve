@@ -8,7 +8,7 @@ this['mrd-16'] = function(name,x,y,angle){
                 const div = 10;
                 const measurement = { 
                     file: { width:2500, height:520 },
-                    design: { width:25, height:5.2 },
+                    design: { width:25+0.5, height:5.2+0.2 },
                 };
 
                 this.offset = {x:2.5,y:1};
@@ -63,16 +63,21 @@ this['mrd-16'] = function(name,x,y,angle){
                             data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                         },
 
-                        {collection:'control', type:'checkbox_image', name:'signal', data:{
-                            x:5, y:7.5, width:6, height:15,
-                            checkURL:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
-                            uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
+                        {collection:'control', type:'button_image', name:'signal', data:{
+                            x:5, y:7.5, width:6, height:15, hoverable:false,
+                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
+                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
+                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
+                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
                         }},
-                        {collection:'control', type:'checkbox_image', name:'voltage', data:{
-                            x:14, y:7.5, width:6, height:15,
-                            checkURL:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
-                            uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
+                        {collection:'control', type:'button_image', name:'voltage', data:{
+                            x:14, y:7.5, width:6, height:15, hoverable:false,
+                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
+                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
+                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
+                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
                         }},
+
                         {collection:'control', type:'button_image', name:'channel_left', data:{
                             x:23, y:7.5, width:6, height:15, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_row_up.png',
@@ -208,8 +213,6 @@ this['mrd-16'] = function(name,x,y,angle){
             const five2zero = _canvas_.library.math.curveGenerator.s(detail,5,0);
 
             if(mode == 'signal'){
-                object.elements.checkbox_image.signal.set(true);
-                object.elements.checkbox_image.voltage.set(false);
                 for(let a = 0; a < 8; a++){
                     object.elements.connectionNode_voltage['voltage_out_'+a].disconnect();
                     object.elements.connectionNode_voltage['voltage_out_'+a].set(0);
@@ -221,11 +224,8 @@ this['mrd-16'] = function(name,x,y,angle){
                         },
                         (duration/detail)*b);
                     }
-                    
                 }
             }else if(mode == 'voltage'){
-                object.elements.checkbox_image.signal.set(false);
-                object.elements.checkbox_image.voltage.set(true);
                 for(let a = 0; a < 8; a++){
                     object.elements.connectionNode_signal['signal_out_'+a].disconnect();
                     object.elements.connectionNode_signal['signal_out_'+a].set(false);
@@ -238,8 +238,18 @@ this['mrd-16'] = function(name,x,y,angle){
                     }
                 }
             }
+            refreshLEDS();
         }
         function refreshLEDS(){
+            //output select
+                if(state.outputMode == 'signal'){
+                    object.elements.button_image.signal.glow(true);
+                    object.elements.button_image.voltage.glow(false);
+                }else if(state.outputMode == 'voltage'){
+                    object.elements.button_image.signal.glow(false);
+                    object.elements.button_image.voltage.glow(true);
+                }
+
             //channel
                 for(let a = 0; a < 8; a++){
                     object.elements.glowbox_path['channelLED_'+a].off();
@@ -320,15 +330,11 @@ this['mrd-16'] = function(name,x,y,angle){
 
     //wiring
         //hid
-            object.elements.checkbox_image.signal.onchange = function(state){
-                if(state){
-                    setOutputConnectionNodes('signal');
-                }
+            object.elements.button_image.signal.onpress = function(){
+                setOutputConnectionNodes('signal');
             };
-            object.elements.checkbox_image.voltage.onchange = function(state){
-                if(state){
-                    setOutputConnectionNodes('voltage');
-                }
+            object.elements.button_image.voltage.onpress = function(){
+                setOutputConnectionNodes('voltage');
             };
             object.elements.button_image.channel_left.onpress = function(){
                 state.currentChannel--;
@@ -548,7 +554,6 @@ this['mrd-16'] = function(name,x,y,angle){
 
     //setup/tearDown
         object.oncreate = function(){
-            object.elements.checkbox_image.signal.set(true);
             setChannel(0);
         };
 
@@ -556,6 +561,6 @@ this['mrd-16'] = function(name,x,y,angle){
 };
 this['mrd-16'].metadata = {
     name:'MRD-16',
-    category:'sequencers',
+    category:'',
     helpURL:'/help/units/harbinger/mrd-16/'
 };

@@ -185,13 +185,13 @@ this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
     //responseType: text / arraybuffer / blob / document / json 
 
     const xhttp = new XMLHttpRequest();
-    if(callback != undefined){ xhttp.onloadend = a => {
+    xhttp.onloadend = a => {
         if(a.target.status == 200){ callback(a.target.response); }
         else{ 
             if(errorCallback != undefined){ errorCallback(); }
             else{console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL);}
         }
-    }; }
+    };
     xhttp.open('get',URL,true);
     xhttp.responseType = responseType;
     xhttp.send();

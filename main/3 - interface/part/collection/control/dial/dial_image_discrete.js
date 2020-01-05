@@ -27,6 +27,7 @@ this.dial_discrete_image = function(
         function set(a,update=true){ 
             a = (a>(optionCount-1) ? (optionCount-1) : a);
             a = (a<0 ? 0 : a);
+            if(a == value){return;}
 
             if(update && object.onchange != undefined){object.onchange(a);}
 
@@ -86,7 +87,6 @@ this.dial_discrete_image = function(
                 function(x,y,event){
                     const diff = Math.round( (event.Y - initialY)/25 );
                     set( initialValue - diff );
-                    if(object.onchange != undefined){object.onchange(value);}
                 },
                 function(x,y,event){
                     grappled = false;

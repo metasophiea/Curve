@@ -29,7 +29,7 @@ _canvas_.core.go.add( function(){
         _canvas_.core.arrangement.append(characterString_3);
     let characterString_4 = _canvas_.core.element.create('characterString','test_characterString_4');
         characterString_4.unifiedAttribute({
-            string:'.,:;?!/\\()[]{}#-_\'"|><+=&*~%$',
+            string:'.,:;?!/\\()[]{}#-_\'"|><+=&*~%^$',
             font:'defaultThick',
             x:10, y:130, width:35, height:35, 
             printingMode:{ widthCalculation:'absolute', horizontal:'left', vertical:'top' },
@@ -101,7 +101,7 @@ _canvas_.core.go.add( function(){
         _canvas_.core.arrangement.append(characterString_11);
     let characterString_12 = _canvas_.core.element.create('characterString','test_characterString_12');
         characterString_12.unifiedAttribute({
-            string:'.,:;?!/\\()[]{}#-_\'"|><+=&*~%$',
+            string:'.,:;?!/\\()[]{}#-_\'"|><+=&*~%^$',
             font:'defaultThin',
             x:10, y:540, width:35, height:35, spacing:0.2,
             printingMode:{ widthCalculation:'absolute', horizontal:'left', vertical:'top' },

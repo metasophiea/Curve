@@ -196,7 +196,7 @@ this.extractGlyphs = function(fontFileData,reducedGlyphSet){
 
 
 const vectorLibrary = {};
-const reducedGlyphSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;?!/\\()[]{}#-_\'"|><+=&*~%'.split('');
+const reducedGlyphSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;?!/\\()[]{}#-_\'"|><+=&*~%^'.split('');
 const fontFilesLocation = '/fonts/';
 const systemFonts = [
     'defaultThick',

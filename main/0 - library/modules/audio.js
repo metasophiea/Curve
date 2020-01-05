@@ -42,7 +42,7 @@
             console.log(e);
         }
     };
-    this.loadAudioFile = function(callback,type='file',url=''){
+    this.loadAudioFile = function(callback,type='file',url='',errorCallback){
         dev.log.audio('.loadAudioFile(',callback,type,url); //#development
         dev.count('.audio.loadAudioFile'); //#development
 
@@ -60,7 +60,8 @@
                             callback({ buffer:data, name:(url.split('/')).pop(), duration:data.duration });
                         });
                     },
-                    'arraybuffer'
+                    'arraybuffer',
+                    errorCallback
                 );
             break;
             case 'file': default:

@@ -66,6 +66,7 @@ const genericElementProxy = function(_type, _name){
             cashedAttributes[name] = defaultValue;
             this[name] = function(a){
                 if(a == undefined){ return cashedAttributes[name]; }
+                if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
                 dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',a); //#development
                 cashedAttributes[name] = a;
                 if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[a]); }

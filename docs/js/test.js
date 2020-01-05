@@ -73,7 +73,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:5} };
                 const library = this;
                 
                 const dev = {
@@ -1990,7 +1990,7 @@
                     
                     
                     const vectorLibrary = {};
-                    const reducedGlyphSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;?!/\\()[]{}#-_\'"|><+=&*~%'.split('');
+                    const reducedGlyphSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;?!/\\()[]{}#-_\'"|><+=&*~%^'.split('');
                     const fontFilesLocation = '/fonts/';
                     const systemFonts = [
                         'defaultThick',
@@ -2475,10 +2475,17 @@
                             vector:[0,0,0.3333333333333333,0,0.6666666666666666,0.1,0.6666666666666666,0.4,1,0.5,0.6666666666666666,0.6,0.6666666666666666,0.6,0.6666666666666666,0.9,0.3333333333333333,1,0.3333333333333333,1,0,1,0,0.9,0.3333333333333333,0.8,0.3333333333333333,0.6,0.5,0.5,0.5,0.5,0.3333333333333333,0.4,0.3333333333333333,0.2,0.3333333333333333,0.2,0,0.1,0,0,0.6666666666666666,0.4,0.6666666666666666,0.6,0.3333333333333333,1,0.3333333333333333,1,0,0.9,0.3333333333333333,0.8,0.3333333333333333,0.2,0,0,0.6666666666666666,0.1,0.6666666666666666,0.1,0.6666666666666666,0.4,0.3333333333333333,1,0.3333333333333333,1,0.3333333333333333,0.8,0.5,0.5,0.5,0.5,0.3333333333333333,0.2,0.6666666666666666,0.1,0.6666666666666666,0.1,0.3333333333333333,1,0.5,0.5],
                             ratio:{x:0.45},
                         },
+                        '^':{
+                            // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.3/0.3, 0.3/0.6,0.0/0.3, 0.6/0.6,0.3/0.3, 0.4/0.6,0.3/0.3, 0.3/0.6,0.2/0.3, 0.2/0.6,0.3/0.3],'flatArray'),
+                            vector:[0.5, 0.6666666666666667, 0.33333333333333337, 1, 0, 1, 0.5, 0, 1, 1, 0.6666666666666667, 1, 0.5, 0.6666666666666667, 0, 1, 0.5, 0, 0.5, 0, 0.6666666666666667, 1, 0.5, 0.6666666666666667],
+                            ratio:{x:0.6,y:0.3},
+                        },
                     };
                     
                     //correct font to be compatible with the new way of fonting
                     reducedGlyphSet.concat(['default','']).forEach(key => {
+                        if(vectorLibrary.defaultThick[key] == undefined){return;}
+                    
                         //generate limits
                             vectorLibrary.defaultThick[key].top = vectorLibrary.defaultThick[key].ratio != undefined && vectorLibrary.defaultThick[key].ratio.y != undefined ? -vectorLibrary.defaultThick[key].ratio.y : -1;
                             vectorLibrary.defaultThick[key].right = vectorLibrary.defaultThick[key].ratio != undefined && vectorLibrary.defaultThick[key].ratio.x != undefined ? vectorLibrary.defaultThick[key].ratio.x + 0.1 : 1.1;
@@ -2967,11 +2974,18 @@
                             // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.1, 0.1,0.0, 0.3,0.0, 0.4,0.1, 0.4,0.3, 0.3,0.4, 0.1,0.4, 0.0,0.3, 0.1,0.25, 0.15,0.3, 0.25,0.3, 0.3,0.25, 0.3,0.15, 0.25,0.1, 0.15,0.1, 0.1,0.15, 0.1,0.25, 0.0,0.3, 0.02,0.9, 0.92,0.0, 1.0,0.08, 0.08,0.98, 0.7,1.0, 0.6,0.9, 0.6,0.7, 0.7,0.6, 0.9,0.6, 1.0,0.7, 1.0,0.9, 0.9,1.0, 0.7,1.0, 0.75,0.9, 0.85,0.9, 0.9,0.85, 0.9,0.75, 0.85,0.7, 0.75,0.7, 0.7,0.75, 0.7,0.85, 0.75,0.9, 0.7,1.0, 0.08,0.98, 0.02,0.9 ]),
                             vector:[0,0.1,0.1,0,0.3,0,0.3,0,0.4,0.1,0.4,0.3,0.4,0.3,0.3,0.4,0.1,0.4,0.1,0.15,0.1,0.25,0,0.3,0.02,0.9,0.92,0,1,0.08,0.7,1,0.6,0.9,0.6,0.7,0.6,0.7,0.7,0.6,0.9,0.6,0.9,0.6,1,0.7,1,0.9,0.02,0.9,1,0.08,0.08,0.98,0.7,1,0.7,0.85,0.75,0.9,0.1,0.15,0,0.3,0,0.1,0.1,0.4,0,0.3,0.1,0.25,0.15,0.1,0.1,0.15,0,0.1,0.1,0.4,0.1,0.25,0.15,0.3,0.15,0.1,0,0.1,0.3,0,0.1,0.4,0.15,0.3,0.25,0.3,0.25,0.1,0.15,0.1,0.3,0,0.4,0.3,0.1,0.4,0.25,0.3,0.3,0.15,0.25,0.1,0.3,0,0.4,0.3,0.25,0.3,0.3,0.25,0.3,0.15,0.3,0,0.4,0.3,0.4,0.3,0.3,0.25,0.3,0.15,0.7,0.75,0.7,1,0.6,0.7,1,0.9,0.9,1,0.7,1,0.7,1,0.75,0.9,0.85,0.9,0.75,0.7,0.7,0.75,0.6,0.7,1,0.9,0.7,1,0.85,0.9,0.75,0.7,0.6,0.7,0.9,0.6,1,0.9,0.85,0.9,0.9,0.85,0.85,0.7,0.75,0.7,0.9,0.6,1,0.9,0.9,0.85,0.9,0.75,0.9,0.75,0.85,0.7,0.9,0.6,0.9,0.6,1,0.9,0.9,0.75],
                         },
+                        '^':{
+                            // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.3/0.3, 0.3/0.6,0.0/0.3, 0.6/0.6,0.3/0.3, 0.45/0.6,0.3/0.3, 0.3/0.6,0.15/0.3, 0.15/0.6,0.3/0.3 ],'flatArray'),
+                            vector:[0.5, 0.5, 0.25, 1, 0, 1, 0.5, 0, 1, 1, 0.75, 1, 0.5, 0.5, 0, 1, 0.5, 0, 0.5, 0, 0.75, 1, 0.5, 0.5],
+                            ratio:{x:0.6,y:0.3},
+                        },
                     };
                     
                     
                     //correct font to be compatible with the new way of fonting
                     reducedGlyphSet.concat(['default','']).forEach(key => {
+                        if(vectorLibrary.defaultThin[key] == undefined){return;}
+                        
                         //generate limits
                             vectorLibrary.defaultThin[key].top = vectorLibrary.defaultThin[key].ratio != undefined && vectorLibrary.defaultThin[key].ratio.y != undefined ? -vectorLibrary.defaultThin[key].ratio.y : -1;
                             vectorLibrary.defaultThin[key].right = vectorLibrary.defaultThin[key].ratio != undefined && vectorLibrary.defaultThin[key].ratio.x != undefined ? vectorLibrary.defaultThin[key].ratio.x + 0.1 : 1.1;
@@ -3272,13 +3286,13 @@
                         //responseType: text / arraybuffer / blob / document / json 
                     
                         const xhttp = new XMLHttpRequest();
-                        if(callback != undefined){ xhttp.onloadend = a => {
+                        xhttp.onloadend = a => {
                             if(a.target.status == 200){ callback(a.target.response); }
                             else{ 
                                 if(errorCallback != undefined){ errorCallback(); }
                                 else{console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL);}
                             }
-                        }; }
+                        };
                         xhttp.open('get',URL,true);
                         xhttp.responseType = responseType;
                         xhttp.send();
@@ -3421,7 +3435,7 @@
                                 console.log(e);
                             }
                         };
-                        this.loadAudioFile = function(callback,type='file',url=''){
+                        this.loadAudioFile = function(callback,type='file',url='',errorCallback){
                             dev.log.audio('.loadAudioFile(',callback,type,url); //#development
                             dev.count('.audio.loadAudioFile'); //#development
                     
@@ -3439,7 +3453,8 @@
                                                 callback({ buffer:data, name:(url.split('/')).pop(), duration:data.duration });
                                             });
                                         },
-                                        'arraybuffer'
+                                        'arraybuffer',
+                                        errorCallback
                                     );
                                 break;
                                 case 'file': default:
@@ -21893,7 +21908,7 @@
             };
             _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:3} };
                 const core_engine = new Worker("js/core_engine.js");
                 const self = this;
                 
@@ -22100,6 +22115,7 @@
                                 cashedAttributes[name] = defaultValue;
                                 this[name] = function(a){
                                     if(a == undefined){ return cashedAttributes[name]; }
+                                    if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
                                     dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',a); //#development
                                     cashedAttributes[name] = a;
                                     if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[a]); }
@@ -24084,12 +24100,12 @@
                                 self.area(state.area.percentage_start,state.area.percentage_end);
                                 callback(data);
                             }
-                            function load(type,callback,url=''){
-                                dev.log.circuit('.player::loadRaw('+type+','+callback+','+url+')'); //#development
+                            function load(type,callback,url='',errorCallback){
+                                dev.log.circuit('.player::load('+type+','+callback+','+url+')'); //#development
                                 _canvas_.library.audio.loadAudioFile( function(data){ 
                                     state.fileLoaded = false;
                                     loadRaw(data,callback)
-                                }, type, url);
+                                }, type, url, errorCallback);
                             }
                             function generatePlayheadNumber(){
                                 dev.log.circuit('.player::unlogeneratePlayheadNumberadRaw()'); //#development
@@ -24205,9 +24221,9 @@
                                 dev.log.circuit('.player.loadRaw('+data+','+callback+')'); //#development
                                 loadRaw(data,callback); 
                             };
-                            this.load = function(type,callback,url=''){ 
+                            this.load = function(type,callback,url='',errorCallback){ 
                                 dev.log.circuit('.player.load('+type+','+callback+','+url+')'); //#development
-                                load(type,callback,url); 
+                                load(type,callback,url,errorCallback); 
                             };
                     
                             // this.generatePlayheadNumber = function(){ 
@@ -30202,6 +30218,7 @@
                                     function set(a,update=true){ 
                                         a = (a>(optionCount-1) ? (optionCount-1) : a);
                                         a = (a<0 ? 0 : a);
+                                        if(a == value){return;}
                             
                                         if(update && object.onchange != undefined){object.onchange(a);}
                             
@@ -30261,7 +30278,6 @@
                                             function(x,y,event){
                                                 const diff = Math.round( (event.Y - initialY)/25 );
                                                 set( initialValue - diff );
-                                                if(object.onchange != undefined){object.onchange(value);}
                                             },
                                             function(x,y,event){
                                                 grappled = false;
@@ -39493,7 +39509,7 @@
             } );
 
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:5} };
                 this.go = new function(){
                     const functionList = [];
             
@@ -51518,17 +51534,591 @@
                     };
                 };
                 this.harbinger = new function(){
+                    this['dsds-8^3'] = function(name,x,y,angle){
+                        //audio sample URLs
+                            const samples = [
+                                [
+                                    // - bass
+                                    '/sounds/78/bass_1.wav',
+                                    '/sounds/78/bass_2.wav',
+                                    '/sounds/808/bass_1.wav',
+                                    '/sounds/808/bass_2.wav',
+                                    '/sounds/808/bass_3.wav',
+                                    '/sounds/SP12/bass_1.wav',
+                                    '/sounds/SP12/bass_2.wav',
+                                    '/sounds/SP12/bass_3.wav',
+                                ],[
+                                    // - snare
+                                    '/sounds/78/snare_1.wav',
+                                    '/sounds/78/snare_2.wav',
+                                    '/sounds/808/snare_1.wav',
+                                    '/sounds/808/snare_2.wav',
+                                    '/sounds/808/snare_3.wav',
+                                    '/sounds/SP12/snare_1.wav',
+                                    '/sounds/SP12/snare_2.wav',
+                                    '/sounds/SP12/snare_3.wav',
+                                ],[
+                                    // - hat_closed
+                                    '/sounds/78/hat_closed_1.wav',
+                                    '/sounds/808/hat_closed_1.wav',
+                                    '/sounds/808/hat_closed_2.wav',
+                                    '/sounds/SP12/hat_closed_1.wav',
+                                    '/sounds/SP12/hat_closed_2.wav',
+                                    '/sounds/RetroMachines/hat_closed_1.wav',
+                                    '/sounds/RetroMachines/hat_closed_2.wav',
+                                    '/sounds/ModernMachines/hat_closed_1.wav',
+                                ],[
+                                    // - hat_open
+                                    '/sounds/78/hat_open_1.wav',
+                                    '/sounds/78/hat_open_2.wav',
+                                    '/sounds/808/hat_open_1.wav',
+                                    '/sounds/808/hat_open_2.wav',
+                                    '/sounds/SP12/hat_open_1.wav',
+                                    '/sounds/SP12/hat_open_2.wav',
+                                    '/sounds/RetroMachines/hat_open_1.wav',
+                                    '/sounds/ModernMachines/hat_open_1.wav',
+                                ],[
+                                    // misc 1 - 8
+                                    '/sounds/ElectroBump/ride.wav',
+                                    '/sounds/HitMachine/ride.wav',
+                                    '/sounds/808/cowbell.wav',
+                                    '/sounds/SP12/cowbell.wav',
+                                    '/sounds/78/rim.wav',
+                                    '/sounds/808/rim.wav',
+                                    '/sounds/SP12/rim_1.wav',
+                                    '/sounds/SP12/rim_2.wav',
+                                ],[
+                                    // misc 9 - 16
+                                    '/sounds/SP12/tom_low.wav',
+                                    '/sounds/SP12/tom_mid.wav',
+                                    '/sounds/SP12/tom_high.wav',
+                                    '/sounds/78/maraca.wav',
+                                    '/sounds/808/maraca.wav',
+                                    '/sounds/78/tamb_1.wav',
+                                    '/sounds/78/tamb_2.wav',
+                                    '/sounds/78/tamb_3.wav',
+                                ],[
+                                    // misc 17 - 24
+                                    '/sounds/78/bongo_low.wav',
+                                    '/sounds/78/bongo_mid.wav',
+                                    '/sounds/78/bongo_high.wav',
+                                    '/sounds/78/gulro_long.wav',
+                                    '/sounds/78/gulro_short.wav',
+                                    '/sounds/78/gulro_high.wav',
+                                    '/sounds/78/clave.wav',
+                                    '/sounds/78/metal.wav',
+                                ],[
+                                    // misc 25 - 32
+                                    '/sounds/808/clap.wav',
+                                    '/sounds/Grimy909/crash.wav',
+                                    '/sounds/808/conga_low.wav',
+                                    '/sounds/808/conga_mid.wav',
+                                    '/sounds/808/conga_high.wav',
+                                    '/sounds/SP12/conga_low.wav',
+                                    '/sounds/SP12/conga_mid.wav',
+                                    '/sounds/SP12/conga_high.wav',
+                                ]
+                            ];
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'dsds-8^3/';
+                    
+                                //calculation of measurements
+                                    const div = 10;
+                                    const measurement = { 
+                                        file: { width:1925, height:820 },
+                                        design: { width:18.75, height:8 },
+                                    };
+                    
+                                    this.offset = {x:2.5,y:1};
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //colours
+                                    this.LED = {
+                                        glow:{r:1,g:0,b:0,a:1},
+                                        dim:{r:0.48,g:0.21,b:0.19,a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'dsds-8^3',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                    {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                    {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                    {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                ],
+                                elements:
+                                    (new Array(8)).fill().flatMap((item,index) => {
+                                        return [
+                                            {collection:'dynamic', type:'connectionNode_audio', name:'audio_out_'+index, data:{ 
+                                                x:10 + index*20, y:0, width:5, height:10, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'signal_in_'+index, data:{ 
+                                                x:20 + index*20, y:80, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_in_'+index, data:{ 
+                                                x:20 + index*20, y:75, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                            }},
+                                        ];
+                                    }).concat(
+                                        [
+                                            {collection:'dynamic', type:'connectionNode_audio', name:'audio_out_master', data:{ 
+                                                x:170, y:0, width:5, height:10, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                            }},
+                                            {collection:'basic', type:'image', name:'backing', 
+                                                data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
+                                            },
+                                            {collection:'control', type:'dial_continuous_image', name:'masterVolume', data:{
+                                                x:175, y:18.5, radius:14/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
+                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'signal', data:{
+                                                x:168, y:63, width:6, height:15, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'voltage', data:{
+                                                x:176, y:63, width:6, height:15, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
+                                            }},
+                    
+                                            {collection:'control', type:'button_image', name:'preset_1', data:{
+                                                x:168, y:27, width:14, height:6.25, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'preset_1_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'preset_1_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'preset_1_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'preset_1_on.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'preset_2', data:{
+                                                x:168, y:34.2, width:14, height:6.25, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'preset_2_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'preset_2_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'preset_2_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'preset_2_on.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'preset_3', data:{
+                                                x:168, y:41.4, width:14, height:6.25, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'preset_3_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'preset_3_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'preset_3_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'preset_3_on.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'preset_4', data:{
+                                                x:168, y:48.6, width:14, height:6.25, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'preset_4_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'preset_4_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'preset_4_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'preset_4_on.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'preset_5', data:{
+                                                x:168, y:55.8, width:14, height:6.25, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'preset_5_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'preset_5_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'preset_5_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'preset_5_on.png',
+                                            }},
+                                        ]
+                                    ).concat(
+                                        (new Array(8)).fill().flatMap((item,index) => {
+                                            return [
+                                                {collection:'control', type:'dial_continuous_image', name:'volume_'+index, data:{
+                                                    x:11 + index*20, y:16.5, radius:9/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
+                                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                                }},
+                                                {collection:'control', type:'dial_continuous_image', name:'rate_'+index, data:{
+                                                    x:19 + index*20, y:23.5, radius:9/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
+                                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                                }},
+                                                {collection:'control', type:'dial_discrete_image', name:'bank_'+index, data:{
+                                                    x:15 + index*20, y:40, radius:14/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
+                                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                                }},
+                                                {collection:'display', type:'glowbox_circle', name:'channelStatusLED_'+index, data:{
+                                                    x:20 + index*20, y:49, radius:2/2, capType:'round', style:unitStyle.LED
+                                                }},
+                                                {collection:'control', type:'dial_discrete_image', name:'sample_'+index, data:{
+                                                    x:15 + index*20, y:60, radius:14/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
+                                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                                }},
+                                                {collection:'display', type:'glowbox_path', name:'channelFireLED_'+index, data:{
+                                                    x:10 + index*20, y:69.5, points:[{x:0,y:0},{x:10,y:0}], capType:'round', style:unitStyle.LED
+                                                }},
+                                                {collection:'control', type:'button_image', name:'fire_'+index, data:{
+                                                    x:8 + index*20, y:72, width:14, height:6, hoverable:false,
+                                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'fire_up.png',
+                                                    backingURL__press:unitStyle.imageStoreURL_localPrefix+'fire_down.png',
+                                                }},
+                                            ];
+                                        })
+                                    )
+                            });
+                    
+                        //circuitry
+                            const state = {
+                                presetSettingTimeout:1000,
+                                inputMode:'signal',
+                                presets:[
+                                    [
+                                        {bank:0,sample:0,rate:0.5,volume:0.5},
+                                        {bank:1,sample:0,rate:0.5,volume:0.5},
+                                        {bank:2,sample:0,rate:0.5,volume:0.5},
+                                        {bank:3,sample:0,rate:0.5,volume:0.5},
+                                        {bank:4,sample:0,rate:0.5,volume:0.5},
+                                        {bank:5,sample:0,rate:0.5,volume:0.5},
+                                        {bank:6,sample:0,rate:0.5,volume:0.5},
+                                        {bank:7,sample:0,rate:0.5,volume:0.5},
+                                    ],
+                                    [
+                                        {bank:0,sample:1,rate:0.5,volume:0.5},
+                                        {bank:1,sample:1,rate:0.5,volume:0.5},
+                                        {bank:2,sample:1,rate:0.5,volume:0.5},
+                                        {bank:3,sample:1,rate:0.5,volume:0.5},
+                                        {bank:4,sample:1,rate:0.5,volume:0.5},
+                                        {bank:5,sample:1,rate:0.5,volume:0.5},
+                                        {bank:6,sample:1,rate:0.5,volume:0.5},
+                                        {bank:7,sample:1,rate:0.5,volume:0.5},
+                                    ],
+                                    [
+                                        {bank:0,sample:2,rate:0.5,volume:0.5},
+                                        {bank:1,sample:2,rate:0.5,volume:0.5},
+                                        {bank:2,sample:2,rate:0.5,volume:0.5},
+                                        {bank:3,sample:2,rate:0.5,volume:0.5},
+                                        {bank:4,sample:2,rate:0.5,volume:0.5},
+                                        {bank:5,sample:2,rate:0.5,volume:0.5},
+                                        {bank:6,sample:2,rate:0.5,volume:0.5},
+                                        {bank:7,sample:2,rate:0.5,volume:0.5},
+                                    ],
+                                    [
+                                        {bank:0,sample:3,rate:0.5,volume:0.5},
+                                        {bank:1,sample:3,rate:0.5,volume:0.5},
+                                        {bank:2,sample:3,rate:0.5,volume:0.5},
+                                        {bank:3,sample:3,rate:0.5,volume:0.5},
+                                        {bank:4,sample:3,rate:0.5,volume:0.5},
+                                        {bank:5,sample:3,rate:0.5,volume:0.5},
+                                        {bank:6,sample:3,rate:0.5,volume:0.5},
+                                        {bank:7,sample:3,rate:0.5,volume:0.5},
+                                    ],
+                                    [
+                                        {bank:0,sample:4,rate:0.5,volume:0.5},
+                                        {bank:1,sample:4,rate:0.5,volume:0.5},
+                                        {bank:2,sample:4,rate:0.5,volume:0.5},
+                                        {bank:3,sample:4,rate:0.5,volume:0.5},
+                                        {bank:4,sample:4,rate:0.5,volume:0.5},
+                                        {bank:5,sample:4,rate:0.5,volume:0.5},
+                                        {bank:6,sample:4,rate:0.5,volume:0.5},
+                                        {bank:7,sample:4,rate:0.5,volume:0.5},
+                                    ],
+                                ],
+                            };
+                    
+                            const channelData = (new Array(8)).fill().map((item,index) => {
+                                return { bank:0, sample:0, rate:1, volume:1 }
+                            });
+                    
+                            const samplePlayers = (new Array(8)).fill().map((item,index) => {
+                                const player = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
+                                player.concurrentPlayCountLimit(-1);
+                                player.out_right().connect( object.io.audio['audio_out_'+index].in() );
+                                player.out_left().connect( object.io.audio['audio_out_master'].in() );
+                                return player;
+                            });
+                    
+                            function fire(channel){
+                                samplePlayers[channel].start();
+                                object.elements.glowbox_path['channelFireLED_'+channel].on();
+                                setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
+                            }
+                            function loadSample(channel,bank,sample){
+                                setChannelStatusLED(channel,'loading');
+                                samplePlayers[channel].load(
+                                    'url',
+                                    () => { setChannelStatusLED(channel,'ready'); }, 
+                                    samples[bank][sample],
+                                    () => { setChannelStatusLED(channel,'error'); }, 
+                                );
+                            }
+                            function setOutputConnectionNodes(mode){
+                                if(mode != 'signal' && mode != 'voltage'){return;}
+                                if(state.inputMode == mode){return;}
+                                state.inputMode = mode;
+                    
+                                const duration = 500;
+                                const detail = 30;
+                                const zero2five = _canvas_.library.math.curveGenerator.s(detail,0,5);
+                                const five2zero = _canvas_.library.math.curveGenerator.s(detail,5,0);
+                    
+                                if(mode == 'signal'){
+                                    for(let a = 0; a < 8; a++){
+                                        object.elements.connectionNode_voltage['voltage_in_'+a].disconnect();
+                                        object.elements.connectionNode_voltage['voltage_in_'+a].set(0);
+                                        
+                                        for(let b = 0; b < detail; b++){
+                                            setTimeout(()=>{
+                                                object.elements.connectionNode_signal['signal_in_'+a].y(80 - five2zero[b]);
+                                                object.elements.connectionNode_voltage['voltage_in_'+a].y(80 - zero2five[b]);
+                                            },
+                                            (duration/detail)*b);
+                                        }
+                                    }
+                                }else if(mode == 'voltage'){
+                                    for(let a = 0; a < 8; a++){
+                                        object.elements.connectionNode_signal['signal_in_'+a].disconnect();
+                                        object.elements.connectionNode_signal['signal_in_'+a].set(false);
+                                        for(let b = 0; b < detail; b++){
+                                            setTimeout(()=>{
+                                                object.elements.connectionNode_signal['signal_in_'+a].y(80 - zero2five[b]);
+                                                object.elements.connectionNode_voltage['voltage_in_'+a].y(80 - five2zero[b]);
+                                            },
+                                            (duration/detail)*b);
+                                        }
+                                    }
+                                }
+                    
+                                if(state.inputMode == 'signal'){
+                                    object.elements.button_image.signal.glow(true);
+                                    object.elements.button_image.voltage.glow(false);
+                                }else if(state.inputMode == 'voltage'){
+                                    object.elements.button_image.signal.glow(false);
+                                    object.elements.button_image.voltage.glow(true);
+                                }
+                            }
+                            const intervals = [];
+                            function setChannelStatusLED(channel,status){
+                                if( intervals[channel] != undefined && intervals[channel].interval != undefined ){
+                                    clearInterval(intervals[channel].interval);
+                                }
+                                const led = object.elements.glowbox_circle['channelStatusLED_'+channel];
+                    
+                                switch(status){
+                                    case 'ready':
+                                        led.on();
+                                    break;
+                                    case 'loading':
+                                        intervals[channel] = {};
+                                        intervals[channel].flip = true;
+                                        intervals[channel].interval = setInterval(() => {
+                                            intervals[channel].flip ? led.on() : led.off();
+                                            intervals[channel].flip = !intervals[channel].flip;
+                                        },250);
+                                    break;
+                                    case 'error':
+                                        led.off();
+                                    break;
+                                }
+                            }
+                            function selectPreset(preset){
+                                for(let a = 1; a <= 5; a++){
+                                    object.elements.button_image['preset_'+a].glow(false);
+                                }
+                                object.elements.button_image['preset_'+preset].glow(true);
+                    
+                                state.presets[preset-1].forEach((set,index) => {
+                                    object.elements.dial_continuous_image['volume_'+index].set(set.volume);
+                                    object.elements.dial_continuous_image['rate_'+index].set(set.rate);
+                                    object.elements.dial_discrete_image['bank_'+index].set(set.bank);
+                                    object.elements.dial_discrete_image['sample_'+index].set(set.sample);
+                                });
+                            }
+                            function savePreset(block){
+                                state.presets[block] = [
+                                    {
+                                        bank:object.elements.dial_discrete_image['bank_'+0].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+0].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+0].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+0].get()
+                                    },
+                                    {
+                                        bank:object.elements.dial_discrete_image['bank_'+1].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+1].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+1].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+1].get()
+                                    },
+                                    {
+                                        bank:object.elements.dial_discrete_image['bank_'+2].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+2].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+2].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+2].get()
+                                    },
+                                    {
+                                        bank:object.elements.dial_discrete_image['bank_'+3].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+3].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+3].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+3].get()
+                                    },
+                                    {
+                                        bank:object.elements.dial_discrete_image['bank_'+4].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+4].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+4].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+4].get()
+                                    },
+                                    {
+                                        bank:object.elements.dial_discrete_image['bank_'+5].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+5].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+5].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+5].get()
+                                    },
+                                    {
+                                        bank:object.elements.dial_discrete_image['bank_'+6].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+6].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+6].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+6].get()
+                                    },
+                                    {
+                                        bank:object.elements.dial_discrete_image['bank_'+7].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+7].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+7].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+7].get()
+                                    },
+                                ];
+                    
+                                object.elements.button_image['preset_'+(block+1)].glow(false);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(true); },200);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(false); },400);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(true); },600);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(false); },800);
+                            }
+                    
+                        //wiring
+                            //hid
+                                object.elements.button_image.signal.onpress = function(){
+                                    setOutputConnectionNodes('signal');
+                                };
+                                object.elements.button_image.voltage.onpress = function(){
+                                    setOutputConnectionNodes('voltage');
+                                };
+                                for(let a = 0; a < 8; a++){
+                                    object.elements.dial_continuous_image['volume_'+a].onchange = function(value){
+                                        channelData[a].volume = value;
+                                    };
+                                    object.elements.dial_continuous_image['rate_'+a].onchange = function(value){
+                                        channelData[a].rate = value;
+                                        if(channelData[a].rate <= 0.1){ channelData[a].rate = 0.1; }
+                                        samplePlayers[a].rate( 2*channelData[a].rate );
+                                    };
+                                    object.elements.dial_discrete_image['bank_'+a].onchange = function(value){
+                                        channelData[a].bank = value;
+                                        loadSample(a,channelData[a].bank,channelData[a].sample);
+                                    };
+                                    object.elements.dial_discrete_image['sample_'+a].onchange = function(value){
+                                        channelData[a].sample = value;
+                                        loadSample(a,channelData[a].bank,channelData[a].sample);
+                                    };
+                                    object.elements.button_image['fire_'+a].onpress = function(){
+                                        fire(a);
+                                    };
+                                }
+                    
+                                object.elements.button_image.preset_1.onpress = function(){
+                                    object.elements.button_image.preset_1.pressed = true;
+                                    setTimeout(() => { if(object.elements.button_image.preset_1.pressed){savePreset(0);} }, state.presetSettingTimeout);
+                                };
+                                object.elements.button_image.preset_1.onrelease = function(){
+                                    object.elements.button_image.preset_1.pressed = false;
+                                    selectPreset(1);
+                                };
+                                object.elements.button_image.preset_2.onpress = function(){ 
+                                    object.elements.button_image.preset_2.pressed = true;
+                                    setTimeout(() => { if(object.elements.button_image.preset_2.pressed){savePreset(1);} }, state.presetSettingTimeout);
+                                };
+                                object.elements.button_image.preset_2.onrelease = function(){ 
+                                    object.elements.button_image.preset_2.pressed = false;
+                                    selectPreset(2);
+                                };
+                                object.elements.button_image.preset_3.onpress = function(){ 
+                                    object.elements.button_image.preset_3.pressed = true;
+                                    setTimeout(() => { if(object.elements.button_image.preset_3.pressed){savePreset(2);} }, state.presetSettingTimeout);
+                                };
+                                object.elements.button_image.preset_3.onrelease = function(){ 
+                                    object.elements.button_image.preset_3.pressed = false;
+                                    selectPreset(3);
+                                };
+                                object.elements.button_image.preset_4.onpress = function(){ 
+                                    object.elements.button_image.preset_4.pressed = true;
+                                    setTimeout(() => { if(object.elements.button_image.preset_4.pressed){savePreset(4);} }, state.presetSettingTimeout);
+                                };
+                                object.elements.button_image.preset_4.onrelease = function(){ 
+                                    object.elements.button_image.preset_4.pressed = false;
+                                    selectPreset(4);
+                                };
+                                object.elements.button_image.preset_5.onpress = function(){ 
+                                    object.elements.button_image.preset_5.pressed = true;
+                                    setTimeout(() => { if(object.elements.button_image.preset_5.pressed){savePreset(5);} }, state.presetSettingTimeout);
+                                };
+                                object.elements.button_image.preset_5.onrelease = function(){ 
+                                    object.elements.button_image.preset_5.pressed = false;
+                                    selectPreset(5);
+                                };
+                    
+                            //keycapture
+                                // object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
+                                // });
+                                // object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
+                                // });
+                    
+                            //io
+                                for(let a = 0; a < 8; a++){
+                                    object.io.signal['signal_in_'+a].onchange = function(value){
+                                        if(!value){return}
+                                        fire(a);
+                                    } 
+                                }
+                    
+                        //interface
+                            object.i = {
+                            };
+                    
+                        //import/export
+                            object.exportData = function(){
+                            };
+                            object.importData = function(data){
+                            };
+                    
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                loadSample(0,0,0);
+                                for(let a = 1; a < 8; a++){
+                                    object.elements.dial_discrete_image['bank_'+a].set(a);
+                                }
+                                object.elements.button_image.signal.glow(true);
+                                selectPreset(1);
+                            };
+                            object.ondelete = function(){
+                                intervals.forEach(interval => {
+                                    clearInterval(interval.interval);
+                                });
+                            };
+                    
+                        return object;
+                    };
+                    this['dsds-8^3'].metadata = {
+                        name:'DSDS-8^3',
+                        category:'',
+                        helpURL:'/help/units/harbinger/dsds-8^3/'
+                    };
                     this['mrd-16'] = function(name,x,y,angle){
                         //style data
                             const unitStyle = new function(){
                                 //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'mrd-16/';
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'MRD-16/';
                     
                                 //calculation of measurements
                                     const div = 10;
                                     const measurement = { 
                                         file: { width:2500, height:520 },
-                                        design: { width:25, height:5.2 },
+                                        design: { width:25+0.5, height:5.2+0.2 },
                                     };
                     
                                     this.offset = {x:2.5,y:1};
@@ -51583,16 +52173,21 @@
                                                 data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                             },
                     
-                                            {collection:'control', type:'checkbox_image', name:'signal', data:{
-                                                x:5, y:7.5, width:6, height:15,
-                                                checkURL:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
-                                                uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
+                                            {collection:'control', type:'button_image', name:'signal', data:{
+                                                x:5, y:7.5, width:6, height:15, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
                                             }},
-                                            {collection:'control', type:'checkbox_image', name:'voltage', data:{
-                                                x:14, y:7.5, width:6, height:15,
-                                                checkURL:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
-                                                uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
+                                            {collection:'control', type:'button_image', name:'voltage', data:{
+                                                x:14, y:7.5, width:6, height:15, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
                                             }},
+                    
                                             {collection:'control', type:'button_image', name:'channel_left', data:{
                                                 x:23, y:7.5, width:6, height:15, hoverable:false,
                                                 backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_row_up.png',
@@ -51728,8 +52323,6 @@
                                 const five2zero = _canvas_.library.math.curveGenerator.s(detail,5,0);
                     
                                 if(mode == 'signal'){
-                                    object.elements.checkbox_image.signal.set(true);
-                                    object.elements.checkbox_image.voltage.set(false);
                                     for(let a = 0; a < 8; a++){
                                         object.elements.connectionNode_voltage['voltage_out_'+a].disconnect();
                                         object.elements.connectionNode_voltage['voltage_out_'+a].set(0);
@@ -51741,11 +52334,8 @@
                                             },
                                             (duration/detail)*b);
                                         }
-                                        
                                     }
                                 }else if(mode == 'voltage'){
-                                    object.elements.checkbox_image.signal.set(false);
-                                    object.elements.checkbox_image.voltage.set(true);
                                     for(let a = 0; a < 8; a++){
                                         object.elements.connectionNode_signal['signal_out_'+a].disconnect();
                                         object.elements.connectionNode_signal['signal_out_'+a].set(false);
@@ -51758,8 +52348,18 @@
                                         }
                                     }
                                 }
+                                refreshLEDS();
                             }
                             function refreshLEDS(){
+                                //output select
+                                    if(state.outputMode == 'signal'){
+                                        object.elements.button_image.signal.glow(true);
+                                        object.elements.button_image.voltage.glow(false);
+                                    }else if(state.outputMode == 'voltage'){
+                                        object.elements.button_image.signal.glow(false);
+                                        object.elements.button_image.voltage.glow(true);
+                                    }
+                    
                                 //channel
                                     for(let a = 0; a < 8; a++){
                                         object.elements.glowbox_path['channelLED_'+a].off();
@@ -51840,15 +52440,11 @@
                     
                         //wiring
                             //hid
-                                object.elements.checkbox_image.signal.onchange = function(state){
-                                    if(state){
-                                        setOutputConnectionNodes('signal');
-                                    }
+                                object.elements.button_image.signal.onpress = function(){
+                                    setOutputConnectionNodes('signal');
                                 };
-                                object.elements.checkbox_image.voltage.onchange = function(state){
-                                    if(state){
-                                        setOutputConnectionNodes('voltage');
-                                    }
+                                object.elements.button_image.voltage.onpress = function(){
+                                    setOutputConnectionNodes('voltage');
                                 };
                                 object.elements.button_image.channel_left.onpress = function(){
                                     state.currentChannel--;
@@ -52068,7 +52664,6 @@
                     
                         //setup/tearDown
                             object.oncreate = function(){
-                                object.elements.checkbox_image.signal.set(true);
                                 setChannel(0);
                             };
                     
@@ -52076,7 +52671,7 @@
                     };
                     this['mrd-16'].metadata = {
                         name:'MRD-16',
-                        category:'sequencers',
+                        category:'',
                         helpURL:'/help/units/harbinger/mrd-16/'
                     };
                     const imageStoreURL = '/images/units/3 - harbinger/';
@@ -52117,7 +52712,6 @@
                         name:'Harbinger',
                         itemWidth:210,
                         categoryOrder:[
-                            'sequencers',
                         ],   
                     };
                     this._categoryData = {
@@ -52208,14 +52802,16 @@
                                     //for this collection, sort models into their categories
                                         const categorySortingList = {};
                                         Object.keys(collection).sort().filter(a => a[0]!='_').forEach(modelKey => {
-                                            const model = collection[modelKey];
+                                            const model = collection[modelKey]; //console.log(model.metadata);
                                             if(model.metadata.category == undefined){ model.metadata.category = 'unknown'; }
                                             if(!categorySortingList.hasOwnProperty(model.metadata.category)){ categorySortingList[model.metadata.category] = []; }
                                             categorySortingList[model.metadata.category].push(modelKey);
                                         });
             
-                                    //run though categories and generate item list for this collection
+                                    //run though categories and generate item list for this collection (except the "" one)
                                         Object.keys(categorySortingList).sort().forEach(categoryKey => {
+                                            if(categoryKey == ""){return;}
+            
                                             //get category printing name
                                                 let categoryPrintingName = categoryKey;
                                                 let itemWidth = undefined;
@@ -52255,6 +52851,21 @@
             
                                     //add this item list to the output array
                                         outputItemList.push(collectionItemList);
+            
+                                    //if there is one, add the units from the "" list to the main list
+                                        if( categorySortingList[""] != undefined){
+                                            categorySortingList[""].forEach(model => {
+                                                collectionItemList.list.push(
+                                                    {
+                                                        type:'button', text_left:collection[model].metadata.name,
+                                                        function:function(design){return function(){
+                                                            const p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(unitPlacementPosition.x,unitPlacementPosition.y);
+                                                            _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
+                                                        }}(model),
+                                                    }
+                                                );
+                                            });
+                                        }
                                 }
             
                                 collections.metadata.mainList.forEach(collectionKey => { populator(collectionKey); });
@@ -52345,7 +52956,13 @@
 
             
             _canvas_.curve.go.add( function(){
-                _canvas_.control.scene.addUnit(10,10,0,'mrd-16','harbinger');
+                // _canvas_.control.scene.addUnit(10,10,0,'mrd-16','harbinger');
+                const dsds = _canvas_.control.scene.addUnit(10,10,0,'dsds-8^3','harbinger');
+            
+            
+                // const amp = _canvas_.control.scene.addUnit(-150,-150,0,'amplifier','alpha');
+                // dsds.io.audio.audio_out_master.connectTo(amp.io.audio.input_L);
+            
             
             
                 _canvas_.control.viewport.scale(5);

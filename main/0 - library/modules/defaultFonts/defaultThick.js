@@ -444,10 +444,17 @@ vectorLibrary.defaultThick = {
         vector:[0,0,0.3333333333333333,0,0.6666666666666666,0.1,0.6666666666666666,0.4,1,0.5,0.6666666666666666,0.6,0.6666666666666666,0.6,0.6666666666666666,0.9,0.3333333333333333,1,0.3333333333333333,1,0,1,0,0.9,0.3333333333333333,0.8,0.3333333333333333,0.6,0.5,0.5,0.5,0.5,0.3333333333333333,0.4,0.3333333333333333,0.2,0.3333333333333333,0.2,0,0.1,0,0,0.6666666666666666,0.4,0.6666666666666666,0.6,0.3333333333333333,1,0.3333333333333333,1,0,0.9,0.3333333333333333,0.8,0.3333333333333333,0.2,0,0,0.6666666666666666,0.1,0.6666666666666666,0.1,0.6666666666666666,0.4,0.3333333333333333,1,0.3333333333333333,1,0.3333333333333333,0.8,0.5,0.5,0.5,0.5,0.3333333333333333,0.2,0.6666666666666666,0.1,0.6666666666666666,0.1,0.3333333333333333,1,0.5,0.5],
         ratio:{x:0.45},
     },
+    '^':{
+        // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.3/0.3, 0.3/0.6,0.0/0.3, 0.6/0.6,0.3/0.3, 0.4/0.6,0.3/0.3, 0.3/0.6,0.2/0.3, 0.2/0.6,0.3/0.3],'flatArray'),
+        vector:[0.5, 0.6666666666666667, 0.33333333333333337, 1, 0, 1, 0.5, 0, 1, 1, 0.6666666666666667, 1, 0.5, 0.6666666666666667, 0, 1, 0.5, 0, 0.5, 0, 0.6666666666666667, 1, 0.5, 0.6666666666666667],
+        ratio:{x:0.6,y:0.3},
+    },
 };
 
 //correct font to be compatible with the new way of fonting
 reducedGlyphSet.concat(['default','']).forEach(key => {
+    if(vectorLibrary.defaultThick[key] == undefined){return;}
+
     //generate limits
         vectorLibrary.defaultThick[key].top = vectorLibrary.defaultThick[key].ratio != undefined && vectorLibrary.defaultThick[key].ratio.y != undefined ? -vectorLibrary.defaultThick[key].ratio.y : -1;
         vectorLibrary.defaultThick[key].right = vectorLibrary.defaultThick[key].ratio != undefined && vectorLibrary.defaultThick[key].ratio.x != undefined ? vectorLibrary.defaultThick[key].ratio.x + 0.1 : 1.1;

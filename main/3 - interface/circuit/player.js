@@ -55,12 +55,12 @@ this.player = function(context){
             self.area(state.area.percentage_start,state.area.percentage_end);
             callback(data);
         }
-        function load(type,callback,url=''){
-            dev.log.circuit('.player::loadRaw('+type+','+callback+','+url+')'); //#development
+        function load(type,callback,url='',errorCallback){
+            dev.log.circuit('.player::load('+type+','+callback+','+url+')'); //#development
             _canvas_.library.audio.loadAudioFile( function(data){ 
                 state.fileLoaded = false;
                 loadRaw(data,callback)
-            }, type, url);
+            }, type, url, errorCallback);
         }
         function generatePlayheadNumber(){
             dev.log.circuit('.player::unlogeneratePlayheadNumberadRaw()'); //#development
@@ -176,9 +176,9 @@ this.player = function(context){
             dev.log.circuit('.player.loadRaw('+data+','+callback+')'); //#development
             loadRaw(data,callback); 
         };
-        this.load = function(type,callback,url=''){ 
+        this.load = function(type,callback,url='',errorCallback){ 
             dev.log.circuit('.player.load('+type+','+callback+','+url+')'); //#development
-            load(type,callback,url); 
+            load(type,callback,url,errorCallback); 
         };
 
         // this.generatePlayheadNumber = function(){ 

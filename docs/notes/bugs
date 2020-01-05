@@ -42,3 +42,5 @@
 [2019-10-06:1] sometimes the scene loader doesn't do anything
 [2019-10-19:3] sometimes the alt key gets stuck on (you can recreate it by pressing the key then clicking a different window in the OS)
 [2020-01-02:2] the audio file player can have its playback speed set to 0, or some very low value. The causes system slowdown when it's triggered alot in this state
+[2020-01-03:1] core's image element seems to be requesting image data is had in the past again from the server.. there should be some system to store the last N image data files, and/or a central repository of them
+[2020-01-05:1] there's also a lot of re-requesting audio files that were already loaded. Modifications should be made to the library layer to stop this (probably adding an override "force reload" argument too)

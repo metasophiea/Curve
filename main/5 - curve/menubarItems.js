@@ -70,14 +70,16 @@ _canvas_.control.go.add( function(){
                         //for this collection, sort models into their categories
                             const categorySortingList = {};
                             Object.keys(collection).sort().filter(a => a[0]!='_').forEach(modelKey => {
-                                const model = collection[modelKey];
+                                const model = collection[modelKey]; //console.log(model.metadata);
                                 if(model.metadata.category == undefined){ model.metadata.category = 'unknown'; }
                                 if(!categorySortingList.hasOwnProperty(model.metadata.category)){ categorySortingList[model.metadata.category] = []; }
                                 categorySortingList[model.metadata.category].push(modelKey);
                             });
 
-                        //run though categories and generate item list for this collection
+                        //run though categories and generate item list for this collection (except the "" one)
                             Object.keys(categorySortingList).sort().forEach(categoryKey => {
+                                if(categoryKey == ""){return;}
+
                                 //get category printing name
                                     let categoryPrintingName = categoryKey;
                                     let itemWidth = undefined;
@@ -117,6 +119,21 @@ _canvas_.control.go.add( function(){
 
                         //add this item list to the output array
                             outputItemList.push(collectionItemList);
+
+                        //if there is one, add the units from the "" list to the main list
+                            if( categorySortingList[""] != undefined){
+                                categorySortingList[""].forEach(model => {
+                                    collectionItemList.list.push(
+                                        {
+                                            type:'button', text_left:collection[model].metadata.name,
+                                            function:function(design){return function(){
+                                                const p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(unitPlacementPosition.x,unitPlacementPosition.y);
+                                                _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
+                                            }}(model),
+                                        }
+                                    );
+                                });
+                            }
                     }
 
                     collections.metadata.mainList.forEach(collectionKey => { populator(collectionKey); });
