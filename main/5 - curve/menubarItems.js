@@ -152,7 +152,7 @@ _canvas_.control.go.add( function(){
             {
                 text:'tools',
                 width:50,
-                listWidth:150,
+                listWidth:170,
                 listItemHeight:22.5,
                 breakHeight: 0.5,
                 spaceHeight: 1,
@@ -163,6 +163,16 @@ _canvas_.control.go.add( function(){
                         onclickFunction:function(val){
                             if(val){ _canvas_.control.gui.style.darkMode(); }
                             else{ _canvas_.control.gui.style.lightMode(); }
+                        }
+                    },
+                    { type:'radio', text:'Mouse Wheel Mode', itemWidth:150, 
+                        options:['Magic', 'Clicky Wheel'],
+                        updateFunction:function(){
+                            if( _canvas_.control.mouseWheelMode == 'magic' ){ return 0; }
+                            if( _canvas_.control.mouseWheelMode == 'clickyWheel' ){ return 1; }
+                        },
+                        onclickFunction:function(value){
+                            _canvas_.control.mouseWheelMode = ['magic','clickyWheel'][value];
                         }
                     },
                 ]

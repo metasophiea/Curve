@@ -27,11 +27,11 @@ this.dial_discrete_image = function(
         function set(a,update=true){ 
             a = (a>(optionCount-1) ? (optionCount-1) : a);
             a = (a<0 ? 0 : a);
+            a = Math.round(a);
             if(a == value){return;}
 
             if(update && object.onchange != undefined){object.onchange(a);}
 
-            a = Math.round(a);
             value = a;
             dial.set( value/(optionCount-1) );
         };
@@ -101,6 +101,7 @@ this.dial_discrete_image = function(
 
     //setup
         set(value);
+        dial.set( Math.round(value)/(optionCount-1) );
 
     return object;
 };

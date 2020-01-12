@@ -1,2 +1,11 @@
- - Mini Rhythm Designer 16 (MRD-16)
- - Digital Sample Drum Set 8^3 (DSDS-8^3)
+\/ - Digital Sample Drum Set 8^3 (DSDS-8^3)
+_/ - Mini Rhythm Designer 16 (MRD-16)
+__ - Rhythm Designer Pro 32 (RDP-32)
+        - 32 step
+        - 16 outputs (or maybe just 10)
+        - rangeslide for subselection of the steps to loop
+        - some way to adjust 'step power' when using voltage output mode
+        - random fill button
+        - live playthrough option (using the step buttons to directly activate the channels)
+
+(custom part for the dials?)

@@ -26,13 +26,14 @@ this.dial_1_discrete = function(
             object.append(dial);
         
     //graphical adjust
-        function set(a,update=true){ 
+        function set(a,update=true){
             a = (a>(optionCount-1) ? (optionCount-1) : a);
             a = (a<0 ? 0 : a);
+            a = Math.round(a);
+            if(a == value){return;}
 
             if(update && object.onchange != undefined){object.onchange(a);}
 
-            a = Math.round(a);
             value = a;
             dial.set( value/(optionCount-1) );
         };
@@ -88,7 +89,6 @@ this.dial_1_discrete = function(
                 function(x,y,event){
                     const diff = Math.round( (event.Y - initialY)/25 );
                     set( initialValue - diff );
-                    if(object.onchange != undefined){object.onchange(value);}
                 },
                 function(x,y,event){
                     grappled = false;
@@ -103,6 +103,7 @@ this.dial_1_discrete = function(
 
     //setup
         set(value);
+        dial.set( Math.round(value)/(optionCount-1) );
 
     return object;
 };

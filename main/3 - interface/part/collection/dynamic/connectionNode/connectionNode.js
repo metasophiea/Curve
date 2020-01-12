@@ -117,8 +117,8 @@ this.connectionNode = function(
         object.getAttachmentPoint = function(){
             dev.log.partDynamic('.connectionNode.getAttachmentPoint()'); //#development
             const offset = object.getOffset();
-            const diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
-            const collectedAngle = offset.angle + Math.atan( height/width );
+            const diagonalLength = Math.sqrt( Math.pow((rectangle.height()),2)/4 + Math.pow((rectangle.width()),2)/4 ) * offset.scale;
+            const collectedAngle = offset.angle + Math.atan( rectangle.height()/rectangle.width() );
             dev.log.partDynamic('.connectionNode.getAttachmentPoint -> offset:'+JSON.stringify(offset)+' diagonalLength:'+diagonalLength+' collectedAngle:'+collectedAngle); //#development
 
             return {

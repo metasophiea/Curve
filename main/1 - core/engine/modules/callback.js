@@ -36,30 +36,30 @@ const callback = new function(){
                 }
             break;
             case 'firstMatch':
-                    if(callbackName == 'onmouseenterelement'){
-                        for(let a = 0; a < all.length; a++){
-                            if(all[a][callbackName] != undefined){
-                                if(relevant.indexOf(all[a]) >= 0){
-                                    self.coupling_out.onmouseleaveelement(x, y, event, {all:all, relevant:[currentlyEnteredElement]});
-                                    currentlyEnteredElement = all[a];
-                                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[all[a]]});
-                                }
-                                break;
-                            }
-                        }
-                    }else if(callbackName == 'onmouseleaveelement'){
-                        currentlyEnteredElement = undefined;
-                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
-                        for(let a = 0; a < all.length; a++){
-                            if(all[a].onmouseenterelement != undefined){
+                if(callbackName == 'onmouseenterelement'){
+                    for(let a = 0; a < all.length; a++){
+                        if(all[a][callbackName] != undefined){
+                            if(relevant.indexOf(all[a]) >= 0){
+                                self.coupling_out.onmouseleaveelement(x, y, event, {all:all, relevant:[currentlyEnteredElement]});
                                 currentlyEnteredElement = all[a];
-                                self.coupling_out.onmouseenterelement(x, y, event, {all:all, relevant:[all[a]]});
-                                break;
+                                self.coupling_out[callbackName](x, y, event, {all:all, relevant:[all[a]]});
                             }
+                            break;
                         }
-                    }else{
-                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                     }
+                }else if(callbackName == 'onmouseleaveelement'){
+                    currentlyEnteredElement = undefined;
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
+                    for(let a = 0; a < all.length; a++){
+                        if(all[a].onmouseenterelement != undefined){
+                            currentlyEnteredElement = all[a];
+                            self.coupling_out.onmouseenterelement(x, y, event, {all:all, relevant:[all[a]]});
+                            break;
+                        }
+                    }
+                }else{
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
+                }
             break;
             case 'allMatches': default:
                 self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant});

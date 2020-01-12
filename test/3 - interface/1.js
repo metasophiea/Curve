@@ -11,6 +11,7 @@ _canvas_.interface.go.add( function(){
     
     console.log('');
 
+
     setTimeout(function(){
         console.log('-> start player_1');
         player_1.start();
@@ -75,4 +76,12 @@ _canvas_.interface.go.add( function(){
         console.log('-> get waveform segment from player_1');
         console.log( player_1.waveformSegment({start:0,end:0.1}) );
     },8500);
+    setTimeout(function(){
+        console.log('-> start player_1');
+        player_1.start();
+    },9000);
+    setTimeout(function(){
+        console.log('-> start player_1 again');
+        player_1.start();
+    },9500);
 });

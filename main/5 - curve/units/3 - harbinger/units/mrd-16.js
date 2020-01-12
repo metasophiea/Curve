@@ -2,7 +2,7 @@ this['mrd-16'] = function(name,x,y,angle){
     //style data
         const unitStyle = new function(){
             //image store location URL
-                this.imageStoreURL_localPrefix = imageStoreURL+'MRD-16/';
+                this.imageStoreURL_localPrefix = imageStoreURL+'mrd-16/';
 
             //calculation of measurements
                 const div = 10;
@@ -50,7 +50,7 @@ this['mrd-16'] = function(name,x,y,angle){
                             x:5 + index*20, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                         }},
                         {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_out_'+index, data:{ 
-                            x:5 + index*20, y:5, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                            x:5 + index*20, y:0, width:0, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
                         }},
                     ];
                 }).concat(
@@ -219,8 +219,8 @@ this['mrd-16'] = function(name,x,y,angle){
                     
                     for(let b = 0; b < detail; b++){
                         setTimeout(()=>{
-                            object.elements.connectionNode_signal['signal_out_'+a].y(five2zero[b]);
-                            object.elements.connectionNode_voltage['voltage_out_'+a].y(zero2five[b]);
+                            object.elements.connectionNode_signal['signal_out_'+a].getChildren()[0].width(zero2five[b]);
+                            object.elements.connectionNode_voltage['voltage_out_'+a].getChildren()[0].width(five2zero[b]);
                         },
                         (duration/detail)*b);
                     }
@@ -231,8 +231,8 @@ this['mrd-16'] = function(name,x,y,angle){
                     object.elements.connectionNode_signal['signal_out_'+a].set(false);
                     for(let b = 0; b < detail; b++){
                         setTimeout(()=>{
-                            object.elements.connectionNode_signal['signal_out_'+a].y(zero2five[b]);
-                            object.elements.connectionNode_voltage['voltage_out_'+a].y(five2zero[b]);
+                            object.elements.connectionNode_signal['signal_out_'+a].getChildren()[0].width(five2zero[b]);
+                            object.elements.connectionNode_voltage['voltage_out_'+a].getChildren()[0].width(zero2five[b]);
                         },
                         (duration/detail)*b);
                     }
@@ -536,10 +536,9 @@ this['mrd-16'] = function(name,x,y,angle){
 
     //import/export
         object.exportData = function(){
-            return JSON.stringify(state);
+            return JSON.parse(JSON.stringify(state));
         };
         object.importData = function(data){
-            data = JSON.parse(data);
             state.outputMode = data.outputMode;
             state.step = data.step;
             state.direction = data.direction;

@@ -5,6 +5,7 @@
 {{include:../../main/4 - control/main.js}}
 {{include:../../main/5 - curve/main.js}}
 
+// {{include:0.js}} //workshop
 // {{include:1.js}} //development units - all
 // {{include:2.js}} //development units - testing copy/paste
 // {{include:3.js}} //alpha units

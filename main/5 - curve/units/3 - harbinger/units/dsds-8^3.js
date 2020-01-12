@@ -129,7 +129,7 @@ this['dsds-8^3'] = function(name,x,y,angle){
                             x:20 + index*20, y:80, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                         }},
                         {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_in_'+index, data:{ 
-                            x:20 + index*20, y:75, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                            x:20 + index*20, y:80, width:0, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
                         }},
                     ];
                 }).concat(
@@ -234,56 +234,57 @@ this['dsds-8^3'] = function(name,x,y,angle){
         const state = {
             presetSettingTimeout:1000,
             inputMode:'signal',
+            currentPreset:1,
             presets:[
                 [
                     {bank:0,sample:0,rate:0.5,volume:0.5},
                     {bank:1,sample:0,rate:0.5,volume:0.5},
                     {bank:2,sample:0,rate:0.5,volume:0.5},
                     {bank:3,sample:0,rate:0.5,volume:0.5},
-                    {bank:4,sample:0,rate:0.5,volume:0.5},
-                    {bank:5,sample:0,rate:0.5,volume:0.5},
+                    {bank:7,sample:5,rate:0.5,volume:0.5},
+                    {bank:7,sample:6,rate:0.5,volume:0.5},
                     {bank:6,sample:0,rate:0.5,volume:0.5},
                     {bank:7,sample:0,rate:0.5,volume:0.5},
                 ],
                 [
-                    {bank:0,sample:1,rate:0.5,volume:0.5},
-                    {bank:1,sample:1,rate:0.5,volume:0.5},
-                    {bank:2,sample:1,rate:0.5,volume:0.5},
-                    {bank:3,sample:1,rate:0.5,volume:0.5},
-                    {bank:4,sample:1,rate:0.5,volume:0.5},
+                    {bank:0,sample:5,rate:0.5,volume:0.5},
+                    {bank:1,sample:5,rate:0.5,volume:0.5},
+                    {bank:2,sample:5,rate:0.5,volume:0.5},
+                    {bank:3,sample:4,rate:0.5,volume:0.5},
+                    {bank:4,sample:5,rate:0.5,volume:0.5},
                     {bank:5,sample:1,rate:0.5,volume:0.5},
-                    {bank:6,sample:1,rate:0.5,volume:0.5},
-                    {bank:7,sample:1,rate:0.5,volume:0.5},
+                    {bank:5,sample:4,rate:0.5,volume:0.5},
+                    {bank:5,sample:6,rate:0.5,volume:0.5},
                 ],
                 [
                     {bank:0,sample:2,rate:0.5,volume:0.5},
                     {bank:1,sample:2,rate:0.5,volume:0.5},
-                    {bank:2,sample:2,rate:0.5,volume:0.5},
-                    {bank:3,sample:2,rate:0.5,volume:0.5},
-                    {bank:4,sample:2,rate:0.5,volume:0.5},
-                    {bank:5,sample:2,rate:0.5,volume:0.5},
-                    {bank:6,sample:2,rate:0.5,volume:0.5},
-                    {bank:7,sample:2,rate:0.5,volume:0.5},
-                ],
-                [
-                    {bank:0,sample:3,rate:0.5,volume:0.5},
-                    {bank:1,sample:3,rate:0.5,volume:0.5},
-                    {bank:2,sample:3,rate:0.5,volume:0.5},
-                    {bank:3,sample:3,rate:0.5,volume:0.5},
+                    {bank:2,sample:7,rate:0.5,volume:0.5},
+                    {bank:3,sample:5,rate:0.5,volume:0.5},
                     {bank:4,sample:3,rate:0.5,volume:0.5},
-                    {bank:5,sample:3,rate:0.5,volume:0.5},
-                    {bank:6,sample:3,rate:0.5,volume:0.5},
-                    {bank:7,sample:3,rate:0.5,volume:0.5},
+                    {bank:5,sample:0,rate:0.5,volume:0.5},
+                    {bank:5,sample:1,rate:0.5,volume:0.5},
+                    {bank:5,sample:2,rate:0.5,volume:0.5},
                 ],
                 [
-                    {bank:0,sample:4,rate:0.5,volume:0.5},
-                    {bank:1,sample:4,rate:0.5,volume:0.5},
-                    {bank:2,sample:4,rate:0.5,volume:0.5},
-                    {bank:3,sample:4,rate:0.5,volume:0.5},
-                    {bank:4,sample:4,rate:0.5,volume:0.5},
+                    {bank:0,sample:5,rate:0.5,volume:0.5},
+                    {bank:1,sample:7,rate:0.5,volume:0.5},
+                    {bank:2,sample:6,rate:0.5,volume:0.5},
+                    {bank:3,sample:6,rate:0.5,volume:0.5},
+                    {bank:4,sample:1,rate:0.5,volume:0.5},
+                    {bank:4,sample:3,rate:0.5,volume:0.5},
                     {bank:5,sample:4,rate:0.5,volume:0.5},
-                    {bank:6,sample:4,rate:0.5,volume:0.5},
+                    {bank:7,sample:1,rate:0.5,volume:0.5},
+                ],
+                [
+                    {bank:7,sample:2,rate:0.5,volume:0.5},
+                    {bank:7,sample:3,rate:0.5,volume:0.5},
                     {bank:7,sample:4,rate:0.5,volume:0.5},
+                    {bank:6,sample:0,rate:0.5,volume:0.5},
+                    {bank:6,sample:1,rate:0.5,volume:0.5},
+                    {bank:6,sample:2,rate:0.5,volume:0.5},
+                    {bank:4,sample:4,rate:0.5,volume:0.5},
+                    {bank:7,sample:1,rate:0.5,volume:0.5},
                 ],
             ],
         };
@@ -292,11 +293,18 @@ this['dsds-8^3'] = function(name,x,y,angle){
             return { bank:0, sample:0, rate:1, volume:1 }
         });
 
+        const masterGain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
+        masterGain.out().connect( object.io.audio['audio_out_master'].in() );
+        const channelGains = (new Array(8)).fill().map((item,index) => {
+            const gain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
+            gain.out().connect( object.io.audio['audio_out_'+index].in() );
+            gain.out().connect( masterGain.in() );
+            return gain;
+        });
         const samplePlayers = (new Array(8)).fill().map((item,index) => {
             const player = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
             player.concurrentPlayCountLimit(-1);
-            player.out_right().connect( object.io.audio['audio_out_'+index].in() );
-            player.out_left().connect( object.io.audio['audio_out_master'].in() );
+            player.out_right().connect( channelGains[index].in() );
             return player;
         });
 
@@ -309,12 +317,22 @@ this['dsds-8^3'] = function(name,x,y,angle){
             setChannelStatusLED(channel,'loading');
             samplePlayers[channel].load(
                 'url',
-                () => { setChannelStatusLED(channel,'ready'); }, 
+                () => { 
+                    setChannelStatusLED(channel,'ready');
+                    if( bank != channelData[channel].bank || sample != channelData[channel].sample ){
+                        loadSample(channel,channelData[channel].bank,channelData[channel].sample);
+                    }
+                },
                 samples[bank][sample],
-                () => { setChannelStatusLED(channel,'error'); }, 
+                () => { 
+                    setChannelStatusLED(channel,'error');
+                    if( bank != channelData[channel].bank || sample != channelData[channel].sample ){
+                        loadSample(channel,channelData[channel].bank,channelData[channel].sample);
+                    }
+                },
             );
         }
-        function setOutputConnectionNodes(mode){
+        function setInputConnectionNodes(mode){
             if(mode != 'signal' && mode != 'voltage'){return;}
             if(state.inputMode == mode){return;}
             state.inputMode = mode;
@@ -331,8 +349,8 @@ this['dsds-8^3'] = function(name,x,y,angle){
                     
                     for(let b = 0; b < detail; b++){
                         setTimeout(()=>{
-                            object.elements.connectionNode_signal['signal_in_'+a].y(80 - five2zero[b]);
-                            object.elements.connectionNode_voltage['voltage_in_'+a].y(80 - zero2five[b]);
+                            object.elements.connectionNode_signal['signal_in_'+a].getChildren()[0].width(zero2five[b]);
+                            object.elements.connectionNode_voltage['voltage_in_'+a].getChildren()[0].width(five2zero[b]);
                         },
                         (duration/detail)*b);
                     }
@@ -343,8 +361,8 @@ this['dsds-8^3'] = function(name,x,y,angle){
                     object.elements.connectionNode_signal['signal_in_'+a].set(false);
                     for(let b = 0; b < detail; b++){
                         setTimeout(()=>{
-                            object.elements.connectionNode_signal['signal_in_'+a].y(80 - zero2five[b]);
-                            object.elements.connectionNode_voltage['voltage_in_'+a].y(80 - five2zero[b]);
+                            object.elements.connectionNode_signal['signal_in_'+a].getChildren()[0].width(five2zero[b]);
+                            object.elements.connectionNode_voltage['voltage_in_'+a].getChildren()[0].width(zero2five[b]);
                         },
                         (duration/detail)*b);
                     }
@@ -389,6 +407,8 @@ this['dsds-8^3'] = function(name,x,y,angle){
             }
             object.elements.button_image['preset_'+preset].glow(true);
 
+            state.currentPreset = preset;
+
             state.presets[preset-1].forEach((set,index) => {
                 object.elements.dial_continuous_image['volume_'+index].set(set.volume);
                 object.elements.dial_continuous_image['rate_'+index].set(set.rate);
@@ -397,75 +417,35 @@ this['dsds-8^3'] = function(name,x,y,angle){
             });
         }
         function savePreset(block){
-            state.presets[block] = [
-                {
-                    bank:object.elements.dial_discrete_image['bank_'+0].get(), 
-                    sample:object.elements.dial_discrete_image['sample_'+0].get(), 
-                    rate:object.elements.dial_continuous_image['rate_'+0].get(), 
-                    volume:object.elements.dial_continuous_image['volume_'+0].get()
-                },
-                {
-                    bank:object.elements.dial_discrete_image['bank_'+1].get(), 
-                    sample:object.elements.dial_discrete_image['sample_'+1].get(), 
-                    rate:object.elements.dial_continuous_image['rate_'+1].get(), 
-                    volume:object.elements.dial_continuous_image['volume_'+1].get()
-                },
-                {
-                    bank:object.elements.dial_discrete_image['bank_'+2].get(), 
-                    sample:object.elements.dial_discrete_image['sample_'+2].get(), 
-                    rate:object.elements.dial_continuous_image['rate_'+2].get(), 
-                    volume:object.elements.dial_continuous_image['volume_'+2].get()
-                },
-                {
-                    bank:object.elements.dial_discrete_image['bank_'+3].get(), 
-                    sample:object.elements.dial_discrete_image['sample_'+3].get(), 
-                    rate:object.elements.dial_continuous_image['rate_'+3].get(), 
-                    volume:object.elements.dial_continuous_image['volume_'+3].get()
-                },
-                {
-                    bank:object.elements.dial_discrete_image['bank_'+4].get(), 
-                    sample:object.elements.dial_discrete_image['sample_'+4].get(), 
-                    rate:object.elements.dial_continuous_image['rate_'+4].get(), 
-                    volume:object.elements.dial_continuous_image['volume_'+4].get()
-                },
-                {
-                    bank:object.elements.dial_discrete_image['bank_'+5].get(), 
-                    sample:object.elements.dial_discrete_image['sample_'+5].get(), 
-                    rate:object.elements.dial_continuous_image['rate_'+5].get(), 
-                    volume:object.elements.dial_continuous_image['volume_'+5].get()
-                },
-                {
-                    bank:object.elements.dial_discrete_image['bank_'+6].get(), 
-                    sample:object.elements.dial_discrete_image['sample_'+6].get(), 
-                    rate:object.elements.dial_continuous_image['rate_'+6].get(), 
-                    volume:object.elements.dial_continuous_image['volume_'+6].get()
-                },
-                {
-                    bank:object.elements.dial_discrete_image['bank_'+7].get(), 
-                    sample:object.elements.dial_discrete_image['sample_'+7].get(), 
-                    rate:object.elements.dial_continuous_image['rate_'+7].get(), 
-                    volume:object.elements.dial_continuous_image['volume_'+7].get()
-                },
-            ];
+            state.presets[block-1] = (new Array(8)).fill().map((item,index) => {
+                return {
+                    bank:object.elements.dial_discrete_image['bank_'+index].get(), 
+                    sample:object.elements.dial_discrete_image['sample_'+index].get(), 
+                    rate:object.elements.dial_continuous_image['rate_'+index].get(), 
+                    volume:object.elements.dial_continuous_image['volume_'+index].get()
+                };
+            });
 
-            object.elements.button_image['preset_'+(block+1)].glow(false);
-            setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(true); },200);
-            setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(false); },400);
-            setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(true); },600);
-            setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(false); },800);
+            object.elements.button_image['preset_'+(block)].glow(false);
+            setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(true); },100);
+            setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(false); },200);
+            setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(true); },300);
+            setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(false); },400);
+            setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(true); },500);
         }
 
     //wiring
         //hid
             object.elements.button_image.signal.onpress = function(){
-                setOutputConnectionNodes('signal');
+                setInputConnectionNodes('signal');
             };
             object.elements.button_image.voltage.onpress = function(){
-                setOutputConnectionNodes('voltage');
+                setInputConnectionNodes('voltage');
             };
             for(let a = 0; a < 8; a++){
                 object.elements.dial_continuous_image['volume_'+a].onchange = function(value){
                     channelData[a].volume = value;
+                    channelGains[a].gain(value*2);
                 };
                 object.elements.dial_continuous_image['rate_'+a].onchange = function(value){
                     channelData[a].rate = value;
@@ -484,6 +464,10 @@ this['dsds-8^3'] = function(name,x,y,angle){
                     fire(a);
                 };
             }
+
+            object.elements.dial_continuous_image.masterVolume.onchange = function(value){
+                masterGain.gain(value*2);
+            };
 
             object.elements.button_image.preset_1.onpress = function(){
                 object.elements.button_image.preset_1.pressed = true;
@@ -535,7 +519,11 @@ this['dsds-8^3'] = function(name,x,y,angle){
         //io
             for(let a = 0; a < 8; a++){
                 object.io.signal['signal_in_'+a].onchange = function(value){
-                    if(!value){return}
+                    if(!value){return;}
+                    fire(a);
+                } 
+                object.io.voltage['voltage_in_'+a].onchange = function(value){
+                    if(value <= 0){return;}
                     fire(a);
                 } 
             }
@@ -546,8 +534,29 @@ this['dsds-8^3'] = function(name,x,y,angle){
 
     //import/export
         object.exportData = function(){
+            return {
+                currentSettings:(new Array(8)).fill().map((item,index) => {
+                    return {
+                        bank:object.elements.dial_discrete_image['bank_'+index].get(), 
+                        sample:object.elements.dial_discrete_image['sample_'+index].get(), 
+                        rate:object.elements.dial_continuous_image['rate_'+index].get(), 
+                        volume:object.elements.dial_continuous_image['volume_'+index].get()
+                    };
+                }),
+                state:JSON.parse(JSON.stringify(state)),
+            };
         };
         object.importData = function(data){
+            state.presetSettingTimeout = data.state.presetSettingTimeout;
+            state.presets = data.state.presets;
+            setInputConnectionNodes(data.state.inputMode);
+            selectPreset(data.state.currentPreset);
+            data.currentSettings.forEach((channel,index) => {
+                object.elements.dial_discrete_image['bank_'+index].set(channel.bank);
+                object.elements.dial_discrete_image['sample_'+index].set(channel.sample);
+                object.elements.dial_continuous_image['rate_'+index].set(channel.rate);
+                object.elements.dial_continuous_image['volume_'+index].set(channel.volume);
+            });
         };
 
     //setup/tearDown

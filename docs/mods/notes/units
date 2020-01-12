@@ -79,14 +79,8 @@ future units
     potential units
         (aside from variations on the above)
 
-        send signal button
-        discrete dial signal option sender
-
         disk
         equalizer
-
-        signal NOT / AND / OR / XOR / NAND / NOR / XNOR (NONE, ALL, ANY, EITHER)
-        signal memory
 
         Neon Sign (that just says CURVE or something)
 
@@ -132,6 +126,7 @@ future units
         multi-band distortion box
         bit crusher
         amplitude modulator
+        (some of these could use AudioWorkletProcessor-based custom audio nodes)
 
         tuner (like the one on the phone)
 
@@ -205,5 +200,6 @@ design pattern
     import/export
         exportData
         importData
-
     setup
+        oncreate
+        ondelete

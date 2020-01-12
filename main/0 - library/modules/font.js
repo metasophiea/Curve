@@ -282,7 +282,7 @@ this.loadFont = function(fontName,onLoaded=()=>{}){
     dev.log.font('.loadFont(',fontName,onLoaded); //#development
     dev.count('.font.loadFont'); //#development
 
-    if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
+    if(vectorLibrary[fontName] == undefined){ console.warn('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
 
     //make sure font file is on the approved list
         if( !this.isApprovedFont(fontName) ){

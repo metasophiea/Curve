@@ -108,7 +108,7 @@ this.character = function(_id,_name){
                     font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
                     dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> font set to: "'+font+'"'); //#development
                 }else{
-                    report.warning('library.font : error : unknown font:',newFont);
+                    console.warn('library.font : error : unknown font:',newFont);
                     font = defaultFontName;
                 }
 

@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:5} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:7} };
                 const library = this;
                 
                 const dev = {
@@ -686,20 +686,63 @@
                                 (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
                                 (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
                             ){
+                                dev.log.math('.detectIntersect.lineOnLine -> identical segments'); //#development
                                 return {x:undefined, y:undefined, intersect:false, contact:true};
                             }
                                 
                             //point on point
                             if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
+                                dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[0]:',segment1[0]); //#development
                                 return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
                             }
                             if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
+                                dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[1]:',segment1[1]); //#development
                                 return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
                             }
                     
                             //calculate denominator
                             const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                            if(denominator == 0){  return {x:undefined, y:undefined, intersect:false, contact:false}; }
+                            dev.log.math('.detectIntersect.lineOnLine -> denominator:',denominator); //#development
+                            if(denominator == 0){
+                                const points = [];
+                                const output = {x1:undefined, y1:undefined, x2:undefined, y2:undefined, intersect:false, contact:true};
+                                if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){
+                                    output.x1 = segment1[0].x;
+                                    output.y1 = segment1[0].y;
+                                }
+                                if( library.math.detectIntersect.pointOnLine(segment1[1],segment2) ){
+                                    if(output.x1 == undefined){
+                                        output.x1 = segment1[1].x;
+                                        output.y1 = segment1[1].y;
+                                    }else{
+                                        output.x2 = segment1[1].x;
+                                        output.y2 = segment1[1].y;
+                                        return output;
+                                    }
+                                }
+                                if( library.math.detectIntersect.pointOnLine(segment2[0],segment1) ){
+                                    if(output.x1 == undefined){
+                                        output.x1 = segment2[0].x;
+                                        output.y1 = segment2[0].y;
+                                    }else{
+                                        output.x2 = segment2[0].x;
+                                        output.y2 = segment2[0].y;
+                                        return output;
+                                    }
+                                }
+                                if( library.math.detectIntersect.pointOnLine(segment2[1],segment1) ){
+                                    if(output.x1 == undefined){
+                                        output.x1 = segment2[1].x;
+                                        output.y1 = segment2[1].y;
+                                    }else{
+                                        output.x2 = segment2[1].x;
+                                        output.y2 = segment2[1].y;
+                                        return output;
+                                    }
+                                }
+                    
+                                return output;
+                            }
                                 
                             //point on line
                             if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){ return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true}; }
@@ -737,10 +780,25 @@
                                 for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
                                     const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
                                     dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> result:',result); //#development
-                                    if(result.intersect){
-                                        output.points.push({x:result.x,y:result.y});
-                                        output.intersect = true;
+                                    if(result.contact){
                                         output.contact = true;
+                                        if(result.intersect){
+                                            output.intersect = true;
+                                        }
+                    
+                                        if( result.x2 != undefined ){
+                                            if( output.points.find(item => item.x == result.x1 && item.y == result.y1 ) == undefined ){
+                                                output.points.push({x:result.x1,y:result.y1});
+                                            }
+                                            if( output.points.find(item => item.x == result.x2 && item.y == result.y2 ) == undefined ){
+                                                output.points.push({x:result.x2,y:result.y2});
+                                            }
+                                            break;
+                                        }
+                    
+                                        if( output.points.find(item => item.x == result.x && item.y == result.y ) == undefined ){
+                                            output.points.push({x:result.x,y:result.y});
+                                        }
                                     }
                                 }
                     
@@ -768,11 +826,19 @@
                                 huntForIntersection(line,poly.points);
                             }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onPoint') ){
                                 huntForIntersection(line,poly.points);
-                                output.points.push(line[dir]);
+                                // if(dir == 1){
+                                //     output.points.push(line[1]);
+                                // }else if(dir == 2){
+                                //     output.points.push(line[0]);
+                                // }
                                 output.contact = true;
                             }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onEdge') ){
                                 huntForIntersection(line,poly.points);
-                                output.points.push(line[dir]);
+                                // if(dir == 1){
+                                //     output.points.push(line[1]);
+                                // }else if(dir == 2){
+                                //     output.points.push(line[0]);
+                                // }
                                 output.contact = true;
                             }else if( oneWhileTheOtherIs(point_a,point_b,'outside','inside') ){
                                 huntForIntersection(line,poly.points);
@@ -787,7 +853,11 @@
                                 output.contact = true;
                                 output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
                             }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','inside') ){
-                                output.points = [line[dir]];
+                                if(dir == 1){
+                                    output.points.push(line[1]);
+                                }else if(dir == 2){
+                                    output.points.push(line[0]);
+                                }
                                 output.contact = true;
                                 output.intersect = true;
                             }else if( oneWhileTheOtherIs(point_a,point_b,'onEdge','onEdge') ){
@@ -795,7 +865,11 @@
                                 output.contact = true;
                                 output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
                             }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','inside') ){
-                                output.points = [line[dir]];
+                                if(dir == 1){
+                                    output.points.push(line[1]);
+                                }else if(dir == 2){
+                                    output.points.push(line[0]);
+                                }
                                 output.contact = true;
                                 output.intersect = true;
                             }else if( oneWhileTheOtherIs(point_a,point_b,'inside','inside') ){
@@ -811,11 +885,20 @@
                             dev.log.math('.detectIntersect.polyOnPoly(',poly_a,poly_b); //#development
                             dev.count('.math.detectIntersect.polyOnPoly'); //#development
                     
-                            if(poly_a.boundingBox == undefined){ poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points); }
-                            if(poly_b.boundingBox == undefined){ poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points); }
+                            if(poly_a.boundingBox == undefined){ 
+                                dev.log.math('.detectIntersect.polyOnPoly -> poly_a boundingBox not found, generating...'); //#development
+                                poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points);
+                            }
+                            if(poly_b.boundingBox == undefined){ 
+                                dev.log.math('.detectIntersect.polyOnPoly -> poly_b boundingBox not found, generating...'); //#development
+                                poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points);
+                            }
                             if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
+                                dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s are totally seperate!'); //#development
                                 return { points:[], intersect:false, contact:false };
                             }
+                    
+                            dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s do collide, proceeding with search'); //#development
                     
                             const results = {
                                 points:[],
@@ -830,25 +913,34 @@
                                     if(index != -1){sudo_poly_a_points.splice(index, 1);}
                                 });
                                 if(sudo_poly_a_points.length == 0){
+                                    dev.log.math('.detectIntersect.polyOnPoly -> these two polys are exactly the same'); //#development
                                     return {
                                         points:Object.assign([],poly_a.points),
                                         contact:true,
                                         intersect:true,
                                     };
                                 }
+                                dev.log.math('.detectIntersect.polyOnPoly -> these two polys are not exactly the same (though they do share '+(poly_a.points.length-sudo_poly_a_points.length)+' of the same points)'); //#development
                     
                             //find all side intersection points
                                 for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
+                                    dev.log.math('.detectIntersect.polyOnPoly -> testing line on poly:',[poly_a.points[a_a],poly_a.points[a_b]],poly_b); //#development
                                     const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
-                                    results.points = results.points.concat(tmp.points);
+                                    dev.log.math('.detectIntersect.polyOnPoly -> lineOnPoly-results:',tmp); //#development
+                    
+                                    results.points = results.points.concat(
+                                        tmp.points.filter(point => results.points.find(item => item.x == point.x && item.y == point.y ) == undefined )
+                                    );
+                    
                                     results.contact = results.contact || tmp.contact;
                                     results.intersect = results.intersect || tmp.intersect;
                                 }
-                            
+                                dev.log.math('.detectIntersect.polyOnPoly -> results:',results); //#development
+                        
                             //check if poly_a is totally inside poly_b (if necessary)
                                 for(let a = 0; a < poly_b.points.length; a++){
                                     if( results.intersect ){break;}
-                                    if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) == 'inside' ){   
+                                    if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) != 'outside' ){   
                                         results.intersect = true;
                                     }
                                 }
@@ -3011,7 +3103,7 @@
                         dev.log.font('.loadFont(',fontName,onLoaded); //#development
                         dev.count('.font.loadFont'); //#development
                     
-                        if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
+                        if(vectorLibrary[fontName] == undefined){ console.warn('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
                     
                         //make sure font file is on the approved list
                             if( !this.isApprovedFont(fontName) ){
@@ -3382,7 +3474,8 @@
                                 console.log(e);
                             }
                         };
-                        this.loadAudioFile = function(callback,type='file',url='',errorCallback){
+                        const loadedAudioFiles = {};
+                        this.loadAudioFile = function(callback,type='file',url='',errorCallback,forceRequest=false){
                             dev.log.audio('.loadAudioFile(',callback,type,url); //#development
                             dev.count('.audio.loadAudioFile'); //#development
                     
@@ -3393,11 +3486,17 @@
                         
                             switch(type){
                                 case 'url': 
+                                    if(!forceRequest && loadedAudioFiles[url] != undefined){
+                                        callback(loadedAudioFiles[url]);
+                                        break;
+                                    }
+                    
                                     library.misc.loadFileFromURL(
                                         url, 
                                         data => {
                                             library.audio.context.decodeAudioData(data, function(data){
-                                                callback({ buffer:data, name:(url.split('/')).pop(), duration:data.duration });
+                                                loadedAudioFiles[url] = { buffer:data, name:(url.split('/')).pop(), duration:data.duration };
+                                                callback(loadedAudioFiles[url]);
                                             });
                                         },
                                         'arraybuffer',
@@ -21855,7 +21954,7 @@
             };
             _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:3} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:7} };
                 const core_engine = new Worker("js/core_engine.js");
                 const self = this;
                 
@@ -22063,9 +22162,9 @@
                                 this[name] = function(a){
                                     if(a == undefined){ return cashedAttributes[name]; }
                                     if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',a); //#development
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',...arguments); //#development
                                     cashedAttributes[name] = a;
-                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[a]); }
+                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[...arguments]); }
                                 };
                             }
                             Object.entries({
@@ -22516,7 +22615,7 @@
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            url: '',
+                            url:'',
                             bitmap: undefined,
                         }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
@@ -23148,7 +23247,7 @@
                                 }else{
                                     console.warn('unknown event type: ',event);
                                 }
-                
+                                
                                 communicationModule.run('callback.coupling_in.'+callbackName,[sudoEvent]);
                             };
                 
@@ -23441,7 +23540,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:2} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:10} };
                 const interface = this;
             
                 const dev = {
@@ -23471,6 +23570,55 @@
                     this.__activate = function(){ functionList.forEach(f => f()); };
                 };
             
+                this.audioWorkletProcessor = new function(){
+                    this.audioWorkletProcessor = new function(){
+                        const processorCodeBlobs = [
+                            new Blob([`
+                                class bitcrusher extends AudioWorkletProcessor{
+                                    static get parameterDescriptors(){
+                                        return [
+                                            {
+                                                name: 'amplitudeResolution',
+                                                defaultValue: 10,
+                                                minValue: 1,
+                                                maxValue: 128,
+                                                automationRate: 'k-rate',
+                                            },{
+                                                name: 'sampleFrequency',
+                                                defaultValue: 1,
+                                                minValue: 1,
+                                                maxValue: 128,
+                                                automationRate: 'k-rate',
+                                            }
+                                        ];
+                                    }
+                                    constructor(options){
+                                        super(options);
+                                    }
+                                    process(inputs, outputs, parameters){
+                                        const input = inputs[0];
+                                        const output = outputs[0];
+                                        const amplitudeResolution = parameters.amplitudeResolution;
+                                        const sampleFrequency = parameters.sampleFrequency;
+                                    
+                                        for(let channel = 0; channel < input.length; channel++){
+                                            const inputChannel = input[channel];
+                                            const outputChannel = output[channel];
+                                    
+                                            for(let i = 0; i < inputChannel.length; i++){
+                                                outputChannel[i] = i%sampleFrequency == 0 ? Math.round(inputChannel[i]*amplitudeResolution)/amplitudeResolution : outputChannel[i-1];
+                                            }
+                                        }
+                                    return true;
+                                    }
+                                }
+                                registerProcessor('bitcrusher', bitcrusher);
+                            `], { type: "text/javascript" }),
+                        ];
+                    
+                        processorCodeBlobs.map(blob => _canvas_.library.audio.context.audioWorklet.addModule(window.URL.createObjectURL(blob)));
+                    };
+                };
                 this.circuit = new function(){
                     this.recorder = function(context){
                     
@@ -23629,6 +23777,31 @@
                     
                         //setup
                             if(setupConnect){this.selectDevice('default');}
+                    };
+                    this.gain = function(
+                        context
+                    ){
+                        //flow
+                            //flow chain
+                                const flow = {
+                                    gainNode:{}
+                                };
+                    
+                        //gainNode
+                            flow.gainNode.gain = 1;
+                            flow.gainNode.node = context.createGain();    
+                            _canvas_.library.audio.changeAudioParam(context, flow.gainNode.node.gain, flow.gainNode.gain, 0.01, 'instant', true);
+                    
+                        //input/output node
+                            this.in = function(){return flow.gainNode.node;}
+                            this.out = function(a){return flow.gainNode.node;}
+                    
+                        //controls
+                            this.gain = function(value){
+                                if(value == undefined){ return flow.gainNode.gain; }
+                                flow.gainNode.gain = value;
+                                _canvas_.library.audio.changeAudioParam(context, flow.gainNode.node.gain, flow.gainNode.gain, 0.01, 'instant', true);
+                            };
                     };
                     this.audio2percentage = function(){
                         return new function(){
@@ -23789,6 +23962,36 @@
                             setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
                     };
 
+                    this.bitcrusher = function(
+                        context
+                    ){
+                        //flow
+                            //flow chain
+                                const flow = {
+                                    bitcrusherNode:{}
+                                };
+                    
+                        //bitcrusherNode
+                            flow.bitcrusherNode.amplitudeResolution = 10;
+                            flow.bitcrusherNode.sampleFrequency = 1;
+                            flow.bitcrusherNode.node = new AudioWorkletNode(_canvas_.library.audio.context, 'bitcrusher');
+                    
+                        //input/output node
+                            this.in = function(){return flow.bitcrusherNode.node;}
+                            this.out = function(a){return flow.bitcrusherNode.node;}
+                    
+                        //controls
+                            this.amplitudeResolution = function(value){
+                                if(value == undefined){ return flow.bitcrusherNode.amplitudeResolution; }
+                                flow.bitcrusherNode.amplitudeResolution = value;
+                                flow.bitcrusherNode.node.parameters.get('amplitudeResolution').setValueAtTime(value, 0);
+                            };
+                            this.sampleFrequency = function(value){
+                                if(value == undefined){ return flow.bitcrusherNode.sampleFrequency; }
+                                flow.bitcrusherNode.sampleFrequency = value;
+                                flow.bitcrusherNode.node.parameters.get('sampleFrequency').setValueAtTime(value, 0);
+                            };
+                    };
                     this.multibandFilter = function(
                         context, bandcount, frames=false
                     ){
@@ -24055,7 +24258,7 @@
                                 }, type, url, errorCallback);
                             }
                             function generatePlayheadNumber(){
-                                dev.log.circuit('.player::unlogeneratePlayheadNumberadRaw()'); //#development
+                                dev.log.circuit('.player::generatePlayheadNumber()'); //#development
                                 let num = 0;
                                 while( Object.keys(state.playhead).includes(String(num)) && state.playhead[num] != undefined ){num++;}
                                 return num;
@@ -24179,7 +24382,7 @@
                             // };
                     
                             this.start = function(playhead){
-                                dev.log.circuit('.player.start('+playhead+')'); //#development
+                                dev.log.circuit('.player.start(',playhead); //#development
                                 dev.log.circuit('.player.start -> state.playhead[playhead]: '+JSON.stringify(state.playhead[playhead])); //#development
                                 dev.log.circuit('.player.start -> state.loop.active: '+state.loop.active); //#development
                                 dev.log.circuit('.player.start -> play area'); //#development
@@ -24194,8 +24397,10 @@
                                 //if no particular playhead is selected, generate a new one
                                 //(unless we've already reached the concurrentPlayCountLimit)
                                     if(playhead == undefined){
+                                        dev.log.circuit('.player.start -> concurrentPlayCountLimit check:',state.concurrentPlayCountLimit != -1, state.playhead.length >= state.concurrentPlayCountLimit); //#development
                                         if(state.concurrentPlayCountLimit != -1 && state.playhead.filter(() => true).length >= state.concurrentPlayCountLimit){ return -1; }
-                    
+                                        dev.log.circuit('.player.start -> generating a new playhead'); //#development
+                                        
                                         playhead = generatePlayheadNumber();
                                         state.playhead[playhead] = { position:0, lastSightingTime:0 };
                                         dev.log.circuit('.player.start -> playhead: '+playhead); //#development
@@ -24246,6 +24451,9 @@
                                 }
                                 dev.log.circuit('.player.resume('+playhead+')'); //#development
                     
+                                //if this playhead is already playing, don't start it again
+                                    if( state.playhead[playhead].playing ){return;}
+                        
                                 this.start(playhead);
                             };
                             this.stop = function(playhead,callback){
@@ -24256,6 +24464,7 @@
                                 dev.log.circuit('.player.stop('+playhead+','+callback+')'); //#development
                     
                                 //check if we should stop at all (player must be playing)
+                                    dev.log.circuit('.player.stop -> playhead:',playhead,JSON.stringify(state.playhead[playhead])); //#development
                                     if( state.playhead[playhead] == undefined || !state.playhead[playhead].playing ){return;}
                                 //actually stop the buffer and destroy it
                                     flow.bufferSource[playhead].onended = callback;
@@ -24709,7 +24918,6 @@
                                 flow.wobbler_detune.start();
                             };
                     };
-
                 };
                 this.part = new function(){
                     const interfacePart = this;
@@ -29924,13 +30132,14 @@
                                         object.append(dial);
                                     
                                 //graphical adjust
-                                    function set(a,update=true){ 
+                                    function set(a,update=true){
                                         a = (a>(optionCount-1) ? (optionCount-1) : a);
                                         a = (a<0 ? 0 : a);
+                                        a = Math.round(a);
+                                        if(a == value){return;}
                             
                                         if(update && object.onchange != undefined){object.onchange(a);}
                             
-                                        a = Math.round(a);
                                         value = a;
                                         dial.set( value/(optionCount-1) );
                                     };
@@ -29986,7 +30195,6 @@
                                             function(x,y,event){
                                                 const diff = Math.round( (event.Y - initialY)/25 );
                                                 set( initialValue - diff );
-                                                if(object.onchange != undefined){object.onchange(value);}
                                             },
                                             function(x,y,event){
                                                 grappled = false;
@@ -30001,6 +30209,7 @@
                             
                                 //setup
                                     set(value);
+                                    dial.set( Math.round(value)/(optionCount-1) );
                             
                                 return object;
                             };
@@ -30165,11 +30374,11 @@
                                     function set(a,update=true){ 
                                         a = (a>(optionCount-1) ? (optionCount-1) : a);
                                         a = (a<0 ? 0 : a);
+                                        a = Math.round(a);
                                         if(a == value){return;}
                             
                                         if(update && object.onchange != undefined){object.onchange(a);}
                             
-                                        a = Math.round(a);
                                         value = a;
                                         dial.set( value/(optionCount-1) );
                                     };
@@ -30239,6 +30448,7 @@
                             
                                 //setup
                                     set(value);
+                                    dial.set( Math.round(value)/(optionCount-1) );
                             
                                 return object;
                             };
@@ -30282,10 +30492,11 @@
                                     function set(a,update=true){ 
                                         a = (a>(optionCount-1) ? (optionCount-1) : a);
                                         a = (a<0 ? 0 : a);
+                                        a = Math.round(a);
+                                        if(a == value){return;}
                             
                                         if(update && object.onchange != undefined){object.onchange(a);}
                             
-                                        a = Math.round(a);
                                         value = a;
                                         dial.set( value/(optionCount-1) );
                                     };
@@ -30341,7 +30552,6 @@
                                             function(x,y,event){
                                                 const diff = Math.round( (event.Y - initialY)/25 );
                                                 set( initialValue - diff );
-                                                if(object.onchange != undefined){object.onchange(value);}
                                             },
                                             function(x,y,event){
                                                 grappled = false;
@@ -30356,6 +30566,7 @@
                             
                                 //setup
                                     set(value);
+                                    dial.set( Math.round(value)/(optionCount-1) );
                             
                                 return object;
                             };
@@ -33038,6 +33249,9 @@
                                         },
                                         checkbox:{},
                                         button:{},
+                                        radio:{
+                                            arrowMux:subList_arrowMux,
+                                        },
                                         list:{
                                             heightLimit:-1,
                                             arrowMux:subList_arrowMux,
@@ -33256,6 +33470,111 @@
                                                     function(){ if(item.function){item.function();} object.onrelease([index]); },
                                                     function(obj,event){ object.select(index,true,event,false);} ,
                                                     function(obj,event){ object.select(index,false,event,false); },
+                                                );
+                                            }else if(item.type == 'radio'){
+                                                newItem = self.list.itemTypes.radio(
+                                                    subListGroup,
+                                                    index, xOffset, output.calculatedListHeight,
+                                                                        
+                                                    //internal callbacks
+                                                        function(isOpen){
+                                                            if(!isOpen){return;}
+                                                            itemArray.forEach((item,a) => { if(list[a].type == 'list' && a != index && item.isOpen){ item.close(); } });
+                                                            return -state.position * (style.default.heightLimit > 0 && style.default.heightLimit < calculatedListHeight ? (calculatedListHeight-style.default.heightLimit) : calculatedListHeight);
+                                                        },
+                            
+                                                    //button
+                                                        def(item,'width'), def(item,'height'), 
+                                                
+                                                        def(item,'itemHorizontalPadding'),
+                                                        (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                                                        def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'), def(item,'arrowMux'),
+                                                        item.active != undefined ? item.active : active, 
+                                                        item.hoverable != undefined ? item.hoverable : hoverable, 
+                                                        item.pressable != undefined ? item.pressable : pressable, 
+                            
+                                                        def(item,'text_colour__off'),
+                                                        def(item,'text_colour__up'),
+                                                        def(item,'text_colour__press'),
+                                                        def(item,'text_colour__select'),
+                                                        def(item,'text_colour__select_press'),
+                                                        def(item,'text_colour__glow'),
+                                                        def(item,'text_colour__glow_press'),
+                                                        def(item,'text_colour__glow_select'),
+                                                        def(item,'text_colour__glow_select_press'),
+                                                        def(item,'text_colour__hover'),
+                                                        def(item,'text_colour__hover_press'),
+                                                        def(item,'text_colour__hover_select'),
+                                                        def(item,'text_colour__hover_select_press'),
+                                                        def(item,'text_colour__hover_glow'),
+                                                        def(item,'text_colour__hover_glow_press'),
+                                                        def(item,'text_colour__hover_glow_select'),
+                                                        def(item,'text_colour__hover_glow_select_press'),
+                                                
+                                                        def(item,'item__off__colour'),
+                                                        def(item,'item__off__lineColour'),
+                                                        def(item,'item__off__lineThickness'),
+                                                        def(item,'item__up__colour'),
+                                                        def(item,'item__up__lineColour'),
+                                                        def(item,'item__up__lineThickness'),
+                                                        def(item,'item__press__colour'),
+                                                        def(item,'item__press__lineColour'),
+                                                        def(item,'item__press__lineThickness'),
+                                                        def(item,'item__select__colour'),
+                                                        def(item,'item__select__lineColour'),
+                                                        def(item,'item__select__lineThickness'),
+                                                        def(item,'item__select_press__colour'),
+                                                        def(item,'item__select_press__lineColour'),
+                                                        def(item,'item__select_press__lineThickness'),
+                                                        def(item,'item__glow__colour'),
+                                                        def(item,'item__glow__lineColour'),
+                                                        def(item,'item__glow__lineThickness'),
+                                                        def(item,'item__glow_press__colour'),
+                                                        def(item,'item__glow_press__lineColour'),
+                                                        def(item,'item__glow_press__lineThickness'),
+                                                        def(item,'item__glow_select__colour'),
+                                                        def(item,'item__glow_select__lineColour'),
+                                                        def(item,'item__glow_select__lineThickness'),
+                                                        def(item,'item__glow_select_press__colour'),
+                                                        def(item,'item__glow_select_press__lineColour'),
+                                                        def(item,'item__glow_select_press__lineThickness'),
+                                                        def(item,'item__hover__colour'),
+                                                        def(item,'item__hover__lineColour'),
+                                                        def(item,'item__hover__lineThickness'),
+                                                        def(item,'item__hover_press__colour'),
+                                                        def(item,'item__hover_press__lineColour'),
+                                                        def(item,'item__hover_press__lineThickness'),
+                                                        def(item,'item__hover_select__colour'),
+                                                        def(item,'item__hover_select__lineColour'),
+                                                        def(item,'item__hover_select__lineThickness'),
+                                                        def(item,'item__hover_select_press__colour'),
+                                                        def(item,'item__hover_select_press__lineColour'),
+                                                        def(item,'item__hover_select_press__lineThickness'),
+                                                        def(item,'item__hover_glow__colour'),
+                                                        def(item,'item__hover_glow__lineColour'),
+                                                        def(item,'item__hover_glow__lineThickness'),
+                                                        def(item,'item__hover_glow_press__colour'),
+                                                        def(item,'item__hover_glow_press__lineColour'),
+                                                        def(item,'item__hover_glow_press__lineThickness'),
+                                                        def(item,'item__hover_glow_select__colour'),
+                                                        def(item,'item__hover_glow_select__lineColour'),
+                                                        def(item,'item__hover_glow_select__lineThickness'),
+                                                        def(item,'item__hover_glow_select_press__colour'),
+                                                        def(item,'item__hover_glow_select_press__lineColour'),
+                                                        def(item,'item__hover_glow_select_press__lineThickness'),
+                                                
+                                                    //sub list
+                                                        item.options,
+                                                
+                                                        item.itemWidth,
+                                                        def(item,'heightLimit'),
+                                                        def(item,'widthLimit'),
+                                                        def(item,'backgroundColour'),
+                                                        def(item,'backgroundMarkingColour'),
+                                                
+                                                        def(item,'default_item_spacingHeight'),
+                            
+                                                        item.updateFunction, item.onclickFunction,
                                                 );
                                             }else if(item.type == 'list'){
                                                 newItem = self.list.itemTypes.list(
@@ -33870,7 +34189,7 @@
                             
                                 button.onpressrelease = function(){
                                     newItem.set(!newItem.state);
-                                    onclickFunction(newItem.state);
+                                    if(onclickFunction){onclickFunction(newItem.state);}
                                 };
                             
                                 if(updateFunction != undefined){
@@ -34062,6 +34381,385 @@
                                 });
                             
                                 return {item:button_rectangle,height:height};
+                            };
+                            this.list.itemTypes.radio = function(
+                                subListGroup,
+                                index, x, y, 
+                            
+                                //interal callbacks
+                                    buttonClick,
+                                
+                                //button
+                                    width, height,
+                            
+                                    itemHorizontalPadding, 
+                                    text_left, text_centre, text_right,
+                                    fontSize, font, spacing, interCharacterSpacing, arrowMux,
+                                    active, hoverable, pressable,
+                            
+                                    text_colour__off,
+                                    text_colour__up,
+                                    text_colour__press,
+                                    text_colour__select,
+                                    text_colour__select_press,
+                                    text_colour__glow,
+                                    text_colour__glow_press,
+                                    text_colour__glow_select,
+                                    text_colour__glow_select_press,
+                                    text_colour__hover,
+                                    text_colour__hover_press,
+                                    text_colour__hover_select,
+                                    text_colour__hover_select_press,
+                                    text_colour__hover_glow,
+                                    text_colour__hover_glow_press,
+                                    text_colour__hover_glow_select,
+                                    text_colour__hover_glow_select_press,
+                            
+                                    item__off__colour,
+                                    item__off__lineColour,
+                                    item__off__lineThickness,
+                                    item__up__colour,
+                                    item__up__lineColour,
+                                    item__up__lineThickness,
+                                    item__press__colour,
+                                    item__press__lineColour,
+                                    item__press__lineThickness,
+                                    item__select__colour,
+                                    item__select__lineColour,
+                                    item__select__lineThickness,
+                                    item__select_press__colour,
+                                    item__select_press__lineColour,
+                                    item__select_press__lineThickness,
+                                    item__glow__colour,
+                                    item__glow__lineColour,
+                                    item__glow__lineThickness,
+                                    item__glow_press__colour,
+                                    item__glow_press__lineColour,
+                                    item__glow_press__lineThickness,
+                                    item__glow_select__colour,
+                                    item__glow_select__lineColour,
+                                    item__glow_select__lineThickness,
+                                    item__glow_select_press__colour,
+                                    item__glow_select_press__lineColour,
+                                    item__glow_select_press__lineThickness,
+                                    item__hover__colour,
+                                    item__hover__lineColour,
+                                    item__hover__lineThickness,
+                                    item__hover_press__colour,
+                                    item__hover_press__lineColour,
+                                    item__hover_press__lineThickness,
+                                    item__hover_select__colour,
+                                    item__hover_select__lineColour,
+                                    item__hover_select__lineThickness,
+                                    item__hover_select_press__colour,
+                                    item__hover_select_press__lineColour,
+                                    item__hover_select_press__lineThickness,
+                                    item__hover_glow__colour,
+                                    item__hover_glow__lineColour,
+                                    item__hover_glow__lineThickness,
+                                    item__hover_glow_press__colour,
+                                    item__hover_glow_press__lineColour,
+                                    item__hover_glow_press__lineThickness,
+                                    item__hover_glow_select__colour,
+                                    item__hover_glow_select__lineColour,
+                                    item__hover_glow_select__lineThickness,
+                                    item__hover_glow_select_press__colour,
+                                    item__hover_glow_select_press__lineColour,
+                                    item__hover_glow_select_press__lineThickness,
+                            
+                                //sub list
+                                    options, 
+                            
+                                    itemWidth,
+                                    heightLimit,
+                                    widthLimit,
+                                    backgroundColour,
+                                    backgroundMarkingColour,
+                            
+                                    default_item_spacingHeight,
+                            
+                                    updateFunction, onclickFunction,
+                            ){
+                                dev.log.partControl('.list.itemTypes.radio(...)'); //#development
+                            
+                                const newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
+                                const button = interfacePart.builder('control', 'button_rectangle', 'button', {
+                                    width:width, height:height,
+                                    text_left:text_left,
+                                    text_centre:text_centre,
+                                    text_right:text_right,
+                            
+                                    textVerticalOffsetMux:0.5, textHorizontalOffsetMux:itemHorizontalPadding/width,
+                                    active:active, hoverable:hoverable, selectable:true, pressable:pressable,
+                            
+                                    style:{
+                                        text_font:font,
+                                        text_size:fontSize,
+                                        text_spacing:spacing,
+                                        text_interCharacterSpacing:interCharacterSpacing,
+                            
+                                        text__off__colour:                                  text_colour__off,
+                                        text__up__colour:                                   text_colour__up,
+                                        text__press__colour:                                text_colour__press,
+                                        text__select__colour:                               text_colour__select,
+                                        text__select_press__colour:                         text_colour__select_press,
+                                        text__glow__colour:                                 text_colour__glow,
+                                        text__glow_press__colour:                           text_colour__glow_press,
+                                        text__glow_select__colour:                          text_colour__glow_select,
+                                        text__glow_select_press__colour:                    text_colour__glow_select_press,
+                                        text__hover__colour:                                text_colour__hover,
+                                        text__hover_press__colour:                          text_colour__hover_press,
+                                        text__hover_select__colour:                         text_colour__hover_select,
+                                        text__hover_select_press__colour:                   text_colour__hover_select_press,
+                                        text__hover_glow__colour:                           text_colour__hover_glow,
+                                        text__hover_glow_press__colour:                     text_colour__hover_glow_press,
+                                        text__hover_glow_select__colour:                    text_colour__hover_glow_select,
+                                        text__hover_glow_select_press__colour:              text_colour__hover_glow_select_press,
+                            
+                                        background__off__colour:                            item__off__colour,
+                                        background__off__lineColour:                        item__off__lineColour,
+                                        background__off__lineThickness:                     item__off__lineThickness,
+                                        background__up__colour:                             item__up__colour,
+                                        background__up__lineColour:                         item__up__lineColour,
+                                        background__up__lineThickness:                      item__up__lineThickness,
+                                        background__press__colour:                          item__press__colour,
+                                        background__press__lineColour:                      item__press__lineColour,
+                                        background__press__lineThickness:                   item__press__lineThickness,
+                                        background__select__colour:                         item__select__colour,
+                                        background__select__lineColour:                     item__select__lineColour,
+                                        background__select__lineThickness:                  item__select__lineThickness,
+                                        background__select_press__colour:                   item__select_press__colour,
+                                        background__select_press__lineColour:               item__select_press__lineColour,
+                                        background__select_press__lineThickness:            item__select_press__lineThickness,
+                                        background__glow__colour:                           item__glow__colour,
+                                        background__glow__lineColour:                       item__glow__lineColour,
+                                        background__glow__lineThickness:                    item__glow__lineThickness,
+                                        background__glow_press__colour:                     item__glow_press__colour,
+                                        background__glow_press__lineColour:                 item__glow_press__lineColour,
+                                        background__glow_press__lineThickness:              item__glow_press__lineThickness,
+                                        background__glow_select__colour:                    item__glow_select__colour,
+                                        background__glow_select__lineColour:                item__glow_select__lineColour,
+                                        background__glow_select__lineThickness:             item__glow_select__lineThickness,
+                                        background__glow_select_press__colour:              item__glow_select_press__colour,
+                                        background__glow_select_press__lineColour:          item__glow_select_press__lineColour,
+                                        background__glow_select_press__lineThickness:       item__glow_select_press__lineThickness,
+                                        background__hover__colour:                          item__hover__colour,
+                                        background__hover__lineColour:                      item__hover__lineColour,
+                                        background__hover__lineThickness:                   item__hover__lineThickness,
+                                        background__hover_press__colour:                    item__hover_press__colour,
+                                        background__hover_press__lineColour:                item__hover_press__lineColour,
+                                        background__hover_press__lineThickness:             item__hover_press__lineThickness,
+                                        background__hover_select__colour:                   item__hover_select__colour,
+                                        background__hover_select__lineColour:               item__hover_select__lineColour,
+                                        background__hover_select__lineThickness:            item__hover_select__lineThickness,
+                                        background__hover_select_press__colour:             item__hover_select_press__colour,
+                                        background__hover_select_press__lineColour:         item__hover_select_press__lineColour,
+                                        background__hover_select_press__lineThickness:      item__hover_select_press__lineThickness,
+                                        background__hover_glow__colour:                     item__hover_glow__colour,
+                                        background__hover_glow__lineColour:                 item__hover_glow__lineColour,
+                                        background__hover_glow__lineThickness:              item__hover_glow__lineThickness,
+                                        background__hover_glow_press__colour:               item__hover_glow_press__colour,
+                                        background__hover_glow_press__lineColour:           item__hover_glow_press__lineColour,
+                                        background__hover_glow_press__lineThickness:        item__hover_glow_press__lineThickness,
+                                        background__hover_glow_select__colour:              item__hover_glow_select__colour,
+                                        background__hover_glow_select__lineColour:          item__hover_glow_select__lineColour,
+                                        background__hover_glow_select__lineThickness:       item__hover_glow_select__lineThickness,
+                                        background__hover_glow_select_press__colour:        item__hover_glow_select_press__colour,
+                                        background__hover_glow_select_press__lineColour:    item__hover_glow_select_press__lineColour,
+                                        background__hover_glow_select_press__lineThickness: item__hover_glow_select_press__lineThickness,
+                                    },
+                                });
+                                newItem.append(button);
+                                const arrow = interfacePart.builder('basic', 'polygon', 'arrow', {
+                                    pointsAsXYArray:[
+                                        {x:width-fontSize*arrowMux-itemHorizontalPadding,y:(height-fontSize*arrowMux)/2}, 
+                                        {x:width-fontSize*arrowMux-itemHorizontalPadding,y:(height+fontSize*arrowMux)/2}, 
+                                        {x:width-itemHorizontalPadding,y:height/2}
+                                    ],
+                                    colour:text_colour__up,
+                                });
+                                newItem.append(arrow);
+                                    const arrowState = { hovering:false, glowing:false, selected:false, pressed:false };
+                                    function updateArrowColour(){
+                                        if(!active){ arrow.colour(text_colour__off); return; }
+                            
+                                        const styles = [
+                                            text_colour__up,
+                                            text_colour__press,
+                                            text_colour__select,
+                                            text_colour__select_press,
+                                            text_colour__glow,
+                                            text_colour__glow_press,
+                                            text_colour__glow_select,
+                                            text_colour__glow_select_press,
+                                            text_colour__hover,
+                                            text_colour__hover_press,
+                                            text_colour__hover_select,
+                                            text_colour__hover_select_press,
+                                            text_colour__hover_glow,
+                                            text_colour__hover_glow_press,
+                                            text_colour__hover_glow_select,
+                                            text_colour__hover_glow_select_press,
+                                        ];
+                            
+                                        if(!hoverable && arrowState.hovering ){ arrowState.hovering = false; }
+                            
+                                        const i = arrowState.hovering*8 + arrowState.glowing*4 + arrowState.selected*2 + (pressable && arrowState.pressed)*1;
+                                        arrow.colour(styles[i]);
+                                    } updateArrowColour();
+                                    button.onenter = function(){arrowState.hovering = true; updateArrowColour();};
+                                    button.onleave = function(){arrowState.hovering = false; updateArrowColour();};
+                                    button.onpress = function(){arrowState.pressed = true; updateArrowColour();};
+                                    button.onrelease = function(){arrowState.pressed = false; updateArrowColour();};
+                            
+                                let sublist;
+                            
+                                function selectOption(number){
+                                    sublist.getChildByName('stenciledGroup').getChildByName('itemCollection').getChildren().forEach((checkbox,index) => {
+                                        if(number == index){return;}
+                                        checkbox.set(false);
+                                    });
+                                    if(onclickFunction){onclickFunction(number);}
+                                }
+                            
+                                newItem.open = function(yOffset){
+                                    if(this.isOpen){return;}
+                                    this.isOpen = true;
+                                    button.select(true);
+                            
+                                    const list = options.map((option,index) => {
+                                        return {
+                                            type:'checkbox',
+                                            text:option,
+                                            onclickFunction:function(val){
+                                                if(!val){
+                                                    sublist.getChildByName('stenciledGroup').getChildByName('itemCollection').getChildren()[index].set(true);
+                                                }
+                                                selectOption(index);
+                                            },
+                                        };
+                                    });
+                            
+                                    sublist = interfacePart.builder('control', 'list', 'list', {
+                                        x:x+width, y:y+yOffset, list:list,
+                            
+                                        heightLimit:heightLimit,
+                                        widthLimit:widthLimit,
+                                        backgroundColour:backgroundColour,
+                                        backgroundMarkingColour:backgroundMarkingColour,
+                                    
+                                        default_item_height:height,
+                                        default_item_width:itemWidth!=undefined?itemWidth:width,
+                                        default_item_spacingHeight:default_item_spacingHeight,
+                                        default_item_horizontalPadding:itemHorizontalPadding,
+                                    
+                                        default_text__text:text_left,
+                                        default_text__font:font,
+                                        default_text__fontSize:fontSize,
+                                        default_text__printingMode:undefined,
+                                        default_text__spacing:spacing,
+                                        default_text__interCharacterSpacing:interCharacterSpacing,
+                            
+                                        default_text_colour__off:text_colour__off,
+                                        default_text_colour__up:text_colour__up,
+                                        default_text_colour__press:text_colour__press,
+                                        default_text_colour__select:text_colour__select,
+                                        default_text_colour__select_press:text_colour__select_press,
+                                        default_text_colour__glow:text_colour__glow,
+                                        default_text_colour__glow_press:text_colour__glow_press,
+                                        default_text_colour__glow_select:text_colour__glow_select,
+                                        default_text_colour__glow_select_press:text_colour__glow_select_press,
+                                        default_text_colour__hover:text_colour__hover,
+                                        default_text_colour__hover_press:text_colour__hover_press,
+                                        default_text_colour__hover_select:text_colour__hover_select,
+                                        default_text_colour__hover_select_press:text_colour__hover_select_press,
+                                        default_text_colour__hover_glow:text_colour__hover_glow,
+                                        default_text_colour__hover_glow_press:text_colour__hover_glow_press,
+                                        default_text_colour__hover_glow_select:text_colour__hover_glow_select,
+                                        default_text_colour__hover_glow_select_press:text_colour__hover_glow_select_press,
+                                  
+                                        default_item__off__colour:item__off__colour,
+                                        default_item__off__lineColour:item__off__lineColour,
+                                        default_item__off__lineThickness:item__off__lineThickness,
+                                        default_item__up__colour:item__up__colour,
+                                        default_item__up__lineColour:item__up__lineColour,
+                                        default_item__up__lineThickness:item__up__lineThickness,
+                                        default_item__press__colour:item__press__colour,
+                                        default_item__press__lineColour:item__press__lineColour,
+                                        default_item__press__lineThickness:item__press__lineThickness,
+                                        default_item__select__colour:item__select__colour,
+                                        default_item__select__lineColour:item__select__lineColour,
+                                        default_item__select__lineThickness:item__select__lineThickness,
+                                        default_item__select_press__colour:item__select_press__colour,
+                                        default_item__select_press__lineColour:item__select_press__lineColour,
+                                        default_item__select_press__lineThickness:item__select_press__lineThickness,
+                                        default_item__glow__colour:item__glow__colour,
+                                        default_item__glow__lineColour:item__glow__lineColour,
+                                        default_item__glow__lineThickness:item__glow__lineThickness,
+                                        default_item__glow_press__colour:item__glow_press__colour,
+                                        default_item__glow_press__lineColour:item__glow_press__lineColour,
+                                        default_item__glow_press__lineThickness:item__glow_press__lineThickness,
+                                        default_item__glow_select__colour:item__glow_select__colour,
+                                        default_item__glow_select__lineColour:item__glow_select__lineColour,
+                                        default_item__glow_select__lineThickness:item__glow_select__lineThickness,
+                                        default_item__glow_select_press__colour:item__glow_select_press__colour,
+                                        default_item__glow_select_press__lineColour:item__glow_select_press__lineColour,
+                                        default_item__glow_select_press__lineThickness:item__glow_select_press__lineThickness,
+                                        default_item__hover__colour:item__hover__colour,
+                                        default_item__hover__lineColour:item__hover__lineColour,
+                                        default_item__hover__lineThickness:item__hover__lineThickness,
+                                        default_item__hover_press__colour:item__hover_press__colour,
+                                        default_item__hover_press__lineColour:item__hover_press__lineColour,
+                                        default_item__hover_press__lineThickness:item__hover_press__lineThickness,
+                                        default_item__hover_select__colour:item__hover_select__colour,
+                                        default_item__hover_select__lineColour:item__hover_select__lineColour,
+                                        default_item__hover_select__lineThickness:item__hover_select__lineThickness,
+                                        default_item__hover_select_press__colour:item__hover_select_press__colour,
+                                        default_item__hover_select_press__lineColour:item__hover_select_press__lineColour,
+                                        default_item__hover_select_press__lineThickness:item__hover_select_press__lineThickness,
+                                        default_item__hover_glow__colour:item__hover_glow__colour,
+                                        default_item__hover_glow__lineColour:item__hover_glow__lineColour,
+                                        default_item__hover_glow__lineThickness:item__hover_glow__lineThickness,
+                                        default_item__hover_glow_press__colour:item__hover_glow_press__colour,
+                                        default_item__hover_glow_press__lineColour:item__hover_glow_press__lineColour,
+                                        default_item__hover_glow_press__lineThickness:item__hover_glow_press__lineThickness,
+                                        default_item__hover_glow_select__colour:item__hover_glow_select__colour,
+                                        default_item__hover_glow_select__lineColour:item__hover_glow_select__lineColour,
+                                        default_item__hover_glow_select__lineThickness:item__hover_glow_select__lineThickness,
+                                        default_item__hover_glow_select_press__colour:item__hover_glow_select_press__colour,
+                                        default_item__hover_glow_select_press__lineColour:item__hover_glow_select_press__lineColour,
+                                        default_item__hover_glow_select_press__lineThickness:item__hover_glow_select_press__lineThickness,
+                                    });
+                                    subListGroup.append(sublist);
+                            
+                                    if( updateFunction ){
+                                        sublist.getChildByName('stenciledGroup').getChildByName('itemCollection').getChildren()[updateFunction()].set(true);
+                                    }else{
+                                        sublist.getChildByName('stenciledGroup').getChildByName('itemCollection').getChildren()[0].set(true);
+                                    }
+                                };
+                                newItem.close = function(){
+                                    if(!this.isOpen){return;}
+                                    this.isOpen = false;
+                                    button.select(false);
+                            
+                                    subListGroup.remove(sublist);
+                                };
+                            
+                                button.onselect = function(){
+                                    const yOffset = buttonClick(true);
+                                    newItem.open(yOffset);
+                                    arrowState.selected = true; 
+                                    updateArrowColour();
+                                };
+                                button.ondeselect = function(){
+                                    buttonClick(false);
+                                    newItem.close();
+                                    arrowState.selected = false; 
+                                    updateArrowColour();
+                                };
+                            
+                                return {item:newItem,height:height};
                             };
                             this.list.itemTypes.list = function(
                                 subListGroup,
@@ -36129,8 +36827,8 @@
                                     object.getAttachmentPoint = function(){
                                         dev.log.partDynamic('.connectionNode.getAttachmentPoint()'); //#development
                                         const offset = object.getOffset();
-                                        const diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
-                                        const collectedAngle = offset.angle + Math.atan( height/width );
+                                        const diagonalLength = Math.sqrt( Math.pow((rectangle.height()),2)/4 + Math.pow((rectangle.width()),2)/4 ) * offset.scale;
+                                        const collectedAngle = offset.angle + Math.atan( rectangle.height()/rectangle.width() );
                                         dev.log.partDynamic('.connectionNode.getAttachmentPoint -> offset:'+JSON.stringify(offset)+' diagonalLength:'+diagonalLength+' collectedAngle:'+collectedAngle); //#development
                             
                                         return {
@@ -37094,6 +37792,50 @@
                                 name:'Test Unit 4',
                                 helpURL:'https://curve.metasophiea.com/help/units/test/testUnit_4/'
                             };
+                            this.testUnit_5 = function(name,x,y,angle){
+                                const design = {
+                                    name: name,
+                                    model: 'testUnit_5',
+                                    collection: 'test',
+                                    x:x, y:y, angle:angle,
+                                    space: [
+                                        {x:0,y:0}, 
+                                        {x:100,y:0}, 
+                                        {x:100,y:100}, 
+                                        {x:0,y:100}, 
+                                    ],
+                                    // spaceOutline: true,
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode', name:'test_connectionNode1', data:{ cableVersion:2, x:110, y:60, height:50, width:50, angle:Math.PI/2 }},
+                                        {collection:'basic', type:'rectangle', name:'testRectangle1', data:{ x:0, y:0, width:100, height:100, colour:{r:100/255,g:100/255,b:100/255,a:1} }},
+                                        {collection:'basic', type:'rectangle', name:'testRectangle2', data:{ x:10, y:10, width:90, height:90, colour:{r:130/255,g:130/255,b:130/255,a:1} }},
+                                        {collection:'basic', type:'rectangle', name:'testRectangle3', data:{ x:20, y:20, width:80, height:80, colour:{r:160/255,g:160/255,b:160/255,a:1} }},
+                                        {collection:'basic', type:'rectangle', name:'testRectangle4', data:{ x:30, y:30, width:70, height:70, colour:{r:190/255,g:190/255,b:190/255,a:1} }},
+                                        {collection:'basic', type:'rectangle', name:'testRectangle5', data:{ x:0, y:0, width:50, height:50, colour:{r:220/255,g:220/255,b:220/255,a:1} }},
+                                    ],
+                                };
+                            
+                                //main object
+                                    const object = interface.unit.builder(design);
+                                
+                                // mouse interaction
+                                    object.elements.rectangle.testRectangle5.attachCallback('onmousedown', () => {console.log('onmousedown');});
+                            
+                                return object;
+                            };
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            this.testUnit_5.devUnit = true;
+                            this.testUnit_5.metadata = {
+                                name:'Test Unit 5',
+                                helpURL:'https://curve.metasophiea.com/help/units/test/testUnit_5/'
+                            };
 
                         };
                     };
@@ -37385,8 +38127,9 @@
                 _canvas_.layers.registerLayerLoaded('interface',_canvas_.interface);
                 _canvas_.interface.go.__activate();
             } );
+                
             _canvas_.control = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:8} };
                 const control = this;
             
                 const dev = {
@@ -37491,6 +38234,11 @@
                     this.heavyRefresh = function(){
                         if(menubar != undefined){
                             menubar.heavyRefresh();
+                        }
+                    };
+                    this.checkboxRefresh = function(){
+                        if(menubar != undefined){
+                            menubar.checkboxRefresh();
                         }
                     };
             
@@ -37887,6 +38635,9 @@
                                 };
                                 object.refresh();
                                 object.heavyRefresh = function(){ produceBar(); };
+                                object.checkboxRefresh = function(){
+                                    console.log(object.getTree());
+                                };
                         
                             return object;
                         };
@@ -39290,6 +40041,7 @@
                 );
                 
                 //zoom
+                this.mouseWheelMode = 'magic'; // magic / clickyWheel
                 _canvas_.system.mouse.functionList.onwheel.push(
                     {
                         requiredKeys:[],
@@ -39301,12 +40053,22 @@
                 
                             const scaleLimits = {'max':20, 'min':0.1};
                 
+                            let delta = data.event.wheelDeltaY;
+                            switch(control.mouseWheelMode){
+                                case 'magic':
+                                    //already pefect
+                                break;
+                                case 'clickyWheel':
+                                    delta = 25*Math.sign(delta);
+                                break;
+                            }
+                
                             //perform scale and associated pan
                                 //discover point under mouse
                                     const originalPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
                                 //perform actual scaling
                                     let scale = _canvas_.control.viewport.scale();
-                                    scale += scale*(data.event.wheelDeltaY/100);
+                                    scale += scale*(delta/100);
                                     if( scale > scaleLimits.max ){scale = scaleLimits.max;}
                                     if( scale < scaleLimits.min ){scale = scaleLimits.min;}
                                     _canvas_.control.viewport.scale(scale);
@@ -39456,7 +40218,7 @@
             } );
 
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:5} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:10} };
                 this.go = new function(){
                     const functionList = [];
             
@@ -39486,6 +40248,186 @@
             
             
             _canvas_.interface.unit.collection = new function(){
+                this.workshop = new function(){
+                    const imageStoreURL = '/images/units/1 - alpha/';
+                    const style = {
+                        background:{r:70/255,g:70/255,b:70/255,a:1},
+                        bumper:{r:0.125,g:0.125,b:0.125,a:1},
+                        textColour:{r:0.7,g:0.7,b:0.7,a:1},
+                    
+                        primaryEight:[
+                            {r:1,g:0.01,b:0.02,a:1},
+                            {r:1,g:0.55,b:0,a:1},
+                            {r:1,g:0.93,b:0,a:1},
+                            {r:0,g:1,b:0,a:1},
+                            {r:0,g:1,b:0.81,a:1},
+                            {r:0,g:0.62,b:1,a:1},
+                            {r:0.08,g:0,b:1,a:1},
+                            {r:0.68,g:0,b:1,a:1}, 
+                        ],
+                    
+                        marking:{
+                            default:{r:0.7,g:0.7,b:0.7,a:1},
+                            signal:{r:235/255,g:98/255,b:61/255,a:1},
+                            voltage:{r:170/255,g:251/255,b:89/255,a:1},
+                            data:{r:114/255,g:176/255,b:248/255,a:1},
+                            audio:{r:243/255,g:173/255,b:61/255,a:1},
+                        },
+                        connectionNode:{
+                            signal:{
+                                dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                cable_dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                cable_glow:{r:237/255,g:154/255,b:132/255,a:1},
+                            },
+                            voltage:{
+                                dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                cable_dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                cable_glow:{r:210/255,g:255/255,b:165/255,a:1},
+                            },
+                            data:{
+                                dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                cable_dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                cable_glow:{r:168/255,g:208/255,b:255/255,a:1},
+                            },
+                            audio:{
+                                dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                cable_dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                cable_glow:{r:247/255,g:203/255,b:133/255,a:1},
+                            },
+                        },
+                        connectionCable:{
+                            signal:{
+                                dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                glow:{r:237/255,g:154/255,b:132/255,a:1},
+                            },
+                            voltage:{
+                                dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                glow:{r:210/255,g:255/255,b:165/255,a:1},
+                            },
+                            data:{
+                                dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                glow:{r:168/255,g:208/255,b:255/255,a:1},
+                            },
+                            audio:{
+                                dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                glow:{r:247/255,g:203/255,b:133/255,a:1},
+                            },
+                        },
+                    };
+                    this['test_a'] = function(name,x,y,angle){
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'test_a',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    {x:0, y:0},
+                                    {x:100, y:0},
+                                    {x:100, y:100},
+                                    {x:0, y:100},
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                        x:100, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                        x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'basic', type:'rectangle', name:'backing', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
+                    
+                                    {collection:'control', type:'dial_discrete', name:'amplitudeResolution', data:{
+                                        x:20, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:10, arcDistance:1.2, optionCount:20,
+                                    }},
+                                    {collection:'control', type:'dial_discrete', name:'sampleFrequency', data:{
+                                        x:40, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:7,
+                                    }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            const bitcrusher = new _canvas_.interface.circuit.bitcrusher(_canvas_.library.audio.context);
+                    
+                        //wiring
+                            //hid
+                                object.elements.dial_discrete.amplitudeResolution.onchange = function(value){
+                                    bitcrusher.amplitudeResolution(value+1);
+                                };
+                                object.elements.dial_discrete.sampleFrequency.onchange = function(value){
+                                    bitcrusher.sampleFrequency(Math.pow(2,value)+1);
+                                };
+                                
+                            //keycapture
+                            //io
+                                object.io.audio.input.out().connect(bitcrusher.in());
+                                bitcrusher.out().connect(object.io.audio.output.in());
+                    
+                        //interface
+                            object.i = {
+                            };
+                    
+                        //import/export
+                            object.exportData = function(){
+                            };
+                            object.importData = function(data){
+                            };
+                    
+                        //setup/tearDown
+                            object.oncreate = function(){
+                            };
+                            object.ondelete = function(){
+                            };
+                    
+                        return object;
+                    };
+                    this['test_a'].metadata = {
+                        name:'test_a',
+                        category:'',
+                        helpURL:''
+                    };
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    // _canvas_.library.audio.context.audioWorklet.addModule(window.URL.createObjectURL(blob)).then( () => {
+                    //     const osc = new OscillatorNode(_canvas_.library.audio.context);
+                    //     const bitcrusher = new AudioWorkletNode(_canvas_.library.audio.context, 'bitcrusher');
+                    //     osc.connect(bitcrusher).connect(_canvas_.library.audio.destination);
+                    //     osc.start();
+                    
+                    //     const notes = [261.6, 277.2, 293.7, 311.1, 329.6, 349.2, 370.0, 392.0, 415.3, 440.0, 466.2, 493.9];
+                    //     let step = 0;
+                    //     setInterval(() => {
+                    //         osc.frequency.setTargetAtTime(notes[step], _canvas_.library.audio.context.currentTime, 0);
+                    //         step++; if(step == notes.length){step = 0;}
+                    //     },250);
+                    
+                    
+                    
+                    //     const paramBitDepth = bitcrusher.parameters.get('bitDepth');
+                    //     const paramReduction = bitcrusher.parameters.get('frequencyReduction');
+                    // });
+
+                    
+                    this._collectionData = {
+                        name:'Workshop',
+                    };
+                    this._categoryData = {
+                    };
+                };
                 this.development = new function(){
                     // this.audio_duplicator = function(x,y,a){
                     //     var style = {
@@ -47107,12 +48049,12 @@
                                 periodicWave:function(data){return synthesizerCircuit.periodicWave(data);},
                                 performMidiNote:function(data){synthesizerCircuit.perform(data);},
                             };
-                            ['gain','attack','release','detune','gainWobblePeriod','gainWobbleDepth','detuneWobblePeriod','detuneWobbleDepth'].forEach(dialName => {
+                            ['outputGain','attack','release','detune_note','gainWobblePeriod','gainWobbleDepth','detuneWobblePeriod','detuneWobbleDepth'].forEach(dialName => {
                                 object.i[dialName] = (function(element){
                                     return function(value){ if(value==undefined){return element.get();}else{element.set(value);} }
                                 })(object.elements.dial_2_continuous[dialName]);
                             });
-                            ['octave','waveType'].forEach(dialName => {
+                            ['detune_octave','periodicWaveType'].forEach(dialName => {
                                 object.i[dialName] = (function(element){
                                     return function(value){ if(value==undefined){return element.get();}else{element.set(value);} }
                                 })(object.elements.dial_2_discrete[dialName]);
@@ -47150,6 +48092,13 @@
                                 object.elements.dial_2_continuous.gainWobbleDepth.set( data.gainWobble.depth );
                                 object.elements.dial_2_continuous.detuneWobblePeriod.set( data.detuneWobble.rate/100 );
                                 object.elements.dial_2_continuous.detuneWobbleDepth.set( data.detuneWobble.depth );
+                            };
+                    
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                synthesizerCircuit.gain( 0.5 );
+                            };
+                            object.ondelete = function(){
                             };
                             
                         return object;
@@ -51612,7 +52561,7 @@
                                                 x:20 + index*20, y:80, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_in_'+index, data:{ 
-                                                x:20 + index*20, y:75, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                                x:20 + index*20, y:80, width:0, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
                                             }},
                                         ];
                                     }).concat(
@@ -51717,56 +52666,57 @@
                             const state = {
                                 presetSettingTimeout:1000,
                                 inputMode:'signal',
+                                currentPreset:1,
                                 presets:[
                                     [
                                         {bank:0,sample:0,rate:0.5,volume:0.5},
                                         {bank:1,sample:0,rate:0.5,volume:0.5},
                                         {bank:2,sample:0,rate:0.5,volume:0.5},
                                         {bank:3,sample:0,rate:0.5,volume:0.5},
-                                        {bank:4,sample:0,rate:0.5,volume:0.5},
-                                        {bank:5,sample:0,rate:0.5,volume:0.5},
+                                        {bank:7,sample:5,rate:0.5,volume:0.5},
+                                        {bank:7,sample:6,rate:0.5,volume:0.5},
                                         {bank:6,sample:0,rate:0.5,volume:0.5},
                                         {bank:7,sample:0,rate:0.5,volume:0.5},
                                     ],
                                     [
-                                        {bank:0,sample:1,rate:0.5,volume:0.5},
-                                        {bank:1,sample:1,rate:0.5,volume:0.5},
-                                        {bank:2,sample:1,rate:0.5,volume:0.5},
-                                        {bank:3,sample:1,rate:0.5,volume:0.5},
-                                        {bank:4,sample:1,rate:0.5,volume:0.5},
+                                        {bank:0,sample:5,rate:0.5,volume:0.5},
+                                        {bank:1,sample:5,rate:0.5,volume:0.5},
+                                        {bank:2,sample:5,rate:0.5,volume:0.5},
+                                        {bank:3,sample:4,rate:0.5,volume:0.5},
+                                        {bank:4,sample:5,rate:0.5,volume:0.5},
                                         {bank:5,sample:1,rate:0.5,volume:0.5},
-                                        {bank:6,sample:1,rate:0.5,volume:0.5},
-                                        {bank:7,sample:1,rate:0.5,volume:0.5},
+                                        {bank:5,sample:4,rate:0.5,volume:0.5},
+                                        {bank:5,sample:6,rate:0.5,volume:0.5},
                                     ],
                                     [
                                         {bank:0,sample:2,rate:0.5,volume:0.5},
                                         {bank:1,sample:2,rate:0.5,volume:0.5},
-                                        {bank:2,sample:2,rate:0.5,volume:0.5},
-                                        {bank:3,sample:2,rate:0.5,volume:0.5},
-                                        {bank:4,sample:2,rate:0.5,volume:0.5},
-                                        {bank:5,sample:2,rate:0.5,volume:0.5},
-                                        {bank:6,sample:2,rate:0.5,volume:0.5},
-                                        {bank:7,sample:2,rate:0.5,volume:0.5},
-                                    ],
-                                    [
-                                        {bank:0,sample:3,rate:0.5,volume:0.5},
-                                        {bank:1,sample:3,rate:0.5,volume:0.5},
-                                        {bank:2,sample:3,rate:0.5,volume:0.5},
-                                        {bank:3,sample:3,rate:0.5,volume:0.5},
+                                        {bank:2,sample:7,rate:0.5,volume:0.5},
+                                        {bank:3,sample:5,rate:0.5,volume:0.5},
                                         {bank:4,sample:3,rate:0.5,volume:0.5},
-                                        {bank:5,sample:3,rate:0.5,volume:0.5},
-                                        {bank:6,sample:3,rate:0.5,volume:0.5},
-                                        {bank:7,sample:3,rate:0.5,volume:0.5},
+                                        {bank:5,sample:0,rate:0.5,volume:0.5},
+                                        {bank:5,sample:1,rate:0.5,volume:0.5},
+                                        {bank:5,sample:2,rate:0.5,volume:0.5},
                                     ],
                                     [
-                                        {bank:0,sample:4,rate:0.5,volume:0.5},
-                                        {bank:1,sample:4,rate:0.5,volume:0.5},
-                                        {bank:2,sample:4,rate:0.5,volume:0.5},
-                                        {bank:3,sample:4,rate:0.5,volume:0.5},
-                                        {bank:4,sample:4,rate:0.5,volume:0.5},
+                                        {bank:0,sample:5,rate:0.5,volume:0.5},
+                                        {bank:1,sample:7,rate:0.5,volume:0.5},
+                                        {bank:2,sample:6,rate:0.5,volume:0.5},
+                                        {bank:3,sample:6,rate:0.5,volume:0.5},
+                                        {bank:4,sample:1,rate:0.5,volume:0.5},
+                                        {bank:4,sample:3,rate:0.5,volume:0.5},
                                         {bank:5,sample:4,rate:0.5,volume:0.5},
-                                        {bank:6,sample:4,rate:0.5,volume:0.5},
+                                        {bank:7,sample:1,rate:0.5,volume:0.5},
+                                    ],
+                                    [
+                                        {bank:7,sample:2,rate:0.5,volume:0.5},
+                                        {bank:7,sample:3,rate:0.5,volume:0.5},
                                         {bank:7,sample:4,rate:0.5,volume:0.5},
+                                        {bank:6,sample:0,rate:0.5,volume:0.5},
+                                        {bank:6,sample:1,rate:0.5,volume:0.5},
+                                        {bank:6,sample:2,rate:0.5,volume:0.5},
+                                        {bank:4,sample:4,rate:0.5,volume:0.5},
+                                        {bank:7,sample:1,rate:0.5,volume:0.5},
                                     ],
                                 ],
                             };
@@ -51775,11 +52725,18 @@
                                 return { bank:0, sample:0, rate:1, volume:1 }
                             });
                     
+                            const masterGain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
+                            masterGain.out().connect( object.io.audio['audio_out_master'].in() );
+                            const channelGains = (new Array(8)).fill().map((item,index) => {
+                                const gain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
+                                gain.out().connect( object.io.audio['audio_out_'+index].in() );
+                                gain.out().connect( masterGain.in() );
+                                return gain;
+                            });
                             const samplePlayers = (new Array(8)).fill().map((item,index) => {
                                 const player = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
                                 player.concurrentPlayCountLimit(-1);
-                                player.out_right().connect( object.io.audio['audio_out_'+index].in() );
-                                player.out_left().connect( object.io.audio['audio_out_master'].in() );
+                                player.out_right().connect( channelGains[index].in() );
                                 return player;
                             });
                     
@@ -51792,12 +52749,22 @@
                                 setChannelStatusLED(channel,'loading');
                                 samplePlayers[channel].load(
                                     'url',
-                                    () => { setChannelStatusLED(channel,'ready'); }, 
+                                    () => { 
+                                        setChannelStatusLED(channel,'ready');
+                                        if( bank != channelData[channel].bank || sample != channelData[channel].sample ){
+                                            loadSample(channel,channelData[channel].bank,channelData[channel].sample);
+                                        }
+                                    },
                                     samples[bank][sample],
-                                    () => { setChannelStatusLED(channel,'error'); }, 
+                                    () => { 
+                                        setChannelStatusLED(channel,'error');
+                                        if( bank != channelData[channel].bank || sample != channelData[channel].sample ){
+                                            loadSample(channel,channelData[channel].bank,channelData[channel].sample);
+                                        }
+                                    },
                                 );
                             }
-                            function setOutputConnectionNodes(mode){
+                            function setInputConnectionNodes(mode){
                                 if(mode != 'signal' && mode != 'voltage'){return;}
                                 if(state.inputMode == mode){return;}
                                 state.inputMode = mode;
@@ -51814,8 +52781,8 @@
                                         
                                         for(let b = 0; b < detail; b++){
                                             setTimeout(()=>{
-                                                object.elements.connectionNode_signal['signal_in_'+a].y(80 - five2zero[b]);
-                                                object.elements.connectionNode_voltage['voltage_in_'+a].y(80 - zero2five[b]);
+                                                object.elements.connectionNode_signal['signal_in_'+a].getChildren()[0].width(zero2five[b]);
+                                                object.elements.connectionNode_voltage['voltage_in_'+a].getChildren()[0].width(five2zero[b]);
                                             },
                                             (duration/detail)*b);
                                         }
@@ -51826,8 +52793,8 @@
                                         object.elements.connectionNode_signal['signal_in_'+a].set(false);
                                         for(let b = 0; b < detail; b++){
                                             setTimeout(()=>{
-                                                object.elements.connectionNode_signal['signal_in_'+a].y(80 - zero2five[b]);
-                                                object.elements.connectionNode_voltage['voltage_in_'+a].y(80 - five2zero[b]);
+                                                object.elements.connectionNode_signal['signal_in_'+a].getChildren()[0].width(five2zero[b]);
+                                                object.elements.connectionNode_voltage['voltage_in_'+a].getChildren()[0].width(zero2five[b]);
                                             },
                                             (duration/detail)*b);
                                         }
@@ -51872,6 +52839,8 @@
                                 }
                                 object.elements.button_image['preset_'+preset].glow(true);
                     
+                                state.currentPreset = preset;
+                    
                                 state.presets[preset-1].forEach((set,index) => {
                                     object.elements.dial_continuous_image['volume_'+index].set(set.volume);
                                     object.elements.dial_continuous_image['rate_'+index].set(set.rate);
@@ -51880,75 +52849,35 @@
                                 });
                             }
                             function savePreset(block){
-                                state.presets[block] = [
-                                    {
-                                        bank:object.elements.dial_discrete_image['bank_'+0].get(), 
-                                        sample:object.elements.dial_discrete_image['sample_'+0].get(), 
-                                        rate:object.elements.dial_continuous_image['rate_'+0].get(), 
-                                        volume:object.elements.dial_continuous_image['volume_'+0].get()
-                                    },
-                                    {
-                                        bank:object.elements.dial_discrete_image['bank_'+1].get(), 
-                                        sample:object.elements.dial_discrete_image['sample_'+1].get(), 
-                                        rate:object.elements.dial_continuous_image['rate_'+1].get(), 
-                                        volume:object.elements.dial_continuous_image['volume_'+1].get()
-                                    },
-                                    {
-                                        bank:object.elements.dial_discrete_image['bank_'+2].get(), 
-                                        sample:object.elements.dial_discrete_image['sample_'+2].get(), 
-                                        rate:object.elements.dial_continuous_image['rate_'+2].get(), 
-                                        volume:object.elements.dial_continuous_image['volume_'+2].get()
-                                    },
-                                    {
-                                        bank:object.elements.dial_discrete_image['bank_'+3].get(), 
-                                        sample:object.elements.dial_discrete_image['sample_'+3].get(), 
-                                        rate:object.elements.dial_continuous_image['rate_'+3].get(), 
-                                        volume:object.elements.dial_continuous_image['volume_'+3].get()
-                                    },
-                                    {
-                                        bank:object.elements.dial_discrete_image['bank_'+4].get(), 
-                                        sample:object.elements.dial_discrete_image['sample_'+4].get(), 
-                                        rate:object.elements.dial_continuous_image['rate_'+4].get(), 
-                                        volume:object.elements.dial_continuous_image['volume_'+4].get()
-                                    },
-                                    {
-                                        bank:object.elements.dial_discrete_image['bank_'+5].get(), 
-                                        sample:object.elements.dial_discrete_image['sample_'+5].get(), 
-                                        rate:object.elements.dial_continuous_image['rate_'+5].get(), 
-                                        volume:object.elements.dial_continuous_image['volume_'+5].get()
-                                    },
-                                    {
-                                        bank:object.elements.dial_discrete_image['bank_'+6].get(), 
-                                        sample:object.elements.dial_discrete_image['sample_'+6].get(), 
-                                        rate:object.elements.dial_continuous_image['rate_'+6].get(), 
-                                        volume:object.elements.dial_continuous_image['volume_'+6].get()
-                                    },
-                                    {
-                                        bank:object.elements.dial_discrete_image['bank_'+7].get(), 
-                                        sample:object.elements.dial_discrete_image['sample_'+7].get(), 
-                                        rate:object.elements.dial_continuous_image['rate_'+7].get(), 
-                                        volume:object.elements.dial_continuous_image['volume_'+7].get()
-                                    },
-                                ];
+                                state.presets[block-1] = (new Array(8)).fill().map((item,index) => {
+                                    return {
+                                        bank:object.elements.dial_discrete_image['bank_'+index].get(), 
+                                        sample:object.elements.dial_discrete_image['sample_'+index].get(), 
+                                        rate:object.elements.dial_continuous_image['rate_'+index].get(), 
+                                        volume:object.elements.dial_continuous_image['volume_'+index].get()
+                                    };
+                                });
                     
-                                object.elements.button_image['preset_'+(block+1)].glow(false);
-                                setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(true); },200);
-                                setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(false); },400);
-                                setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(true); },600);
-                                setTimeout(() => { object.elements.button_image['preset_'+(block+1)].glow(false); },800);
+                                object.elements.button_image['preset_'+(block)].glow(false);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(true); },100);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(false); },200);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(true); },300);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(false); },400);
+                                setTimeout(() => { object.elements.button_image['preset_'+(block)].glow(true); },500);
                             }
                     
                         //wiring
                             //hid
                                 object.elements.button_image.signal.onpress = function(){
-                                    setOutputConnectionNodes('signal');
+                                    setInputConnectionNodes('signal');
                                 };
                                 object.elements.button_image.voltage.onpress = function(){
-                                    setOutputConnectionNodes('voltage');
+                                    setInputConnectionNodes('voltage');
                                 };
                                 for(let a = 0; a < 8; a++){
                                     object.elements.dial_continuous_image['volume_'+a].onchange = function(value){
                                         channelData[a].volume = value;
+                                        channelGains[a].gain(value*2);
                                     };
                                     object.elements.dial_continuous_image['rate_'+a].onchange = function(value){
                                         channelData[a].rate = value;
@@ -51967,6 +52896,10 @@
                                         fire(a);
                                     };
                                 }
+                    
+                                object.elements.dial_continuous_image.masterVolume.onchange = function(value){
+                                    masterGain.gain(value*2);
+                                };
                     
                                 object.elements.button_image.preset_1.onpress = function(){
                                     object.elements.button_image.preset_1.pressed = true;
@@ -52018,7 +52951,11 @@
                             //io
                                 for(let a = 0; a < 8; a++){
                                     object.io.signal['signal_in_'+a].onchange = function(value){
-                                        if(!value){return}
+                                        if(!value){return;}
+                                        fire(a);
+                                    } 
+                                    object.io.voltage['voltage_in_'+a].onchange = function(value){
+                                        if(value <= 0){return;}
                                         fire(a);
                                     } 
                                 }
@@ -52029,8 +52966,29 @@
                     
                         //import/export
                             object.exportData = function(){
+                                return {
+                                    currentSettings:(new Array(8)).fill().map((item,index) => {
+                                        return {
+                                            bank:object.elements.dial_discrete_image['bank_'+index].get(), 
+                                            sample:object.elements.dial_discrete_image['sample_'+index].get(), 
+                                            rate:object.elements.dial_continuous_image['rate_'+index].get(), 
+                                            volume:object.elements.dial_continuous_image['volume_'+index].get()
+                                        };
+                                    }),
+                                    state:JSON.parse(JSON.stringify(state)),
+                                };
                             };
                             object.importData = function(data){
+                                state.presetSettingTimeout = data.state.presetSettingTimeout;
+                                state.presets = data.state.presets;
+                                setInputConnectionNodes(data.state.inputMode);
+                                selectPreset(data.state.currentPreset);
+                                data.currentSettings.forEach((channel,index) => {
+                                    object.elements.dial_discrete_image['bank_'+index].set(channel.bank);
+                                    object.elements.dial_discrete_image['sample_'+index].set(channel.sample);
+                                    object.elements.dial_continuous_image['rate_'+index].set(channel.rate);
+                                    object.elements.dial_continuous_image['volume_'+index].set(channel.volume);
+                                });
                             };
                     
                         //setup/tearDown
@@ -52059,7 +53017,7 @@
                         //style data
                             const unitStyle = new function(){
                                 //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'MRD-16/';
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'mrd-16/';
                     
                                 //calculation of measurements
                                     const div = 10;
@@ -52107,7 +53065,7 @@
                                                 x:5 + index*20, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_out_'+index, data:{ 
-                                                x:5 + index*20, y:5, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                                x:5 + index*20, y:0, width:0, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
                                             }},
                                         ];
                                     }).concat(
@@ -52276,8 +53234,8 @@
                                         
                                         for(let b = 0; b < detail; b++){
                                             setTimeout(()=>{
-                                                object.elements.connectionNode_signal['signal_out_'+a].y(five2zero[b]);
-                                                object.elements.connectionNode_voltage['voltage_out_'+a].y(zero2five[b]);
+                                                object.elements.connectionNode_signal['signal_out_'+a].getChildren()[0].width(zero2five[b]);
+                                                object.elements.connectionNode_voltage['voltage_out_'+a].getChildren()[0].width(five2zero[b]);
                                             },
                                             (duration/detail)*b);
                                         }
@@ -52288,8 +53246,8 @@
                                         object.elements.connectionNode_signal['signal_out_'+a].set(false);
                                         for(let b = 0; b < detail; b++){
                                             setTimeout(()=>{
-                                                object.elements.connectionNode_signal['signal_out_'+a].y(zero2five[b]);
-                                                object.elements.connectionNode_voltage['voltage_out_'+a].y(five2zero[b]);
+                                                object.elements.connectionNode_signal['signal_out_'+a].getChildren()[0].width(five2zero[b]);
+                                                object.elements.connectionNode_voltage['voltage_out_'+a].getChildren()[0].width(zero2five[b]);
                                             },
                                             (duration/detail)*b);
                                         }
@@ -52593,10 +53551,9 @@
                     
                         //import/export
                             object.exportData = function(){
-                                return JSON.stringify(state);
+                                return JSON.parse(JSON.stringify(state));
                             };
                             object.importData = function(data){
-                                data = JSON.parse(data);
                                 state.outputMode = data.outputMode;
                                 state.step = data.step;
                                 state.direction = data.direction;
@@ -52675,6 +53632,7 @@
                 ],
                 devList:[
                     'development',
+                    'workshop',
                 ],
             };
             _canvas_.control.go.add( function(){
@@ -52831,7 +53789,7 @@
                         {
                             text:'tools',
                             width:50,
-                            listWidth:150,
+                            listWidth:170,
                             listItemHeight:22.5,
                             breakHeight: 0.5,
                             spaceHeight: 1,
@@ -52842,6 +53800,16 @@
                                     onclickFunction:function(val){
                                         if(val){ _canvas_.control.gui.style.darkMode(); }
                                         else{ _canvas_.control.gui.style.lightMode(); }
+                                    }
+                                },
+                                { type:'radio', text:'Mouse Wheel Mode', itemWidth:150, 
+                                    options:['Magic', 'Clicky Wheel'],
+                                    updateFunction:function(){
+                                        if( _canvas_.control.mouseWheelMode == 'magic' ){ return 0; }
+                                        if( _canvas_.control.mouseWheelMode == 'clickyWheel' ){ return 1; }
+                                    },
+                                    onclickFunction:function(value){
+                                        _canvas_.control.mouseWheelMode = ['magic','clickyWheel'][value];
                                     }
                                 },
                             ]

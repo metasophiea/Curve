@@ -92,7 +92,7 @@ this.callback = new function(){
                 }else{
                     console.warn('unknown event type: ',event);
                 }
-
+                
                 communicationModule.run('callback.coupling_in.'+callbackName,[sudoEvent]);
             };
 

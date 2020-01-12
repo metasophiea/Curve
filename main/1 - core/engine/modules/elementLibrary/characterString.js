@@ -86,7 +86,7 @@ this.characterString = function(_id,_name){
     
                         font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
                     }else{
-                        report.warning('library.font : error : unknown font:',newFont);
+                        console.warn('library.font : error : unknown font:',newFont);
                         font = defaultFontName;
                     }
     

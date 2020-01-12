@@ -1,4 +1,7 @@
 _canvas_.interface.unit.collection = new function(){
+    this.workshop = new function(){
+        {{include:0 - workshop/main.js}}
+    };
     this.development = new function(){
         {{include:0 - development/main.js}}
     };
@@ -21,5 +24,6 @@ _canvas_.interface.unit.collection.metadata = {
     ],
     devList:[
         'development',
+        'workshop',
     ],
 };

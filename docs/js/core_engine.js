@@ -664,20 +664,63 @@ const library = new function(){
                     (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
                     (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
                 ){
+                    dev.log.math('.detectIntersect.lineOnLine -> identical segments'); //#development
                     return {x:undefined, y:undefined, intersect:false, contact:true};
                 }
                     
                 //point on point
                 if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
+                    dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[0]:',segment1[0]); //#development
                     return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
                 }
                 if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
+                    dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[1]:',segment1[1]); //#development
                     return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
                 }
         
                 //calculate denominator
                 const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                if(denominator == 0){  return {x:undefined, y:undefined, intersect:false, contact:false}; }
+                dev.log.math('.detectIntersect.lineOnLine -> denominator:',denominator); //#development
+                if(denominator == 0){
+                    const points = [];
+                    const output = {x1:undefined, y1:undefined, x2:undefined, y2:undefined, intersect:false, contact:true};
+                    if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){
+                        output.x1 = segment1[0].x;
+                        output.y1 = segment1[0].y;
+                    }
+                    if( library.math.detectIntersect.pointOnLine(segment1[1],segment2) ){
+                        if(output.x1 == undefined){
+                            output.x1 = segment1[1].x;
+                            output.y1 = segment1[1].y;
+                        }else{
+                            output.x2 = segment1[1].x;
+                            output.y2 = segment1[1].y;
+                            return output;
+                        }
+                    }
+                    if( library.math.detectIntersect.pointOnLine(segment2[0],segment1) ){
+                        if(output.x1 == undefined){
+                            output.x1 = segment2[0].x;
+                            output.y1 = segment2[0].y;
+                        }else{
+                            output.x2 = segment2[0].x;
+                            output.y2 = segment2[0].y;
+                            return output;
+                        }
+                    }
+                    if( library.math.detectIntersect.pointOnLine(segment2[1],segment1) ){
+                        if(output.x1 == undefined){
+                            output.x1 = segment2[1].x;
+                            output.y1 = segment2[1].y;
+                        }else{
+                            output.x2 = segment2[1].x;
+                            output.y2 = segment2[1].y;
+                            return output;
+                        }
+                    }
+        
+                    return output;
+                }
                     
                 //point on line
                 if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){ return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true}; }
@@ -715,10 +758,25 @@ const library = new function(){
                     for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
                         const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
                         dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> result:',result); //#development
-                        if(result.intersect){
-                            output.points.push({x:result.x,y:result.y});
-                            output.intersect = true;
+                        if(result.contact){
                             output.contact = true;
+                            if(result.intersect){
+                                output.intersect = true;
+                            }
+        
+                            if( result.x2 != undefined ){
+                                if( output.points.find(item => item.x == result.x1 && item.y == result.y1 ) == undefined ){
+                                    output.points.push({x:result.x1,y:result.y1});
+                                }
+                                if( output.points.find(item => item.x == result.x2 && item.y == result.y2 ) == undefined ){
+                                    output.points.push({x:result.x2,y:result.y2});
+                                }
+                                break;
+                            }
+        
+                            if( output.points.find(item => item.x == result.x && item.y == result.y ) == undefined ){
+                                output.points.push({x:result.x,y:result.y});
+                            }
                         }
                     }
         
@@ -746,11 +804,19 @@ const library = new function(){
                     huntForIntersection(line,poly.points);
                 }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onPoint') ){
                     huntForIntersection(line,poly.points);
-                    output.points.push(line[dir]);
+                    // if(dir == 1){
+                    //     output.points.push(line[1]);
+                    // }else if(dir == 2){
+                    //     output.points.push(line[0]);
+                    // }
                     output.contact = true;
                 }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onEdge') ){
                     huntForIntersection(line,poly.points);
-                    output.points.push(line[dir]);
+                    // if(dir == 1){
+                    //     output.points.push(line[1]);
+                    // }else if(dir == 2){
+                    //     output.points.push(line[0]);
+                    // }
                     output.contact = true;
                 }else if( oneWhileTheOtherIs(point_a,point_b,'outside','inside') ){
                     huntForIntersection(line,poly.points);
@@ -765,7 +831,11 @@ const library = new function(){
                     output.contact = true;
                     output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
                 }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','inside') ){
-                    output.points = [line[dir]];
+                    if(dir == 1){
+                        output.points.push(line[1]);
+                    }else if(dir == 2){
+                        output.points.push(line[0]);
+                    }
                     output.contact = true;
                     output.intersect = true;
                 }else if( oneWhileTheOtherIs(point_a,point_b,'onEdge','onEdge') ){
@@ -773,7 +843,11 @@ const library = new function(){
                     output.contact = true;
                     output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
                 }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','inside') ){
-                    output.points = [line[dir]];
+                    if(dir == 1){
+                        output.points.push(line[1]);
+                    }else if(dir == 2){
+                        output.points.push(line[0]);
+                    }
                     output.contact = true;
                     output.intersect = true;
                 }else if( oneWhileTheOtherIs(point_a,point_b,'inside','inside') ){
@@ -789,11 +863,20 @@ const library = new function(){
                 dev.log.math('.detectIntersect.polyOnPoly(',poly_a,poly_b); //#development
                 dev.count('.math.detectIntersect.polyOnPoly'); //#development
         
-                if(poly_a.boundingBox == undefined){ poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points); }
-                if(poly_b.boundingBox == undefined){ poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points); }
+                if(poly_a.boundingBox == undefined){ 
+                    dev.log.math('.detectIntersect.polyOnPoly -> poly_a boundingBox not found, generating...'); //#development
+                    poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points);
+                }
+                if(poly_b.boundingBox == undefined){ 
+                    dev.log.math('.detectIntersect.polyOnPoly -> poly_b boundingBox not found, generating...'); //#development
+                    poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points);
+                }
                 if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
+                    dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s are totally seperate!'); //#development
                     return { points:[], intersect:false, contact:false };
                 }
+        
+                dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s do collide, proceeding with search'); //#development
         
                 const results = {
                     points:[],
@@ -808,25 +891,34 @@ const library = new function(){
                         if(index != -1){sudo_poly_a_points.splice(index, 1);}
                     });
                     if(sudo_poly_a_points.length == 0){
+                        dev.log.math('.detectIntersect.polyOnPoly -> these two polys are exactly the same'); //#development
                         return {
                             points:Object.assign([],poly_a.points),
                             contact:true,
                             intersect:true,
                         };
                     }
+                    dev.log.math('.detectIntersect.polyOnPoly -> these two polys are not exactly the same (though they do share '+(poly_a.points.length-sudo_poly_a_points.length)+' of the same points)'); //#development
         
                 //find all side intersection points
                     for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
+                        dev.log.math('.detectIntersect.polyOnPoly -> testing line on poly:',[poly_a.points[a_a],poly_a.points[a_b]],poly_b); //#development
                         const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
-                        results.points = results.points.concat(tmp.points);
+                        dev.log.math('.detectIntersect.polyOnPoly -> lineOnPoly-results:',tmp); //#development
+        
+                        results.points = results.points.concat(
+                            tmp.points.filter(point => results.points.find(item => item.x == point.x && item.y == point.y ) == undefined )
+                        );
+        
                         results.contact = results.contact || tmp.contact;
                         results.intersect = results.intersect || tmp.intersect;
                     }
-                
+                    dev.log.math('.detectIntersect.polyOnPoly -> results:',results); //#development
+            
                 //check if poly_a is totally inside poly_b (if necessary)
                     for(let a = 0; a < poly_b.points.length; a++){
                         if( results.intersect ){break;}
-                        if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) == 'inside' ){   
+                        if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) != 'outside' ){   
                             results.intersect = true;
                         }
                     }
@@ -2713,7 +2805,7 @@ const library = new function(){
             dev.log.font('.loadFont(',fontName,onLoaded); //#development
             dev.count('.font.loadFont'); //#development
         
-            if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
+            if(vectorLibrary[fontName] == undefined){ console.warn('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
         
             //make sure font file is on the approved list
                 if( !this.isApprovedFont(fontName) ){
@@ -24385,43 +24477,49 @@ const element = new function(){
                             isChanged:false, 
                             defaultURL:'/images/noimageimage.png'
                         };
-                        function loadImage(url){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url); //#development
+                        function loadImage(url,forceUpdate=false){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url,forceUpdate); //#development
             
-                            fetch(url).then( response => {
-                                if(response.status != 200){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> image was not found at url: '+url); //#development
-                                    console.warn(type,id,self.getAddress(),'could not find image at: '+url);
-                                    console.warn(response);
-                                    loadImage(image.defaultURL);
-                                    return;
-                                }
+                            image.isLoaded = false;
             
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> response:',response); //#development
-                                response.blob().then(data => {
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> data:',data); //#development
-                                    createImageBitmap(data).then(bitmap => {
-                                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> bitmap:',bitmap); //#development
-                                        image.bitmap = bitmap;
-                                        image.isLoaded = true;
-                                        image.isChanged = true;
-                                    }).catch(error => {
+                            elementLibrary.image.getImageFromURL(
+                                url, 
+                                bitmap => {
+                                    if(url != image.url){
+                                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> URL has changed since this request started; re-requesting...'); //#development
+                                        loadImage(image.url);
+                                        return;
+                                    }
+            
+                                    image.bitmap = bitmap;
+                                    image.isLoaded = true;
+                                    image.isChanged = true;
+                                },
+                                (errorType, response, error) => {
+                                    if(errorType == 'badURL'){
+                                        console.warn(type,id,self.getAddress(),'could not find image at: '+url);
+                                        console.warn(response);
+                                        loadImage(image.defaultURL);
+                                    }else if(errorType == 'imageDecodingError'){
                                         console.error('Image decoding error :: url:',url);
                                         console.error('-- -- -- -- -- -- -- :: response:',response);
                                         console.error('-- -- -- -- -- -- -- :: data:',data);
                                         console.error(error);
                                         loadImage(image.defaultURL);
-                                    });
-                                });
-                            });
-            
-            
-                            image.isLoaded = false; 
+                                    }else if(errorType == 'previousFailure'){
+                                        console.warn('previous failure to load "'+url+'" - load not attempted this time');
+                                    }else{
+                                        console.error('Unknown error :: errorType:',errorType);
+                                        loadImage(image.defaultURL);
+                                    }
+                                },
+                                forceUpdate
+                            );
                         }
                         setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
             
-                        this.url = function(a){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a); //#development
+                        this.url = function(a,forceUpdate=false){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a,forceUpdate); //#development
             
                             if(a==undefined){return image.url;}
                             if(a==image.url){return;} //no need to reload the same image
@@ -24429,7 +24527,7 @@ const element = new function(){
             
                             if(image.url === ''){ image.url = image.defaultURL; }
             
-                            loadImage(image.url);
+                            loadImage(image.url,forceUpdate);
                         };
                         this.bitmap = function(a){
                             dev.log.elementLibrary[type]('['+self.getAddress()+'].bitmap(',a); //#development
@@ -24688,6 +24786,48 @@ const element = new function(){
                         this.getAddress = self.getAddress;
                         this._dump = self._dump;
                     };
+            };
+            this.image.loadedImageData = {}; // { state:'requested/ready/failed', bitmap:-bitmap-, callbacks:[] }
+            this.image.getImageFromURL = function(url,callback,errorCallback,forceUpdate=false){
+                dev.log.elementLibrary['image']('.getImageFromURL(',url,callback,errorCallback,forceUpdate); //#development
+            
+                if(this.loadedImageData[url] == undefined || forceUpdate && this.loadedImageData[url].state != 'requested' ){
+                    dev.log.elementLibrary['image']('.getImageFromURL -> no previously requested image bitmap for this URL, requesting now...'); //#development
+                    this.loadedImageData[url] = { state:'requested', bitmap:undefined, callbacks:[[callback,errorCallback]] };
+            
+                    fetch(url).then( response => {
+                        if(response.status != 200){
+                            dev.log.elementLibrary['image']('.getImageFromURL -> image was not found at url: '+url); //#development
+                            this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[1]('badURL',response); } );
+                            return;
+                        }
+            
+                        dev.log.elementLibrary['image']('.getImageFromURL -> response:',response); //#development
+                        response.blob().then(data => {
+                            dev.log.elementLibrary['image']('.getImageFromURL -> data:',data); //#development
+                            createImageBitmap(data).then(bitmap => {
+                                dev.log.elementLibrary['image']('.getImageFromURL -> bitmap:',bitmap); //#development
+                                this.loadedImageData[url].bitmap = bitmap;
+                                this.loadedImageData[url].state = 'ready';
+                                this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[0](bitmap); } );
+                            }).catch(error => {
+                                dev.log.elementLibrary['image']('.getImageFromURL -> Image decoding error'); //#development
+                                this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[1]('imageDecodingError',response,error); } );
+                            });
+                        });
+                    });
+            
+            
+                }else if( this.loadedImageData[url].state == 'ready' ){
+                    dev.log.elementLibrary['image']('.getImageFromURL -> found a previously loaded image bitmap for this URL'); //#development
+                    if(callback != undefined){ callback(this.loadedImageData[url].bitmap); }
+                }else if( this.loadedImageData[url].state == 'requested' ){
+                    dev.log.elementLibrary['image']('.getImageFromURL -> bitmap is being loaded, adding callbacks to list'); //#development
+                    this.loadedImageData[url].callbacks.push([callback,errorCallback]);
+                }else if( this.loadedImageData[url].state == 'failed' ){
+                    dev.log.elementLibrary['image']('.getImageFromURL -> previous attempt to load from the URL has failed'); //#development
+                    errorCallback('previousFailure');
+                }
             };
             //this element is exactly the same as the image element; except the name and 
             //type have been changed to 'canvas'
@@ -25192,7 +25332,7 @@ const element = new function(){
                                 font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
                                 dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> font set to: "'+font+'"'); //#development
                             }else{
-                                report.warning('library.font : error : unknown font:',newFont);
+                                console.warn('library.font : error : unknown font:',newFont);
                                 font = defaultFontName;
                             }
             
@@ -25582,7 +25722,7 @@ const element = new function(){
                 
                                     font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
                                 }else{
-                                    report.warning('library.font : error : unknown font:',newFont);
+                                    console.warn('library.font : error : unknown font:',newFont);
                                     font = defaultFontName;
                                 }
                 
@@ -26478,30 +26618,30 @@ const callback = new function(){
                 }
             break;
             case 'firstMatch':
-                    if(callbackName == 'onmouseenterelement'){
-                        for(let a = 0; a < all.length; a++){
-                            if(all[a][callbackName] != undefined){
-                                if(relevant.indexOf(all[a]) >= 0){
-                                    self.coupling_out.onmouseleaveelement(x, y, event, {all:all, relevant:[currentlyEnteredElement]});
-                                    currentlyEnteredElement = all[a];
-                                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:[all[a]]});
-                                }
-                                break;
-                            }
-                        }
-                    }else if(callbackName == 'onmouseleaveelement'){
-                        currentlyEnteredElement = undefined;
-                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
-                        for(let a = 0; a < all.length; a++){
-                            if(all[a].onmouseenterelement != undefined){
+                if(callbackName == 'onmouseenterelement'){
+                    for(let a = 0; a < all.length; a++){
+                        if(all[a][callbackName] != undefined){
+                            if(relevant.indexOf(all[a]) >= 0){
+                                self.coupling_out.onmouseleaveelement(x, y, event, {all:all, relevant:[currentlyEnteredElement]});
                                 currentlyEnteredElement = all[a];
-                                self.coupling_out.onmouseenterelement(x, y, event, {all:all, relevant:[all[a]]});
-                                break;
+                                self.coupling_out[callbackName](x, y, event, {all:all, relevant:[all[a]]});
                             }
+                            break;
                         }
-                    }else{
-                        self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
                     }
+                }else if(callbackName == 'onmouseleaveelement'){
+                    currentlyEnteredElement = undefined;
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
+                    for(let a = 0; a < all.length; a++){
+                        if(all[a].onmouseenterelement != undefined){
+                            currentlyEnteredElement = all[a];
+                            self.coupling_out.onmouseenterelement(x, y, event, {all:all, relevant:[all[a]]});
+                            break;
+                        }
+                    }
+                }else{
+                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
+                }
             break;
             case 'allMatches': default:
                 self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant});
@@ -26938,7 +27078,7 @@ const callback = new function(){
         //for accepting the callback signals from the window's canvas
         communicationModule.function['callback.coupling_in.'+callbackName] = function(event){
             dev.log.service('.callback.coupling_in.'+callbackName+'(',event); //#development
-        dev.count('service-callback.coupling_in'); //#development
+            dev.count('service-callback.coupling_in'); //#development
             callback.coupling_in[callbackName](event);
         };
     });

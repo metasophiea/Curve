@@ -25,6 +25,7 @@ console.log('%c- detectIntersect', 'font-weight: bold;');
                     {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} }, box_b:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} },   result:true},
                     {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} }, box_b:{ topLeft:{x:10,y:0}, bottomRight:{x:20,y:10} },  result:true},
                     {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} }, box_b:{ topLeft:{x:11,y:0}, bottomRight:{x:20,y:10} },  result:false},
+                    {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:50,y:45} }, box_b:{ topLeft:{x:0,y:0}, bottomRight:{x:70,y:45} },   result:true}
             ];
             testingPairs.forEach(pair => {
                 tester( _canvas_.library.math.detectIntersect.boundingBoxes( pair.box_a, pair.box_b ), pair.result );
@@ -100,6 +101,8 @@ console.log('%c- detectIntersect', 'font-weight: bold;');
                 {line_a:[{x:0,y:0},{x:0,y:5}],  line_b:[{x:0,y:5},{x:2.5,y:2.5}], result:{x:0, y:5, intersect:false, contact:true}                  },
                 {line_a:[{x:1,y:1},{x:9,y:9}],  line_b:[{x:0,y:0},{x:0,y:10}],    result:{x:undefined, y:undefined, intersect:false, contact:false} },
                 {line_a:[{x:0,y:0},{x:0,y:10}], line_b:[{x:0,y:0},{x:0,y:10}],    result:{x:undefined, y:undefined, intersect:false, contact:true}  },
+                {line_a:[{x:5,y:0},{x:15,y:0}], line_b:[{x:0,y:0},{x:10,y:0}],    result:{x1:5, y1:0, x2:10, y2:0, intersect:false, contact:true}},
+                {line_a:[{x:0,y:0},{x:10,y:0}], line_b:[{x:2,y:0},{x:8,y:0}],     result:{x1:2, y1:0, x2:8, y2:0, intersect:false, contact:true}}
             ];
             testingPairs.forEach(pair => {
                 tester( _canvas_.library.math.detectIntersect.lineOnLine( pair.line_a, pair.line_b ), pair.result );
@@ -121,7 +124,8 @@ console.log('%c- detectIntersect', 'font-weight: bold;');
                 {line:[{x:0,y:0},{x:10,y:10}],       poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:0},{x:10,y:10}],       intersect:true,  contact:true}  }, //perfect traversal
                 {line:[{x:1,y:1},{x:9,y:9}],         poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[],                            intersect:true,  contact:false} }, //completely within
                 {line:[{x:-10,y:0},{x:10,y:10}],     poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:5},{x:10,y:10}],       intersect:true,  contact:true}  },
-
+                {line:[{x:10,y:0},{x:100,y:0}],      poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:10,y:0}],                  intersect:false, contact:true}  },
+                {line:[{x:5,y:0},{x:15,y:0}],        poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:5,y:0},{x:10,y:0}],                  intersect:false, contact:true}  },
             ];
             testingPairs.forEach(pair => {
                 tester( _canvas_.library.math.detectIntersect.lineOnPoly( pair.line, pair.poly ), pair.result );
@@ -263,6 +267,26 @@ console.log('%c- detectIntersect', 'font-weight: bold;');
                         poly_b:{points:[{x:80,y:330},{x:400,y:330},{x:400,y:392.5},{x:80,y:392.5}]},
                         result:{points:[{x:80,y:355},{x:400,y:355}],contact:true,intersect:true}
                     },
+                    {
+                        poly_a:{points:[{x:6,y:6},{x:56,y:6},{x:56,y:51},{x:6,y:51}]},
+                        poly_b:{points:[{x:6,y:6},{x:76,y:6},{x:76,y:51},{x:6,y:51}]},
+                        result:{points:[{x:6,y:51},{x:6,y:6},{x:56,y:6},{x:56,y:51}],contact:true,intersect:true}
+                    },
+                    {
+                        poly_a:{points:[{x:0,y:0},{x:70,y:0},{x:70,y:45},{x:0,y:45}]},
+                        poly_b:{points:[{x:0,y:0},{x:50,y:0},{x:50,y:45},{x:0,y:45}]},
+                        result:{points:[{x:0,y:45},{x:0,y:0},{x:50,y:0},{x:50,y:45}],contact:true,intersect:true}
+                    },
+                    {
+                        poly_a:{points:[{x:0,y:0},{x:100,y:0},{x:100,y:100},{x:0,y:100}]},
+                        poly_b:{points:[{x:0,y:0},{x:50,y:0},{x:0,y:100},{x:50,y:100}]},
+                        result:{points:[{x:0,y:100},{x:0,y:0},{x:50,y:0},{x:50,y:100}],contact:true,intersect:true}
+                    },
+                    {
+                        poly_a:{points:[{x:0,y:0},{x:100,y:0},{x:100,y:100},{x:0,y:100}]},
+                        poly_b:{points:[{x:-50,y:0},{x:50,y:0},{x:50,y:100},{x:-50,y:100}]},
+                        result:{points:[{x:0,y:100},{x:0,y:0},{x:50,y:0},{x:50,y:100}],contact:true,intersect:true}
+                    }
             ];
             testingPairs.forEach(pair => {
                 tester( _canvas_.library.math.detectIntersect.polyOnPoly( pair.poly_a, pair.poly_b ), pair.result ); 

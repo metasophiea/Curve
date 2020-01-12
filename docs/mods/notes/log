@@ -1,96 +1,186 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-01-11
+  - updated the presets of the dsds-8^3, also fixed up some bugs with the unit
+
+
+2020-01-10
+  - added 'radio' item to the list part, which is sort of like a sublist of
+    only checkboxes, where only one can be checked at a time (with a minimum
+    of one also)
+  - updated curve's manubar to use the new radio item for the mouse wheel mode
+    selection
+  - rearranged the interface layer a little to include the custom 
+    audioWorkletProcessor section. I've only placed the biscrusher in there
+    and created a circuit for it which all seems to work fine. It does however
+    rather slow down the start-up time of that layer, as a request/promise is
+    being made for the creation of the bitcrusher webWorker. More audio
+    worklets will be added, but I'm hoping that they can be loaded in
+    parallel, reducing their load time weight. It makes more sense to me now
+    to add some kind of loading screen
+  - ...I've sped things up a little bit by removing the load checks for the
+    bitcrusher. We'll see if that holds up.
+  - fixed bug with player circuit which allowed one to start the same playhead
+    again, thus resulting in many simultaneous audio streams of the same file
+
+
+2020-01-09
+  - created a 'Workshop' collection of units, within which I will develop new
+    unit types...I should probably get rid of the development collection units
+    instead and just use that name, but..maybe I'm a little sentimental
+  - began work on a "bitcrusher" effect unit, which is made using an
+   'AudioWorkletProcessor' Pretty cool stuff
+  - seems the Alpha collection's synthesizer was starting out with a gain that 
+    was different from what the default value of the dial showed. I've changed 
+    it so now on creation it sets to what the dial's default is. I'm a little 
+    worried the other settings have similar discrepancies.
+    ...Also the interface was set up a little wrong.
+  - added the import/export code to the dsds-8^3
+  - made some modifications to the discrete parts to reduce the number of
+    callbacks where nothing changed
+
+
+2020-01-08
+  - added a check to the compatability checker, which checks if 
+    "requestAnimationFrame" works in a webworker
+  - modified control.mouse's onwheel function to add a way of selecting
+    differnt methods of mouse wheel calculation, along with some new options   
+    in the 'tools' section of the menubar (done in a way that's a little ugly, 
+    frankly) So now, zooming is pretty nice with a clicky wheel mouse
+      
+
+2020-01-07
+  - the mrd-16 was having issues with the buttons, where if you clicked them a 
+    certian way, they would appear to become stuck on "pressed". In reality, 
+    when you clicked the button for the first time, the image element would 
+    request the 'down' image (as is expected), but if you clicked too quickly, 
+    the change to the 'up' image would be processed and completed fast (thanks 
+    to the new image caching) but on completion of the 'down' image request, 
+    the element would set itself to that image thus giving the appearance that 
+    the button was stuck 'down' This has been fixed in the image element, 
+    which now on completion of an image request, checks if the currently 
+    active URL is the same as the one for the request that it just completed. 
+    If so, all's good, but if not it automatically re-requests the currently 
+    active URL.
+  - updated library.math.detectIntersect to return more point information. 
+    lineOnLine returns all points of contact, as does lineOnPoly ...its just 
+    better now. There was an issue with detecting polygons that were exactly 
+    ontop of each other, but not with the same points, but this is fixed now. 
+    lineOnLine was also modified to return two points if the lines are on the 
+    same line (thus producing a range of point values between) this is stored 
+    as x1,y2,x2 and y2 values
+  - added same style of modification that was made to the image element 
+    yesterday, to library.audio's loadAudioFile function. Now, all url loaded 
+    files are stored in a cache and called upon when that url is used again. 
+    There's also a "forceRequest" argument to bypass the cache.
+  - updated the generic connectionNode to use the current width/height of the  
+    rectangle for calculating the attachment point (as apposed to the initial 
+    values)
+
+
+2020-01-06
+  - modified core engine's image element, to reduce the URL request load. Now, 
+    its saving the results of previous requests so that any image element that 
+    requests from the same URL, will simply be given this data instead. Or, if 
+    the request is in motion, the element provides a callback that will be 
+    called when the origianl request is complete (there's success and failure 
+    callbacks) There's also a way of forcing an update. I've already noticed 
+    that changes between images (that are loaded) are much faster
+  - modified the core-console genericElementProxy's "setupSimpleAttribute"
+    function to allow for methods with extra arguments. Those extra arguments
+    are not saved, but this is useful for sending additional, one off data.
+      eg. image.url('-url',force=True) 
+  - created the 'gain' circuit
+
+
 2020-01-05
-  CoreV3
-    - added sudo-catagory to curve's menubar creater in the create submenu, so
-      that if you use it ("") the unit is added to the bottom of the main list
-    - added the '^' symbol to library.font's reducedGlyphSet, and both default
-      fonts
+  - added sudo-catagory to curve's menubar creater in the create submenu, so
+    that if you use it ("") the unit is added to the bottom of the main list
+  - added the '^' symbol to library.font's reducedGlyphSet, and both default
+    fonts
+  - further work on the drum machine (the harbinger dsds-8^3)
 
 
 2020-01-04
-  CoreV3
-    - began work on a drum machine
-    - updated dial_image_discrete's set function, so that it stops when the new
-      value is the same as the old value
+  - began work on a drum machine
+  - updated dial_image_discrete's set function, so that it stops when the new
+    value is the same as the old value
 
 
 2020-01-03
-  CoreV3
-    - fixed an issue with the MRD-16 not having the correct address for its
-      images
-    - updated core console's generic element simple attribute updater code so
-      that it doesn't update values to what's already stored in the cache, as
-      there's no need to set things to what they already are
-    - changed the MRD-16 chackbox's to buttons (for the signal/voltage
-      selection) as there was a little issue with clicking the mode that was
-      already selected and somehow having nothing selected
-    - moved drum sounds into a new folder in docs and started putting together
-      a collection of sample sounds (I have '78' and '808'. There's a few more
-      on the way which I'm getting from Logic Pro X..probably questionable
-      legal, but we'll deal with the C&D when it arrives)
+  - fixed an issue with the MRD-16 not having the correct address for its
+    images
+  - updated core console's generic element simple attribute updater code so
+    that it doesn't update values to what's already stored in the cache, as
+    there's no need to set things to what they already are
+  - changed the MRD-16 chackbox's to buttons (for the signal/voltage selection)
+    as there was a little issue with clicking the mode that was already 
+    selected and somehow having nothing selected
+  - moved drum sounds into a new folder in docs and started putting together
+    a collection of sample sounds (I have '78' and '808'. There's a few more
+    on the way which I'm getting from Logic Pro X..probably questionable 
+    legality, but we'll deal with the C&D when it arrives)
 
 
 2020-01-02
-  CoreV3
-    - seems Harbinger have opened a shop in town, currently they're only selling
-      the MRD-16 (Mini Rhythm Designer) which is a pretty nifty sequencer
-    - added 'nudge' method to the discrete dials
-    - added 'toggle' method to the checkboxes
-    - fixed bug with core_engine's group element, where the
-      'calculateExtremitiesBox' function wasn't calculating the limits
-      correctly. Simply, the collection of if statements were not set up
-      correctly (there was if-elseif where there shouldn't have been) Along the
-      way I noticed some unnecessary 'boundingBoxFromPoints' work being done,
-      so that's been removed too
-    - removed duplicated font code from the core layer (it was already in the
-      library, just never used)
-    - guess who hadn't written the if statement that used
-      "detectIntersect.polyOnPoly" correctly in the getTrianglesFromGlyphPath
-      function in the font section of the library, which caused the dots on i
-      and j characters to not show up, and probably other issues I hadn't
-      noticed yet? Not me anyway, that would have been silly
+  - seems a company called Harbinger have opened a shop in town, currently
+    they're only selling the MRD-16 (Mini Rhythm Designer) which is a pretty
+    nifty sequencer, though I'm told they have a number of other products on
+    the way
+  - added 'nudge' method to the discrete dials
+  - added 'toggle' method to the checkboxes
+  - fixed bug with core_engine's group element, where the 
+    'calculateExtremitiesBox' function wasn't calculating the limits 
+    correctly. Simply, the collection of if statements were not set up 
+    correctly (there was if-elseif where there shouldn't have been) Along the 
+    way I noticed some unnecessary 'boundingBoxFromPoints' work being done, so 
+    that's been removed too
+  - removed duplicated font code from the core layer (it was already in the
+    library, just never used)
+  - guess who hadn't written the if statement that used 
+    "detectIntersect.polyOnPoly" correctly in the getTrianglesFromGlyphPath 
+    function in the font section of the library, which caused the dots on i 
+    and j characters to not show up, and probably other issues I hadn't 
+    noticed yet? Not me anyway, that would have been silly
 
 
 2020-01-01
-  CoreV3
-    - core.render.activeLimitToFrameRate didn't have the cached values
-      implemented. However, that has changed now
-    - added a "Limit Frame Rate" option to the Dev menubar panel
-    - improved the date strings in the Dev menubar panel, so that they can
-      handle days and months with single digits (automatically adding the
-      leading zeros)
-    - fixed issue with detectIntersect.pointOnPoly (same issue as last time in
-      fact, seems when a point is perfectly level with a point of the poly
-      things get confusing...I'd messed up the solution to this by making it
-      judge each point twice, thus flips would occur twice)
-    - updated fitPolyIn to use detectIntersect instead of detectOverlap,
-      along with other sections that were still using detectOverlap
-    - updated shortestRouteFromVisibilityGraph to return an empty route when one
-      can't be found
-    - commented out all of detectOverlap (I really should just dump it)
-    - made initial attempts to bring in the cable routing code. So far, it works
-      but feels messy. The system must calculate the visibilityGraph every time
-      for each cable draw
-    - ...processing is pretty heavy, so I've disabled cable routing for now
-    - fixed issue with audio_file_player unit where if you pressed the 'load
-      file' button, but then canceled out of the file chooser; the unit would
-      be unable to play the previously loaded audio. Seems the load process in
-      the circuitry set the 'is file loaded' flag to false before attempting the
-      file load. I've fixed this by only setting that flag when the file has been
-      loaded and is to be processed into the circuitry
-    - did some new artwork for a new unit
+  - core.render.activeLimitToFrameRate didn't have the cached values 
+    implemented. However, that has changed now
+  - added a "Limit Frame Rate" option to the Dev menubar panel
+  - improved the date strings in the Dev menubar panel, so that they can    
+    handle days and months with single digits (automatically adding the 
+    leading zeros)
+  - fixed issue with detectIntersect.pointOnPoly (same issue as last time in 
+    fact, seems when a point is perfectly level with a point of the poly 
+    things get confusing...I'd messed up the solution to this by making it 
+    judge each point twice, thus flips would occur twice)
+  - updated fitPolyIn to use detectIntersect instead of detectOverlap, along 
+    with other sections that were still using detectOverlap
+  - updated shortestRouteFromVisibilityGraph to return an empty route when one
+    can't be found
+  - commented out all of detectOverlap (I really should just dump it)
+  - made initial attempts to bring in the cable routing code. So far, it works
+    but feels messy. The system must calculate the visibilityGraph every time
+    for each cable draw
+  - ...processing is pretty heavy, so I've disabled cable routing for now
+  - fixed issue with audio_file_player unit where if you pressed the 'load 
+    file' button, but then canceled out of the file chooser; the unit would be 
+    unable to play the previously loaded audio. Seems the load process in the 
+    circuitry set the 'is file loaded' flag to false before attempting the 
+    file load. I've fixed this by only setting that flag when the file has been
+    loaded and is to be processed into the circuitry
+  - did some new artwork for a new unit
 
 
 2019-12-30
-  CoreV3
-    - adding in oncreate and ondelete callbacks to the unit and parts, mainly so
-      that intervals can be stopped when parts or units are removed
-    - updated the parts and units that use intervals, so that those intervals
-      are cleared upon that part or unit's deletion
-    - created a small testing script and an error page for when a browser is
-      incompatible with the site in some way, currently it only deals with
-      OffscreenCanvas errors, but can be easily expanded. Page looks pretty nice
-      too
+  - adding in oncreate and ondelete callbacks to the unit and parts, mainly so
+    that intervals can be stopped when parts or units are removed
+  - updated the parts and units that use intervals, so that those intervals
+    are cleared upon that part or unit's deletion
+  - created a small testing script and an error page for when a browser is 
+    incompatible with the site in some way, currently it only deals with 
+    OffscreenCanvas errors, but can be easily expanded. Page looks pretty nice 
+    too
 
 
 2019-12-28
@@ -102,11 +192,11 @@
       fixed by making it add the 'input' element to the document body, then
       'clicking' it. The element is removed after a second
     - setting things up for the switch over
-    - performed the switch over and pushed
-    - updated the readme
-    - demo loader was asking for permission to change the scene, which doesn't
-      make a whole lot of sense considering what the automatic demo loader is
-      trying to accomplish
+  - performed the switch over and pushed
+  - updated the readme
+  - demo loader was asking for permission to change the scene, which doesn't
+    make a whole lot of sense considering what the automatic demo loader is
+    trying to accomplish
 
 
 2019-12-26
@@ -167,7 +257,7 @@
 2019-12-25
   CoreV3
     - christmas update. Things are now 27% more cheerful (though much slower)
-    = fixed that checkbox issue from yesterday
+    - fixed that checkbox issue from yesterday
     - there's something amiss with loading files on chrome that isn't an issue
       on chromium
 

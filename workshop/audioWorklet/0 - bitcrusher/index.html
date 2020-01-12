@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>test</title>
+        <meta charset="utf-8"></meta>
+    </head>
+
+    <body>   
+    </body>
+
+</html>
+
+<script>
+    // const context = new AudioContext();
+    // context.audioWorklet.addModule('bitcrusher.js').then( () => {
+    //     const osc = new OscillatorNode(context);
+    //     const amp = new GainNode(context);
+    //     const bitcrusher = new AudioWorkletNode(context, 'bitcrusher', {
+    //         parameterData: {bitDepth: 8}
+    //     });
+    //     osc.connect(bitcrusher).connect(amp).connect(context.destination);
+    //     osc.start();
+    // });
+
+    // const context = new AudioContext();
+    // context.audioWorklet.addModule('BitCrusherProcessor.js').then( () => {
+    //     const osc = new OscillatorNode(context);
+    //     const amp = new GainNode(context);
+    //     const bitcrusher = new AudioWorkletNode(context, 'bit-crusher-processor');
+    //     osc.connect(bitcrusher).connect(amp).connect(context.destination);
+    //     osc.start();
+
+    //     const paramBitDepth = bitcrusher.parameters.get('bitDepth');
+    //     const paramReduction = bitcrusher.parameters.get('frequencyReduction');
+    //     // paramBitDepth.setValueAtTime(1, 0);
+    //     // paramReduction.setValueAtTime(0.01, 0);
+    //     // paramReduction.linearRampToValueAtTime(0.1, 4);
+    //     // paramReduction.exponentialRampToValueAtTime(0.01, 8);
+    // });
+
+    const context = new AudioContext();
+    context.audioWorklet.addModule('bitcrusher2.js').then( () => {
+        const osc = new OscillatorNode(context);
+        const bitcrusher = new AudioWorkletNode(context, 'bitcrusher');
+        osc.connect(bitcrusher).connect(context.destination);
+        osc.start();
+
+        const notes = [261.6, 277.2, 293.7, 311.1, 329.6, 349.2, 370.0, 392.0, 415.3, 440.0, 466.2, 493.9];
+        let step = 0;
+        setInterval(() => {
+            osc.frequency.setTargetAtTime(notes[step], context.currentTime, 0);
+            step++; if(step == notes.length){step = 0;}
+        },250);
+
+
+
+        const paramBitDepth = bitcrusher.parameters.get('bitDepth');
+        const paramReduction = bitcrusher.parameters.get('frequencyReduction');
+    });
+</script>

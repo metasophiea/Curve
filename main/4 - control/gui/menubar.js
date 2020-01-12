@@ -368,6 +368,9 @@ this.menubar = function(x,y){
         };
         object.refresh();
         object.heavyRefresh = function(){ produceBar(); };
+        object.checkboxRefresh = function(){
+            console.log(object.getTree());
+        };
 
     return object;
 };

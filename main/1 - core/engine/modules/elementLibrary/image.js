@@ -94,43 +94,49 @@ this.image = function(_id,_name){
                 isChanged:false, 
                 defaultURL:'/images/noimageimage.png'
             };
-            function loadImage(url){
-                dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url); //#development
+            function loadImage(url,forceUpdate=false){
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url,forceUpdate); //#development
 
-                fetch(url).then( response => {
-                    if(response.status != 200){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> image was not found at url: '+url); //#development
-                        console.warn(type,id,self.getAddress(),'could not find image at: '+url);
-                        console.warn(response);
-                        loadImage(image.defaultURL);
-                        return;
-                    }
+                image.isLoaded = false;
 
-                    dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> response:',response); //#development
-                    response.blob().then(data => {
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> data:',data); //#development
-                        createImageBitmap(data).then(bitmap => {
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> bitmap:',bitmap); //#development
-                            image.bitmap = bitmap;
-                            image.isLoaded = true;
-                            image.isChanged = true;
-                        }).catch(error => {
+                elementLibrary.image.getImageFromURL(
+                    url, 
+                    bitmap => {
+                        if(url != image.url){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> URL has changed since this request started; re-requesting...'); //#development
+                            loadImage(image.url);
+                            return;
+                        }
+
+                        image.bitmap = bitmap;
+                        image.isLoaded = true;
+                        image.isChanged = true;
+                    },
+                    (errorType, response, error) => {
+                        if(errorType == 'badURL'){
+                            console.warn(type,id,self.getAddress(),'could not find image at: '+url);
+                            console.warn(response);
+                            loadImage(image.defaultURL);
+                        }else if(errorType == 'imageDecodingError'){
                             console.error('Image decoding error :: url:',url);
                             console.error('-- -- -- -- -- -- -- :: response:',response);
                             console.error('-- -- -- -- -- -- -- :: data:',data);
                             console.error(error);
                             loadImage(image.defaultURL);
-                        });
-                    });
-                });
-
-
-                image.isLoaded = false; 
+                        }else if(errorType == 'previousFailure'){
+                            console.warn('previous failure to load "'+url+'" - load not attempted this time');
+                        }else{
+                            console.error('Unknown error :: errorType:',errorType);
+                            loadImage(image.defaultURL);
+                        }
+                    },
+                    forceUpdate
+                );
             }
             setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
 
-            this.url = function(a){
-                dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a); //#development
+            this.url = function(a,forceUpdate=false){
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a,forceUpdate); //#development
 
                 if(a==undefined){return image.url;}
                 if(a==image.url){return;} //no need to reload the same image
@@ -138,7 +144,7 @@ this.image = function(_id,_name){
 
                 if(image.url === ''){ image.url = image.defaultURL; }
 
-                loadImage(image.url);
+                loadImage(image.url,forceUpdate);
             };
             this.bitmap = function(a){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].bitmap(',a); //#development
@@ -397,4 +403,46 @@ this.image = function(_id,_name){
             this.getAddress = self.getAddress;
             this._dump = self._dump;
         };
+};
+this.image.loadedImageData = {}; // { state:'requested/ready/failed', bitmap:-bitmap-, callbacks:[] }
+this.image.getImageFromURL = function(url,callback,errorCallback,forceUpdate=false){
+    dev.log.elementLibrary['image']('.getImageFromURL(',url,callback,errorCallback,forceUpdate); //#development
+
+    if(this.loadedImageData[url] == undefined || forceUpdate && this.loadedImageData[url].state != 'requested' ){
+        dev.log.elementLibrary['image']('.getImageFromURL -> no previously requested image bitmap for this URL, requesting now...'); //#development
+        this.loadedImageData[url] = { state:'requested', bitmap:undefined, callbacks:[[callback,errorCallback]] };
+
+        fetch(url).then( response => {
+            if(response.status != 200){
+                dev.log.elementLibrary['image']('.getImageFromURL -> image was not found at url: '+url); //#development
+                this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[1]('badURL',response); } );
+                return;
+            }
+
+            dev.log.elementLibrary['image']('.getImageFromURL -> response:',response); //#development
+            response.blob().then(data => {
+                dev.log.elementLibrary['image']('.getImageFromURL -> data:',data); //#development
+                createImageBitmap(data).then(bitmap => {
+                    dev.log.elementLibrary['image']('.getImageFromURL -> bitmap:',bitmap); //#development
+                    this.loadedImageData[url].bitmap = bitmap;
+                    this.loadedImageData[url].state = 'ready';
+                    this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[0](bitmap); } );
+                }).catch(error => {
+                    dev.log.elementLibrary['image']('.getImageFromURL -> Image decoding error'); //#development
+                    this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[1]('imageDecodingError',response,error); } );
+                });
+            });
+        });
+
+
+    }else if( this.loadedImageData[url].state == 'ready' ){
+        dev.log.elementLibrary['image']('.getImageFromURL -> found a previously loaded image bitmap for this URL'); //#development
+        if(callback != undefined){ callback(this.loadedImageData[url].bitmap); }
+    }else if( this.loadedImageData[url].state == 'requested' ){
+        dev.log.elementLibrary['image']('.getImageFromURL -> bitmap is being loaded, adding callbacks to list'); //#development
+        this.loadedImageData[url].callbacks.push([callback,errorCallback]);
+    }else if( this.loadedImageData[url].state == 'failed' ){
+        dev.log.elementLibrary['image']('.getImageFromURL -> previous attempt to load from the URL has failed'); //#development
+        errorCallback('previousFailure');
+    }
 };

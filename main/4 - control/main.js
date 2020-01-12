@@ -1,5 +1,5 @@
 _canvas_.control = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:8} };
     const control = this;
 
     {{include:dev.js}}
@@ -25,6 +25,11 @@ _canvas_.control = new function(){
         this.heavyRefresh = function(){
             if(menubar != undefined){
                 menubar.heavyRefresh();
+            }
+        };
+        this.checkboxRefresh = function(){
+            if(menubar != undefined){
+                menubar.checkboxRefresh();
             }
         };
 

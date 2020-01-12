@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:5} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:7} };
                 const library = this;
                 
                 const dev = {
@@ -686,20 +686,63 @@
                                 (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
                                 (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
                             ){
+                                dev.log.math('.detectIntersect.lineOnLine -> identical segments'); //#development
                                 return {x:undefined, y:undefined, intersect:false, contact:true};
                             }
                                 
                             //point on point
                             if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
+                                dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[0]:',segment1[0]); //#development
                                 return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
                             }
                             if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
+                                dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[1]:',segment1[1]); //#development
                                 return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
                             }
                     
                             //calculate denominator
                             const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                            if(denominator == 0){  return {x:undefined, y:undefined, intersect:false, contact:false}; }
+                            dev.log.math('.detectIntersect.lineOnLine -> denominator:',denominator); //#development
+                            if(denominator == 0){
+                                const points = [];
+                                const output = {x1:undefined, y1:undefined, x2:undefined, y2:undefined, intersect:false, contact:true};
+                                if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){
+                                    output.x1 = segment1[0].x;
+                                    output.y1 = segment1[0].y;
+                                }
+                                if( library.math.detectIntersect.pointOnLine(segment1[1],segment2) ){
+                                    if(output.x1 == undefined){
+                                        output.x1 = segment1[1].x;
+                                        output.y1 = segment1[1].y;
+                                    }else{
+                                        output.x2 = segment1[1].x;
+                                        output.y2 = segment1[1].y;
+                                        return output;
+                                    }
+                                }
+                                if( library.math.detectIntersect.pointOnLine(segment2[0],segment1) ){
+                                    if(output.x1 == undefined){
+                                        output.x1 = segment2[0].x;
+                                        output.y1 = segment2[0].y;
+                                    }else{
+                                        output.x2 = segment2[0].x;
+                                        output.y2 = segment2[0].y;
+                                        return output;
+                                    }
+                                }
+                                if( library.math.detectIntersect.pointOnLine(segment2[1],segment1) ){
+                                    if(output.x1 == undefined){
+                                        output.x1 = segment2[1].x;
+                                        output.y1 = segment2[1].y;
+                                    }else{
+                                        output.x2 = segment2[1].x;
+                                        output.y2 = segment2[1].y;
+                                        return output;
+                                    }
+                                }
+                    
+                                return output;
+                            }
                                 
                             //point on line
                             if( library.math.detectIntersect.pointOnLine(segment1[0],segment2) ){ return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true}; }
@@ -737,10 +780,25 @@
                                 for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
                                     const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
                                     dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> result:',result); //#development
-                                    if(result.intersect){
-                                        output.points.push({x:result.x,y:result.y});
-                                        output.intersect = true;
+                                    if(result.contact){
                                         output.contact = true;
+                                        if(result.intersect){
+                                            output.intersect = true;
+                                        }
+                    
+                                        if( result.x2 != undefined ){
+                                            if( output.points.find(item => item.x == result.x1 && item.y == result.y1 ) == undefined ){
+                                                output.points.push({x:result.x1,y:result.y1});
+                                            }
+                                            if( output.points.find(item => item.x == result.x2 && item.y == result.y2 ) == undefined ){
+                                                output.points.push({x:result.x2,y:result.y2});
+                                            }
+                                            break;
+                                        }
+                    
+                                        if( output.points.find(item => item.x == result.x && item.y == result.y ) == undefined ){
+                                            output.points.push({x:result.x,y:result.y});
+                                        }
                                     }
                                 }
                     
@@ -768,11 +826,19 @@
                                 huntForIntersection(line,poly.points);
                             }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onPoint') ){
                                 huntForIntersection(line,poly.points);
-                                output.points.push(line[dir]);
+                                // if(dir == 1){
+                                //     output.points.push(line[1]);
+                                // }else if(dir == 2){
+                                //     output.points.push(line[0]);
+                                // }
                                 output.contact = true;
                             }else if( dir = oneWhileTheOtherIs(point_a,point_b,'outside','onEdge') ){
                                 huntForIntersection(line,poly.points);
-                                output.points.push(line[dir]);
+                                // if(dir == 1){
+                                //     output.points.push(line[1]);
+                                // }else if(dir == 2){
+                                //     output.points.push(line[0]);
+                                // }
                                 output.contact = true;
                             }else if( oneWhileTheOtherIs(point_a,point_b,'outside','inside') ){
                                 huntForIntersection(line,poly.points);
@@ -787,7 +853,11 @@
                                 output.contact = true;
                                 output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
                             }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onPoint','inside') ){
-                                output.points = [line[dir]];
+                                if(dir == 1){
+                                    output.points.push(line[1]);
+                                }else if(dir == 2){
+                                    output.points.push(line[0]);
+                                }
                                 output.contact = true;
                                 output.intersect = true;
                             }else if( oneWhileTheOtherIs(point_a,point_b,'onEdge','onEdge') ){
@@ -795,7 +865,11 @@
                                 output.contact = true;
                                 output.intersect = library.math.detectIntersect.pointWithinPoly({ x:(output.points[0].x + output.points[1].x)/2, y:(output.points[0].y + output.points[1].y)/2 }, poly) == 'inside';
                             }else if( dir = oneWhileTheOtherIs(point_a,point_b,'onEdge','inside') ){
-                                output.points = [line[dir]];
+                                if(dir == 1){
+                                    output.points.push(line[1]);
+                                }else if(dir == 2){
+                                    output.points.push(line[0]);
+                                }
                                 output.contact = true;
                                 output.intersect = true;
                             }else if( oneWhileTheOtherIs(point_a,point_b,'inside','inside') ){
@@ -811,11 +885,20 @@
                             dev.log.math('.detectIntersect.polyOnPoly(',poly_a,poly_b); //#development
                             dev.count('.math.detectIntersect.polyOnPoly'); //#development
                     
-                            if(poly_a.boundingBox == undefined){ poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points); }
-                            if(poly_b.boundingBox == undefined){ poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points); }
+                            if(poly_a.boundingBox == undefined){ 
+                                dev.log.math('.detectIntersect.polyOnPoly -> poly_a boundingBox not found, generating...'); //#development
+                                poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points);
+                            }
+                            if(poly_b.boundingBox == undefined){ 
+                                dev.log.math('.detectIntersect.polyOnPoly -> poly_b boundingBox not found, generating...'); //#development
+                                poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points);
+                            }
                             if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
+                                dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s are totally seperate!'); //#development
                                 return { points:[], intersect:false, contact:false };
                             }
+                    
+                            dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s do collide, proceeding with search'); //#development
                     
                             const results = {
                                 points:[],
@@ -830,25 +913,34 @@
                                     if(index != -1){sudo_poly_a_points.splice(index, 1);}
                                 });
                                 if(sudo_poly_a_points.length == 0){
+                                    dev.log.math('.detectIntersect.polyOnPoly -> these two polys are exactly the same'); //#development
                                     return {
                                         points:Object.assign([],poly_a.points),
                                         contact:true,
                                         intersect:true,
                                     };
                                 }
+                                dev.log.math('.detectIntersect.polyOnPoly -> these two polys are not exactly the same (though they do share '+(poly_a.points.length-sudo_poly_a_points.length)+' of the same points)'); //#development
                     
                             //find all side intersection points
                                 for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
+                                    dev.log.math('.detectIntersect.polyOnPoly -> testing line on poly:',[poly_a.points[a_a],poly_a.points[a_b]],poly_b); //#development
                                     const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
-                                    results.points = results.points.concat(tmp.points);
+                                    dev.log.math('.detectIntersect.polyOnPoly -> lineOnPoly-results:',tmp); //#development
+                    
+                                    results.points = results.points.concat(
+                                        tmp.points.filter(point => results.points.find(item => item.x == point.x && item.y == point.y ) == undefined )
+                                    );
+                    
                                     results.contact = results.contact || tmp.contact;
                                     results.intersect = results.intersect || tmp.intersect;
                                 }
-                            
+                                dev.log.math('.detectIntersect.polyOnPoly -> results:',results); //#development
+                        
                             //check if poly_a is totally inside poly_b (if necessary)
                                 for(let a = 0; a < poly_b.points.length; a++){
                                     if( results.intersect ){break;}
-                                    if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) == 'inside' ){   
+                                    if( library.math.detectIntersect.pointWithinPoly(poly_b.points[a],poly_a) != 'outside' ){   
                                         results.intersect = true;
                                     }
                                 }
@@ -3011,7 +3103,7 @@
                         dev.log.font('.loadFont(',fontName,onLoaded); //#development
                         dev.count('.font.loadFont'); //#development
                     
-                        if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
+                        if(vectorLibrary[fontName] == undefined){ console.warn('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
                     
                         //make sure font file is on the approved list
                             if( !this.isApprovedFont(fontName) ){
@@ -3382,7 +3474,8 @@
                                 console.log(e);
                             }
                         };
-                        this.loadAudioFile = function(callback,type='file',url='',errorCallback){
+                        const loadedAudioFiles = {};
+                        this.loadAudioFile = function(callback,type='file',url='',errorCallback,forceRequest=false){
                             dev.log.audio('.loadAudioFile(',callback,type,url); //#development
                             dev.count('.audio.loadAudioFile'); //#development
                     
@@ -3393,11 +3486,17 @@
                         
                             switch(type){
                                 case 'url': 
+                                    if(!forceRequest && loadedAudioFiles[url] != undefined){
+                                        callback(loadedAudioFiles[url]);
+                                        break;
+                                    }
+                    
                                     library.misc.loadFileFromURL(
                                         url, 
                                         data => {
                                             library.audio.context.decodeAudioData(data, function(data){
-                                                callback({ buffer:data, name:(url.split('/')).pop(), duration:data.duration });
+                                                loadedAudioFiles[url] = { buffer:data, name:(url.split('/')).pop(), duration:data.duration };
+                                                callback(loadedAudioFiles[url]);
                                             });
                                         },
                                         'arraybuffer',
@@ -21855,7 +21954,7 @@
             };
             _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:3} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:7} };
                 const core_engine = new Worker("js/core_engine.js");
                 const self = this;
                 
@@ -22063,9 +22162,9 @@
                                 this[name] = function(a){
                                     if(a == undefined){ return cashedAttributes[name]; }
                                     if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',a); //#development
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',...arguments); //#development
                                     cashedAttributes[name] = a;
-                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[a]); }
+                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[...arguments]); }
                                 };
                             }
                             Object.entries({
@@ -22516,7 +22615,7 @@
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            url: '',
+                            url:'',
                             bitmap: undefined,
                         }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
@@ -23148,7 +23247,7 @@
                                 }else{
                                     console.warn('unknown event type: ',event);
                                 }
-                
+                                
                                 communicationModule.run('callback.coupling_in.'+callbackName,[sudoEvent]);
                             };
                 

@@ -89,6 +89,7 @@ _canvas_.system.mouse.functionList.onmousedown.push(
 );
 
 //zoom
+this.mouseWheelMode = 'magic'; // magic / clickyWheel
 _canvas_.system.mouse.functionList.onwheel.push(
     {
         requiredKeys:[],
@@ -100,12 +101,22 @@ _canvas_.system.mouse.functionList.onwheel.push(
 
             const scaleLimits = {'max':20, 'min':0.1};
 
+            let delta = data.event.wheelDeltaY;
+            switch(control.mouseWheelMode){
+                case 'magic':
+                    //already pefect
+                break;
+                case 'clickyWheel':
+                    delta = 25*Math.sign(delta);
+                break;
+            }
+
             //perform scale and associated pan
                 //discover point under mouse
                     const originalPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
                 //perform actual scaling
                     let scale = _canvas_.control.viewport.scale();
-                    scale += scale*(data.event.wheelDeltaY/100);
+                    scale += scale*(delta/100);
                     if( scale > scaleLimits.max ){scale = scaleLimits.max;}
                     if( scale < scaleLimits.min ){scale = scaleLimits.min;}
                     _canvas_.control.viewport.scale(scale);

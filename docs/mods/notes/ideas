@@ -174,8 +174,7 @@
 - rotate unit around point other than their origin (maybe it's 'centre')
 - dev output text console thing. Maybe activate with F3 or something (maybe just the url which adds an option in the menubar dropdown)
 - auto-generated "blotchy" background (maybe other background types too)
-- redo Alpha collection to be in the 100x100 pixel-per-cm resolution
+- redo Alpha collection to be in the 100x100 pixel-per-cm resolution (and probably in a slightly different style that is less similar to any other collection)
 - connection nodes reveal text when moused over (to say what they're named or if they are an input or output)
 - some way of telling when a file is being loaded and the user just needs to wait
-- menubar option for switching between mouse wheel modes
-- Harbinger multi track drum synthesiser: replace that text block on the right with presets (savable?)
+- list part radio-selector item

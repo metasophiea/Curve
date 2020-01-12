@@ -42,7 +42,8 @@
             console.log(e);
         }
     };
-    this.loadAudioFile = function(callback,type='file',url='',errorCallback){
+    const loadedAudioFiles = {};
+    this.loadAudioFile = function(callback,type='file',url='',errorCallback,forceRequest=false){
         dev.log.audio('.loadAudioFile(',callback,type,url); //#development
         dev.count('.audio.loadAudioFile'); //#development
 
@@ -53,11 +54,17 @@
     
         switch(type){
             case 'url': 
+                if(!forceRequest && loadedAudioFiles[url] != undefined){
+                    callback(loadedAudioFiles[url]);
+                    break;
+                }
+
                 library.misc.loadFileFromURL(
                     url, 
                     data => {
                         library.audio.context.decodeAudioData(data, function(data){
-                            callback({ buffer:data, name:(url.split('/')).pop(), duration:data.duration });
+                            loadedAudioFiles[url] = { buffer:data, name:(url.split('/')).pop(), duration:data.duration };
+                            callback(loadedAudioFiles[url]);
                         });
                     },
                     'arraybuffer',

@@ -63,7 +63,7 @@ this.player = function(context){
             }, type, url, errorCallback);
         }
         function generatePlayheadNumber(){
-            dev.log.circuit('.player::unlogeneratePlayheadNumberadRaw()'); //#development
+            dev.log.circuit('.player::generatePlayheadNumber()'); //#development
             let num = 0;
             while( Object.keys(state.playhead).includes(String(num)) && state.playhead[num] != undefined ){num++;}
             return num;
@@ -187,7 +187,7 @@ this.player = function(context){
         // };
 
         this.start = function(playhead){
-            dev.log.circuit('.player.start('+playhead+')'); //#development
+            dev.log.circuit('.player.start(',playhead); //#development
             dev.log.circuit('.player.start -> state.playhead[playhead]: '+JSON.stringify(state.playhead[playhead])); //#development
             dev.log.circuit('.player.start -> state.loop.active: '+state.loop.active); //#development
             dev.log.circuit('.player.start -> play area'); //#development
@@ -202,8 +202,10 @@ this.player = function(context){
             //if no particular playhead is selected, generate a new one
             //(unless we've already reached the concurrentPlayCountLimit)
                 if(playhead == undefined){
+                    dev.log.circuit('.player.start -> concurrentPlayCountLimit check:',state.concurrentPlayCountLimit != -1, state.playhead.length >= state.concurrentPlayCountLimit); //#development
                     if(state.concurrentPlayCountLimit != -1 && state.playhead.filter(() => true).length >= state.concurrentPlayCountLimit){ return -1; }
-
+                    dev.log.circuit('.player.start -> generating a new playhead'); //#development
+                    
                     playhead = generatePlayheadNumber();
                     state.playhead[playhead] = { position:0, lastSightingTime:0 };
                     dev.log.circuit('.player.start -> playhead: '+playhead); //#development
@@ -254,6 +256,9 @@ this.player = function(context){
             }
             dev.log.circuit('.player.resume('+playhead+')'); //#development
 
+            //if this playhead is already playing, don't start it again
+                if( state.playhead[playhead].playing ){return;}
+    
             this.start(playhead);
         };
         this.stop = function(playhead,callback){
@@ -264,6 +269,7 @@ this.player = function(context){
             dev.log.circuit('.player.stop('+playhead+','+callback+')'); //#development
 
             //check if we should stop at all (player must be playing)
+                dev.log.circuit('.player.stop -> playhead:',playhead,JSON.stringify(state.playhead[playhead])); //#development
                 if( state.playhead[playhead] == undefined || !state.playhead[playhead].playing ){return;}
             //actually stop the buffer and destroy it
                 flow.bufferSource[playhead].onended = callback;

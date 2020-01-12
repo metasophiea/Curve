@@ -296,7 +296,7 @@
         //for accepting the callback signals from the window's canvas
         communicationModule.function['callback.coupling_in.'+callbackName] = function(event){
             dev.log.service('.callback.coupling_in.'+callbackName+'(',event); //#development
-        dev.count('service-callback.coupling_in'); //#development
+            dev.count('service-callback.coupling_in'); //#development
             callback.coupling_in[callbackName](event);
         };
     });

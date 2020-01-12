@@ -224,6 +224,9 @@ this.list = function(
             },
             checkbox:{},
             button:{},
+            radio:{
+                arrowMux:subList_arrowMux,
+            },
             list:{
                 heightLimit:-1,
                 arrowMux:subList_arrowMux,
@@ -442,6 +445,111 @@ this.list = function(
                         function(){ if(item.function){item.function();} object.onrelease([index]); },
                         function(obj,event){ object.select(index,true,event,false);} ,
                         function(obj,event){ object.select(index,false,event,false); },
+                    );
+                }else if(item.type == 'radio'){
+                    newItem = self.list.itemTypes.radio(
+                        subListGroup,
+                        index, xOffset, output.calculatedListHeight,
+                                            
+                        //internal callbacks
+                            function(isOpen){
+                                if(!isOpen){return;}
+                                itemArray.forEach((item,a) => { if(list[a].type == 'list' && a != index && item.isOpen){ item.close(); } });
+                                return -state.position * (style.default.heightLimit > 0 && style.default.heightLimit < calculatedListHeight ? (calculatedListHeight-style.default.heightLimit) : calculatedListHeight);
+                            },
+
+                        //button
+                            def(item,'width'), def(item,'height'), 
+                    
+                            def(item,'itemHorizontalPadding'),
+                            (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                            def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'), def(item,'arrowMux'),
+                            item.active != undefined ? item.active : active, 
+                            item.hoverable != undefined ? item.hoverable : hoverable, 
+                            item.pressable != undefined ? item.pressable : pressable, 
+
+                            def(item,'text_colour__off'),
+                            def(item,'text_colour__up'),
+                            def(item,'text_colour__press'),
+                            def(item,'text_colour__select'),
+                            def(item,'text_colour__select_press'),
+                            def(item,'text_colour__glow'),
+                            def(item,'text_colour__glow_press'),
+                            def(item,'text_colour__glow_select'),
+                            def(item,'text_colour__glow_select_press'),
+                            def(item,'text_colour__hover'),
+                            def(item,'text_colour__hover_press'),
+                            def(item,'text_colour__hover_select'),
+                            def(item,'text_colour__hover_select_press'),
+                            def(item,'text_colour__hover_glow'),
+                            def(item,'text_colour__hover_glow_press'),
+                            def(item,'text_colour__hover_glow_select'),
+                            def(item,'text_colour__hover_glow_select_press'),
+                    
+                            def(item,'item__off__colour'),
+                            def(item,'item__off__lineColour'),
+                            def(item,'item__off__lineThickness'),
+                            def(item,'item__up__colour'),
+                            def(item,'item__up__lineColour'),
+                            def(item,'item__up__lineThickness'),
+                            def(item,'item__press__colour'),
+                            def(item,'item__press__lineColour'),
+                            def(item,'item__press__lineThickness'),
+                            def(item,'item__select__colour'),
+                            def(item,'item__select__lineColour'),
+                            def(item,'item__select__lineThickness'),
+                            def(item,'item__select_press__colour'),
+                            def(item,'item__select_press__lineColour'),
+                            def(item,'item__select_press__lineThickness'),
+                            def(item,'item__glow__colour'),
+                            def(item,'item__glow__lineColour'),
+                            def(item,'item__glow__lineThickness'),
+                            def(item,'item__glow_press__colour'),
+                            def(item,'item__glow_press__lineColour'),
+                            def(item,'item__glow_press__lineThickness'),
+                            def(item,'item__glow_select__colour'),
+                            def(item,'item__glow_select__lineColour'),
+                            def(item,'item__glow_select__lineThickness'),
+                            def(item,'item__glow_select_press__colour'),
+                            def(item,'item__glow_select_press__lineColour'),
+                            def(item,'item__glow_select_press__lineThickness'),
+                            def(item,'item__hover__colour'),
+                            def(item,'item__hover__lineColour'),
+                            def(item,'item__hover__lineThickness'),
+                            def(item,'item__hover_press__colour'),
+                            def(item,'item__hover_press__lineColour'),
+                            def(item,'item__hover_press__lineThickness'),
+                            def(item,'item__hover_select__colour'),
+                            def(item,'item__hover_select__lineColour'),
+                            def(item,'item__hover_select__lineThickness'),
+                            def(item,'item__hover_select_press__colour'),
+                            def(item,'item__hover_select_press__lineColour'),
+                            def(item,'item__hover_select_press__lineThickness'),
+                            def(item,'item__hover_glow__colour'),
+                            def(item,'item__hover_glow__lineColour'),
+                            def(item,'item__hover_glow__lineThickness'),
+                            def(item,'item__hover_glow_press__colour'),
+                            def(item,'item__hover_glow_press__lineColour'),
+                            def(item,'item__hover_glow_press__lineThickness'),
+                            def(item,'item__hover_glow_select__colour'),
+                            def(item,'item__hover_glow_select__lineColour'),
+                            def(item,'item__hover_glow_select__lineThickness'),
+                            def(item,'item__hover_glow_select_press__colour'),
+                            def(item,'item__hover_glow_select_press__lineColour'),
+                            def(item,'item__hover_glow_select_press__lineThickness'),
+                    
+                        //sub list
+                            item.options,
+                    
+                            item.itemWidth,
+                            def(item,'heightLimit'),
+                            def(item,'widthLimit'),
+                            def(item,'backgroundColour'),
+                            def(item,'backgroundMarkingColour'),
+                    
+                            def(item,'default_item_spacingHeight'),
+
+                            item.updateFunction, item.onclickFunction,
                     );
                 }else if(item.type == 'list'){
                     newItem = self.list.itemTypes.list(
@@ -1056,7 +1164,7 @@ this.list.itemTypes.checkbox = function(
 
     button.onpressrelease = function(){
         newItem.set(!newItem.state);
-        onclickFunction(newItem.state);
+        if(onclickFunction){onclickFunction(newItem.state);}
     };
 
     if(updateFunction != undefined){
@@ -1248,6 +1356,385 @@ this.list.itemTypes.button = function(
     });
 
     return {item:button_rectangle,height:height};
+};
+this.list.itemTypes.radio = function(
+    subListGroup,
+    index, x, y, 
+
+    //interal callbacks
+        buttonClick,
+    
+    //button
+        width, height,
+
+        itemHorizontalPadding, 
+        text_left, text_centre, text_right,
+        fontSize, font, spacing, interCharacterSpacing, arrowMux,
+        active, hoverable, pressable,
+
+        text_colour__off,
+        text_colour__up,
+        text_colour__press,
+        text_colour__select,
+        text_colour__select_press,
+        text_colour__glow,
+        text_colour__glow_press,
+        text_colour__glow_select,
+        text_colour__glow_select_press,
+        text_colour__hover,
+        text_colour__hover_press,
+        text_colour__hover_select,
+        text_colour__hover_select_press,
+        text_colour__hover_glow,
+        text_colour__hover_glow_press,
+        text_colour__hover_glow_select,
+        text_colour__hover_glow_select_press,
+
+        item__off__colour,
+        item__off__lineColour,
+        item__off__lineThickness,
+        item__up__colour,
+        item__up__lineColour,
+        item__up__lineThickness,
+        item__press__colour,
+        item__press__lineColour,
+        item__press__lineThickness,
+        item__select__colour,
+        item__select__lineColour,
+        item__select__lineThickness,
+        item__select_press__colour,
+        item__select_press__lineColour,
+        item__select_press__lineThickness,
+        item__glow__colour,
+        item__glow__lineColour,
+        item__glow__lineThickness,
+        item__glow_press__colour,
+        item__glow_press__lineColour,
+        item__glow_press__lineThickness,
+        item__glow_select__colour,
+        item__glow_select__lineColour,
+        item__glow_select__lineThickness,
+        item__glow_select_press__colour,
+        item__glow_select_press__lineColour,
+        item__glow_select_press__lineThickness,
+        item__hover__colour,
+        item__hover__lineColour,
+        item__hover__lineThickness,
+        item__hover_press__colour,
+        item__hover_press__lineColour,
+        item__hover_press__lineThickness,
+        item__hover_select__colour,
+        item__hover_select__lineColour,
+        item__hover_select__lineThickness,
+        item__hover_select_press__colour,
+        item__hover_select_press__lineColour,
+        item__hover_select_press__lineThickness,
+        item__hover_glow__colour,
+        item__hover_glow__lineColour,
+        item__hover_glow__lineThickness,
+        item__hover_glow_press__colour,
+        item__hover_glow_press__lineColour,
+        item__hover_glow_press__lineThickness,
+        item__hover_glow_select__colour,
+        item__hover_glow_select__lineColour,
+        item__hover_glow_select__lineThickness,
+        item__hover_glow_select_press__colour,
+        item__hover_glow_select_press__lineColour,
+        item__hover_glow_select_press__lineThickness,
+
+    //sub list
+        options, 
+
+        itemWidth,
+        heightLimit,
+        widthLimit,
+        backgroundColour,
+        backgroundMarkingColour,
+
+        default_item_spacingHeight,
+
+        updateFunction, onclickFunction,
+){
+    dev.log.partControl('.list.itemTypes.radio(...)'); //#development
+
+    const newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
+    const button = interfacePart.builder('control', 'button_rectangle', 'button', {
+        width:width, height:height,
+        text_left:text_left,
+        text_centre:text_centre,
+        text_right:text_right,
+
+        textVerticalOffsetMux:0.5, textHorizontalOffsetMux:itemHorizontalPadding/width,
+        active:active, hoverable:hoverable, selectable:true, pressable:pressable,
+
+        style:{
+            text_font:font,
+            text_size:fontSize,
+            text_spacing:spacing,
+            text_interCharacterSpacing:interCharacterSpacing,
+
+            text__off__colour:                                  text_colour__off,
+            text__up__colour:                                   text_colour__up,
+            text__press__colour:                                text_colour__press,
+            text__select__colour:                               text_colour__select,
+            text__select_press__colour:                         text_colour__select_press,
+            text__glow__colour:                                 text_colour__glow,
+            text__glow_press__colour:                           text_colour__glow_press,
+            text__glow_select__colour:                          text_colour__glow_select,
+            text__glow_select_press__colour:                    text_colour__glow_select_press,
+            text__hover__colour:                                text_colour__hover,
+            text__hover_press__colour:                          text_colour__hover_press,
+            text__hover_select__colour:                         text_colour__hover_select,
+            text__hover_select_press__colour:                   text_colour__hover_select_press,
+            text__hover_glow__colour:                           text_colour__hover_glow,
+            text__hover_glow_press__colour:                     text_colour__hover_glow_press,
+            text__hover_glow_select__colour:                    text_colour__hover_glow_select,
+            text__hover_glow_select_press__colour:              text_colour__hover_glow_select_press,
+
+            background__off__colour:                            item__off__colour,
+            background__off__lineColour:                        item__off__lineColour,
+            background__off__lineThickness:                     item__off__lineThickness,
+            background__up__colour:                             item__up__colour,
+            background__up__lineColour:                         item__up__lineColour,
+            background__up__lineThickness:                      item__up__lineThickness,
+            background__press__colour:                          item__press__colour,
+            background__press__lineColour:                      item__press__lineColour,
+            background__press__lineThickness:                   item__press__lineThickness,
+            background__select__colour:                         item__select__colour,
+            background__select__lineColour:                     item__select__lineColour,
+            background__select__lineThickness:                  item__select__lineThickness,
+            background__select_press__colour:                   item__select_press__colour,
+            background__select_press__lineColour:               item__select_press__lineColour,
+            background__select_press__lineThickness:            item__select_press__lineThickness,
+            background__glow__colour:                           item__glow__colour,
+            background__glow__lineColour:                       item__glow__lineColour,
+            background__glow__lineThickness:                    item__glow__lineThickness,
+            background__glow_press__colour:                     item__glow_press__colour,
+            background__glow_press__lineColour:                 item__glow_press__lineColour,
+            background__glow_press__lineThickness:              item__glow_press__lineThickness,
+            background__glow_select__colour:                    item__glow_select__colour,
+            background__glow_select__lineColour:                item__glow_select__lineColour,
+            background__glow_select__lineThickness:             item__glow_select__lineThickness,
+            background__glow_select_press__colour:              item__glow_select_press__colour,
+            background__glow_select_press__lineColour:          item__glow_select_press__lineColour,
+            background__glow_select_press__lineThickness:       item__glow_select_press__lineThickness,
+            background__hover__colour:                          item__hover__colour,
+            background__hover__lineColour:                      item__hover__lineColour,
+            background__hover__lineThickness:                   item__hover__lineThickness,
+            background__hover_press__colour:                    item__hover_press__colour,
+            background__hover_press__lineColour:                item__hover_press__lineColour,
+            background__hover_press__lineThickness:             item__hover_press__lineThickness,
+            background__hover_select__colour:                   item__hover_select__colour,
+            background__hover_select__lineColour:               item__hover_select__lineColour,
+            background__hover_select__lineThickness:            item__hover_select__lineThickness,
+            background__hover_select_press__colour:             item__hover_select_press__colour,
+            background__hover_select_press__lineColour:         item__hover_select_press__lineColour,
+            background__hover_select_press__lineThickness:      item__hover_select_press__lineThickness,
+            background__hover_glow__colour:                     item__hover_glow__colour,
+            background__hover_glow__lineColour:                 item__hover_glow__lineColour,
+            background__hover_glow__lineThickness:              item__hover_glow__lineThickness,
+            background__hover_glow_press__colour:               item__hover_glow_press__colour,
+            background__hover_glow_press__lineColour:           item__hover_glow_press__lineColour,
+            background__hover_glow_press__lineThickness:        item__hover_glow_press__lineThickness,
+            background__hover_glow_select__colour:              item__hover_glow_select__colour,
+            background__hover_glow_select__lineColour:          item__hover_glow_select__lineColour,
+            background__hover_glow_select__lineThickness:       item__hover_glow_select__lineThickness,
+            background__hover_glow_select_press__colour:        item__hover_glow_select_press__colour,
+            background__hover_glow_select_press__lineColour:    item__hover_glow_select_press__lineColour,
+            background__hover_glow_select_press__lineThickness: item__hover_glow_select_press__lineThickness,
+        },
+    });
+    newItem.append(button);
+    const arrow = interfacePart.builder('basic', 'polygon', 'arrow', {
+        pointsAsXYArray:[
+            {x:width-fontSize*arrowMux-itemHorizontalPadding,y:(height-fontSize*arrowMux)/2}, 
+            {x:width-fontSize*arrowMux-itemHorizontalPadding,y:(height+fontSize*arrowMux)/2}, 
+            {x:width-itemHorizontalPadding,y:height/2}
+        ],
+        colour:text_colour__up,
+    });
+    newItem.append(arrow);
+        const arrowState = { hovering:false, glowing:false, selected:false, pressed:false };
+        function updateArrowColour(){
+            if(!active){ arrow.colour(text_colour__off); return; }
+
+            const styles = [
+                text_colour__up,
+                text_colour__press,
+                text_colour__select,
+                text_colour__select_press,
+                text_colour__glow,
+                text_colour__glow_press,
+                text_colour__glow_select,
+                text_colour__glow_select_press,
+                text_colour__hover,
+                text_colour__hover_press,
+                text_colour__hover_select,
+                text_colour__hover_select_press,
+                text_colour__hover_glow,
+                text_colour__hover_glow_press,
+                text_colour__hover_glow_select,
+                text_colour__hover_glow_select_press,
+            ];
+
+            if(!hoverable && arrowState.hovering ){ arrowState.hovering = false; }
+
+            const i = arrowState.hovering*8 + arrowState.glowing*4 + arrowState.selected*2 + (pressable && arrowState.pressed)*1;
+            arrow.colour(styles[i]);
+        } updateArrowColour();
+        button.onenter = function(){arrowState.hovering = true; updateArrowColour();};
+        button.onleave = function(){arrowState.hovering = false; updateArrowColour();};
+        button.onpress = function(){arrowState.pressed = true; updateArrowColour();};
+        button.onrelease = function(){arrowState.pressed = false; updateArrowColour();};
+
+    let sublist;
+
+    function selectOption(number){
+        sublist.getChildByName('stenciledGroup').getChildByName('itemCollection').getChildren().forEach((checkbox,index) => {
+            if(number == index){return;}
+            checkbox.set(false);
+        });
+        if(onclickFunction){onclickFunction(number);}
+    }
+
+    newItem.open = function(yOffset){
+        if(this.isOpen){return;}
+        this.isOpen = true;
+        button.select(true);
+
+        const list = options.map((option,index) => {
+            return {
+                type:'checkbox',
+                text:option,
+                onclickFunction:function(val){
+                    if(!val){
+                        sublist.getChildByName('stenciledGroup').getChildByName('itemCollection').getChildren()[index].set(true);
+                    }
+                    selectOption(index);
+                },
+            };
+        });
+
+        sublist = interfacePart.builder('control', 'list', 'list', {
+            x:x+width, y:y+yOffset, list:list,
+
+            heightLimit:heightLimit,
+            widthLimit:widthLimit,
+            backgroundColour:backgroundColour,
+            backgroundMarkingColour:backgroundMarkingColour,
+        
+            default_item_height:height,
+            default_item_width:itemWidth!=undefined?itemWidth:width,
+            default_item_spacingHeight:default_item_spacingHeight,
+            default_item_horizontalPadding:itemHorizontalPadding,
+        
+            default_text__text:text_left,
+            default_text__font:font,
+            default_text__fontSize:fontSize,
+            default_text__printingMode:undefined,
+            default_text__spacing:spacing,
+            default_text__interCharacterSpacing:interCharacterSpacing,
+
+            default_text_colour__off:text_colour__off,
+            default_text_colour__up:text_colour__up,
+            default_text_colour__press:text_colour__press,
+            default_text_colour__select:text_colour__select,
+            default_text_colour__select_press:text_colour__select_press,
+            default_text_colour__glow:text_colour__glow,
+            default_text_colour__glow_press:text_colour__glow_press,
+            default_text_colour__glow_select:text_colour__glow_select,
+            default_text_colour__glow_select_press:text_colour__glow_select_press,
+            default_text_colour__hover:text_colour__hover,
+            default_text_colour__hover_press:text_colour__hover_press,
+            default_text_colour__hover_select:text_colour__hover_select,
+            default_text_colour__hover_select_press:text_colour__hover_select_press,
+            default_text_colour__hover_glow:text_colour__hover_glow,
+            default_text_colour__hover_glow_press:text_colour__hover_glow_press,
+            default_text_colour__hover_glow_select:text_colour__hover_glow_select,
+            default_text_colour__hover_glow_select_press:text_colour__hover_glow_select_press,
+      
+            default_item__off__colour:item__off__colour,
+            default_item__off__lineColour:item__off__lineColour,
+            default_item__off__lineThickness:item__off__lineThickness,
+            default_item__up__colour:item__up__colour,
+            default_item__up__lineColour:item__up__lineColour,
+            default_item__up__lineThickness:item__up__lineThickness,
+            default_item__press__colour:item__press__colour,
+            default_item__press__lineColour:item__press__lineColour,
+            default_item__press__lineThickness:item__press__lineThickness,
+            default_item__select__colour:item__select__colour,
+            default_item__select__lineColour:item__select__lineColour,
+            default_item__select__lineThickness:item__select__lineThickness,
+            default_item__select_press__colour:item__select_press__colour,
+            default_item__select_press__lineColour:item__select_press__lineColour,
+            default_item__select_press__lineThickness:item__select_press__lineThickness,
+            default_item__glow__colour:item__glow__colour,
+            default_item__glow__lineColour:item__glow__lineColour,
+            default_item__glow__lineThickness:item__glow__lineThickness,
+            default_item__glow_press__colour:item__glow_press__colour,
+            default_item__glow_press__lineColour:item__glow_press__lineColour,
+            default_item__glow_press__lineThickness:item__glow_press__lineThickness,
+            default_item__glow_select__colour:item__glow_select__colour,
+            default_item__glow_select__lineColour:item__glow_select__lineColour,
+            default_item__glow_select__lineThickness:item__glow_select__lineThickness,
+            default_item__glow_select_press__colour:item__glow_select_press__colour,
+            default_item__glow_select_press__lineColour:item__glow_select_press__lineColour,
+            default_item__glow_select_press__lineThickness:item__glow_select_press__lineThickness,
+            default_item__hover__colour:item__hover__colour,
+            default_item__hover__lineColour:item__hover__lineColour,
+            default_item__hover__lineThickness:item__hover__lineThickness,
+            default_item__hover_press__colour:item__hover_press__colour,
+            default_item__hover_press__lineColour:item__hover_press__lineColour,
+            default_item__hover_press__lineThickness:item__hover_press__lineThickness,
+            default_item__hover_select__colour:item__hover_select__colour,
+            default_item__hover_select__lineColour:item__hover_select__lineColour,
+            default_item__hover_select__lineThickness:item__hover_select__lineThickness,
+            default_item__hover_select_press__colour:item__hover_select_press__colour,
+            default_item__hover_select_press__lineColour:item__hover_select_press__lineColour,
+            default_item__hover_select_press__lineThickness:item__hover_select_press__lineThickness,
+            default_item__hover_glow__colour:item__hover_glow__colour,
+            default_item__hover_glow__lineColour:item__hover_glow__lineColour,
+            default_item__hover_glow__lineThickness:item__hover_glow__lineThickness,
+            default_item__hover_glow_press__colour:item__hover_glow_press__colour,
+            default_item__hover_glow_press__lineColour:item__hover_glow_press__lineColour,
+            default_item__hover_glow_press__lineThickness:item__hover_glow_press__lineThickness,
+            default_item__hover_glow_select__colour:item__hover_glow_select__colour,
+            default_item__hover_glow_select__lineColour:item__hover_glow_select__lineColour,
+            default_item__hover_glow_select__lineThickness:item__hover_glow_select__lineThickness,
+            default_item__hover_glow_select_press__colour:item__hover_glow_select_press__colour,
+            default_item__hover_glow_select_press__lineColour:item__hover_glow_select_press__lineColour,
+            default_item__hover_glow_select_press__lineThickness:item__hover_glow_select_press__lineThickness,
+        });
+        subListGroup.append(sublist);
+
+        if( updateFunction ){
+            sublist.getChildByName('stenciledGroup').getChildByName('itemCollection').getChildren()[updateFunction()].set(true);
+        }else{
+            sublist.getChildByName('stenciledGroup').getChildByName('itemCollection').getChildren()[0].set(true);
+        }
+    };
+    newItem.close = function(){
+        if(!this.isOpen){return;}
+        this.isOpen = false;
+        button.select(false);
+
+        subListGroup.remove(sublist);
+    };
+
+    button.onselect = function(){
+        const yOffset = buttonClick(true);
+        newItem.open(yOffset);
+        arrowState.selected = true; 
+        updateArrowColour();
+    };
+    button.ondeselect = function(){
+        buttonClick(false);
+        newItem.close();
+        arrowState.selected = false; 
+        updateArrowColour();
+    };
+
+    return {item:newItem,height:height};
 };
 this.list.itemTypes.list = function(
     subListGroup,

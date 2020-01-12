@@ -33,9 +33,6 @@ _canvas_.curve.go.add( function(){
 
     // _canvas_.control.scene.addUnit(-10,-10,0,'ruler','alpha');
 
-
-
-
     // _canvas_.control.viewport.scale(6.5);
     _canvas_.control.viewport.position(300, 200);
 });
