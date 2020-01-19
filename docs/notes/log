@@ -1,6 +1,66 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-01-19
+  - completed the switch of the mrd-16 image files (just deleting the old ones
+    and changing the names of the folders)
+
+
+2020-01-18
+  - updated the artwork for the dsds-8 and mrd-16 (making them both about 1.5
+    times bigger)
+  - removed the "change output type" hotkey button from the mrd-16 because it's
+    too much of a risk to have around and you'll never need it that often or
+    quickly
+  - added hotkeys to the dsds-8
+  - in a bid to remove the need for the heavyComp script to rename all
+    instances of 'static' to '_static'; I've refactored core-engine a little
+    to remove the uses of the 'static'  variable, replacing it with "isStatic"
+    (though not the method, which hasn't changed)
+    There's still not a lot working elsewhere in the project, which will need
+    renaming. The regular version still works fine, but Closure can't deal
+    with it
+
+
+2020-01-17
+  - created the amplitudeModifier circuit
+  - created the momentaryAmplitudeMeter circuit
+
+
+2020-01-16
+  - adding all kinds of crazy audioWorklets (in a developmental sense)
+  - updated the AudioWorkletNode maker so that one can define the options in
+    the array, with the name and blob
+  - renamed "AudioWorkletProcessor" of library.audio, to "audioWorklet"
+
+
+2020-01-14
+  - updated the unload warning to include refreshing the page
+  - added an option to curve's menubar's dev setion to reactivate the unload
+    protection (it's off by default while in dev mode)
+
+
+2020-01-13
+  - shifted the audioWorkletProcessor section into the library, rearranging the
+    audio subsection as I went. audioWorkletProcessors are now loaded and
+    automatically get their own 'context.create' method (eg. bitcrusher ->
+    context.createBitcrusher)
+  - fixed issue in detectIntersect.lineOnPoly (for situations where a line was
+    going from a point on the poly, through it, accross another point on the
+    poly then to an outside point)
+  - moved the old development units to the trash. Tis a sad day
+  - renamed the 'workshop' unit collection to the 'development' unit
+    collection
+  - changed the key name of the newer 'dsds-8^3_2' to '_dsds-8^3_2' so that it
+    doesn't show up in the menubar list
+  - added "Reset Viewport" option to the Tools dropdown menu
+
+
+2020-01-12
+  - more drawing
+
+
 2020-01-11
   - updated the presets of the dsds-8^3, also fixed up some bugs with the unit
+  - began redrawing of Harbinger units to make the ~1.5 times bigger
 
 
 2020-01-10

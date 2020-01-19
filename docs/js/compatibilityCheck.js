@@ -19,14 +19,13 @@ let errorData = {
     }
 
     {
-        const blob = new Blob([
-            "try{"+
-            "   requestAnimationFrame;"+
-            "}catch(error){"+
-            "   self.postMessage(''+error);"+
-            "}"+
-            ""
-        ], { type: "text/javascript" });
+        const blob = new Blob([`
+            try{
+                requestAnimationFrame;
+            }catch(error){
+                self.postMessage(String(error));
+            }
+        `], { type: "text/javascript" });
         const worker = new Worker(window.URL.createObjectURL(blob));
         worker.onmessage = function(data){
             errorData.type = 'requestAnimationFrame';

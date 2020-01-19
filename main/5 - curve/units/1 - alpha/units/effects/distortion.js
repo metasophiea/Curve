@@ -83,7 +83,7 @@ this.distortion = function(name,x,y,angle){
         });
 
     //circuitry
-        distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
+        const distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
 
     //wiring
         //hid

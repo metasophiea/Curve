@@ -65,7 +65,8 @@ echo "running Closure"
         #make the following changes:
         #   static => _static
         #   interface => _interface
-            cat "$dir"/../docs/js/$name.min.js | sed -e "s/static/_static/g" -e "s/interface/_interface/g" > "$dir"/../docs/js/$name.min.tmp.js
+            # cat "$dir"/../docs/js/$name.min.js | sed -e "s/static/_static/g" -e "s/interface/_interface/g" > "$dir"/../docs/js/$name.min.tmp.js
+            cat "$dir"/../docs/js/$name.min.js | sed -e "s/interface/_interface/g" > "$dir"/../docs/js/$name.min.tmp.js
             mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
 
         #push temp file through closure then delete

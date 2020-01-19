@@ -1,36 +1,84 @@
-alpha units
-    audioEffectUnits
-        distortionUnit
-        filterUnit
-        multibandFilter
-        reverbUnit
-    audioFile
-        looper
-        oneShot_multi_multiTrack
-        oneShot_multi
-        oneShot_single
-        player
-        recorder
-    humanInputDevices
-        audioIn
-        musicalKeyboard
-    humanOutputDevices
-        audioScope
-        audioSink
-    misc
-        audio_duplicator
-        basicMixer
-        data_duplicator
-        pulseGenerator_hyper
-        pulseGenerator
-        universalReadout
-    sequencers
-        basicSequencer_midiOut
-        basicSequencer
-        launchpad
-    synthesizers
-        basicSynthesizer_img
-        basicSynthesizer
+Alpha
+    Monitors
+        Amplifer
+        Audio Recorder
+        Audio Scope
+        Data Readout
+        Signal Readout
+        Voltage Readout
+    Human Interface Devies
+        Audio In
+        Musical Keyboard
+        Signal Switch
+        Voltage Dial
+    Sequencers
+        Eight Step Sequencer
+        Launchpad
+        Pulse Generator
+    Synthesizers
+        Audio File Player
+        Basic Synthesizer
+    Effect Units
+        Distortion
+        Filter
+        Reverb
+    Tools
+        Ruler
+    Miscellaneous
+        Audio Duplicator
+        Data Combiner
+        Data Duplicator
+        Eight Track
+        Signal Combiner
+        Signal Duplicator
+        Voltage Combiner
+        Voltage Duplicator
+        _ Periodic Wave Designer (with display)
+
+curveTech
+    Interface
+        Button Panel - Type A
+        Button Panel - Type B
+        Button Panel - Type C
+        Button Panel - Type D
+        Light Panel - Type A
+        Light Panel - Type B
+        Light Panel - Type C
+        Multi Option Signal Sender - Type A
+        Multi Option Signal Sender - Type B
+        Multi Option Signal Sender - Type C
+    Logic Gates
+        AND
+        DUP
+        NAN
+        NOR
+        NOT
+        OR
+        REP
+        XNO
+        XOR
+    Devices
+        Adder
+        Demultiplexer - Type A
+        Demultiplexer - Type B
+        Demultiplexer - Type C
+        Multiplexer - Type A
+        Multiplexer - Type B
+        Multiplexer - Type C
+        Single Bit Memory
+
+Harbinger
+    DSDS-8^3 (Digital Sample Drum Set 8 channel)
+    MRD-16 (Mini Rhythm Designer 16 step)
+    _ RDP-32 (Rhythm Designer Pro 32 step)
+
+
+    _ Bitcrusher
+    _ Amplitude Modifier (invert, offset, divideBy)
+    _ Amplitude Peak Attenuator
+    _ Momentary Amplitude Meter
+    _ Amplitude Controled Modulator (Modulon)
+    _ Frequency Response Workstation
 
 
 
@@ -42,12 +90,27 @@ alpha units
 
 
 
-        
 
 
 
 
-future units
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+future unit ideas
     potential brand or model names
         walsh electronics
         [BLOCK]
@@ -56,8 +119,8 @@ future units
         Riven
         milk
         Audio Research Technologies (ART)
-        Accoustic Labratories LLC (ALL)
-        Accoustic Research
+        Acoustic Labratories LLC (ALL)
+        Acoustic Research
         Sonic Sandbox
         Soundbox
         Anderson Electronics
@@ -75,6 +138,7 @@ future units
 
         Supernova : synthesizer
         Kizboc : synthesizer
+
 
     potential units
         (aside from variations on the above)
@@ -105,7 +169,7 @@ future units
         signal->data activator (with area for writing in what the data message should be)
         data->voltage activator (must recieve correct instruction)
         signal->data multi-signal encoder
-        data->signal multi-signal decoder
+        data->signal multi-signal decoder (the musical keyboard sort of already does this)
 
         custom wave designer (with disks that you can slot into other units)
             Function generator
@@ -124,8 +188,9 @@ future units
         chorus audio effect unit
         compressor audio effect unit (and/or/as-in the s-wave audio value corrector)
         multi-band distortion box
-        bit crusher
+        bitcrusher
         amplitude modulator
+        waveform inverter
         (some of these could use AudioWorkletProcessor-based custom audio nodes)
 
         tuner (like the one on the phone)
@@ -141,28 +206,6 @@ future units
         signal tempo multiplier (predictive tempo generator from input)
 
         printer (saves to file)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

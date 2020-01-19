@@ -7,11 +7,11 @@ this['mrd-16'] = function(name,x,y,angle){
             //calculation of measurements
                 const div = 10;
                 const measurement = { 
-                    file: { width:2500, height:520 },
-                    design: { width:25+0.5, height:5.2+0.2 },
+                    file: { width:3450, height:790 },
+                    design: { width:33.5, height:7.5 },
                 };
 
-                this.offset = {x:2.5,y:1};
+                this.offset = {x:5,y:2};
                 this.drawingValue = { 
                     width: measurement.file.width/div, 
                     height: measurement.file.height/div
@@ -47,16 +47,16 @@ this['mrd-16'] = function(name,x,y,angle){
                 (new Array(8)).fill().flatMap((item,index) => {
                     return [
                         {collection:'dynamic', type:'connectionNode_signal', name:'signal_out_'+index, data:{ 
-                            x:5 + index*20, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                            x:18 - (10/2) + index*30, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                         }},
                         {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_out_'+index, data:{ 
-                            x:5 + index*20, y:0, width:0, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                            x:18 - (10/2) + index*30, y:0, width:0, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
                         }},
                     ];
                 }).concat(
                     [
                         {collection:'dynamic', type:'connectionNode_signal', name:'pulseIn', data:{ 
-                            x:unitStyle.drawingValue.width - unitStyle.offset.x, y:30, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                            x:unitStyle.drawingValue.width - unitStyle.offset.x, y:50, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
                         }},
 
                         {collection:'basic', type:'image', name:'backing', 
@@ -64,14 +64,14 @@ this['mrd-16'] = function(name,x,y,angle){
                         },
 
                         {collection:'control', type:'button_image', name:'signal', data:{
-                            x:5, y:7.5, width:6, height:15, hoverable:false,
+                            x:10, y:13, width:8, height:20, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
                             backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
                             backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
                         }},
                         {collection:'control', type:'button_image', name:'voltage', data:{
-                            x:14, y:7.5, width:6, height:15, hoverable:false,
+                            x:22, y:13, width:8, height:20, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
                             backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
@@ -79,49 +79,49 @@ this['mrd-16'] = function(name,x,y,angle){
                         }},
 
                         {collection:'control', type:'button_image', name:'channel_left', data:{
-                            x:23, y:7.5, width:6, height:15, hoverable:false,
+                            x:34, y:13, width:8, height:20, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_row_up.png',
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_row_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'channel_right', data:{
-                            x:38, y:22.5, width:6, height:15, angle:Math.PI, hoverable:false,
+                            x:46+8, y:13+20, width:8, height:20, angle:Math.PI, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_row_up.png',
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_row_down.png',
                         }},
                         {collection:'control', type:'checkbox_image', name:'unify', data:{
-                            x:41, y:7.5, width:6, height:15,
+                            x:58, y:13, width:8, height:20,
                             checkURL:unitStyle.imageStoreURL_localPrefix+'button_unify_on.png',
                             uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_unify_off.png',
                         }},
                         {collection:'control', type:'button_image', name:'page_up', data:{
-                            x:50, y:7.5, width:15, height:6, hoverable:false,
+                            x:70, y:13, width:20, height:8, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_up_up.png',
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_up_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'page_down', data:{
-                            x:50, y:16.5, width:15, height:6, hoverable:false,
+                            x:70, y:25, width:20, height:8, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_down_up.png',
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_down_down.png',
                         }},
                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
-                            x:68.5, y:8, width:7, height:14, static:true, resolution:5,
+                            x:94.5, y:13.5, width:11, height:19, static:true, resolution:5,
                         }},
                         {collection:'control', type:'button_image', name:'clear', data:{
-                            x:79, y:7.5, width:6, height:15, hoverable:false,
+                            x:110, y:13, width:8, height:20, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_clear_up.png',
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_clear_down.png',
                         }},
                         {collection:'control', type:'dial_discrete_image', name:'releaseLength', data:{
-                            x:95.5, y:15, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
+                            x:132, y:23, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
                             handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
                         }},
                         {collection:'control', type:'button_image', name:'step', data:{
-                            x:106, y:7.5, width:15, height:15, hoverable:false,
+                            x:146, y:13, width:20, height:20, hoverable:false,
                             backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_step_up.png',
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_step_down.png',
                         }},
                         {collection:'control', type:'dial_discrete_image', name:'direction', data:{
-                            x:131.75, y:15, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
+                            x:180, y:23, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
                             handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
                         }},
                     ]
@@ -129,7 +129,7 @@ this['mrd-16'] = function(name,x,y,angle){
                     (new Array(16)).fill().flatMap((item,index) => {
                         return [
                             {collection:'display', type:'glowbox_rectangle', name:'selectorStepLED_'+index, data:{
-                                x:7.5 + index*15, y:45, width:5, height:2.5, style:unitStyle.selectorStepLEDstyle,
+                                x:17.5 - (5/2) + index*20, y:69, width:5, height:2.5, style:unitStyle.selectorStepLEDstyle,
                             }},
                         ];
                     })
@@ -137,7 +137,7 @@ this['mrd-16'] = function(name,x,y,angle){
                     (new Array(8)).fill().flatMap((item,index) => {
                         return [
                             {collection:'display', type:'glowbox_path', name:'channelLED_'+index, data:{
-                                x:5 + index*20, y:3.5, points:[{x:0,y:0},{x:10,y:0}], capType:'round', style:unitStyle.channelLEDstyle
+                                x:10.5 + index*30, y:6.5, thickness:1.5, points:[{x:0,y:0},{x:15,y:0}], capType:'round', style:unitStyle.channelLEDstyle
                             }},
                         ]
                     })
@@ -145,36 +145,36 @@ this['mrd-16'] = function(name,x,y,angle){
                     (new Array(4)).fill().flatMap((item,index) => {
                         return [
                             {collection:'control', type:'button_image', name:'selector_'+index, data:{
-                                x:5 + index*15, y:25, width:10, height:20, hoverable:false,
+                                x:10 + index*20, y:39, width:15, height:30, hoverable:false,
                                 backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_1_up.png',
                                 backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_1_down.png',
                             }},
                             {collection:'display', type:'glowbox_circle', name:'selectorLED_'+index, data:{
-                                x:10 + index*15, y:30, radius:2, style:unitStyle.selectorLEDstyle,
+                                x:17.5 + index*20, y:47.5, radius:3, style:unitStyle.selectorLEDstyle,
                             }},
                             {collection:'control', type:'button_image', name:'selector_'+(index+4), data:{
-                                x:5 + (index+4)*15, y:25, width:10, height:20, hoverable:false,
+                                x:10 + (index+4)*20, y:39, width:15, height:30, hoverable:false,
                                 backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_2_up.png',
                                 backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_2_down.png',
                             }},
                             {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+4), data:{
-                                x:10 + (index+4)*15, y:30, radius:2, style:unitStyle.selectorLEDstyle,
+                                x:17.5 + (index+4)*20, y:47.5, radius:3, style:unitStyle.selectorLEDstyle,
                             }},
                             {collection:'control', type:'button_image', name:'selector_'+(index+8), data:{
-                                x:5 + (index+8)*15, y:25, width:10, height:20, hoverable:false,
+                                x:10 + (index+8)*20, y:39, width:15, height:30, hoverable:false,
                                 backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_3_up.png',
                                 backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_3_down.png',
                             }},
                             {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+8), data:{
-                                x:10 + (index+8)*15, y:30, radius:2, style:unitStyle.selectorLEDstyle,
+                                x:17.5 + (index+8)*20, y:47.5, radius:3, style:unitStyle.selectorLEDstyle,
                             }},
                             {collection:'control', type:'button_image', name:'selector_'+(index+12), data:{
-                                x:5 + (index+12)*15, y:25, width:10, height:20, hoverable:false,
+                                x:10 + (index+12)*20, y:39, width:15, height:30, hoverable:false,
                                 backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_4_up.png',
                                 backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_4_down.png',
                             }},
                             {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+12), data:{
-                                x:10 + (index+12)*15, y:30, radius:2, style:unitStyle.selectorLEDstyle,
+                                x:17.5 + (index+12)*20, y:47.5, radius:3, style:unitStyle.selectorLEDstyle,
                             }},
                         ];
                     })
@@ -421,24 +421,62 @@ this['mrd-16'] = function(name,x,y,angle){
                     case '-': object.elements.dial_discrete_image.direction.nudge(-1); break;
                     case '=': object.elements.dial_discrete_image.direction.nudge(1);  break;
 
-                    case '.': 
-                        if(state.outputMode == 'signal'){ setOutputConnectionNodes('voltage'); }
-                        else if(state.outputMode == 'voltage'){ setOutputConnectionNodes('signal'); }
-                    break;
                     case '/': object.elements.checkbox_image.unify.toggle(); break;
                     case ';': object.elements.button_image.clear.press(); break;
                     case 'Enter': step(); break;
 
-                    case 'q': state.channel[state.currentChannel].currentPage = 0; refreshLEDS(); break;
-                    case 'w': state.channel[state.currentChannel].currentPage = 1; refreshLEDS(); break;
-                    case 'e': state.channel[state.currentChannel].currentPage = 2; refreshLEDS(); break;
-                    case 'r': state.channel[state.currentChannel].currentPage = 3; refreshLEDS(); break;
-                    case 't': state.channel[state.currentChannel].currentPage = 4; refreshLEDS(); break;
-                    case 'y': state.channel[state.currentChannel].currentPage = 5; refreshLEDS(); break;
-                    case 'u': state.channel[state.currentChannel].currentPage = 6; refreshLEDS(); break;
-                    case 'i': state.channel[state.currentChannel].currentPage = 7; refreshLEDS(); break;
-                    case 'o': state.channel[state.currentChannel].currentPage = 8; refreshLEDS(); break;
-                    case 'p': state.channel[state.currentChannel].currentPage = 9; refreshLEDS(); break;
+                    case 'q': 
+                        state.channel[state.currentChannel].currentPage = 0;
+                        if(state.unifyChannels){
+                            state.channel.forEach( a => {a.currentPage = 0;} );
+                        }
+                        refreshLEDS();
+                    break;
+                    case 'w': 
+                        state.channel[state.currentChannel].currentPage = 1;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 1;} ); }
+                        refreshLEDS();
+                    break;
+                    case 'e': 
+                        state.channel[state.currentChannel].currentPage = 2;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 2;} ); }
+                        refreshLEDS();
+                    break;
+                    case 'r': 
+                        state.channel[state.currentChannel].currentPage = 3;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 3;} ); }
+                        refreshLEDS();
+                    break;
+                    case 't': 
+                        state.channel[state.currentChannel].currentPage = 4;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 4;} ); }
+                        refreshLEDS();
+                    break;
+                    case 'y': 
+                        state.channel[state.currentChannel].currentPage = 5;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 5;} ); }
+                        refreshLEDS();
+                    break;
+                    case 'u': 
+                        state.channel[state.currentChannel].currentPage = 6;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 6;} ); }
+                        refreshLEDS();
+                    break;
+                    case 'i': 
+                        state.channel[state.currentChannel].currentPage = 7;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 7;} ); }
+                        refreshLEDS();
+                    break;
+                    case 'o': 
+                        state.channel[state.currentChannel].currentPage = 8;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 8;} ); }
+                        refreshLEDS();
+                    break;
+                    case 'p': 
+                        state.channel[state.currentChannel].currentPage = 9;
+                        if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 9;} ); }
+                        refreshLEDS();
+                    break;
 
                     case 'a': object.elements.button_image['selector_0'].press();  break;
                     case 's': object.elements.button_image['selector_1'].press();  break;

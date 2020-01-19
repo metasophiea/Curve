@@ -33,7 +33,7 @@
     there was an issue with how group bounding boxes were being calculated in the engine (log:2020-01-02)
 [2020-01-02:3] i's are missing their dots now?
     misuse of detectIntersect.polyOnPoly (log:2020-01-02)
-[2020-01-03:1] core's image element seems to be requesting image data is had in the past again from the server.. there should be some system to store the last N image data files, and/or a central repository of them
+[2020-01-03:1] core's image element seems to be requesting image data it had in the past again from the server.. there should be some system to store the last N image data files, and/or a central repository of them
     (log:2020-01-06) modifications made to core-engine's image element to stop this
 [2020-01-06:1] parts hidden behind the main grapple element in a unit are still accessible (at least, the connection nodes are)
     the image isn't the main grapple. The space is the main grapple, and that's always placed as the furthest back element in the unit's group. Thus this isn't a bug 

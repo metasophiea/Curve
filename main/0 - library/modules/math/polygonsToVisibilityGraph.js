@@ -13,7 +13,7 @@ this.polygonsToVisibilityGraph = function(polys){
     graph.forEach((graphPoint_source,index_source) => {
         graph.forEach((graphPoint_destination,index_destination) => {
             if(index_source == index_destination){return;}
-            // if( index_source != 4 ){return;} if( index_destination != 1 ){return;}
+            // if( index_source != 4 ){return;} if( index_destination != 2 ){return;}
 
             const route_source = graphPoint_source.polyIndex+'_'+graphPoint_source.pointIndex;
             const route_destination = graphPoint_destination.polyIndex+'_'+graphPoint_destination.pointIndex;
@@ -29,7 +29,7 @@ this.polygonsToVisibilityGraph = function(polys){
             //scan route
             let addRoute = true;
             for(let a = 0; a < polys.length; a++){
-                dev.log.math('.polygonsToVisibilityGraph -> testing polygon:',a,polys[a]); //#development
+                dev.log.math('.polygonsToVisibilityGraph -> testing polygon:',a,':',polys[a]); //#development
                 const result = library.math.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a] );
                 dev.log.math('.polygonsToVisibilityGraph -> result:',result); //#development
                 if( result.intersect ){

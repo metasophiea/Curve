@@ -3,7 +3,7 @@
 {{include:../../main/2 - system/main.js}}
 {{include:../../main/3 - interface/main.js}}
 
-{{include:1.js}} //test of the player circuit
+// {{include:1.js}} //test of the player circuit
 // {{include:2.js}} //test of basic parts
 // {{include:3.js}} //test of display parts
 // {{include:4.js}} //test of control parts

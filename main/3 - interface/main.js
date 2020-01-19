@@ -1,5 +1,5 @@
 _canvas_.interface = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:10} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:17} };
     const interface = this;
 
     const dev = {
@@ -29,9 +29,6 @@ _canvas_.interface = new function(){
         this.__activate = function(){ functionList.forEach(f => f()); };
     };
 
-    this.audioWorkletProcessor = new function(){
-        {{include:audioWorkletProcessor/main.js}}
-    };
     this.circuit = new function(){
         {{include:circuit}}
     };

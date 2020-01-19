@@ -241,6 +241,7 @@ this.detectIntersect = new function(){
         function huntForIntersection(line,polyPoints){
             dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection(',line,polyPoints); //#development
             for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
+                dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> line:',line,'polyPoints[a]:',polyPoints[a],'polyPoints[b]:',polyPoints[b]); //#development
                 const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
                 dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> result:',result); //#development
                 if(result.contact){
@@ -249,19 +250,26 @@ this.detectIntersect = new function(){
                         output.intersect = true;
                     }
 
-                    if( result.x2 != undefined ){
-                        if( output.points.find(item => item.x == result.x1 && item.y == result.y1 ) == undefined ){
-                            output.points.push({x:result.x1,y:result.y1});
-                        }
-                        if( output.points.find(item => item.x == result.x2 && item.y == result.y2 ) == undefined ){
-                            output.points.push({x:result.x2,y:result.y2});
-                        }
-                        break;
+                    if( result.x != undefined && (result.x != line[0].x && result.x != line[1].x) ){
+                        dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> odd contact'); //#development
+                        output.intersect = true;
                     }
 
-                    if( output.points.find(item => item.x == result.x && item.y == result.y ) == undefined ){
-                        output.points.push({x:result.x,y:result.y});
-                    }
+                    //if the result is a range of values, add the ends of this range
+                        if( result.x2 != undefined ){
+                            if( output.points.find(item => item.x == result.x1 && item.y == result.y1 ) == undefined ){
+                                output.points.push({x:result.x1,y:result.y1});
+                            }
+                            if( output.points.find(item => item.x == result.x2 && item.y == result.y2 ) == undefined ){
+                                output.points.push({x:result.x2,y:result.y2});
+                            }
+                            break;
+                        }
+
+                    //add point, but don't add duplicate points
+                        if( output.points.find(item => item.x == result.x && item.y == result.y ) == undefined ){
+                            output.points.push({x:result.x,y:result.y});
+                        }
                 }
             }
 

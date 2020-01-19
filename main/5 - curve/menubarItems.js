@@ -175,6 +175,10 @@ _canvas_.control.go.add( function(){
                             _canvas_.control.mouseWheelMode = ['magic','clickyWheel'][value];
                         }
                     },
+                    {type:'button', text_left:'Reset Viewport', function:function(){
+                        _canvas_.control.viewport.position(0,0);
+                        _canvas_.control.viewport.scale(1);
+                    } },
                 ]
             }
         );
@@ -213,6 +217,10 @@ _canvas_.control.go.add( function(){
                         {type:'checkbox', text_left:'Limit Frame Rate (30fps)', 
                             updateFunction:_canvas_.core.render.activeLimitToFrameRate, 
                             onclickFunction:function(val){_canvas_.core.render.activeLimitToFrameRate(val);}
+                        },
+                        { type:'checkbox', text:'No Unload Warning', 
+                            updateFunction:function(){return !_canvas_.control.interaction.unloadWarning(); }, 
+                            onclickFunction:function(val){ _canvas_.control.interaction.unloadWarning(!val); }
                         },
                         {type:'break'}
                     ].concat(

@@ -177,4 +177,4 @@
 - redo Alpha collection to be in the 100x100 pixel-per-cm resolution (and probably in a slightly different style that is less similar to any other collection)
 - connection nodes reveal text when moused over (to say what they're named or if they are an input or output)
 - some way of telling when a file is being loaded and the user just needs to wait
-- list part radio-selector item
+- networking cable for all units which uses the interface, to allow units to be computer controllled (whenever the computer unit gets made)

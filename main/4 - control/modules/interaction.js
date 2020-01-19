@@ -25,3 +25,8 @@ this.interaction = new function(){
         };
     });
 };
+
+window.onbeforeunload = function(){ 
+    if(!interactionState.unloadWarning){ return; }
+    return "Unsaved work will be lost";
+};

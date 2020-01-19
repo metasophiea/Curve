@@ -4,9 +4,9 @@
 // {
 //     {{include:structuredTests/math/misc.js}}
 // }
-{
-    {{include:structuredTests/math/detectIntersect.js}}
-}
+// {
+//     {{include:structuredTests/math/detectIntersect.js}}
+// }
 // {
 //     {{include:structuredTests/math/pathExtrapolation.js}}
 // }
@@ -32,11 +32,10 @@
 //     {{include:structuredTests/misc.js}}
 // }
 
-// console.log( _canvas_.library.dev.countResults() );
 
 
 
-
+// {{include:unstructuredTests/1.js}}
 
 
 

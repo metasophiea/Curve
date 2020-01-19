@@ -1,16 +1,15 @@
 _canvas_.curve.go.add( function(){
     _canvas_.core.render.frameRateLimit(10);
 
-    // const mrd = _canvas_.control.scene.addUnit(10,130,0,'mrd-16','harbinger');
     const dsds = _canvas_.control.scene.addUnit(10,10,0,'dsds-8^3','harbinger');
-    const dsds_2 = _canvas_.control.scene.addUnit(10,130,0,'dsds-8^3_2','harbinger');
+    const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
 
     // for(let a = 0; a < 8; a++){
     //     mrd.io.signal['signal_out_'+a].connectTo(dsds.io.signal['signal_in_'+a]);
     // }
 
 
-    // const pulse = _canvas_.control.scene.addUnit(310,120,0,'pulse_generator','alpha');
+    // const pulse = _canvas_.control.scene.addUnit(370,120,0,'pulse_generator','alpha');
     // const amp = _canvas_.control.scene.addUnit(-150,-150,0,'amplifier','alpha');
     // const dup = _canvas_.control.scene.addUnit(60,-60,0,'audio_duplicator','alpha');
     // dsds.io.audio.audio_out_master.connectTo(dup.io.audio.input);
@@ -36,6 +35,6 @@ _canvas_.curve.go.add( function(){
 
 
 
-    _canvas_.control.viewport.scale(9.5);
-    _canvas_.control.viewport.position(-2095, -1835);
+    // _canvas_.control.viewport.scale(4);
+    // _canvas_.control.viewport.position(-10, 20);
 });

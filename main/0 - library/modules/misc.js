@@ -149,9 +149,6 @@ this.openFile = function(callback,readAsType='readAsBinaryString',fileType){
     const i = document.createElement('input');
     i.type = 'file';
     i.accept = fileType;
-    i.onload = function(){
-        console.log('onload');
-    };
     i.onchange = function(){
         dev.log.misc('.openFile::onchange()'); //#development
         const f = new FileReader();

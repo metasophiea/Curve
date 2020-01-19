@@ -9,8 +9,8 @@ this.bitcrusher = function(
 
     //bitcrusherNode
         flow.bitcrusherNode.amplitudeResolution = 10;
-        flow.bitcrusherNode.sampleFrequency = 1;
-        flow.bitcrusherNode.node = new AudioWorkletNode(_canvas_.library.audio.context, 'bitcrusher');
+        flow.bitcrusherNode.sampleFrequency = 16;
+        flow.bitcrusherNode.node = context.createBitcrusher();
 
     //input/output node
         this.in = function(){return flow.bitcrusherNode.node;}

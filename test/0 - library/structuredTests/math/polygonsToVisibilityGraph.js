@@ -58,7 +58,7 @@ for(let a = 0; a < field.length; a++){
 
 const visibilityGraph = _canvas_.library.math.polygonsToVisibilityGraph( field );
 
-console.log(visibilityGraph);
+// console.log(visibilityGraph);
 visibilityGraph.forEach(point_source => {
     grapher.drawCircle(
         field[point_source.polyIndex].points[point_source.pointIndex].x,
