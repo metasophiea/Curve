@@ -17,7 +17,6 @@ _canvas_.core.go.add( function(){
         console.log('group_1.y() :',group_1.y());
         console.log('group_1.angle() :',group_1.angle());
         console.log('group_1.scale() :',group_1.scale());
-        console.log('group_1.static() :',group_1.static());
         console.log('group_1.getChildren() :',group_1.getChildren());
         console.log('group_1.stencil() :',group_1.stencil());
         console.log('group_1.clipActive() :',group_1.clipActive());

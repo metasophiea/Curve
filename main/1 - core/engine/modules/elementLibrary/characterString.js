@@ -122,7 +122,7 @@ this.characterString = function(_id,_name){
     
                     if(allowGenerateStringCharacters){generateStringCharacters();}
                 };
-            this.static = innerGroup.static;
+            // this.static = innerGroup.static;
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
                 if(attributes==undefined){ 
@@ -277,7 +277,7 @@ this.characterString = function(_id,_name){
             this.string = self.string;
             this.interCharacterSpacing = self.interCharacterSpacing;
             this.printingMode = self.printingMode;
-            this.static = self.static;
+            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this.resultingWidth = self.resultingWidth;

@@ -62,10 +62,8 @@ echo "running Closure"
     for name in ${nameArray[@]}; do 
 
         echo "-> "$name".js"
-        #make the following changes:
-        #   static => _static
+        #make the following change:
         #   interface => _interface
-            # cat "$dir"/../docs/js/$name.min.js | sed -e "s/static/_static/g" -e "s/interface/_interface/g" > "$dir"/../docs/js/$name.min.tmp.js
             cat "$dir"/../docs/js/$name.min.js | sed -e "s/interface/_interface/g" > "$dir"/../docs/js/$name.min.tmp.js
             mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
 

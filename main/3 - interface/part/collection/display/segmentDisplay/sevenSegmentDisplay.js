@@ -1,11 +1,11 @@
 this.sevenSegmentDisplay = function(
-    name='sevenSegmentDisplay', static=false, resolution=2, 
+    name='sevenSegmentDisplay', canvasBased=false, resolution=2, 
     x=0, y=0, width=20, height=30, angle=0,
     backgroundStyle={r:0,g:0,b:0,a:1},
     glowStyle={r:0.78,g:0.78,b:0.78,a:1},
     dimStyle={r:0.1,g:0.1,b:0.1,a:1},
 ){
-    dev.log.partDisplay('.sevenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
+    dev.log.partDisplay('.sevenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
     
     const margin = width/8;
     const division = width/8;
@@ -131,11 +131,19 @@ this.sevenSegmentDisplay = function(
             case 7: case '7': return [1,0,1,0,0,1,0];
             case 8: case '8': return [1,1,1,1,1,1,1];
             case 9: case '9': return [1,1,1,1,0,1,1];
+
+            case 'a': case 'A': return [1,1,1,1,1,1,0];
+            case 'b': case 'B': return [0,1,0,1,1,1,1];
+            case 'c': case 'C': return [1,1,0,0,1,0,1];
+            case 'd': case 'D': return [0,0,1,1,1,1,1];
+            case 'e': case 'E': return [1,1,0,1,1,0,1];
+            case 'f': case 'F': return [1,1,0,1,1,0,0];
+
             default: return [0,0,0,0,0,0,0];
         }
     }
 
-    if(static){
+    if(canvasBased){
         let stamp = [0,0,0,0,0,0,0];
 
         //elements 
@@ -177,7 +185,7 @@ this.sevenSegmentDisplay = function(
             };
             object.get = function(segment){ 
                 if(segment==undefined){
-                    console.error('sevenSegmentDisplay_static::get: must provide segment value'); 
+                    console.error('sevenSegmentDisplay_canvasBased::get: must provide segment value'); 
                     return;
                 } 
                 return stamp[segment].state;
@@ -252,7 +260,7 @@ this.sevenSegmentDisplay = function(
 
 interfacePart.partLibrary.display.sevenSegmentDisplay = function(name,data){ 
     return interfacePart.collection.display.sevenSegmentDisplay(
-        name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.angle,
+        name, data.canvasBased, data.resolution, data.x, data.y, data.width, data.height, data.angle,
         data.style.background, data.style.glow, data.style.dim
     );
 };

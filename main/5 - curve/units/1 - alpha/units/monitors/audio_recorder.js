@@ -62,7 +62,7 @@ this.audio_recorder = function(name,x,y,angle){
                     dimURL:unitStyle.imageStoreURL_localPrefix+'light_stopped.png',
                 }},
                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'time', data:{
-                    x:5+2/3, y:15+2/3, width:78.75, height:8.75, static:true, count:14, decimalPlaces:true, resolution:5,
+                    x:5+2/3, y:15+2/3, width:78.75, height:8.75, canvasBased:true, count:14, decimalPlaces:true, resolution:5,
                 }},
                 {collection:'control', type:'button_image', name:'button_record', data:{
                     x:5, y:25+4/5, width:15+1/3, height:10, hoverable:false, 

@@ -137,7 +137,9 @@ const viewport = new function(){
             mouseData.stopScrollActive = bool;
     
             //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
-            interface.setDocumentAttributes(['body.style.overflow'],['']);
+            if(!bool){
+                interface.setDocumentAttributes(['body.style.overflow'],['']);
+            }
         };
         this._dump = function(){
             report.info('viewport._dump()');

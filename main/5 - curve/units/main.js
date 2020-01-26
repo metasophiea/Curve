@@ -11,6 +11,9 @@ _canvas_.interface.unit.collection = new function(){
     this.harbinger = new function(){
         {{include:3 - harbinger/main.js}}
     };
+    this.acousticresearch = new function(){
+        {{include:4 - acoustic research/main.js}}
+    };
 };
 
 _canvas_.interface.unit.collection.metadata = {
@@ -18,6 +21,7 @@ _canvas_.interface.unit.collection.metadata = {
         'alpha',
         'curvetech',
         'harbinger',
+        'acousticresearch',
     ],
     devList:[
         'development',

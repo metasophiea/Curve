@@ -3,9 +3,6 @@ const audio = this;
 //master context
     this.context = new (window.AudioContext || window.webkitAudioContext)();
 
-
-    
-
 //destination
     this.destination = this.context.createGain();
     this.destination.connect(this.context.destination);

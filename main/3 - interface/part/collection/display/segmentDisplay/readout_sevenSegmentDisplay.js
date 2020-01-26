@@ -1,11 +1,11 @@
 this.readout_sevenSegmentDisplay = function(
-    name='readout_sevenSegmentDisplay', static=false, resolution=1, 
+    name='readout_sevenSegmentDisplay', canvasBased=false, resolution=1, 
     x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=!false,
     backgroundStyle={r:0,g:0,b:0,a:1},
     glowStyle={r:0.78,g:0.78,b:0.78,a:1},
     dimStyle={r:0.1,g:0.1,b:0.1,a:1},
 ){
-    dev.log.partDisplay('.readout_sevenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+count+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
+    dev.log.partDisplay('.readout_sevenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+count+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
     
     //values
         let text = '';
@@ -14,7 +14,7 @@ this.readout_sevenSegmentDisplay = function(
     //elements 
         const object = interfacePart.builder('basic','group',name,{x:x, y:y});
 
-    if(static){
+    if(canvasBased){
         const margin = (width/8) / count;
         const division = (width/8) / count;
         const shapes = {
@@ -272,7 +272,7 @@ this.readout_sevenSegmentDisplay = function(
                 const units = (new Array(count)).fill().map((a,index) => {
                     return interfacePart.builder('display', 'sevenSegmentDisplay', ''+index, {
                         x:(width/count)*index, width:width/count, height:height, 
-                        static:static, resolution:resolution,
+                        canvasBased:canvasBased, resolution:resolution,
                         style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
                     });
                 });
@@ -345,7 +345,7 @@ this.readout_sevenSegmentDisplay = function(
 
 interfacePart.partLibrary.display.readout_sevenSegmentDisplay = function(name,data){ 
     return interfacePart.collection.display.readout_sevenSegmentDisplay(
-        name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
+        name, data.canvasBased, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
         data.style.background, data.style.glow, data.style.dim,
     ); 
 };

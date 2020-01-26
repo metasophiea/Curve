@@ -1,4 +1,90 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-01-26
+  - lots of work on the new bitcrusher unit, seems to be working good now
+  - also added the Amplitude Modifier unit
+
+
+2020-01-25
+  - updated the sevenSegmentDisplay to include the characters 'a','b','c','d',
+    'e' and 'f', thus allowing it to display hexadecimal
+  - added method of setting the 'selectable' value in buttons
+  - finished drawing up the Harbinger Rhythm Designer Pro (rdp-32) and have done
+    all the circuitry apart from the interface. It needs a little testing, but
+    seems good so far
+
+
+2020-01-24
+  - modified the amplitudeModifier to have floor and ceiling cap values
+    (defaulted to +/- 10)
+
+
+2020-01-23
+  - redid the audioWorklet folder to be a little easier to manage. Also messed
+    with the code of the momentaryAmplitudeMeter to add a way of selecting 
+    whether you want it to do its calculations with all the data recieved
+    since the last data was procuced, if if you want it to just sample in that
+    momemt
+  - started work on a signal response analysiser
+
+
+2020-01-21
+  - renamed the display name of the alpha collection's effect units to "Audio
+    Effect Units" from "Effect Units"
+  - played around with the help files a little more, adding one for Alpha's 
+    basic_synthesizer, which works pretty nice, but just lacks excitement for
+    me..I liked the idea that the help files would have little windows to
+    samples of the units, to allow for an interactive experience, but...maybe
+    the PDFs idea is enough?
+
+
+2020-01-20
+  - removed all references to 'static' in core (which as it happened, wasn't
+    using this value anyway)
+  - fixed an issue with core's image element, would would encounter problems
+    when no url was provided on creation
+  - renamed 'static' to 'canvasBased' in the interface layer, which is more
+    descriptive name anyway
+  - dial_continuous_image had it's needle image shape defined in the wrong
+    scope, which is not the case anymore
+  - modified core-console's genericElementProxy element's getAddress method,
+    so that it won't print out the "/root" name at the beginning of an address
+  - went through all the tests, and things seem to be working fine. Closure is
+    compiling without error.
+
+    - results -
+      -> core_engine
+        core_engine.js 1246kb
+        core_engine.min.js 427kb
+        reduced to 34.26% of original size
+      -> core
+        core.js 1341kb
+        core.min.js 379kb
+        reduced to 28.27% of original size
+      -> system
+        system.js 1353kb
+        system.min.js 386kb
+        reduced to 28.57% of original size
+      -> interface
+        interface.js 2432kb
+        interface.min.js 680kb
+        reduced to 27.98% of original size
+      -> control
+        control.js 2568kb
+        control.min.js 735kb
+        reduced to 28.62% of original size
+      -> curve
+        curve.js 3154kb
+        curve.min.js 964kb
+        reduced to 30.58% of original size
+
+  - seems in core-engine's viewport section, the stopMouseScroll method was
+    always setting the overflow to '' (?) have changed that to only when the
+    value is being set to false. Could fix an issue I've been having with the
+    mouse wheel affecting the position of the site along with the regular
+    zooming (at least on macOS, where you get that rubber-site feel thing
+    happening)
+
+
 2020-01-19
   - completed the switch of the mrd-16 image files (just deleting the old ones
     and changing the names of the folders)
@@ -13,7 +99,7 @@
   - added hotkeys to the dsds-8
   - in a bid to remove the need for the heavyComp script to rename all
     instances of 'static' to '_static'; I've refactored core-engine a little
-    to remove the uses of the 'static'  variable, replacing it with "isStatic"
+    to remove the uses of the 'static' variable, replacing it with "isStatic"
     (though not the method, which hasn't changed)
     There's still not a lot working elsewhere in the project, which will need
     renaming. The regular version still works fine, but Closure can't deal

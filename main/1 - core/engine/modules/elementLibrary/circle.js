@@ -40,7 +40,7 @@ this.circle = function(_id,_name){
             let radius = 10;
             let detail = 25;
             let scale = 1;
-            let isStatic = false;
+            // let isStatic = false;
             this.x = function(a){ 
                 if(a==undefined){return x;}     
                 x = a;     
@@ -72,16 +72,16 @@ this.circle = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
-            this.static = function(a){
-                if(a==undefined){return isStatic;}  
-                isStatic = a;  
-                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-                if(allowComputeExtremities){computeExtremities();}
-            };
+            // this.static = function(a){
+            //     if(a==undefined){return isStatic;}  
+            //     isStatic = a;  
+            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
+            //     if(allowComputeExtremities){computeExtremities();}
+            // };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:isStatic }; } 
+                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, /*static:isStatic*/ }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -210,7 +210,7 @@ this.circle = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
 
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 let adjusted = { 
@@ -277,7 +277,7 @@ this.circle = function(_id,_name){
             report.info(self.getAddress(),'._dump -> radius: '+radius);
             report.info(self.getAddress(),'._dump -> detail: '+detail);
             report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> static: '+self.static());
+            // report.info(self.getAddress(),'._dump -> static: '+self.static());
         };
     
     //interface
@@ -288,7 +288,7 @@ this.circle = function(_id,_name){
             this.y = self.y;
             this.radius = self.radius;
             this.scale = self.scale;
-            this.static = self.static;
+            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;

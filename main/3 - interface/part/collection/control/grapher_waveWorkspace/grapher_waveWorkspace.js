@@ -30,7 +30,7 @@ this.grapher_waveWorkspace = function(
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //main graph
             const graph = interfacePart.builder('display','grapher', 'graph', {
-                static:true, resolution:10,
+                canvasBased:true, resolution:10,
                 width:width, height:height,
                 backgroundText_horizontalMarkings:{ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:['3/4','1/2','1/4','0','-1/4','-1/2','-3/4'], textPositionOffset:{x:1,y:-0.5}, printText:true },
                 backgroundText_verticalMarkings:{  points:[0.75,0.5,0.25,0], printText:false },

@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:17} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:24} };
                 const library = this;
             
                 this.go = new function(){
@@ -70,8 +70,6 @@
                 
                 this.math = new function(){
                     this.averageArray = function(array){
-                        dev.log.math('.averageArray(',array); //#development
-                        dev.count('.math.averageArray'); //#development
                     
                         // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
                     
@@ -81,15 +79,11 @@
                         return sum/array.length;
                     };
                     this.averagePoint = function(points){
-                        dev.log.math('.averagePoint(',points); //#development
-                        dev.count('.math.averagePoint'); //#development
                     
                         const sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
                         return {x:sum.x/points.length,y:sum.y/points.length};
                     };
                     this.boundingBoxFromPoints = function(points){
-                        dev.log.math('.boundingBoxFromPoints(',points); //#development
-                        dev.count('.math.boundingBoxFromPoints'); //#development
                     
                         if(points.length == 0){
                             return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
@@ -144,8 +138,6 @@
                         };
                     };
                     this.cartesianAngleAdjust = function(x,y,angle){
-                        dev.log.math('.cartesianAngleAdjust(',x,y,angle); //#development
-                        dev.count('.math.cartesianAngleAdjust'); //#development
                     
                         // //v1    
                         //     if(angle == 0){ return {x:x,y:y}; }
@@ -163,14 +155,10 @@
                     };
                     this.convertColour = new function(){
                         this.obj2rgba = function(obj){
-                            dev.log.math('.convertColour.obj2rgbacartesianAngleAdjust(',obj); //#development
-                            dev.count('.math.convertColour.obj2rgba'); //#development
                     
                             return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
                         };
                         this.rgba2obj = function(rgba){
-                            dev.log.math('.convertColour.rgba2obj(',rgba); //#development
-                            dev.count('.convertColour.rgba2obj'); //#development
                     
                             rgba = rgba.split(',');
                             rgba[0] = rgba[0].replace('rgba(', '');
@@ -181,8 +169,6 @@
                     };
                     this.curveGenerator = new function(){
                         this.linear = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.linear(',stepCount,start,end); //#development
-                            dev.count('.math.curveGenerator.linear'); //#development
                     
                             stepCount = Math.abs(stepCount)-1;
                             const outputArray = [0];
@@ -199,8 +185,6 @@
                             return outputArray;
                         };
                         this.sin = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.sin(',stepCount,start,end); //#development
-                            dev.count('.math.curveGenerator.sin'); //#development
                     
                             stepCount = Math.abs(stepCount) -1;
                             let outputArray = [0];
@@ -219,8 +203,6 @@
                             return outputArray;		
                         };
                         this.cos = function(stepCount=2, start=0, end=1){
-                            dev.log.math('.curveGenerator.cos(',stepCount,start,end); //#development
-                            dev.count('.math.curveGenerator.cos'); //#development
                     
                             stepCount = Math.abs(stepCount) -1;
                             let outputArray = [0];
@@ -239,8 +221,6 @@
                             return outputArray;	
                         };
                         this.s = function(stepCount=2, start=0, end=1, sharpness=8){
-                            dev.log.math('.curveGenerator.s(',stepCount,start,end,sharpness); //#development
-                            dev.count('.math.curveGenerator.s'); //#development
                     
                             if(sharpness == 0){sharpness = 1/1000000;}
                     
@@ -261,8 +241,6 @@
                             return outputArray;
                         };
                         this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
-                            dev.log.math('.curveGenerator.exponential(',stepCount,start,end,sharpness); //#development
-                            dev.count('.math.curveGenerator.exponential'); //#development
                     
                             stepCount = stepCount-1;
                             let outputArray = [];
@@ -283,26 +261,18 @@
                     };
                     this.curvePoint = new function(){
                         this.linear = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.linear(',x,start,end); //#development
-                            dev.count('.math.curvePoint.linear'); //#development
                     
                             return x *(end-start)+start;
                         };
                         this.sin = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.sin(',x,start,end); //#development
-                            dev.count('.math.curvePoint.sin'); //#development
                     
                             return Math.sin(Math.PI/2*x) *(end-start)+start;
                         };
                         this.cos = function(x=0.5, start=0, end=1){
-                            dev.log.math('.curvePoint.cos(',x,start,end); //#development
-                            dev.count('.math.curvePoint.cos'); //#development
                     
                             return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
                         };
                         this.s = function(x=0.5, start=0, end=1, sharpness=8){
-                            dev.log.math('.curvePoint.s(',x,start,end,sharpness); //#development
-                            dev.count('.math.curvePoint.s'); //#development
                     
                             const temp = library.math.normalizeStretchArray([
                                 1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
@@ -312,8 +282,6 @@
                             return temp[1] *(end-start)+start;
                         };
                         this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
-                            dev.log.math('.curvePoint.exponential(',x,start,end,sharpness); //#development
-                            dev.count('.math.curvePoint.exponential'); //#development
                     
                             const temp = library.math.normalizeStretchArray([
                                 (Math.exp(sharpness*0)-1)/(Math.E-1),
@@ -324,8 +292,6 @@
                         };
                     };
                     this.getAngleOfTwoPoints = function(point_1,point_2){
-                        dev.log.math('.getAngleOfTwoPoints(',point_1,point_2); //#development
-                        dev.count('.math.getAngleOfTwoPoints'); //#development
                     
                         if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
                     
@@ -339,8 +305,6 @@
                         return angle;
                     };
                     this.getIndexOfSequence = function(array,sequence){ 
-                        dev.log.math('.getIndexOfSequence(',array,sequence); //#development
-                        dev.count('.math.getIndexOfSequence'); //#development
                     
                         function comp(thing_A,thing_B){
                             const keys = Object.keys(thing_A);
@@ -372,8 +336,6 @@
                         return undefined;
                     };
                     this.largestValueFound = function(array){
-                        dev.log.math('.largestValueFound(',array); //#development
-                        dev.count('.math.largestValueFound'); //#development
                     
                         if(array.length == 0){return undefined;}
                         return array.reduce(function(max,current){
@@ -381,8 +343,6 @@
                         });
                     };
                     this.normalizeStretchArray = function(array){
-                        dev.log.math('.normalizeStretchArray(',array); //#development
-                        dev.count('.math.normalizeStretchArray'); //#development
                     
                         //discover the largest number
                             const biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
@@ -399,16 +359,12 @@
                         return array;
                     };
                     this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
-                        dev.log.math('.relativeDistance(',realLength,start,end,d,allowOverflow); //#development
-                        dev.count('.math.relativeDistance'); //#development
                     
                         const mux = (d - start)/(end - start);
                         if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
                         return mux*realLength;
                     };
                     this.seconds2time = function(seconds){
-                        dev.log.math('.seconds2time(',seconds); //#development
-                        dev.count('.math.seconds2time'); //#development
                     
                         const result = {h:0, m:0, s:0, ms:0, µs:0, ns:0, ps:0, fs:0};
                         
@@ -446,13 +402,9 @@
                     };
                     
                     this.distanceBetweenTwoPoints = function(point_a,point_b){
-                        dev.log.math('.distanceBetweenTwoPoints(',point_a,point_b); //#development
-                        dev.count('.math.distanceBetweenTwoPoints'); //#development
                         return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
                     };
                     this.cartesian2polar = function(x,y){
-                        dev.log.math('.cartesian2polar(',x,y); //#development
-                        dev.count('.math.cartesian2polar'); //#development
                     
                         const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5);
                         let ang = 0;
@@ -471,15 +423,11 @@
                         return {'dis':dis,'ang':ang};
                     };
                     this.polar2cartesian = function(angle,distance){
-                        dev.log.math('.polar2cartesian(',angle,distance); //#development
-                        dev.count('.math.polar2cartesian'); //#development
                     
                         return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
                     };
                     
                     this.blendColours = function(rgba_1,rgba_2,ratio){
-                        dev.log.math('.blendColours(',rgba_1,rgba_2,ratio); //#development
-                        dev.count('.math.blendColours'); //#development
                     
                         return {
                             r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
@@ -489,8 +437,6 @@
                         };           
                     };
                     this.multiBlendColours = function(rgbaList,ratio){
-                        dev.log.math('.multiBlendColours(',rgbaList,ratio); //#development
-                        dev.count('.math.multiBlendColours'); //#development
                     
                         //special cases
                             if(ratio == 0){return rgbaList[0];}
@@ -503,8 +449,6 @@
                     
                     
                     this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
-                        dev.log.math('.polygonToSubTriangles(',regions,inputFormat); //#development
-                        dev.count('.math.polygonToSubTriangles'); //#development
                     
                         if(inputFormat == 'flatArray'){
                             const tmp = [];
@@ -519,8 +463,6 @@
                         return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
                     };
                     this.unionPolygons = function(polygon1,polygon2){
-                        dev.log.math('.unionPolygons(',polygon1,polygon2); //#development
-                        dev.count('.math.unionPolygons'); //#development
                     
                         //martinez (not working)
                         // for(let a = 0; a < polygon1.length; a++){
@@ -544,8 +486,6 @@
                     }
                     this.detectIntersect = new function(){
                         this.boundingBoxes = function(box_a, box_b){
-                            dev.log.math('.detectIntersect.boundingBoxes(',box_a,box_b); //#development
-                            dev.count('.math.detectIntersect.boundingBoxes'); //#development
                     
                             return box_a.bottomRight.y >= box_b.topLeft.y && 
                                 box_a.bottomRight.x >= box_b.topLeft.x && 
@@ -554,16 +494,12 @@
                         };
                     
                         this.pointWithinBoundingBox = function(point,box){
-                            dev.log.math('.detectIntersect.pointWithinBoundingBox(',point,box); //#development
-                            dev.count('.math.detectIntersect.pointWithinBoundingBox'); //#development
                             return !(
                                 point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
                                 point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
                             );
                         };
                         this.pointOnLine = function(point,line){
-                            dev.log.math('.detectIntersect.pointOnLine(',point,line); //#development
-                            dev.count('.math.detectIntersect.pointOnLine'); //#development
                             
                             if( 
                                 point.x < line[0].x && point.x < line[1].x ||
@@ -584,8 +520,6 @@
                             return ((line[1].y - line[0].y) / (line[1].x - line[0].x))*(point.x - line[0].x) + line[0].y - point.y == 0;
                         }
                         this.pointWithinPoly = function(point,poly){
-                            dev.log.math('.detectIntersect.pointWithinPoly(',point,poly.points); //#development
-                            dev.count('.math.detectIntersect.pointWithinPoly'); //#development
                     
                             if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
                             if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints([point]), poly.boundingBox ) ){ return 'outside'; }
@@ -595,29 +529,24 @@
                             //check if the point is on a point of the poly; bail and return 'onPoint'
                             for(let a = 0; a < poly.points.length; a++){
                                 if( point.x == poly.points[a].x && point.y == poly.points[a].y ){
-                                    dev.log.math('.detectIntersect.pointWithinPoly -> point on a poly ',a,':',poly.points[a]); //#development
                                     return 'onPoint';
                                 }
                             }
                     
                             function pointLevelWithPolyPointChecker(poly,point,a,b){
-                                dev.log.math('.detectIntersect.pointWithinPoly::pointLevelWithPolyPointChecker(',poly,point,a,b); //#development
                                 //only flip, if the point is not perfectly level with point a of the line 
                                 //or if you can prove that the a's two adjacent points are higher and lower than the matching point's level
                                 //(the system will come round to having this same point be point b)
                                 if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
                                     return true;
                                 }else if(poly.points[a].y == point.y){
-                                    dev.log.math('.detectIntersect.pointWithinPoly -> point is perfectly level with a point on the poly (line point a)'); //#development
                                     const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
                                     const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
                                     if(
                                         poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
                                         poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
                                     ){
-                                        dev.log.math('.detectIntersect.pointWithinPoly -> all above or all below; no need for a flip'); //#development
                                     }else{
-                                        dev.log.math('.detectIntersect.pointWithinPoly -> crossing fround; time for a flip'); //#development
                                         return true;
                                     }
                                 }
@@ -628,24 +557,20 @@
                             //Ray casting algorithm
                             let inside = false;
                             for(let a = 0, b = poly.points.length - 1; a < poly.points.length; b = a++){
-                                dev.log.math('.detectIntersect.pointWithinPoly -> point:',point,'poly.points[a]:',poly.points[a],'poly.points[b]:',poly.points[b]); //#development
                     
                                 //point must be on the same level of the line
                                 if( (poly.points[b].y >= point.y && poly.points[a].y <= point.y) || (poly.points[a].y >= point.y && poly.points[b].y <= point.y) ){
                                     //discover if the point is on the far right of the line
                                     if( poly.points[a].x < point.x && poly.points[b].x < point.x ){
-                                        dev.log.math('.detectIntersect.pointWithinPoly -> point is on far right of line'); //#development
                                         //only flip if the line is not perfectly level (which would make the ray skirt the line)
                                         if( poly.points[a].y != poly.points[b].y ){
                                             if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
                                                 inside = !inside;
-                                                dev.log.math('.detectIntersect.pointWithinPoly -> flip (',inside,')'); //#development
                                             }
                                         }
                     
                                     //discover if the point is on the far left of the line, skip it if so
                                     }else if( poly.points[a].x > point.x && poly.points[b].x > point.x ){
-                                        dev.log.math('.detectIntersect.pointWithinPoly -> point is on far left of line'); //#development
                                         continue;
                                     }else{
                                         //calculate what side of the line this point is
@@ -661,28 +586,22 @@
                                             }
                     
                                         //if its on the line, return 'onEdge' immediately, if it's above 1 do a flip
-                                            dev.log.math('.detectIntersect.pointWithinPoly -> areaLocation:',areaLocation); //#development
                                             if( areaLocation == 1 || isNaN(areaLocation) ){
                                                 return 'onEdge';
                                             }else if(areaLocation > 1){
                                                 if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
                                                     inside = !inside;
-                                                    dev.log.math('.detectIntersect.pointWithinPoly -> flip (',inside,')'); //#development
                                                 }
                                             }
                                     }
                                 }else{
-                                    dev.log.math('.detectIntersect.pointWithinPoly -> point is not on the same level as the line'); //#development
                                 }
                             }
                     
-                            dev.log.math('.detectIntersect.pointWithinPoly -> inside:',inside); //#development
                             return inside ? 'inside' : 'outside';
                         };
                     
                         this.lineOnLine = function(segment1,segment2){
-                            dev.log.math('.detectIntersect.lineOnLine(',segment1,segment2); //#development
-                            dev.count('.math.detectIntersect.lineOnLine'); //#development
                     
                             if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(segment1), library.math.boundingBoxFromPoints(segment2) ) ){
                                 return {x:undefined, y:undefined, intersect:false, contact:false};
@@ -693,23 +612,19 @@
                                 (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
                                 (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
                             ){
-                                dev.log.math('.detectIntersect.lineOnLine -> identical segments'); //#development
                                 return {x:undefined, y:undefined, intersect:false, contact:true};
                             }
                                 
                             //point on point
                             if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
-                                dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[0]:',segment1[0]); //#development
                                 return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
                             }
                             if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
-                                dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[1]:',segment1[1]); //#development
                                 return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
                             }
                     
                             //calculate denominator
                             const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
-                            dev.log.math('.detectIntersect.lineOnLine -> denominator:',denominator); //#development
                             if(denominator == 0){
                                 const points = [];
                                 const output = {x1:undefined, y1:undefined, x2:undefined, y2:undefined, intersect:false, contact:true};
@@ -769,8 +684,6 @@
                             };
                         };
                         this.lineOnPoly = function(line,poly){
-                            dev.log.math('.detectIntersect.lineOnPoly(',line,poly); //#development
-                            dev.count('.math.detectIntersect.lineOnPoly'); //#development
                     
                             if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
                             if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(line), poly.boundingBox ) ){
@@ -783,11 +696,8 @@
                                 return 0;
                             }
                             function huntForIntersection(line,polyPoints){
-                                dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection(',line,polyPoints); //#development
                                 for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
-                                    dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> line:',line,'polyPoints[a]:',polyPoints[a],'polyPoints[b]:',polyPoints[b]); //#development
                                     const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
-                                    dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> result:',result); //#development
                                     if(result.contact){
                                         output.contact = true;
                                         if(result.intersect){
@@ -795,7 +705,6 @@
                                         }
                     
                                         if( result.x != undefined && (result.x != line[0].x && result.x != line[1].x) ){
-                                            dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> odd contact'); //#development
                                             output.intersect = true;
                                         }
                     
@@ -818,7 +727,6 @@
                                 }
                     
                                 //situation where the line passes perfectly through a point on the poly
-                                dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> output.points.length:',output.points.length); //#development
                                 if(output.points.length == 0){
                                     for(let a = 0; a < poly.points.length; a++){
                                         if( poly.points[a].x != line[0].x && poly.points[a].y != line[0].y && poly.points[a].x != line[1].x && poly.points[a].y != line[1].y){
@@ -834,7 +742,6 @@
                             const output = { points:[], contact:false, intersect:false };
                             const point_a = library.math.detectIntersect.pointWithinPoly(line[0],poly);
                             const point_b = library.math.detectIntersect.pointWithinPoly(line[1],poly);
-                            dev.log.math('.detectIntersect.lineOnPoly -> point_a:',point_a,'point_b:',point_b); //#development
                     
                             let dir = 0;
                             if( oneWhileTheOtherIs(point_a,point_b,'outside','outside') ){
@@ -892,28 +799,21 @@
                                 output.contact = false;
                             }
                             
-                            dev.log.math('.detectIntersect.lineOnPoly -> output:',output); //#development
                             return output;
                         };
                     
                         this.polyOnPoly = function(poly_a,poly_b){
-                            dev.log.math('.detectIntersect.polyOnPoly(',poly_a,poly_b); //#development
-                            dev.count('.math.detectIntersect.polyOnPoly'); //#development
                     
                             if(poly_a.boundingBox == undefined){ 
-                                dev.log.math('.detectIntersect.polyOnPoly -> poly_a boundingBox not found, generating...'); //#development
                                 poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points);
                             }
                             if(poly_b.boundingBox == undefined){ 
-                                dev.log.math('.detectIntersect.polyOnPoly -> poly_b boundingBox not found, generating...'); //#development
                                 poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points);
                             }
                             if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
-                                dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s are totally seperate!'); //#development
                                 return { points:[], intersect:false, contact:false };
                             }
                     
-                            dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s do collide, proceeding with search'); //#development
                     
                             const results = {
                                 points:[],
@@ -928,20 +828,16 @@
                                     if(index != -1){sudo_poly_a_points.splice(index, 1);}
                                 });
                                 if(sudo_poly_a_points.length == 0){
-                                    dev.log.math('.detectIntersect.polyOnPoly -> these two polys are exactly the same'); //#development
                                     return {
                                         points:Object.assign([],poly_a.points),
                                         contact:true,
                                         intersect:true,
                                     };
                                 }
-                                dev.log.math('.detectIntersect.polyOnPoly -> these two polys are not exactly the same (though they do share '+(poly_a.points.length-sudo_poly_a_points.length)+' of the same points)'); //#development
                     
                             //find all side intersection points
                                 for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
-                                    dev.log.math('.detectIntersect.polyOnPoly -> testing line on poly:',[poly_a.points[a_a],poly_a.points[a_b]],poly_b); //#development
                                     const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
-                                    dev.log.math('.detectIntersect.polyOnPoly -> lineOnPoly-results:',tmp); //#development
                     
                                     results.points = results.points.concat(
                                         tmp.points.filter(point => results.points.find(item => item.x == point.x && item.y == point.y ) == undefined )
@@ -950,7 +846,6 @@
                                     results.contact = results.contact || tmp.contact;
                                     results.intersect = results.intersect || tmp.intersect;
                                 }
-                                dev.log.math('.detectIntersect.polyOnPoly -> results:',results); //#development
                         
                             //check if poly_a is totally inside poly_b (if necessary)
                                 for(let a = 0; a < poly_b.points.length; a++){
@@ -965,11 +860,9 @@
                     };
                     this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
                         dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
-                        dev.count('.math.pathExtrapolation'); //#development
                     
                         function loopThisPath(path){
                             dev.log.math('.pathExtrapolation::loopThisPath(',path);
-                            dev.count('.math.pathExtrapolation::loopThisPath'); //#development
                         
                             const joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
                             let loopingPath = [];
@@ -985,7 +878,6 @@
                         }
                         function calculateJointData(path,thickness){
                             dev.log.math('.pathExtrapolation::calculateJointData(',path,thickness);
-                            dev.count('.math.pathExtrapolation::calculateJointData'); //#development
                         
                             const jointData = [];
                             //parse path
@@ -1016,7 +908,6 @@
                         }
                         function path_to_rectangleSeries(path,thickness){
                             dev.log.math('.pathExtrapolation::path_to_rectangleSeries(',path,thickness);
-                            dev.count('.math.pathExtrapolation::path_to_rectangleSeries'); //#development
                         
                             let outputPoints = [];
                             for(let a = 1; a < path.length/2; a++){
@@ -1036,8 +927,6 @@
                         }
                     
                         function flatJoints(jointData,thickness){
-                            dev.log.math('.pathExtrapolation::flatJoints(',jointData,thickness); //#development
-                            dev.count('.math.pathExtrapolation::flatJoints'); //#development
                         
                             const polygons = [];
                     
@@ -1069,8 +958,6 @@
                             return polygons;
                         }
                         function roundJoints(jointData,thickness,detail=5){
-                            dev.log.math('.pathExtrapolation::roundJoints(',jointData,thickness,detail); //#development
-                            dev.count('.math.pathExtrapolation::roundJoints'); //#development
                         
                             const polygons = [];
                             if(detail < 1){detail = 1;}
@@ -1120,8 +1007,6 @@
                             return polygons;
                         }
                         function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
-                            dev.log.math('.pathExtrapolation::sharpJoints(',jointData,thickness,sharpLimit); //#development
-                            dev.count('.math.pathExtrapolation::sharpJoints'); //#development
                         
                             const polygons = [];
                     
@@ -1181,8 +1066,6 @@
                         }
                     
                         function roundCaps(jointData,thickness,detail=5){
-                            dev.log.math('.pathExtrapolation::roundCaps(',jointData,thickness,detail); //#development
-                            dev.count('.math.pathExtrapolation::roundCaps'); //#development
                         
                             if(detail < 1){detail = 1;}
                     
@@ -1228,17 +1111,12 @@
 
                     this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},returnPathData=false){
                         dev.log.math('.fitPolyIn(',freshPoly,environmentPolys,snapping);
-                        dev.count('.math.fitPolyIn'); //#development
                     
                         function applyOffsetToPoints(offset,points){
-                            dev.log.math('.fitPolyIn::applyOffsetToPoints(',offset,points); //#development
-                            dev.count('.math.fitPolyIn::applyOffsetToPoints'); //#development
                         
                             return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
                         };
                         function applyOffsetToPolygon(offset,poly){
-                            dev.log.math('.fitPolyIn::applyOffsetToPolygon(',offset,poly); //#development
-                            dev.count('.math.fitPolyIn::applyOffsetToPolygon'); //#development
                         
                             const newPolygon = { points: applyOffsetToPoints(offset,poly.points), boundingBox:{} };
                             newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
@@ -1381,7 +1259,6 @@
                         return returnPathData ? {offset:offset,paths:paths} : offset;
                     };
                     this.polygonsToVisibilityGraph = function(polys){
-                        dev.log.math('.polygonsToVisibilityGraph(',polys); //#development
                         const graph = polys.flatMap((poly,polyIndex) => {
                             return poly.points.map((point,pointIndex) => ({
                                 polyIndex:polyIndex,
@@ -1406,14 +1283,11 @@
                                 //convert for convenience
                                 const point_source = polys[graphPoint_source.polyIndex].points[graphPoint_source.pointIndex];
                                 const point_destination = polys[graphPoint_destination.polyIndex].points[graphPoint_destination.pointIndex];
-                                dev.log.math('.polygonsToVisibilityGraph -> point_source:',point_source,'point_destination:',point_destination); //#development
                     
                                 //scan route
                                 let addRoute = true;
                                 for(let a = 0; a < polys.length; a++){
-                                    dev.log.math('.polygonsToVisibilityGraph -> testing polygon:',a,':',polys[a]); //#development
                                     const result = library.math.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a] );
-                                    dev.log.math('.polygonsToVisibilityGraph -> result:',result); //#development
                                     if( result.intersect ){
                                         addRoute = false;
                                         break;
@@ -1421,7 +1295,6 @@
                                 }
                     
                                 //if route is valid, add to graph
-                                dev.log.math('.polygonsToVisibilityGraph -> addRoute:',addRoute); //#development
                                 if(addRoute){
                                     const distance = library.math.distanceBetweenTwoPoints(point_source,point_destination);
                     
@@ -1451,7 +1324,6 @@
                         return graph;
                     };
                     this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
-                        dev.log.math('.shortestRouteFromVisibilityGraph(',visibilityGraph,start,end); //#development
                     
                         //if the starting location or ending location are totally inaccessible, bail on this whole thing
                         //though return the point (if any) that was ok
@@ -1480,7 +1352,6 @@
                         //(don't forget to set the current location's distance to zero)
                             const locationSet = Object.keys(visibilityGraph).map( () => ({ distance:Infinity, visited:false, route:'' }) );
                             locationSet[current].distance = 0;
-                            dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#developments
                     
                         //loop through locations, until the end location has been visited
                             let limit = 100;
@@ -1488,7 +1359,6 @@
                                 if(limit <= 0){console.error('.shortestRouteFromVisibilityGraph has encountered an overflow'); break;}
                                 limit--;
                     
-                                dev.log.math('.shortestRouteFromVisibilityGraph -> current:',current); //#development
                     
                                 //update unvisited distance values
                                     for(let a = 0; a < visibilityGraph[current].destination.length; a++){
@@ -1516,7 +1386,6 @@
                                         }
                                     });
                             }while( !locationSet[end].visited )
-                            dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#development
                         
                         //go back through the location set to discover the shortest route
                             let route = [];
@@ -1571,8 +1440,6 @@
                 };
                 this.structure = new function(){
                     this.functionListRunner = function(list,activeKeys){
-                        dev.log.structure('.functionListRunner(',list,activeKeys); //#development
-                        dev.count('.structure.functionListRunner'); //#development
                     
                         //function builder for working with the 'functionList' format
                     
@@ -1601,8 +1468,6 @@
                     };
                     
                     this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
-                        dev.log.structure('.signalRegistry(',rightLimit,bottomLimit,signalLengthLimit); //#development
-                        dev.count('.structure.signalRegistry'); //#development
                     
                         let signals = [];
                         let selectedSignals = [];
@@ -1612,8 +1477,6 @@
                         let positions = [];
                     
                         this.__dump = function(){
-                            dev.log.structure('.signalRegistry.__dump()'); //#development
-                            dev.count('.structure.signalRegistry.__dump'); //#development
                         
                             console.log('---- signalRegistry dump ----');
                     
@@ -1650,8 +1513,6 @@
                         };
                     
                         this.export = function(){
-                            dev.log.structure('.signalRegistry.export()'); //#development
-                            dev.count('.structure.signalRegistry.export'); //#development
                         
                             return JSON.parse(JSON.stringify(
                                 {
@@ -1665,8 +1526,6 @@
                             ));
                         };
                         this.import = function(data){
-                            dev.log.structure('.signalRegistry.import(',data); //#development
-                            dev.count('.structure.signalRegistry.import'); //#development
                         
                             signals =           JSON.parse(JSON.stringify(data.signals));
                             selectedSignals =   JSON.parse(JSON.stringify(data.selectedSignals));
@@ -1677,27 +1536,19 @@
                         };
                     
                         this.getAllSignals = function(){ 
-                            dev.log.structure('.signalRegistry.getAllSignals()'); //#development
-                            dev.count('.structure.signalRegistry.getAllSignals'); //#development
                         
                             return JSON.parse(JSON.stringify(signals));
                         };
                         this.getAllEvents = function(){ 
-                            dev.log.structure('.signalRegistry.getAllEvents()'); //#development
-                            dev.count('.structure.signalRegistry.getAllEvents'); //#development
                         
                             return JSON.parse(JSON.stringify(events));
                         };
                         this.getSignal = function(id){
-                            dev.log.structure('.signalRegistry.getSignal(',id); //#development
-                            dev.count('.structure.signalRegistry.getSignal'); //#development
                         
                             if( signals[id] == undefined ){return;}
                             return JSON.parse(JSON.stringify(signals[id]));
                         };
                         this.eventsBetween = function(start,end){
-                            dev.log.structure('.signalRegistry.eventsBetween(',start,end); //#development
-                            dev.count('.structure.signalRegistry.eventsBetween'); //#development
                         
                             //depending on whether theres an end position or not; get all the events positions that 
                             //lie on the start positions, or get all the events that how positions which lie between
@@ -1724,8 +1575,6 @@
                             });
                         };
                         this.add = function(data,forceID){
-                            dev.log.structure('.signalRegistry.add(',data,forceID); //#development
-                            dev.count('.structure.signalRegistry.add'); //#development
                         
                             //clean up data
                                 if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
@@ -1784,8 +1633,6 @@
                             return newID;
                         };
                         this.remove = function(id){
-                            dev.log.structure('.signalRegistry.remove(',id); //#development
-                            dev.count('.structure.signalRegistry.remove'); //#development
                         
                             if( signals[id] == undefined ){return;}
                     
@@ -1802,8 +1649,6 @@
                             delete events_byID[id];
                         };
                         this.update = function(id,data){
-                            dev.log.structure('.signalRegistry.update(',id,data); //#development
-                            dev.count('.structure.signalRegistry.update'); //#development
                         
                             //clean input
                                 if(data == undefined){return;}
@@ -1833,8 +1678,6 @@
                             this.add(data,id);
                         };
                         this.reset = function(){
-                            dev.log.structure('.signalRegistry.reset()'); //#development
-                            dev.count('.structure.signalRegistry.reset'); //#development
                         
                             signals = [];
                             selectedSignals = [];
@@ -1847,21 +1690,15 @@
                 };
                 this.font = new function(){
                     this.listAllAvailableGlyphs = function(fontFileData){
-                        dev.log.font('.listAllAvailableGlyphs(',fontFileData); //#development
-                        dev.count('.font.listAllAvailableGlyphs'); //#development
                     
                         const font = this.decodeFont(fontFileData);
                         return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                     };
                     this.decodeFont = function(fontFileData){
-                        dev.log.font('.decodeFont(',fontFileData); //#development
-                        dev.count('.font.decodeFont'); //#development
                     
                         return _thirdparty.opentype.parse(fontFileData);
                     };
                     this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
-                        dev.log.font('.getAllAvailableGlyphDrawingPaths(',font,reducedGlyphSet); //#development
-                        dev.count('.font.getAllAvailableGlyphDrawingPaths'); //#development
                     
                         const glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                         const paths = glyphs.map( a => font.getPath(a,0,0,1) );
@@ -1874,8 +1711,6 @@
                         return outputData;
                     };
                     this.convertPathToPoints = function(path,detail=2){
-                        dev.log.font('.convertPathToPoints(',path,detail); //#development
-                        dev.count('.font.convertPathToPoints'); //#development
                     
                         let output = [];
                         let currentPoints = [];
@@ -1919,8 +1754,6 @@
                         return output;
                     };
                     this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
-                        dev.log.font('.getTrianglesFromGlyphPath(',glyphPath,detail); //#development
-                        dev.count('.font.getTrianglesFromGlyphPath'); //#development
                     
                         //input checking
                             if(glyphPath.length == 0){return [];}
@@ -1971,8 +1804,6 @@
                             return segments.flatMap(segment => library.math.polygonToSubTriangles(segment.regions) );
                     };
                     this.extractGlyphs = function(fontFileData,reducedGlyphSet){
-                        dev.log.font('.extractGlyphs(',fontFileData,reducedGlyphSet); //#development
-                        dev.count('.font.extractGlyphs'); //#development
                     
                         //decode font data
                             const font = library.font.decodeFont(fontFileData);
@@ -3070,16 +2901,12 @@
                     
                     
                     this.getLoadableFonts = function(){ 
-                        dev.log.font('.getLoadableFonts()'); //#development
-                        dev.count('.font.getLoadableFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
                         const loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
                         return defaultFontNames.concat(loadableFontNames);
                     };
                     this.getLoadedFonts = function(){
-                        dev.log.font('.getLoadedFonts()'); //#development
-                        dev.count('.font.getLoadedFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
                         const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
@@ -3087,28 +2914,20 @@
                     };
                     
                     this.isApprovedFont = function(fontName){
-                        dev.log.font('.isApprovedFont(',fontName); //#development
-                        dev.count('.font.isApprovedFont'); //#development
                     
                         return vectorLibrary[fontName] != undefined;
                     };
                     this.isFontLoaded = function(fontName){
-                        dev.log.font('.isFontLoaded(',fontName); //#development
-                        dev.count('.font.isFontLoaded'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
                         return vectorLibrary[fontName].isLoaded;
                     }
                     this.fontLoadAttempted = function(fontName){
-                        dev.log.font('.fontLoadAttempted(',fontName); //#development
-                        dev.count('.font.fontLoadAttempted'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
                         return vectorLibrary[fontName].loadAttempted;
                     }
                     this.loadFont = function(fontName,onLoaded=()=>{}){
-                        dev.log.font('.loadFont(',fontName,onLoaded); //#development
-                        dev.count('.font.loadFont'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
                     
@@ -3146,8 +2965,6 @@
                 };
                 this.misc = new function(){
                     this.padString = function(string,length,padding=' ',paddingSide='l'){
-                        dev.log.misc('.padString(',string,length,padding,paddingSide); //#development
-                        dev.count('.misc.padString'); //#development
                     
                         if(padding.length<1){return string;}
                         string = ''+string;
@@ -3161,20 +2978,14 @@
                         return string;
                     };
                     this.compressString = function(string){
-                        dev.log.misc('.compressString(',string); //#development
-                        dev.count('.misc.compressString'); //#development
                     
                         return _thirdparty.lzString.compress(string);
                     };
                     this.decompressString = function(string){
-                        dev.log.misc('.decompressString(',string); //#development
-                        dev.count('.misc.decompressString'); //#development
                     
                         return _thirdparty.lzString.decompress(string);
                     };
                     this.serialize = function(data,compress=true){
-                        dev.log.misc('.serialize(',data,compress); //#development
-                        dev.count('.misc.serialize'); //#development
                     
                         function getType(obj){
                             return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -3211,8 +3022,6 @@
                         return data;
                     };
                     this.unserialize = function(data,compressed=true){
-                        dev.log.misc('.unserialize(',data,compressed); //#development
-                        dev.count('.misc.unserialize'); //#development
                     
                         if(data === undefined){return undefined;}
                     
@@ -3255,16 +3064,12 @@
                         });
                     };
                     this.packData = function(data,compress=true){
-                        dev.log.misc('.packData(',data,compress); //#development
-                        dev.count('.misc.packData'); //#development
                         return library.misc.serialize({ 
                             compressed:compress, 
                             data:library.misc.serialize(data,compress)
                         },false);
                     };
                     this.unpackData = function(data){
-                        dev.log.misc('.unpackData(',data); //#development
-                        dev.count('.misc.unpackData'); //#development
                     
                         //deserialize first layer
                             try{
@@ -3290,21 +3095,17 @@
                         return data;
                     };
                     this.openFile = function(callback,readAsType='readAsBinaryString',fileType){
-                        dev.log.misc('.openFile(',callback,readAsType); //#development
-                        dev.count('.misc.openFile'); //#development
                     
                         const i = document.createElement('input');
                         i.type = 'file';
                         i.accept = fileType;
                         i.onchange = function(){
-                            dev.log.misc('.openFile::onchange()'); //#development
                             const f = new FileReader();
                             switch(readAsType){
                                 case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
                                 case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
                             }
                             f.onloadend = function(){ 
-                                dev.log.misc('.openFile::onloadend()'); //#development
                                 if(callback){callback(f.result,i.files[0]);}
                             }
                         };
@@ -3314,8 +3115,6 @@
                         setTimeout(() => {document.body.removeChild(i);},1000);
                     };
                     this.printFile = function(filename,data){
-                        dev.log.misc('.printFile(',filename,data); //#development
-                        dev.count('.misc.printFile'); //#development
                     
                         const a = document.createElement('a');
                         a.href = URL.createObjectURL(new Blob([data]));
@@ -3323,8 +3122,6 @@
                         a.click();
                     };
                     this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
-                        dev.log.misc('.loadFileFromURL(',URL,callback,responseType,errorCallback); //#development
-                        dev.count('.misc.loadFileFromURL'); //#development
                     
                         //responseType: text / arraybuffer / blob / document / json 
                     
@@ -3341,8 +3138,6 @@
                         xhttp.send();
                     };
                     this.argumentsToArray = function(argumentsObject){
-                        dev.log.misc('.argumentsToArray(',argumentsObject); //#development
-                        dev.count('.misc.argumentsToArray'); //#development
                         const outputArray = [];
                         for(let a = 0; a < argumentsObject.length; a++){
                             outputArray.push( argumentsObject[a] );
@@ -3350,8 +3145,6 @@
                         return outputArray;
                     };
                     this.comparer = function(item1,item2){
-                        dev.log.misc('.comparer(',item1,item2); //#development
-                        dev.count('.misc.comparer'); //#development
                         function getType(obj){
                             return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
                         }
@@ -3392,22 +3185,16 @@
                         return false;
                     };
                     this.removeThisFromThatArray = function(item,array){
-                        dev.log.misc('.removeThisFromThatArray(',item,array); //#development
-                        dev.count('.misc.removeThisFromThatArray'); //#development
                         const index = array.findIndex(a => library.misc.comparer(a,item))
                         if(index == -1){return;}
                         return array.splice(index,1);
                     };
                     this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
-                        dev.log.misc('.removeTheseElementsFromThatArray(',theseElements,thatArray); //#development
-                        dev.count('.misc.removeTheseElementsFromThatArray'); //#development
                     
                         theseElements.forEach(a => library.misc.removeThisFromThatArray(a,thatArray) );
                         return thatArray;
                     };
                     this.getDifferenceOfArrays = function(array_a,array_b){
-                        dev.log.misc('.getDifferenceOfArrays(',array_a,array_b); //#development
-                        dev.count('.misc.getDifferenceOfArrays'); //#development
                     
                         if(array_a.length == 0 && array_b.length == 0){
                             return {a:[],b:[]};
@@ -3439,16 +3226,11 @@
                     //master context
                         this.context = new (window.AudioContext || window.webkitAudioContext)();
                     
-                    
-                        
-                    
                     //destination
                         this.destination = this.context.createGain();
                         this.destination.connect(this.context.destination);
                         this.destination._gain = 1;
                         this.destination.masterGain = function(value){
-                            dev.log.audio('.masterGain(',value); //#development
-                            dev.count('.audio.masterGain'); //#development
                     
                             if(value == undefined){return this.destination._gain;}
                             this._gain = value;
@@ -3508,46 +3290,32 @@
                     
                     //lead functions
                         this.num2name = function(num){ 
-                            dev.log.audio('.num2name(',num); //#development
-                            dev.count('.audio.num2name'); //#development
                     
                             return this.midinumbers_names[num];
                         };
                         this.num2freq = function(num){ 
-                            dev.log.audio('.num2freq(',num); //#development
-                            dev.count('.audio.num2freq'); //#development
                     
                             return this.names_frequencies[this.midinumbers_names[num]];
                         };
                     
                         this.name2num = function(name){ 
-                            dev.log.audio('.name2num(',name); //#development
-                            dev.count('.audio.name2num'); //#development
                     
                             return this.names_midinumbers[name];
                         };
                         this.name2freq = function(name){ 
-                            dev.log.audio('.name2freq(',name); //#development
-                            dev.count('.audio.name2freq'); //#development
                     
                             return this.names_frequencies[name];
                         };
                     
                         this.freq2num = function(freq){ 
-                            dev.log.audio('.freq2num(',freq); //#development
-                            dev.count('.audio.freq2num'); //#development
                     
                             return this.names_midinumbers[this.frequencies_names[freq]];
                         };
                         this.freq2name = function(freq){ 
-                            dev.log.audio('.freq2name(',freq); //#development
-                            dev.count('.audio.freq2name'); //#development
                     
                             return this.frequencies_names[freq];
                         };
                     this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
-                        dev.log.audio('.changeAudioParam(',context,audioParam,target,time,curve,cancelScheduledValues); //#development
-                        dev.count('.audio.changeAudioParam'); //#development
                     
                         if(target==null){return audioParam.value;}
                     
@@ -3583,11 +3351,8 @@
                     };
                     const loadedAudioFiles = {};
                     this.loadAudioFile = function(callback,type='file',url='',errorCallback,forceRequest=false){
-                        dev.log.audio('.loadAudioFile(',callback,type,url); //#development
-                        dev.count('.audio.loadAudioFile'); //#development
                     
                         if(callback == undefined){
-                            dev.log.audio('.loadAudioFile -> no callback provided; result has nowhere to go, so it will not be done'); //#development
                             return;
                         }
                     
@@ -3623,8 +3388,6 @@
                         }
                     };
                     this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
-                        dev.log.audio('.waveformSegment(',audioBuffer,bounds,resolution); //#development
-                        dev.count('.audio.waveformSegment'); //#development
                     
                         const waveform = audioBuffer.getChannelData(0);
                         // const channelCount = audioBuffer.numberOfChannels;
@@ -3647,8 +3410,6 @@
                         return outputArray;
                     };
                     this.loadBuffer = function(context, data, destination, onended){
-                        dev.log.audio('.loadBuffer(',context,data,destination,onended); //#development
-                        dev.count('.audio.loadBuffer'); //#development
                     
                         const temp = context.createBufferSource();
                         temp.buffer = data;
@@ -3658,11 +3419,13 @@
                     };
                     this.audioWorklet = new function(){
                         function checkIfReady(){
+                            if(worklets.length == 0){return true;}
                             return worklets.map(a => a.loaded).reduce((rolling,current) => {return rolling && current;});
                         };
                         this.nowReady = function(){};
                     
                         const worklets = [
+                            //main
                             {
                                 name:'bitcrusher',
                                 blob:new Blob([`
@@ -3695,12 +3458,9 @@
                                             const amplitudeResolution = parameters.amplitudeResolution;
                                             const sampleFrequency = parameters.sampleFrequency;
                                         
-                                            for(let channel = 0; channel < input.length; channel++){
-                                                const inputChannel = input[channel];
-                                                const outputChannel = output[channel];
-                                        
-                                                for(let a = 0; a < inputChannel.length; a++){
-                                                    outputChannel[a] = a%sampleFrequency == 0 ? Math.round(inputChannel[a]*amplitudeResolution)/amplitudeResolution : outputChannel[a-1];
+                                            for(let channel = 0; channel < input.length; channel++){    
+                                                for(let a = 0; a < input[channel].length; a++){
+                                                    output[channel][a] = a%sampleFrequency == 0 ? Math.round(input[channel][a]*amplitudeResolution)/amplitudeResolution : output[channel][a-1];
                                                 }
                                             }
                                             return true;
@@ -3733,6 +3493,18 @@
                                                     minValue: 1,
                                                     maxValue: 16,
                                                     automationRate: 'k-rate',
+                                                },{
+                                                    name: 'ceiling',
+                                                    defaultValue: 10,
+                                                    minValue: -10,
+                                                    maxValue: 10,
+                                                    automationRate: 'k-rate',
+                                                },{
+                                                    name: 'floor',
+                                                    defaultValue: -10,
+                                                    minValue: -10,
+                                                    maxValue: 10,
+                                                    automationRate: 'k-rate',
                                                 }
                                             ];
                                         }
@@ -3744,16 +3516,18 @@
                                         process(inputs, outputs, parameters){
                                             const input = inputs[0];
                                             const output = outputs[0];
-                                            
-                                            const offset = parameters.offset/10;
+                                    
                                             //shortest code
                                                 const sign = parameters.invert == 1 ? -1 : 1;
-                                                for(let channel = 0; channel < input.length; channel++){
-                                                    const inputChannel = input[channel];
-                                                    const outputChannel = output[channel];
-                                            
-                                                    for(let a = 0; a < inputChannel.length; a++){
-                                                        outputChannel[a] = sign * (inputChannel[a]/parameters.divisor) + offset;
+                                                for(let channel = 0; channel < input.length; channel++){        
+                                                    for(let a = 0; a < input[channel].length; a++){
+                                                        output[channel][a] = sign * (input[channel][a]/parameters.divisor) + parameters.offset[0];
+                                    
+                                                        if( output[channel][a] < parameters.floor ){
+                                                            output[channel][a] = parameters.floor;
+                                                        }else if( output[channel][a] > parameters.ceiling ){
+                                                            output[channel][a] = parameters.ceiling;
+                                                        }
                                                     }
                                                 }
                                     
@@ -3766,6 +3540,12 @@
                                                     
                                             //                 for(let a = 0; a < inputChannel.length; a++){
                                             //                     outputChannel[a] = -inputChannel[a] + offset;
+                                    
+                                            //                     if( output[channel][a] < parameters.floor ){
+                                            //                         output[channel][a] = parameters.floor;
+                                            //                     }else if( output[channel][a] > parameters.ceiling ){
+                                            //                         output[channel][a] = parameters.ceiling;
+                                            //                     }
                                             //                 }
                                             //             }
                                             //         }else{
@@ -3775,6 +3555,12 @@
                                                     
                                             //                 for(let a = 0; a < inputChannel.length; a++){
                                             //                     outputChannel[a] = -(inputChannel[a]/divisor) + offset;
+                                    
+                                            //                     if( output[channel][a] < parameters.floor ){
+                                            //                         output[channel][a] = parameters.floor;
+                                            //                     }else if( output[channel][a] > parameters.ceiling ){
+                                            //                         output[channel][a] = parameters.ceiling;
+                                            //                     }
                                             //                 }
                                             //             }
                                             //         }
@@ -3786,6 +3572,12 @@
                                                     
                                             //                 for(let a = 0; a < inputChannel.length; a++){
                                             //                     outputChannel[a] = inputChannel[a] + offset;
+                                    
+                                            //                     if( output[channel][a] < parameters.floor ){
+                                            //                         output[channel][a] = parameters.floor;
+                                            //                     }else if( output[channel][a] > parameters.ceiling ){
+                                            //                         output[channel][a] = parameters.ceiling;
+                                            //                     }
                                             //                 }
                                             //             }
                                             //         }else{
@@ -3795,6 +3587,12 @@
                                                     
                                             //                 for(let a = 0; a < inputChannel.length; a++){
                                             //                     outputChannel[a] = (inputChannel[a]/divisor) + offset;
+                                    
+                                            //                     if( output[channel][a] < parameters.floor ){
+                                            //                         output[channel][a] = parameters.floor;
+                                            //                     }else if( output[channel][a] > parameters.ceiling ){
+                                            //                         output[channel][a] = parameters.ceiling;
+                                            //                     }
                                             //                 }
                                             //             }
                                             //         }
@@ -3816,6 +3614,12 @@
                                         static get parameterDescriptors(){
                                             return [
                                                 {
+                                                    name: 'fullSample',
+                                                    defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame sine the last time a value was returned
+                                                    minValue: 0,
+                                                    maxValue: 1,
+                                                    automationRate: 'k-rate',
+                                                },{
                                                     name: 'updateDelay',
                                                     defaultValue: 100,
                                                     minValue: 1,
@@ -3840,13 +3644,20 @@
                                     
                                         process(inputs, outputs, parameters){
                                             const input = inputs[0];
+                                            const fullSample = parameters.fullSample;
                                             const updateDelay = parameters.updateDelay;
-                                            const calculationMode = parseInt(parameters.calculationMode);
+                                            const calculationMode = parameters.calculationMode;
+                                    
+                                            if(fullSample){
+                                                this._dataArray.push(...input[0]);
+                                            }else{
+                                                this._dataArray = input[0];
+                                            }
                                     
                                             if(currentTime - this._lastUpdate > updateDelay/1000){
                                                 this._lastUpdate = currentTime;
                                     
-                                                switch(calculationMode){
+                                                switch(calculationMode[0]){
                                                     case 0: default:
                                                         this.port.postMessage( Math.max(...this._dataArray) );
                                                     break;
@@ -3867,9 +3678,9 @@
                                                     break;
                                                 }
                                     
-                                                this._dataArray = [];
-                                            }else{
-                                                this._dataArray.push(...input[0]);
+                                                if(fullSample){
+                                                    this._dataArray = [];
+                                                }
                                             }
                                     
                                             return true;
@@ -3878,7 +3689,43 @@
                                     registerProcessor('momentaryAmplitudeMeter', momentaryAmplitudeMeter);
                                 `], { type: "text/javascript" }),
                             },
-                    
+                            {
+                                name:'amplitudeControlledModulator',
+                                options:{
+                                    numberOfInputs:2
+                                },
+                                blob:new Blob([`
+                                    class amplitudeControlledModulator extends AudioWorkletProcessor{
+                                        static get parameterDescriptors(){
+                                            return [];
+                                        }
+                                        
+                                        constructor(options){
+                                            super(options);
+                                        }
+                                    
+                                        process(inputs, outputs, parameters){
+                                            const input_1 = inputs[0];
+                                            const input_2 = inputs[1];
+                                            const output_1 = outputs[0];
+                                    
+                                            for(let channel = 0; channel < input_1.length; channel++){    
+                                                for(let a = 0; a < output_1[channel].length; a++){
+                                                    output_1[channel][a] = input_1[channel][a] * (input_2[channel][a]+1)/2;
+                                                }
+                                            }
+                                    
+                                            return true;
+                                        }
+                                    }
+                                    registerProcessor('amplitudeControlledModulator', amplitudeControlledModulator);
+                                `], { type: "text/javascript" }),
+                            },
+                            
+                            
+                            
+                            
+                            //development
                             {
                                 name:'amplitudeInverter',
                                 blob:new Blob([`
@@ -3950,42 +3797,6 @@
                                 `], { type: "text/javascript" }),
                             },
                             {
-                                name:'modulon',
-                                options:{
-                                    numberOfInputs:2
-                                },
-                                blob:new Blob([`
-                                    class modulon extends AudioWorkletProcessor{
-                                        static get parameterDescriptors(){
-                                            return [];
-                                        }
-                                        
-                                        constructor(options){
-                                            super(options);
-                                        }
-                                    
-                                        process(inputs, outputs, parameters){
-                                            const input_1 = inputs[0];
-                                            const input_2 = inputs[1];
-                                            const output_1 = outputs[0];
-                                    
-                                            for(let channel = 0; channel < input_1.length; channel++){
-                                                const input_1_Channel = input_1[channel];
-                                                const input_2_Channel = input_2[channel];
-                                                const outputChannel = output_1[channel];
-                                        
-                                                for(let a = 0; a < outputChannel.length; a++){
-                                                    outputChannel[a] = input_1_Channel[a] * (input_2_Channel[a]+1)/2;
-                                                }
-                                            }
-                                    
-                                            return true;
-                                        }
-                                    }
-                                    registerProcessor('modulon', modulon);
-                                `], { type: "text/javascript" }),
-                            },
-                            {
                                 name:'sqasherDoubler',
                                 blob:new Blob([`
                                     class sqasherDoubler extends AudioWorkletProcessor{
@@ -4053,16 +3864,13 @@
                                 `], { type: "text/javascript" }),
                             },
                         ];
-                        
+                            
                         worklets.forEach(worklet => {
-                            dev.log.audio('.AudioWorklet -> loading worklet:',worklet.name); //#development
                             worklet.loaded = false;
                     
                             audio.context.audioWorklet.addModule(window.URL.createObjectURL(worklet.blob)).then( () => {
-                                dev.log.audio('.AudioWorklet ->',worklet.name,'has been loaded'); //#development
                                 worklet.loaded = true;
                                 const creationFunctionName = 'create'+worklet.name.charAt(0).toUpperCase() + worklet.name.slice(1);
-                                dev.log.audio('.AudioWorklet -> creationFunctionName:',creationFunctionName); //#development
                                 audio.context[creationFunctionName] = function(){
                                     return new AudioWorkletNode(_canvas_.library.audio.context, worklet.name, worklet.options);
                                 };
@@ -22365,8 +22173,8 @@
             };
 
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:7} };
-                const core_engine = new Worker("js/core_engine.js");
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:20} };
+                const core_engine = new Worker("/js/core_engine.js");
                 const self = this;
                 
                 const communicationModuleMaker = function(communicationObject,callerName){
@@ -22384,25 +22192,18 @@
                     const messagingCallbacks = {};
                 
                     function generateMessageID(){
-                        self.log('::generateMessageID()'); //#development
                         return messageId++;
                     }
                 
                     communicationObject.onmessage = function(encodedPacket){
-                        self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
                         let message = encodedPacket.data;
                 
                         if(message.outgoing){
-                            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
                             if(message.cargo.function in self.function){
-                                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
-                                self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                                 if(message.id == null){
-                                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                                     self.function[message.cargo.function](...message.cargo.arguments);
                                 }else{
-                                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     communicationObject.postMessage({
                                         id:message.id,
                                         outgoing:false,
@@ -22410,35 +22211,25 @@
                                     });
                                 }
                             }else if(message.cargo.function in self.delayedFunction){
-                                self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
-                                self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                                 if(message.id == null){
-                                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                                 }else{
-                                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
                                         communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
                                     }].concat(message.cargo.arguments));
                                 }
                             }else{
-                                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
                             }
                         }else{
-                            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
-                            self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
                             messagingCallbacks[message.id](message.cargo);
                             delete messagingCallbacks[message.id];
                         }
                     };
                     this.run = function(functionName,argumentList=[],callback,transferables){
-                        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
                         let id = null;
                         if(callback != undefined){
-                            self.log('.run -> callback was defined; generating message ID'); //#development
                             id = generateMessageID();
-                            self.log('.run -> message ID:',id); //#development
                             messagingCallbacks[id] = callback;
                         }
                         communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
@@ -22510,14 +22301,12 @@
                         //type
                             const type = _type;
                             this.getType = function(){return type;};
-                            dev.log.elementLibrary[type](' - new '+type+'(',_name); //#development
                     
                         //id
                             let id = -1;
                             this.getId = function(){return id;};
                             this.__idReceived = function(){};
                             this.__id = function(a,updateIdOnly=false){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].__id(',a); //#development
                                 id = a;
                                 if(updateIdOnly){return;}
                     
@@ -22533,22 +22322,19 @@
                             let name = _name;
                             this.getName = function(){return name;};
                             // this.setName = function(a){
-                            //     dev.log.elementLibrary[type]('['+this.getAddress+'].setName(',a); //#development
                             //     name = a;
                             // };
                     
                         //hierarchy
                             this.parent = undefined;
                             this.getAddress = function(){
-                                return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
+                                return (this.parent != undefined && this.parent.getId() != 0 ? this.parent.getAddress() : '') + '/' + name;
                             };
                             this.getOffset = function(){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
                     
                                 let output = {x:0,y:0,scale:1,angle:0};
                     
                                 if(this.parent){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset() -> parent found'); //#development
                                     const offset = this.parent.getOffset();
                                     const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
                                     output = { 
@@ -22558,11 +22344,9 @@
                                         angle: offset.angle + cashedAttributes.angle,
                                     };
                                 }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> no parent found'); //#development
                                     output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
                                 }
                     
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> output: '+JSON.stringify(output)); //#development
                                 return output;
                             };
                     
@@ -22573,7 +22357,6 @@
                                 this[name] = function(a){
                                     if(a == undefined){ return cashedAttributes[name]; }
                                     if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',...arguments); //#development
                                     cashedAttributes[name] = a;
                                     if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[...arguments]); }
                                 };
@@ -22581,11 +22364,10 @@
                             Object.entries({
                                 ignored: false,
                                 scale: 1,
-                                static: false,
+                                // static: false,
                             }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                             this.unifiedAttribute = function(attributes){
                                 if(attributes == undefined){ return cashedAttributes; }
-                                dev.log.elementLibrary[type]('['+this.getAddress+'].unifiedAttribute(',attributes); //#development
                                 Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
                                 if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                             };
@@ -22593,23 +22375,19 @@
                         //callbacks
                             const cashedCallbacks = {};
                             this.getCallback = function(callbackType){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getCallback(',callbackType); //#development
                                 return cashedCallbacks[callbackType];
                             };
                             this.attachCallback = function(callbackType, callback){
-                                dev.log.elementLibrary[type]('['+this.getAddress+'].attachCallback(',callbackType,callback); //#development
                                 cashedCallbacks[callbackType] = callback;
                                 if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
                             }
                             this.removeCallback = function(callbackType){
-                                dev.log.elementLibrary[type]('['+this.getAddress+'].removeCallback(',callbackType); //#development
                                 delete cashedCallbacks[callbackType];
                                 if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
                             }
                     
                         //info dump
                             this._dump = function(){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']._dump()'); //#development
                                 _canvas_.core.element.__executeMethod(id,'_dump',[]);
                             };
                     };
@@ -22651,18 +22429,15 @@
                     
                         let clearingLock = false;
                         function lockClearingLock(){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::lockClearingLock()'); //#development
                             clearingLock = true;
                         }
                         function unlockClearingLock(){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::unlockClearingLock()'); //#development
                             self.__repush();
                             clearingLock = false;
                         }
                     
                         function checkForName(name){ return childRegistry[name] != undefined; }
                         function isValidElement(elementToCheck){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::isValidElement(',elementToCheck); //#development
                             if( elementToCheck == undefined ){ return false; }
                             if( elementToCheck.getName() == undefined || elementToCheck.getName().length == 0 ){
                                 console.warn('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
@@ -22687,7 +22462,6 @@
                     
                             communicationModule.run('element.executeMethod',[self.getId(),'clear'],() => {
                                 function readdChildren(){
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::repush::readdChildren -> children:',children); //#development
                                     const childIds = children.map(child => child.getId());
                                     if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
                                     else{ _canvas_.core.element.__executeMethod(self.getId(),'syncChildren',[childIds]); }
@@ -22697,23 +22471,18 @@
                         };
                         
                         this.getChildren = function(){ 
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildren()'); //#development
                             return children;
                         };
                         this.getChildByName = function(name){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildByName(',name); //#development
                             return childRegistry[name];
                         };
                         this.getChildIndexByName = function(name){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildIndexByName(',name); //#development
                             return children.indexOf(childRegistry[name]);
                         };
                         this.contains = function(elementToCheck){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].contains(',elementToCheck); //#development
                             return children.indexOf(elementToCheck) != -1;
                         };
                         this.append = function(newElement){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append(',newElement,'(',newElement.getName(),')'); //#development
                     
                             if( !isValidElement(newElement) ){ return false; }
                             newElement.parent = this;
@@ -22724,32 +22493,24 @@
                             if(clearingLock){ return; }
                     
                             if(newElement.getId() == -1){
-                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> newElement\'s id missing; setting up "__idReceived" callback..'); //#development
                                 newElement.__calledBy = this.getAddress();
                                 newElement.__idReceived = function(){
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> newElement\'s "__idReceived" callback, called by '+newElement.__calledBy+', id is: '+newElement.getId()+' ()'); //#development
                                     if(self.getId() != -1){ 
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id:',self.getId()); //#development
                                         if(children.indexOf(newElement) != -1){
-                                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> element position:',children.indexOf(newElement)); //#development
                                             _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
                                         }else{
-                                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
                                         }
                                     }else{
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
                                     }
                                 };
                             }else{
                                 if(self.getId() != -1){
                                     _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
                                 }else{
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
                                 }
                             }
                         };
                         this.prepend = function(newElement){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend(',newElement,'(',newElement.getName(),')'); //#development
                     
                             if( !isValidElement(newElement) ){ return false; }
                             newElement.parent = this;
@@ -22760,25 +22521,20 @@
                             if(clearingLock){ return; }
                     
                             if(newElement.getId() == -1){
-                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> newElement\'s id missing; setting up "__idReceived" callback..'); //#development
                                 newElement.__idReceived = function(){
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> newElement\'s "__idReceived" callback ->'); //#development
                                     if(children.indexOf(newElement) != -1 && self.getId() != -1){ 
                                         _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
                                     }else{
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> this group\'s id missing; will not send message'); //#development
                                     }
                                 };
                             }else{
                                 if(self.getId() != -1){
                                     _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
                                 }else{
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
                                 }
                             }
                         };
                         this.remove = function(elementToRemove){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove(',elementToRemove,'(',elementToRemove.getName(),')'); //#development
                             children.splice(children.indexOf(elementToRemove), 1);
                             delete childRegistry[elementToRemove.getName()];
                             elementToRemove.parent = undefined;
@@ -22787,37 +22543,29 @@
                             if(clearingLock){ return; }
                     
                             if(elementToRemove.getId() == -1){
-                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s id missing'); //#development
                                 elementToRemove.__idReceived = function(){
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s "__idReceived" callback ->'); //#development
                                     if(children.indexOf(elementToRemove) == -1 && self.getId() != -1){ 
                                         _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
                                     }else{
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
                                     }
                                 };
                             }else{
-                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s id:',elementToRemove.getId()); //#development
                                 if(self.getId() != -1){
                                     _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
                                 }else{
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
                                 }
                             }
                         };
                         this.clear = function(){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].clear()'); //#development
                             children = [];
                             childRegistry = {};
                             if(self.getId() != -1){ 
                                 lockClearingLock();
                                 communicationModule.run('element.executeMethod',[self.getId(),'clear',[]],unlockClearingLock);
                             }else{
-                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
                             }
                         };
                         this.getElementsUnderPoint = function(x,y){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getElementsUnderPoint(',x,y); //#development
                             if(self.getId() != -1){
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.__executeMethod(self.getId(),'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
@@ -22825,7 +22573,6 @@
                             }
                         };
                         this.getTree = function(){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getTree()'); //#development
                     
                             const result = {name:this.getName(), type:this.getType(), id:this.getId(), children:[]};
                             children.forEach(function(a){
@@ -22836,7 +22583,6 @@
                         };
                         this.stencil = function(newStencilElement){
                             if(newStencilElement == undefined){ return stencilElement; }
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].stencil(',newStencilElement); //#development
                             stencilElement = newStencilElement;
                     
                             if(newStencilElement.getId() == -1){
@@ -23166,50 +22912,42 @@
                 
                 this.meta = new function(){
                     this.areYouReady = function(){
-                        dev.log.interface('.meta.areYouReady()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('areYouReady',[],resolve);
                         });
                     };
                     this.refresh = function(){
-                        dev.log.interface('.meta.refresh()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('refresh',[],resolve);
                         });
                     };
                     this.getElementFromId = function(id){
-                        dev.log.interface('.meta.getElementFromId('+id+')'); //#development
                         return elementRegistry[id];
                     };
                 };
                 
                 this._dump = new function(){
                     this.elememt = function(){
-                        dev.log.interface('._dump.elememt()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.element',[],resolve);
                         });
                     };
                     this.arrangement = function(){
-                        dev.log.interface('._dump.arrangement()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.arrangement',[],resolve);
                         });
                     };
                     this.render = function(){
-                        dev.log.interface('._dump.render()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.render',[],resolve);
                         });
                     };
                     this.viewport = function(){
-                        dev.log.interface('._dump.viewport()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.viewport',[],resolve);
                         });
                     };
                     this.callback = function(){
-                        dev.log.interface('._dump.callback()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.callback',[],resolve);
                         });
@@ -23218,12 +22956,10 @@
                 
                 this.element = new function(){
                     this.getAvailableElements = function(){
-                        dev.log.interface('.element.getAvailableElements()'); //#development
                         return Object.keys(elementLibrary);
                     };
                 
                     this.create = function(type,name,forceId,updateIdOnly){
-                        dev.log.interface('.element.create(',type,name,forceId,updateIdOnly); //#development
                 
                         if(elementLibrary[type] == undefined){
                             console.warn('interface.element.create - unknown element type "'+type+'"');
@@ -23243,18 +22979,15 @@
                         return newElementProxy;
                     };
                     this.delete = function(ele){
-                        dev.log.interface('.element.delete(',ele); //#development
                         communicationModule.run('element.delete',[ele.getId()]);
                         elementRegistry[element.getId()] = undefined;
                     };
                     this.deleteAllCreated = function(){
-                        dev.log.interface('.element.deleteAllCreated()'); //#development
                         communicationModule.run('element.deleteAllCreated',[]);
                         elementRegistry = [];
                     };
                 
                     this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
-                        dev.log.interface('.element.__executeMethod(',id,attribute,argumentList,callback,transferables); //#development
                         communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
                     };
                 };
@@ -23262,7 +22995,6 @@
                     const design = self.element.create('group','root',0,true)
                 
                     this.new = function(){
-                        dev.log.interface('.arrangement.new()'); //#development
                         communicationModule.run('arrangement.new');
                         design.clear();
                         design.unifiedAttribute({
@@ -23271,31 +23003,25 @@
                             angle: 0,
                             scale: 1,
                             heedCamera: false,
-                            static: false,
+                            // static: false,
                         });
                     };
                     this.get = function(){
-                        dev.log.interface('.arrangement.get()'); //#development
                         return design;
                     };
                     this.prepend = function(element){
-                        dev.log.interface('.arrangement.prepend()'); //#development
                         return design.prepend(element);
                     };
                     this.append = function(element){
-                        dev.log.interface('.arrangement.append()'); //#development
                         return design.append(element);
                     };
                     this.remove = function(element){
-                        dev.log.interface('.arrangement.remove()'); //#development
                         return design.remove(element);
                     };
                     this.clear = function(){
-                        dev.log.interface('.arrangement.clear()'); //#development
                         return design.clear();
                     };
                     this.getElementByAddress = function(address){
-                        dev.log.interface('.arrangement.getElementByAddress(',address); //#development
                         
                         const route = address.split('/');
                         route.shift();
@@ -23308,7 +23034,6 @@
                         return currentObject;
                     };
                     this.getElementsUnderPoint = function(x,y){
-                        dev.log.interface('.arrangement.getElementsUnderPoint(',x,y); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.getElementsUnderPoint',[x,y],results => {
                                 resolve(results.map(result => elementRegistry[result]));
@@ -23316,7 +23041,6 @@
                         });
                     };
                     this.getElementsUnderArea = function(points){
-                        dev.log.interface('.arrangement.getElementsUnderArea(',points); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.getElementsUnderArea',[points],results => {
                                 resolve(results.map(result => elementRegistry[result]));
@@ -23324,7 +23048,6 @@
                         });
                     };
                     this.printTree = function(mode='spaced',local=false){
-                        dev.log.interface('.arrangement.printTree(',mode,local); //#development
                 
                         if(local){
                             function recursivePrint(grouping,prefix=''){
@@ -23350,13 +23073,11 @@
                         }
                     };
                     this.areParents = function(element,potentialParents=[]){
-                        dev.log.interface('.arrangement.areParents(',element,potentialParents); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.areParents',[element.getId(),potentialParents.map(parent => parent.getId())],resolve);
                         });
                     };
                     this._dump = function(local=true,engine=true){
-                        dev.log.interface('.arrangement._dump(',local,engine); //#development
                 
                         if(local){
                             console.log(design.getAddress(),'._dump()');
@@ -23371,7 +23092,7 @@
                             console.log(design.getAddress(),'._dump -> angle: '+design.angle());
                             console.log(design.getAddress(),'._dump -> scale: '+design.scale());
                             console.log(design.getAddress(),'._dump -> heedCamera: '+design.heedCamera());
-                            console.log(design.getAddress(),'._dump -> static: '+design.static());
+                            // console.log(design.getAddress(),'._dump -> static: '+design.static());
                             console.log(design.getAddress(),'._dump -> children.length: '+design.getChildren().length);
                             console.log(design.getAddress(),'._dump -> children: ',design.getChildren());
                             console.log(design.getAddress(),'._dump -> clipActive: '+design.clipActive());
@@ -23389,13 +23110,11 @@
                     };
                 
                     this.refresh = function(){
-                        dev.log.interface('.render.refresh()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.refresh',[],resolve);
                         });
                     };
                     this.clearColour = function(colour){
-                        dev.log.interface('.render.clearColour(',colour); //#development
                         if(colour == undefined){return cachedValues.clearColour;}
                         cachedValues.clearColour = colour;
                         return new Promise((resolve, reject) => {
@@ -23403,17 +23122,14 @@
                         });
                     };
                     this.adjustCanvasSize = function(newWidth, newHeight){
-                        dev.log.interface('.render.adjustCanvasSize(',newWidth, newHeight); //#development
                         communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
                     };
                     this.getCanvasSize = function(){
-                        dev.log.interface('.render.getCanvasSize()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.getCanvasSize',[],resolve);
                         });
                     };
                     this.activeLimitToFrameRate = function(active){
-                        dev.log.interface('.render.activeLimitToFrameRate(',active); //#development
                         if(active == undefined){return cachedValues.active;}
                         cachedValues.active = active;
                         return new Promise((resolve, reject) => {
@@ -23421,7 +23137,6 @@
                         });
                     };
                     this.frameRateLimit = function(rate){
-                        dev.log.interface('.render.frameRateLimit(',rate); //#development
                         if(rate == undefined){return cachedValues.frameRateLimit;}
                         cachedValues.frameRateLimit = rate;
                         return new Promise((resolve, reject) => {
@@ -23429,11 +23144,9 @@
                         });
                     };
                     this.frame = function(){
-                        dev.log.interface('.render.frame()'); //#development
                         communicationModule.run('render.frame',[]);
                     };
                     this.active = function(active){
-                        dev.log.interface('.render.active(',active); //#development
                         if(active == undefined){return cachedValues.active;}
                         cachedValues.active = active;
                         return new Promise((resolve, reject) => {
@@ -23457,7 +23170,6 @@
                     //adapter
                         this.adapter = new function(){
                             this.windowPoint2workspacePoint = function(x,y){
-                                dev.log.interface('.viewport.adapter.windowPoint2workspacePoint(',x,y); //#development
                                 const position = cachedValues.position;
                                 const scale = cachedValues.scale;
                                 const angle = cachedValues.angle;
@@ -23484,13 +23196,11 @@
                         };
                 
                     this.refresh = function(){
-                        dev.log.interface('.viewport.refresh()'); //#development
                         communicationModule.run('viewport.refresh',[]);
                     };
                     this.position = function(x,y){
                         if(x==undefined || y==undefined){ return cachedValues.position; }
                         cachedValues.position = {x:x,y:y};
-                        dev.log.interface('.viewport.position(',x,y); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.position',[x,y],resolve);
                         });
@@ -23499,7 +23209,6 @@
                         if(s==undefined){ return cachedValues.scale; }
                         if(s == 0){console.error('cannot set scale to zero');}
                         cachedValues.scale = s;
-                        dev.log.interface('.viewport.scale(',s); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.scale',[s],resolve);
                         });
@@ -23507,32 +23216,27 @@
                     this.angle = function(a){
                         if(a==undefined){ return cachedValues.angle; }
                         cachedValues.angle = a;
-                        dev.log.interface('.viewport.angle(',a); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.angle',[a],resolve);
                         });
                     };
                     this.getElementsUnderPoint = function(x,y){
-                        dev.log.interface('.viewport.getElementsUnderPoint(',x,y); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
                         });
                     };
                     this.getElementsUnderArea = function(points){
-                        dev.log.interface('.viewport.getElementsUnderArea(',points); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
                         });
                     };
                     this.getMousePosition = function(x,y){
-                        dev.log.interface('.viewport.getMousePosition(',x,y); //#development
                         if(x == undefined || y == undefined){ return mouseData; }
                         mouseData.x = x;
                         mouseData.y = y;
                         communicationModule.run('viewport.getMousePosition',[x,y]);
                     };
                     this.getBoundingBox = function(){
-                        dev.log.interface('.viewport.getBoundingBox()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getBoundingBox',[],resolve);
                         });
@@ -23540,7 +23244,6 @@
                     this.stopMouseScroll = function(bool){
                         if(bool==undefined){ return cachedValues.stopMouseScroll; }
                         cachedValues.stopMouseScroll = bool;
-                        dev.log.interface('.viewport.stopMouseScroll(',bool); //#development
                         communicationModule.run('viewport.stopMouseScroll',[bool]);
                     };
                 
@@ -23552,13 +23255,11 @@
                 };
                 this.stats = new function(){
                     this.active = function(active){
-                        dev.log.interface('.stats.active(',active); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('stats.active',[active],resolve);
                         });
                     };
                     this.getReport = function(){
-                        dev.log.interface('.stats.getReport()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('stats.getReport',[],resolve);
                         });
@@ -23566,7 +23267,6 @@
                 };
                 this.callback = new function(){
                     this.listCallbackTypes = function(){
-                        dev.log.interface('.callback.listCallbackTypes()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('callback.listCallbackTypes',[],resolve);
                         });
@@ -23594,16 +23294,13 @@
                         };
                     };
                     this.getCallback = function(element, callbackType){
-                        dev.log.interface('.callback.getCallback(',element,callbackType); //#development
                         callbackRegistry.getCallback(element.getId(), callbackType);
                     };
                     this.attachCallback = function(element, callbackType, callback){
-                        dev.log.interface('.callback.attachCallback(',element,callbackType,callback); //#development
                         callbackRegistry.register(element.getId(), callbackType, callback);
                         communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
                     };
                     this.removeCallback = function(element, callbackType){
-                        dev.log.interface('.callback.removeCallback(',element,callbackType); //#development
                         callbackRegistry.remove(element.getId(), callbackType);
                         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
                     };
@@ -23611,7 +23308,6 @@
                     let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
                     this.callbackActivationMode = function(mode){
                         if(mode==undefined){return callbackActivationMode;}
-                        dev.log.interface('.callback.callbackActivationMode(',mode); //#development
                         callbackActivationMode = mode;
                     };
                 
@@ -23679,69 +23375,57 @@
                 };
 
                 communicationModule.function.go = function(){
-                    dev.log.service('.go()'); //#development
                     _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
                     self.go.__activate();
                 };
                 communicationModule.function.printToScreen = function(imageData){
-                    dev.log.service('.printToScreen(',imageData); //#development
                     _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
                 };
                 // communicationModule.function.onViewportAdjust = function(state){
-                //     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
                 //     console.log('onViewportAdjust -> ',state); /* callback */
                 // };
                 
                 communicationModule.function.updateElement = function(elem, data={}){
-                    dev.log.service('.updateElement(',elem,data); //#development
                     const proxyElement = _canvas_.core.meta.getElementFromId(elem);
                     if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
                 };
                 communicationModule.function.runElementCallback = function(elem, data={}){
-                    dev.log.service('.runElementCallback(',elem,data); //#development
                     const proxyElement = _canvas_.core.meta.getElementFromId(elem);
                     if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
                 };
                 
                 communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
                     return attributeNames.map((name,index) => {
                         return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
                     });    
                 };
                 communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
-                    dev.log.service('.setCanvasAttributes(',attributes,prefixActiveArray); //#development
                     attributes.map((attribute,index) => {
                         _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
                     });
                 };
                 communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
                     return attributeNames.map((name,index) => {
                         return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
                     });
                 };
                 
                 communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                    dev.log.service('.getDocumentAttributes(',attributeNames); //#development
                     return attributeNames.map(attribute => {
                         return eval('document.'+attribute);
                     });
                 };
                 communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                    dev.log.service('.setDocumentAttributes(',attributeNames,values); //#development
                     return attributeNames.map((attribute,index) => {
                         eval('document.'+attribute+' = "'+values[index]+'"');
                     });
                 };
                 communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                    dev.log.service('.getWindowAttributes(',attributeNames); //#development
                     return attributeNames.map(attribute => {
                         return eval('window.'+attribute);
                     });
                 };
                 communicationModule.function.setWindowAttributes = function(attributes=[]){
-                    dev.log.service('.setWindowAttributes(',attributes); //#development
                     attributes.map((attribute,index) => {
                         eval('window.'+attribute.name+' = "'+attribute.value+'"');
                     });

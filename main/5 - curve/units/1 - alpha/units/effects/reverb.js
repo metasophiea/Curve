@@ -76,8 +76,8 @@ this.reverb = function(name,x,y,angle){
                     backingURL__up:unitStyle.imageStoreURL_localPrefix+'rocker_down_up.png',
                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'rocker_down_down.png',
                 }},
-                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, static:true, style:unitStyle.LCD }},
-                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, static:true, style:unitStyle.LCD }},
+                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, canvasBased:true, style:unitStyle.LCD }},
+                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, canvasBased:true, style:unitStyle.LCD }},
             ]
         });
 

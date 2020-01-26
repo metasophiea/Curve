@@ -71,10 +71,10 @@ this.audio_file_player = function(name,x,y,angle){
                     x:125, y:20, radius:67.5/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_playbackSpeed,
                 }},
                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'time', data:{
-                    x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, static:true, count:8, resolution:5,
+                    x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, canvasBased:true, count:8, resolution:5,
                 }},
                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'trackNameReadout', data:{
-                    x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, static:true, count:14, resolution:5,
+                    x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, canvasBased:true, count:14, resolution:5,
                 }},
                 {collection:'control', type:'button_image', name:'button_play', data:{
                     x:2.5, y:35, width:10, height:10, hoverable:false, 

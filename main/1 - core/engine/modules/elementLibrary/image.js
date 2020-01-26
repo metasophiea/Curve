@@ -35,7 +35,7 @@ this.image = function(_id,_name){
             let width = 10;
             let height = 10;
             let scale = 1;
-            let isStatic = false;
+            // let isStatic = false;
             this.x = function(a){ 
                 if(a==undefined){return x;}     
                 x = a;     
@@ -78,12 +78,12 @@ this.image = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
-            this.static = function(a){
-                if(a==undefined){return isStatic;}  
-                isStatic = a;  
-                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-                if(allowComputeExtremities){computeExtremities();}
-            };
+            // this.static = function(a){
+            //     if(a==undefined){return isStatic;}  
+            //     isStatic = a;  
+            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
+            //     if(allowComputeExtremities){computeExtremities();}
+            // };
 
         //image data
             const image = { 
@@ -96,6 +96,11 @@ this.image = function(_id,_name){
             };
             function loadImage(url,forceUpdate=false){
                 dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url,forceUpdate); //#development
+                
+                if(url == ''){
+                    image.url = image.defaultURL;
+                    url = image.defaultURL;
+                }
 
                 image.isLoaded = false;
 
@@ -120,7 +125,6 @@ this.image = function(_id,_name){
                         }else if(errorType == 'imageDecodingError'){
                             console.error('Image decoding error :: url:',url);
                             console.error('-- -- -- -- -- -- -- :: response:',response);
-                            console.error('-- -- -- -- -- -- -- :: data:',data);
                             console.error(error);
                             loadImage(image.defaultURL);
                         }else if(errorType == 'previousFailure'){
@@ -142,7 +146,7 @@ this.image = function(_id,_name){
                 if(a==image.url){return;} //no need to reload the same image
                 image.url = a;
 
-                if(image.url === ''){ image.url = image.defaultURL; }
+                if(image.url == ''){ image.url = image.defaultURL; }
 
                 loadImage(image.url,forceUpdate);
             };
@@ -159,7 +163,7 @@ this.image = function(_id,_name){
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:isStatic, url:image.url }; } 
+                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, /*static:isStatic,*/ url:image.url }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -305,7 +309,7 @@ this.image = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
@@ -382,7 +386,7 @@ this.image = function(_id,_name){
             report.info(self.getAddress(),'._dump -> width: '+width);
             report.info(self.getAddress(),'._dump -> height: '+height);
             report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> static: '+self.static());
+            // report.info(self.getAddress(),'._dump -> static: '+self.static());
             report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
         };
     
@@ -396,7 +400,7 @@ this.image = function(_id,_name){
             this.width = self.width;
             this.height = self.height;
             this.scale = self.scale;
-            this.static = self.static;
+            // this.static = self.static;
             this.url = self.url;
             this.bitmap = self.bitmap;
             this.unifiedAttribute = self.unifiedAttribute;

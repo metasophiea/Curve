@@ -1,18 +1,19 @@
-// momentaryAmplitudeMeter
-_canvas_.library.go.add( function(){
-    const osc = new OscillatorNode(_canvas_.library.audio.context);
-    const gain = new GainNode(_canvas_.library.audio.context);
-    const MAM = _canvas_.library.audio.context.createMomentaryAmplitudeMeter();
+// // momentaryAmplitudeMeter
+// _canvas_.library.go.add( function(){
+//     const osc = new OscillatorNode(_canvas_.library.audio.context);
+//     const gain = new GainNode(_canvas_.library.audio.context);
+//     const MAM = _canvas_.library.audio.context.createMomentaryAmplitudeMeter();
     
-    osc.connect(gain).connect(MAM).connect(_canvas_.library.audio.context.destination);
+//     osc.connect(gain).connect(MAM);
 
-    MAM.port.onmessage = function(msg){ console.log(msg.data); }
+//     MAM.port.onmessage = function(msg){ console.log(msg.data); }
 
-    osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
-    osc.start();
+//     // osc.type = 'square';
+//     osc.frequency.setTargetAtTime(10, _canvas_.library.audio.context.currentTime, 0);
+//     osc.start();
 
-    gain.gain.linearRampToValueAtTime(0, _canvas_.library.audio.context.currentTime+10);
-});
+//     // gain.gain.linearRampToValueAtTime(0, _canvas_.library.audio.context.currentTime+10);
+// });
 
 
 // // amplitudeInverter
@@ -45,7 +46,7 @@ _canvas_.library.go.add( function(){
 // });
 
 
-// // modulon
+// // modulon / amplitudeControledModulator
 // _canvas_.library.go.add( function(){
 //     const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
 //     const osc_2 = new OscillatorNode(_canvas_.library.audio.context);

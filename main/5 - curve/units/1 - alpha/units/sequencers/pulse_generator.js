@@ -83,7 +83,7 @@ this.pulse_generator = function(name,x,y,angle){
                 } },
 
                 {collection:'display', type:'readout_sevenSegmentDisplay', name:'LCD', data:{ 
-                    x:21.75, y:10.75, width:64, height:18.5, static:true, count:6, decimalPlaces:true, style:unitStyle.LCD, resolution:5,
+                    x:21.75, y:10.75, width:64, height:18.5, canvasBased:true, count:6, decimalPlaces:true, style:unitStyle.LCD, resolution:5,
                 }},
 
                 {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + 10.85*0, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},

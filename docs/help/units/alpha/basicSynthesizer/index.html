@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>Basic Synthesizer</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                font-family:Helvetica;
+            }
+            .generalTextSections{
+                width:80%;
+                min-width:600px;
+                max-width:700px;
+                margin:10px auto;
+            }
+            #curveCanvas{
+                display:block; 
+                margin:auto;
+                border:5px;
+                border-style:inset;
+                outline:none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <p class='generalTextSections'>For synthesizing sound</p>
+        <canvas id='curveCanvas' curve curveWidth='600px' curveHeight='400px'></canvas>
+    </body>
+
+</html>
+
+<script type='text/javascript' src='/js/curve.min.js'></script>
+
+<script>
+    document.getElementById('curveCanvas').curve.go.add(function(){
+        document.getElementById('curveCanvas').control.gui.hideMenubar();
+        document.getElementById('curveCanvas').control.interaction.menubar(false);
+        document.getElementById('curveCanvas').core.viewport.stopMouseScroll(false);
+        document.getElementById('curveCanvas').control.interaction.unloadWarning(false);
+        document.getElementById('curveCanvas').control.interaction.mouseGripPanning(false);
+        document.getElementById('curveCanvas').control.interaction.mouseWheelZoom(false);
+
+        document.getElementById('curveCanvas').control.interaction.unitSelection(false);
+        document.getElementById('curveCanvas').control.interaction.unitGrappleRotation(false);
+        document.getElementById('curveCanvas').control.interaction.unitGrapplePosition(false);
+        document.getElementById('curveCanvas').control.viewport.scale(3);
+
+        const basic_synthesizer = document.getElementById('curveCanvas').control.scene.addUnit(10,10,0,'basic_synthesizer','alpha');
+        const audio_duplicator = document.getElementById('curveCanvas').control.scene.addUnit(-100,12.5,0,'audio_duplicator','alpha');
+        const amplifier = document.getElementById('curveCanvas').control.scene.addUnit(-300,-50,0,'amplifier','alpha');
+        const eightStepSequencer = document.getElementById('curveCanvas').control.scene.addUnit(250,15,0,'eightStepSequencer','alpha');
+        const pulse_generator = document.getElementById('curveCanvas').control.scene.addUnit(600,15,0,'pulse_generator','alpha');
+
+        basic_synthesizer.io.audio.io_output.connectTo( audio_duplicator.io.audio.input );
+        audio_duplicator.io.audio.output_1.connectTo( amplifier.io.audio.input_L );
+        audio_duplicator.io.audio.output_2.connectTo( amplifier.io.audio.input_R );
+        eightStepSequencer.io.data.output.connectTo( basic_synthesizer.io.data.io_midiNoteInput );
+        pulse_generator.io.signal.output.connectTo( eightStepSequencer.io.signal.directionChange_step );
+
+        basic_synthesizer.i.outputGain(0);
+        eightStepSequencer.importData(
+            {
+                stages:[
+                    {note:0,  octave:0, velocity:1},
+                    {note:2,  octave:0, velocity:1},
+                    {note:4,  octave:0, velocity:1},
+                    {note:5,  octave:0, velocity:1},
+                    {note:7,  octave:0, velocity:1},
+                    {note:9,  octave:0, velocity:1},
+                    {note:11, octave:0, velocity:1},
+                    {note:0,  octave:1, velocity:1},
+                ],
+                direction: 1,
+                currentStage: -1,
+            }
+        );
+        pulse_generator.i.tempo(240);
+   
+        document.getElementById('curveCanvas').control.interaction.unitAdditionRemoval(false);
+    });
+</script>

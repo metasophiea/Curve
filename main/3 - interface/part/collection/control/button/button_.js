@@ -77,6 +77,10 @@ this.button_ = function(
             if(bool==undefined){return interactable;}
             interactable = bool;
         };
+        object.selectable = function(bool){
+            if(bool==undefined){return selectable;}
+            selectable = bool;
+        };
         object.forceMouseLeave = function(){
             object.state.hovering = false; 
             object.release('forced'); 

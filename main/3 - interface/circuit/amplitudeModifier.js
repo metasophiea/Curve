@@ -12,6 +12,8 @@ this.amplitudeModifier = function(
             invert: false,
             offset: 0,
             divisor: 1,
+            ceiling:10,
+            floor:-10,
             node: context.createAmplitudeModifier(),
         };
 
@@ -34,5 +36,15 @@ this.amplitudeModifier = function(
             if(value == undefined){ return flow.amplitudeModifierNode.divisor; }
             flow.amplitudeModifierNode.divisor = value;
             flow.amplitudeModifierNode.node.parameters.get('divisor').setValueAtTime(value,0);
+        };
+        this.ceiling = function(value){
+            if(value == undefined){ return flow.amplitudeModifierNode.ceiling; }
+            flow.amplitudeModifierNode.ceiling = value;
+            flow.amplitudeModifierNode.node.parameters.get('ceiling').setValueAtTime(value,0);
+        };
+        this.floor = function(value){
+            if(value == undefined){ return flow.amplitudeModifierNode.floor; }
+            flow.amplitudeModifierNode.floor = value;
+            flow.amplitudeModifierNode.node.parameters.get('floor').setValueAtTime(value,0);
         };
 };

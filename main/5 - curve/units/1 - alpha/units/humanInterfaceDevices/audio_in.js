@@ -62,10 +62,10 @@ this.audio_in = function(name,x,y,angle,setupConnect=true){
                     x:37.5+10/16, y:5+10/16, width:11.65-10/8, height:40-10/8
                 }},
                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'index', data:{
-                    x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, static:true, count:11, resolution:5,
+                    x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, canvasBased:true, count:11, resolution:5,
                 }},
                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'text', data:{
-                    x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, static:true, count:18, resolution:5,
+                    x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, canvasBased:true, count:18, resolution:5,
                 }},
             ]
         });

@@ -1,8 +1,9 @@
 _canvas_.curve.go.add( function(){
-    _canvas_.core.render.frameRateLimit(10);
+    // _canvas_.core.render.frameRateLimit(10);
 
-    const dsds = _canvas_.control.scene.addUnit(10,10,0,'dsds-8^3','harbinger');
-    const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
+    // const dsds = _canvas_.control.scene.addUnit(10,10,0,'dsds-8^3','harbinger');
+    // const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
+    const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
 
     // for(let a = 0; a < 8; a++){
     //     mrd.io.signal['signal_out_'+a].connectTo(dsds.io.signal['signal_in_'+a]);
@@ -35,6 +36,6 @@ _canvas_.curve.go.add( function(){
 
 
 
-    // _canvas_.control.viewport.scale(4);
-    // _canvas_.control.viewport.position(-10, 20);
+    _canvas_.control.viewport.scale(4);
+    _canvas_.control.viewport.position(-5, -650);
 });

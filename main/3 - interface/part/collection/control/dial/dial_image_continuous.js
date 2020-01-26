@@ -42,8 +42,9 @@ this.dial_continuous_image = function(
             object.append(handle);
 
         //needle group
+            let needleGroup;
             if(needleURL != undefined){
-                const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
+                needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
                 object.append(needleGroup);
 
                 //needle

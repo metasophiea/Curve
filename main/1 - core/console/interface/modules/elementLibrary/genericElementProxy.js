@@ -34,7 +34,7 @@ const genericElementProxy = function(_type, _name){
     //hierarchy
         this.parent = undefined;
         this.getAddress = function(){
-            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
+            return (this.parent != undefined && this.parent.getId() != 0 ? this.parent.getAddress() : '') + '/' + name;
         };
         this.getOffset = function(){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
@@ -75,7 +75,7 @@ const genericElementProxy = function(_type, _name){
         Object.entries({
             ignored: false,
             scale: 1,
-            static: false,
+            // static: false,
         }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
         this.unifiedAttribute = function(attributes){
             if(attributes == undefined){ return cashedAttributes; }

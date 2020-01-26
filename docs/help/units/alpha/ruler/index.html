@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>Ruler</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                font-family:Helvetica;
+            }
+            .generalTextSections{
+                width:80%;
+                min-width:600px;
+                max-width:700px;
+                margin:10px auto;
+            }
+            #curveCanvas{
+                display:block; 
+                margin:auto;
+                border:5px;
+                border-style:inset;
+                outline:none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <p class='generalTextSections'>The ruler is a tool you can use to measure things. It's about a meter long, supposedly. It won't collide with anything and comes in a delightful shade of grey.</p>
+        <canvas id='curveCanvas' curve curveWidth='600px' curveHeight='300px'></canvas>
+    </body>
+
+</html>
+
+<script type='text/javascript' src='/js/curve.min.js'></script>
+
+<script>
+    document.getElementById('curveCanvas').curve.go.add(function(){
+        document.getElementById('curveCanvas').control.gui.hideMenubar();
+        document.getElementById('curveCanvas').control.interaction.menubar(false);
+        document.getElementById('curveCanvas').core.viewport.stopMouseScroll(false);
+        document.getElementById('curveCanvas').control.interaction.unloadWarning(false);
+        document.getElementById('curveCanvas').control.interaction.mouseGripPanning(false);
+        document.getElementById('curveCanvas').control.interaction.mouseWheelZoom(false);
+
+        document.getElementById('curveCanvas').control.scene.addUnit(10,50,-1.15,'ruler','alpha');
+
+        document.getElementById('curveCanvas').control.interaction.unitAdditionRemoval(false);
+    });
+</script>

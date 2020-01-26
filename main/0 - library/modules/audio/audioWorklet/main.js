@@ -1,70 +1,14 @@
 this.audioWorklet = new function(){
     function checkIfReady(){
+        if(worklets.length == 0){return true;}
         return worklets.map(a => a.loaded).reduce((rolling,current) => {return rolling && current;});
     };
     this.nowReady = function(){};
 
     const worklets = [
-        {
-            name:'bitcrusher',
-            blob:new Blob([`
-                {{include:bitcrusher.js}}
-            `], { type: "text/javascript" }),
-        },
-        {
-            name:'amplitudeModifier',
-            blob:new Blob([`
-                {{include:amplitudeModifier.js}}
-            `], { type: "text/javascript" }),
-        },
-        {
-            name:'momentaryAmplitudeMeter',
-            options:{
-                numberOfOutputs:0
-            },
-            blob:new Blob([`
-                {{include:momentaryAmplitudeMeter.js}}
-            `], { type: "text/javascript" }),
-        },
-
-        {
-            name:'amplitudeInverter',
-            blob:new Blob([`
-                {{include:amplitudeInverter.js}}
-            `], { type: "text/javascript" }),
-        },
-        {
-            name:'amplitudePeakAttenuator',
-            blob:new Blob([`
-                {{include:amplitudePeakAttenuator.js}}
-            `], { type: "text/javascript" }),
-        },
-        {
-            name:'modulon',
-            options:{
-                numberOfInputs:2
-            },
-            blob:new Blob([`
-                {{include:modulon.js}}
-            `], { type: "text/javascript" }),
-        },
-        {
-            name:'sqasherDoubler',
-            blob:new Blob([`
-                {{include:sqasherDoubler.js}}
-            `], { type: "text/javascript" }),
-        },
-        {
-            name:'vocoder',
-            options:{
-                numberOfInputs:2
-            },
-            blob:new Blob([`
-                {{include:vocoder.js}}
-            `], { type: "text/javascript" }),
-        },
+        {{include:workletList.js}}
     ];
-    
+        
     worklets.forEach(worklet => {
         dev.log.audio('.AudioWorklet -> loading worklet:',worklet.name); //#development
         worklet.loaded = false;

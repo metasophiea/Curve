@@ -70,17 +70,16 @@ curveTech
 Harbinger
     DSDS-8^3 (Digital Sample Drum Set 8 channel)
     MRD-16 (Mini Rhythm Designer 16 step)
-    _ RDP-32 (Rhythm Designer Pro 32 step)
+    RDP-32 (Rhythm Designer Pro 32 step)
 
 
-    _ Bitcrusher
-    _ Amplitude Modifier (invert, offset, divideBy)
+    _ Bitcrusher (amplitudeResolution:1-128(10), sampleFrequency:0-7(^2)(16))
+    _ Amplitude Modifier (invert, offset, divideBy, floor/ceiling)
     _ Amplitude Peak Attenuator
     _ Momentary Amplitude Meter
-    _ Amplitude Controled Modulator (Modulon)
+    _ Amplitude Controlled Modulator (Modulon)
     _ Frequency Response Workstation
-
-
+    _ Rapid Amplitude Modulator (Jaggedizer)
 
 
 
@@ -125,6 +124,7 @@ future unit ideas
         Soundbox
         Anderson Electronics
         Yonder Electronics
+        Swift
 
         Fysical Utilities (PH.U.) : effect boxes
         CoLoUR : effect boxes

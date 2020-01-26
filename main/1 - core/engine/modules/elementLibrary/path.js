@@ -43,7 +43,7 @@ this.path = function(_id,_name){
             let jointType = 'sharp';
             let jointDetail = 25;
             let sharpLimit = 4;
-            let isStatic = false;
+            // let isStatic = false;
             this.points = function(a){
                 if(points==undefined){return points;}     
                 points = a;     
@@ -118,16 +118,16 @@ this.path = function(_id,_name){
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
             };
-            this.static = function(a){
-                if(a==undefined){return isStatic;}  
-                isStatic = a;  
-                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-                if(allowComputeExtremities){computeExtremities();}
-            };
+            // this.static = function(a){
+            //     if(a==undefined){return isStatic;}  
+            //     isStatic = a;  
+            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
+            //     if(allowComputeExtremities){computeExtremities();}
+            // };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, static:isStatic }; } 
+            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, /*static:isStatic*/ }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -242,7 +242,7 @@ this.path = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
             //calculate points based on the offset
                 self.extremities.points = [];
                 for(let a = 0; a < generatedPathPolygon.length; a+=2){
@@ -294,7 +294,7 @@ this.path = function(_id,_name){
             report.info(self.getAddress(),'._dump -> jointType: '+jointType);
             report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
             report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
-            report.info(self.getAddress(),'._dump -> static: '+self.static());
+            // report.info(self.getAddress(),'._dump -> static: '+self.static());
         };
 
     //interface
@@ -310,7 +310,7 @@ this.path = function(_id,_name){
             this.jointType = self.jointType;
             this.jointDetail = self.jointDetail;
             this.sharpLimit = self.sharpLimit;
-            this.static = self.static;
+            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;

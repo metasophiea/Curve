@@ -1,11 +1,11 @@
 this.readout_sixteenSegmentDisplay = function(
-    name='readout_sixteenSegmentDisplay', static=false, resolution=1, 
+    name='readout_sixteenSegmentDisplay', canvasBased=false, resolution=1, 
     x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=false,
     backgroundStyle={r:0,g:0,b:0,a:1},
     glowStyle={r:0.78,g:0.78,b:0.78,a:1},
     dimStyle={r:0.1,g:0.1,b:0.1,a:1},
 ){
-    dev.log.partDisplay('.readout_sixteenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
+    dev.log.partDisplay('.readout_sixteenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
     
     //values
         let text = '';
@@ -16,7 +16,7 @@ this.readout_sixteenSegmentDisplay = function(
         //main
             const object = interfacePart.builder('basic', 'group', name, {x:x, y:y, angle:angle});
 
-    if(static){
+    if(canvasBased){
         const margin = (width/count)/8;
         const division = (width/count)/8;
         const shapes = {
@@ -845,7 +845,7 @@ this.readout_sixteenSegmentDisplay = function(
                 const units = (new Array(count)).fill().map((a,index) => {
                     return _canvas_.interface.part.builder('display', 'sixteenSegmentDisplay', ''+index, {
                         x:(width/count)*index, width:width/count, height:height, 
-                        static:static, resolution:resolution,
+                        canvasBased:canvasBased, resolution:resolution,
                         style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
                     });
                 });
@@ -918,7 +918,7 @@ this.readout_sixteenSegmentDisplay = function(
 
 interfacePart.partLibrary.display.readout_sixteenSegmentDisplay = function(name,data){ 
     return interfacePart.collection.display.readout_sixteenSegmentDisplay(
-        name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
+        name, data.canvasBased, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
         data.style.background, data.style.glow, data.style.dim,
     ); 
 };

@@ -36,6 +36,7 @@
 
 
 // {{include:unstructuredTests/1.js}}
+{{include:unstructuredTests/2.js}}
 
 
 

@@ -1,6 +1,6 @@
 this.grapher_periodicWave = function(
     name='grapher_periodicWave',
-    x, y, width=120, height=60, angle=0, static=false, resolution=5, 
+    x, y, width=120, height=60, angle=0, canvasBased=false, resolution=5, 
 
     foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
     foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
@@ -21,7 +21,7 @@ this.grapher_periodicWave = function(
             const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //grapher
             const grapher = interfacePart.builder('display','grapher',name,{
-                x:0, y:0, width:width, height:height, static:static, resolution:resolution,
+                x:0, y:0, width:width, height:height, canvasBased:canvasBased, resolution:resolution,
                 foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                 backgroundStyle_colour:backgroundStyle_colour, 
                 backgroundStyle_lineThickness:backgroundStyle_lineThickness,
@@ -96,7 +96,7 @@ this.grapher_periodicWave = function(
 
 interfacePart.partLibrary.display.grapher_periodicWave = function(name,data){ 
     return interfacePart.collection.display.grapher_periodicWave(
-        name, data.x, data.y, data.width, data.height, data.angle, data.static, data.resolution,
+        name, data.x, data.y, data.width, data.height, data.angle, data.canvasBased, data.resolution,
         data.style.foregrounds, data.style.foregroundText,
         data.style.background_colour, data.style.background_lineThickness,
         data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,

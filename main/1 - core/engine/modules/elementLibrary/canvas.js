@@ -38,7 +38,7 @@ this.canvas = function(_id,_name){
             let width = 10;
             let height = 10;
             let scale = 1;
-            let isStatic = false;
+            // let isStatic = false;
             this.x = function(a){ 
                 if(a==undefined){return x;}     
                 x = a;     
@@ -81,12 +81,12 @@ this.canvas = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
-            this.static = function(a){
-                if(a==undefined){return isStatic;}  
-                isStatic = a;  
-                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-                if(allowComputeExtremities){computeExtremities();}
-            };
+            // this.static = function(a){
+            //     if(a==undefined){return isStatic;}  
+            //     isStatic = a;  
+            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
+            //     if(allowComputeExtremities){computeExtremities();}
+            // };
 
         //image data
             const image = { 
@@ -146,7 +146,7 @@ this.canvas = function(_id,_name){
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:isStatic }; } 
+                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, /*static:isStatic*/ }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -292,7 +292,7 @@ this.canvas = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point:',point); //#development
@@ -369,7 +369,7 @@ this.canvas = function(_id,_name){
             report.info(self.getAddress(),'._dump -> width: '+width);
             report.info(self.getAddress(),'._dump -> height: '+height);
             report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> static: '+self.static());
+            // report.info(self.getAddress(),'._dump -> static: '+self.static());
         };
     
     //interface
@@ -382,7 +382,7 @@ this.canvas = function(_id,_name){
             this.width = self.width;
             this.height = self.height;
             this.scale = self.scale;
-            this.static = self.static;
+            // this.static = self.static;
             this.imageURL = self.imageURL;
             this.imageBitmap = self.imageBitmap;
             this.unifiedAttribute = self.unifiedAttribute;

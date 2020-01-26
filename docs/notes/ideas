@@ -178,3 +178,5 @@
 - connection nodes reveal text when moused over (to say what they're named or if they are an input or output)
 - some way of telling when a file is being loaded and the user just needs to wait
 - networking cable for all units which uses the interface, to allow units to be computer controllled (whenever the computer unit gets made)
+- some kind of bluring for when elements are far from the camera enough to cause them to look weird
+- have dial control be like actual dials instead of like sliders

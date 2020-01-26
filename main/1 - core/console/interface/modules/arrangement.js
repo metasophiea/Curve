@@ -11,7 +11,7 @@ this.arrangement = new function(){
             angle: 0,
             scale: 1,
             heedCamera: false,
-            static: false,
+            // static: false,
         });
     };
     this.get = function(){
@@ -111,7 +111,7 @@ this.arrangement = new function(){
             console.log(design.getAddress(),'._dump -> angle: '+design.angle());
             console.log(design.getAddress(),'._dump -> scale: '+design.scale());
             console.log(design.getAddress(),'._dump -> heedCamera: '+design.heedCamera());
-            console.log(design.getAddress(),'._dump -> static: '+design.static());
+            // console.log(design.getAddress(),'._dump -> static: '+design.static());
             console.log(design.getAddress(),'._dump -> children.length: '+design.getChildren().length);
             console.log(design.getAddress(),'._dump -> children: ',design.getChildren());
             console.log(design.getAddress(),'._dump -> clipActive: '+design.clipActive());

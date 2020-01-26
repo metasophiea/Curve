@@ -52,7 +52,7 @@ this.audio_scope = function(name,x,y,angle){
                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
                 }},
                 {collection:'display', type:'grapher_audioScope', name:'waveport', data:{
-                    x:5, y:5, width:150, height:100, static:true, style:unitStyle.waveport,
+                    x:5, y:5, width:150, height:100, canvasBased:true, style:unitStyle.waveport,
                 }},
             ]
         });

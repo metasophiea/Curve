@@ -1,6 +1,6 @@
 this.grapher = function(
     name='grapher',
-    x, y, width=120, height=60, angle=0, static=false, resolution=5,
+    x, y, width=120, height=60, angle=0, canvasBased=false, resolution=5,
 
     foregroundStyles=[
         {colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
@@ -53,7 +53,7 @@ this.grapher = function(
             if( a.printText != undefined ){backgroundTextStyle_verticalMarkings.printText = a.printText;}
         };
 
-    if(static){
+    if(canvasBased){
         //elements
             const backingCanvas = interfacePart.builder('basic','canvas','backingCanvas',{ width:width, height:height, resolution:resolution });
                 object.append(backingCanvas);
@@ -141,7 +141,7 @@ this.grapher = function(
     
                 //input check
                     if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                        console.warn('grapher_static error',name,'attempting to add line with no y component');
+                        console.warn('grapher_canvasBased error',name,'attempting to add line with no y component');
                         console.warn('x:',foregroundElementsGroup[layer].x);
                         console.warn('y:',foregroundElementsGroup[layer].y);
                         return;
@@ -179,7 +179,7 @@ this.grapher = function(
                                         frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
                                     );
                                 }
-                            }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
+                            }else{console.error('grapher_canvasBased::'+name,':layers are of different length:',layer.y,layer.x);}
     
                             frontingCanvas._.stroke();
                     }
@@ -351,7 +351,7 @@ this.grapher = function(
             }
 
         //controls
-            object.resolution = function(a){console.warn('this isn\'t the static version of the grapher part');};
+            object.resolution = function(a){console.warn('this isn\'t the canvasBased version of the grapher part');};
 
             object.clearAll = function(){
                 clearAll();
@@ -376,7 +376,7 @@ this.grapher = function(
 
 interfacePart.partLibrary.display.grapher = function(name,data){ 
     return interfacePart.collection.display.grapher(
-        name, data.x, data.y, data.width, data.height, data.angle, data.static, data.resolution,
+        name, data.x, data.y, data.width, data.height, data.angle, data.canvasBased, data.resolution,
         data.style.foregrounds, data.style.foregroundText,
         data.style.background_colour, data.style.background_lineThickness,
         data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,

@@ -308,10 +308,19 @@ this['dsds-8^3'] = function(name,x,y,angle){
             return player;
         });
 
-        function fire(channel){
-            samplePlayers[channel].start();
-            object.elements.glowbox_path['channelFireLED_'+channel].on();
-            setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
+        function fire(channel,mode='signal',value){
+            if(mode == 'signal'){
+                samplePlayers[channel].start();
+                object.elements.glowbox_path['channelFireLED_'+channel].on();
+                setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
+            }else if(mode == 'voltage'){
+                samplePlayers[channel].rate(
+                    object.elements.dial_continuous_image['rate_'+channel].get() * value 
+                );
+                samplePlayers[channel].start();
+                object.elements.glowbox_path['channelFireLED_'+channel].on();
+                setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
+            }
         }
         function loadSample(channel,bank,sample){
             setChannelStatusLED(channel,'loading');
@@ -581,7 +590,7 @@ this['dsds-8^3'] = function(name,x,y,angle){
                 } 
                 object.io.voltage['voltage_in_'+a].onchange = function(value){
                     if(value <= 0){return;}
-                    fire(a);
+                    fire(a,'voltage',value);
                 } 
             }
 

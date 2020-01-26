@@ -32,6 +32,12 @@ this['test_a'] = function(name,x,y,angle){
                 {collection:'control', type:'dial_continuous', name:'c', data:{
                     x:60, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
                 }},
+                {collection:'control', type:'dial_continuous', name:'d', data:{
+                    x:20, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                }},
+                {collection:'control', type:'dial_continuous', name:'e', data:{
+                    x:40, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2, resetValue:0.5,
+                }},
             ]
         });
 
@@ -44,10 +50,16 @@ this['test_a'] = function(name,x,y,angle){
                 AM.invert(value!=0);
             };
             object.elements.dial_discrete.b.onchange = function(value){
-                AM.offset(value-10);
+                AM.offset(value/10 - 1);
             };
             object.elements.dial_continuous.c.onchange = function(value){
                 AM.divisor(value+1);
+            };
+            object.elements.dial_continuous.d.onchange = function(value){
+                AM.floor(value*20 - 10);
+            };
+            object.elements.dial_continuous.e.onchange = function(value){
+                AM.ceiling(value*20 - 10);
             };
 
         //keycapture
@@ -74,7 +86,7 @@ this['test_a'] = function(name,x,y,angle){
     return object;
 };
 this['test_a'].metadata = {
-    name:'test_a',
+    name:'amplitudeModifier',
     category:'',
     helpURL:''
 };

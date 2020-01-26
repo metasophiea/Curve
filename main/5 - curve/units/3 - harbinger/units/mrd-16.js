@@ -104,7 +104,7 @@ this['mrd-16'] = function(name,x,y,angle){
                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_down_down.png',
                         }},
                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
-                            x:94.5, y:13.5, width:11, height:19, static:true, resolution:5,
+                            x:94.5, y:13.5, width:11, height:19, canvasBased:true, resolution:5,
                         }},
                         {collection:'control', type:'button_image', name:'clear', data:{
                             x:110, y:13, width:8, height:20, hoverable:false,
@@ -202,6 +202,41 @@ this['mrd-16'] = function(name,x,y,angle){
             );
         }
 
+        function refreshLEDS(){
+            //output select
+                if(state.outputMode == 'signal'){
+                    object.elements.button_image.signal.glow(true);
+                    object.elements.button_image.voltage.glow(false);
+                }else if(state.outputMode == 'voltage'){
+                    object.elements.button_image.signal.glow(false);
+                    object.elements.button_image.voltage.glow(true);
+                }
+
+            //channel
+                for(let a = 0; a < 8; a++){
+                    object.elements.glowbox_path['channelLED_'+a].off();
+                }
+                object.elements.glowbox_path['channelLED_'+state.currentChannel].on();
+
+            //page
+                const page = state.channel[state.currentChannel].currentPage;
+                object.elements.sevenSegmentDisplay.page.enterCharacter(page);
+                
+            //selector
+                for(let a = 0; a < 16; a++){
+                    if( state.channel[state.currentChannel].pages[page][a] ){
+                        object.elements.glowbox_circle['selectorLED_'+a].on();
+                    }else{
+                        object.elements.glowbox_circle['selectorLED_'+a].off();
+                    }
+                }
+
+            //step
+                for(let a = 0; a < 16; a++){
+                    object.elements.glowbox_rectangle['selectorStepLED_'+a].off();
+                }
+                object.elements.glowbox_rectangle['selectorStepLED_'+state.step].on();
+        }
         function setOutputConnectionNodes(mode){
             if(mode != 'signal' && mode != 'voltage'){return;}
             if(state.outputMode == mode){return;}
@@ -239,41 +274,6 @@ this['mrd-16'] = function(name,x,y,angle){
                 }
             }
             refreshLEDS();
-        }
-        function refreshLEDS(){
-            //output select
-                if(state.outputMode == 'signal'){
-                    object.elements.button_image.signal.glow(true);
-                    object.elements.button_image.voltage.glow(false);
-                }else if(state.outputMode == 'voltage'){
-                    object.elements.button_image.signal.glow(false);
-                    object.elements.button_image.voltage.glow(true);
-                }
-
-            //channel
-                for(let a = 0; a < 8; a++){
-                    object.elements.glowbox_path['channelLED_'+a].off();
-                }
-                object.elements.glowbox_path['channelLED_'+state.currentChannel].on();
-
-            //page
-                const page = state.channel[state.currentChannel].currentPage;
-                object.elements.sevenSegmentDisplay.page.enterCharacter(page);
-                
-            //selector
-                for(let a = 0; a < 16; a++){
-                    if( state.channel[state.currentChannel].pages[page][a] ){
-                        object.elements.glowbox_circle['selectorLED_'+a].on();
-                    }else{
-                        object.elements.glowbox_circle['selectorLED_'+a].off();
-                    }
-                }
-
-            //step
-                for(let a = 0; a < 16; a++){
-                    object.elements.glowbox_rectangle['selectorStepLED_'+a].off();
-                }
-                object.elements.glowbox_rectangle['selectorStepLED_'+state.step].on();
         }
         function setChannel(channel){
             if(channel == undefined){ return state.currentChannel; }

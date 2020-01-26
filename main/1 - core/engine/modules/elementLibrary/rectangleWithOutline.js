@@ -48,7 +48,7 @@ this.rectangleWithOutline = function(_id,_name){
             let height = 10;
             let scale = 1;
             let thickness = 0;
-            let isStatic = false;
+            // let isStatic = false;
 
             this.x = function(a){ 
                 if(a==undefined){return x;}     
@@ -98,16 +98,16 @@ this.rectangleWithOutline = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
-            this.static = function(a){
-                if(a==undefined){return isStatic;}  
-                isStatic = a;  
-                dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-                if(allowComputeExtremities){computeExtremities();}
-            };
+            // this.static = function(a){
+            //     if(a==undefined){return isStatic;}  
+            //     isStatic = a;  
+            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
+            //     if(allowComputeExtremities){computeExtremities();}
+            // };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, thickness:thickness, static:isStatic }; } 
+            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, thickness:thickness, /*static:isStatic*/ }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -308,7 +308,7 @@ this.rectangleWithOutline = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
@@ -388,7 +388,7 @@ this.rectangleWithOutline = function(_id,_name){
             report.info(self.getAddress(),'._dump -> height: '+height);
             report.info(self.getAddress(),'._dump -> scale: '+scale);
             report.info(self.getAddress(),'._dump -> thickness: '+thickness);
-            report.info(self.getAddress(),'._dump -> static: '+self.static());
+            // report.info(self.getAddress(),'._dump -> static: '+self.static());
         };
     
     //interface
@@ -404,7 +404,7 @@ this.rectangleWithOutline = function(_id,_name){
             this.height = self.height;
             this.scale = self.scale;
             this.thickness = self.thickness;
-            this.static = self.static;
+            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;

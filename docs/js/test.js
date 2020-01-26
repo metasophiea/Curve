@@ -72,7 +72,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:17} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:24} };
             const library = this;
         
             this.go = new function(){
@@ -3491,9 +3491,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 //master context
                     this.context = new (window.AudioContext || window.webkitAudioContext)();
                 
-                
-                    
-                
                 //destination
                     this.destination = this.context.createGain();
                     this.destination.connect(this.context.destination);
@@ -3710,11 +3707,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
                 this.audioWorklet = new function(){
                     function checkIfReady(){
+                        if(worklets.length == 0){return true;}
                         return worklets.map(a => a.loaded).reduce((rolling,current) => {return rolling && current;});
                     };
                     this.nowReady = function(){};
                 
                     const worklets = [
+                        //main
                         {
                             name:'bitcrusher',
                             blob:new Blob([`
@@ -3747,12 +3746,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         const amplitudeResolution = parameters.amplitudeResolution;
                                         const sampleFrequency = parameters.sampleFrequency;
                                     
-                                        for(let channel = 0; channel < input.length; channel++){
-                                            const inputChannel = input[channel];
-                                            const outputChannel = output[channel];
-                                    
-                                            for(let a = 0; a < inputChannel.length; a++){
-                                                outputChannel[a] = a%sampleFrequency == 0 ? Math.round(inputChannel[a]*amplitudeResolution)/amplitudeResolution : outputChannel[a-1];
+                                        for(let channel = 0; channel < input.length; channel++){    
+                                            for(let a = 0; a < input[channel].length; a++){
+                                                output[channel][a] = a%sampleFrequency == 0 ? Math.round(input[channel][a]*amplitudeResolution)/amplitudeResolution : output[channel][a-1];
                                             }
                                         }
                                         return true;
@@ -3785,6 +3781,18 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 minValue: 1,
                                                 maxValue: 16,
                                                 automationRate: 'k-rate',
+                                            },{
+                                                name: 'ceiling',
+                                                defaultValue: 10,
+                                                minValue: -10,
+                                                maxValue: 10,
+                                                automationRate: 'k-rate',
+                                            },{
+                                                name: 'floor',
+                                                defaultValue: -10,
+                                                minValue: -10,
+                                                maxValue: 10,
+                                                automationRate: 'k-rate',
                                             }
                                         ];
                                     }
@@ -3796,16 +3804,18 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     process(inputs, outputs, parameters){
                                         const input = inputs[0];
                                         const output = outputs[0];
-                                        
-                                        const offset = parameters.offset/10;
+                                
                                         //shortest code
                                             const sign = parameters.invert == 1 ? -1 : 1;
-                                            for(let channel = 0; channel < input.length; channel++){
-                                                const inputChannel = input[channel];
-                                                const outputChannel = output[channel];
-                                        
-                                                for(let a = 0; a < inputChannel.length; a++){
-                                                    outputChannel[a] = sign * (inputChannel[a]/parameters.divisor) + offset;
+                                            for(let channel = 0; channel < input.length; channel++){        
+                                                for(let a = 0; a < input[channel].length; a++){
+                                                    output[channel][a] = sign * (input[channel][a]/parameters.divisor) + parameters.offset[0];
+                                
+                                                    if( output[channel][a] < parameters.floor ){
+                                                        output[channel][a] = parameters.floor;
+                                                    }else if( output[channel][a] > parameters.ceiling ){
+                                                        output[channel][a] = parameters.ceiling;
+                                                    }
                                                 }
                                             }
                                 
@@ -3818,6 +3828,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 
                                         //                 for(let a = 0; a < inputChannel.length; a++){
                                         //                     outputChannel[a] = -inputChannel[a] + offset;
+                                
+                                        //                     if( output[channel][a] < parameters.floor ){
+                                        //                         output[channel][a] = parameters.floor;
+                                        //                     }else if( output[channel][a] > parameters.ceiling ){
+                                        //                         output[channel][a] = parameters.ceiling;
+                                        //                     }
                                         //                 }
                                         //             }
                                         //         }else{
@@ -3827,6 +3843,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 
                                         //                 for(let a = 0; a < inputChannel.length; a++){
                                         //                     outputChannel[a] = -(inputChannel[a]/divisor) + offset;
+                                
+                                        //                     if( output[channel][a] < parameters.floor ){
+                                        //                         output[channel][a] = parameters.floor;
+                                        //                     }else if( output[channel][a] > parameters.ceiling ){
+                                        //                         output[channel][a] = parameters.ceiling;
+                                        //                     }
                                         //                 }
                                         //             }
                                         //         }
@@ -3838,6 +3860,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 
                                         //                 for(let a = 0; a < inputChannel.length; a++){
                                         //                     outputChannel[a] = inputChannel[a] + offset;
+                                
+                                        //                     if( output[channel][a] < parameters.floor ){
+                                        //                         output[channel][a] = parameters.floor;
+                                        //                     }else if( output[channel][a] > parameters.ceiling ){
+                                        //                         output[channel][a] = parameters.ceiling;
+                                        //                     }
                                         //                 }
                                         //             }
                                         //         }else{
@@ -3847,6 +3875,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 
                                         //                 for(let a = 0; a < inputChannel.length; a++){
                                         //                     outputChannel[a] = (inputChannel[a]/divisor) + offset;
+                                
+                                        //                     if( output[channel][a] < parameters.floor ){
+                                        //                         output[channel][a] = parameters.floor;
+                                        //                     }else if( output[channel][a] > parameters.ceiling ){
+                                        //                         output[channel][a] = parameters.ceiling;
+                                        //                     }
                                         //                 }
                                         //             }
                                         //         }
@@ -3868,6 +3902,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     static get parameterDescriptors(){
                                         return [
                                             {
+                                                name: 'fullSample',
+                                                defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame sine the last time a value was returned
+                                                minValue: 0,
+                                                maxValue: 1,
+                                                automationRate: 'k-rate',
+                                            },{
                                                 name: 'updateDelay',
                                                 defaultValue: 100,
                                                 minValue: 1,
@@ -3892,13 +3932,20 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 
                                     process(inputs, outputs, parameters){
                                         const input = inputs[0];
+                                        const fullSample = parameters.fullSample;
                                         const updateDelay = parameters.updateDelay;
-                                        const calculationMode = parseInt(parameters.calculationMode);
+                                        const calculationMode = parameters.calculationMode;
+                                
+                                        if(fullSample){
+                                            this._dataArray.push(...input[0]);
+                                        }else{
+                                            this._dataArray = input[0];
+                                        }
                                 
                                         if(currentTime - this._lastUpdate > updateDelay/1000){
                                             this._lastUpdate = currentTime;
                                 
-                                            switch(calculationMode){
+                                            switch(calculationMode[0]){
                                                 case 0: default:
                                                     this.port.postMessage( Math.max(...this._dataArray) );
                                                 break;
@@ -3919,9 +3966,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 break;
                                             }
                                 
-                                            this._dataArray = [];
-                                        }else{
-                                            this._dataArray.push(...input[0]);
+                                            if(fullSample){
+                                                this._dataArray = [];
+                                            }
                                         }
                                 
                                         return true;
@@ -3930,7 +3977,43 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 registerProcessor('momentaryAmplitudeMeter', momentaryAmplitudeMeter);
                             `], { type: "text/javascript" }),
                         },
-                
+                        {
+                            name:'amplitudeControlledModulator',
+                            options:{
+                                numberOfInputs:2
+                            },
+                            blob:new Blob([`
+                                class amplitudeControlledModulator extends AudioWorkletProcessor{
+                                    static get parameterDescriptors(){
+                                        return [];
+                                    }
+                                    
+                                    constructor(options){
+                                        super(options);
+                                    }
+                                
+                                    process(inputs, outputs, parameters){
+                                        const input_1 = inputs[0];
+                                        const input_2 = inputs[1];
+                                        const output_1 = outputs[0];
+                                
+                                        for(let channel = 0; channel < input_1.length; channel++){    
+                                            for(let a = 0; a < output_1[channel].length; a++){
+                                                output_1[channel][a] = input_1[channel][a] * (input_2[channel][a]+1)/2;
+                                            }
+                                        }
+                                
+                                        return true;
+                                    }
+                                }
+                                registerProcessor('amplitudeControlledModulator', amplitudeControlledModulator);
+                            `], { type: "text/javascript" }),
+                        },
+                        
+                        
+                        
+                        
+                        //development
                         {
                             name:'amplitudeInverter',
                             blob:new Blob([`
@@ -4002,42 +4085,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             `], { type: "text/javascript" }),
                         },
                         {
-                            name:'modulon',
-                            options:{
-                                numberOfInputs:2
-                            },
-                            blob:new Blob([`
-                                class modulon extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input_1 = inputs[0];
-                                        const input_2 = inputs[1];
-                                        const output_1 = outputs[0];
-                                
-                                        for(let channel = 0; channel < input_1.length; channel++){
-                                            const input_1_Channel = input_1[channel];
-                                            const input_2_Channel = input_2[channel];
-                                            const outputChannel = output_1[channel];
-                                    
-                                            for(let a = 0; a < outputChannel.length; a++){
-                                                outputChannel[a] = input_1_Channel[a] * (input_2_Channel[a]+1)/2;
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('modulon', modulon);
-                            `], { type: "text/javascript" }),
-                        },
-                        {
                             name:'sqasherDoubler',
                             blob:new Blob([`
                                 class sqasherDoubler extends AudioWorkletProcessor{
@@ -4105,7 +4152,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             `], { type: "text/javascript" }),
                         },
                     ];
-                    
+                        
                     worklets.forEach(worklet => {
                         dev.log.audio('.AudioWorklet -> loading worklet:',worklet.name); //#development
                         worklet.loaded = false;
@@ -22417,8 +22464,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         };
 
         _canvas_.core = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:7} };
-            const core_engine = new Worker("js/core_engine.js");
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:20} };
+            const core_engine = new Worker("/js/core_engine.js");
             const self = this;
             
             const communicationModuleMaker = function(communicationObject,callerName){
@@ -22592,7 +22639,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //hierarchy
                         this.parent = undefined;
                         this.getAddress = function(){
-                            return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
+                            return (this.parent != undefined && this.parent.getId() != 0 ? this.parent.getAddress() : '') + '/' + name;
                         };
                         this.getOffset = function(){
                             dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
@@ -22633,7 +22680,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         Object.entries({
                             ignored: false,
                             scale: 1,
-                            static: false,
+                            // static: false,
                         }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                         this.unifiedAttribute = function(attributes){
                             if(attributes == undefined){ return cashedAttributes; }
@@ -23323,7 +23370,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         angle: 0,
                         scale: 1,
                         heedCamera: false,
-                        static: false,
+                        // static: false,
                     });
                 };
                 this.get = function(){
@@ -23423,7 +23470,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         console.log(design.getAddress(),'._dump -> angle: '+design.angle());
                         console.log(design.getAddress(),'._dump -> scale: '+design.scale());
                         console.log(design.getAddress(),'._dump -> heedCamera: '+design.heedCamera());
-                        console.log(design.getAddress(),'._dump -> static: '+design.static());
+                        // console.log(design.getAddress(),'._dump -> static: '+design.static());
                         console.log(design.getAddress(),'._dump -> children.length: '+design.getChildren().length);
                         console.log(design.getAddress(),'._dump -> children: ',design.getChildren());
                         console.log(design.getAddress(),'._dump -> clipActive: '+design.clipActive());
@@ -24003,7 +24050,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:17} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:25} };
             const interface = this;
         
             const dev = {
@@ -24192,6 +24239,86 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //setup
                         if(setupConnect){this.selectDevice('default');}
                 };
+                this.rapidAmplitudeModulator = function(
+                    context
+                ){
+                    //flow
+                        let inputOption = 'internalOscillator';
+                        //flow chain
+                            const flow = {
+                                signalToModulate:{},
+                
+                                modulatingSignal:{},
+                                internalOscillator:{},
+                                amplitudeControlledModulator:{},
+                
+                                out:{},
+                            };
+                
+                        //signalToModulate
+                            flow.signalToModulate.gain = 1;
+                            flow.signalToModulate.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.signalToModulate.node.gain, flow.signalToModulate.gain, 0.01, 'instant', true);
+                        //modulatingSignal
+                            flow.modulatingSignal.gain = 1;
+                            flow.modulatingSignal.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.modulatingSignal.node.gain, flow.modulatingSignal.gain, 0.01, 'instant', true);
+                        //internalOscillator
+                            flow.internalOscillator.frequency = 1;
+                            flow.internalOscillator.type = 'sine'; 
+                            flow.internalOscillator.node = context.createOscillator();
+                            flow.internalOscillator.node.frequency.setTargetAtTime(flow.internalOscillator.frequency, _canvas_.library.audio.context.currentTime, 0);
+                            flow.internalOscillator.node.type = flow.internalOscillator.type; 
+                            flow.internalOscillator.node.start();
+                        //amplitudeControlledModulator
+                            flow.amplitudeControlledModulator.node = context.createAmplitudeControlledModulator();
+                        //out
+                            flow.out.gain = 1;
+                            flow.out.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.out.node.gain, flow.out.gain, 0.01, 'instant', true);
+                
+                        //do connections
+                            flow.signalToModulate.node.connect(flow.amplitudeControlledModulator.node, undefined, 0);
+                            flow.internalOscillator.node.connect(flow.amplitudeControlledModulator.node, undefined, 1);
+                            flow.amplitudeControlledModulator.node.connect(flow.out.node);
+                
+                    //input/output node
+                        this.signalToModulate = function(){
+                            return flow.signalToModulate.node;
+                        };
+                        this.modulatingSignal = function(){
+                            return flow.modulatingSignal.node;
+                        };
+                        this.out = function(){
+                            return flow.out.node;
+                        };
+                
+                    //controls
+                        this.frequency = function(a,transitionTime=0){
+                            if(a == undefined){ return flow.internalOscillator.frequency; }
+                            flow.internalOscillator.frequency = a;
+                            flow.internalOscillator.node.frequency.linearRampToValueAtTime(flow.internalOscillator.frequency, _canvas_.library.audio.context.currentTime+transitionTime);
+                        };
+                        this.waveType = function(a){
+                            if(a == undefined){ return flow.internalOscillator.type; }
+                            if(a == 'custom'){
+                                if(inputOption == 'internalOscillator'){
+                                    flow.internalOscillator.node.disconnect(flow.amplitudeControlledModulator.node, undefined, 1);
+                                    flow.modulatingSignal.node.connect(flow.amplitudeControlledModulator.node, undefined, 1);
+                                    inputOption = 'internalOscillator';
+                                }
+                            }else{
+                                if(inputOption == 'modulatingSignal'){
+                                    flow.modulatingSignal.node.disconnect(flow.amplitudeControlledModulator.node, undefined, 1);
+                                    flow.internalOscillator.node.connect(flow.amplitudeControlledModulator.node, undefined, 1);
+                                    inputOption = 'modulatingSignal';
+                                }
+                                flow.internalOscillator.type = a;
+                                flow.internalOscillator.node.type = flow.internalOscillator.type; 
+                            }
+                        };
+                
+                };
                 this.gain = function(
                     context
                 ){
@@ -24277,6 +24404,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             invert: false,
                             offset: 0,
                             divisor: 1,
+                            ceiling:10,
+                            floor:-10,
                             node: context.createAmplitudeModifier(),
                         };
                 
@@ -24299,6 +24428,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             if(value == undefined){ return flow.amplitudeModifierNode.divisor; }
                             flow.amplitudeModifierNode.divisor = value;
                             flow.amplitudeModifierNode.node.parameters.get('divisor').setValueAtTime(value,0);
+                        };
+                        this.ceiling = function(value){
+                            if(value == undefined){ return flow.amplitudeModifierNode.ceiling; }
+                            flow.amplitudeModifierNode.ceiling = value;
+                            flow.amplitudeModifierNode.node.parameters.get('ceiling').setValueAtTime(value,0);
+                        };
+                        this.floor = function(value){
+                            if(value == undefined){ return flow.amplitudeModifierNode.floor; }
+                            flow.amplitudeModifierNode.floor = value;
+                            flow.amplitudeModifierNode.node.parameters.get('floor').setValueAtTime(value,0);
                         };
                 };
                 this.reverbUnit = function(
@@ -25840,7 +25979,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         };
                         this.grapher_audioScope = function(
                             name='grapher_audioScope',
-                            x, y, width=120, height=60, angle=0, static=false, resolution=5, 
+                            x, y, width=120, height=60, angle=0, canvasBased=false, resolution=5, 
                         
                             foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
                             foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
@@ -25876,7 +26015,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
                                 //grapher
                                     const grapher = interfacePart.builder('display','grapher',name,{
-                                        x:0, y:0, width:width, height:height, static:static, resolution:resolution,
+                                        x:0, y:0, width:width, height:height, canvasBased:canvasBased, resolution:resolution,
                                         foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                                         backgroundStyle_colour:backgroundStyle_colour, 
                                         backgroundStyle_lineThickness:backgroundStyle_lineThickness,
@@ -25942,7 +26081,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         interfacePart.partLibrary.display.grapher_audioScope = function(name,data){ 
                             return interfacePart.collection.display.grapher_audioScope(
-                                name, data.x, data.y, data.width, data.height, data.angle, data.static, data.resolution,
+                                name, data.x, data.y, data.width, data.height, data.angle, data.canvasBased, data.resolution,
                                 data.style.foregrounds, data.style.foregroundText,
                                 data.style.background_colour, data.style.background_lineThickness,
                                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
@@ -25951,7 +26090,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         };
                         this.grapher = function(
                             name='grapher',
-                            x, y, width=120, height=60, angle=0, static=false, resolution=5,
+                            x, y, width=120, height=60, angle=0, canvasBased=false, resolution=5,
                         
                             foregroundStyles=[
                                 {colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
@@ -26004,7 +26143,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     if( a.printText != undefined ){backgroundTextStyle_verticalMarkings.printText = a.printText;}
                                 };
                         
-                            if(static){
+                            if(canvasBased){
                                 //elements
                                     const backingCanvas = interfacePart.builder('basic','canvas','backingCanvas',{ width:width, height:height, resolution:resolution });
                                         object.append(backingCanvas);
@@ -26092,7 +26231,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             
                                         //input check
                                             if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                                                console.warn('grapher_static error',name,'attempting to add line with no y component');
+                                                console.warn('grapher_canvasBased error',name,'attempting to add line with no y component');
                                                 console.warn('x:',foregroundElementsGroup[layer].x);
                                                 console.warn('y:',foregroundElementsGroup[layer].y);
                                                 return;
@@ -26130,7 +26269,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                                 frontingCanvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
                                                             );
                                                         }
-                                                    }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
+                                                    }else{console.error('grapher_canvasBased::'+name,':layers are of different length:',layer.y,layer.x);}
                             
                                                     frontingCanvas._.stroke();
                                             }
@@ -26302,7 +26441,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                         
                                 //controls
-                                    object.resolution = function(a){console.warn('this isn\'t the static version of the grapher part');};
+                                    object.resolution = function(a){console.warn('this isn\'t the canvasBased version of the grapher part');};
                         
                                     object.clearAll = function(){
                                         clearAll();
@@ -26327,7 +26466,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         interfacePart.partLibrary.display.grapher = function(name,data){ 
                             return interfacePart.collection.display.grapher(
-                                name, data.x, data.y, data.width, data.height, data.angle, data.static, data.resolution,
+                                name, data.x, data.y, data.width, data.height, data.angle, data.canvasBased, data.resolution,
                                 data.style.foregrounds, data.style.foregroundText,
                                 data.style.background_colour, data.style.background_lineThickness,
                                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
@@ -26338,7 +26477,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         };
                         this.grapher_periodicWave = function(
                             name='grapher_periodicWave',
-                            x, y, width=120, height=60, angle=0, static=false, resolution=5, 
+                            x, y, width=120, height=60, angle=0, canvasBased=false, resolution=5, 
                         
                             foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
                             foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
@@ -26359,7 +26498,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
                                 //grapher
                                     const grapher = interfacePart.builder('display','grapher',name,{
-                                        x:0, y:0, width:width, height:height, static:static, resolution:resolution,
+                                        x:0, y:0, width:width, height:height, canvasBased:canvasBased, resolution:resolution,
                                         foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                                         backgroundStyle_colour:backgroundStyle_colour, 
                                         backgroundStyle_lineThickness:backgroundStyle_lineThickness,
@@ -26434,7 +26573,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         interfacePart.partLibrary.display.grapher_periodicWave = function(name,data){ 
                             return interfacePart.collection.display.grapher_periodicWave(
-                                name, data.x, data.y, data.width, data.height, data.angle, data.static, data.resolution,
+                                name, data.x, data.y, data.width, data.height, data.angle, data.canvasBased, data.resolution,
                                 data.style.foregrounds, data.style.foregroundText,
                                 data.style.background_colour, data.style.background_lineThickness,
                                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
@@ -27070,13 +27209,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             ); 
                         };
                         this.readout_sevenSegmentDisplay = function(
-                            name='readout_sevenSegmentDisplay', static=false, resolution=1, 
+                            name='readout_sevenSegmentDisplay', canvasBased=false, resolution=1, 
                             x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=!false,
                             backgroundStyle={r:0,g:0,b:0,a:1},
                             glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                             dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                         ){
-                            dev.log.partDisplay('.readout_sevenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+count+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
+                            dev.log.partDisplay('.readout_sevenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+count+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                             
                             //values
                                 let text = '';
@@ -27085,7 +27224,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //elements 
                                 const object = interfacePart.builder('basic','group',name,{x:x, y:y});
                         
-                            if(static){
+                            if(canvasBased){
                                 const margin = (width/8) / count;
                                 const division = (width/8) / count;
                                 const shapes = {
@@ -27343,7 +27482,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         const units = (new Array(count)).fill().map((a,index) => {
                                             return interfacePart.builder('display', 'sevenSegmentDisplay', ''+index, {
                                                 x:(width/count)*index, width:width/count, height:height, 
-                                                static:static, resolution:resolution,
+                                                canvasBased:canvasBased, resolution:resolution,
                                                 style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
                                             });
                                         });
@@ -27416,18 +27555,18 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         interfacePart.partLibrary.display.readout_sevenSegmentDisplay = function(name,data){ 
                             return interfacePart.collection.display.readout_sevenSegmentDisplay(
-                                name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
+                                name, data.canvasBased, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
                                 data.style.background, data.style.glow, data.style.dim,
                             ); 
                         };
                         this.sevenSegmentDisplay = function(
-                            name='sevenSegmentDisplay', static=false, resolution=2, 
+                            name='sevenSegmentDisplay', canvasBased=false, resolution=2, 
                             x=0, y=0, width=20, height=30, angle=0,
                             backgroundStyle={r:0,g:0,b:0,a:1},
                             glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                             dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                         ){
-                            dev.log.partDisplay('.sevenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
+                            dev.log.partDisplay('.sevenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                             
                             const margin = width/8;
                             const division = width/8;
@@ -27553,11 +27692,19 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     case 7: case '7': return [1,0,1,0,0,1,0];
                                     case 8: case '8': return [1,1,1,1,1,1,1];
                                     case 9: case '9': return [1,1,1,1,0,1,1];
+                        
+                                    case 'a': case 'A': return [1,1,1,1,1,1,0];
+                                    case 'b': case 'B': return [0,1,0,1,1,1,1];
+                                    case 'c': case 'C': return [1,1,0,0,1,0,1];
+                                    case 'd': case 'D': return [0,0,1,1,1,1,1];
+                                    case 'e': case 'E': return [1,1,0,1,1,0,1];
+                                    case 'f': case 'F': return [1,1,0,1,1,0,0];
+                        
                                     default: return [0,0,0,0,0,0,0];
                                 }
                             }
                         
-                            if(static){
+                            if(canvasBased){
                                 let stamp = [0,0,0,0,0,0,0];
                         
                                 //elements 
@@ -27599,7 +27746,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     };
                                     object.get = function(segment){ 
                                         if(segment==undefined){
-                                            console.error('sevenSegmentDisplay_static::get: must provide segment value'); 
+                                            console.error('sevenSegmentDisplay_canvasBased::get: must provide segment value'); 
                                             return;
                                         } 
                                         return stamp[segment].state;
@@ -27674,18 +27821,18 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         interfacePart.partLibrary.display.sevenSegmentDisplay = function(name,data){ 
                             return interfacePart.collection.display.sevenSegmentDisplay(
-                                name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.angle,
+                                name, data.canvasBased, data.resolution, data.x, data.y, data.width, data.height, data.angle,
                                 data.style.background, data.style.glow, data.style.dim
                             );
                         };
                         this.sixteenSegmentDisplay = function(
-                            name='sixteenSegmentDisplay', static=false, resolution=2, 
+                            name='sixteenSegmentDisplay', canvasBased=false, resolution=2, 
                             x=0, y=0, width=20, height=30, angle=0,
                             backgroundStyle={r:0,g:0,b:0,a:1},
                             glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                             dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                         ){
-                            dev.log.partDisplay('.sixteenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
+                            dev.log.partDisplay('.sixteenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                             
                             const margin = width/8;
                             const division = width/8;
@@ -28386,7 +28533,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                             }
                         
-                            if(static){
+                            if(canvasBased){
                                 let stamp = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
                         
                                 //elements 
@@ -28428,7 +28575,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     };
                                     object.get = function(segment){ 
                                         if(segment==undefined){
-                                            console.error('sevenSegmentDisplay_static::get: must provide segment value'); 
+                                            console.error('sevenSegmentDisplay_canvasBased::get: must provide segment value'); 
                                             return;
                                         } 
                                         return stamp[segment].state;
@@ -28502,18 +28649,18 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         interfacePart.partLibrary.display.sixteenSegmentDisplay = function(name,data){ 
                             return interfacePart.collection.display.sixteenSegmentDisplay(
-                                name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.angle,
+                                name, data.canvasBased, data.resolution, data.x, data.y, data.width, data.height, data.angle,
                                 data.style.background, data.style.glow, data.style.dim
                             );
                         };
                         this.readout_sixteenSegmentDisplay = function(
-                            name='readout_sixteenSegmentDisplay', static=false, resolution=1, 
+                            name='readout_sixteenSegmentDisplay', canvasBased=false, resolution=1, 
                             x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=false,
                             backgroundStyle={r:0,g:0,b:0,a:1},
                             glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                             dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                         ){
-                            dev.log.partDisplay('.readout_sixteenSegmentDisplay('+name+','+static+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
+                            dev.log.partDisplay('.readout_sixteenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                             
                             //values
                                 let text = '';
@@ -28524,7 +28671,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 //main
                                     const object = interfacePart.builder('basic', 'group', name, {x:x, y:y, angle:angle});
                         
-                            if(static){
+                            if(canvasBased){
                                 const margin = (width/count)/8;
                                 const division = (width/count)/8;
                                 const shapes = {
@@ -29353,7 +29500,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         const units = (new Array(count)).fill().map((a,index) => {
                                             return _canvas_.interface.part.builder('display', 'sixteenSegmentDisplay', ''+index, {
                                                 x:(width/count)*index, width:width/count, height:height, 
-                                                static:static, resolution:resolution,
+                                                canvasBased:canvasBased, resolution:resolution,
                                                 style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
                                             });
                                         });
@@ -29426,7 +29573,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         interfacePart.partLibrary.display.readout_sixteenSegmentDisplay = function(name,data){ 
                             return interfacePart.collection.display.readout_sixteenSegmentDisplay(
-                                name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
+                                name, data.canvasBased, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
                                 data.style.background, data.style.glow, data.style.dim,
                             ); 
                         };
@@ -30502,8 +30649,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     object.append(handle);
                         
                                 //needle group
+                                    let needleGroup;
                                     if(needleURL != undefined){
-                                        const needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
+                                        needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
                                         object.append(needleGroup);
                         
                                         //needle
@@ -32311,6 +32459,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 object.interactable = function(bool){
                                     if(bool==undefined){return interactable;}
                                     interactable = bool;
+                                };
+                                object.selectable = function(bool){
+                                    if(bool==undefined){return selectable;}
+                                    selectable = bool;
                                 };
                                 object.forceMouseLeave = function(){
                                     object.state.hovering = false; 
@@ -36971,7 +37123,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
                                 //main graph
                                     const graph = interfacePart.builder('display','grapher', 'graph', {
-                                        static:true, resolution:10,
+                                        canvasBased:true, resolution:10,
                                         width:width, height:height,
                                         backgroundText_horizontalMarkings:{ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:['3/4','1/2','1/4','0','-1/4','-1/2','-3/4'], textPositionOffset:{x:1,y:-0.5}, printText:true },
                                         backgroundText_verticalMarkings:{  points:[0.75,0.5,0.25,0], printText:false },
@@ -37773,13 +37925,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         {collection:'display', type:'glowbox_polygon', name:'test_glowbox_polygon', data:{x:0, y:235}},
                                         {collection:'display', type:'glowbox_path', name:'test_glowbox_path', data:{x:0, y:270}},
                                         {collection:'display', type:'sevenSegmentDisplay', name:'test_sevenSegmentDisplay', data:{x:35, y:140}},
-                                        {collection:'display', type:'sevenSegmentDisplay', name:'test_sevenSegmentDisplay_static', data:{x:35, y:175, static:true}},
+                                        {collection:'display', type:'sevenSegmentDisplay', name:'test_sevenSegmentDisplay_canvasBased', data:{x:35, y:175, canvasBased:true}},
                                         {collection:'display', type:'sixteenSegmentDisplay', name:'test_sixteenSegmentDisplay', data:{x:60, y:140}},
-                                        {collection:'display', type:'sixteenSegmentDisplay', name:'test_sixteenSegmentDisplay_static', data:{x:60, y:175, static:true}},
+                                        {collection:'display', type:'sixteenSegmentDisplay', name:'test_sixteenSegmentDisplay_canvasBased', data:{x:60, y:175, canvasBased:true}},
                                         {collection:'display', type:'readout_sevenSegmentDisplay', name:'test_readout_sevenSegmentDisplay', data:{x:85, y:140}},
-                                        {collection:'display', type:'readout_sevenSegmentDisplay', name:'test_readout_sevenSegmentDisplay_static', data:{x:85, y:175, static:true}},
+                                        {collection:'display', type:'readout_sevenSegmentDisplay', name:'test_readout_sevenSegmentDisplay_canvasBased', data:{x:85, y:175, canvasBased:true}},
                                         {collection:'display', type:'readout_sixteenSegmentDisplay', name:'test_readout_sixteenSegmentDisplay', data:{x:190, y:140}},
-                                        {collection:'display', type:'readout_sixteenSegmentDisplay', name:'test_readout_sixteenSegmentDisplay_static', data:{x:190, y:175, static:true}},
+                                        {collection:'display', type:'readout_sixteenSegmentDisplay', name:'test_readout_sixteenSegmentDisplay_canvasBased', data:{x:190, y:175, canvasBased:true}},
                                         {collection:'display', type:'level', name:'test_level', data:{x:295, y:140}},
                                         {collection:'display', type:'meter_level', name:'test_meter_level', data:{x:320, y:140}},
                                         {collection:'display', type:'audio_meter_level', name:'test_audio_meter_level', data:{x:345, y:140}},
@@ -37789,11 +37941,11 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         {collection:'display', type:'meter_gauge_image', name:'test_meter_gauge_image', data:{x:425, y:175, backingURL:'/images/testImages/mikeandbrian.jpg'}},
                                         {collection:'display', type:'rastorDisplay', name:'test_rastorDisplay', data:{x:480, y:140}},
                                         {collection:'display', type:'grapher', name:'test_grapher', data:{x:550, y:140}},
-                                        {collection:'display', type:'grapher', name:'test_grapher_static', data:{x:550, y:205, static:true}},
+                                        {collection:'display', type:'grapher', name:'test_grapher_canvasBased', data:{x:550, y:205, canvasBased:true}},
                                         {collection:'display', type:'grapher_periodicWave', name:'test_grapher_periodicWave', data:{x:675, y:140}},
-                                        {collection:'display', type:'grapher_periodicWave', name:'test_grapher_periodicWave_static', data:{x:675, y:205, static:true}},
+                                        {collection:'display', type:'grapher_periodicWave', name:'test_grapher_periodicWave_canvasBased', data:{x:675, y:205, canvasBased:true}},
                                         {collection:'display', type:'grapher_audioScope', name:'test_grapher_audioScope', data:{x:800, y:140}},
-                                        {collection:'display', type:'grapher_audioScope', name:'test_grapher_audioScope_static', data:{x:800, y:205, static:true}},
+                                        {collection:'display', type:'grapher_audioScope', name:'test_grapher_audioScope_canvasBased', data:{x:800, y:205, canvasBased:true}},
                                     //control
                                         {collection:'control', type:'button_rectangle', name:'test_button_rectangle', data:{
                                             x:0, y:350, text_centre:'rectangle', style:{text__hover__colour:{r:1,g:0,b:0,a:1}}
@@ -40717,7 +40869,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         } );
 
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:18} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:26 } };
             this.go = new function(){
                 const functionList = [];
         
@@ -40817,6 +40969,77 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         },
                     },
                 };
+                this['test_b'] = function(name,x,y,angle){
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'test_b',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:0, y:0},
+                                {x:100, y:0},
+                                {x:100, y:100},
+                                {x:0, y:100},
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:100, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                    x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                
+                                {collection:'basic', type:'rectangle', name:'backing', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
+                
+                                {collection:'control', type:'dial_discrete', name:'a', data:{
+                                    x:20, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:9, arcDistance:1.2, optionCount:128,
+                                }},
+                                {collection:'control', type:'dial_discrete', name:'b', data:{
+                                    x:40, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:4, arcDistance:1.2, optionCount:7,
+                                }},
+                            ]
+                        });
+                
+                    //circuitry
+                        const BC = new _canvas_.interface.circuit.bitcrusher(_canvas_.library.audio.context);
+                
+                    //wiring
+                        //hid
+                            object.elements.dial_discrete.a.onchange = function(value){
+                                BC.amplitudeResolution(value+1);
+                            };
+                            object.elements.dial_discrete.b.onchange = function(value){
+                                BC.sampleFrequency(Math.pow(2,value));
+                            };
+                
+                        //keycapture
+                        //io
+                            object.io.audio.input.out().connect( BC.in() );
+                            BC.out().connect(object.io.audio.output.in());
+                
+                    //interface
+                        object.i = {
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                        };
+                        object.importData = function(data){
+                        };
+                
+                    //setup/tearDown
+                        object.oncreate = function(){
+                        };
+                        object.ondelete = function(){
+                        };
+                
+                    return object;
+                };
+                this['test_b'].metadata = {
+                    name:'bitcrusher',
+                    category:'',
+                    helpURL:''
+                };
                 this['test_a'] = function(name,x,y,angle){
                     //main object creation
                         const object = _canvas_.interface.unit.builder({
@@ -40851,6 +41074,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {collection:'control', type:'dial_continuous', name:'c', data:{
                                     x:60, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
                                 }},
+                                {collection:'control', type:'dial_continuous', name:'d', data:{
+                                    x:20, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                }},
+                                {collection:'control', type:'dial_continuous', name:'e', data:{
+                                    x:40, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2, resetValue:0.5,
+                                }},
                             ]
                         });
                 
@@ -40863,10 +41092,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 AM.invert(value!=0);
                             };
                             object.elements.dial_discrete.b.onchange = function(value){
-                                AM.offset(value-10);
+                                AM.offset(value/10 - 1);
                             };
                             object.elements.dial_continuous.c.onchange = function(value){
                                 AM.divisor(value+1);
+                            };
+                            object.elements.dial_continuous.d.onchange = function(value){
+                                AM.floor(value*20 - 10);
+                            };
+                            object.elements.dial_continuous.e.onchange = function(value){
+                                AM.ceiling(value*20 - 10);
                             };
                 
                         //keycapture
@@ -40893,7 +41128,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     return object;
                 };
                 this['test_a'].metadata = {
-                    name:'test_a',
+                    name:'amplitudeModifier',
                     category:'',
                     helpURL:''
                 };
@@ -41799,7 +42034,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
                                 }},
                                 {collection:'display', type:'grapher_audioScope', name:'waveport', data:{
-                                    x:5, y:5, width:150, height:100, static:true, style:unitStyle.waveport,
+                                    x:5, y:5, width:150, height:100, canvasBased:true, style:unitStyle.waveport,
                                 }},
                             ]
                         });
@@ -42031,7 +42266,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     dimURL:unitStyle.imageStoreURL_localPrefix+'light_stopped.png',
                                 }},
                                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'time', data:{
-                                    x:5+2/3, y:15+2/3, width:78.75, height:8.75, static:true, count:14, decimalPlaces:true, resolution:5,
+                                    x:5+2/3, y:15+2/3, width:78.75, height:8.75, canvasBased:true, count:14, decimalPlaces:true, resolution:5,
                                 }},
                                 {collection:'control', type:'button_image', name:'button_record', data:{
                                     x:5, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
@@ -42617,10 +42852,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     x:37.5+10/16, y:5+10/16, width:11.65-10/8, height:40-10/8
                                 }},
                                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'index', data:{
-                                    x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, static:true, count:11, resolution:5,
+                                    x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, canvasBased:true, count:11, resolution:5,
                                 }},
                                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'text', data:{
-                                    x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, static:true, count:18, resolution:5,
+                                    x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, canvasBased:true, count:18, resolution:5,
                                 }},
                             ]
                         });
@@ -43181,10 +43416,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     x:125, y:20, radius:67.5/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_playbackSpeed,
                                 }},
                                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'time', data:{
-                                    x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, static:true, count:8, resolution:5,
+                                    x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, canvasBased:true, count:8, resolution:5,
                                 }},
                                 {collection:'display', type:'readout_sixteenSegmentDisplay', name:'trackNameReadout', data:{
-                                    x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, static:true, count:14, resolution:5,
+                                    x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, canvasBased:true, count:14, resolution:5,
                                 }},
                                 {collection:'control', type:'button_image', name:'button_play', data:{
                                     x:2.5, y:35, width:10, height:10, hoverable:false, 
@@ -43639,8 +43874,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     backingURL__up:unitStyle.imageStoreURL_localPrefix+'rocker_down_up.png',
                                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'rocker_down_down.png',
                                 }},
-                                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, static:true, style:unitStyle.LCD }},
-                                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, static:true, style:unitStyle.LCD }},
+                                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, canvasBased:true, style:unitStyle.LCD }},
+                                {collection:'display', type:'sevenSegmentDisplay', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, canvasBased:true, style:unitStyle.LCD }},
                             ]
                         });
                 
@@ -44032,7 +44267,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 } },
                 
                                 {collection:'display', type:'readout_sevenSegmentDisplay', name:'LCD', data:{ 
-                                    x:21.75, y:10.75, width:64, height:18.5, static:true, count:6, decimalPlaces:true, style:unitStyle.LCD, resolution:5,
+                                    x:21.75, y:10.75, width:64, height:18.5, canvasBased:true, count:6, decimalPlaces:true, style:unitStyle.LCD, resolution:5,
                                 }},
                 
                                 {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + 10.85*0, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
@@ -44643,7 +44878,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     tools:{ printingName:'Tools',itemWidth:150},
                     misc:{ printingName:'Miscellaneous',itemWidth:150},
                     monitors:{ printingName:'Monitors',itemWidth:150},
-                    effects:{ printingName:'Effect Units',itemWidth:150},
+                    effects:{ printingName:'Audio Effect Units',itemWidth:150},
                     sequencers:{ printingName:'Sequencers',itemWidth:175},
                     synthesizers:{ printingName:'Synthesizers',itemWidth:150},
                     humanInterfaceDevices:{ printingName:'Human Interface Devices',itemWidth:150},
@@ -47740,10 +47975,19 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             return player;
                         });
                 
-                        function fire(channel){
-                            samplePlayers[channel].start();
-                            object.elements.glowbox_path['channelFireLED_'+channel].on();
-                            setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
+                        function fire(channel,mode='signal',value){
+                            if(mode == 'signal'){
+                                samplePlayers[channel].start();
+                                object.elements.glowbox_path['channelFireLED_'+channel].on();
+                                setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
+                            }else if(mode == 'voltage'){
+                                samplePlayers[channel].rate(
+                                    object.elements.dial_continuous_image['rate_'+channel].get() * value 
+                                );
+                                samplePlayers[channel].start();
+                                object.elements.glowbox_path['channelFireLED_'+channel].on();
+                                setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
+                            }
                         }
                         function loadSample(channel,bank,sample){
                             setChannelStatusLED(channel,'loading');
@@ -48013,7 +48257,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 } 
                                 object.io.voltage['voltage_in_'+a].onchange = function(value){
                                     if(value <= 0){return;}
-                                    fire(a);
+                                    fire(a,'voltage',value);
                                 } 
                             }
                 
@@ -48176,7 +48420,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_down_down.png',
                                         }},
                                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
-                                            x:94.5, y:13.5, width:11, height:19, static:true, resolution:5,
+                                            x:94.5, y:13.5, width:11, height:19, canvasBased:true, resolution:5,
                                         }},
                                         {collection:'control', type:'button_image', name:'clear', data:{
                                             x:110, y:13, width:8, height:20, hoverable:false,
@@ -48274,6 +48518,41 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             );
                         }
                 
+                        function refreshLEDS(){
+                            //output select
+                                if(state.outputMode == 'signal'){
+                                    object.elements.button_image.signal.glow(true);
+                                    object.elements.button_image.voltage.glow(false);
+                                }else if(state.outputMode == 'voltage'){
+                                    object.elements.button_image.signal.glow(false);
+                                    object.elements.button_image.voltage.glow(true);
+                                }
+                
+                            //channel
+                                for(let a = 0; a < 8; a++){
+                                    object.elements.glowbox_path['channelLED_'+a].off();
+                                }
+                                object.elements.glowbox_path['channelLED_'+state.currentChannel].on();
+                
+                            //page
+                                const page = state.channel[state.currentChannel].currentPage;
+                                object.elements.sevenSegmentDisplay.page.enterCharacter(page);
+                                
+                            //selector
+                                for(let a = 0; a < 16; a++){
+                                    if( state.channel[state.currentChannel].pages[page][a] ){
+                                        object.elements.glowbox_circle['selectorLED_'+a].on();
+                                    }else{
+                                        object.elements.glowbox_circle['selectorLED_'+a].off();
+                                    }
+                                }
+                
+                            //step
+                                for(let a = 0; a < 16; a++){
+                                    object.elements.glowbox_rectangle['selectorStepLED_'+a].off();
+                                }
+                                object.elements.glowbox_rectangle['selectorStepLED_'+state.step].on();
+                        }
                         function setOutputConnectionNodes(mode){
                             if(mode != 'signal' && mode != 'voltage'){return;}
                             if(state.outputMode == mode){return;}
@@ -48311,41 +48590,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                             }
                             refreshLEDS();
-                        }
-                        function refreshLEDS(){
-                            //output select
-                                if(state.outputMode == 'signal'){
-                                    object.elements.button_image.signal.glow(true);
-                                    object.elements.button_image.voltage.glow(false);
-                                }else if(state.outputMode == 'voltage'){
-                                    object.elements.button_image.signal.glow(false);
-                                    object.elements.button_image.voltage.glow(true);
-                                }
-                
-                            //channel
-                                for(let a = 0; a < 8; a++){
-                                    object.elements.glowbox_path['channelLED_'+a].off();
-                                }
-                                object.elements.glowbox_path['channelLED_'+state.currentChannel].on();
-                
-                            //page
-                                const page = state.channel[state.currentChannel].currentPage;
-                                object.elements.sevenSegmentDisplay.page.enterCharacter(page);
-                                
-                            //selector
-                                for(let a = 0; a < 16; a++){
-                                    if( state.channel[state.currentChannel].pages[page][a] ){
-                                        object.elements.glowbox_circle['selectorLED_'+a].on();
-                                    }else{
-                                        object.elements.glowbox_circle['selectorLED_'+a].off();
-                                    }
-                                }
-                
-                            //step
-                                for(let a = 0; a < 16; a++){
-                                    object.elements.glowbox_rectangle['selectorStepLED_'+a].off();
-                                }
-                                object.elements.glowbox_rectangle['selectorStepLED_'+state.step].on();
                         }
                         function setChannel(channel){
                             if(channel == undefined){ return state.currentChannel; }
@@ -48706,6 +48950,880 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         },
                     },
                 };
+                this['rdp-32'] = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_localPrefix = imageStoreURL+'rdp-32/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:3450, height:1440 },
+                                    design: { width:34.5, height:14 },
+                                };
+                
+                                this.offset = {x:5,y:2};
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                
+                            //colours
+                                this.channelLEDstyle = {
+                                    glow:{r:1,g:0,b:0,a:1},
+                                    dim:{r:0.85,g:0.6,b:0.6,a:1},
+                                };
+                                this.selectorStepLEDstyle = {
+                                    glow:{r:1,g:1,b:1,a:1},
+                                    dim:{r:0.5,g:0.5,b:0.5,a:1},
+                                };
+                        };
+                
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'rdp-32',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                            ],
+                            elements:
+                                (new Array(8)).fill().flatMap((item,index) => {
+                                    return [
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'signal_out_'+index, data:{ 
+                                            x:18 - (10/2) + index*30, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_out_'+index, data:{ 
+                                            x:18 - (10/2) + index*30, y:0, width:0, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                    ];
+                                }).concat(
+                                    [
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'pulseIn', data:{ 
+                                            x:unitStyle.drawingValue.width - unitStyle.offset.x, y:80, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                
+                                        {collection:'control', type:'checkbox_image', name:'unify', data:{
+                                            x:10, y:22, width:8, height:20,
+                                            checkURL:unitStyle.imageStoreURL_localPrefix+'unify_on.png',
+                                            uncheckURL:unitStyle.imageStoreURL_localPrefix+'unify_off.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'clear', data:{
+                                            x:21, y:22, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'clear_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'clear_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'randomFill', data:{
+                                            x:32, y:22, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'randomFill_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'randomFill_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'cut', data:{
+                                            x:43, y:22, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'cut_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'cut_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'copy', data:{
+                                            x:54, y:22, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'copy_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'copy_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'paste', data:{
+                                            x:65, y:22, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'paste_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'paste_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'channel_left', data:{
+                                            x:76, y:22, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'row_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'row_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'channel_right', data:{
+                                            x:87+8, y:22+20, width:8, height:20, angle:Math.PI, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'row_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'row_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'page_up', data:{
+                                            x:98, y:22, width:20, height:8, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'page_up_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'page_up_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'page_down', data:{
+                                            x:98, y:34, width:20, height:8, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'page_down_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'page_down_down.png',
+                                        }},
+                                        {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
+                                            x:121.5, y:22.5, width:11, height:19, canvasBased:true, resolution:5,
+                                        }},
+                
+                                        {collection:'control', type:'button_image', name:'step', data:{
+                                            x:10, y:45, width:20, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'step_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'step_down.png',
+                                        }},
+                                        {collection:'control', type:'dial_discrete_image', name:'releaseLength', data:{
+                                            x:43, y:55, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                        }},
+                                        {collection:'control', type:'dial_discrete_image', name:'direction', data:{
+                                            x:66, y:55, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'region_left', data:{
+                                            x:86, y:45, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'region_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'region_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'region_right', data:{
+                                            x:97+8, y:45+20, width:8, height:20, angle:Math.PI, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'region_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'region_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'region_32', data:{
+                                            x:108, y:45, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'region_32_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'region_32_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'region_16', data:{
+                                            x:119, y:45, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'region_16_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'region_16_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'region_8', data:{
+                                            x:130, y:45, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'region_8_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'region_8_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'signal', data:{
+                                            x:151, y:45, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'voltage', data:{
+                                            x:162, y:45, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'through', data:{
+                                            x:173, y:45, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'through_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'through_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'through_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'through_on.png',
+                                        }},
+                                    ]
+                                ).concat(
+                                    (new Array(16)).fill().flatMap((item,index) => {
+                                        return [
+                                            {collection:'display', type:'glowbox_rectangle', name:'selectorStepLED_'+index, data:{
+                                                x:10 + index*20, y:100-3, width:15, height:5, style:unitStyle.selectorStepLEDstyle,
+                                            }},
+                                            {collection:'display', type:'glowbox_rectangle', name:'selectorStepLED_'+(index+16), data:{
+                                                x:10 + index*20, y:135-3, width:15, height:5, style:unitStyle.selectorStepLEDstyle,
+                                            }},
+                                        ];
+                                    })
+                                ).concat(
+                                    (new Array(8)).fill().flatMap((item,index) => {
+                                        return [
+                                            {collection:'display', type:'glowbox_path', name:'channelLED_'+index, data:{
+                                                x:10.5 + index*30, y:6, thickness:1.5, points:[{x:0,y:0},{x:15,y:0}], capType:'round', style:unitStyle.channelLEDstyle
+                                            }},
+                                        ]
+                                    })
+                                ).concat(
+                                    (new Array(8)).fill().flatMap((item,index) => {
+                                        return [
+                                            {collection:'control', type:'button_image', name:'selector_'+index, data:{
+                                                x:10 + index*20, y:70, width:15, height:30, hoverable:false, selectable:true,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'1_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'1_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'1_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'1_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'1_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'1_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'1_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'1_down_glow_select.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'selector_'+(index+8), data:{
+                                                x:10 + (index+8)*20, y:70, width:15, height:30, hoverable:false, selectable:true,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'2_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'2_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'2_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'2_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'2_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'2_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'2_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'2_down_glow_select.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'selector_'+(index+16), data:{
+                                                x:10 + index*20, y:105, width:15, height:30, hoverable:false, selectable:true,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'3_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'3_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'3_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'3_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'3_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'3_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'3_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'3_down_glow_select.png',
+                                            }},
+                                            {collection:'control', type:'button_image', name:'selector_'+(index+24), data:{
+                                                x:10 + (index+8)*20, y:105, width:15, height:30, hoverable:false, selectable:true,
+                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'4_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'4_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'4_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'4_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'4_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'4_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'4_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'4_down_glow_select.png',
+                                            }},
+                
+                                            {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+index, data:{
+                                                x:197.5 + index*16, y:20.5, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
+                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                            }},
+                                            {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+8), data:{
+                                                x:205.5 + index*16, y:20.5+13, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
+                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                            }},
+                                            {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+16), data:{
+                                                x:197.5 + index*16, y:20.5+26, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
+                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                            }},
+                                            {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+24), data:{
+                                                x:205.5 + index*16, y:20.5+39, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
+                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                            }},
+                                        ];
+                                    })
+                                )
+                        });
+                
+                    //circuitry
+                        const channelCount = 8;
+                        const selectorCount = 32;
+                        const pageCount = 16;
+                        const state = {
+                            outputMode:'signal', //signal / voltage
+                            step:0, 
+                            direction:'l2r', //l2r / r2l / bounce / random
+                            bounceDirection:1,
+                            currentChannel:0,
+                            unifyChannels:false,
+                            channel:[],
+                            currentlySoundingChannels:[0,0,0,0,0,0,0,0],
+                            release:1,
+                            playThrough:{active:false, values: (new Array(channelCount)).fill().map(() => 1) },
+                            region:{start:0, end:31, mode:'32'},
+                            clipboard:[],
+                        };
+                        for(let a = 0; a < channelCount; a++){
+                            state.channel.push(
+                                {
+                                    currentPage:0,
+                                    pages:(new Array(pageCount)).fill().map(() => (new Array(selectorCount)).fill().map(() => ({value:1, state:false})) )
+                                }
+                            );
+                        }
+                
+                        function refreshLEDs(){
+                            //output select
+                                if(state.outputMode == 'signal'){
+                                    object.elements.button_image.signal.glow(true);
+                                    object.elements.button_image.voltage.glow(false);
+                                }else if(state.outputMode == 'voltage'){
+                                    object.elements.button_image.signal.glow(false);
+                                    object.elements.button_image.voltage.glow(true);
+                                }
+                
+                            //channel
+                                for(let a = 0; a < channelCount; a++){
+                                    object.elements.glowbox_path['channelLED_'+a].off();
+                                }
+                                object.elements.glowbox_path['channelLED_'+state.currentChannel].on();
+                
+                            //page
+                                const page = state.channel[state.currentChannel].currentPage;
+                                object.elements.sevenSegmentDisplay.page.enterCharacter(['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'][page]);
+                
+                            //step
+                                for(let a = 0; a < selectorCount; a++){
+                                    object.elements.button_image['selector_'+a].glow(false);
+                                }
+                                object.elements.button_image['selector_'+state.step].glow(true);
+                
+                            //selection region
+                                for(let a = 0; a < selectorCount; a++){
+                                    object.elements.glowbox_rectangle['selectorStepLED_'+a].off();
+                                    if(a >= state.region.start && a <= state.region.end){
+                                        object.elements.glowbox_rectangle['selectorStepLED_'+a].on();
+                                    }
+                                }
+                
+                        }
+                        function refresh(){
+                            refreshLEDs();
+                
+                            //selector
+                                const page = state.channel[state.currentChannel].currentPage;
+                                for(let a = 0; a < selectorCount; a++){
+                                    object.elements.button_image['selector_'+a].select(
+                                        state.channel[state.currentChannel].pages[page][a].state
+                                    );
+                                    object.elements.dial_continuous_image['selectorDial_'+a].set(
+                                        state.channel[state.currentChannel].pages[page][a].value/2
+                                    );
+                                }
+                
+                            //reset playThrough
+                                if(state.playThrough.active){
+                                    toggleThroughMode();
+                                }
+                        }
+                        function setOutputConnectionNodes(mode){
+                            if(mode != 'signal' && mode != 'voltage'){return;}
+                            if(state.outputMode == mode){return;}
+                            state.outputMode = mode;
+                
+                            const duration = 500;
+                            const detail = 30;
+                            const zero2five = _canvas_.library.math.curveGenerator.s(detail,0,5);
+                            const five2zero = _canvas_.library.math.curveGenerator.s(detail,5,0);
+                
+                            if(mode == 'signal'){
+                                for(let a = 0; a < 8; a++){
+                                    object.elements.connectionNode_voltage['voltage_out_'+a].disconnect();
+                                    object.elements.connectionNode_voltage['voltage_out_'+a].set(0);
+                                    
+                                    for(let b = 0; b < detail; b++){
+                                        setTimeout(()=>{
+                                            object.elements.connectionNode_signal['signal_out_'+a].getChildren()[0].width(zero2five[b]);
+                                            object.elements.connectionNode_voltage['voltage_out_'+a].getChildren()[0].width(five2zero[b]);
+                                        },
+                                        (duration/detail)*b);
+                                    }
+                                }
+                            }else if(mode == 'voltage'){
+                                for(let a = 0; a < 8; a++){
+                                    object.elements.connectionNode_signal['signal_out_'+a].disconnect();
+                                    object.elements.connectionNode_signal['signal_out_'+a].set(false);
+                                    for(let b = 0; b < detail; b++){
+                                        setTimeout(()=>{
+                                            object.elements.connectionNode_signal['signal_out_'+a].getChildren()[0].width(five2zero[b]);
+                                            object.elements.connectionNode_voltage['voltage_out_'+a].getChildren()[0].width(zero2five[b]);
+                                        },
+                                        (duration/detail)*b);
+                                    }
+                                }
+                            }
+                            refresh();
+                        }
+                        function setChannel(channel){
+                            if(channel == undefined){ return state.currentChannel; }
+                            state.currentChannel = channel;
+                            refresh();
+                        }
+                        function step(){
+                            switch(state.direction){
+                                case 'l2r':
+                                    state.step++;
+                                    if(state.step == state.region.end+1 || state.step >= selectorCount){state.step = state.region.start;}
+                                break;
+                                case 'r2l': 
+                                    state.step--;
+                                    if(state.step == state.region.start-1 || state.step < 0){state.step = state.region.end;}
+                                break;
+                                case 'bounce':
+                                    if(state.step == state.region.start || state.step == 0){state.bounceDirection = 1;}
+                                    if(state.step == state.region.end || state.step == selectorCount-1){state.bounceDirection = -1;}
+                                    state.step += state.bounceDirection;
+                                break;
+                                case 'random':
+                                    state.step = state.region.start + Math.round(Math.random()*(state.region.end - state.region.start));
+                                break;
+                            }
+                
+                            state.currentlySoundingChannels = state.currentlySoundingChannels.map((item,index) => {
+                                if(item == 0){return 0;}
+                                if(item == 1){
+                                    if( state.outputMode == 'signal' ){
+                                        object.elements.connectionNode_signal['signal_out_'+index].set( false );
+                                    }else if( state.outputMode == 'voltage' ){
+                                        object.elements.connectionNode_voltage['voltage_out_'+index].set( 0 );
+                                    }
+                                    return 0;
+                                }
+                                if(item > 1){
+                                    return item - 1;
+                                }
+                            });
+                            for(let a = 0; a < channelCount; a++){
+                                if( state.channel[a].pages[state.channel[a].currentPage][state.step].state && state.currentlySoundingChannels[a] == 0 ){
+                                    if( state.outputMode == 'signal' ){
+                                        object.elements.connectionNode_signal['signal_out_'+a].set( true );
+                                    }else if( state.outputMode == 'voltage' ){
+                                        object.elements.connectionNode_voltage['voltage_out_'+a].set( state.channel[a].pages[state.channel[a].currentPage][state.step].value );
+                                    }
+                                    state.currentlySoundingChannels[a] = state.release;
+                                }
+                            }
+                            
+                            refreshLEDs();
+                        }
+                        function clear(){
+                            const page = state.channel[state.currentChannel].currentPage;
+                            if(state.unifyChannels){
+                                for(let a = 0; a < channelCount; a++){
+                                    for(let b = 0; b < selectorCount; b++){
+                                        state.channel[a].pages[page][b].state = false;
+                                        state.channel[a].pages[page][b].value = 1;
+                                    }
+                                }
+                            }else{
+                                for(let a = 0; a < selectorCount; a++){
+                                    state.channel[state.currentChannel].pages[page][a].state = false;
+                                    state.channel[state.currentChannel].pages[page][a].value = 1;
+                                }
+                            }
+                            refresh();
+                        }
+                        function randomFill(){
+                            const page = state.channel[state.currentChannel].currentPage;
+                
+                            if(state.unifyChannels){
+                                for(let a = 0; a < channelCount; a++){
+                                    for(let b = 0; b < selectorCount; b++){
+                                        state.channel[a].pages[page][b].state = Math.round(Math.random()) == 1;
+                                        state.channel[a].pages[page][b].value = Math.random()*2;
+                                    }
+                                }
+                            }else{
+                                for(let a = 0; a < selectorCount; a++){
+                                    state.channel[state.currentChannel].pages[page][a].state = Math.round(Math.random()) == 1;
+                                    state.channel[state.currentChannel].pages[page][a].value = Math.random()*2;
+                                }
+                            }
+                            refresh();
+                        }
+                        function copy(){
+                            state.clipboard = [];
+                            const page = state.channel[state.currentChannel].currentPage;
+                
+                            if(state.unifyChannels){
+                                for(let a = 0; a < channelCount; a++){
+                                    state.clipboard[a] = [];
+                                    for(let b = 0; b < selectorCount; b++){
+                                        state.clipboard[a].push({
+                                            state: state.channel[a].pages[page][b].state,
+                                            value: state.channel[a].pages[page][b].value,
+                                        });
+                                    }
+                                }
+                            }else{
+                                for(let a = 0; a < selectorCount; a++){
+                                    state.clipboard.push({
+                                        state: state.channel[state.currentChannel].pages[page][a].state,
+                                        value: state.channel[state.currentChannel].pages[page][a].value,
+                                    });
+                                }
+                            }
+                        }
+                        function cut(){
+                            copy();
+                            clear();
+                        }
+                        function paste(){
+                            if(state.clipboard.length == 0){return;}
+                
+                            const page = state.channel[state.currentChannel].currentPage;
+                            if(state.unifyChannels){
+                                for(let a = 0; a < channelCount; a++){
+                                    for(let b = 0; b < selectorCount; b++){
+                                        state.channel[a].pages[page][b].state = state.clipboard[a][b].state;
+                                        state.channel[a].pages[page][b].value = state.clipboard[a][b].value;
+                                    }
+                                }
+                            }else{
+                                for(let a = 0; a < selectorCount; a++){
+                                    state.channel[state.currentChannel].pages[page][a].state = state.clipboard[a].state;
+                                    state.channel[state.currentChannel].pages[page][a].value = state.clipboard[a].value;
+                                }
+                            }
+                            refresh();
+                        }
+                        function toggleThroughMode(){
+                            state.playThrough.active = !state.playThrough.active;
+                            object.elements.button_image.through.glow(state.playThrough.active);
+                
+                            if(state.playThrough.active){
+                                for(let a = 0; a < selectorCount; a++){
+                                    object.elements.button_image['selector_'+a].select(false,undefined,false);
+                                    object.elements.button_image['selector_'+a].glow(false);
+                                    object.elements.button_image['selector_'+a].selectable(false);
+                                    object.elements.dial_continuous_image['selectorDial_'+a].set(
+                                        state.playThrough.values[a] != undefined ? state.playThrough.values[a]/2 : 0
+                                    );
+                                }
+                            }else{
+                                for(let a = 0; a < selectorCount; a++){
+                                    object.elements.button_image['selector_'+a].selectable(true);
+                                }
+                                refresh();
+                            }
+                        }
+                
+                    //wiring
+                        //hid
+                            //page
+                                object.elements.checkbox_image.unify.onchange = function(bool){
+                                    state.unifyChannels = bool;
+                                    state.clipboard = [];
+                                };
+                                object.elements.button_image.clear.onpress = function(){
+                                    clear();
+                                };
+                                object.elements.button_image.randomFill.onpress = function(){
+                                    randomFill();
+                                };
+                                object.elements.button_image.cut.onpress = function(){
+                                    cut();
+                                };
+                                object.elements.button_image.copy.onpress = function(){
+                                    copy();
+                                };
+                                object.elements.button_image.paste.onpress = function(){
+                                    paste();
+                                };
+                                object.elements.button_image.channel_left.onpress = function(){
+                                    state.currentChannel--;
+                                    if(state.currentChannel < 0){state.currentChannel = channelCount-1;}
+                                    refresh();
+                                };
+                                object.elements.button_image.channel_right.onpress = function(){
+                                    state.currentChannel++;
+                                    if(state.currentChannel > channelCount-1){state.currentChannel = 0;}
+                                    refresh();
+                                };
+                                object.elements.button_image.page_up.onpress = function(){
+                                    state.channel[state.currentChannel].currentPage++;
+                                    if(state.channel[state.currentChannel].currentPage > pageCount-1){state.channel[state.currentChannel].currentPage = 0;}
+                    
+                                    if(state.unifyChannels){
+                                        for(let a = 0; a < channelCount; a++){
+                                            state.channel[a].currentPage = state.channel[state.currentChannel].currentPage;
+                                        }
+                                    }
+                    
+                                    refresh();
+                                };
+                                object.elements.button_image.page_down.onpress = function(){
+                                    state.channel[state.currentChannel].currentPage--;
+                                    if(state.channel[state.currentChannel].currentPage < 0){state.channel[state.currentChannel].currentPage = pageCount-1;}
+                    
+                                    if(state.unifyChannels){
+                                        for(let a = 0; a < channelCount; a++){
+                                            state.channel[a].currentPage = state.channel[state.currentChannel].currentPage;
+                                        }
+                                    }
+                    
+                                    refresh();
+                                };
+                        
+                            //progression
+                                object.elements.button_image.step.onpress = function(){
+                                    step();
+                                };
+                                object.elements.dial_discrete_image.releaseLength.onchange = function(value){
+                                    state.release = value+1;
+                                };
+                                object.elements.dial_discrete_image.direction.onchange = function(value){
+                                    state.direction = ['l2r','r2l','bounce','random'][value];
+                                };
+                
+                            //subsection selection
+                                object.elements.button_image.region_left.onpress = function(){
+                                    state.region.mode = 'left';
+                                };
+                                object.elements.button_image.region_right.onpress = function(){
+                                    state.region.mode = 'right';
+                                };
+                                object.elements.button_image.region_32.onpress = function(){
+                                    state.region = {start:0, end:31};
+                                    refresh();
+                                    state.region.mode = '32';
+                                };
+                                object.elements.button_image.region_16.onpress = function(){
+                                    if( state.region.mode == '16_1' ){
+                                        state.region = {start:16, end:31};
+                                        state.region.mode = '16_2';
+                                    }else{
+                                        state.region = {start:0, end:15};
+                                        state.region.mode = '16_1';
+                                    }
+                                    refresh();
+                                };
+                                object.elements.button_image.region_8.onpress = function(){
+                                    if( state.region.mode == '8_1' ){
+                                        state.region = {start:8, end:15};
+                                        state.region.mode = '8_2';
+                                    }else if( state.region.mode == '8_2' ){
+                                        state.region = {start:16, end:23};
+                                        state.region.mode = '8_3';
+                                    }else if( state.region.mode == '8_3' ){
+                                        state.region = {start:24, end:31};
+                                        state.region.mode = '8_4';
+                                    }else{
+                                        state.region = {start:0, end:7};
+                                        state.region.mode = '8_1';
+                                    }
+                                    refresh();
+                                };
+                                
+                            //meta
+                                object.elements.button_image.signal.onpress = function(){
+                                    setOutputConnectionNodes('signal');
+                                };
+                                object.elements.button_image.voltage.onpress = function(){
+                                    setOutputConnectionNodes('voltage');
+                                };
+                                object.elements.button_image.through.onpress = function(){
+                                    toggleThroughMode();
+                                };
+                            
+                            //selectors
+                                for(let a = 0; a < selectorCount; a++){
+                                    object.elements.button_image['selector_'+a].onpress = function(){
+                                        if(state.playThrough.active){
+                                            if( state.outputMode == 'signal' ){
+                                                object.elements.connectionNode_signal['signal_out_'+a].set( true );
+                                            }else if( state.outputMode == 'voltage' ){
+                                                object.elements.connectionNode_voltage['voltage_out_'+a].set( state.playThrough.values[a] );
+                                            }
+                                        }
+                
+                                        if( state.region.mode != 'left' && state.region.mode != 'right' ){return;}
+                
+                                        if( state.region.mode == 'left' ){
+                                            if( a > state.region.end ){
+                                                state.region.mode = '';
+                                                return;
+                                            }
+                                            state.region.start = a;
+                                        }else if( state.region.mode == 'right' ){
+                                            if( a < state.region.start ){
+                                                state.region.mode = '';
+                                                return;
+                                            }
+                                            state.region.end = a;
+                                        }
+                
+                                        const page = state.channel[state.currentChannel].currentPage;
+                                        state.channel[state.currentChannel].pages[page][a].state = !state.channel[state.currentChannel].pages[page][a].state;
+                
+                                        state.region.mode = '';
+                                        refresh();
+                                    };
+                                    object.elements.button_image['selector_'+a].onrelease = function(){
+                                        if(state.playThrough.active){
+                                            if( state.outputMode == 'signal' ){
+                                                object.elements.connectionNode_signal['signal_out_'+a].set( false );
+                                            }else if( state.outputMode == 'voltage' ){
+                                                object.elements.connectionNode_voltage['voltage_out_'+a].set( 0 );
+                                            }
+                                        }
+                                    };
+                                    object.elements.button_image['selector_'+a].onselect = function(){
+                                        const page = state.channel[state.currentChannel].currentPage;
+                                        state.channel[state.currentChannel].pages[page][a].state = true;
+                                    };
+                                    object.elements.button_image['selector_'+a].ondeselect = function(){
+                                        const page = state.channel[state.currentChannel].currentPage;
+                                        state.channel[state.currentChannel].pages[page][a].state = false;
+                                    };
+                
+                                    object.elements.dial_continuous_image['selectorDial_'+a].onchange = function(value){
+                                        if(state.playThrough.active){
+                                            state.playThrough.values[a] = value*2;
+                                            return;
+                                        }
+                
+                                        const page = state.channel[state.currentChannel].currentPage;
+                                        state.channel[state.currentChannel].pages[page][a].value = value*2;
+                                    };
+                                }
+                
+                        //keycapture
+                            object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
+                                switch(event.key){
+                                    case '1': setChannel(0); break;
+                                    case '2': setChannel(1); break;
+                                    case '3': setChannel(2); break;
+                                    case '4': setChannel(3); break;
+                                    case '5': setChannel(4); break;
+                                    case '6': setChannel(5); break;
+                                    case '7': setChannel(6); break;
+                                    case '8': setChannel(7); break;
+                
+                                    case '9': object.elements.dial_discrete_image.releaseLength.nudge(-1); break;
+                                    case '0': object.elements.dial_discrete_image.releaseLength.nudge(1);  break;
+                                    case '-': object.elements.dial_discrete_image.direction.nudge(-1); break;
+                                    case '=': object.elements.dial_discrete_image.direction.nudge(1);  break;
+                
+                                    case '/': object.elements.checkbox_image.unify.toggle(); break;
+                                    case ';': object.elements.button_image.clear.press(); break;
+                                    case 'Enter': step(); break;
+                
+                                    case 'ArrowUp': object.elements.button_image.page_up.press(); break;
+                                    case 'ArrowDown': object.elements.button_image.page_down.press(); break;
+                                    case 'ArrowLeft': object.elements.button_image.channel_left.press(); break;
+                                    case 'ArrowRight': object.elements.button_image.channel_right.press(); break;
+                
+                                    case 'q': object.elements.button_image.randomFill.press(); break;
+                                    case 'w': object.elements.button_image.cut.press(); break;
+                                    case 'e': object.elements.button_image.copy.press(); break;
+                                    case 'r': object.elements.button_image.paste.press(); break;
+                                    case 't': object.elements.button_image.region_left.press(); break;
+                                    case 'y': object.elements.button_image.region_right.press(); break;
+                                    case 'u': object.elements.button_image.region_32.press(); break;
+                                    case 'i': object.elements.button_image.region_16.press(); break;
+                                    case 'o': object.elements.button_image.region_8.press(); break;
+                                    case 'p': object.elements.button_image.through.press(); break;
+                
+                                    case 'a': object.elements.button_image['selector_0'].press();  break;
+                                    case 's': object.elements.button_image['selector_1'].press();  break;
+                                    case 'd': object.elements.button_image['selector_2'].press();  break;
+                                    case 'f': object.elements.button_image['selector_3'].press();  break;
+                                    case 'g': object.elements.button_image['selector_4'].press();  break;
+                                    case 'h': object.elements.button_image['selector_5'].press();  break;
+                                    case 'j': object.elements.button_image['selector_6'].press();  break;
+                                    case 'k': object.elements.button_image['selector_7'].press();  break;
+                                    case '`': object.elements.button_image['selector_8'].press();  break;
+                                    case 'z': object.elements.button_image['selector_9'].press();  break;
+                                    case 'x': object.elements.button_image['selector_10'].press(); break;
+                                    case 'c': object.elements.button_image['selector_11'].press(); break;
+                                    case 'v': object.elements.button_image['selector_12'].press(); break;
+                                    case 'b': object.elements.button_image['selector_13'].press(); break;
+                                    case 'n': object.elements.button_image['selector_14'].press(); break;
+                                    case 'm': object.elements.button_image['selector_15'].press(); break;
+                                    case 'A': object.elements.button_image['selector_16'].press(); break;
+                                    case 'S': object.elements.button_image['selector_17'].press(); break;
+                                    case 'D': object.elements.button_image['selector_18'].press(); break;
+                                    case 'F': object.elements.button_image['selector_19'].press(); break;
+                                    case 'G': object.elements.button_image['selector_20'].press(); break;
+                                    case 'H': object.elements.button_image['selector_21'].press(); break;
+                                    case 'J': object.elements.button_image['selector_22'].press(); break;
+                                    case 'K': object.elements.button_image['selector_23'].press(); break;
+                                    case '~': object.elements.button_image['selector_24'].press(); break;
+                                    case 'Z': object.elements.button_image['selector_25'].press(); break;
+                                    case 'X': object.elements.button_image['selector_26'].press(); break;
+                                    case 'C': object.elements.button_image['selector_27'].press(); break;
+                                    case 'V': object.elements.button_image['selector_28'].press(); break;
+                                    case 'B': object.elements.button_image['selector_29'].press(); break;
+                                    case 'N': object.elements.button_image['selector_30'].press(); break;
+                                    case 'M': object.elements.button_image['selector_31'].press(); break;
+                                }
+                            });
+                            object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
+                                switch(event.key){
+                                    case ';': object.elements.button_image.clear.release(); break;
+                
+                                    case 'ArrowUp': object.elements.button_image.page_up.release(); break;
+                                    case 'ArrowDown': object.elements.button_image.page_down.release(); break;
+                                    case 'ArrowLeft': object.elements.button_image.channel_left.release(); break;
+                                    case 'ArrowRight': object.elements.button_image.channel_right.release(); break;
+                
+                                    case 'q': object.elements.button_image.randomFill.release(); break;
+                                    case 'w': object.elements.button_image.cut.release(); break;
+                                    case 'e': object.elements.button_image.copy.release(); break;
+                                    case 'r': object.elements.button_image.paste.release(); break;
+                                    case 't': object.elements.button_image.region_left.release(); break;
+                                    case 'y': object.elements.button_image.region_right.release(); break;
+                                    case 'u': object.elements.button_image.region_32.release(); break;
+                                    case 'i': object.elements.button_image.region_16.release(); break;
+                                    case 'o': object.elements.button_image.region_8.release(); break;
+                                    case 'p': object.elements.button_image.through.release(); break;
+                
+                                    case 'a': object.elements.button_image['selector_0'].release();  break;
+                                    case 's': object.elements.button_image['selector_1'].release();  break;
+                                    case 'd': object.elements.button_image['selector_2'].release();  break;
+                                    case 'f': object.elements.button_image['selector_3'].release();  break;
+                                    case 'g': object.elements.button_image['selector_4'].release();  break;
+                                    case 'h': object.elements.button_image['selector_5'].release();  break;
+                                    case 'j': object.elements.button_image['selector_6'].release();  break;
+                                    case 'k': object.elements.button_image['selector_7'].release();  break;
+                                    case '`': object.elements.button_image['selector_8'].release();  break;
+                                    case 'z': object.elements.button_image['selector_9'].release();  break;
+                                    case 'x': object.elements.button_image['selector_10'].release(); break;
+                                    case 'c': object.elements.button_image['selector_11'].release(); break;
+                                    case 'v': object.elements.button_image['selector_12'].release(); break;
+                                    case 'b': object.elements.button_image['selector_13'].release(); break;
+                                    case 'n': object.elements.button_image['selector_14'].release(); break;
+                                    case 'm': object.elements.button_image['selector_15'].release(); break;
+                                    case 'A': object.elements.button_image['selector_16'].release(); break;
+                                    case 'S': object.elements.button_image['selector_17'].release(); break;
+                                    case 'D': object.elements.button_image['selector_18'].release(); break;
+                                    case 'F': object.elements.button_image['selector_19'].release(); break;
+                                    case 'G': object.elements.button_image['selector_20'].release(); break;
+                                    case 'H': object.elements.button_image['selector_21'].release(); break;
+                                    case 'J': object.elements.button_image['selector_22'].release(); break;
+                                    case 'K': object.elements.button_image['selector_23'].release(); break;
+                                    case '~': object.elements.button_image['selector_24'].release(); break;
+                                    case 'Z': object.elements.button_image['selector_25'].release(); break;
+                                    case 'X': object.elements.button_image['selector_26'].release(); break;
+                                    case 'C': object.elements.button_image['selector_27'].release(); break;
+                                    case 'V': object.elements.button_image['selector_28'].release(); break;
+                                    case 'B': object.elements.button_image['selector_29'].release(); break;
+                                    case 'N': object.elements.button_image['selector_30'].release(); break;
+                                    case 'M': object.elements.button_image['selector_31'].release(); break;
+                                }
+                                
+                            });
+                
+                        //io
+                            object.io.signal.pulseIn.onchange = function(value){
+                                if(!value){return}
+                                step();
+                            } 
+                
+                    //interface
+                        object.i = {
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                            return JSON.parse(JSON.stringify(state));
+                        };
+                        object.importData = function(data){
+                            Object.keys(data).forEach(key => { state[key] = JSON.parse(JSON.stringify(data[key])); });
+                            refresh();
+                        };
+                
+                    //setup/tearDown
+                        object.oncreate = function(){
+                            setChannel(0);
+                        };
+                
+                    return object;
+                };
+                this['rdp-32'].metadata = {
+                    name:'RDP-32',
+                    category:'',
+                    helpURL:'/help/units/harbinger/rdp-32/'
+                };
                 
                 this._collectionData = {
                     name:'Harbinger',
@@ -48717,6 +49835,311 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     sequencers:{ printingName:'Sequencers',itemWidth:175},
                 };
             };
+            this.acousticresearch = new function(){
+                const imageStoreURL = '/images/units/4 - acoustic research/';
+                const style = {
+                    connectionNode:{
+                        signal:{
+                            dim:{r:235/255,g:98/255,b:61/255,a:1},
+                            glow:{r:237/255,g:154/255,b:132/255,a:1},
+                            cable_dim:{r:235/255,g:98/255,b:61/255,a:1},
+                            cable_glow:{r:237/255,g:154/255,b:132/255,a:1},
+                        },
+                        voltage:{
+                            dim:{r:170/255,g:251/255,b:89/255,a:1},
+                            glow:{r:210/255,g:255/255,b:165/255,a:1},
+                            cable_dim:{r:170/255,g:251/255,b:89/255,a:1},
+                            cable_glow:{r:210/255,g:255/255,b:165/255,a:1},
+                        },
+                        data:{
+                            dim:{r:114/255,g:176/255,b:248/255,a:1},
+                            glow:{r:168/255,g:208/255,b:255/255,a:1},
+                            cable_dim:{r:114/255,g:176/255,b:248/255,a:1},
+                            cable_glow:{r:168/255,g:208/255,b:255/255,a:1},
+                        },
+                        audio:{
+                            dim:{r:243/255,g:173/255,b:61/255,a:1},
+                            glow:{r:247/255,g:203/255,b:133/255,a:1},
+                            cable_dim:{r:243/255,g:173/255,b:61/255,a:1},
+                            cable_glow:{r:247/255,g:203/255,b:133/255,a:1},
+                        },
+                    },
+                };
+                this['bitcrusher'] = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_localPrefix = imageStoreURL+'bitcrusher/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:1050, height:600 },
+                                    design: { width:10.5, height:6 },
+                                };
+                
+                                this.offset = {x:0,y:0};
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                        };
+                
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'bitcrusher',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:unitStyle.drawingValue.width, y:22.5, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                    x:0, y:37.5, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                },
+                
+                                {collection:'control', type:'dial_continuous_image', name:'amplitudeResolution', data:{
+                                    x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:128, 
+                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                }},
+                                {collection:'control', type:'dial_discrete_image', name:'sampleFrequency', data:{
+                                    x:65, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:8, 
+                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                }},
+                            ]
+                        });
+                
+                    //circuitry
+                        const state = {
+                            amplitudeResolution:0.425,
+                            sampleFrequency:4,
+                        };
+                        const BC = new _canvas_.interface.circuit.bitcrusher(_canvas_.library.audio.context);
+                
+                    //wiring
+                        //hid
+                            object.elements.dial_continuous_image.amplitudeResolution.onchange = function(value){
+                                BC.amplitudeResolution( Math.pow(2,value*7) );
+                                state.amplitudeResolution = value;
+                            };
+                            object.elements.dial_discrete_image.sampleFrequency.onchange = function(value){
+                                BC.sampleFrequency(Math.pow(2, value));
+                                state.sampleFrequency = value;
+                            };
+                
+                        //io
+                            object.io.audio.input.out().connect( BC.in() );
+                            BC.out().connect(object.io.audio.output.in());
+                
+                    //interface
+                        object.i = {
+                            amplitudeResolution:function(a){
+                                if(a == undefined){ return BC.amplitudeResolution(); }
+                                object.elements.dial_continuous_image.amplitudeResolution.set( Math.log2(a)/7 );
+                            },
+                            sampleFrequency:function(a){
+                                if(a == undefined){ return BC.sampleFrequency(); }
+                                if( ![1,2,4,8,16,32,64,128].includes(a) ){ return; }
+                                object.elements.dial_discrete_image.sampleFrequency.set( Math.log2(a) );
+                            },
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                            return JSON.parse(JSON.stringify(state));
+                        };
+                        object.importData = function(data){
+                            object.elements.dial_continuous_image.amplitudeResolution.set( data.amplitudeResolution );
+                            object.elements.dial_discrete_image.sampleFrequency.set( data.sampleFrequency );
+                        };
+                
+                    //setup/tearDown
+                        object.oncreate = function(){
+                            object.elements.dial_continuous_image.amplitudeResolution.set(0.425);
+                            object.elements.dial_discrete_image.sampleFrequency.set(4);
+                        };
+                        object.ondelete = function(){
+                        };
+                
+                    return object;
+                };
+                this['bitcrusher'].metadata = {
+                    name:'Bitcrusher',
+                    category:'',
+                    helpURL:''
+                };
+                this['amplitude_modifier'] = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_modifier/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:1150, height:900 },
+                                    design: { width:11.5, height:9 },
+                                };
+                
+                                this.offset = {x:0,y:0};
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                        };
+                
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'amplitude_modifier',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height/2 - 15/2, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height/2 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
+                                },
+                
+                                {collection:'control', type:'dial_continuous_image', name:'offset', data:{
+                                    x:35, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, resetValue:0.5, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'divideBy', data:{
+                                    x:35, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:1/7, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'ceiling', data:{
+                                    x:75, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'floor', data:{
+                                    x:75, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'invert', data:{
+                                    x:5, y:35, width:10, height:20,
+                                    uncheckURL:unitStyle.imageStoreURL_localPrefix+'switch_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_localPrefix+'switch_down.png',
+                                }},
+                            ]
+                        });
+                
+                    //circuitry
+                        const state = {
+                            offset:0,
+                            divideBy:1,
+                            ceiling:2,
+                            floor:-2,
+                            invert:false,
+                        };
+                        const AM = new _canvas_.interface.circuit.amplitudeModifier(_canvas_.library.audio.context);
+                
+                    //wiring
+                        //hid
+                            object.elements.dial_continuous_image.offset.onchange = function(value){
+                                AM.offset(value*2 - 1);
+                                state.offset = value*2 - 1;
+                            };
+                            object.elements.dial_continuous_image.divideBy.onchange = function(value){
+                                AM.divisor(value*7 + 1);
+                                state.divideBy = value*7 + 1;
+                            };
+                            object.elements.dial_continuous_image.ceiling.onchange = function(value){
+                                AM.ceiling(value*2);
+                                state.ceiling = value*2;
+                            };
+                            object.elements.dial_continuous_image.floor.onchange = function(value){
+                                AM.floor(-(1-value)*2);
+                                state.floor = -(1-value)*2;
+                            };
+                            object.elements.checkbox_image.invert.onchange = function(value){
+                                AM.invert(value);
+                                state.invert = value;
+                            };
+                        //io
+                            object.io.audio.input.out().connect( AM.in() );
+                            AM.out().connect(object.io.audio.output.in());
+                
+                    //interface
+                        object.i = {
+                            offset:function(a){
+                                if(a==undefined){ return state.offset; }
+                                object.elements.dial_continuous_image.offset.set( (a+1)/2 );
+                            },
+                            divideBy:function(a){
+                                if(a==undefined){ return state.divideBy; }
+                                object.elements.dial_continuous_image.divideBy.set( (a-1)/7 );
+                            },
+                            ceiling:function(a){
+                                if(a==undefined){ return state.ceiling; }
+                                object.elements.dial_continuous_image.ceiling.set( a/2 );
+                            },
+                            floor:function(a){
+                                if(a==undefined){ return state.floor; }
+                                object.elements.dial_continuous_image.floor.set( 1 + a/2 );
+                            },
+                            invert:function(a){
+                                if(a==undefined){ return state.invert; }
+                                object.elements.checkbox_image.invert.set( a );
+                            },
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                            return JSON.parse(JSON.stringify(state));
+                        };
+                        object.importData = function(data){
+                            object.elements.dial_continuous_image.offset.set( (data.offset+1)/2 );
+                            object.elements.dial_continuous_image.divideBy.set( (data.divideBy-1)/7 );
+                            object.elements.dial_continuous_image.ceiling.set( data.ceiling/2 );
+                            object.elements.dial_continuous_image.floor.set( -data.floor/2 );
+                            object.elements.checkbox_image.invert.set( data.invert );
+                        };
+                
+                    //setup/tearDown
+                        object.oncreate = function(){
+                        };
+                        object.ondelete = function(){
+                        };
+                
+                    return object;
+                };
+                this['amplitude_modifier'].metadata = {
+                    name:'Amplitude Modifier',
+                    category:'',
+                    helpURL:''
+                };
+                
+                this._collectionData = {
+                    name:'Acoustic Research',
+                    itemWidth:210,
+                    categoryOrder:[
+                    ],   
+                };
+                this._categoryData = {
+                };
+            };
         };
         
         _canvas_.interface.unit.collection.metadata = {
@@ -48724,6 +50147,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 'alpha',
                 'curvetech',
                 'harbinger',
+                'acousticresearch',
             ],
             devList:[
                 'development',
@@ -48973,44 +50397,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
 
         
         _canvas_.curve.go.add( function(){
-            _canvas_.core.render.frameRateLimit(10);
+            // _canvas_.core.render.frameRateLimit(10);
         
-            const dsds = _canvas_.control.scene.addUnit(10,10,0,'dsds-8^3','harbinger');
-            const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
-        
-            // for(let a = 0; a < 8; a++){
-            //     mrd.io.signal['signal_out_'+a].connectTo(dsds.io.signal['signal_in_'+a]);
-            // }
-        
-        
-            // const pulse = _canvas_.control.scene.addUnit(370,120,0,'pulse_generator','alpha');
-            // const amp = _canvas_.control.scene.addUnit(-150,-150,0,'amplifier','alpha');
-            // const dup = _canvas_.control.scene.addUnit(60,-60,0,'audio_duplicator','alpha');
-            // dsds.io.audio.audio_out_master.connectTo(dup.io.audio.input);
-            // dup.io.audio.output_1.connectTo(amp.io.audio.input_R);
-            // dup.io.audio.output_2.connectTo(amp.io.audio.input_L);
-            // pulse.io.signal.output.connectTo(mrd.io.signal.pulseIn);
-            // pulse.i.tempo(380);
-        
-            // mrd.i.pageData(0,0,
-            //     [true, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false]
-            // );
-            // mrd.i.pageData(1,0,
-            //     [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false]
-            // );
-            // mrd.i.pageData(2,0,
-            //     [false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, true]
-            // );
-            // mrd.i.pageData(6,0,
-            //     [false, false, true, false, false, false, true, false, false, false, true, true, false, false, true, false]
-            // );
-            
+            // const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
+            const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
             
         
         
         
-            // _canvas_.control.viewport.scale(4);
-            // _canvas_.control.viewport.position(-10, 20);
+            _canvas_.control.viewport.scale(4);
+            // _canvas_.control.viewport.position(-5, -650);
         });
 
 
