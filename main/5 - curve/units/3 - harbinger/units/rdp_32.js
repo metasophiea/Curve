@@ -3,6 +3,7 @@ this['rdp-32'] = function(name,x,y,angle){
         const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'rdp-32/';
+                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
 
             //calculation of measurements
                 const div = 10;
@@ -61,13 +62,13 @@ this['rdp-32'] = function(name,x,y,angle){
 
                         {collection:'control', type:'checkbox_image', name:'unify', data:{
                             x:10, y:22, width:8, height:20,
-                            checkURL:unitStyle.imageStoreURL_localPrefix+'unify_on.png',
-                            uncheckURL:unitStyle.imageStoreURL_localPrefix+'unify_off.png',
+                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
+                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
                         }},
                         {collection:'control', type:'button_image', name:'clear', data:{
                             x:21, y:22, width:8, height:20, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'clear_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'clear_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'clear_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'clear_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'randomFill', data:{
                             x:32, y:22, width:8, height:20, hoverable:false,
@@ -91,23 +92,23 @@ this['rdp-32'] = function(name,x,y,angle){
                         }},
                         {collection:'control', type:'button_image', name:'channel_left', data:{
                             x:76, y:22, width:8, height:20, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'row_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'row_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'channel_right', data:{
                             x:87+8, y:22+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'row_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'row_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'page_up', data:{
                             x:98, y:22, width:20, height:8, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'page_up_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'page_up_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'page_down', data:{
                             x:98, y:34, width:20, height:8, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'page_down_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'page_down_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
                         }},
                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                             x:121.5, y:22.5, width:11, height:19, canvasBased:true, resolution:5,
@@ -115,16 +116,16 @@ this['rdp-32'] = function(name,x,y,angle){
 
                         {collection:'control', type:'button_image', name:'step', data:{
                             x:10, y:45, width:20, height:20, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'step_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'step_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'step_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'step_down.png',
                         }},
                         {collection:'control', type:'dial_discrete_image', name:'releaseLength', data:{
                             x:43, y:55, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
-                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                            handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                         }},
                         {collection:'control', type:'dial_discrete_image', name:'direction', data:{
                             x:66, y:55, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
-                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                            handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                         }},
                         {collection:'control', type:'button_image', name:'region_left', data:{
                             x:86, y:45, width:8, height:20, hoverable:false,
@@ -153,17 +154,17 @@ this['rdp-32'] = function(name,x,y,angle){
                         }},
                         {collection:'control', type:'button_image', name:'signal', data:{
                             x:151, y:45, width:8, height:20, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
-                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
-                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
+                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
                         }},
                         {collection:'control', type:'button_image', name:'voltage', data:{
                             x:162, y:45, width:8, height:20, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
-                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
-                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
+                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
                         }},
                         {collection:'control', type:'button_image', name:'through', data:{
                             x:173, y:45, width:8, height:20, hoverable:false,
@@ -197,64 +198,64 @@ this['rdp-32'] = function(name,x,y,angle){
                         return [
                             {collection:'control', type:'button_image', name:'selector_'+index, data:{
                                 x:10 + index*20, y:70, width:15, height:30, hoverable:false, selectable:true,
-                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'1_up.png',
-                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'1_down.png',
-                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'1_up_select.png',
-                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'1_down_select.png',
-                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'1_up_glow.png',
-                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'1_down_glow.png',
-                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'1_up_glow_select.png',
-                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'1_down_glow_select.png',
+                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'1_up.png',
+                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'1_down.png',
+                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'1_up_select.png',
+                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'1_down_select.png',
+                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'1_up_glow.png',
+                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'1_down_glow.png',
+                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'1_up_glow_select.png',
+                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'1_down_glow_select.png',
                             }},
                             {collection:'control', type:'button_image', name:'selector_'+(index+8), data:{
                                 x:10 + (index+8)*20, y:70, width:15, height:30, hoverable:false, selectable:true,
-                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'2_up.png',
-                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'2_down.png',
-                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'2_up_select.png',
-                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'2_down_select.png',
-                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'2_up_glow.png',
-                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'2_down_glow.png',
-                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'2_up_glow_select.png',
-                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'2_down_glow_select.png',
+                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'2_up.png',
+                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'2_down.png',
+                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'2_up_select.png',
+                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'2_down_select.png',
+                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'2_up_glow.png',
+                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'2_down_glow.png',
+                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'2_up_glow_select.png',
+                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'2_down_glow_select.png',
                             }},
                             {collection:'control', type:'button_image', name:'selector_'+(index+16), data:{
                                 x:10 + index*20, y:105, width:15, height:30, hoverable:false, selectable:true,
-                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'3_up.png',
-                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'3_down.png',
-                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'3_up_select.png',
-                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'3_down_select.png',
-                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'3_up_glow.png',
-                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'3_down_glow.png',
-                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'3_up_glow_select.png',
-                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'3_down_glow_select.png',
+                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'3_up.png',
+                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'3_down.png',
+                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'3_up_select.png',
+                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'3_down_select.png',
+                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'3_up_glow.png',
+                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'3_down_glow.png',
+                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'3_up_glow_select.png',
+                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'3_down_glow_select.png',
                             }},
                             {collection:'control', type:'button_image', name:'selector_'+(index+24), data:{
                                 x:10 + (index+8)*20, y:105, width:15, height:30, hoverable:false, selectable:true,
-                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'4_up.png',
-                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'4_down.png',
-                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'4_up_select.png',
-                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'4_down_select.png',
-                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'4_up_glow.png',
-                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'4_down_glow.png',
-                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'4_up_glow_select.png',
-                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'4_down_glow_select.png',
+                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'4_up.png',
+                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'4_down.png',
+                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'4_up_select.png',
+                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'4_down_select.png',
+                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'4_up_glow.png',
+                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'4_down_glow.png',
+                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'4_up_glow_select.png',
+                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'4_down_glow_select.png',
                             }},
 
                             {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+index, data:{
                                 x:197.5 + index*16, y:20.5, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                             }},
                             {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+8), data:{
                                 x:205.5 + index*16, y:20.5+13, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                             }},
                             {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+16), data:{
                                 x:197.5 + index*16, y:20.5+26, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                             }},
                             {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+24), data:{
                                 x:205.5 + index*16, y:20.5+39, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                             }},
                         ];
                     })
@@ -266,27 +267,24 @@ this['rdp-32'] = function(name,x,y,angle){
         const selectorCount = 32;
         const pageCount = 16;
         const state = {
-            outputMode:'signal', //signal / voltage
-            step:0, 
-            direction:'l2r', //l2r / r2l / bounce / random
-            bounceDirection:1,
+            outputMode:'signal', // signal / voltage
+            step:0,
+            direction:'l2r', // l2r / r2l / bounce / random
+            bounceDirection:1, // 1 / -1
             currentChannel:0,
             unifyChannels:false,
-            channel:[],
+            channel: (new Array(channelCount)).fill().map(() => {
+                return {
+                    currentPage:0,
+                    pages:(new Array(pageCount)).fill().map(() => (new Array(selectorCount)).fill().map(() => ({value:1, state:false})) )
+                }
+            }),
             currentlySoundingChannels:[0,0,0,0,0,0,0,0],
-            release:1,
+            release:1, // 1 / 2 / 3 / 4
             playThrough:{active:false, values: (new Array(channelCount)).fill().map(() => 1) },
             region:{start:0, end:31, mode:'32'},
             clipboard:[],
         };
-        for(let a = 0; a < channelCount; a++){
-            state.channel.push(
-                {
-                    currentPage:0,
-                    pages:(new Array(pageCount)).fill().map(() => (new Array(selectorCount)).fill().map(() => ({value:1, state:false})) )
-                }
-            );
-        }
 
         function refreshLEDs(){
             //output select
@@ -321,21 +319,21 @@ this['rdp-32'] = function(name,x,y,angle){
                         object.elements.glowbox_rectangle['selectorStepLED_'+a].on();
                     }
                 }
-
+        }
+        function refreshSelectors(){
+            const page = state.channel[state.currentChannel].currentPage;
+            for(let a = 0; a < selectorCount; a++){
+                object.elements.button_image['selector_'+a].select(
+                    state.channel[state.currentChannel].pages[page][a].state
+                );
+                object.elements.dial_continuous_image['selectorDial_'+a].set(
+                    state.channel[state.currentChannel].pages[page][a].value/2
+                );
+            }
         }
         function refresh(){
             refreshLEDs();
-
-            //selector
-                const page = state.channel[state.currentChannel].currentPage;
-                for(let a = 0; a < selectorCount; a++){
-                    object.elements.button_image['selector_'+a].select(
-                        state.channel[state.currentChannel].pages[page][a].state
-                    );
-                    object.elements.dial_continuous_image['selectorDial_'+a].set(
-                        state.channel[state.currentChannel].pages[page][a].value/2
-                    );
-                }
+            refreshSelectors();
 
             //reset playThrough
                 if(state.playThrough.active){
@@ -716,129 +714,99 @@ this['rdp-32'] = function(name,x,y,angle){
 
         //keycapture
             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                switch(event.key){
-                    case '1': setChannel(0); break;
-                    case '2': setChannel(1); break;
-                    case '3': setChannel(2); break;
-                    case '4': setChannel(3); break;
-                    case '5': setChannel(4); break;
-                    case '6': setChannel(5); break;
-                    case '7': setChannel(6); break;
-                    case '8': setChannel(7); break;
+                const OEBI = object.elements.button_image;
 
-                    case '9': object.elements.dial_discrete_image.releaseLength.nudge(-1); break;
-                    case '0': object.elements.dial_discrete_image.releaseLength.nudge(1);  break;
-                    case '-': object.elements.dial_discrete_image.direction.nudge(-1); break;
-                    case '=': object.elements.dial_discrete_image.direction.nudge(1);  break;
+                switch(event.keyCode){
+                    case 49: setChannel(0); break;
+                    case 50: setChannel(1); break;
+                    case 51: setChannel(2); break;
+                    case 52: setChannel(3); break;
+                    case 53: setChannel(4); break;
+                    case 54: setChannel(5); break;
+                    case 55: setChannel(6); break;
+                    case 56: setChannel(7); break;
 
-                    case '/': object.elements.checkbox_image.unify.toggle(); break;
-                    case ';': object.elements.button_image.clear.press(); break;
-                    case 'Enter': step(); break;
+                    case 57: object.elements.dial_discrete_image.releaseLength.nudge(-1); break;
+                    case 48: object.elements.dial_discrete_image.releaseLength.nudge(1);  break;
+                    case 189: object.elements.dial_discrete_image.direction.nudge(-1); break;
+                    case 187: object.elements.dial_discrete_image.direction.nudge(1);  break;
 
-                    case 'ArrowUp': object.elements.button_image.page_up.press(); break;
-                    case 'ArrowDown': object.elements.button_image.page_down.press(); break;
-                    case 'ArrowLeft': object.elements.button_image.channel_left.press(); break;
-                    case 'ArrowRight': object.elements.button_image.channel_right.press(); break;
+                    case 191: object.elements.checkbox_image.unify.toggle(); break;
+                    case 186: OEBI.clear.press(); break;
+                    case 13: step(); break;
 
-                    case 'q': object.elements.button_image.randomFill.press(); break;
-                    case 'w': object.elements.button_image.cut.press(); break;
-                    case 'e': object.elements.button_image.copy.press(); break;
-                    case 'r': object.elements.button_image.paste.press(); break;
-                    case 't': object.elements.button_image.region_left.press(); break;
-                    case 'y': object.elements.button_image.region_right.press(); break;
-                    case 'u': object.elements.button_image.region_32.press(); break;
-                    case 'i': object.elements.button_image.region_16.press(); break;
-                    case 'o': object.elements.button_image.region_8.press(); break;
-                    case 'p': object.elements.button_image.through.press(); break;
+                    case 38: OEBI.page_up.press(); break;
+                    case 40: OEBI.page_down.press(); break;
+                    case 37: OEBI.channel_left.press(); break;
+                    case 39: OEBI.channel_right.press(); break;
 
-                    case 'a': object.elements.button_image['selector_0'].press();  break;
-                    case 's': object.elements.button_image['selector_1'].press();  break;
-                    case 'd': object.elements.button_image['selector_2'].press();  break;
-                    case 'f': object.elements.button_image['selector_3'].press();  break;
-                    case 'g': object.elements.button_image['selector_4'].press();  break;
-                    case 'h': object.elements.button_image['selector_5'].press();  break;
-                    case 'j': object.elements.button_image['selector_6'].press();  break;
-                    case 'k': object.elements.button_image['selector_7'].press();  break;
-                    case '`': object.elements.button_image['selector_8'].press();  break;
-                    case 'z': object.elements.button_image['selector_9'].press();  break;
-                    case 'x': object.elements.button_image['selector_10'].press(); break;
-                    case 'c': object.elements.button_image['selector_11'].press(); break;
-                    case 'v': object.elements.button_image['selector_12'].press(); break;
-                    case 'b': object.elements.button_image['selector_13'].press(); break;
-                    case 'n': object.elements.button_image['selector_14'].press(); break;
-                    case 'm': object.elements.button_image['selector_15'].press(); break;
-                    case 'A': object.elements.button_image['selector_16'].press(); break;
-                    case 'S': object.elements.button_image['selector_17'].press(); break;
-                    case 'D': object.elements.button_image['selector_18'].press(); break;
-                    case 'F': object.elements.button_image['selector_19'].press(); break;
-                    case 'G': object.elements.button_image['selector_20'].press(); break;
-                    case 'H': object.elements.button_image['selector_21'].press(); break;
-                    case 'J': object.elements.button_image['selector_22'].press(); break;
-                    case 'K': object.elements.button_image['selector_23'].press(); break;
-                    case '~': object.elements.button_image['selector_24'].press(); break;
-                    case 'Z': object.elements.button_image['selector_25'].press(); break;
-                    case 'X': object.elements.button_image['selector_26'].press(); break;
-                    case 'C': object.elements.button_image['selector_27'].press(); break;
-                    case 'V': object.elements.button_image['selector_28'].press(); break;
-                    case 'B': object.elements.button_image['selector_29'].press(); break;
-                    case 'N': object.elements.button_image['selector_30'].press(); break;
-                    case 'M': object.elements.button_image['selector_31'].press(); break;
+                    case 81: OEBI.randomFill.press(); break;
+                    case 87: OEBI.cut.press(); break;
+                    case 69: OEBI.copy.press(); break;
+                    case 82: OEBI.paste.press(); break;
+                    case 84: OEBI.region_left.press(); break;
+                    case 89: OEBI.region_right.press(); break;
+                    case 85: OEBI.region_32.press(); break;
+                    case 73: OEBI.region_16.press(); break;
+                    case 79: OEBI.region_8.press(); break;
+                    case 80: OEBI.through.press(); break;
+
+                    case 65:  if(!event.shiftKey){ OEBI['selector_0'].press();  }else{ OEBI['selector_16'].press(); } break;
+                    case 83:  if(!event.shiftKey){ OEBI['selector_1'].press();  }else{ OEBI['selector_17'].press(); } break;
+                    case 68:  if(!event.shiftKey){ OEBI['selector_2'].press();  }else{ OEBI['selector_18'].press(); } break;
+                    case 70:  if(!event.shiftKey){ OEBI['selector_3'].press();  }else{ OEBI['selector_19'].press(); } break;
+                    case 71:  if(!event.shiftKey){ OEBI['selector_4'].press();  }else{ OEBI['selector_20'].press(); } break;
+                    case 72:  if(!event.shiftKey){ OEBI['selector_5'].press();  }else{ OEBI['selector_21'].press(); } break;
+                    case 74:  if(!event.shiftKey){ OEBI['selector_6'].press();  }else{ OEBI['selector_22'].press(); } break;
+                    case 75:  if(!event.shiftKey){ OEBI['selector_7'].press();  }else{ OEBI['selector_23'].press(); } break;
+                    case 90:  if(!event.shiftKey){ OEBI['selector_8'].press();  }else{ OEBI['selector_24'].press(); } break;
+                    case 88:  if(!event.shiftKey){ OEBI['selector_9'].press();  }else{ OEBI['selector_25'].press(); } break;
+                    case 67:  if(!event.shiftKey){ OEBI['selector_10'].press(); }else{ OEBI['selector_26'].press(); } break;
+                    case 86:  if(!event.shiftKey){ OEBI['selector_11'].press(); }else{ OEBI['selector_27'].press(); } break;
+                    case 66:  if(!event.shiftKey){ OEBI['selector_12'].press(); }else{ OEBI['selector_28'].press(); } break;
+                    case 78:  if(!event.shiftKey){ OEBI['selector_13'].press(); }else{ OEBI['selector_29'].press(); } break;
+                    case 77:  if(!event.shiftKey){ OEBI['selector_14'].press(); }else{ OEBI['selector_30'].press(); } break;
+                    case 188: if(!event.shiftKey){ OEBI['selector_15'].press(); }else{ OEBI['selector_31'].press(); } break;
                 }
             });
             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                switch(event.key){
-                    case ';': object.elements.button_image.clear.release(); break;
+                const OEBI = object.elements.button_image;
+                switch(event.keyCode){
+                    case 186: OEBI.clear.release(); break;
 
-                    case 'ArrowUp': object.elements.button_image.page_up.release(); break;
-                    case 'ArrowDown': object.elements.button_image.page_down.release(); break;
-                    case 'ArrowLeft': object.elements.button_image.channel_left.release(); break;
-                    case 'ArrowRight': object.elements.button_image.channel_right.release(); break;
+                    case 57: object.elements.button_image.page_up.release(); break;
+                    case 48: object.elements.button_image.page_down.release(); break;
+                    case 189: object.elements.button_image.channel_left.release(); break;
+                    case 187: object.elements.button_image.channel_right.release(); break;
 
-                    case 'q': object.elements.button_image.randomFill.release(); break;
-                    case 'w': object.elements.button_image.cut.release(); break;
-                    case 'e': object.elements.button_image.copy.release(); break;
-                    case 'r': object.elements.button_image.paste.release(); break;
-                    case 't': object.elements.button_image.region_left.release(); break;
-                    case 'y': object.elements.button_image.region_right.release(); break;
-                    case 'u': object.elements.button_image.region_32.release(); break;
-                    case 'i': object.elements.button_image.region_16.release(); break;
-                    case 'o': object.elements.button_image.region_8.release(); break;
-                    case 'p': object.elements.button_image.through.release(); break;
+                    case 81: object.elements.button_image.randomFill.release(); break;
+                    case 87: object.elements.button_image.cut.release(); break;
+                    case 69: object.elements.button_image.copy.release(); break;
+                    case 82: object.elements.button_image.paste.release(); break;
+                    case 84: object.elements.button_image.region_left.release(); break;
+                    case 89: object.elements.button_image.region_right.release(); break;
+                    case 85: object.elements.button_image.region_32.release(); break;
+                    case 73: object.elements.button_image.region_16.release(); break;
+                    case 79: object.elements.button_image.region_8.release(); break;
+                    case 80: object.elements.button_image.through.release(); break;
 
-                    case 'a': object.elements.button_image['selector_0'].release();  break;
-                    case 's': object.elements.button_image['selector_1'].release();  break;
-                    case 'd': object.elements.button_image['selector_2'].release();  break;
-                    case 'f': object.elements.button_image['selector_3'].release();  break;
-                    case 'g': object.elements.button_image['selector_4'].release();  break;
-                    case 'h': object.elements.button_image['selector_5'].release();  break;
-                    case 'j': object.elements.button_image['selector_6'].release();  break;
-                    case 'k': object.elements.button_image['selector_7'].release();  break;
-                    case '`': object.elements.button_image['selector_8'].release();  break;
-                    case 'z': object.elements.button_image['selector_9'].release();  break;
-                    case 'x': object.elements.button_image['selector_10'].release(); break;
-                    case 'c': object.elements.button_image['selector_11'].release(); break;
-                    case 'v': object.elements.button_image['selector_12'].release(); break;
-                    case 'b': object.elements.button_image['selector_13'].release(); break;
-                    case 'n': object.elements.button_image['selector_14'].release(); break;
-                    case 'm': object.elements.button_image['selector_15'].release(); break;
-                    case 'A': object.elements.button_image['selector_16'].release(); break;
-                    case 'S': object.elements.button_image['selector_17'].release(); break;
-                    case 'D': object.elements.button_image['selector_18'].release(); break;
-                    case 'F': object.elements.button_image['selector_19'].release(); break;
-                    case 'G': object.elements.button_image['selector_20'].release(); break;
-                    case 'H': object.elements.button_image['selector_21'].release(); break;
-                    case 'J': object.elements.button_image['selector_22'].release(); break;
-                    case 'K': object.elements.button_image['selector_23'].release(); break;
-                    case '~': object.elements.button_image['selector_24'].release(); break;
-                    case 'Z': object.elements.button_image['selector_25'].release(); break;
-                    case 'X': object.elements.button_image['selector_26'].release(); break;
-                    case 'C': object.elements.button_image['selector_27'].release(); break;
-                    case 'V': object.elements.button_image['selector_28'].release(); break;
-                    case 'B': object.elements.button_image['selector_29'].release(); break;
-                    case 'N': object.elements.button_image['selector_30'].release(); break;
-                    case 'M': object.elements.button_image['selector_31'].release(); break;
+                    case 65:  if(!event.shiftKey){ OEBI['selector_0'].release();  }else{ OEBI['selector_16'].release(); } break;
+                    case 83:  if(!event.shiftKey){ OEBI['selector_1'].release();  }else{ OEBI['selector_17'].release(); } break;
+                    case 68:  if(!event.shiftKey){ OEBI['selector_2'].release();  }else{ OEBI['selector_18'].release(); } break;
+                    case 70:  if(!event.shiftKey){ OEBI['selector_3'].release();  }else{ OEBI['selector_19'].release(); } break;
+                    case 71:  if(!event.shiftKey){ OEBI['selector_4'].release();  }else{ OEBI['selector_20'].release(); } break;
+                    case 72:  if(!event.shiftKey){ OEBI['selector_5'].release();  }else{ OEBI['selector_21'].release(); } break;
+                    case 74:  if(!event.shiftKey){ OEBI['selector_6'].release();  }else{ OEBI['selector_22'].release(); } break;
+                    case 75:  if(!event.shiftKey){ OEBI['selector_7'].release();  }else{ OEBI['selector_23'].release(); } break;
+                    case 90:  if(!event.shiftKey){ OEBI['selector_8'].release();  }else{ OEBI['selector_24'].release(); } break;
+                    case 88:  if(!event.shiftKey){ OEBI['selector_9'].release();  }else{ OEBI['selector_25'].release(); } break;
+                    case 67:  if(!event.shiftKey){ OEBI['selector_10'].release(); }else{ OEBI['selector_26'].release(); } break;
+                    case 86:  if(!event.shiftKey){ OEBI['selector_11'].release(); }else{ OEBI['selector_27'].release(); } break;
+                    case 66:  if(!event.shiftKey){ OEBI['selector_12'].release(); }else{ OEBI['selector_28'].release(); } break;
+                    case 78:  if(!event.shiftKey){ OEBI['selector_13'].release(); }else{ OEBI['selector_29'].release(); } break;
+                    case 77:  if(!event.shiftKey){ OEBI['selector_14'].release(); }else{ OEBI['selector_30'].release(); } break;
+                    case 188: if(!event.shiftKey){ OEBI['selector_15'].release(); }else{ OEBI['selector_31'].release(); } break;
                 }
-                
             });
 
         //io
@@ -849,6 +817,94 @@ this['rdp-32'] = function(name,x,y,angle){
 
     //interface
         object.i = {
+            outputMode:function(mode){
+                if(mode == undefined){ return state.outputMode; }
+                setOutputConnectionNodes(mode);
+            },
+            playThrough:function(bool){
+                if(bool == undefined){ return state.playThrough.active; }
+                if( state.playThrough.active == bool ){ return; }
+                toggleThroughMode();
+            },
+            step:function(){
+                step();
+            },
+            currentChannel:function(channel){
+                if(channel == undefined){ return state.currentChannel; }
+                if(channel > channelCount-1 || channel < 0){return;}
+                state.currentChannel = channel;
+                refreshLEDs();
+                refreshSelectors();
+            },
+            currentPage:function(channel, page){
+                if(channel == undefined){ return; }
+                if(channel > channelCount-1 || channel < 0){return;}
+                if(page == undefined){ return state.channel[channel].currentPage; }
+                if(page > pageCount-1 || page < 0){return;}
+                state.channel[channel].currentPage = page;
+                refreshLEDs();
+                refreshSelectors();
+            },
+            pageData:function(channel, page, data){
+                if(channel == undefined){ return; }
+                if(channel > channelCount-1 || channel < 0){return;}
+                if(page == undefined){ return state.channel[channel].pages; }
+                if(page > pageCount-1 || page < 0){return;}
+                if(data == undefined){ return state.channel[channel].pages[page]; }
+                state.channel[channel].pages[page] = data;
+                refreshLEDs();
+                refreshSelectors();
+            },
+            unify:function(bool){
+                if(bool == undefined){ return state.unifyChannels; }
+                object.elements.checkbox_image.unify.set(bool);
+            },
+            clear:function(){
+                clear();
+            },
+            randomFill:function(){
+                randomFill();
+            },
+            release:function(value){
+                if(value == undefined){ return state.release-1; }
+                object.elements.dial_discrete_image.releaseLength.set(value);
+            },
+            direction:function(mode){
+                if(mode == undefined){ return state.direction; }
+                object.elements.dial_discrete_image.direction.set( ['l2r','r2l','bounce','random'].indexOf(mode) );
+            },
+            region:function(start,end){
+                if(start == undefined && end == undefined){ return {start:state.region.start,end:state.region.end}; }
+                if( start < 0 || start > selectorCount-1 || end < 0 || end > selectorCount-1){ return; }
+                if( end < start ){ return; }
+                state.region = {start:start, end:end};
+                refresh();
+                state.region.mode = '';
+            },
+            reset:function(){
+                state.outputMode = 'signal';
+                state.step = 0;
+                state.direction = 'l2r';
+                state.bounceDirection = 1;
+                state.currentChannel = 0;
+                state.unifyChannels = false;
+                state.channel = (new Array(channelCount)).fill().map(() => {
+                    return {
+                        currentPage:0,
+                        pages:(new Array(pageCount)).fill().map(() => (new Array(selectorCount)).fill().map(() => ({value:1, state:false})) )
+                    }
+                });
+                state.currentlySoundingChannels = [0,0,0,0,0,0,0,0];
+                state.release = 1;
+                state.playThrough.active = false
+                state.playThrough.values = (new Array(channelCount)).fill().map(() => 1);
+                state.region.start = 0, 
+                state.region.end = 31
+                state.region.mode = '32'
+                state.clipboard = [];
+
+                refresh();
+            },
         };
 
     //import/export
@@ -868,7 +924,7 @@ this['rdp-32'] = function(name,x,y,angle){
     return object;
 };
 this['rdp-32'].metadata = {
-    name:'RDP-32',
+    name:'Rhythm Designer Pro - 32',
     category:'',
     helpURL:'/help/units/harbinger/rdp-32/'
 };

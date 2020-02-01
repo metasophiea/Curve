@@ -1,4 +1,59 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-01
+  - seems closure can't handle the new custom audio node code..so we're back
+    to just the plain unminified code now
+  - updated Harbinger's dsds so that the voltage input now controls volume
+    instead of rate..it's not super great, but it does work
+
+
+2020-01-30
+  - more work on the new audioWorklet-based oscillator (I now have a nice
+    square wave with adjustable frequency and duty cycle..though I'm having
+    issues with the a-rate/k-rate non-instant adjustment thing)
+
+
+2020-01-29
+  - began work on a new audioWorklet-based oscillator
+
+
+2020-01-28
+  - updated the library.audio section to better handle waiting for the loading
+    of its sections
+  - rewrote the audioWorklets to expand to use the AudioNodes, encapsulating
+    things in a really nice way. I've also updated the circuits in the 
+    interface layer. Part of the re-write also includes better use of the way
+    audioWorklets work, so hopefully this should make existing and future
+    worklets operate smoother and with less audio glitching (which I'd noticed
+    in the amplitudeModifier on the weekend when it was used with one of the
+    units) Things still aren't perfect - for some reason custom 'options' don't
+    work like they should - but I've learned some useful things which should
+    help alot.
+
+
+2020-01-27
+  - changed Harbinger units' display names to the actual names instead of those
+    codes
+  - added interface methods to Harbinger's RDP unit
+  - replaced the seletor parts in Harbinger's MRD unit with the newer, snazzier
+    ones from the RDP
+  - made a 'common' folder in Harbinger's image folder location, for images
+    that are shared between different units. This should reduce the amount of
+    space that the images for these units take up, and reduce the time it takes
+    to add them to a scene. CurveTech is already set up a bit like this, so no
+    common folder is needed there
+  - replaced Harbinger's DSDS signal/voltage buttons with slightly larger ones
+    (which are the ones that the other two units use, so they're in the common
+    folder)
+  - did some of the same moves for Acoustic Research, but only the dial is
+    common there
+  - put together a document with the codes for all the keys of a keyboard
+  - began changing how key capture is done by units, where instead of the 
+    unit using the character of the key, it uses the keyCode which represents
+    its position on the keyboard, thus allowing more keyboard types to use the
+    hotkeys. I've converted as many of the units that I could find that used
+    the old method
+
+
 2020-01-26
   - lots of work on the new bitcrusher unit, seems to be working good now
   - also added the Amplitude Modifier unit

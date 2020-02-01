@@ -52,7 +52,7 @@ const viewport = new function(){
             state.position.y = y;
 
             arrangement.get().children().forEach(function(item){
-                if(item.heedCamera()){ 
+                if(item.heedCamera && item.heedCamera()){ 
                     dev.log.viewport('.position -> adjusting:',item); //#development
                     item.unifiedAttribute({x:state.position.x,y:state.position.y});
                 }
@@ -67,7 +67,7 @@ const viewport = new function(){
             if(s == undefined){return state.scale;}
             state.scale = s <= 0 ? 1 : s;
             arrangement.get().children().forEach(function(item){
-                if(item.heedCamera()){ 
+                if(item.heedCamera && item.heedCamera()){ 
                     dev.log.viewport('.scale -> adjusting:',item); //#development
                     item.scale(state.scale);
                 }
@@ -81,7 +81,7 @@ const viewport = new function(){
             if(a == undefined){return state.angle;}
             state.angle = a;
             arrangement.get().children().forEach(function(item){
-                if(item.heedCamera()){ 
+                if(item.heedCamera && item.heedCamera()){ 
                     dev.log.viewport('.angle -> adjusting:',item); //#development
                     item.angle(state.angle);
                 }

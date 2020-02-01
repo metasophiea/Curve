@@ -59,15 +59,15 @@ this.button_panel_2 = function(name,x,y,angle){
             object.elements.button_image.button_2.onpress = function(){   object.io.signal.out_2.set(true);  };
             object.elements.button_image.button_2.onrelease = function(){ object.io.signal.out_2.set(false); };
         //keycapture
-            const glyphs = [ '1', '2' ]; 
+            const keyCodes = [ 49, 50 ];
             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                if( glyphs.includes(event.key) ){
-                    object.elements.button_image['button_'+event.key].press();
+                if( keyCodes.includes(event.keyCode) ){
+                    object.elements.button_image['button_'+(keyCodes.indexOf(event.keyCode)+1)].press();
                 }
             });
             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                if( glyphs.includes(event.key) ){
-                    object.elements.button_image['button_'+event.key].release();
+                if( keyCodes.includes(event.keyCode) ){
+                    object.elements.button_image['button_'+(keyCodes.indexOf(event.keyCode)+1)].release();
                 }
             });
 

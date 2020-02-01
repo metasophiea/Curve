@@ -17,7 +17,8 @@
 // {{include:14.js}} //group methods test
 // {{include:15.js}} //group rapid addition/remove/clearing test
 // {{include:16.js}} //arrangement test
-{{include:17.js}} //repeated image request test
+// {{include:17.js}} //repeated image request test
+{{include:18.js}} //big image / small image performace test
 
 
 // {{include:a.js}} //custom shape (quite broken)

@@ -1,5 +1,5 @@
 _canvas_.library = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:24} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:28} };
     const library = this;
 
     this.go = new function(){
@@ -35,7 +35,7 @@ _canvas_.library = new function(){
     };
 };
 
-_canvas_.library.audio.audioWorklet.nowReady = function(){
+_canvas_.library.audio.nowReady = function(){
     _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
     _canvas_.library.go.__activate();
 };

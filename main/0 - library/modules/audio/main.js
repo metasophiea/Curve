@@ -19,3 +19,25 @@ const audio = this;
 {{include:conversion.js}}
 {{include:utility.js}}
 {{include:audioWorklet/main.js}}
+
+
+
+
+
+
+
+
+const readyCheckList = {
+    audioWorklet:false,
+};
+audio.nowReady = function(){};
+
+Object.keys(readyCheckList).forEach(item => {
+    audio[item].nowReady = function(){
+        readyCheckList[item] = true;
+        if( Object.values(readyCheckList).reduce((a,b) => a&&b) ){ audio.nowReady(); }
+    };
+    if( audio[item].checkIfReady() ){
+        audio[item].nowReady();
+    }
+});

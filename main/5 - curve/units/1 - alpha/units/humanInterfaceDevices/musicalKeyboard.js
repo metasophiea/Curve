@@ -158,15 +158,15 @@ this.musicalKeyboard = function(name,x,y,angle){
             }
 
         //keycapture
-            const glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
+            const keyCodes = [ 90, 83, 88, 68, 67, 86, 71, 66, 72, 78, 74, 77, 81, 50, 87, 51, 69, 82, 53, 84, 54, 89, 55, 85, 73 ];
             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                if( glyphs.includes(event.key) ){
-                    object.elements.button_rectangle['key_'+glyphs.indexOf(event.key)].press();
+                if( keyCodes.includes(event.keyCode) ){
+                    object.elements.button_rectangle['key_'+keyCodes.indexOf(event.keyCode)].press();
                 }
             });
             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                if( glyphs.includes(event.key) ){
-                    object.elements.button_rectangle['key_'+glyphs.indexOf(event.key)].release();
+                if( keyCodes.includes(event.keyCode) ){
+                    object.elements.button_rectangle['key_'+keyCodes.indexOf(event.keyCode)].release();
                 }
             });
 

@@ -49,14 +49,14 @@ this.button_panel_1 = function(name,x,y,angle){
             object.elements.button_image.button.onpress = function(){ object.io.signal.out.set(true); };
             object.elements.button_image.button.onrelease = function(){ object.io.signal.out.set(false); };
         //keycapture
-        const glyphs = [ '1' ]; 
+            const keyCodes = [ 49 ];
             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                if( glyphs.includes(event.key) ){
+                if( keyCodes.includes(event.keyCode) ){
                     object.elements.button_image.button.press();
                 }
             });
             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                if( glyphs.includes(event.key) ){
+                if( keyCodes.includes(event.keyCode) ){
                     object.elements.button_image.button.release();
                 }
             });

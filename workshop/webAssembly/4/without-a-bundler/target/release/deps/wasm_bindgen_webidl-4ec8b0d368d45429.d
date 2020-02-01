@@ -1,0 +1,10 @@
+/catapult/curve/workshop/webAssembly/4/without-a-bundler/target/release/deps/wasm_bindgen_webidl-4ec8b0d368d45429.rmeta: /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/lib.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/first_pass.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/idl_type.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/util.rs
+
+/catapult/curve/workshop/webAssembly/4/without-a-bundler/target/release/deps/libwasm_bindgen_webidl-4ec8b0d368d45429.rlib: /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/lib.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/first_pass.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/idl_type.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/util.rs
+
+/catapult/curve/workshop/webAssembly/4/without-a-bundler/target/release/deps/wasm_bindgen_webidl-4ec8b0d368d45429.d: /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/lib.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/first_pass.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/idl_type.rs /home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/util.rs
+
+/home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/lib.rs:
+/home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/first_pass.rs:
+/home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/idl_type.rs:
+/home/brandon/.cargo/registry/src/github.com-1ecc6299db9ec823/wasm-bindgen-webidl-0.2.58/src/util.rs:

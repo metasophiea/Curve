@@ -49,3 +49,4 @@
 [2019-10-06:1] sometimes the scene loader doesn't do anything
 [2019-10-19:3] sometimes the alt key gets stuck on (you can recreate it by pressing the key then clicking a different window in the OS)
 [2020-01-02:2] the audio file player can have its playback speed set to 0, or some very low value. The causes system slowdown when it's triggered alot in this state (not sure if this is all that solvable, unless we set some sort of minimum speed..which really depends on how maybe concurrant plays are requested)
+[2020-01-27:1] regarding the selector buttons on Harbinger rymthm designer units; the lights are quite difficult to distinguish. Particularly the yellow ones

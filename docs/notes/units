@@ -72,13 +72,16 @@ Harbinger
     MRD-16 (Mini Rhythm Designer 16 step)
     RDP-32 (Rhythm Designer Pro 32 step)
 
-
-    _ Bitcrusher (amplitudeResolution:1-128(10), sampleFrequency:0-7(^2)(16))
-    _ Amplitude Modifier (invert, offset, divideBy, floor/ceiling)
+Acoustic Research
+    Bitcrusher (amplitudeResolution:1-128(10), sampleFrequency:0-7(^2)(16))
+    Amplitude Modifier (invert, offset, divideBy, floor/ceiling)
     _ Amplitude Peak Attenuator
     _ Momentary Amplitude Meter
-    _ Amplitude Controlled Modulator (Modulon)
+    _ Histogram Audio Visualizer (needs better name)
+
+
     _ Frequency Response Workstation
+    _ Amplitude Controlled Modulator (Modulon)
     _ Rapid Amplitude Modulator (Jaggedizer)
 
 
@@ -119,12 +122,12 @@ future unit ideas
         milk
         Audio Research Technologies (ART)
         Acoustic Labratories LLC (ALL)
-        Acoustic Research
         Sonic Sandbox
         Soundbox
         Anderson Electronics
         Yonder Electronics
         Swift
+        The Sunset Initiative / The Sunrise Initiative
 
         Fysical Utilities (PH.U.) : effect boxes
         CoLoUR : effect boxes
@@ -188,9 +191,8 @@ future unit ideas
         chorus audio effect unit
         compressor audio effect unit (and/or/as-in the s-wave audio value corrector)
         multi-band distortion box
-        bitcrusher
         amplitude modulator
-        waveform inverter
+        lag processor (a box that reacts slowly to input changes, rounding things out)
         (some of these could use AudioWorkletProcessor-based custom audio nodes)
 
         tuner (like the one on the phone)
@@ -206,6 +208,16 @@ future unit ideas
         signal tempo multiplier (predictive tempo generator from input)
 
         printer (saves to file)
+        
+        chip-tune simulator synthesizer (like bleep') http://www.vst4free.com/img/ToneBytes-Bleep_3.jpg
+        - three ocsilators
+        - - five waveforms (sine, saw, triangle, square and noise)(square has pulse width modulation)
+        - - detune (-1/0/+1 octaves and fine tuning)
+        - - Amplitute ASDR envelope
+        - - simplistic high/mid/low filter
+        - - gain
+        ...I'm going to have to do some investigations into Bleep' to discover what each option does
+
 
 
 

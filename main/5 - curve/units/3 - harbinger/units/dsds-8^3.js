@@ -87,6 +87,7 @@ this['dsds-8^3'] = function(name,x,y,angle){
         const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_localPrefix = imageStoreURL+'dsds-8^3/';
+                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
 
             //calculation of measurements
                 const div = 10;
@@ -141,22 +142,22 @@ this['dsds-8^3'] = function(name,x,y,angle){
                             data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                         },
                         {collection:'control', type:'dial_continuous_image', name:'masterVolume', data:{
-                            x:unitStyle.offset.x*2 + 252, y:27, radius:22/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
-                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                            x:unitStyle.offset.x*2 + 252, y:27, radius:20/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
+                            handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                         }},
                         {collection:'control', type:'button_image', name:'signal', data:{
-                            x:unitStyle.offset.x*2 + 244, y:95.5, width:7, height:18, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
-                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
-                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
+                            x:unitStyle.offset.x*2 + 244-1, y:95.5, width:8, height:20, hoverable:false,
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
+                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
                         }},
                         {collection:'control', type:'button_image', name:'voltage', data:{
-                            x:unitStyle.offset.x*2 + 253, y:95.5, width:7, height:18, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
-                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
-                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
-                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
+                            x:unitStyle.offset.x*2 + 253, y:95.5, width:8, height:20, hoverable:false,
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
+                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
                         }},
 
                         {collection:'control', type:'button_image', name:'preset_1', data:{
@@ -200,22 +201,22 @@ this['dsds-8^3'] = function(name,x,y,angle){
                         return [
                             {collection:'control', type:'dial_continuous_image', name:'volume_'+index, data:{
                                 x:16 + index*30, y:24, radius:13/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
-                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                             }},
                             {collection:'control', type:'dial_continuous_image', name:'rate_'+index, data:{
                                 x:28 + index*30, y:36, radius:13/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
-                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                             }},
                             {collection:'control', type:'dial_discrete_image', name:'bank_'+index, data:{
-                                x:22 + index*30, y:60, radius:22/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
-                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                x:22 + index*30, y:60, radius:20/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
+                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                             }},
                             {collection:'display', type:'glowbox_circle', name:'channelStatusLED_'+index, data:{
                                 x:32 + index*30, y:74, radius:3/2, capType:'round', style:unitStyle.LED
                             }},
                             {collection:'control', type:'dial_discrete_image', name:'sample_'+index, data:{
-                                x:22 + index*30, y:90, radius:22/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
-                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                x:22 + index*30, y:90, radius:20/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
+                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                             }},
                             {collection:'display', type:'glowbox_path', name:'channelFireLED_'+index, data:{
                                 x:14 + index*30, y:104, points:[{x:0,y:0},{x:16,y:0}], capType:'round', style:unitStyle.LED
@@ -314,8 +315,11 @@ this['dsds-8^3'] = function(name,x,y,angle){
                 object.elements.glowbox_path['channelFireLED_'+channel].on();
                 setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
             }else if(mode == 'voltage'){
-                samplePlayers[channel].rate(
-                    object.elements.dial_continuous_image['rate_'+channel].get() * value 
+                // samplePlayers[channel].rate(
+                //     object.elements.dial_continuous_image['rate_'+channel].get()*2 * value 
+                // );
+                channelGains[channel].gain(
+                    object.elements.dial_continuous_image['volume_'+channel].get()*2 * value 
                 );
                 samplePlayers[channel].start();
                 object.elements.glowbox_path['channelFireLED_'+channel].on();
@@ -546,39 +550,39 @@ this['dsds-8^3'] = function(name,x,y,angle){
 
         //keycapture
             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                switch(event.key){
-                    case '1': object.elements.button_image.preset_1.press(); break;
-                    case '2': object.elements.button_image.preset_2.press(); break;
-                    case '3': object.elements.button_image.preset_3.press(); break;
-                    case '4': object.elements.button_image.preset_4.press(); break;
-                    case '5': object.elements.button_image.preset_5.press(); break;
+                switch(event.keyCode){
+                    case 49: object.elements.button_image.preset_1.press(); break;
+                    case 50: object.elements.button_image.preset_2.press(); break;
+                    case 51: object.elements.button_image.preset_3.press(); break;
+                    case 52: object.elements.button_image.preset_4.press(); break;
+                    case 53: object.elements.button_image.preset_5.press(); break;
 
-                    case '`': object.elements.button_image['fire_'+0].press(); break;
-                    case 'z': object.elements.button_image['fire_'+1].press(); break;
-                    case 'x': object.elements.button_image['fire_'+2].press(); break;
-                    case 'c': object.elements.button_image['fire_'+3].press(); break;
-                    case 'v': object.elements.button_image['fire_'+4].press(); break;
-                    case 'b': object.elements.button_image['fire_'+5].press(); break;
-                    case 'n': object.elements.button_image['fire_'+6].press(); break;
-                    case 'm': object.elements.button_image['fire_'+7].press(); break;
+                    case 90: object.elements.button_image['fire_'+0].press(); break;
+                    case 88: object.elements.button_image['fire_'+1].press(); break;
+                    case 67: object.elements.button_image['fire_'+2].press(); break;
+                    case 86: object.elements.button_image['fire_'+3].press(); break;
+                    case 66: object.elements.button_image['fire_'+4].press(); break;
+                    case 78: object.elements.button_image['fire_'+5].press(); break;
+                    case 77: object.elements.button_image['fire_'+6].press(); break;
+                    case 188: object.elements.button_image['fire_'+7].press(); break;
                 }
             });
             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                switch(event.key){
-                    case '1': object.elements.button_image.preset_1.release(); break;
-                    case '2': object.elements.button_image.preset_2.release(); break;
-                    case '3': object.elements.button_image.preset_3.release(); break;
-                    case '4': object.elements.button_image.preset_4.release(); break;
-                    case '5': object.elements.button_image.preset_5.release(); break;
+                switch(event.keyCode){
+                    case 49: object.elements.button_image.preset_1.release(); break;
+                    case 50: object.elements.button_image.preset_2.release(); break;
+                    case 51: object.elements.button_image.preset_3.release(); break;
+                    case 52: object.elements.button_image.preset_4.release(); break;
+                    case 53: object.elements.button_image.preset_5.release(); break;
 
-                    case '`': object.elements.button_image['fire_'+0].release(); break;
-                    case 'z': object.elements.button_image['fire_'+1].release(); break;
-                    case 'x': object.elements.button_image['fire_'+2].release(); break;
-                    case 'c': object.elements.button_image['fire_'+3].release(); break;
-                    case 'v': object.elements.button_image['fire_'+4].release(); break;
-                    case 'b': object.elements.button_image['fire_'+5].release(); break;
-                    case 'n': object.elements.button_image['fire_'+6].release(); break;
-                    case 'm': object.elements.button_image['fire_'+7].release(); break;
+                    case 90: object.elements.button_image['fire_'+0].release(); break;
+                    case 88: object.elements.button_image['fire_'+1].release(); break;
+                    case 67: object.elements.button_image['fire_'+2].release(); break;
+                    case 86: object.elements.button_image['fire_'+3].release(); break;
+                    case 66: object.elements.button_image['fire_'+4].release(); break;
+                    case 78: object.elements.button_image['fire_'+5].release(); break;
+                    case 77: object.elements.button_image['fire_'+6].release(); break;
+                    case 188: object.elements.button_image['fire_'+7].release(); break;
                 }
             });
 
@@ -643,7 +647,7 @@ this['dsds-8^3'] = function(name,x,y,angle){
     return object;
 };
 this['dsds-8^3'].metadata = {
-    name:'DSDS-8^3',
+    name:'Digital Sample Drum Set - 8^3',
     category:'',
     helpURL:'/help/units/harbinger/dsds-8^3/'
 };

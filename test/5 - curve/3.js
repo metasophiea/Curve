@@ -3,7 +3,7 @@ _canvas_.curve.go.add( function(){
     // _canvas_.control.scene.addUnit(-145,-170,0,'reverb','alpha');
     // _canvas_.control.scene.addUnit(-180,240,0,'filter','alpha');
 
-    // _canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','alpha');
+    _canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','alpha');
     // _canvas_.control.scene.addUnit(175,-95,0,'audio_in','alpha');
     // _canvas_.control.scene.addUnit(140,-115,0,'signal_switch','alpha');
     // _canvas_.control.scene.addUnit(-235,240,0,'voltage_dial','alpha');

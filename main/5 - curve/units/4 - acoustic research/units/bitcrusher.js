@@ -2,6 +2,7 @@ this['bitcrusher'] = function(name,x,y,angle){
     //style data
         const unitStyle = new function(){
             //image store location URL
+                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
                 this.imageStoreURL_localPrefix = imageStoreURL+'bitcrusher/';
 
             //calculation of measurements
@@ -43,11 +44,11 @@ this['bitcrusher'] = function(name,x,y,angle){
 
                 {collection:'control', type:'dial_continuous_image', name:'amplitudeResolution', data:{
                     x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:128, 
-                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                 }},
                 {collection:'control', type:'dial_discrete_image', name:'sampleFrequency', data:{
                     x:65, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:8, 
-                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                 }},
             ]
         });
@@ -57,31 +58,31 @@ this['bitcrusher'] = function(name,x,y,angle){
             amplitudeResolution:0.425,
             sampleFrequency:4,
         };
-        const BC = new _canvas_.interface.circuit.bitcrusher(_canvas_.library.audio.context);
+        const bitcrusher = new _canvas_.interface.circuit.bitcrusher(_canvas_.library.audio.context);
 
     //wiring
         //hid
             object.elements.dial_continuous_image.amplitudeResolution.onchange = function(value){
-                BC.amplitudeResolution( Math.pow(2,value*7) );
+                bitcrusher.amplitudeResolution( Math.pow(2,value*7) );
                 state.amplitudeResolution = value;
             };
             object.elements.dial_discrete_image.sampleFrequency.onchange = function(value){
-                BC.sampleFrequency(Math.pow(2, value));
+                bitcrusher.sampleFrequency(Math.pow(2, value));
                 state.sampleFrequency = value;
             };
 
         //io
-            object.io.audio.input.out().connect( BC.in() );
-            BC.out().connect(object.io.audio.output.in());
+            object.io.audio.input.out().connect( bitcrusher.in() );
+            bitcrusher.out().connect(object.io.audio.output.in());
 
     //interface
         object.i = {
             amplitudeResolution:function(a){
-                if(a == undefined){ return BC.amplitudeResolution(); }
+                if(a == undefined){ return bitcrusher.amplitudeResolution(); }
                 object.elements.dial_continuous_image.amplitudeResolution.set( Math.log2(a)/7 );
             },
             sampleFrequency:function(a){
-                if(a == undefined){ return BC.sampleFrequency(); }
+                if(a == undefined){ return bitcrusher.sampleFrequency(); }
                 if( ![1,2,4,8,16,32,64,128].includes(a) ){ return; }
                 object.elements.dial_discrete_image.sampleFrequency.set( Math.log2(a) );
             },
@@ -100,8 +101,6 @@ this['bitcrusher'] = function(name,x,y,angle){
         object.oncreate = function(){
             object.elements.dial_continuous_image.amplitudeResolution.set(0.425);
             object.elements.dial_discrete_image.sampleFrequency.set(4);
-        };
-        object.ondelete = function(){
         };
 
     return object;

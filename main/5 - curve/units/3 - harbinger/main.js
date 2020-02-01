@@ -2,10 +2,10 @@
 
 this._collectionData = {
     name:'Harbinger',
-    itemWidth:210,
+    itemWidth:222.5,
     categoryOrder:[
     ],   
 };
 this._categoryData = {
-    sequencers:{ printingName:'Sequencers',itemWidth:175},
+    // sequencers:{ printingName:'Sequencers',itemWidth:175},
 };

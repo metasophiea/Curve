@@ -72,7 +72,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:24} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:28} };
             const library = this;
         
             this.go = new function(){
@@ -3707,16 +3707,536 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
                 this.audioWorklet = new function(){
                     function checkIfReady(){
+                        dev.log.audio('.AudioWorklet::checkIfReady()'); //#development
+                        dev.log.audio('.AudioWorklet::checkIfReady -> worklets.length:',worklets.length); //#development
                         if(worklets.length == 0){return true;}
+                        dev.log.audio('.AudioWorklet::checkIfReady -> worklets.map(a => a.loaded):',worklets.map(a => a.loaded) ); //#development
                         return worklets.map(a => a.loaded).reduce((rolling,current) => {return rolling && current;});
                     };
+                    this.checkIfReady = function(){ return checkIfReady(); };
                     this.nowReady = function(){};
                 
                     const worklets = [
-                        //main
+                        {
+                            name:'testWorklet',
+                            worklet:new Blob([`
+                                class testWorklet extends AudioWorkletProcessor{
+                                    static MinimumValue = -10;
+                                
+                                    static get parameterDescriptors(){
+                                        return [
+                                            {
+                                                name: 'valueA',
+                                                defaultValue: 10,
+                                                minValue: 1,
+                                                maxValue: 100,
+                                                automationRate: 'a-rate', //you should use the array, it's the same length as the block
+                                            },{
+                                                name: 'valueB',
+                                                defaultValue: 10,
+                                                minValue: 1,
+                                                maxValue: 100,
+                                                automationRate: 'k-rate', //you should use only the first value in the array
+                                            }
+                                        ];
+                                    }
+                                    
+                                    constructor(options){
+                                        super(options);
+                                        console.log('<<< constructor >>>');
+                                        console.log('options:',options);
+                                
+                                        this._lastUpdate = currentTime;
+                                        this._callCount = 0;
+                                
+                                        this.port.onmessage = function(event){
+                                            console.log('worklet.port.onmessage',event);
+                                        };
+                                    }
+                                
+                                    process(inputs, outputs, parameters){
+                                        this._callCount++;
+                                        if( currentTime - this._lastUpdate >= 1 ){
+                                            console.log('<<< process >>>');
+                                            console.log('currentTime:',currentTime);
+                                            console.log('calls since last printing:',this._callCount);
+                                            console.log('samples since last printing:',this._callCount*outputs[0][0].length);
+                                            console.log(' - number of inputs:',inputs.length);
+                                            inputs.forEach((input,index) => {
+                                                console.log('   '+index+' : streams:',input.length,': samples per stream:',input.map(a => a.length));
+                                            });
+                                            console.log(' - number of outputs:',outputs.length);
+                                            outputs.forEach((output,index) => {
+                                                console.log('   '+index+' : streams:',output.length,': samples per stream:',output.map(a => a.length));
+                                            });
+                                
+                                            console.log( 'parameters:',parameters );
+                                            console.log( 'parameters.valueA:',parameters.valueA );
+                                            console.log( 'parameters.valueB:',parameters.valueB );
+                                
+                                            this._lastUpdate = currentTime;
+                                            this._callCount = 0;
+                                            return false;
+                                        }
+                                
+                                        const input = inputs[0];
+                                        const output = outputs[0];
+                                    
+                                        for(let channel = 0; channel < input.length; channel++){
+                                            const inputChannel = input[channel];
+                                            const outputChannel = output[channel];
+                                    
+                                            for(let a = 0; a < inputChannel.length; a++){
+                                                outputChannel[a] = inputChannel[a];
+                                            }
+                                        }
+                                        return true;
+                                    }
+                                }
+                                registerProcessor('testWorklet', testWorklet);
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                // class squareWaveGenerator extends AudioWorkletProcessor{
+                                //     static get parameterDescriptors(){
+                                //         return [];
+                                //     }
+                                
+                                //     constructor(options){
+                                //         super(options);
+                                //         this._frequency = 440;
+                                //         this._phaseMux = (2*this._frequency) / sampleRate;
+                                //     }
+                                
+                                //     process(inputs, outputs, parameters){
+                                //         const output = outputs[0];
+                                        
+                                //         for(let channel = 0; channel < output.length; channel++){
+                                //             for(let a = 0; a < output[channel].length; a++){
+                                //                 output[channel][a] = Math.sin( Math.PI * this._phaseMux * (currentFrame+a) );
+                                //             }
+                                //         }
+                                //         return true;
+                                //     }
+                                // }
+                                // registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                // class squareWaveGenerator extends AudioWorkletProcessor{
+                                //     static get parameterDescriptors(){
+                                //         return [];
+                                //     }
+                                
+                                //     constructor(options){
+                                //         super(options);
+                                
+                                //         this._frequency = 440;
+                                //         this._dutyCycle = 0.5;
+                                //         this._frameCount = 0;
+                                
+                                //         this._flip = false;
+                                
+                                //         // this._data = [];
+                                //     }
+                                
+                                //     process(inputs, outputs, parameters){
+                                //         const samplingRate = sampleRate;
+                                //         const output = outputs[0];
+                                        
+                                //         // for(let channel = 0; channel < output.length; channel++){
+                                //         //     for(let a = 0; a < output[channel].length; a++){
+                                //         //         if( this._sampleCount >= samplingRate / (this._frequency*2) ){
+                                //         //             this._sampleCount = 0;
+                                //         //             this._flip = !this._flip;
+                                //         //         }else{
+                                //         //             this._sampleCount++; 
+                                //         //         }
+                                //         //         output[channel][a] = (this._flip ? 1 : 0) * 0.25
+                                //         //     }
+                                //         // }
+                                
+                                
+                                
+                                //         const phaseMux = (2*this._frequency) / samplingRate;
+                                //         function sineWave(sampleNumber){
+                                //             return Math.sin( Math.PI * phaseMux * sampleNumber );
+                                //         }
+                                //         for(let channel = 0; channel < output.length; channel++){
+                                //             for(let a = 0; a < output[channel].length; a++){
+                                //                 output[channel][a] = sineWave(currentFrame+a);
+                                //             }
+                                //             // this._data.push(...output[channel]);
+                                
+                                //             // if( this._sampleCount >= samplingRate ){
+                                //             //     this._sampleCount = 0;
+                                //             //     // console.log(this._data);
+                                //             //     // return false;
+                                //             // }
+                                
+                                
+                                
+                                
+                                
+                                //             // if( this._sampleCount >= 500 ){
+                                //             //     console.log( JSON.stringify(this._data) );
+                                //             //     return false;
+                                //             // }
+                                //         }
+                                
+                                
+                                
+                                
+                                //         // // for(let a = 0; a < outputs[0][0].length; a++){
+                                //         // //     this._sampleCount++;
+                                //         // // }
+                                //         // // if( this._sampleCount%44160 == 0 ){
+                                //         // //     console.log( currentTime, this._sampleCount );
+                                //         // // }
+                                //         // if( this._frameCount%345 == 0 ){
+                                //         //     console.log( currentTime, this._frameCount, samplingRate );
+                                //         // }
+                                
+                                //         // for(let channel = 0; channel < output.length; channel++){
+                                //         //     for(let a = 0; a < output[channel].length/2; a++){
+                                //         //         output[channel][a] = 1;
+                                //         //     }
+                                //         //     for(let a = output[channel].length/2; a < output[channel].length; a++){
+                                //         //         output[channel][a] = -1;
+                                //         //     }
+                                //         // }
+                                
+                                //         this._frameCount++;
+                                //         return true;
+                                //     }
+                                // }
+                                // registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                
+                                
+                                
+                                
+                                
+                                // samplingRate = 44160
+                                //1hz = a complete waveform takes 44160 samples
+                                //2hz = a complete waveform takes 22080 samples
+                                //10hz = a complete waveform takes 4416 samples
+                                //80hz = a complete waveform takes 552 samples
+                                //100hz = a complete waveform takes 441.6 samples
+                                //400hz = a complete waveform takes 110.4 samples
+                                //440hz = a complete waveform takes 100.3636... samples
+                                //480hz = a complete waveform takes 92 samples
+                                
+                                // samples that a complete waveform takes = samplingRate / frequency of wave
+                                // frequency of wave = samplingRate / samples that a complete waveform takes
+                                // frequency of wave * samples that a complete waveform takes = samplingRate
+                                
+                                // 441.6hz = a complete waveform takes 100 samples
+                                // 437.2277227722772hz = a complete waveform takes 101 samples
+
+                            `], { type: "text/javascript" }),
+                            class:
+                                class TestWorkerNode extends AudioWorkletNode{
+                                    constructor(context, options={}){
+                                        options.numberOfInputs = 6;
+                                        options.numberOfOutputs = 6;
+                                        options.channelCount = 1;
+                                        super(context, 'testWorklet', options);
+                                
+                                        this._superImportantValue = 'farts';
+                                
+                                        this.port.onmessage = function(event){
+                                            console.log('worklet.node.onmessage',event);
+                                        };
+                                        this.port.start();
+                                    }
+                                
+                                    get superImportantValue(){
+                                        console.log('getting super important value, which happens to be "'+this._superImportantValue+'"');
+                                        return this._superImportantValue;
+                                    }
+                                    set superImportantValue(newValue){
+                                        console.log('the super important value is being changed to "'+newValue+'"');
+                                        this._superImportantValue = newValue;
+                                        this.port.postMessage({ superImportantValue: this._superImportantValue });
+                                    }
+                                    doubleTheSuperImportantValue(){
+                                        console.log('doubling the super important value');
+                                        this._superImportantValue = this._superImportantValue + this._superImportantValue ;
+                                        this.port.postMessage({ superImportantValue: this._superImportantValue });
+                                    }
+                                }
+                            ,
+                        },
+                        
+                        {
+                            name:'squareWaveGenerator',
+                            worklet:new Blob([`
+                                class squareWaveGenerator extends AudioWorkletProcessor{
+                                    static get parameterDescriptors(){
+                                        return [
+                                            {
+                                                name: 'frequency',
+                                                defaultValue: 440,
+                                                minValue: 0,
+                                                maxValue: 20000,
+                                                automationRate: 'a-rate',
+                                            },{
+                                                name: 'dutyCycle',
+                                                defaultValue: 0.5,
+                                                minValue: 0,
+                                                maxValue: 1,
+                                                automationRate: 'a-rate',
+                                            }
+                                        ];
+                                    }
+                                
+                                    constructor(options){
+                                        super(options);
+                                    }
+                                
+                                    process(inputs, outputs, parameters){
+                                        const output = outputs[0];
+                                
+                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                        const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                
+                                        for(let channel = 0; channel < output.length; channel++){
+                                            for(let a = 0; a < output[channel].length; a++){
+                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                const dutyCycle = dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a];
+                                
+                                                const overallWaveProgressPercentage = (frequency/sampleRate) * (currentFrame+a);
+                                                const waveProgress = overallWaveProgressPercentage - Math.trunc(overallWaveProgressPercentage);
+                                                output[channel][a] = waveProgress < dutyCycle ? 1 : -1;
+                                            }
+                                        }
+                                
+                                        return true;
+                                    }
+                                }
+                                registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                            `], { type: "text/javascript" }),
+                            class:
+                                class squareWaveGenerator extends AudioWorkletNode{
+                                    constructor(context, options={}){
+                                        options.numberOfInputs = 0;
+                                        options.numberOfOutputs = 1;
+                                        options.channelCount = 1;
+                                        super(context, 'squareWaveGenerator', options);
+                                    }
+                                
+                                    get frequency(){
+                                        return this.parameters.get('frequency');
+                                    }
+                                    get dutyCycle(){
+                                        return this.parameters.get('dutyCycle');
+                                    }
+                                }
+                            ,
+                        },
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        {
+                            name:'amplitudeModifier',
+                            worklet:new Blob([`
+                                class amplitudeModifier extends AudioWorkletProcessor{
+                                    static get parameterDescriptors(){
+                                        return [
+                                            {
+                                                name: 'invert',
+                                                defaultValue: 0,
+                                                minValue: 0,
+                                                maxValue: 1,
+                                                automationRate: 'k-rate',
+                                            },{
+                                                name: 'offset',
+                                                defaultValue: 0,
+                                                minValue: -10,
+                                                maxValue: 10,
+                                                automationRate: 'a-rate',
+                                            },{
+                                                name: 'divisor',
+                                                defaultValue: 1,
+                                                minValue: 1,
+                                                maxValue: 16,
+                                                automationRate: 'a-rate',
+                                            },{
+                                                name: 'ceiling',
+                                                defaultValue: 10,
+                                                minValue: -10,
+                                                maxValue: 10,
+                                                automationRate: 'a-rate',
+                                            },{
+                                                name: 'floor',
+                                                defaultValue: -10,
+                                                minValue: -10,
+                                                maxValue: 10,
+                                                automationRate: 'a-rate',
+                                            }
+                                        ];
+                                    }
+                                    
+                                    constructor(options){
+                                        super(options);
+                                    }
+                                
+                                    process(inputs, outputs, parameters){
+                                        const input = inputs[0];
+                                        const output = outputs[0];
+                                        const sign = parameters.invert[0] == 1 ? -1 : 1;
+                                
+                                        const divisor_useFirstOnly = parameters.divisor.length == 1;
+                                        const offset_useFirstOnly = parameters.offset.length == 1;
+                                        const floor_useFirstOnly = parameters.floor.length == 1;
+                                        const ceiling_useFirstOnly = parameters.ceiling.length == 1;
+                                
+                                        for(let channel = 0; channel < input.length; channel++){        
+                                            for(let a = 0; a < input[channel].length; a++){
+                                                const divisor = divisor_useFirstOnly ? parameters.divisor[0] : parameters.divisor[a];
+                                                const offset = offset_useFirstOnly ? parameters.offset[0] : parameters.offset[a];
+                                                const floor = floor_useFirstOnly ? parameters.floor[0] : parameters.floor[a];
+                                                const ceiling = ceiling_useFirstOnly ? parameters.ceiling[0] : parameters.ceiling[a];
+                                
+                                                output[channel][a] = sign * (input[channel][a]/divisor) + offset;
+                                
+                                                if( output[channel][a] < floor ){
+                                                    output[channel][a] = floor;
+                                                }else if( output[channel][a] > ceiling ){
+                                                    output[channel][a] = ceiling;
+                                                }
+                                            }
+                                        }
+                                
+                                        return true;
+                                    }
+                                }
+                                registerProcessor('amplitudeModifier', amplitudeModifier);
+                            `], { type: "text/javascript" }),
+                            class:
+                                class amplitudeModifier extends AudioWorkletNode{
+                                    constructor(context, options={}){
+                                        options.numberOfInputs = 1;
+                                        options.numberOfOutputs = 1;
+                                        options.channelCount = 1;
+                                        super(context, 'amplitudeModifier', options);
+                                
+                                        this._invert = false;
+                                    }
+                                
+                                    get invert(){
+                                        return this._invert;
+                                    }
+                                    set invert(value){
+                                        this._invert = value;
+                                        this.parameters.get('invert').setValueAtTime(this._invert?1:0,0);
+                                    }
+                                
+                                    get offset(){
+                                        return this.parameters.get('offset');
+                                    }
+                                    get divisor(){
+                                        return this.parameters.get('divisor');
+                                    }
+                                    get ceiling(){
+                                        return this.parameters.get('ceiling');
+                                    }
+                                    get floor(){
+                                        return this.parameters.get('floor');
+                                    }
+                                }
+                            ,
+                        },
+                        
                         {
                             name:'bitcrusher',
-                            blob:new Blob([`
+                            worklet:new Blob([`
                                 class bitcrusher extends AudioWorkletProcessor{
                                     static get parameterDescriptors(){
                                         return [
@@ -3743,8 +4263,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     process(inputs, outputs, parameters){
                                         const input = inputs[0];
                                         const output = outputs[0];
-                                        const amplitudeResolution = parameters.amplitudeResolution;
-                                        const sampleFrequency = parameters.sampleFrequency;
+                                        const amplitudeResolution = parameters.amplitudeResolution[0];
+                                        const sampleFrequency = parameters.sampleFrequency[0];
                                     
                                         for(let channel = 0; channel < input.length; channel++){    
                                             for(let a = 0; a < input[channel].length; a++){
@@ -3756,154 +4276,46 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                                 registerProcessor('bitcrusher', bitcrusher);
                             `], { type: "text/javascript" }),
-                        },
-                        {
-                            name:'amplitudeModifier',
-                            blob:new Blob([`
-                                class amplitudeModifier extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'invert',
-                                                defaultValue: 0,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'offset',
-                                                defaultValue: 0,
-                                                minValue: -10,
-                                                maxValue: 10,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'divisor',
-                                                defaultValue: 1,
-                                                minValue: 1,
-                                                maxValue: 16,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'ceiling',
-                                                defaultValue: 10,
-                                                minValue: -10,
-                                                maxValue: 10,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'floor',
-                                                defaultValue: -10,
-                                                minValue: -10,
-                                                maxValue: 10,
-                                                automationRate: 'k-rate',
-                                            }
-                                        ];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
+                            class:
+                                class bitcrusher extends AudioWorkletNode{
+                                    constructor(context, options={}){
+                                        options.numberOfInputs = 1;
+                                        options.numberOfOutputs = 1;
+                                        options.channelCount = 1;
+                                        super(context, 'bitcrusher', options);
+                                        
+                                        this._amplitudeResolution = 10;
+                                        this._sampleFrequency = 16;
                                     }
                                 
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        const output = outputs[0];
+                                    get amplitudeResolution(){
+                                        return this._amplitudeResolution;
+                                    }
+                                    set amplitudeResolution(value){
+                                        this._amplitudeResolution = value;
+                                        this.parameters.get('amplitudeResolution').setValueAtTime(this._amplitudeResolution,0);
+                                    }
                                 
-                                        //shortest code
-                                            const sign = parameters.invert == 1 ? -1 : 1;
-                                            for(let channel = 0; channel < input.length; channel++){        
-                                                for(let a = 0; a < input[channel].length; a++){
-                                                    output[channel][a] = sign * (input[channel][a]/parameters.divisor) + parameters.offset[0];
-                                
-                                                    if( output[channel][a] < parameters.floor ){
-                                                        output[channel][a] = parameters.floor;
-                                                    }else if( output[channel][a] > parameters.ceiling ){
-                                                        output[channel][a] = parameters.ceiling;
-                                                    }
-                                                }
-                                            }
-                                
-                                        // //desperate bid for speed
-                                        //     if(parameters.invert == 1){
-                                        //         if(parameters.divisor == 1){
-                                        //             for(let channel = 0; channel < input.length; channel++){
-                                        //                 const inputChannel = input[channel];
-                                        //                 const outputChannel = output[channel];
-                                                
-                                        //                 for(let a = 0; a < inputChannel.length; a++){
-                                        //                     outputChannel[a] = -inputChannel[a] + offset;
-                                
-                                        //                     if( output[channel][a] < parameters.floor ){
-                                        //                         output[channel][a] = parameters.floor;
-                                        //                     }else if( output[channel][a] > parameters.ceiling ){
-                                        //                         output[channel][a] = parameters.ceiling;
-                                        //                     }
-                                        //                 }
-                                        //             }
-                                        //         }else{
-                                        //             for(let channel = 0; channel < input.length; channel++){
-                                        //                 const inputChannel = input[channel];
-                                        //                 const outputChannel = output[channel];
-                                                
-                                        //                 for(let a = 0; a < inputChannel.length; a++){
-                                        //                     outputChannel[a] = -(inputChannel[a]/divisor) + offset;
-                                
-                                        //                     if( output[channel][a] < parameters.floor ){
-                                        //                         output[channel][a] = parameters.floor;
-                                        //                     }else if( output[channel][a] > parameters.ceiling ){
-                                        //                         output[channel][a] = parameters.ceiling;
-                                        //                     }
-                                        //                 }
-                                        //             }
-                                        //         }
-                                        //     }else{
-                                        //         if(parameters.divisor == 1){
-                                        //             for(let channel = 0; channel < input.length; channel++){
-                                        //                 const inputChannel = input[channel];
-                                        //                 const outputChannel = output[channel];
-                                                
-                                        //                 for(let a = 0; a < inputChannel.length; a++){
-                                        //                     outputChannel[a] = inputChannel[a] + offset;
-                                
-                                        //                     if( output[channel][a] < parameters.floor ){
-                                        //                         output[channel][a] = parameters.floor;
-                                        //                     }else if( output[channel][a] > parameters.ceiling ){
-                                        //                         output[channel][a] = parameters.ceiling;
-                                        //                     }
-                                        //                 }
-                                        //             }
-                                        //         }else{
-                                        //             for(let channel = 0; channel < input.length; channel++){
-                                        //                 const inputChannel = input[channel];
-                                        //                 const outputChannel = output[channel];
-                                                
-                                        //                 for(let a = 0; a < inputChannel.length; a++){
-                                        //                     outputChannel[a] = (inputChannel[a]/divisor) + offset;
-                                
-                                        //                     if( output[channel][a] < parameters.floor ){
-                                        //                         output[channel][a] = parameters.floor;
-                                        //                     }else if( output[channel][a] > parameters.ceiling ){
-                                        //                         output[channel][a] = parameters.ceiling;
-                                        //                     }
-                                        //                 }
-                                        //             }
-                                        //         }
-                                        //     }
-                                
-                                        return true;
+                                    get sampleFrequency(){
+                                        return this._sampleFrequency;
+                                    }
+                                    set sampleFrequency(value){
+                                        this._sampleFrequency = value;
+                                        this.parameters.get('sampleFrequency').setValueAtTime(this._sampleFrequency,0);
                                     }
                                 }
-                                registerProcessor('amplitudeModifier', amplitudeModifier);
-                            `], { type: "text/javascript" }),
+                            ,
                         },
+                        
                         {
                             name:'momentaryAmplitudeMeter',
-                            options:{
-                                numberOfOutputs:0
-                            },
-                            blob:new Blob([`
+                            worklet:new Blob([`
                                 class momentaryAmplitudeMeter extends AudioWorkletProcessor{
                                     static get parameterDescriptors(){
                                         return [
                                             {
                                                 name: 'fullSample',
-                                                defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame sine the last time a value was returned
+                                                defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame since the last time a value was returned
                                                 minValue: 0,
                                                 maxValue: 1,
                                                 automationRate: 'k-rate',
@@ -3912,14 +4324,14 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 defaultValue: 100,
                                                 minValue: 1,
                                                 maxValue: 1000,
-                                                automationRate: 'a-rate',
+                                                automationRate: 'k-rate',
                                             },
                                             {
                                                 name: 'calculationMode',
                                                 defaultValue: 3, //max, min, average, absMax, absMin, absAverage
                                                 minValue: 0,
                                                 maxValue: 5,
-                                                automationRate: 'a-rate',
+                                                automationRate: 'k-rate',
                                             }
                                         ];
                                     }
@@ -3932,9 +4344,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 
                                     process(inputs, outputs, parameters){
                                         const input = inputs[0];
-                                        const fullSample = parameters.fullSample;
-                                        const updateDelay = parameters.updateDelay;
-                                        const calculationMode = parameters.calculationMode;
+                                        const fullSample = parameters.fullSample[0];
+                                        const updateDelay = parameters.updateDelay[0];
+                                        const calculationMode = parameters.calculationMode[0];
                                 
                                         if(fullSample){
                                             this._dataArray.push(...input[0]);
@@ -3976,13 +4388,60 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                                 registerProcessor('momentaryAmplitudeMeter', momentaryAmplitudeMeter);
                             `], { type: "text/javascript" }),
+                            class:
+                                class momentaryAmplitudeMeter extends AudioWorkletNode{
+                                    constructor(context, options={}){
+                                        options.numberOfInputs = 1;
+                                        options.numberOfOutputs = 0;
+                                        options.channelCount = 1;
+                                        super(context, 'momentaryAmplitudeMeter', options);
+                                
+                                        const self = this;
+                                
+                                        this._fullSample = false;
+                                        this._updateDelay = 100;
+                                        this._calculationMode = 3;
+                                
+                                        this.reading = function(){};
+                                
+                                        this.port.onmessage = function(event){
+                                            try{
+                                                self.reading(event.data);
+                                            }catch(error){}
+                                        };
+                                        this.port.start();
+                                    }
+                                
+                                    get fullSample(){
+                                        return this._fullSample;
+                                    }
+                                    set fullSample(value){
+                                        this._fullSample = value;
+                                        this.parameters.get('fullSample').setValueAtTime(this._fullSample?1:0,0);
+                                    }
+                                
+                                    get updateDelay(){
+                                        return this._updateDelay;
+                                    }
+                                    set updateDelay(value){
+                                        this._updateDelay = value;
+                                        this.parameters.get('updateDelay').setValueAtTime(this._updateDelay);
+                                    }
+                                
+                                    get calculationMode(){
+                                        return this._calculationMode;
+                                    }
+                                    set calculationMode(value){
+                                        this._calculationMode = value;
+                                        this.parameters.get('calculationMode').setValueAtTime(this._calculationMode);
+                                    }
+                                }
+                            ,
                         },
+                        
                         {
                             name:'amplitudeControlledModulator',
-                            options:{
-                                numberOfInputs:2
-                            },
-                            blob:new Blob([`
+                            worklet:new Blob([`
                                 class amplitudeControlledModulator extends AudioWorkletProcessor{
                                     static get parameterDescriptors(){
                                         return [];
@@ -4008,16 +4467,22 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                                 registerProcessor('amplitudeControlledModulator', amplitudeControlledModulator);
                             `], { type: "text/javascript" }),
+                            class:
+                                class amplitudeControlledModulator extends AudioWorkletNode{
+                                    constructor(context, options={}){
+                                        options.numberOfInputs = 2;
+                                        options.numberOfOutputs = 1;
+                                        options.channelCount = 1;
+                                        super(context, 'amplitudeControlledModulator', options);
+                                    }
+                                }
+                            ,
                         },
                         
-                        
-                        
-                        
-                        //development
                         {
-                            name:'amplitudeInverter',
-                            blob:new Blob([`
-                                class amplitudeInverter extends AudioWorkletProcessor{
+                            name:'whiteNoiseGenerator',
+                            worklet:new Blob([`
+                                class whiteNoiseGenerator extends AudioWorkletProcessor{
                                     static get parameterDescriptors(){
                                         return [];
                                     }
@@ -4027,129 +4492,29 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                                 
                                     process(inputs, outputs, parameters){
-                                        const input = inputs[0];
                                         const output = outputs[0];
-                                    
-                                        for(let channel = 0; channel < input.length; channel++){
-                                            const inputChannel = input[channel];
-                                            const outputChannel = output[channel];
-                                    
-                                            for(let a = 0; a < inputChannel.length; a++){
-                                                outputChannel[a] = -inputChannel[a];
-                                            }
-                                        }
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('amplitudeInverter', amplitudeInverter);
-                            `], { type: "text/javascript" }),
-                        },
-                        {
-                            name:'amplitudePeakAttenuator',
-                            blob:new Blob([`
-                                class amplitudePeakAttenuator extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'sharpness',
-                                                defaultValue: 10,
-                                                minValue: 1,
-                                                maxValue: 100,
-                                                automationRate: 'a-rate',
-                                            }
-                                        ];
-                                    }
                                 
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        const output = outputs[0];
-                                        const sharpness = parameters.sharpness;
-                                    
-                                        for(let channel = 0; channel < input.length; channel++){
-                                            const inputChannel = input[channel];
-                                            const outputChannel = output[channel];
-                                    
-                                            for(let a = 0; a < inputChannel.length; a++){
-                                                const mux = inputChannel[a]*sharpness;
-                                                outputChannel[a] = mux / ( 1 + Math.abs(mux) );
-                                            }
-                                        }
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('amplitudePeakAttenuator', amplitudePeakAttenuator);
-                            `], { type: "text/javascript" }),
-                        },
-                        {
-                            name:'sqasherDoubler',
-                            blob:new Blob([`
-                                class sqasherDoubler extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        const output = outputs[0];
-                                    
-                                        for(let channel = 0; channel < input.length; channel++){
-                                            const inputChannel = input[channel];
-                                            const outputChannel = output[channel];
-                                    
-                                            for(let a = 0; a < inputChannel.length/2; a++){
-                                                outputChannel[a] = inputChannel[a*2];
-                                                outputChannel[inputChannel.length/2 + a] = inputChannel[a*2];
-                                            }
-                                        }
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('sqasherDoubler', sqasherDoubler);
-                            `], { type: "text/javascript" }),
-                        },
-                        {
-                            name:'vocoder',
-                            options:{
-                                numberOfInputs:2
-                            },
-                            blob:new Blob([`
-                                class vocoder extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input_1 = inputs[0];
-                                        const input_2 = inputs[1];
-                                        const output_1 = outputs[0];
-                                
-                                        for(let channel = 0; channel < input_1.length; channel++){
-                                            const input_1_Channel = input_1[channel];
-                                            const input_2_Channel = input_2[channel];
-                                            const outputChannel = output_1[channel];
-                                    
-                                            for(let a = 0; a < outputChannel.length; a++){
-                                                outputChannel[a] = input_1_Channel[a] * Math.abs(input_2_Channel[a])*2;
+                                        for(let channel = 0; channel < output.length; channel++){
+                                            for(let a = 0; a < output[channel].length; a++){
+                                                output[channel][a] = Math.random()*2 - 1;
                                             }
                                         }
                                 
                                         return true;
                                     }
                                 }
-                                registerProcessor('vocoder', vocoder);
+                                registerProcessor('whiteNoiseGenerator', whiteNoiseGenerator);
                             `], { type: "text/javascript" }),
+                            class:
+                                class whiteNoiseGenerator extends AudioWorkletNode{
+                                    constructor(context, options={}){
+                                        options.numberOfInputs = 0;
+                                        options.numberOfOutputs = 1;
+                                        options.channelCount = 1;
+                                        super(context, 'whiteNoiseGenerator', options);
+                                    }
+                                }
+                            ,
                         },
                     ];
                         
@@ -4157,14 +4522,11 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         dev.log.audio('.AudioWorklet -> loading worklet:',worklet.name); //#development
                         worklet.loaded = false;
                 
-                        audio.context.audioWorklet.addModule(window.URL.createObjectURL(worklet.blob)).then( () => {
+                        audio.context.audioWorklet.addModule(window.URL.createObjectURL(worklet.worklet)).then( () => {
                             dev.log.audio('.AudioWorklet ->',worklet.name,'has been loaded'); //#development
                             worklet.loaded = true;
-                            const creationFunctionName = 'create'+worklet.name.charAt(0).toUpperCase() + worklet.name.slice(1);
-                            dev.log.audio('.AudioWorklet -> creationFunctionName:',creationFunctionName); //#development
-                            audio.context[creationFunctionName] = function(){
-                                return new AudioWorkletNode(_canvas_.library.audio.context, worklet.name, worklet.options);
-                            };
+                
+                            audio.audioWorklet[worklet.name] = worklet.class;
                 
                             if( checkIfReady() && this.nowReady != undefined ){
                                 this.nowReady();
@@ -4172,7 +4534,28 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         } );
                     });
                 };
-
+                
+                
+                
+                
+                
+                
+                
+                
+                const readyCheckList = {
+                    audioWorklet:false,
+                };
+                audio.nowReady = function(){};
+                
+                Object.keys(readyCheckList).forEach(item => {
+                    audio[item].nowReady = function(){
+                        readyCheckList[item] = true;
+                        if( Object.values(readyCheckList).reduce((a,b) => a&&b) ){ audio.nowReady(); }
+                    };
+                    if( audio[item].checkIfReady() ){
+                        audio[item].nowReady();
+                    }
+                });
             };
             const _thirdparty = new function(){
                 const thirdparty = this;
@@ -22458,7 +22841,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         
-        _canvas_.library.audio.audioWorklet.nowReady = function(){
+        _canvas_.library.audio.nowReady = function(){
             _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
             _canvas_.library.go.__activate();
         };
@@ -24050,7 +24433,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:25} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:28} };
             const interface = this;
         
             const dev = {
@@ -24404,9 +24787,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             invert: false,
                             offset: 0,
                             divisor: 1,
-                            ceiling:10,
-                            floor:-10,
-                            node: context.createAmplitudeModifier(),
+                            ceiling: 10,
+                            floor: -10,
+                            node: new _canvas_.library.audio.audioWorklet.amplitudeModifier(_canvas_.library.audio.context),
                         };
                 
                     //input/output node
@@ -24417,27 +24800,27 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.invert = function(value){
                             if(value == undefined){ return flow.amplitudeModifierNode.invert; }
                             flow.amplitudeModifierNode.invert = value;
-                            flow.amplitudeModifierNode.node.parameters.get('invert').setValueAtTime(value?1:0,0);
+                            flow.amplitudeModifierNode.node.invert = value;
                         };
                         this.offset = function(value){
                             if(value == undefined){ return flow.amplitudeModifierNode.offset; }
                             flow.amplitudeModifierNode.offset = value;
-                            flow.amplitudeModifierNode.node.parameters.get('offset').setValueAtTime(value,0);
+                            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.offset, value, 0.01, 'instant', true);
                         };
                         this.divisor = function(value){
                             if(value == undefined){ return flow.amplitudeModifierNode.divisor; }
                             flow.amplitudeModifierNode.divisor = value;
-                            flow.amplitudeModifierNode.node.parameters.get('divisor').setValueAtTime(value,0);
+                            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.divisor, value, 0.01, 'instant', true);
                         };
                         this.ceiling = function(value){
                             if(value == undefined){ return flow.amplitudeModifierNode.ceiling; }
                             flow.amplitudeModifierNode.ceiling = value;
-                            flow.amplitudeModifierNode.node.parameters.get('ceiling').setValueAtTime(value,0);
+                            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.ceiling, value, 0.01, 'instant', true);
                         };
                         this.floor = function(value){
                             if(value == undefined){ return flow.amplitudeModifierNode.floor; }
                             flow.amplitudeModifierNode.floor = value;
-                            flow.amplitudeModifierNode.node.parameters.get('floor').setValueAtTime(value,0);
+                            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.floor, value, 0.01, 'instant', true);
                         };
                 };
                 this.reverbUnit = function(
@@ -24597,31 +24980,21 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.bitcrusher = function(
                     context
                 ){
-                    //flow
-                        //flow chain
-                            const flow = {
-                                bitcrusherNode:{}
-                            };
-                
                     //bitcrusherNode
-                        flow.bitcrusherNode.amplitudeResolution = 10;
-                        flow.bitcrusherNode.sampleFrequency = 16;
-                        flow.bitcrusherNode.node = context.createBitcrusher();
+                        const bitcrusherNode = new _canvas_.library.audio.audioWorklet.bitcrusher(_canvas_.library.audio.context);
                 
                     //input/output node
-                        this.in = function(){return flow.bitcrusherNode.node;}
-                        this.out = function(a){return flow.bitcrusherNode.node;}
+                        this.in = function(){return bitcrusherNode;}
+                        this.out = function(a){return bitcrusherNode;}
                 
                     //controls
                         this.amplitudeResolution = function(value){
-                            if(value == undefined){ return flow.bitcrusherNode.amplitudeResolution; }
-                            flow.bitcrusherNode.amplitudeResolution = value;
-                            flow.bitcrusherNode.node.parameters.get('amplitudeResolution').setValueAtTime(value, 0);
+                            if(value == undefined){ return bitcrusherNode.amplitudeResolution; }
+                            bitcrusherNode.amplitudeResolution = value;
                         };
                         this.sampleFrequency = function(value){
-                            if(value == undefined){ return flow.bitcrusherNode.sampleFrequency; }
-                            flow.bitcrusherNode.sampleFrequency = value;
-                            flow.bitcrusherNode.node.parameters.get('sampleFrequency').setValueAtTime(value, 0);
+                            if(value == undefined){ return bitcrusherNode.sampleFrequency; }
+                            bitcrusherNode.sampleFrequency = value;
                         };
                 };
                 this.multibandFilter = function(
@@ -40869,7 +41242,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         } );
 
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:26 } };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:1 } };
             this.go = new function(){
                 const functionList = [];
         
@@ -42741,15 +43114,15 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             }
                 
                         //keycapture
-                            const glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
+                            const keyCodes = [ 90, 83, 88, 68, 67, 86, 71, 66, 72, 78, 74, 77, 81, 50, 87, 51, 69, 82, 53, 84, 54, 89, 55, 85, 73 ];
                             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_rectangle['key_'+glyphs.indexOf(event.key)].press();
+                                if( keyCodes.includes(event.keyCode) ){
+                                    object.elements.button_rectangle['key_'+keyCodes.indexOf(event.keyCode)].press();
                                 }
                             });
                             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_rectangle['key_'+glyphs.indexOf(event.key)].release();
+                                if( keyCodes.includes(event.keyCode) ){
+                                    object.elements.button_rectangle['key_'+keyCodes.indexOf(event.keyCode)].release();
                                 }
                             });
                 
@@ -45070,14 +45443,14 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.button_image.button.onpress = function(){ object.io.signal.out.set(true); };
                             object.elements.button_image.button.onrelease = function(){ object.io.signal.out.set(false); };
                         //keycapture
-                        const glyphs = [ '1' ]; 
+                            const keyCodes = [ 49 ];
                             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
+                                if( keyCodes.includes(event.keyCode) ){
                                     object.elements.button_image.button.press();
                                 }
                             });
                             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
+                                if( keyCodes.includes(event.keyCode) ){
                                     object.elements.button_image.button.release();
                                 }
                             });
@@ -45278,15 +45651,15 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.button_image.button_4.onpress = function(){   object.io.signal.out_4.set(true);  };
                             object.elements.button_image.button_4.onrelease = function(){ object.io.signal.out_4.set(false); };
                         //keycapture
-                            const glyphs = [ '1', '2', '3', '4' ]; 
+                            const keyCodes = [ 49, 50, 51, 52 ];
                             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_image['button_'+event.key].press();
+                                if( keyCodes.includes(event.keyCode) ){
+                                    object.elements.button_image['button_'+(keyCodes.indexOf(event.keyCode)+1)].press();
                                 }
                             });
                             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_image['button_'+event.key].release();
+                                if( keyCodes.includes(event.keyCode) ){
+                                    object.elements.button_image['button_'+(keyCodes.indexOf(event.keyCode)+1)].release();
                                 }
                             });
                 
@@ -45676,15 +46049,15 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.button_image.button_8.onpress = function(){   object.io.signal.out_8.set(true);  };
                             object.elements.button_image.button_8.onrelease = function(){ object.io.signal.out_8.set(false); };
                         //keycapture
-                            const glyphs = [ '1', '2', '3', '4', '5', '6', '7', '8' ]; 
+                            const keyCodes = [ 49, 50, 51, 52, 53, 54, 55, 56 ];
                             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_image['button_'+event.key].press();
+                                if( keyCodes.includes(event.keyCode) ){
+                                    object.elements.button_image['button_'+(keyCodes.indexOf(event.keyCode)+1)].press();
                                 }
                             });
                             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_image['button_'+event.key].release();
+                                if( keyCodes.includes(event.keyCode) ){
+                                    object.elements.button_image['button_'+(keyCodes.indexOf(event.keyCode)+1)].release();
                                 }
                             });
                 
@@ -45852,15 +46225,15 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.button_image.button_2.onpress = function(){   object.io.signal.out_2.set(true);  };
                             object.elements.button_image.button_2.onrelease = function(){ object.io.signal.out_2.set(false); };
                         //keycapture
-                            const glyphs = [ '1', '2' ]; 
+                            const keyCodes = [ 49, 50 ];
                             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_image['button_'+event.key].press();
+                                if( keyCodes.includes(event.keyCode) ){
+                                    object.elements.button_image['button_'+(keyCodes.indexOf(event.keyCode)+1)].press();
                                 }
                             });
                             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_image['button_'+event.key].release();
+                                if( keyCodes.includes(event.keyCode) ){
+                                    object.elements.button_image['button_'+(keyCodes.indexOf(event.keyCode)+1)].release();
                                 }
                             });
                 
@@ -47754,6 +48127,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         const unitStyle = new function(){
                             //image store location URL
                                 this.imageStoreURL_localPrefix = imageStoreURL+'dsds-8^3/';
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
                 
                             //calculation of measurements
                                 const div = 10;
@@ -47808,22 +48182,22 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                             data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                         },
                                         {collection:'control', type:'dial_continuous_image', name:'masterVolume', data:{
-                                            x:unitStyle.offset.x*2 + 252, y:27, radius:22/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
-                                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                            x:unitStyle.offset.x*2 + 252, y:27, radius:20/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
+                                            handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'signal', data:{
-                                            x:unitStyle.offset.x*2 + 244, y:95.5, width:7, height:18, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
-                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
-                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
+                                            x:unitStyle.offset.x*2 + 244-1, y:95.5, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'voltage', data:{
-                                            x:unitStyle.offset.x*2 + 253, y:95.5, width:7, height:18, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
-                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
-                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
+                                            x:unitStyle.offset.x*2 + 253, y:95.5, width:8, height:20, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
                                         }},
                 
                                         {collection:'control', type:'button_image', name:'preset_1', data:{
@@ -47867,22 +48241,22 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         return [
                                             {collection:'control', type:'dial_continuous_image', name:'volume_'+index, data:{
                                                 x:16 + index*30, y:24, radius:13/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
-                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                                             }},
                                             {collection:'control', type:'dial_continuous_image', name:'rate_'+index, data:{
                                                 x:28 + index*30, y:36, radius:13/2, startAngle:2.5, maxAngle:4.4, value:0.5, resetValue:0.5,
-                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                                             }},
                                             {collection:'control', type:'dial_discrete_image', name:'bank_'+index, data:{
-                                                x:22 + index*30, y:60, radius:22/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
-                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                                x:22 + index*30, y:60, radius:20/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
+                                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                             }},
                                             {collection:'display', type:'glowbox_circle', name:'channelStatusLED_'+index, data:{
                                                 x:32 + index*30, y:74, radius:3/2, capType:'round', style:unitStyle.LED
                                             }},
                                             {collection:'control', type:'dial_discrete_image', name:'sample_'+index, data:{
-                                                x:22 + index*30, y:90, radius:22/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
-                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                                x:22 + index*30, y:90, radius:20/2, startAngle:2.5, maxAngle:4.4, value:0, optionCount:8, 
+                                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                             }},
                                             {collection:'display', type:'glowbox_path', name:'channelFireLED_'+index, data:{
                                                 x:14 + index*30, y:104, points:[{x:0,y:0},{x:16,y:0}], capType:'round', style:unitStyle.LED
@@ -47981,8 +48355,11 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 object.elements.glowbox_path['channelFireLED_'+channel].on();
                                 setTimeout(object.elements.glowbox_path['channelFireLED_'+channel].off, 100);
                             }else if(mode == 'voltage'){
-                                samplePlayers[channel].rate(
-                                    object.elements.dial_continuous_image['rate_'+channel].get() * value 
+                                // samplePlayers[channel].rate(
+                                //     object.elements.dial_continuous_image['rate_'+channel].get()*2 * value 
+                                // );
+                                channelGains[channel].gain(
+                                    object.elements.dial_continuous_image['volume_'+channel].get()*2 * value 
                                 );
                                 samplePlayers[channel].start();
                                 object.elements.glowbox_path['channelFireLED_'+channel].on();
@@ -48213,39 +48590,39 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                         //keycapture
                             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                                switch(event.key){
-                                    case '1': object.elements.button_image.preset_1.press(); break;
-                                    case '2': object.elements.button_image.preset_2.press(); break;
-                                    case '3': object.elements.button_image.preset_3.press(); break;
-                                    case '4': object.elements.button_image.preset_4.press(); break;
-                                    case '5': object.elements.button_image.preset_5.press(); break;
+                                switch(event.keyCode){
+                                    case 49: object.elements.button_image.preset_1.press(); break;
+                                    case 50: object.elements.button_image.preset_2.press(); break;
+                                    case 51: object.elements.button_image.preset_3.press(); break;
+                                    case 52: object.elements.button_image.preset_4.press(); break;
+                                    case 53: object.elements.button_image.preset_5.press(); break;
                 
-                                    case '`': object.elements.button_image['fire_'+0].press(); break;
-                                    case 'z': object.elements.button_image['fire_'+1].press(); break;
-                                    case 'x': object.elements.button_image['fire_'+2].press(); break;
-                                    case 'c': object.elements.button_image['fire_'+3].press(); break;
-                                    case 'v': object.elements.button_image['fire_'+4].press(); break;
-                                    case 'b': object.elements.button_image['fire_'+5].press(); break;
-                                    case 'n': object.elements.button_image['fire_'+6].press(); break;
-                                    case 'm': object.elements.button_image['fire_'+7].press(); break;
+                                    case 90: object.elements.button_image['fire_'+0].press(); break;
+                                    case 88: object.elements.button_image['fire_'+1].press(); break;
+                                    case 67: object.elements.button_image['fire_'+2].press(); break;
+                                    case 86: object.elements.button_image['fire_'+3].press(); break;
+                                    case 66: object.elements.button_image['fire_'+4].press(); break;
+                                    case 78: object.elements.button_image['fire_'+5].press(); break;
+                                    case 77: object.elements.button_image['fire_'+6].press(); break;
+                                    case 188: object.elements.button_image['fire_'+7].press(); break;
                                 }
                             });
                             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                                switch(event.key){
-                                    case '1': object.elements.button_image.preset_1.release(); break;
-                                    case '2': object.elements.button_image.preset_2.release(); break;
-                                    case '3': object.elements.button_image.preset_3.release(); break;
-                                    case '4': object.elements.button_image.preset_4.release(); break;
-                                    case '5': object.elements.button_image.preset_5.release(); break;
+                                switch(event.keyCode){
+                                    case 49: object.elements.button_image.preset_1.release(); break;
+                                    case 50: object.elements.button_image.preset_2.release(); break;
+                                    case 51: object.elements.button_image.preset_3.release(); break;
+                                    case 52: object.elements.button_image.preset_4.release(); break;
+                                    case 53: object.elements.button_image.preset_5.release(); break;
                 
-                                    case '`': object.elements.button_image['fire_'+0].release(); break;
-                                    case 'z': object.elements.button_image['fire_'+1].release(); break;
-                                    case 'x': object.elements.button_image['fire_'+2].release(); break;
-                                    case 'c': object.elements.button_image['fire_'+3].release(); break;
-                                    case 'v': object.elements.button_image['fire_'+4].release(); break;
-                                    case 'b': object.elements.button_image['fire_'+5].release(); break;
-                                    case 'n': object.elements.button_image['fire_'+6].release(); break;
-                                    case 'm': object.elements.button_image['fire_'+7].release(); break;
+                                    case 90: object.elements.button_image['fire_'+0].release(); break;
+                                    case 88: object.elements.button_image['fire_'+1].release(); break;
+                                    case 67: object.elements.button_image['fire_'+2].release(); break;
+                                    case 86: object.elements.button_image['fire_'+3].release(); break;
+                                    case 66: object.elements.button_image['fire_'+4].release(); break;
+                                    case 78: object.elements.button_image['fire_'+5].release(); break;
+                                    case 77: object.elements.button_image['fire_'+6].release(); break;
+                                    case 188: object.elements.button_image['fire_'+7].release(); break;
                                 }
                             });
                 
@@ -48310,7 +48687,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     return object;
                 };
                 this['dsds-8^3'].metadata = {
-                    name:'DSDS-8^3',
+                    name:'Digital Sample Drum Set - 8^3',
                     category:'',
                     helpURL:'/help/units/harbinger/dsds-8^3/'
                 };
@@ -48319,6 +48696,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         const unitStyle = new function(){
                             //image store location URL
                                 this.imageStoreURL_localPrefix = imageStoreURL+'mrd-16/';
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
                 
                             //calculation of measurements
                                 const div = 10;
@@ -48381,71 +48759,71 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                         {collection:'control', type:'button_image', name:'signal', data:{
                                             x:10, y:13, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_signal_off.png',
-                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
-                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_signal_on.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'voltage', data:{
                                             x:22, y:13, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_voltage_off.png',
-                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
-                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_voltage_on.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
                                         }},
                 
                                         {collection:'control', type:'button_image', name:'channel_left', data:{
                                             x:34, y:13, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_row_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_row_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'channel_right', data:{
                                             x:46+8, y:13+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_row_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_row_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
                                         }},
                                         {collection:'control', type:'checkbox_image', name:'unify', data:{
                                             x:58, y:13, width:8, height:20,
-                                            checkURL:unitStyle.imageStoreURL_localPrefix+'button_unify_on.png',
-                                            uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_unify_off.png',
+                                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
+                                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'page_up', data:{
                                             x:70, y:13, width:20, height:8, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_up_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_up_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'page_down', data:{
                                             x:70, y:25, width:20, height:8, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_down_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_down_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
                                         }},
                                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                                             x:94.5, y:13.5, width:11, height:19, canvasBased:true, resolution:5,
                                         }},
                                         {collection:'control', type:'button_image', name:'clear', data:{
                                             x:110, y:13, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_page_clear_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_page_clear_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'clear_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'clear_down.png',
                                         }},
                                         {collection:'control', type:'dial_discrete_image', name:'releaseLength', data:{
                                             x:132, y:23, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
-                                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                            handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'step', data:{
                                             x:146, y:13, width:20, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_step_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_step_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'step_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'step_down.png',
                                         }},
                                         {collection:'control', type:'dial_discrete_image', name:'direction', data:{
                                             x:180, y:23, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
-                                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                            handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                         }},
                                     ]
                                 ).concat(
                                     (new Array(16)).fill().flatMap((item,index) => {
                                         return [
                                             {collection:'display', type:'glowbox_rectangle', name:'selectorStepLED_'+index, data:{
-                                                x:17.5 - (5/2) + index*20, y:69, width:5, height:2.5, style:unitStyle.selectorStepLEDstyle,
+                                                x:17.5 - (5/2) + index*20, y:69, width:5*0, height:2.5, style:unitStyle.selectorStepLEDstyle,
                                             }},
                                         ];
                                     })
@@ -48461,36 +48839,48 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     (new Array(4)).fill().flatMap((item,index) => {
                                         return [
                                             {collection:'control', type:'button_image', name:'selector_'+index, data:{
-                                                x:10 + index*20, y:39, width:15, height:30, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_1_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_1_down.png',
-                                            }},
-                                            {collection:'display', type:'glowbox_circle', name:'selectorLED_'+index, data:{
-                                                x:17.5 + index*20, y:47.5, radius:3, style:unitStyle.selectorLEDstyle,
+                                                x:10 + index*20, y:39, width:15, height:30, hoverable:false, selectable:true,
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'1_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'1_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'1_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'1_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'1_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'1_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'1_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'1_down_glow_select.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'selector_'+(index+4), data:{
-                                                x:10 + (index+4)*20, y:39, width:15, height:30, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_2_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_2_down.png',
-                                            }},
-                                            {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+4), data:{
-                                                x:17.5 + (index+4)*20, y:47.5, radius:3, style:unitStyle.selectorLEDstyle,
+                                                x:10 + (index+4)*20, y:39, width:15, height:30, hoverable:false, selectable:true,
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'2_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'2_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'2_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'2_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'2_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'2_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'2_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'2_down_glow_select.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'selector_'+(index+8), data:{
-                                                x:10 + (index+8)*20, y:39, width:15, height:30, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_3_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_3_down.png',
-                                            }},
-                                            {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+8), data:{
-                                                x:17.5 + (index+8)*20, y:47.5, radius:3, style:unitStyle.selectorLEDstyle,
+                                                x:10 + (index+8)*20, y:39, width:15, height:30, hoverable:false, selectable:true,
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'3_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'3_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'3_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'3_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'3_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'3_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'3_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'3_down_glow_select.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'selector_'+(index+12), data:{
-                                                x:10 + (index+12)*20, y:39, width:15, height:30, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_4_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_4_down.png',
-                                            }},
-                                            {collection:'display', type:'glowbox_circle', name:'selectorLED_'+(index+12), data:{
-                                                x:17.5 + (index+12)*20, y:47.5, radius:3, style:unitStyle.selectorLEDstyle,
+                                                x:10 + (index+12)*20, y:39, width:15, height:30, hoverable:false, selectable:true,
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'4_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'4_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'4_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'4_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'4_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'4_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'4_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'4_down_glow_select.png',
                                             }},
                                         ];
                                     })
@@ -48498,6 +48888,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         });
                 
                     //circuitry
+                        const channelCount = 8;
+                        const selectorCount = 16;
+                        const pageCount = 10;
                         const state = {
                             outputMode:'signal', //signal / voltage
                             step:0, 
@@ -48509,16 +48902,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             currentlySoundingChannels:[0,0,0,0,0,0,0,0],
                             release:1,
                         };
-                        for(let a = 0; a < 8; a++){
+                        for(let a = 0; a < channelCount; a++){
                             state.channel.push(
                                 {
                                     currentPage:0,
-                                    pages:(new Array(10)).fill().map(() => (new Array(16)).fill().map(() => false) )
+                                    pages:(new Array(pageCount)).fill().map(() => (new Array(selectorCount)).fill().map(() => false) )
                                 }
                             );
                         }
                 
-                        function refreshLEDS(){
+                        function refreshLEDs(){
                             //output select
                                 if(state.outputMode == 'signal'){
                                     object.elements.button_image.signal.glow(true);
@@ -48529,7 +48922,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                 
                             //channel
-                                for(let a = 0; a < 8; a++){
+                                for(let a = 0; a < channelCount; a++){
                                     object.elements.glowbox_path['channelLED_'+a].off();
                                 }
                                 object.elements.glowbox_path['channelLED_'+state.currentChannel].on();
@@ -48538,20 +48931,23 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 const page = state.channel[state.currentChannel].currentPage;
                                 object.elements.sevenSegmentDisplay.page.enterCharacter(page);
                                 
-                            //selector
-                                for(let a = 0; a < 16; a++){
-                                    if( state.channel[state.currentChannel].pages[page][a] ){
-                                        object.elements.glowbox_circle['selectorLED_'+a].on();
-                                    }else{
-                                        object.elements.glowbox_circle['selectorLED_'+a].off();
-                                    }
-                                }
-                
                             //step
-                                for(let a = 0; a < 16; a++){
-                                    object.elements.glowbox_rectangle['selectorStepLED_'+a].off();
+                                for(let a = 0; a < selectorCount; a++){
+                                    object.elements.button_image['selector_'+a].glow(false);
                                 }
-                                object.elements.glowbox_rectangle['selectorStepLED_'+state.step].on();
+                                object.elements.button_image['selector_'+state.step].glow(true);
+                        }
+                        function refreshSelectors(){
+                            const page = state.channel[state.currentChannel].currentPage;
+                            for(let a = 0; a < selectorCount; a++){
+                                object.elements.button_image['selector_'+a].select(
+                                    state.channel[state.currentChannel].pages[page][a]
+                                );
+                            }
+                        }
+                        function refresh(){
+                            refreshLEDs();
+                            refreshSelectors();
                         }
                         function setOutputConnectionNodes(mode){
                             if(mode != 'signal' && mode != 'voltage'){return;}
@@ -48589,30 +48985,30 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                                 }
                             }
-                            refreshLEDS();
+                            refreshLEDs();
                         }
                         function setChannel(channel){
                             if(channel == undefined){ return state.currentChannel; }
                             state.currentChannel = channel;
-                            refreshLEDS();
+                            refreshLEDs();
                         }
                         function step(){
                             switch(state.direction){
                                 case 'l2r':
                                     state.step++;
-                                    if(state.step > 15){state.step = 0;}
+                                    if(state.step > selectorCount-1){state.step = 0;}
                                 break;
                                 case 'r2l': 
                                     state.step--;
-                                    if(state.step < 0){state.step = 15;}
+                                    if(state.step < 0){state.step = selectorCount-1;}
                                 break;
                                 case 'bounce':
                                     if(state.step == 0){state.bounceDirection = 1;}
-                                    if(state.step == 15){state.bounceDirection = -1;}
+                                    if(state.step == selectorCount-1){state.bounceDirection = -1;}
                                     state.step += state.bounceDirection;
                                 break;
                                 case 'random': 
-                                    state.step = Math.floor(Math.random()*16);
+                                    state.step = Math.floor(Math.random()*selectorCount);
                                 break;
                             }
                 
@@ -48641,7 +49037,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }
                             }
                             
-                            refreshLEDS();
+                            refreshLEDs();
                         }
                 
                     //wiring
@@ -48654,24 +49050,17 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             object.elements.button_image.channel_left.onpress = function(){
                                 state.currentChannel--;
-                                if(state.currentChannel < 0){state.currentChannel = 7;}
-                                refreshLEDS();
+                                if(state.currentChannel < 0){state.currentChannel = channelCount-1;}
+                                refresh();
                             };
                             object.elements.button_image.channel_right.onpress = function(){
                                 state.currentChannel++;
-                                if(state.currentChannel > 7){state.currentChannel = 0;}
-                                refreshLEDS();
+                                if(state.currentChannel > channelCount-1){state.currentChannel = 0;}
+                                refresh();
                             };
-                            for(let a = 0; a < 16; a++){
-                                object.elements.button_image['selector_'+a].onpress = function(){
-                                    const page = state.channel[state.currentChannel].currentPage;
-                                    state.channel[state.currentChannel].pages[page][a] = !state.channel[state.currentChannel].pages[page][a];
-                                    refreshLEDS();
-                                };
-                            }
                             object.elements.button_image.page_up.onpress = function(){
                                 state.channel[state.currentChannel].currentPage++;
-                                if(state.channel[state.currentChannel].currentPage > 7){state.channel[state.currentChannel].currentPage = 0;}
+                                if(state.channel[state.currentChannel].currentPage > channelCount-1){state.channel[state.currentChannel].currentPage = 0;}
                 
                                 if(state.unifyChannels){
                                     for(let a = 0; a < 8; a++){
@@ -48679,11 +49068,11 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                                 }
                 
-                                refreshLEDS();
+                                refresh();
                             };
                             object.elements.button_image.page_down.onpress = function(){
                                 state.channel[state.currentChannel].currentPage--;
-                                if(state.channel[state.currentChannel].currentPage < 0){state.channel[state.currentChannel].currentPage = 7;}
+                                if(state.channel[state.currentChannel].currentPage < 0){state.channel[state.currentChannel].currentPage = channelCount-1;}
                 
                                 if(state.unifyChannels){
                                     for(let a = 0; a < 8; a++){
@@ -48691,24 +49080,24 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                                 }
                 
-                                refreshLEDS();
+                                refresh();
                             };
                             object.elements.checkbox_image.unify.onchange = function(bool){
                                 state.unifyChannels = bool;
                             };
                             object.elements.button_image.clear.onpress = function(){
                                 const page = state.channel[state.currentChannel].currentPage;
-                                for(let a = 0; a < 16; a++){
+                                for(let a = 0; a < selectorCount; a++){
                                     state.channel[state.currentChannel].pages[page][a] = false;
                                 }
                                 if(state.unifyChannels){
-                                    for(let a = 0; a < 8; a++){
-                                        for(let b = 0; b < 16; b++){
+                                    for(let a = 0; a < channelCount; a++){
+                                        for(let b = 0; b < selectorCount; b++){
                                             state.channel[a].pages[page][b] = false;
                                         }
                                     }
                                 }
-                                refreshLEDS();
+                                refresh();
                             };
                             object.elements.dial_discrete_image.releaseLength.onchange = function(value){
                                 state.release = value+1;
@@ -48719,119 +49108,133 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.dial_discrete_image.direction.onchange = function(value){
                                 state.direction = ['l2r','r2l','bounce','random'][value];
                             };
+                            
+                            //selectors
+                                for(let a = 0; a < selectorCount; a++){
+                                    object.elements.button_image['selector_'+a].onselect = function(){
+                                        const page = state.channel[state.currentChannel].currentPage;
+                                        state.channel[state.currentChannel].pages[page][a] = true;
+                                        refreshLEDs();
+                                    };
+                                    object.elements.button_image['selector_'+a].ondeselect = function(){
+                                        const page = state.channel[state.currentChannel].currentPage;
+                                        state.channel[state.currentChannel].pages[page][a] = false;
+                                        refreshLEDs();
+                                    };
+                                }
                 
                         //keycapture
                             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                                switch(event.key){
-                                    case '1': setChannel(0); break;
-                                    case '2': setChannel(1); break;
-                                    case '3': setChannel(2); break;
-                                    case '4': setChannel(3); break;
-                                    case '5': setChannel(4); break;
-                                    case '6': setChannel(5); break;
-                                    case '7': setChannel(6); break;
-                                    case '8': setChannel(7); break;
+                                switch(event.keyCode){
+                                    case 49: setChannel(0); break;
+                                    case 50: setChannel(1); break;
+                                    case 51: setChannel(2); break;
+                                    case 52: setChannel(3); break;
+                                    case 53: setChannel(4); break;
+                                    case 54: setChannel(5); break;
+                                    case 55: setChannel(6); break;
+                                    case 56: setChannel(7); break;
                 
-                                    case '9': object.elements.dial_discrete_image.releaseLength.nudge(-1); break;
-                                    case '0': object.elements.dial_discrete_image.releaseLength.nudge(1);  break;
-                                    case '-': object.elements.dial_discrete_image.direction.nudge(-1); break;
-                                    case '=': object.elements.dial_discrete_image.direction.nudge(1);  break;
+                                    case 57: object.elements.dial_discrete_image.releaseLength.nudge(-1); break;
+                                    case 48: object.elements.dial_discrete_image.releaseLength.nudge(1);  break;
+                                    case 189: object.elements.dial_discrete_image.direction.nudge(-1); break;
+                                    case 187: object.elements.dial_discrete_image.direction.nudge(1);  break;
                 
-                                    case '/': object.elements.checkbox_image.unify.toggle(); break;
-                                    case ';': object.elements.button_image.clear.press(); break;
-                                    case 'Enter': step(); break;
+                                    case 191: object.elements.checkbox_image.unify.toggle(); break;
+                                    case 186: object.elements.button_image.clear.press(); break;
+                                    case 13: step(); break;
                 
-                                    case 'q': 
+                                    case 81: 
                                         state.channel[state.currentChannel].currentPage = 0;
                                         if(state.unifyChannels){
                                             state.channel.forEach( a => {a.currentPage = 0;} );
                                         }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 'w': 
+                                    case 87: 
                                         state.channel[state.currentChannel].currentPage = 1;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 1;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 'e': 
+                                    case 69: 
                                         state.channel[state.currentChannel].currentPage = 2;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 2;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 'r': 
+                                    case 82: 
                                         state.channel[state.currentChannel].currentPage = 3;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 3;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 't': 
+                                    case 84: 
                                         state.channel[state.currentChannel].currentPage = 4;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 4;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 'y': 
+                                    case 89: 
                                         state.channel[state.currentChannel].currentPage = 5;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 5;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 'u': 
+                                    case 85: 
                                         state.channel[state.currentChannel].currentPage = 6;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 6;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 'i': 
+                                    case 73: 
                                         state.channel[state.currentChannel].currentPage = 7;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 7;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 'o': 
+                                    case 79: 
                                         state.channel[state.currentChannel].currentPage = 8;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 8;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
-                                    case 'p': 
+                                    case 80: 
                                         state.channel[state.currentChannel].currentPage = 9;
                                         if(state.unifyChannels){ state.channel.forEach( a => {a.currentPage = 9;} ); }
-                                        refreshLEDS();
+                                        refreshLEDs();
                                     break;
                 
-                                    case 'a': object.elements.button_image['selector_0'].press();  break;
-                                    case 's': object.elements.button_image['selector_1'].press();  break;
-                                    case 'd': object.elements.button_image['selector_2'].press();  break;
-                                    case 'f': object.elements.button_image['selector_3'].press();  break;
-                                    case 'g': object.elements.button_image['selector_4'].press();  break;
-                                    case 'h': object.elements.button_image['selector_5'].press();  break;
-                                    case 'j': object.elements.button_image['selector_6'].press();  break;
-                                    case 'k': object.elements.button_image['selector_7'].press();  break;
-                                    case '`': object.elements.button_image['selector_8'].press();  break;
-                                    case 'z': object.elements.button_image['selector_9'].press();  break;
-                                    case 'x': object.elements.button_image['selector_10'].press(); break;
-                                    case 'c': object.elements.button_image['selector_11'].press(); break;
-                                    case 'v': object.elements.button_image['selector_12'].press(); break;
-                                    case 'b': object.elements.button_image['selector_13'].press(); break;
-                                    case 'n': object.elements.button_image['selector_14'].press(); break;
-                                    case 'm': object.elements.button_image['selector_15'].press(); break;
+                                    case 65: object.elements.button_image['selector_0'].press();  break;
+                                    case 83: object.elements.button_image['selector_1'].press();  break;
+                                    case 68: object.elements.button_image['selector_2'].press();  break;
+                                    case 70: object.elements.button_image['selector_3'].press();  break;
+                                    case 71: object.elements.button_image['selector_4'].press();  break;
+                                    case 72: object.elements.button_image['selector_5'].press();  break;
+                                    case 74: object.elements.button_image['selector_6'].press();  break;
+                                    case 75: object.elements.button_image['selector_7'].press();  break;
+                                    case 90: object.elements.button_image['selector_8'].press();  break;
+                                    case 88: object.elements.button_image['selector_9'].press();  break;
+                                    case 67: object.elements.button_image['selector_10'].press(); break;
+                                    case 86: object.elements.button_image['selector_11'].press(); break;
+                                    case 66: object.elements.button_image['selector_12'].press(); break;
+                                    case 78: object.elements.button_image['selector_13'].press(); break;
+                                    case 77: object.elements.button_image['selector_14'].press(); break;
+                                    case 188: object.elements.button_image['selector_15'].press(); break;
                                 }
                             });
                             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                                switch(event.key){
-                                    case ';': object.elements.button_image.clear.release(); break;
+                                switch(event.keyCode){
+                                    case 186: object.elements.button_image.clear.release(); break;
                 
-                                    case 'a': object.elements.button_image['selector_0'].release();  break;
-                                    case 's': object.elements.button_image['selector_1'].release();  break;
-                                    case 'd': object.elements.button_image['selector_2'].release();  break;
-                                    case 'f': object.elements.button_image['selector_3'].release();  break;
-                                    case 'g': object.elements.button_image['selector_4'].release();  break;
-                                    case 'h': object.elements.button_image['selector_5'].release();  break;
-                                    case 'j': object.elements.button_image['selector_6'].release();  break;
-                                    case 'k': object.elements.button_image['selector_7'].release();  break;
-                                    case '`': object.elements.button_image['selector_8'].release();  break;
-                                    case 'z': object.elements.button_image['selector_9'].release();  break;
-                                    case 'x': object.elements.button_image['selector_10'].release(); break;
-                                    case 'c': object.elements.button_image['selector_11'].release(); break;
-                                    case 'v': object.elements.button_image['selector_12'].release(); break;
-                                    case 'b': object.elements.button_image['selector_13'].release(); break;
-                                    case 'n': object.elements.button_image['selector_14'].release(); break;
-                                    case 'm': object.elements.button_image['selector_15'].release(); break;
+                                    case 65: object.elements.button_image['selector_0'].release();  break;
+                                    case 83: object.elements.button_image['selector_1'].release();  break;
+                                    case 68: object.elements.button_image['selector_2'].release();  break;
+                                    case 70: object.elements.button_image['selector_3'].release();  break;
+                                    case 71: object.elements.button_image['selector_4'].release();  break;
+                                    case 72: object.elements.button_image['selector_5'].release();  break;
+                                    case 74: object.elements.button_image['selector_6'].release();  break;
+                                    case 75: object.elements.button_image['selector_7'].release();  break;
+                                    case 90: object.elements.button_image['selector_8'].release();  break;
+                                    case 88: object.elements.button_image['selector_9'].release();  break;
+                                    case 67: object.elements.button_image['selector_10'].release(); break;
+                                    case 86: object.elements.button_image['selector_11'].release(); break;
+                                    case 66: object.elements.button_image['selector_12'].release(); break;
+                                    case 78: object.elements.button_image['selector_13'].release(); break;
+                                    case 77: object.elements.button_image['selector_14'].release(); break;
+                                    case 188: object.elements.button_image['selector_15'].release(); break;
                                 }
                             });
                 
@@ -48852,23 +49255,26 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             },
                             currentChannel:function(channel){
                                 if(channel == undefined){ return state.currentChannel; }
-                                if(channel > 7 || channel < 0){return;}
+                                if(channel > channelCount-1 || channel < 0){return;}
                                 state.currentChannel = channel;
-                                refreshLEDS();
+                                refreshLEDs();
                             },
                             currentPage:function(channel, page){
                                 if(channel == undefined){ return; }
+                                if(channel > channelCount-1 || channel < 0){return;}
                                 if(page == undefined){ return state.channel[channel].currentPage; }
-                                if(page > 9 || page < 0){return;}
+                                if(page > pageCount-1 || page < 0){return;}
                                 state.channel[channel].currentPage = page;
-                                refreshLEDS();
+                                refreshLEDs();
                             },
                             pageData:function(channel, page, data){
                                 if(channel == undefined){ return; }
+                                if(channel > channelCount-1 || channel < 0){return;}
                                 if(page == undefined){ return state.channel[channel].pages; }
+                                if(page > pageCount-1 || page < 0){return;}
                                 if(data == undefined){ return state.channel[channel].pages[page]; }
                                 state.channel[channel].pages[page] = data;
-                                refreshLEDS();
+                                refreshLEDs();
                             },
                             clear:function(){
                                 object.elements.button_image.clear.press();
@@ -48902,7 +49308,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             state.channel = data.channel;
                             state.currentlySoundingChannels = data.currentlySoundingChannels;
                             state.release = data.release;
-                            refreshLEDS();
+                            refreshLEDs();
                         };
                 
                     //setup/tearDown
@@ -48913,7 +49319,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     return object;
                 };
                 this['mrd-16'].metadata = {
-                    name:'MRD-16',
+                    name:'Mini Rhythm Designer - 16',
                     category:'',
                     helpURL:'/help/units/harbinger/mrd-16/'
                 };
@@ -48955,6 +49361,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         const unitStyle = new function(){
                             //image store location URL
                                 this.imageStoreURL_localPrefix = imageStoreURL+'rdp-32/';
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
                 
                             //calculation of measurements
                                 const div = 10;
@@ -49013,13 +49420,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                         {collection:'control', type:'checkbox_image', name:'unify', data:{
                                             x:10, y:22, width:8, height:20,
-                                            checkURL:unitStyle.imageStoreURL_localPrefix+'unify_on.png',
-                                            uncheckURL:unitStyle.imageStoreURL_localPrefix+'unify_off.png',
+                                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
+                                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'clear', data:{
                                             x:21, y:22, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'clear_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'clear_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'clear_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'clear_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'randomFill', data:{
                                             x:32, y:22, width:8, height:20, hoverable:false,
@@ -49043,23 +49450,23 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         }},
                                         {collection:'control', type:'button_image', name:'channel_left', data:{
                                             x:76, y:22, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'row_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'row_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'channel_right', data:{
                                             x:87+8, y:22+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'row_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'row_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'page_up', data:{
                                             x:98, y:22, width:20, height:8, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'page_up_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'page_up_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'page_down', data:{
                                             x:98, y:34, width:20, height:8, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'page_down_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'page_down_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
                                         }},
                                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                                             x:121.5, y:22.5, width:11, height:19, canvasBased:true, resolution:5,
@@ -49067,16 +49474,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                         {collection:'control', type:'button_image', name:'step', data:{
                                             x:10, y:45, width:20, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'step_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'step_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'step_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'step_down.png',
                                         }},
                                         {collection:'control', type:'dial_discrete_image', name:'releaseLength', data:{
                                             x:43, y:55, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
-                                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                            handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                         }},
                                         {collection:'control', type:'dial_discrete_image', name:'direction', data:{
                                             x:66, y:55, radius:20/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:4, 
-                                            handleURL:unitStyle.imageStoreURL_localPrefix+'dial_large.png',
+                                            handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'region_left', data:{
                                             x:86, y:45, width:8, height:20, hoverable:false,
@@ -49105,17 +49512,17 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         }},
                                         {collection:'control', type:'button_image', name:'signal', data:{
                                             x:151, y:45, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'signal_off.png',
-                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
-                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'signal_on.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'signal_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'signal_on.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'voltage', data:{
                                             x:162, y:45, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
-                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'voltage_off.png',
-                                            backingURL__glow:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
-                                            backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'voltage_on.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'voltage_off.png',
+                                            backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
+                                            backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'voltage_on.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'through', data:{
                                             x:173, y:45, width:8, height:20, hoverable:false,
@@ -49149,64 +49556,64 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         return [
                                             {collection:'control', type:'button_image', name:'selector_'+index, data:{
                                                 x:10 + index*20, y:70, width:15, height:30, hoverable:false, selectable:true,
-                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'1_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'1_down.png',
-                                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'1_up_select.png',
-                                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'1_down_select.png',
-                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'1_up_glow.png',
-                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'1_down_glow.png',
-                                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'1_up_glow_select.png',
-                                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'1_down_glow_select.png',
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'1_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'1_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'1_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'1_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'1_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'1_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'1_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'1_down_glow_select.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'selector_'+(index+8), data:{
                                                 x:10 + (index+8)*20, y:70, width:15, height:30, hoverable:false, selectable:true,
-                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'2_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'2_down.png',
-                                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'2_up_select.png',
-                                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'2_down_select.png',
-                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'2_up_glow.png',
-                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'2_down_glow.png',
-                                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'2_up_glow_select.png',
-                                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'2_down_glow_select.png',
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'2_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'2_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'2_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'2_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'2_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'2_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'2_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'2_down_glow_select.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'selector_'+(index+16), data:{
                                                 x:10 + index*20, y:105, width:15, height:30, hoverable:false, selectable:true,
-                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'3_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'3_down.png',
-                                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'3_up_select.png',
-                                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'3_down_select.png',
-                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'3_up_glow.png',
-                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'3_down_glow.png',
-                                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'3_up_glow_select.png',
-                                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'3_down_glow_select.png',
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'3_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'3_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'3_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'3_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'3_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'3_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'3_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'3_down_glow_select.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'selector_'+(index+24), data:{
                                                 x:10 + (index+8)*20, y:105, width:15, height:30, hoverable:false, selectable:true,
-                                                backingURL__up:unitStyle.imageStoreURL_localPrefix+'4_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_localPrefix+'4_down.png',
-                                                backingURL__select:unitStyle.imageStoreURL_localPrefix+'4_up_select.png',
-                                                backingURL__select_press:unitStyle.imageStoreURL_localPrefix+'4_down_select.png',
-                                                backingURL__glow:unitStyle.imageStoreURL_localPrefix+'4_up_glow.png',
-                                                backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'4_down_glow.png',
-                                                backingURL__glow_select:unitStyle.imageStoreURL_localPrefix+'4_up_glow_select.png',
-                                                backingURL__glow_select_press:unitStyle.imageStoreURL_localPrefix+'4_down_glow_select.png',
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'4_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'4_down.png',
+                                                backingURL__select:unitStyle.imageStoreURL_commonPrefix+'4_up_select.png',
+                                                backingURL__select_press:unitStyle.imageStoreURL_commonPrefix+'4_down_select.png',
+                                                backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'4_up_glow.png',
+                                                backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'4_down_glow.png',
+                                                backingURL__glow_select:unitStyle.imageStoreURL_commonPrefix+'4_up_glow_select.png',
+                                                backingURL__glow_select_press:unitStyle.imageStoreURL_commonPrefix+'4_down_glow_select.png',
                                             }},
                 
                                             {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+index, data:{
                                                 x:197.5 + index*16, y:20.5, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                                             }},
                                             {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+8), data:{
                                                 x:205.5 + index*16, y:20.5+13, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                                             }},
                                             {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+16), data:{
                                                 x:197.5 + index*16, y:20.5+26, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                                             }},
                                             {collection:'control', type:'dial_continuous_image', name:'selectorDial_'+(index+24), data:{
                                                 x:205.5 + index*16, y:20.5+39, radius:13/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                                handleURL:unitStyle.imageStoreURL_localPrefix+'dial_small.png',
+                                                handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
                                             }},
                                         ];
                                     })
@@ -49218,27 +49625,24 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         const selectorCount = 32;
                         const pageCount = 16;
                         const state = {
-                            outputMode:'signal', //signal / voltage
-                            step:0, 
-                            direction:'l2r', //l2r / r2l / bounce / random
-                            bounceDirection:1,
+                            outputMode:'signal', // signal / voltage
+                            step:0,
+                            direction:'l2r', // l2r / r2l / bounce / random
+                            bounceDirection:1, // 1 / -1
                             currentChannel:0,
                             unifyChannels:false,
-                            channel:[],
+                            channel: (new Array(channelCount)).fill().map(() => {
+                                return {
+                                    currentPage:0,
+                                    pages:(new Array(pageCount)).fill().map(() => (new Array(selectorCount)).fill().map(() => ({value:1, state:false})) )
+                                }
+                            }),
                             currentlySoundingChannels:[0,0,0,0,0,0,0,0],
-                            release:1,
+                            release:1, // 1 / 2 / 3 / 4
                             playThrough:{active:false, values: (new Array(channelCount)).fill().map(() => 1) },
                             region:{start:0, end:31, mode:'32'},
                             clipboard:[],
                         };
-                        for(let a = 0; a < channelCount; a++){
-                            state.channel.push(
-                                {
-                                    currentPage:0,
-                                    pages:(new Array(pageCount)).fill().map(() => (new Array(selectorCount)).fill().map(() => ({value:1, state:false})) )
-                                }
-                            );
-                        }
                 
                         function refreshLEDs(){
                             //output select
@@ -49273,21 +49677,21 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         object.elements.glowbox_rectangle['selectorStepLED_'+a].on();
                                     }
                                 }
-                
+                        }
+                        function refreshSelectors(){
+                            const page = state.channel[state.currentChannel].currentPage;
+                            for(let a = 0; a < selectorCount; a++){
+                                object.elements.button_image['selector_'+a].select(
+                                    state.channel[state.currentChannel].pages[page][a].state
+                                );
+                                object.elements.dial_continuous_image['selectorDial_'+a].set(
+                                    state.channel[state.currentChannel].pages[page][a].value/2
+                                );
+                            }
                         }
                         function refresh(){
                             refreshLEDs();
-                
-                            //selector
-                                const page = state.channel[state.currentChannel].currentPage;
-                                for(let a = 0; a < selectorCount; a++){
-                                    object.elements.button_image['selector_'+a].select(
-                                        state.channel[state.currentChannel].pages[page][a].state
-                                    );
-                                    object.elements.dial_continuous_image['selectorDial_'+a].set(
-                                        state.channel[state.currentChannel].pages[page][a].value/2
-                                    );
-                                }
+                            refreshSelectors();
                 
                             //reset playThrough
                                 if(state.playThrough.active){
@@ -49668,129 +50072,99 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                         //keycapture
                             object.elements.image.backing.attachCallback('onkeydown', function(x,y,event){
-                                switch(event.key){
-                                    case '1': setChannel(0); break;
-                                    case '2': setChannel(1); break;
-                                    case '3': setChannel(2); break;
-                                    case '4': setChannel(3); break;
-                                    case '5': setChannel(4); break;
-                                    case '6': setChannel(5); break;
-                                    case '7': setChannel(6); break;
-                                    case '8': setChannel(7); break;
+                                const OEBI = object.elements.button_image;
                 
-                                    case '9': object.elements.dial_discrete_image.releaseLength.nudge(-1); break;
-                                    case '0': object.elements.dial_discrete_image.releaseLength.nudge(1);  break;
-                                    case '-': object.elements.dial_discrete_image.direction.nudge(-1); break;
-                                    case '=': object.elements.dial_discrete_image.direction.nudge(1);  break;
+                                switch(event.keyCode){
+                                    case 49: setChannel(0); break;
+                                    case 50: setChannel(1); break;
+                                    case 51: setChannel(2); break;
+                                    case 52: setChannel(3); break;
+                                    case 53: setChannel(4); break;
+                                    case 54: setChannel(5); break;
+                                    case 55: setChannel(6); break;
+                                    case 56: setChannel(7); break;
                 
-                                    case '/': object.elements.checkbox_image.unify.toggle(); break;
-                                    case ';': object.elements.button_image.clear.press(); break;
-                                    case 'Enter': step(); break;
+                                    case 57: object.elements.dial_discrete_image.releaseLength.nudge(-1); break;
+                                    case 48: object.elements.dial_discrete_image.releaseLength.nudge(1);  break;
+                                    case 189: object.elements.dial_discrete_image.direction.nudge(-1); break;
+                                    case 187: object.elements.dial_discrete_image.direction.nudge(1);  break;
                 
-                                    case 'ArrowUp': object.elements.button_image.page_up.press(); break;
-                                    case 'ArrowDown': object.elements.button_image.page_down.press(); break;
-                                    case 'ArrowLeft': object.elements.button_image.channel_left.press(); break;
-                                    case 'ArrowRight': object.elements.button_image.channel_right.press(); break;
+                                    case 191: object.elements.checkbox_image.unify.toggle(); break;
+                                    case 186: OEBI.clear.press(); break;
+                                    case 13: step(); break;
                 
-                                    case 'q': object.elements.button_image.randomFill.press(); break;
-                                    case 'w': object.elements.button_image.cut.press(); break;
-                                    case 'e': object.elements.button_image.copy.press(); break;
-                                    case 'r': object.elements.button_image.paste.press(); break;
-                                    case 't': object.elements.button_image.region_left.press(); break;
-                                    case 'y': object.elements.button_image.region_right.press(); break;
-                                    case 'u': object.elements.button_image.region_32.press(); break;
-                                    case 'i': object.elements.button_image.region_16.press(); break;
-                                    case 'o': object.elements.button_image.region_8.press(); break;
-                                    case 'p': object.elements.button_image.through.press(); break;
+                                    case 38: OEBI.page_up.press(); break;
+                                    case 40: OEBI.page_down.press(); break;
+                                    case 37: OEBI.channel_left.press(); break;
+                                    case 39: OEBI.channel_right.press(); break;
                 
-                                    case 'a': object.elements.button_image['selector_0'].press();  break;
-                                    case 's': object.elements.button_image['selector_1'].press();  break;
-                                    case 'd': object.elements.button_image['selector_2'].press();  break;
-                                    case 'f': object.elements.button_image['selector_3'].press();  break;
-                                    case 'g': object.elements.button_image['selector_4'].press();  break;
-                                    case 'h': object.elements.button_image['selector_5'].press();  break;
-                                    case 'j': object.elements.button_image['selector_6'].press();  break;
-                                    case 'k': object.elements.button_image['selector_7'].press();  break;
-                                    case '`': object.elements.button_image['selector_8'].press();  break;
-                                    case 'z': object.elements.button_image['selector_9'].press();  break;
-                                    case 'x': object.elements.button_image['selector_10'].press(); break;
-                                    case 'c': object.elements.button_image['selector_11'].press(); break;
-                                    case 'v': object.elements.button_image['selector_12'].press(); break;
-                                    case 'b': object.elements.button_image['selector_13'].press(); break;
-                                    case 'n': object.elements.button_image['selector_14'].press(); break;
-                                    case 'm': object.elements.button_image['selector_15'].press(); break;
-                                    case 'A': object.elements.button_image['selector_16'].press(); break;
-                                    case 'S': object.elements.button_image['selector_17'].press(); break;
-                                    case 'D': object.elements.button_image['selector_18'].press(); break;
-                                    case 'F': object.elements.button_image['selector_19'].press(); break;
-                                    case 'G': object.elements.button_image['selector_20'].press(); break;
-                                    case 'H': object.elements.button_image['selector_21'].press(); break;
-                                    case 'J': object.elements.button_image['selector_22'].press(); break;
-                                    case 'K': object.elements.button_image['selector_23'].press(); break;
-                                    case '~': object.elements.button_image['selector_24'].press(); break;
-                                    case 'Z': object.elements.button_image['selector_25'].press(); break;
-                                    case 'X': object.elements.button_image['selector_26'].press(); break;
-                                    case 'C': object.elements.button_image['selector_27'].press(); break;
-                                    case 'V': object.elements.button_image['selector_28'].press(); break;
-                                    case 'B': object.elements.button_image['selector_29'].press(); break;
-                                    case 'N': object.elements.button_image['selector_30'].press(); break;
-                                    case 'M': object.elements.button_image['selector_31'].press(); break;
+                                    case 81: OEBI.randomFill.press(); break;
+                                    case 87: OEBI.cut.press(); break;
+                                    case 69: OEBI.copy.press(); break;
+                                    case 82: OEBI.paste.press(); break;
+                                    case 84: OEBI.region_left.press(); break;
+                                    case 89: OEBI.region_right.press(); break;
+                                    case 85: OEBI.region_32.press(); break;
+                                    case 73: OEBI.region_16.press(); break;
+                                    case 79: OEBI.region_8.press(); break;
+                                    case 80: OEBI.through.press(); break;
+                
+                                    case 65:  if(!event.shiftKey){ OEBI['selector_0'].press();  }else{ OEBI['selector_16'].press(); } break;
+                                    case 83:  if(!event.shiftKey){ OEBI['selector_1'].press();  }else{ OEBI['selector_17'].press(); } break;
+                                    case 68:  if(!event.shiftKey){ OEBI['selector_2'].press();  }else{ OEBI['selector_18'].press(); } break;
+                                    case 70:  if(!event.shiftKey){ OEBI['selector_3'].press();  }else{ OEBI['selector_19'].press(); } break;
+                                    case 71:  if(!event.shiftKey){ OEBI['selector_4'].press();  }else{ OEBI['selector_20'].press(); } break;
+                                    case 72:  if(!event.shiftKey){ OEBI['selector_5'].press();  }else{ OEBI['selector_21'].press(); } break;
+                                    case 74:  if(!event.shiftKey){ OEBI['selector_6'].press();  }else{ OEBI['selector_22'].press(); } break;
+                                    case 75:  if(!event.shiftKey){ OEBI['selector_7'].press();  }else{ OEBI['selector_23'].press(); } break;
+                                    case 90:  if(!event.shiftKey){ OEBI['selector_8'].press();  }else{ OEBI['selector_24'].press(); } break;
+                                    case 88:  if(!event.shiftKey){ OEBI['selector_9'].press();  }else{ OEBI['selector_25'].press(); } break;
+                                    case 67:  if(!event.shiftKey){ OEBI['selector_10'].press(); }else{ OEBI['selector_26'].press(); } break;
+                                    case 86:  if(!event.shiftKey){ OEBI['selector_11'].press(); }else{ OEBI['selector_27'].press(); } break;
+                                    case 66:  if(!event.shiftKey){ OEBI['selector_12'].press(); }else{ OEBI['selector_28'].press(); } break;
+                                    case 78:  if(!event.shiftKey){ OEBI['selector_13'].press(); }else{ OEBI['selector_29'].press(); } break;
+                                    case 77:  if(!event.shiftKey){ OEBI['selector_14'].press(); }else{ OEBI['selector_30'].press(); } break;
+                                    case 188: if(!event.shiftKey){ OEBI['selector_15'].press(); }else{ OEBI['selector_31'].press(); } break;
                                 }
                             });
                             object.elements.image.backing.attachCallback('onkeyup', function(x,y,event){
-                                switch(event.key){
-                                    case ';': object.elements.button_image.clear.release(); break;
+                                const OEBI = object.elements.button_image;
+                                switch(event.keyCode){
+                                    case 186: OEBI.clear.release(); break;
                 
-                                    case 'ArrowUp': object.elements.button_image.page_up.release(); break;
-                                    case 'ArrowDown': object.elements.button_image.page_down.release(); break;
-                                    case 'ArrowLeft': object.elements.button_image.channel_left.release(); break;
-                                    case 'ArrowRight': object.elements.button_image.channel_right.release(); break;
+                                    case 57: object.elements.button_image.page_up.release(); break;
+                                    case 48: object.elements.button_image.page_down.release(); break;
+                                    case 189: object.elements.button_image.channel_left.release(); break;
+                                    case 187: object.elements.button_image.channel_right.release(); break;
                 
-                                    case 'q': object.elements.button_image.randomFill.release(); break;
-                                    case 'w': object.elements.button_image.cut.release(); break;
-                                    case 'e': object.elements.button_image.copy.release(); break;
-                                    case 'r': object.elements.button_image.paste.release(); break;
-                                    case 't': object.elements.button_image.region_left.release(); break;
-                                    case 'y': object.elements.button_image.region_right.release(); break;
-                                    case 'u': object.elements.button_image.region_32.release(); break;
-                                    case 'i': object.elements.button_image.region_16.release(); break;
-                                    case 'o': object.elements.button_image.region_8.release(); break;
-                                    case 'p': object.elements.button_image.through.release(); break;
+                                    case 81: object.elements.button_image.randomFill.release(); break;
+                                    case 87: object.elements.button_image.cut.release(); break;
+                                    case 69: object.elements.button_image.copy.release(); break;
+                                    case 82: object.elements.button_image.paste.release(); break;
+                                    case 84: object.elements.button_image.region_left.release(); break;
+                                    case 89: object.elements.button_image.region_right.release(); break;
+                                    case 85: object.elements.button_image.region_32.release(); break;
+                                    case 73: object.elements.button_image.region_16.release(); break;
+                                    case 79: object.elements.button_image.region_8.release(); break;
+                                    case 80: object.elements.button_image.through.release(); break;
                 
-                                    case 'a': object.elements.button_image['selector_0'].release();  break;
-                                    case 's': object.elements.button_image['selector_1'].release();  break;
-                                    case 'd': object.elements.button_image['selector_2'].release();  break;
-                                    case 'f': object.elements.button_image['selector_3'].release();  break;
-                                    case 'g': object.elements.button_image['selector_4'].release();  break;
-                                    case 'h': object.elements.button_image['selector_5'].release();  break;
-                                    case 'j': object.elements.button_image['selector_6'].release();  break;
-                                    case 'k': object.elements.button_image['selector_7'].release();  break;
-                                    case '`': object.elements.button_image['selector_8'].release();  break;
-                                    case 'z': object.elements.button_image['selector_9'].release();  break;
-                                    case 'x': object.elements.button_image['selector_10'].release(); break;
-                                    case 'c': object.elements.button_image['selector_11'].release(); break;
-                                    case 'v': object.elements.button_image['selector_12'].release(); break;
-                                    case 'b': object.elements.button_image['selector_13'].release(); break;
-                                    case 'n': object.elements.button_image['selector_14'].release(); break;
-                                    case 'm': object.elements.button_image['selector_15'].release(); break;
-                                    case 'A': object.elements.button_image['selector_16'].release(); break;
-                                    case 'S': object.elements.button_image['selector_17'].release(); break;
-                                    case 'D': object.elements.button_image['selector_18'].release(); break;
-                                    case 'F': object.elements.button_image['selector_19'].release(); break;
-                                    case 'G': object.elements.button_image['selector_20'].release(); break;
-                                    case 'H': object.elements.button_image['selector_21'].release(); break;
-                                    case 'J': object.elements.button_image['selector_22'].release(); break;
-                                    case 'K': object.elements.button_image['selector_23'].release(); break;
-                                    case '~': object.elements.button_image['selector_24'].release(); break;
-                                    case 'Z': object.elements.button_image['selector_25'].release(); break;
-                                    case 'X': object.elements.button_image['selector_26'].release(); break;
-                                    case 'C': object.elements.button_image['selector_27'].release(); break;
-                                    case 'V': object.elements.button_image['selector_28'].release(); break;
-                                    case 'B': object.elements.button_image['selector_29'].release(); break;
-                                    case 'N': object.elements.button_image['selector_30'].release(); break;
-                                    case 'M': object.elements.button_image['selector_31'].release(); break;
+                                    case 65:  if(!event.shiftKey){ OEBI['selector_0'].release();  }else{ OEBI['selector_16'].release(); } break;
+                                    case 83:  if(!event.shiftKey){ OEBI['selector_1'].release();  }else{ OEBI['selector_17'].release(); } break;
+                                    case 68:  if(!event.shiftKey){ OEBI['selector_2'].release();  }else{ OEBI['selector_18'].release(); } break;
+                                    case 70:  if(!event.shiftKey){ OEBI['selector_3'].release();  }else{ OEBI['selector_19'].release(); } break;
+                                    case 71:  if(!event.shiftKey){ OEBI['selector_4'].release();  }else{ OEBI['selector_20'].release(); } break;
+                                    case 72:  if(!event.shiftKey){ OEBI['selector_5'].release();  }else{ OEBI['selector_21'].release(); } break;
+                                    case 74:  if(!event.shiftKey){ OEBI['selector_6'].release();  }else{ OEBI['selector_22'].release(); } break;
+                                    case 75:  if(!event.shiftKey){ OEBI['selector_7'].release();  }else{ OEBI['selector_23'].release(); } break;
+                                    case 90:  if(!event.shiftKey){ OEBI['selector_8'].release();  }else{ OEBI['selector_24'].release(); } break;
+                                    case 88:  if(!event.shiftKey){ OEBI['selector_9'].release();  }else{ OEBI['selector_25'].release(); } break;
+                                    case 67:  if(!event.shiftKey){ OEBI['selector_10'].release(); }else{ OEBI['selector_26'].release(); } break;
+                                    case 86:  if(!event.shiftKey){ OEBI['selector_11'].release(); }else{ OEBI['selector_27'].release(); } break;
+                                    case 66:  if(!event.shiftKey){ OEBI['selector_12'].release(); }else{ OEBI['selector_28'].release(); } break;
+                                    case 78:  if(!event.shiftKey){ OEBI['selector_13'].release(); }else{ OEBI['selector_29'].release(); } break;
+                                    case 77:  if(!event.shiftKey){ OEBI['selector_14'].release(); }else{ OEBI['selector_30'].release(); } break;
+                                    case 188: if(!event.shiftKey){ OEBI['selector_15'].release(); }else{ OEBI['selector_31'].release(); } break;
                                 }
-                                
                             });
                 
                         //io
@@ -49801,6 +50175,94 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                     //interface
                         object.i = {
+                            outputMode:function(mode){
+                                if(mode == undefined){ return state.outputMode; }
+                                setOutputConnectionNodes(mode);
+                            },
+                            playThrough:function(bool){
+                                if(bool == undefined){ return state.playThrough.active; }
+                                if( state.playThrough.active == bool ){ return; }
+                                toggleThroughMode();
+                            },
+                            step:function(){
+                                step();
+                            },
+                            currentChannel:function(channel){
+                                if(channel == undefined){ return state.currentChannel; }
+                                if(channel > channelCount-1 || channel < 0){return;}
+                                state.currentChannel = channel;
+                                refreshLEDs();
+                                refreshSelectors();
+                            },
+                            currentPage:function(channel, page){
+                                if(channel == undefined){ return; }
+                                if(channel > channelCount-1 || channel < 0){return;}
+                                if(page == undefined){ return state.channel[channel].currentPage; }
+                                if(page > pageCount-1 || page < 0){return;}
+                                state.channel[channel].currentPage = page;
+                                refreshLEDs();
+                                refreshSelectors();
+                            },
+                            pageData:function(channel, page, data){
+                                if(channel == undefined){ return; }
+                                if(channel > channelCount-1 || channel < 0){return;}
+                                if(page == undefined){ return state.channel[channel].pages; }
+                                if(page > pageCount-1 || page < 0){return;}
+                                if(data == undefined){ return state.channel[channel].pages[page]; }
+                                state.channel[channel].pages[page] = data;
+                                refreshLEDs();
+                                refreshSelectors();
+                            },
+                            unify:function(bool){
+                                if(bool == undefined){ return state.unifyChannels; }
+                                object.elements.checkbox_image.unify.set(bool);
+                            },
+                            clear:function(){
+                                clear();
+                            },
+                            randomFill:function(){
+                                randomFill();
+                            },
+                            release:function(value){
+                                if(value == undefined){ return state.release-1; }
+                                object.elements.dial_discrete_image.releaseLength.set(value);
+                            },
+                            direction:function(mode){
+                                if(mode == undefined){ return state.direction; }
+                                object.elements.dial_discrete_image.direction.set( ['l2r','r2l','bounce','random'].indexOf(mode) );
+                            },
+                            region:function(start,end){
+                                if(start == undefined && end == undefined){ return {start:state.region.start,end:state.region.end}; }
+                                if( start < 0 || start > selectorCount-1 || end < 0 || end > selectorCount-1){ return; }
+                                if( end < start ){ return; }
+                                state.region = {start:start, end:end};
+                                refresh();
+                                state.region.mode = '';
+                            },
+                            reset:function(){
+                                state.outputMode = 'signal';
+                                state.step = 0;
+                                state.direction = 'l2r';
+                                state.bounceDirection = 1;
+                                state.currentChannel = 0;
+                                state.unifyChannels = false;
+                                state.channel = (new Array(channelCount)).fill().map(() => {
+                                    return {
+                                        currentPage:0,
+                                        pages:(new Array(pageCount)).fill().map(() => (new Array(selectorCount)).fill().map(() => ({value:1, state:false})) )
+                                    }
+                                });
+                                state.currentlySoundingChannels = [0,0,0,0,0,0,0,0];
+                                state.release = 1;
+                                state.playThrough.active = false
+                                state.playThrough.values = (new Array(channelCount)).fill().map(() => 1);
+                                state.region.start = 0, 
+                                state.region.end = 31
+                                state.region.mode = '32'
+                                state.clipboard = [];
+                
+                                refresh();
+                            },
                         };
                 
                     //import/export
@@ -49820,19 +50282,19 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     return object;
                 };
                 this['rdp-32'].metadata = {
-                    name:'RDP-32',
+                    name:'Rhythm Designer Pro - 32',
                     category:'',
                     helpURL:'/help/units/harbinger/rdp-32/'
                 };
                 
                 this._collectionData = {
                     name:'Harbinger',
-                    itemWidth:210,
+                    itemWidth:222.5,
                     categoryOrder:[
                     ],   
                 };
                 this._categoryData = {
-                    sequencers:{ printingName:'Sequencers',itemWidth:175},
+                    // sequencers:{ printingName:'Sequencers',itemWidth:175},
                 };
             };
             this.acousticresearch = new function(){
@@ -49869,6 +50331,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //style data
                         const unitStyle = new function(){
                             //image store location URL
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
                                 this.imageStoreURL_localPrefix = imageStoreURL+'bitcrusher/';
                 
                             //calculation of measurements
@@ -49910,11 +50373,11 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                 {collection:'control', type:'dial_continuous_image', name:'amplitudeResolution', data:{
                                     x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:128, 
-                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                                 }},
                                 {collection:'control', type:'dial_discrete_image', name:'sampleFrequency', data:{
                                     x:65, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:8, 
-                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                                 }},
                             ]
                         });
@@ -49924,31 +50387,31 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             amplitudeResolution:0.425,
                             sampleFrequency:4,
                         };
-                        const BC = new _canvas_.interface.circuit.bitcrusher(_canvas_.library.audio.context);
+                        const bitcrusher = new _canvas_.interface.circuit.bitcrusher(_canvas_.library.audio.context);
                 
                     //wiring
                         //hid
                             object.elements.dial_continuous_image.amplitudeResolution.onchange = function(value){
-                                BC.amplitudeResolution( Math.pow(2,value*7) );
+                                bitcrusher.amplitudeResolution( Math.pow(2,value*7) );
                                 state.amplitudeResolution = value;
                             };
                             object.elements.dial_discrete_image.sampleFrequency.onchange = function(value){
-                                BC.sampleFrequency(Math.pow(2, value));
+                                bitcrusher.sampleFrequency(Math.pow(2, value));
                                 state.sampleFrequency = value;
                             };
                 
                         //io
-                            object.io.audio.input.out().connect( BC.in() );
-                            BC.out().connect(object.io.audio.output.in());
+                            object.io.audio.input.out().connect( bitcrusher.in() );
+                            bitcrusher.out().connect(object.io.audio.output.in());
                 
                     //interface
                         object.i = {
                             amplitudeResolution:function(a){
-                                if(a == undefined){ return BC.amplitudeResolution(); }
+                                if(a == undefined){ return bitcrusher.amplitudeResolution(); }
                                 object.elements.dial_continuous_image.amplitudeResolution.set( Math.log2(a)/7 );
                             },
                             sampleFrequency:function(a){
-                                if(a == undefined){ return BC.sampleFrequency(); }
+                                if(a == undefined){ return bitcrusher.sampleFrequency(); }
                                 if( ![1,2,4,8,16,32,64,128].includes(a) ){ return; }
                                 object.elements.dial_discrete_image.sampleFrequency.set( Math.log2(a) );
                             },
@@ -49968,8 +50431,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.dial_continuous_image.amplitudeResolution.set(0.425);
                             object.elements.dial_discrete_image.sampleFrequency.set(4);
                         };
-                        object.ondelete = function(){
-                        };
                 
                     return object;
                 };
@@ -49982,6 +50443,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //style data
                         const unitStyle = new function(){
                             //image store location URL
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
                                 this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_modifier/';
                 
                             //calculation of measurements
@@ -50023,19 +50485,19 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                 {collection:'control', type:'dial_continuous_image', name:'offset', data:{
                                     x:35, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, resetValue:0.5, arcDistance:1.2,
-                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                                 }},
                                 {collection:'control', type:'dial_continuous_image', name:'divideBy', data:{
                                     x:35, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:1/7, arcDistance:1.2,
-                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                                 }},
                                 {collection:'control', type:'dial_continuous_image', name:'ceiling', data:{
                                     x:75, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2,
-                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                                 }},
                                 {collection:'control', type:'dial_continuous_image', name:'floor', data:{
                                     x:75, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
-                                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                                 }},
                                 {collection:'control', type:'checkbox_image', name:'invert', data:{
                                     x:5, y:35, width:10, height:20,
@@ -50053,33 +50515,33 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             floor:-2,
                             invert:false,
                         };
-                        const AM = new _canvas_.interface.circuit.amplitudeModifier(_canvas_.library.audio.context);
+                        const amplitudeModifier = new _canvas_.interface.circuit.amplitudeModifier(_canvas_.library.audio.context);
                 
                     //wiring
                         //hid
                             object.elements.dial_continuous_image.offset.onchange = function(value){
-                                AM.offset(value*2 - 1);
+                                amplitudeModifier.offset(value*2 - 1);
                                 state.offset = value*2 - 1;
                             };
                             object.elements.dial_continuous_image.divideBy.onchange = function(value){
-                                AM.divisor(value*7 + 1);
+                                amplitudeModifier.divisor(value*7 + 1);
                                 state.divideBy = value*7 + 1;
                             };
                             object.elements.dial_continuous_image.ceiling.onchange = function(value){
-                                AM.ceiling(value*2);
+                                amplitudeModifier.ceiling(value*2);
                                 state.ceiling = value*2;
                             };
                             object.elements.dial_continuous_image.floor.onchange = function(value){
-                                AM.floor(-(1-value)*2);
+                                amplitudeModifier.floor(-(1-value)*2);
                                 state.floor = -(1-value)*2;
                             };
                             object.elements.checkbox_image.invert.onchange = function(value){
-                                AM.invert(value);
+                                amplitudeModifier.invert(value);
                                 state.invert = value;
                             };
                         //io
-                            object.io.audio.input.out().connect( AM.in() );
-                            AM.out().connect(object.io.audio.output.in());
+                            object.io.audio.input.out().connect( amplitudeModifier.in() );
+                            amplitudeModifier.out().connect(object.io.audio.output.in());
                 
                     //interface
                         object.i = {
@@ -50116,13 +50578,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.dial_continuous_image.floor.set( -data.floor/2 );
                             object.elements.checkbox_image.invert.set( data.invert );
                         };
-                
-                    //setup/tearDown
-                        object.oncreate = function(){
-                        };
-                        object.ondelete = function(){
-                        };
-                
+                        
                     return object;
                 };
                 this['amplitude_modifier'].metadata = {
@@ -50399,7 +50855,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         _canvas_.curve.go.add( function(){
             // _canvas_.core.render.frameRateLimit(10);
         
-            // const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
+            const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
             const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
             
         

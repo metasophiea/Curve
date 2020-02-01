@@ -12,9 +12,9 @@ this.amplitudeModifier = function(
             invert: false,
             offset: 0,
             divisor: 1,
-            ceiling:10,
-            floor:-10,
-            node: context.createAmplitudeModifier(),
+            ceiling: 10,
+            floor: -10,
+            node: new _canvas_.library.audio.audioWorklet.amplitudeModifier(_canvas_.library.audio.context),
         };
 
     //input/output node
@@ -25,26 +25,26 @@ this.amplitudeModifier = function(
         this.invert = function(value){
             if(value == undefined){ return flow.amplitudeModifierNode.invert; }
             flow.amplitudeModifierNode.invert = value;
-            flow.amplitudeModifierNode.node.parameters.get('invert').setValueAtTime(value?1:0,0);
+            flow.amplitudeModifierNode.node.invert = value;
         };
         this.offset = function(value){
             if(value == undefined){ return flow.amplitudeModifierNode.offset; }
             flow.amplitudeModifierNode.offset = value;
-            flow.amplitudeModifierNode.node.parameters.get('offset').setValueAtTime(value,0);
+            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.offset, value, 0.01, 'instant', true);
         };
         this.divisor = function(value){
             if(value == undefined){ return flow.amplitudeModifierNode.divisor; }
             flow.amplitudeModifierNode.divisor = value;
-            flow.amplitudeModifierNode.node.parameters.get('divisor').setValueAtTime(value,0);
+            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.divisor, value, 0.01, 'instant', true);
         };
         this.ceiling = function(value){
             if(value == undefined){ return flow.amplitudeModifierNode.ceiling; }
             flow.amplitudeModifierNode.ceiling = value;
-            flow.amplitudeModifierNode.node.parameters.get('ceiling').setValueAtTime(value,0);
+            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.ceiling, value, 0.01, 'instant', true);
         };
         this.floor = function(value){
             if(value == undefined){ return flow.amplitudeModifierNode.floor; }
             flow.amplitudeModifierNode.floor = value;
-            flow.amplitudeModifierNode.node.parameters.get('floor').setValueAtTime(value,0);
+            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.floor, value, 0.01, 'instant', true);
         };
 };

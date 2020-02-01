@@ -2,6 +2,9 @@ webASM
     Emscripten Documentation
         https://emscripten.org/docs/
 
+    Rust and WebAssembly
+        https://rustwasm.github.io/docs/book/
+
     Setting up the ultimate WebAssembly (C++) workflow
         https://medium.com/statuscode/setting-up-the-ultimate-webassembly-c-workflow-6484efa3e162
 
@@ -13,6 +16,12 @@ webASM
 
     Rust and OpenGL from scratch - Setup
         https://nercury.github.io/rust/opengl/tutorial/2018/02/08/opengl-in-rust-from-scratch-00-setup.html
+
+    Guide To The wasm-bindgen
+        https://rustwasm.github.io/docs/wasm-bindgen/
+
+    Building a Wavetable Synthesizer From Scratch with Rust, WebAssembly, and WebAudio
+        https://cprimozic.net/blog/buliding-a-wavetable-synthesizer-with-rust-wasm-and-webaudio/#conclusion
 
 webWorkers
     Web Workers Overview

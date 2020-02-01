@@ -1,97 +1,154 @@
-// // momentaryAmplitudeMeter
+// //testWorklet
+// _canvas_.library.go.add( function(){
+//     const osc = new OscillatorNode(_canvas_.library.audio.context);
+//     const testWorklet = new _canvas_.library.audio.audioWorklet.testWorklet(_canvas_.library.audio.context)
+    
+//     osc.connect(testWorklet).connect(_canvas_.library.audio.context.destination);
+
+//     // osc.type = 'sine';
+//     // osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+//     // osc.start();
+
+//     console.log( testWorklet.superImportantValue );
+//     testWorklet.superImportantValue = 'butts';
+//     console.log( testWorklet.superImportantValue );
+//     testWorklet.doubleTheSuperImportantValue();
+//     console.log( testWorklet.superImportantValue );
+
+
+//     testWorklet.parameters.get('valueA').linearRampToValueAtTime(100, _canvas_.library.audio.context.currentTime+2);
+//     testWorklet.parameters.get('valueB').linearRampToValueAtTime(100, _canvas_.library.audio.context.currentTime+2);
+// });
+
+
+
+
+// //amplitudeModifier
+// _canvas_.library.go.add( function(){
+//     const osc = new OscillatorNode(_canvas_.library.audio.context);
+//     const AM = new _canvas_.library.audio.audioWorklet.amplitudeModifier(_canvas_.library.audio.context);
+
+//     // AM.invert = false;
+//     // AM.offset = 0;
+//     // AM.divisor = 1;
+//     // AM.ceiling = 10;
+//     // AM.floor = -10;
+    
+//     _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, AM.divisor, 16, 5, 'linear', true);
+    
+//     osc.connect(AM).connect(_canvas_.library.audio.context.destination);
+
+//     // osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+//     // osc.start();
+// });
+
+
+
+
+// //bitcrusher
+// _canvas_.library.go.add( function(){
+//     const osc = new OscillatorNode(_canvas_.library.audio.context);
+//     const BC = new _canvas_.library.audio.audioWorklet.bitcrusher(_canvas_.library.audio.context);
+
+//     BC.amplitudeResolution = 10;
+//     BC.sampleFrequency = 16;
+    
+//     osc.connect(BC).connect(_canvas_.library.audio.context.destination);
+
+//     // osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+//     // osc.start();
+
+//     // AM.parameters.get('invert').setValueAtTime(true,0);
+// });
+
+
+
+
+// //momentaryAmplitudeMeter
 // _canvas_.library.go.add( function(){
 //     const osc = new OscillatorNode(_canvas_.library.audio.context);
 //     const gain = new GainNode(_canvas_.library.audio.context);
-//     const MAM = _canvas_.library.audio.context.createMomentaryAmplitudeMeter();
+//     const MAM = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(_canvas_.library.audio.context);
     
 //     osc.connect(gain).connect(MAM);
 
-//     MAM.port.onmessage = function(msg){ console.log(msg.data); }
-
-//     // osc.type = 'square';
-//     osc.frequency.setTargetAtTime(10, _canvas_.library.audio.context.currentTime, 0);
-//     osc.start();
-
-//     // gain.gain.linearRampToValueAtTime(0, _canvas_.library.audio.context.currentTime+10);
-// });
-
-
-// // amplitudeInverter
-// _canvas_.library.go.add( function(){
-//     const osc = new OscillatorNode(_canvas_.library.audio.context);
-//     const AI = _canvas_.library.audio.context.createAmplitudeInverter();
-    
-//     osc.connect(AI).connect(_canvas_.library.audio.context.destination);
+//     MAM.reading = function(data){
+//         console.log(data);
+//     };
 
 //     osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
 //     osc.start();
+//     gain.gain.linearRampToValueAtTime(0, _canvas_.library.audio.context.currentTime+10);
 // });
 
 
-// // amplitudePeakAttenuator
-// _canvas_.library.go.add( function(){
-//     const osc = new OscillatorNode(_canvas_.library.audio.context);
-//     const gain = new GainNode(_canvas_.library.audio.context);
-//     const APA = _canvas_.library.audio.context.createAmplitudePeakAttenuator();
-//     const MAM = _canvas_.library.audio.context.createMomentaryAmplitudeMeter();
-    
-//     osc.connect(gain)/*.connect(APA)./*connect(MAM).*/.connect(_canvas_.library.audio.context.destination);
-
-//     osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
-//     osc.start();
-
-//     MAM.port.onmessage = function(msg){ console.log(msg.data); }
-
-//     gain.gain.linearRampToValueAtTime(1, _canvas_.library.audio.context.currentTime+1);
-// });
 
 
-// // modulon / amplitudeControledModulator
+// //amplitudeControlledModulator
 // _canvas_.library.go.add( function(){
 //     const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
 //     const osc_2 = new OscillatorNode(_canvas_.library.audio.context);
 //     const gain_1 = new GainNode(_canvas_.library.audio.context);
 //     const gain_2 = new GainNode(_canvas_.library.audio.context);
-//     const m = _canvas_.library.audio.context.createModulon();
+
+//     const ACM = new _canvas_.library.audio.audioWorklet.amplitudeControlledModulator(_canvas_.library.audio.context);
     
-//     osc_1.connect(gain_1).connect(m,undefined,0).connect(_canvas_.library.audio.context.destination);
-//     osc_2.connect(gain_2).connect(m,undefined,1).connect(_canvas_.library.audio.context.destination);
+//     osc_1.connect(gain_1).connect(ACM,undefined,0).connect(_canvas_.library.audio.context.destination);
+//     osc_2.connect(gain_2).connect(ACM,undefined,1).connect(_canvas_.library.audio.context.destination);
 
+//     osc_1.type = 'sine';
 //     osc_2.type = 'sine';
-
 
 //     gain_1.gain.linearRampToValueAtTime(1, _canvas_.library.audio.context.currentTime);
 //     gain_2.gain.linearRampToValueAtTime(1, _canvas_.library.audio.context.currentTime);
 
 //     osc_1.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
 //     osc_1.start();
-
-//     osc_2.frequency.setTargetAtTime(220, _canvas_.library.audio.context.currentTime, 0);
+//     osc_2.frequency.setTargetAtTime(2, _canvas_.library.audio.context.currentTime, 0);
 //     osc_2.start();
 // });
 
 
-// // amplitudeModifier
+
+
+// //whiteNoiseGenerator
 // _canvas_.library.go.add( function(){
-//     const osc = new OscillatorNode(_canvas_.library.audio.context);
-//     const AM = _canvas_.library.audio.context.createAmplitudeModifier();
-    
-//     osc.connect(AM).connect(_canvas_.library.audio.context.destination);
-
-//     osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
-//     osc.start();
-
-//     // AM.parameters.get('invert').setValueAtTime(true,0);
+//     const WNG = new _canvas_.library.audio.audioWorklet.whiteNoiseGenerator(_canvas_.library.audio.context);
+//     WNG.connect(_canvas_.library.audio.context.destination);
 // });
 
 
-// // sqasherDoubler
-// _canvas_.library.go.add( function(){
-//     const osc = new OscillatorNode(_canvas_.library.audio.context);
-//     const SD = _canvas_.library.audio.context.createSqasherDoubler();
-    
-//     osc.connect(SD).connect(_canvas_.library.audio.context.destination);
 
-//     osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
-//     osc.start();
-// });
+
+//squareWaveGenerator
+_canvas_.library.go.add( function(){
+    grap = grapher;
+
+    const SWG = new _canvas_.library.audio.audioWorklet.squareWaveGenerator(_canvas_.library.audio.context);
+    const gain = new GainNode(_canvas_.library.audio.context);
+    SWG.connect(gain).connect(_canvas_.library.audio.context.destination);
+    gain.gain.linearRampToValueAtTime(0.0001, _canvas_.library.audio.context.currentTime);
+
+    s = SWG;
+
+
+    const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
+    o = osc_1;
+    // // const osc_2 = new OscillatorNode(_canvas_.library.audio.context);
+    // const gain_1 = new GainNode(_canvas_.library.audio.context);
+    // // const gain_2 = new GainNode(_canvas_.library.audio.context);
+    
+    // osc_1.connect(gain_1).connect(_canvas_.library.audio.context.destination);
+    // // osc_2.connect(gain_2).connect(_canvas_.library.audio.context.destination);
+
+    // osc_1.type = 'square';
+    // // osc_2.type = 'sine';
+
+    // gain_1.gain.linearRampToValueAtTime(0.01, _canvas_.library.audio.context.currentTime);
+    // // gain_2.gain.linearRampToValueAtTime(0.01, _canvas_.library.audio.context.currentTime);
+
+    // osc_1.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+    // osc_1.start();
+    // // osc_2.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+    // // osc_2.start();
+});

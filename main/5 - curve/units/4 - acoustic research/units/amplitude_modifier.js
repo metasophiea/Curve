@@ -2,6 +2,7 @@ this['amplitude_modifier'] = function(name,x,y,angle){
     //style data
         const unitStyle = new function(){
             //image store location URL
+                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
                 this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_modifier/';
 
             //calculation of measurements
@@ -43,19 +44,19 @@ this['amplitude_modifier'] = function(name,x,y,angle){
 
                 {collection:'control', type:'dial_continuous_image', name:'offset', data:{
                     x:35, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, resetValue:0.5, arcDistance:1.2,
-                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                 }},
                 {collection:'control', type:'dial_continuous_image', name:'divideBy', data:{
                     x:35, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:1/7, arcDistance:1.2,
-                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                 }},
                 {collection:'control', type:'dial_continuous_image', name:'ceiling', data:{
                     x:75, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2,
-                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                 }},
                 {collection:'control', type:'dial_continuous_image', name:'floor', data:{
                     x:75, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
-                    handleURL:unitStyle.imageStoreURL_localPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
                 }},
                 {collection:'control', type:'checkbox_image', name:'invert', data:{
                     x:5, y:35, width:10, height:20,
@@ -73,33 +74,33 @@ this['amplitude_modifier'] = function(name,x,y,angle){
             floor:-2,
             invert:false,
         };
-        const AM = new _canvas_.interface.circuit.amplitudeModifier(_canvas_.library.audio.context);
+        const amplitudeModifier = new _canvas_.interface.circuit.amplitudeModifier(_canvas_.library.audio.context);
 
     //wiring
         //hid
             object.elements.dial_continuous_image.offset.onchange = function(value){
-                AM.offset(value*2 - 1);
+                amplitudeModifier.offset(value*2 - 1);
                 state.offset = value*2 - 1;
             };
             object.elements.dial_continuous_image.divideBy.onchange = function(value){
-                AM.divisor(value*7 + 1);
+                amplitudeModifier.divisor(value*7 + 1);
                 state.divideBy = value*7 + 1;
             };
             object.elements.dial_continuous_image.ceiling.onchange = function(value){
-                AM.ceiling(value*2);
+                amplitudeModifier.ceiling(value*2);
                 state.ceiling = value*2;
             };
             object.elements.dial_continuous_image.floor.onchange = function(value){
-                AM.floor(-(1-value)*2);
+                amplitudeModifier.floor(-(1-value)*2);
                 state.floor = -(1-value)*2;
             };
             object.elements.checkbox_image.invert.onchange = function(value){
-                AM.invert(value);
+                amplitudeModifier.invert(value);
                 state.invert = value;
             };
         //io
-            object.io.audio.input.out().connect( AM.in() );
-            AM.out().connect(object.io.audio.output.in());
+            object.io.audio.input.out().connect( amplitudeModifier.in() );
+            amplitudeModifier.out().connect(object.io.audio.output.in());
 
     //interface
         object.i = {
@@ -136,13 +137,7 @@ this['amplitude_modifier'] = function(name,x,y,angle){
             object.elements.dial_continuous_image.floor.set( -data.floor/2 );
             object.elements.checkbox_image.invert.set( data.invert );
         };
-
-    //setup/tearDown
-        object.oncreate = function(){
-        };
-        object.ondelete = function(){
-        };
-
+        
     return object;
 };
 this['amplitude_modifier'].metadata = {

@@ -217,10 +217,21 @@ const render = new function(){
     //actual render
         function renderFrame(noClear=false){
             dev.log.render('::renderFrame(',noClear); //#development
-            if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
-            arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
-            const transferableImage = canvas.transferToImageBitmap();
-            interface.printToScreen(transferableImage);
+            function func(){
+                if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
+                arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
+                const transferableImage = canvas.transferToImageBitmap();
+                interface.printToScreen(transferableImage);
+            }
+
+            if( stats._active() ){
+                const startTime = (new Date()).getTime();
+                func();
+                const endTime = (new Date()).getTime();
+                stats.collectFrameTime( endTime - startTime );
+            }else{
+                func();
+            }
         }
         function animate(timestamp){
             dev.log.render('::animate(',timestamp); //#development
