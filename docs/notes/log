@@ -5,6 +5,11 @@
   - updated Harbinger's dsds so that the voltage input now controls volume
     instead of rate..it's not super great, but it does work
 
+  after some investigation, I think that the system would benefit from a
+  webASM core-engine, as it would remove all garbage collection being
+  processed, probably saving time. Also a lot of time seems to be spent doing
+  extremity calculations, which could be faster in webASM
+
 
 2020-01-30
   - more work on the new audioWorklet-based oscillator (I now have a nice
