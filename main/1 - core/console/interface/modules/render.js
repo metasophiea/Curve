@@ -3,6 +3,7 @@ this.render = new function(){
         clearColour:{r:1,g:1,b:1,a:1},
         frameRateLimit:30,
         active:false,
+        activeLimitToFrameRate:false,
     };
 
     this.refresh = function(){
@@ -31,8 +32,8 @@ this.render = new function(){
     };
     this.activeLimitToFrameRate = function(active){
         dev.log.interface('.render.activeLimitToFrameRate(',active); //#development
-        if(active == undefined){return cachedValues.active;}
-        cachedValues.active = active;
+        if(active == undefined){return cachedValues.activeLimitToFrameRate;}
+        cachedValues.activeLimitToFrameRate = active;
         return new Promise((resolve, reject) => {
             communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
         });

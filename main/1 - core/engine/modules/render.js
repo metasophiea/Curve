@@ -217,6 +217,7 @@ const render = new function(){
     //actual render
         function renderFrame(noClear=false){
             dev.log.render('::renderFrame(',noClear); //#development
+
             function func(){
                 if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
                 arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
@@ -255,7 +256,7 @@ const render = new function(){
                 }
 
             //perform stats collection
-                stats.collect(timestamp);
+                stats.collectFrameTimestamp(timestamp);
         }
         this.frame = function(noClear=false){
             dev.log.render('.frame(',noClear); //#development

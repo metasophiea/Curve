@@ -29,8 +29,8 @@ const stats = new function(){
         time:0,
     };
 
-    this.collect = function(timestamp){
-        dev.log.stats('.collect(',timestamp); //#development
+    this.collectFrameTimestamp = function(timestamp){
+        dev.log.stats('.collectFrameTimestamp(',timestamp); //#development
         //if stats are turned off, just bail
             if(!active){return;}
 

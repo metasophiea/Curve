@@ -70,6 +70,8 @@
                 
                 this.math = new function(){
                     this.averageArray = function(array){
+                        dev.log.math('.averageArray(',array); //#development
+                        dev.count('.math.averageArray'); //#development
                     
                         // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
                     
@@ -79,11 +81,15 @@
                         return sum/array.length;
                     };
                     this.averagePoint = function(points){
+                        dev.log.math('.averagePoint(',points); //#development
+                        dev.count('.math.averagePoint'); //#development
                     
                         const sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
                         return {x:sum.x/points.length,y:sum.y/points.length};
                     };
                     this.boundingBoxFromPoints = function(points){
+                        dev.log.math('.boundingBoxFromPoints(',points); //#development
+                        dev.count('.math.boundingBoxFromPoints'); //#development
                     
                         if(points.length == 0){
                             return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
@@ -138,6 +144,8 @@
                         };
                     };
                     this.cartesianAngleAdjust = function(x,y,angle){
+                        dev.log.math('.cartesianAngleAdjust(',x,y,angle); //#development
+                        dev.count('.math.cartesianAngleAdjust'); //#development
                     
                         // //v1    
                         //     if(angle == 0){ return {x:x,y:y}; }
@@ -155,10 +163,14 @@
                     };
                     this.convertColour = new function(){
                         this.obj2rgba = function(obj){
+                            dev.log.math('.convertColour.obj2rgbacartesianAngleAdjust(',obj); //#development
+                            dev.count('.math.convertColour.obj2rgba'); //#development
                     
                             return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
                         };
                         this.rgba2obj = function(rgba){
+                            dev.log.math('.convertColour.rgba2obj(',rgba); //#development
+                            dev.count('.convertColour.rgba2obj'); //#development
                     
                             rgba = rgba.split(',');
                             rgba[0] = rgba[0].replace('rgba(', '');
@@ -169,6 +181,8 @@
                     };
                     this.curveGenerator = new function(){
                         this.linear = function(stepCount=2, start=0, end=1){
+                            dev.log.math('.curveGenerator.linear(',stepCount,start,end); //#development
+                            dev.count('.math.curveGenerator.linear'); //#development
                     
                             stepCount = Math.abs(stepCount)-1;
                             const outputArray = [0];
@@ -185,6 +199,8 @@
                             return outputArray;
                         };
                         this.sin = function(stepCount=2, start=0, end=1){
+                            dev.log.math('.curveGenerator.sin(',stepCount,start,end); //#development
+                            dev.count('.math.curveGenerator.sin'); //#development
                     
                             stepCount = Math.abs(stepCount) -1;
                             let outputArray = [0];
@@ -203,6 +219,8 @@
                             return outputArray;		
                         };
                         this.cos = function(stepCount=2, start=0, end=1){
+                            dev.log.math('.curveGenerator.cos(',stepCount,start,end); //#development
+                            dev.count('.math.curveGenerator.cos'); //#development
                     
                             stepCount = Math.abs(stepCount) -1;
                             let outputArray = [0];
@@ -221,6 +239,8 @@
                             return outputArray;	
                         };
                         this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+                            dev.log.math('.curveGenerator.s(',stepCount,start,end,sharpness); //#development
+                            dev.count('.math.curveGenerator.s'); //#development
                     
                             if(sharpness == 0){sharpness = 1/1000000;}
                     
@@ -241,6 +261,8 @@
                             return outputArray;
                         };
                         this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
+                            dev.log.math('.curveGenerator.exponential(',stepCount,start,end,sharpness); //#development
+                            dev.count('.math.curveGenerator.exponential'); //#development
                     
                             stepCount = stepCount-1;
                             let outputArray = [];
@@ -261,18 +283,26 @@
                     };
                     this.curvePoint = new function(){
                         this.linear = function(x=0.5, start=0, end=1){
+                            dev.log.math('.curvePoint.linear(',x,start,end); //#development
+                            dev.count('.math.curvePoint.linear'); //#development
                     
                             return x *(end-start)+start;
                         };
                         this.sin = function(x=0.5, start=0, end=1){
+                            dev.log.math('.curvePoint.sin(',x,start,end); //#development
+                            dev.count('.math.curvePoint.sin'); //#development
                     
                             return Math.sin(Math.PI/2*x) *(end-start)+start;
                         };
                         this.cos = function(x=0.5, start=0, end=1){
+                            dev.log.math('.curvePoint.cos(',x,start,end); //#development
+                            dev.count('.math.curvePoint.cos'); //#development
                     
                             return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
                         };
                         this.s = function(x=0.5, start=0, end=1, sharpness=8){
+                            dev.log.math('.curvePoint.s(',x,start,end,sharpness); //#development
+                            dev.count('.math.curvePoint.s'); //#development
                     
                             const temp = library.math.normalizeStretchArray([
                                 1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
@@ -282,6 +312,8 @@
                             return temp[1] *(end-start)+start;
                         };
                         this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+                            dev.log.math('.curvePoint.exponential(',x,start,end,sharpness); //#development
+                            dev.count('.math.curvePoint.exponential'); //#development
                     
                             const temp = library.math.normalizeStretchArray([
                                 (Math.exp(sharpness*0)-1)/(Math.E-1),
@@ -292,6 +324,8 @@
                         };
                     };
                     this.getAngleOfTwoPoints = function(point_1,point_2){
+                        dev.log.math('.getAngleOfTwoPoints(',point_1,point_2); //#development
+                        dev.count('.math.getAngleOfTwoPoints'); //#development
                     
                         if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
                     
@@ -305,6 +339,8 @@
                         return angle;
                     };
                     this.getIndexOfSequence = function(array,sequence){ 
+                        dev.log.math('.getIndexOfSequence(',array,sequence); //#development
+                        dev.count('.math.getIndexOfSequence'); //#development
                     
                         function comp(thing_A,thing_B){
                             const keys = Object.keys(thing_A);
@@ -336,6 +372,8 @@
                         return undefined;
                     };
                     this.largestValueFound = function(array){
+                        dev.log.math('.largestValueFound(',array); //#development
+                        dev.count('.math.largestValueFound'); //#development
                     
                         if(array.length == 0){return undefined;}
                         return array.reduce(function(max,current){
@@ -343,6 +381,8 @@
                         });
                     };
                     this.normalizeStretchArray = function(array){
+                        dev.log.math('.normalizeStretchArray(',array); //#development
+                        dev.count('.math.normalizeStretchArray'); //#development
                     
                         //discover the largest number
                             const biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
@@ -359,12 +399,16 @@
                         return array;
                     };
                     this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+                        dev.log.math('.relativeDistance(',realLength,start,end,d,allowOverflow); //#development
+                        dev.count('.math.relativeDistance'); //#development
                     
                         const mux = (d - start)/(end - start);
                         if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
                         return mux*realLength;
                     };
                     this.seconds2time = function(seconds){
+                        dev.log.math('.seconds2time(',seconds); //#development
+                        dev.count('.math.seconds2time'); //#development
                     
                         const result = {h:0, m:0, s:0, ms:0, µs:0, ns:0, ps:0, fs:0};
                         
@@ -402,9 +446,13 @@
                     };
                     
                     this.distanceBetweenTwoPoints = function(point_a,point_b){
+                        dev.log.math('.distanceBetweenTwoPoints(',point_a,point_b); //#development
+                        dev.count('.math.distanceBetweenTwoPoints'); //#development
                         return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
                     };
                     this.cartesian2polar = function(x,y){
+                        dev.log.math('.cartesian2polar(',x,y); //#development
+                        dev.count('.math.cartesian2polar'); //#development
                     
                         const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5);
                         let ang = 0;
@@ -423,11 +471,15 @@
                         return {'dis':dis,'ang':ang};
                     };
                     this.polar2cartesian = function(angle,distance){
+                        dev.log.math('.polar2cartesian(',angle,distance); //#development
+                        dev.count('.math.polar2cartesian'); //#development
                     
                         return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
                     };
                     
                     this.blendColours = function(rgba_1,rgba_2,ratio){
+                        dev.log.math('.blendColours(',rgba_1,rgba_2,ratio); //#development
+                        dev.count('.math.blendColours'); //#development
                     
                         return {
                             r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
@@ -437,6 +489,8 @@
                         };           
                     };
                     this.multiBlendColours = function(rgbaList,ratio){
+                        dev.log.math('.multiBlendColours(',rgbaList,ratio); //#development
+                        dev.count('.math.multiBlendColours'); //#development
                     
                         //special cases
                             if(ratio == 0){return rgbaList[0];}
@@ -449,6 +503,8 @@
                     
                     
                     this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+                        dev.log.math('.polygonToSubTriangles(',regions,inputFormat); //#development
+                        dev.count('.math.polygonToSubTriangles'); //#development
                     
                         if(inputFormat == 'flatArray'){
                             const tmp = [];
@@ -463,6 +519,8 @@
                         return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
                     };
                     this.unionPolygons = function(polygon1,polygon2){
+                        dev.log.math('.unionPolygons(',polygon1,polygon2); //#development
+                        dev.count('.math.unionPolygons'); //#development
                     
                         //martinez (not working)
                         // for(let a = 0; a < polygon1.length; a++){
@@ -486,6 +544,8 @@
                     }
                     this.detectIntersect = new function(){
                         this.boundingBoxes = function(box_a, box_b){
+                            dev.log.math('.detectIntersect.boundingBoxes(',box_a,box_b); //#development
+                            dev.count('.math.detectIntersect.boundingBoxes'); //#development
                     
                             return box_a.bottomRight.y >= box_b.topLeft.y && 
                                 box_a.bottomRight.x >= box_b.topLeft.x && 
@@ -494,12 +554,16 @@
                         };
                     
                         this.pointWithinBoundingBox = function(point,box){
+                            dev.log.math('.detectIntersect.pointWithinBoundingBox(',point,box); //#development
+                            dev.count('.math.detectIntersect.pointWithinBoundingBox'); //#development
                             return !(
                                 point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
                                 point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
                             );
                         };
                         this.pointOnLine = function(point,line){
+                            dev.log.math('.detectIntersect.pointOnLine(',point,line); //#development
+                            dev.count('.math.detectIntersect.pointOnLine'); //#development
                             
                             if( 
                                 point.x < line[0].x && point.x < line[1].x ||
@@ -520,6 +584,8 @@
                             return ((line[1].y - line[0].y) / (line[1].x - line[0].x))*(point.x - line[0].x) + line[0].y - point.y == 0;
                         }
                         this.pointWithinPoly = function(point,poly){
+                            dev.log.math('.detectIntersect.pointWithinPoly(',point,poly.points); //#development
+                            dev.count('.math.detectIntersect.pointWithinPoly'); //#development
                     
                             if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
                             if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints([point]), poly.boundingBox ) ){ return 'outside'; }
@@ -529,24 +595,29 @@
                             //check if the point is on a point of the poly; bail and return 'onPoint'
                             for(let a = 0; a < poly.points.length; a++){
                                 if( point.x == poly.points[a].x && point.y == poly.points[a].y ){
+                                    dev.log.math('.detectIntersect.pointWithinPoly -> point on a poly ',a,':',poly.points[a]); //#development
                                     return 'onPoint';
                                 }
                             }
                     
                             function pointLevelWithPolyPointChecker(poly,point,a,b){
+                                dev.log.math('.detectIntersect.pointWithinPoly::pointLevelWithPolyPointChecker(',poly,point,a,b); //#development
                                 //only flip, if the point is not perfectly level with point a of the line 
                                 //or if you can prove that the a's two adjacent points are higher and lower than the matching point's level
                                 //(the system will come round to having this same point be point b)
                                 if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
                                     return true;
                                 }else if(poly.points[a].y == point.y){
+                                    dev.log.math('.detectIntersect.pointWithinPoly -> point is perfectly level with a point on the poly (line point a)'); //#development
                                     const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
                                     const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
                                     if(
                                         poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
                                         poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
                                     ){
+                                        dev.log.math('.detectIntersect.pointWithinPoly -> all above or all below; no need for a flip'); //#development
                                     }else{
+                                        dev.log.math('.detectIntersect.pointWithinPoly -> crossing fround; time for a flip'); //#development
                                         return true;
                                     }
                                 }
@@ -557,20 +628,24 @@
                             //Ray casting algorithm
                             let inside = false;
                             for(let a = 0, b = poly.points.length - 1; a < poly.points.length; b = a++){
+                                dev.log.math('.detectIntersect.pointWithinPoly -> point:',point,'poly.points[a]:',poly.points[a],'poly.points[b]:',poly.points[b]); //#development
                     
                                 //point must be on the same level of the line
                                 if( (poly.points[b].y >= point.y && poly.points[a].y <= point.y) || (poly.points[a].y >= point.y && poly.points[b].y <= point.y) ){
                                     //discover if the point is on the far right of the line
                                     if( poly.points[a].x < point.x && poly.points[b].x < point.x ){
+                                        dev.log.math('.detectIntersect.pointWithinPoly -> point is on far right of line'); //#development
                                         //only flip if the line is not perfectly level (which would make the ray skirt the line)
                                         if( poly.points[a].y != poly.points[b].y ){
                                             if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
                                                 inside = !inside;
+                                                dev.log.math('.detectIntersect.pointWithinPoly -> flip (',inside,')'); //#development
                                             }
                                         }
                     
                                     //discover if the point is on the far left of the line, skip it if so
                                     }else if( poly.points[a].x > point.x && poly.points[b].x > point.x ){
+                                        dev.log.math('.detectIntersect.pointWithinPoly -> point is on far left of line'); //#development
                                         continue;
                                     }else{
                                         //calculate what side of the line this point is
@@ -586,22 +661,28 @@
                                             }
                     
                                         //if its on the line, return 'onEdge' immediately, if it's above 1 do a flip
+                                            dev.log.math('.detectIntersect.pointWithinPoly -> areaLocation:',areaLocation); //#development
                                             if( areaLocation == 1 || isNaN(areaLocation) ){
                                                 return 'onEdge';
                                             }else if(areaLocation > 1){
                                                 if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
                                                     inside = !inside;
+                                                    dev.log.math('.detectIntersect.pointWithinPoly -> flip (',inside,')'); //#development
                                                 }
                                             }
                                     }
                                 }else{
+                                    dev.log.math('.detectIntersect.pointWithinPoly -> point is not on the same level as the line'); //#development
                                 }
                             }
                     
+                            dev.log.math('.detectIntersect.pointWithinPoly -> inside:',inside); //#development
                             return inside ? 'inside' : 'outside';
                         };
                     
                         this.lineOnLine = function(segment1,segment2){
+                            dev.log.math('.detectIntersect.lineOnLine(',segment1,segment2); //#development
+                            dev.count('.math.detectIntersect.lineOnLine'); //#development
                     
                             if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(segment1), library.math.boundingBoxFromPoints(segment2) ) ){
                                 return {x:undefined, y:undefined, intersect:false, contact:false};
@@ -612,19 +693,23 @@
                                 (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
                                 (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
                             ){
+                                dev.log.math('.detectIntersect.lineOnLine -> identical segments'); //#development
                                 return {x:undefined, y:undefined, intersect:false, contact:true};
                             }
                                 
                             //point on point
                             if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
+                                dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[0]:',segment1[0]); //#development
                                 return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
                             }
                             if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
+                                dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[1]:',segment1[1]); //#development
                                 return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
                             }
                     
                             //calculate denominator
                             const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+                            dev.log.math('.detectIntersect.lineOnLine -> denominator:',denominator); //#development
                             if(denominator == 0){
                                 const points = [];
                                 const output = {x1:undefined, y1:undefined, x2:undefined, y2:undefined, intersect:false, contact:true};
@@ -684,6 +769,8 @@
                             };
                         };
                         this.lineOnPoly = function(line,poly){
+                            dev.log.math('.detectIntersect.lineOnPoly(',line,poly); //#development
+                            dev.count('.math.detectIntersect.lineOnPoly'); //#development
                     
                             if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
                             if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(line), poly.boundingBox ) ){
@@ -696,8 +783,11 @@
                                 return 0;
                             }
                             function huntForIntersection(line,polyPoints){
+                                dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection(',line,polyPoints); //#development
                                 for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
+                                    dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> line:',line,'polyPoints[a]:',polyPoints[a],'polyPoints[b]:',polyPoints[b]); //#development
                                     const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
+                                    dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> result:',result); //#development
                                     if(result.contact){
                                         output.contact = true;
                                         if(result.intersect){
@@ -705,6 +795,7 @@
                                         }
                     
                                         if( result.x != undefined && (result.x != line[0].x && result.x != line[1].x) ){
+                                            dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> odd contact'); //#development
                                             output.intersect = true;
                                         }
                     
@@ -727,6 +818,7 @@
                                 }
                     
                                 //situation where the line passes perfectly through a point on the poly
+                                dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> output.points.length:',output.points.length); //#development
                                 if(output.points.length == 0){
                                     for(let a = 0; a < poly.points.length; a++){
                                         if( poly.points[a].x != line[0].x && poly.points[a].y != line[0].y && poly.points[a].x != line[1].x && poly.points[a].y != line[1].y){
@@ -742,6 +834,7 @@
                             const output = { points:[], contact:false, intersect:false };
                             const point_a = library.math.detectIntersect.pointWithinPoly(line[0],poly);
                             const point_b = library.math.detectIntersect.pointWithinPoly(line[1],poly);
+                            dev.log.math('.detectIntersect.lineOnPoly -> point_a:',point_a,'point_b:',point_b); //#development
                     
                             let dir = 0;
                             if( oneWhileTheOtherIs(point_a,point_b,'outside','outside') ){
@@ -799,21 +892,28 @@
                                 output.contact = false;
                             }
                             
+                            dev.log.math('.detectIntersect.lineOnPoly -> output:',output); //#development
                             return output;
                         };
                     
                         this.polyOnPoly = function(poly_a,poly_b){
+                            dev.log.math('.detectIntersect.polyOnPoly(',poly_a,poly_b); //#development
+                            dev.count('.math.detectIntersect.polyOnPoly'); //#development
                     
                             if(poly_a.boundingBox == undefined){ 
+                                dev.log.math('.detectIntersect.polyOnPoly -> poly_a boundingBox not found, generating...'); //#development
                                 poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points);
                             }
                             if(poly_b.boundingBox == undefined){ 
+                                dev.log.math('.detectIntersect.polyOnPoly -> poly_b boundingBox not found, generating...'); //#development
                                 poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points);
                             }
                             if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
+                                dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s are totally seperate!'); //#development
                                 return { points:[], intersect:false, contact:false };
                             }
                     
+                            dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s do collide, proceeding with search'); //#development
                     
                             const results = {
                                 points:[],
@@ -828,16 +928,20 @@
                                     if(index != -1){sudo_poly_a_points.splice(index, 1);}
                                 });
                                 if(sudo_poly_a_points.length == 0){
+                                    dev.log.math('.detectIntersect.polyOnPoly -> these two polys are exactly the same'); //#development
                                     return {
                                         points:Object.assign([],poly_a.points),
                                         contact:true,
                                         intersect:true,
                                     };
                                 }
+                                dev.log.math('.detectIntersect.polyOnPoly -> these two polys are not exactly the same (though they do share '+(poly_a.points.length-sudo_poly_a_points.length)+' of the same points)'); //#development
                     
                             //find all side intersection points
                                 for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
+                                    dev.log.math('.detectIntersect.polyOnPoly -> testing line on poly:',[poly_a.points[a_a],poly_a.points[a_b]],poly_b); //#development
                                     const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
+                                    dev.log.math('.detectIntersect.polyOnPoly -> lineOnPoly-results:',tmp); //#development
                     
                                     results.points = results.points.concat(
                                         tmp.points.filter(point => results.points.find(item => item.x == point.x && item.y == point.y ) == undefined )
@@ -846,6 +950,7 @@
                                     results.contact = results.contact || tmp.contact;
                                     results.intersect = results.intersect || tmp.intersect;
                                 }
+                                dev.log.math('.detectIntersect.polyOnPoly -> results:',results); //#development
                         
                             //check if poly_a is totally inside poly_b (if necessary)
                                 for(let a = 0; a < poly_b.points.length; a++){
@@ -860,9 +965,11 @@
                     };
                     this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
                         dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
+                        dev.count('.math.pathExtrapolation'); //#development
                     
                         function loopThisPath(path){
                             dev.log.math('.pathExtrapolation::loopThisPath(',path);
+                            dev.count('.math.pathExtrapolation::loopThisPath'); //#development
                         
                             const joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
                             let loopingPath = [];
@@ -878,6 +985,7 @@
                         }
                         function calculateJointData(path,thickness){
                             dev.log.math('.pathExtrapolation::calculateJointData(',path,thickness);
+                            dev.count('.math.pathExtrapolation::calculateJointData'); //#development
                         
                             const jointData = [];
                             //parse path
@@ -908,6 +1016,7 @@
                         }
                         function path_to_rectangleSeries(path,thickness){
                             dev.log.math('.pathExtrapolation::path_to_rectangleSeries(',path,thickness);
+                            dev.count('.math.pathExtrapolation::path_to_rectangleSeries'); //#development
                         
                             let outputPoints = [];
                             for(let a = 1; a < path.length/2; a++){
@@ -927,6 +1036,8 @@
                         }
                     
                         function flatJoints(jointData,thickness){
+                            dev.log.math('.pathExtrapolation::flatJoints(',jointData,thickness); //#development
+                            dev.count('.math.pathExtrapolation::flatJoints'); //#development
                         
                             const polygons = [];
                     
@@ -958,6 +1069,8 @@
                             return polygons;
                         }
                         function roundJoints(jointData,thickness,detail=5){
+                            dev.log.math('.pathExtrapolation::roundJoints(',jointData,thickness,detail); //#development
+                            dev.count('.math.pathExtrapolation::roundJoints'); //#development
                         
                             const polygons = [];
                             if(detail < 1){detail = 1;}
@@ -1007,6 +1120,8 @@
                             return polygons;
                         }
                         function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
+                            dev.log.math('.pathExtrapolation::sharpJoints(',jointData,thickness,sharpLimit); //#development
+                            dev.count('.math.pathExtrapolation::sharpJoints'); //#development
                         
                             const polygons = [];
                     
@@ -1066,6 +1181,8 @@
                         }
                     
                         function roundCaps(jointData,thickness,detail=5){
+                            dev.log.math('.pathExtrapolation::roundCaps(',jointData,thickness,detail); //#development
+                            dev.count('.math.pathExtrapolation::roundCaps'); //#development
                         
                             if(detail < 1){detail = 1;}
                     
@@ -1111,12 +1228,17 @@
 
                     this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},returnPathData=false){
                         dev.log.math('.fitPolyIn(',freshPoly,environmentPolys,snapping);
+                        dev.count('.math.fitPolyIn'); //#development
                     
                         function applyOffsetToPoints(offset,points){
+                            dev.log.math('.fitPolyIn::applyOffsetToPoints(',offset,points); //#development
+                            dev.count('.math.fitPolyIn::applyOffsetToPoints'); //#development
                         
                             return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
                         };
                         function applyOffsetToPolygon(offset,poly){
+                            dev.log.math('.fitPolyIn::applyOffsetToPolygon(',offset,poly); //#development
+                            dev.count('.math.fitPolyIn::applyOffsetToPolygon'); //#development
                         
                             const newPolygon = { points: applyOffsetToPoints(offset,poly.points), boundingBox:{} };
                             newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
@@ -1259,6 +1381,7 @@
                         return returnPathData ? {offset:offset,paths:paths} : offset;
                     };
                     this.polygonsToVisibilityGraph = function(polys){
+                        dev.log.math('.polygonsToVisibilityGraph(',polys); //#development
                         const graph = polys.flatMap((poly,polyIndex) => {
                             return poly.points.map((point,pointIndex) => ({
                                 polyIndex:polyIndex,
@@ -1283,11 +1406,14 @@
                                 //convert for convenience
                                 const point_source = polys[graphPoint_source.polyIndex].points[graphPoint_source.pointIndex];
                                 const point_destination = polys[graphPoint_destination.polyIndex].points[graphPoint_destination.pointIndex];
+                                dev.log.math('.polygonsToVisibilityGraph -> point_source:',point_source,'point_destination:',point_destination); //#development
                     
                                 //scan route
                                 let addRoute = true;
                                 for(let a = 0; a < polys.length; a++){
+                                    dev.log.math('.polygonsToVisibilityGraph -> testing polygon:',a,':',polys[a]); //#development
                                     const result = library.math.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a] );
+                                    dev.log.math('.polygonsToVisibilityGraph -> result:',result); //#development
                                     if( result.intersect ){
                                         addRoute = false;
                                         break;
@@ -1295,6 +1421,7 @@
                                 }
                     
                                 //if route is valid, add to graph
+                                dev.log.math('.polygonsToVisibilityGraph -> addRoute:',addRoute); //#development
                                 if(addRoute){
                                     const distance = library.math.distanceBetweenTwoPoints(point_source,point_destination);
                     
@@ -1324,6 +1451,7 @@
                         return graph;
                     };
                     this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
+                        dev.log.math('.shortestRouteFromVisibilityGraph(',visibilityGraph,start,end); //#development
                     
                         //if the starting location or ending location are totally inaccessible, bail on this whole thing
                         //though return the point (if any) that was ok
@@ -1352,6 +1480,7 @@
                         //(don't forget to set the current location's distance to zero)
                             const locationSet = Object.keys(visibilityGraph).map( () => ({ distance:Infinity, visited:false, route:'' }) );
                             locationSet[current].distance = 0;
+                            dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#developments
                     
                         //loop through locations, until the end location has been visited
                             let limit = 100;
@@ -1359,6 +1488,7 @@
                                 if(limit <= 0){console.error('.shortestRouteFromVisibilityGraph has encountered an overflow'); break;}
                                 limit--;
                     
+                                dev.log.math('.shortestRouteFromVisibilityGraph -> current:',current); //#development
                     
                                 //update unvisited distance values
                                     for(let a = 0; a < visibilityGraph[current].destination.length; a++){
@@ -1386,6 +1516,7 @@
                                         }
                                     });
                             }while( !locationSet[end].visited )
+                            dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#development
                         
                         //go back through the location set to discover the shortest route
                             let route = [];
@@ -1440,6 +1571,8 @@
                 };
                 this.structure = new function(){
                     this.functionListRunner = function(list,activeKeys){
+                        dev.log.structure('.functionListRunner(',list,activeKeys); //#development
+                        dev.count('.structure.functionListRunner'); //#development
                     
                         //function builder for working with the 'functionList' format
                     
@@ -1468,6 +1601,8 @@
                     };
                     
                     this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
+                        dev.log.structure('.signalRegistry(',rightLimit,bottomLimit,signalLengthLimit); //#development
+                        dev.count('.structure.signalRegistry'); //#development
                     
                         let signals = [];
                         let selectedSignals = [];
@@ -1477,6 +1612,8 @@
                         let positions = [];
                     
                         this.__dump = function(){
+                            dev.log.structure('.signalRegistry.__dump()'); //#development
+                            dev.count('.structure.signalRegistry.__dump'); //#development
                         
                             console.log('---- signalRegistry dump ----');
                     
@@ -1513,6 +1650,8 @@
                         };
                     
                         this.export = function(){
+                            dev.log.structure('.signalRegistry.export()'); //#development
+                            dev.count('.structure.signalRegistry.export'); //#development
                         
                             return JSON.parse(JSON.stringify(
                                 {
@@ -1526,6 +1665,8 @@
                             ));
                         };
                         this.import = function(data){
+                            dev.log.structure('.signalRegistry.import(',data); //#development
+                            dev.count('.structure.signalRegistry.import'); //#development
                         
                             signals =           JSON.parse(JSON.stringify(data.signals));
                             selectedSignals =   JSON.parse(JSON.stringify(data.selectedSignals));
@@ -1536,19 +1677,27 @@
                         };
                     
                         this.getAllSignals = function(){ 
+                            dev.log.structure('.signalRegistry.getAllSignals()'); //#development
+                            dev.count('.structure.signalRegistry.getAllSignals'); //#development
                         
                             return JSON.parse(JSON.stringify(signals));
                         };
                         this.getAllEvents = function(){ 
+                            dev.log.structure('.signalRegistry.getAllEvents()'); //#development
+                            dev.count('.structure.signalRegistry.getAllEvents'); //#development
                         
                             return JSON.parse(JSON.stringify(events));
                         };
                         this.getSignal = function(id){
+                            dev.log.structure('.signalRegistry.getSignal(',id); //#development
+                            dev.count('.structure.signalRegistry.getSignal'); //#development
                         
                             if( signals[id] == undefined ){return;}
                             return JSON.parse(JSON.stringify(signals[id]));
                         };
                         this.eventsBetween = function(start,end){
+                            dev.log.structure('.signalRegistry.eventsBetween(',start,end); //#development
+                            dev.count('.structure.signalRegistry.eventsBetween'); //#development
                         
                             //depending on whether theres an end position or not; get all the events positions that 
                             //lie on the start positions, or get all the events that how positions which lie between
@@ -1575,6 +1724,8 @@
                             });
                         };
                         this.add = function(data,forceID){
+                            dev.log.structure('.signalRegistry.add(',data,forceID); //#development
+                            dev.count('.structure.signalRegistry.add'); //#development
                         
                             //clean up data
                                 if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
@@ -1633,6 +1784,8 @@
                             return newID;
                         };
                         this.remove = function(id){
+                            dev.log.structure('.signalRegistry.remove(',id); //#development
+                            dev.count('.structure.signalRegistry.remove'); //#development
                         
                             if( signals[id] == undefined ){return;}
                     
@@ -1649,6 +1802,8 @@
                             delete events_byID[id];
                         };
                         this.update = function(id,data){
+                            dev.log.structure('.signalRegistry.update(',id,data); //#development
+                            dev.count('.structure.signalRegistry.update'); //#development
                         
                             //clean input
                                 if(data == undefined){return;}
@@ -1678,6 +1833,8 @@
                             this.add(data,id);
                         };
                         this.reset = function(){
+                            dev.log.structure('.signalRegistry.reset()'); //#development
+                            dev.count('.structure.signalRegistry.reset'); //#development
                         
                             signals = [];
                             selectedSignals = [];
@@ -1690,15 +1847,21 @@
                 };
                 this.font = new function(){
                     this.listAllAvailableGlyphs = function(fontFileData){
+                        dev.log.font('.listAllAvailableGlyphs(',fontFileData); //#development
+                        dev.count('.font.listAllAvailableGlyphs'); //#development
                     
                         const font = this.decodeFont(fontFileData);
                         return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                     };
                     this.decodeFont = function(fontFileData){
+                        dev.log.font('.decodeFont(',fontFileData); //#development
+                        dev.count('.font.decodeFont'); //#development
                     
                         return _thirdparty.opentype.parse(fontFileData);
                     };
                     this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
+                        dev.log.font('.getAllAvailableGlyphDrawingPaths(',font,reducedGlyphSet); //#development
+                        dev.count('.font.getAllAvailableGlyphDrawingPaths'); //#development
                     
                         const glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                         const paths = glyphs.map( a => font.getPath(a,0,0,1) );
@@ -1711,6 +1874,8 @@
                         return outputData;
                     };
                     this.convertPathToPoints = function(path,detail=2){
+                        dev.log.font('.convertPathToPoints(',path,detail); //#development
+                        dev.count('.font.convertPathToPoints'); //#development
                     
                         let output = [];
                         let currentPoints = [];
@@ -1754,6 +1919,8 @@
                         return output;
                     };
                     this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
+                        dev.log.font('.getTrianglesFromGlyphPath(',glyphPath,detail); //#development
+                        dev.count('.font.getTrianglesFromGlyphPath'); //#development
                     
                         //input checking
                             if(glyphPath.length == 0){return [];}
@@ -1804,6 +1971,8 @@
                             return segments.flatMap(segment => library.math.polygonToSubTriangles(segment.regions) );
                     };
                     this.extractGlyphs = function(fontFileData,reducedGlyphSet){
+                        dev.log.font('.extractGlyphs(',fontFileData,reducedGlyphSet); //#development
+                        dev.count('.font.extractGlyphs'); //#development
                     
                         //decode font data
                             const font = library.font.decodeFont(fontFileData);
@@ -2901,12 +3070,16 @@
                     
                     
                     this.getLoadableFonts = function(){ 
+                        dev.log.font('.getLoadableFonts()'); //#development
+                        dev.count('.font.getLoadableFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
                         const loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
                         return defaultFontNames.concat(loadableFontNames);
                     };
                     this.getLoadedFonts = function(){
+                        dev.log.font('.getLoadedFonts()'); //#development
+                        dev.count('.font.getLoadedFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
                         const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
@@ -2914,20 +3087,28 @@
                     };
                     
                     this.isApprovedFont = function(fontName){
+                        dev.log.font('.isApprovedFont(',fontName); //#development
+                        dev.count('.font.isApprovedFont'); //#development
                     
                         return vectorLibrary[fontName] != undefined;
                     };
                     this.isFontLoaded = function(fontName){
+                        dev.log.font('.isFontLoaded(',fontName); //#development
+                        dev.count('.font.isFontLoaded'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
                         return vectorLibrary[fontName].isLoaded;
                     }
                     this.fontLoadAttempted = function(fontName){
+                        dev.log.font('.fontLoadAttempted(',fontName); //#development
+                        dev.count('.font.fontLoadAttempted'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
                         return vectorLibrary[fontName].loadAttempted;
                     }
                     this.loadFont = function(fontName,onLoaded=()=>{}){
+                        dev.log.font('.loadFont(',fontName,onLoaded); //#development
+                        dev.count('.font.loadFont'); //#development
                     
                         if(vectorLibrary[fontName] == undefined){ console.warn('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
                     
@@ -2965,6 +3146,8 @@
                 };
                 this.misc = new function(){
                     this.padString = function(string,length,padding=' ',paddingSide='l'){
+                        dev.log.misc('.padString(',string,length,padding,paddingSide); //#development
+                        dev.count('.misc.padString'); //#development
                     
                         if(padding.length<1){return string;}
                         string = ''+string;
@@ -2978,14 +3161,20 @@
                         return string;
                     };
                     this.compressString = function(string){
+                        dev.log.misc('.compressString(',string); //#development
+                        dev.count('.misc.compressString'); //#development
                     
                         return _thirdparty.lzString.compress(string);
                     };
                     this.decompressString = function(string){
+                        dev.log.misc('.decompressString(',string); //#development
+                        dev.count('.misc.decompressString'); //#development
                     
                         return _thirdparty.lzString.decompress(string);
                     };
                     this.serialize = function(data,compress=true){
+                        dev.log.misc('.serialize(',data,compress); //#development
+                        dev.count('.misc.serialize'); //#development
                     
                         function getType(obj){
                             return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -3022,6 +3211,8 @@
                         return data;
                     };
                     this.unserialize = function(data,compressed=true){
+                        dev.log.misc('.unserialize(',data,compressed); //#development
+                        dev.count('.misc.unserialize'); //#development
                     
                         if(data === undefined){return undefined;}
                     
@@ -3064,12 +3255,16 @@
                         });
                     };
                     this.packData = function(data,compress=true){
+                        dev.log.misc('.packData(',data,compress); //#development
+                        dev.count('.misc.packData'); //#development
                         return library.misc.serialize({ 
                             compressed:compress, 
                             data:library.misc.serialize(data,compress)
                         },false);
                     };
                     this.unpackData = function(data){
+                        dev.log.misc('.unpackData(',data); //#development
+                        dev.count('.misc.unpackData'); //#development
                     
                         //deserialize first layer
                             try{
@@ -3095,17 +3290,21 @@
                         return data;
                     };
                     this.openFile = function(callback,readAsType='readAsBinaryString',fileType){
+                        dev.log.misc('.openFile(',callback,readAsType); //#development
+                        dev.count('.misc.openFile'); //#development
                     
                         const i = document.createElement('input');
                         i.type = 'file';
                         i.accept = fileType;
                         i.onchange = function(){
+                            dev.log.misc('.openFile::onchange()'); //#development
                             const f = new FileReader();
                             switch(readAsType){
                                 case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
                                 case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
                             }
                             f.onloadend = function(){ 
+                                dev.log.misc('.openFile::onloadend()'); //#development
                                 if(callback){callback(f.result,i.files[0]);}
                             }
                         };
@@ -3115,6 +3314,8 @@
                         setTimeout(() => {document.body.removeChild(i);},1000);
                     };
                     this.printFile = function(filename,data){
+                        dev.log.misc('.printFile(',filename,data); //#development
+                        dev.count('.misc.printFile'); //#development
                     
                         const a = document.createElement('a');
                         a.href = URL.createObjectURL(new Blob([data]));
@@ -3122,6 +3323,8 @@
                         a.click();
                     };
                     this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
+                        dev.log.misc('.loadFileFromURL(',URL,callback,responseType,errorCallback); //#development
+                        dev.count('.misc.loadFileFromURL'); //#development
                     
                         //responseType: text / arraybuffer / blob / document / json 
                     
@@ -3138,6 +3341,8 @@
                         xhttp.send();
                     };
                     this.argumentsToArray = function(argumentsObject){
+                        dev.log.misc('.argumentsToArray(',argumentsObject); //#development
+                        dev.count('.misc.argumentsToArray'); //#development
                         const outputArray = [];
                         for(let a = 0; a < argumentsObject.length; a++){
                             outputArray.push( argumentsObject[a] );
@@ -3145,6 +3350,8 @@
                         return outputArray;
                     };
                     this.comparer = function(item1,item2){
+                        dev.log.misc('.comparer(',item1,item2); //#development
+                        dev.count('.misc.comparer'); //#development
                         function getType(obj){
                             return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
                         }
@@ -3185,16 +3392,22 @@
                         return false;
                     };
                     this.removeThisFromThatArray = function(item,array){
+                        dev.log.misc('.removeThisFromThatArray(',item,array); //#development
+                        dev.count('.misc.removeThisFromThatArray'); //#development
                         const index = array.findIndex(a => library.misc.comparer(a,item))
                         if(index == -1){return;}
                         return array.splice(index,1);
                     };
                     this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+                        dev.log.misc('.removeTheseElementsFromThatArray(',theseElements,thatArray); //#development
+                        dev.count('.misc.removeTheseElementsFromThatArray'); //#development
                     
                         theseElements.forEach(a => library.misc.removeThisFromThatArray(a,thatArray) );
                         return thatArray;
                     };
                     this.getDifferenceOfArrays = function(array_a,array_b){
+                        dev.log.misc('.getDifferenceOfArrays(',array_a,array_b); //#development
+                        dev.count('.misc.getDifferenceOfArrays'); //#development
                     
                         if(array_a.length == 0 && array_b.length == 0){
                             return {a:[],b:[]};
@@ -3231,6 +3444,8 @@
                         this.destination.connect(this.context.destination);
                         this.destination._gain = 1;
                         this.destination.masterGain = function(value){
+                            dev.log.audio('.masterGain(',value); //#development
+                            dev.count('.audio.masterGain'); //#development
                     
                             if(value == undefined){return this.destination._gain;}
                             this._gain = value;
@@ -3290,32 +3505,46 @@
                     
                     //lead functions
                         this.num2name = function(num){ 
+                            dev.log.audio('.num2name(',num); //#development
+                            dev.count('.audio.num2name'); //#development
                     
                             return this.midinumbers_names[num];
                         };
                         this.num2freq = function(num){ 
+                            dev.log.audio('.num2freq(',num); //#development
+                            dev.count('.audio.num2freq'); //#development
                     
                             return this.names_frequencies[this.midinumbers_names[num]];
                         };
                     
                         this.name2num = function(name){ 
+                            dev.log.audio('.name2num(',name); //#development
+                            dev.count('.audio.name2num'); //#development
                     
                             return this.names_midinumbers[name];
                         };
                         this.name2freq = function(name){ 
+                            dev.log.audio('.name2freq(',name); //#development
+                            dev.count('.audio.name2freq'); //#development
                     
                             return this.names_frequencies[name];
                         };
                     
                         this.freq2num = function(freq){ 
+                            dev.log.audio('.freq2num(',freq); //#development
+                            dev.count('.audio.freq2num'); //#development
                     
                             return this.names_midinumbers[this.frequencies_names[freq]];
                         };
                         this.freq2name = function(freq){ 
+                            dev.log.audio('.freq2name(',freq); //#development
+                            dev.count('.audio.freq2name'); //#development
                     
                             return this.frequencies_names[freq];
                         };
                     this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+                        dev.log.audio('.changeAudioParam(',context,audioParam,target,time,curve,cancelScheduledValues); //#development
+                        dev.count('.audio.changeAudioParam'); //#development
                     
                         if(target==null){return audioParam.value;}
                     
@@ -3351,8 +3580,11 @@
                     };
                     const loadedAudioFiles = {};
                     this.loadAudioFile = function(callback,type='file',url='',errorCallback,forceRequest=false){
+                        dev.log.audio('.loadAudioFile(',callback,type,url); //#development
+                        dev.count('.audio.loadAudioFile'); //#development
                     
                         if(callback == undefined){
+                            dev.log.audio('.loadAudioFile -> no callback provided; result has nowhere to go, so it will not be done'); //#development
                             return;
                         }
                     
@@ -3388,6 +3620,8 @@
                         }
                     };
                     this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
+                        dev.log.audio('.waveformSegment(',audioBuffer,bounds,resolution); //#development
+                        dev.count('.audio.waveformSegment'); //#development
                     
                         const waveform = audioBuffer.getChannelData(0);
                         // const channelCount = audioBuffer.numberOfChannels;
@@ -3410,6 +3644,8 @@
                         return outputArray;
                     };
                     this.loadBuffer = function(context, data, destination, onended){
+                        dev.log.audio('.loadBuffer(',context,data,destination,onended); //#development
+                        dev.count('.audio.loadBuffer'); //#development
                     
                         const temp = context.createBufferSource();
                         temp.buffer = data;
@@ -3419,7 +3655,10 @@
                     };
                     this.audioWorklet = new function(){
                         function checkIfReady(){
+                            dev.log.audio('.AudioWorklet::checkIfReady()'); //#development
+                            dev.log.audio('.AudioWorklet::checkIfReady -> worklets.length:',worklets.length); //#development
                             if(worklets.length == 0){return true;}
+                            dev.log.audio('.AudioWorklet::checkIfReady -> worklets.map(a => a.loaded):',worklets.map(a => a.loaded) ); //#development
                             return worklets.map(a => a.loaded).reduce((rolling,current) => {return rolling && current;});
                         };
                         this.checkIfReady = function(){ return checkIfReady(); };
@@ -4228,9 +4467,11 @@
                         ];
                             
                         worklets.forEach(worklet => {
+                            dev.log.audio('.AudioWorklet -> loading worklet:',worklet.name); //#development
                             worklet.loaded = false;
                     
                             audio.context.audioWorklet.addModule(window.URL.createObjectURL(worklet.worklet)).then( () => {
+                                dev.log.audio('.AudioWorklet ->',worklet.name,'has been loaded'); //#development
                                 worklet.loaded = true;
                     
                                 audio.audioWorklet[worklet.name] = worklet.class;
@@ -22573,18 +22814,25 @@
                     const messagingCallbacks = {};
                 
                     function generateMessageID(){
+                        self.log('::generateMessageID()'); //#development
                         return messageId++;
                     }
                 
                     communicationObject.onmessage = function(encodedPacket){
+                        self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
                         let message = encodedPacket.data;
                 
                         if(message.outgoing){
+                            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
                             if(message.cargo.function in self.function){
+                                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
+                                self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                                 if(message.id == null){
+                                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                                     self.function[message.cargo.function](...message.cargo.arguments);
                                 }else{
+                                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     communicationObject.postMessage({
                                         id:message.id,
                                         outgoing:false,
@@ -22592,25 +22840,35 @@
                                     });
                                 }
                             }else if(message.cargo.function in self.delayedFunction){
+                                self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
+                                self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                                 if(message.id == null){
+                                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                                 }else{
+                                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
                                         communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
                                     }].concat(message.cargo.arguments));
                                 }
                             }else{
+                                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
                             }
                         }else{
+                            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
+                            self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
                             messagingCallbacks[message.id](message.cargo);
                             delete messagingCallbacks[message.id];
                         }
                     };
                     this.run = function(functionName,argumentList=[],callback,transferables){
+                        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
                         let id = null;
                         if(callback != undefined){
+                            self.log('.run -> callback was defined; generating message ID'); //#development
                             id = generateMessageID();
+                            self.log('.run -> message ID:',id); //#development
                             messagingCallbacks[id] = callback;
                         }
                         communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
@@ -22682,12 +22940,14 @@
                         //type
                             const type = _type;
                             this.getType = function(){return type;};
+                            dev.log.elementLibrary[type](' - new '+type+'(',_name); //#development
                     
                         //id
                             let id = -1;
                             this.getId = function(){return id;};
                             this.__idReceived = function(){};
                             this.__id = function(a,updateIdOnly=false){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].__id(',a); //#development
                                 id = a;
                                 if(updateIdOnly){return;}
                     
@@ -22703,6 +22963,7 @@
                             let name = _name;
                             this.getName = function(){return name;};
                             // this.setName = function(a){
+                            //     dev.log.elementLibrary[type]('['+this.getAddress+'].setName(',a); //#development
                             //     name = a;
                             // };
                     
@@ -22712,10 +22973,12 @@
                                 return (this.parent != undefined && this.parent.getId() != 0 ? this.parent.getAddress() : '') + '/' + name;
                             };
                             this.getOffset = function(){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
                     
                                 let output = {x:0,y:0,scale:1,angle:0};
                     
                                 if(this.parent){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset() -> parent found'); //#development
                                     const offset = this.parent.getOffset();
                                     const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
                                     output = { 
@@ -22725,9 +22988,11 @@
                                         angle: offset.angle + cashedAttributes.angle,
                                     };
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> no parent found'); //#development
                                     output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
                                 }
                     
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> output: '+JSON.stringify(output)); //#development
                                 return output;
                             };
                     
@@ -22738,6 +23003,7 @@
                                 this[name] = function(a){
                                     if(a == undefined){ return cashedAttributes[name]; }
                                     if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',...arguments); //#development
                                     cashedAttributes[name] = a;
                                     if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[...arguments]); }
                                 };
@@ -22749,6 +23015,7 @@
                             }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                             this.unifiedAttribute = function(attributes){
                                 if(attributes == undefined){ return cashedAttributes; }
+                                dev.log.elementLibrary[type]('['+this.getAddress+'].unifiedAttribute(',attributes); //#development
                                 Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
                                 if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
                             };
@@ -22756,19 +23023,23 @@
                         //callbacks
                             const cashedCallbacks = {};
                             this.getCallback = function(callbackType){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getCallback(',callbackType); //#development
                                 return cashedCallbacks[callbackType];
                             };
                             this.attachCallback = function(callbackType, callback){
+                                dev.log.elementLibrary[type]('['+this.getAddress+'].attachCallback(',callbackType,callback); //#development
                                 cashedCallbacks[callbackType] = callback;
                                 if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
                             }
                             this.removeCallback = function(callbackType){
+                                dev.log.elementLibrary[type]('['+this.getAddress+'].removeCallback(',callbackType); //#development
                                 delete cashedCallbacks[callbackType];
                                 if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
                             }
                     
                         //info dump
                             this._dump = function(){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']._dump()'); //#development
                                 _canvas_.core.element.__executeMethod(id,'_dump',[]);
                             };
                     };
@@ -22810,15 +23081,18 @@
                     
                         let clearingLock = false;
                         function lockClearingLock(){
+                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::lockClearingLock()'); //#development
                             clearingLock = true;
                         }
                         function unlockClearingLock(){
+                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::unlockClearingLock()'); //#development
                             self.__repush();
                             clearingLock = false;
                         }
                     
                         function checkForName(name){ return childRegistry[name] != undefined; }
                         function isValidElement(elementToCheck){
+                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::isValidElement(',elementToCheck); //#development
                             if( elementToCheck == undefined ){ return false; }
                             if( elementToCheck.getName() == undefined || elementToCheck.getName().length == 0 ){
                                 console.warn('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
@@ -22843,6 +23117,7 @@
                     
                             communicationModule.run('element.executeMethod',[self.getId(),'clear'],() => {
                                 function readdChildren(){
+                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::repush::readdChildren -> children:',children); //#development
                                     const childIds = children.map(child => child.getId());
                                     if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
                                     else{ _canvas_.core.element.__executeMethod(self.getId(),'syncChildren',[childIds]); }
@@ -22852,18 +23127,23 @@
                         };
                         
                         this.getChildren = function(){ 
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildren()'); //#development
                             return children;
                         };
                         this.getChildByName = function(name){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildByName(',name); //#development
                             return childRegistry[name];
                         };
                         this.getChildIndexByName = function(name){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildIndexByName(',name); //#development
                             return children.indexOf(childRegistry[name]);
                         };
                         this.contains = function(elementToCheck){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].contains(',elementToCheck); //#development
                             return children.indexOf(elementToCheck) != -1;
                         };
                         this.append = function(newElement){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append(',newElement,'(',newElement.getName(),')'); //#development
                     
                             if( !isValidElement(newElement) ){ return false; }
                             newElement.parent = this;
@@ -22874,24 +23154,32 @@
                             if(clearingLock){ return; }
                     
                             if(newElement.getId() == -1){
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> newElement\'s id missing; setting up "__idReceived" callback..'); //#development
                                 newElement.__calledBy = this.getAddress();
                                 newElement.__idReceived = function(){
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> newElement\'s "__idReceived" callback, called by '+newElement.__calledBy+', id is: '+newElement.getId()+' ()'); //#development
                                     if(self.getId() != -1){ 
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id:',self.getId()); //#development
                                         if(children.indexOf(newElement) != -1){
+                                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> element position:',children.indexOf(newElement)); //#development
                                             _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
                                         }else{
+                                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
                                         }
                                     }else{
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
                                     }
                                 };
                             }else{
                                 if(self.getId() != -1){
                                     _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
                                 }else{
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
                                 }
                             }
                         };
                         this.prepend = function(newElement){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend(',newElement,'(',newElement.getName(),')'); //#development
                     
                             if( !isValidElement(newElement) ){ return false; }
                             newElement.parent = this;
@@ -22902,20 +23190,25 @@
                             if(clearingLock){ return; }
                     
                             if(newElement.getId() == -1){
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> newElement\'s id missing; setting up "__idReceived" callback..'); //#development
                                 newElement.__idReceived = function(){
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> newElement\'s "__idReceived" callback ->'); //#development
                                     if(children.indexOf(newElement) != -1 && self.getId() != -1){ 
                                         _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
                                     }else{
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> this group\'s id missing; will not send message'); //#development
                                     }
                                 };
                             }else{
                                 if(self.getId() != -1){
                                     _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
                                 }else{
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
                                 }
                             }
                         };
                         this.remove = function(elementToRemove){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove(',elementToRemove,'(',elementToRemove.getName(),')'); //#development
                             children.splice(children.indexOf(elementToRemove), 1);
                             delete childRegistry[elementToRemove.getName()];
                             elementToRemove.parent = undefined;
@@ -22924,29 +23217,37 @@
                             if(clearingLock){ return; }
                     
                             if(elementToRemove.getId() == -1){
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s id missing'); //#development
                                 elementToRemove.__idReceived = function(){
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s "__idReceived" callback ->'); //#development
                                     if(children.indexOf(elementToRemove) == -1 && self.getId() != -1){ 
                                         _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
                                     }else{
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
                                     }
                                 };
                             }else{
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s id:',elementToRemove.getId()); //#development
                                 if(self.getId() != -1){
                                     _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
                                 }else{
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
                                 }
                             }
                         };
                         this.clear = function(){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].clear()'); //#development
                             children = [];
                             childRegistry = {};
                             if(self.getId() != -1){ 
                                 lockClearingLock();
                                 communicationModule.run('element.executeMethod',[self.getId(),'clear',[]],unlockClearingLock);
                             }else{
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
                             }
                         };
                         this.getElementsUnderPoint = function(x,y){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getElementsUnderPoint(',x,y); //#development
                             if(self.getId() != -1){
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.__executeMethod(self.getId(),'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
@@ -22954,6 +23255,7 @@
                             }
                         };
                         this.getTree = function(){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getTree()'); //#development
                     
                             const result = {name:this.getName(), type:this.getType(), id:this.getId(), children:[]};
                             children.forEach(function(a){
@@ -22964,6 +23266,7 @@
                         };
                         this.stencil = function(newStencilElement){
                             if(newStencilElement == undefined){ return stencilElement; }
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].stencil(',newStencilElement); //#development
                             stencilElement = newStencilElement;
                     
                             if(newStencilElement.getId() == -1){
@@ -23293,42 +23596,50 @@
                 
                 this.meta = new function(){
                     this.areYouReady = function(){
+                        dev.log.interface('.meta.areYouReady()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('areYouReady',[],resolve);
                         });
                     };
                     this.refresh = function(){
+                        dev.log.interface('.meta.refresh()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('refresh',[],resolve);
                         });
                     };
                     this.getElementFromId = function(id){
+                        dev.log.interface('.meta.getElementFromId('+id+')'); //#development
                         return elementRegistry[id];
                     };
                 };
                 
                 this._dump = new function(){
                     this.elememt = function(){
+                        dev.log.interface('._dump.elememt()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.element',[],resolve);
                         });
                     };
                     this.arrangement = function(){
+                        dev.log.interface('._dump.arrangement()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.arrangement',[],resolve);
                         });
                     };
                     this.render = function(){
+                        dev.log.interface('._dump.render()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.render',[],resolve);
                         });
                     };
                     this.viewport = function(){
+                        dev.log.interface('._dump.viewport()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.viewport',[],resolve);
                         });
                     };
                     this.callback = function(){
+                        dev.log.interface('._dump.callback()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('_dump.callback',[],resolve);
                         });
@@ -23337,10 +23648,12 @@
                 
                 this.element = new function(){
                     this.getAvailableElements = function(){
+                        dev.log.interface('.element.getAvailableElements()'); //#development
                         return Object.keys(elementLibrary);
                     };
                 
                     this.create = function(type,name,forceId,updateIdOnly){
+                        dev.log.interface('.element.create(',type,name,forceId,updateIdOnly); //#development
                 
                         if(elementLibrary[type] == undefined){
                             console.warn('interface.element.create - unknown element type "'+type+'"');
@@ -23360,15 +23673,18 @@
                         return newElementProxy;
                     };
                     this.delete = function(ele){
+                        dev.log.interface('.element.delete(',ele); //#development
                         communicationModule.run('element.delete',[ele.getId()]);
                         elementRegistry[element.getId()] = undefined;
                     };
                     this.deleteAllCreated = function(){
+                        dev.log.interface('.element.deleteAllCreated()'); //#development
                         communicationModule.run('element.deleteAllCreated',[]);
                         elementRegistry = [];
                     };
                 
                     this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
+                        dev.log.interface('.element.__executeMethod(',id,attribute,argumentList,callback,transferables); //#development
                         communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
                     };
                 };
@@ -23376,6 +23692,7 @@
                     const design = self.element.create('group','root',0,true)
                 
                     this.new = function(){
+                        dev.log.interface('.arrangement.new()'); //#development
                         communicationModule.run('arrangement.new');
                         design.clear();
                         design.unifiedAttribute({
@@ -23388,21 +23705,27 @@
                         });
                     };
                     this.get = function(){
+                        dev.log.interface('.arrangement.get()'); //#development
                         return design;
                     };
                     this.prepend = function(element){
+                        dev.log.interface('.arrangement.prepend()'); //#development
                         return design.prepend(element);
                     };
                     this.append = function(element){
+                        dev.log.interface('.arrangement.append()'); //#development
                         return design.append(element);
                     };
                     this.remove = function(element){
+                        dev.log.interface('.arrangement.remove()'); //#development
                         return design.remove(element);
                     };
                     this.clear = function(){
+                        dev.log.interface('.arrangement.clear()'); //#development
                         return design.clear();
                     };
                     this.getElementByAddress = function(address){
+                        dev.log.interface('.arrangement.getElementByAddress(',address); //#development
                         
                         const route = address.split('/');
                         route.shift();
@@ -23415,6 +23738,7 @@
                         return currentObject;
                     };
                     this.getElementsUnderPoint = function(x,y){
+                        dev.log.interface('.arrangement.getElementsUnderPoint(',x,y); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.getElementsUnderPoint',[x,y],results => {
                                 resolve(results.map(result => elementRegistry[result]));
@@ -23422,6 +23746,7 @@
                         });
                     };
                     this.getElementsUnderArea = function(points){
+                        dev.log.interface('.arrangement.getElementsUnderArea(',points); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.getElementsUnderArea',[points],results => {
                                 resolve(results.map(result => elementRegistry[result]));
@@ -23429,6 +23754,7 @@
                         });
                     };
                     this.printTree = function(mode='spaced',local=false){
+                        dev.log.interface('.arrangement.printTree(',mode,local); //#development
                 
                         if(local){
                             function recursivePrint(grouping,prefix=''){
@@ -23454,11 +23780,13 @@
                         }
                     };
                     this.areParents = function(element,potentialParents=[]){
+                        dev.log.interface('.arrangement.areParents(',element,potentialParents); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('arrangement.areParents',[element.getId(),potentialParents.map(parent => parent.getId())],resolve);
                         });
                     };
                     this._dump = function(local=true,engine=true){
+                        dev.log.interface('.arrangement._dump(',local,engine); //#development
                 
                         if(local){
                             console.log(design.getAddress(),'._dump()');
@@ -23488,14 +23816,17 @@
                         clearColour:{r:1,g:1,b:1,a:1},
                         frameRateLimit:30,
                         active:false,
+                        activeLimitToFrameRate:false,
                     };
                 
                     this.refresh = function(){
+                        dev.log.interface('.render.refresh()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.refresh',[],resolve);
                         });
                     };
                     this.clearColour = function(colour){
+                        dev.log.interface('.render.clearColour(',colour); //#development
                         if(colour == undefined){return cachedValues.clearColour;}
                         cachedValues.clearColour = colour;
                         return new Promise((resolve, reject) => {
@@ -23503,21 +23834,25 @@
                         });
                     };
                     this.adjustCanvasSize = function(newWidth, newHeight){
+                        dev.log.interface('.render.adjustCanvasSize(',newWidth, newHeight); //#development
                         communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
                     };
                     this.getCanvasSize = function(){
+                        dev.log.interface('.render.getCanvasSize()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.getCanvasSize',[],resolve);
                         });
                     };
                     this.activeLimitToFrameRate = function(active){
-                        if(active == undefined){return cachedValues.active;}
-                        cachedValues.active = active;
+                        dev.log.interface('.render.activeLimitToFrameRate(',active); //#development
+                        if(active == undefined){return cachedValues.activeLimitToFrameRate;}
+                        cachedValues.activeLimitToFrameRate = active;
                         return new Promise((resolve, reject) => {
                             communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
                         });
                     };
                     this.frameRateLimit = function(rate){
+                        dev.log.interface('.render.frameRateLimit(',rate); //#development
                         if(rate == undefined){return cachedValues.frameRateLimit;}
                         cachedValues.frameRateLimit = rate;
                         return new Promise((resolve, reject) => {
@@ -23525,9 +23860,11 @@
                         });
                     };
                     this.frame = function(){
+                        dev.log.interface('.render.frame()'); //#development
                         communicationModule.run('render.frame',[]);
                     };
                     this.active = function(active){
+                        dev.log.interface('.render.active(',active); //#development
                         if(active == undefined){return cachedValues.active;}
                         cachedValues.active = active;
                         return new Promise((resolve, reject) => {
@@ -23551,6 +23888,7 @@
                     //adapter
                         this.adapter = new function(){
                             this.windowPoint2workspacePoint = function(x,y){
+                                dev.log.interface('.viewport.adapter.windowPoint2workspacePoint(',x,y); //#development
                                 const position = cachedValues.position;
                                 const scale = cachedValues.scale;
                                 const angle = cachedValues.angle;
@@ -23577,11 +23915,13 @@
                         };
                 
                     this.refresh = function(){
+                        dev.log.interface('.viewport.refresh()'); //#development
                         communicationModule.run('viewport.refresh',[]);
                     };
                     this.position = function(x,y){
                         if(x==undefined || y==undefined){ return cachedValues.position; }
                         cachedValues.position = {x:x,y:y};
+                        dev.log.interface('.viewport.position(',x,y); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.position',[x,y],resolve);
                         });
@@ -23590,6 +23930,7 @@
                         if(s==undefined){ return cachedValues.scale; }
                         if(s == 0){console.error('cannot set scale to zero');}
                         cachedValues.scale = s;
+                        dev.log.interface('.viewport.scale(',s); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.scale',[s],resolve);
                         });
@@ -23597,27 +23938,32 @@
                     this.angle = function(a){
                         if(a==undefined){ return cachedValues.angle; }
                         cachedValues.angle = a;
+                        dev.log.interface('.viewport.angle(',a); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.angle',[a],resolve);
                         });
                     };
                     this.getElementsUnderPoint = function(x,y){
+                        dev.log.interface('.viewport.getElementsUnderPoint(',x,y); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
                         });
                     };
                     this.getElementsUnderArea = function(points){
+                        dev.log.interface('.viewport.getElementsUnderArea(',points); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
                         });
                     };
                     this.getMousePosition = function(x,y){
+                        dev.log.interface('.viewport.getMousePosition(',x,y); //#development
                         if(x == undefined || y == undefined){ return mouseData; }
                         mouseData.x = x;
                         mouseData.y = y;
                         communicationModule.run('viewport.getMousePosition',[x,y]);
                     };
                     this.getBoundingBox = function(){
+                        dev.log.interface('.viewport.getBoundingBox()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('viewport.getBoundingBox',[],resolve);
                         });
@@ -23625,6 +23971,7 @@
                     this.stopMouseScroll = function(bool){
                         if(bool==undefined){ return cachedValues.stopMouseScroll; }
                         cachedValues.stopMouseScroll = bool;
+                        dev.log.interface('.viewport.stopMouseScroll(',bool); //#development
                         communicationModule.run('viewport.stopMouseScroll',[bool]);
                     };
                 
@@ -23636,11 +23983,13 @@
                 };
                 this.stats = new function(){
                     this.active = function(active){
+                        dev.log.interface('.stats.active(',active); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('stats.active',[active],resolve);
                         });
                     };
                     this.getReport = function(){
+                        dev.log.interface('.stats.getReport()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('stats.getReport',[],resolve);
                         });
@@ -23648,6 +23997,7 @@
                 };
                 this.callback = new function(){
                     this.listCallbackTypes = function(){
+                        dev.log.interface('.callback.listCallbackTypes()'); //#development
                         return new Promise((resolve, reject) => {
                             communicationModule.run('callback.listCallbackTypes',[],resolve);
                         });
@@ -23675,13 +24025,16 @@
                         };
                     };
                     this.getCallback = function(element, callbackType){
+                        dev.log.interface('.callback.getCallback(',element,callbackType); //#development
                         callbackRegistry.getCallback(element.getId(), callbackType);
                     };
                     this.attachCallback = function(element, callbackType, callback){
+                        dev.log.interface('.callback.attachCallback(',element,callbackType,callback); //#development
                         callbackRegistry.register(element.getId(), callbackType, callback);
                         communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
                     };
                     this.removeCallback = function(element, callbackType){
+                        dev.log.interface('.callback.removeCallback(',element,callbackType); //#development
                         callbackRegistry.remove(element.getId(), callbackType);
                         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
                     };
@@ -23689,6 +24042,7 @@
                     let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
                     this.callbackActivationMode = function(mode){
                         if(mode==undefined){return callbackActivationMode;}
+                        dev.log.interface('.callback.callbackActivationMode(',mode); //#development
                         callbackActivationMode = mode;
                     };
                 
@@ -23756,57 +24110,69 @@
                 };
 
                 communicationModule.function.go = function(){
+                    dev.log.service('.go()'); //#development
                     _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
                     self.go.__activate();
                 };
                 communicationModule.function.printToScreen = function(imageData){
+                    dev.log.service('.printToScreen(',imageData); //#development
                     _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
                 };
                 // communicationModule.function.onViewportAdjust = function(state){
+                //     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
                 //     console.log('onViewportAdjust -> ',state); /* callback */
                 // };
                 
                 communicationModule.function.updateElement = function(elem, data={}){
+                    dev.log.service('.updateElement(',elem,data); //#development
                     const proxyElement = _canvas_.core.meta.getElementFromId(elem);
                     if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
                 };
                 communicationModule.function.runElementCallback = function(elem, data={}){
+                    dev.log.service('.runElementCallback(',elem,data); //#development
                     const proxyElement = _canvas_.core.meta.getElementFromId(elem);
                     if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
                 };
                 
                 communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    dev.log.service('.getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
                     return attributeNames.map((name,index) => {
                         return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
                     });    
                 };
                 communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
+                    dev.log.service('.setCanvasAttributes(',attributes,prefixActiveArray); //#development
                     attributes.map((attribute,index) => {
                         _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
                     });
                 };
                 communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    dev.log.service('.getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
                     return attributeNames.map((name,index) => {
                         return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
                     });
                 };
                 
                 communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
+                    dev.log.service('.getDocumentAttributes(',attributeNames); //#development
                     return attributeNames.map(attribute => {
                         return eval('document.'+attribute);
                     });
                 };
                 communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
+                    dev.log.service('.setDocumentAttributes(',attributeNames,values); //#development
                     return attributeNames.map((attribute,index) => {
                         eval('document.'+attribute+' = "'+values[index]+'"');
                     });
                 };
                 communicationModule.function.getWindowAttributes = function(attributeNames=[]){
+                    dev.log.service('.getWindowAttributes(',attributeNames); //#development
                     return attributeNames.map(attribute => {
                         return eval('window.'+attribute);
                     });
                 };
                 communicationModule.function.setWindowAttributes = function(attributes=[]){
+                    dev.log.service('.setWindowAttributes(',attributes); //#development
                     attributes.map((attribute,index) => {
                         eval('window.'+attribute.name+' = "'+attribute.value+'"');
                     });
@@ -24782,6 +25148,7 @@
                             makeDistortionNode();
                     };
                     this.player = function(context){
+                        dev.log.circuit('.player(-context-)'); //#development
                     
                         //state
                             const self = this;
@@ -24824,9 +25191,11 @@
                             
                         //internal functions
                             function unloadRaw(){
+                                dev.log.circuit('.player::unloadRaw()'); //#development
                                 return flow.track;
                             };
                             function loadRaw(data,callback){
+                                dev.log.circuit('.player::loadRaw('+JSON.stringify(data)+','+callback+')'); //#development
                                 if(Object.keys(data).length === 0){return;}
                                 self.stop();
                                 flow.track = data;
@@ -24836,12 +25205,14 @@
                                 callback(data);
                             }
                             function load(type,callback,url='',errorCallback){
+                                dev.log.circuit('.player::load('+type+','+callback+','+url+')'); //#development
                                 _canvas_.library.audio.loadAudioFile( function(data){ 
                                     state.fileLoaded = false;
                                     loadRaw(data,callback)
                                 }, type, url, errorCallback);
                             }
                             function generatePlayheadNumber(){
+                                dev.log.circuit('.player::generatePlayheadNumber()'); //#development
                                 let num = 0;
                                 while( Object.keys(state.playhead).includes(String(num)) && state.playhead[num] != undefined ){num++;}
                                 return num;
@@ -24851,6 +25222,7 @@
                                     Object.keys(state.playhead).map(key => playheadCompute(parseInt(key)));
                                     return;
                                 }
+                                dev.log.circuit('.player::playheadCompute('+playhead+')'); //#development
                     
                                 //this code is used to update the playhead position as well as to calculate when the loop end will occur, 
                                 //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
@@ -24878,6 +25250,8 @@
                                 //calculate time until the timeout should be called
                                     let timeUntil = state.area.actual_end - currentTime;
                                     if(timeUntil < 0){timeUntil = 0;}
+                                    dev.log.circuit('.player::playheadCompute -> timeUntil:'+timeUntil); //#development
+                                    dev.log.circuit('.player::playheadCompute -> state.area.actual_end:'+state.area.actual_end+' currentTime:'+currentTime); //#development
                     
                                 //the callback (which performs the jump to the start of the loop, and recomputes)
                                     state.loop.timeout[playhead] = setTimeout(
@@ -24891,6 +25265,7 @@
                                     );
                             }
                             function jumpToTime(playhead=0,value,doNotActuallyAffectTheAudioBuffer=false){
+                                dev.log.circuit('.player::jumpToTime('+playhead+','+value+','+doNotActuallyAffectTheAudioBuffer+')'); //#development
                                 //check if we should jump at all
                                 //(file must be loaded and playhead must exist)
                                     if(!state.fileLoaded || state.playhead[playhead] == undefined){return;}
@@ -24928,6 +25303,7 @@
                                     Object.keys(state.playhead).map(key => rejigger(parseInt(key)));
                                     return;
                                 }
+                                dev.log.circuit('.player::rejigger('+playhead+')'); //#development
                     
                                 jumpToTime(playhead,state.playhead[playhead].position);
                             }
@@ -24935,40 +25311,58 @@
                         //controls
                             this.concurrentPlayCountLimit = function(value){
                                 if(value == undefined){return state.concurrentPlayCountLimit;}
+                                dev.log.circuit('.player.concurrentPlayCountLimit('+value+')'); //#development
                     
                                 state.concurrentPlayCountLimit = value;
                                 for(let a = value; a < state.playhead.length; a++){ this.stop(a); }
                             };
                         
                             this.unloadRaw = function(){ 
+                                dev.log.circuit('.player.unloadRaw()'); //#development
                                 return unloadRaw(); 
                             };
                             this.loadRaw = function(data,callback){ 
+                                dev.log.circuit('.player.loadRaw('+data+','+callback+')'); //#development
                                 loadRaw(data,callback); 
                             };
                             this.load = function(type,callback,url='',errorCallback){ 
+                                dev.log.circuit('.player.load('+type+','+callback+','+url+')'); //#development
                                 load(type,callback,url,errorCallback); 
                             };
                     
                             // this.generatePlayheadNumber = function(){ 
+                            //     dev.log.circuit('.player.generatePlayheadNumber()'); //#development
                             //     return generatePlayheadNumber();
                             // };
                     
                             this.start = function(playhead){
+                                dev.log.circuit('.player.start(',playhead); //#development
+                                dev.log.circuit('.player.start -> state.playhead[playhead]: '+JSON.stringify(state.playhead[playhead])); //#development
+                                dev.log.circuit('.player.start -> state.loop.active: '+state.loop.active); //#development
+                                dev.log.circuit('.player.start -> play area'); //#development
+                                dev.log.circuit('.player.start -> - starting from: '+state.area.actual_start+' ('+(state.area.percentage_start*100)+'%)'); //#development
+                                dev.log.circuit('.player.start -> - playing until: '+state.area.actual_end+' ('+(state.area.percentage_end*100)+'%)'); //#development
+                                dev.log.circuit('.player.start -> state.rate: '+state.rate); //#development
+                                dev.log.circuit('.player.start -> state.concurrentPlayCountLimit: '+state.concurrentPlayCountLimit); //#development
+                                dev.log.circuit('.player.start -> state.playhead: '+JSON.stringify(state.playhead)); //#development
                     
                                 //check if we should play at all (file must be loaded)
                                     if(!state.fileLoaded){return;}
                                 //if no particular playhead is selected, generate a new one
                                 //(unless we've already reached the concurrentPlayCountLimit)
                                     if(playhead == undefined){
+                                        dev.log.circuit('.player.start -> concurrentPlayCountLimit check:',state.concurrentPlayCountLimit != -1, state.playhead.length >= state.concurrentPlayCountLimit); //#development
                                         if(state.concurrentPlayCountLimit != -1 && state.playhead.filter(() => true).length >= state.concurrentPlayCountLimit){ return -1; }
+                                        dev.log.circuit('.player.start -> generating a new playhead'); //#development
                                         
                                         playhead = generatePlayheadNumber();
                                         state.playhead[playhead] = { position:0, lastSightingTime:0 };
+                                        dev.log.circuit('.player.start -> playhead: '+playhead); //#development
                                     }
                                 //ensure that the playhead is after the start of the area
                                     if(state.playhead[playhead].position < state.area.actual_start){ state.playhead[playhead].position = state.area.actual_start; }
                                     if(state.playhead[playhead].position > state.area.actual_end){ state.playhead[playhead].position = state.area.actual_start; }
+                                    dev.log.circuit('.player.start -> state.playhead[playhead].position: '+state.playhead[playhead].position); //#development
                                 //load buffer, enter settings and start from playhead position
                                     flow.bufferSource[playhead] = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, (function(playhead){ return function(){self.stop(playhead);};})(playhead));
                                     flow.bufferSource[playhead].loop = state.loop.active;
@@ -24992,6 +25386,7 @@
                                     Object.keys(state.playhead).map(key => self.pause(parseInt(key)));
                                     return;
                                 }
+                                dev.log.circuit('.player.pause('+playhead+','+callback+')'); //#development
                     
                                 //check if we should stop at all (player must be playing)
                                     if( state.playhead[playhead] == undefined || !state.playhead[playhead].playing ){return;}
@@ -25008,6 +25403,7 @@
                                     Object.keys(state.playhead).map(key => self.resume(parseInt(key)));
                                     return;
                                 }
+                                dev.log.circuit('.player.resume('+playhead+')'); //#development
                     
                                 //if this playhead is already playing, don't start it again
                                     if( state.playhead[playhead].playing ){return;}
@@ -25019,8 +25415,10 @@
                                     Object.keys(state.playhead).map(key => self.stop(parseInt(key)));
                                     return;
                                 }
+                                dev.log.circuit('.player.stop('+playhead+','+callback+')'); //#development
                     
                                 //check if we should stop at all (player must be playing)
+                                    dev.log.circuit('.player.stop -> playhead:',playhead,JSON.stringify(state.playhead[playhead])); //#development
                                     if( state.playhead[playhead] == undefined || !state.playhead[playhead].playing ){return;}
                                 //actually stop the buffer and destroy it
                                     flow.bufferSource[playhead].onended = callback;
@@ -25032,11 +25430,13 @@
                                     delete state.playhead[playhead];
                             };
                             this.restart = function(playhead){
+                                dev.log.circuit('.player.restart('+playhead+')'); //#development
                                 this.stop(playhead);
                                 this.start(playhead);
                             };
                     
                             this.jumpTo = function(playhead=0,value=0,percentage=true){
+                                dev.log.circuit('.player.jumpTo('+playhead+','+value+','+percentage+')'); //#development
                                 if(percentage){
                                     value = (value>1 ? 1 : value);
                                     value = (value<0 ? 0 : value);
@@ -25048,6 +25448,7 @@
                             };
                             this.area = function(start,end,percentage=true){
                                 if(start == undefined && end == undefined){ return state.area; }
+                                dev.log.circuit('.player.jumpTo('+start+','+end+','+percentage+')'); //#development
                                 if(start == undefined){ start = percentage ? state.area.percentage_start : state.area.actual_start; }
                                 if(end == undefined){ end = percentage ? state.area.percentage_end : state.area.actual_end; }
                     
@@ -25070,6 +25471,7 @@
                             };
                             this.loop = function(active){
                                 if(active == undefined){return state.loop.active;}
+                                dev.log.circuit('.player.loop('+active+')'); //#development
                     
                                 state.loop.active = active;
                     
@@ -25078,6 +25480,7 @@
                             };
                             this.rate = function(value){
                                 if(value == undefined){return state.rate;}
+                                dev.log.circuit('.player.rate('+value+')'); //#development
                     
                                 playheadCompute();
                                 state.rate = value;
@@ -25086,10 +25489,12 @@
                             };
                     
                             this.createPlayhead = function(position){
+                                dev.log.circuit('.player.createPlayhead('+position+')'); //#development
                                 if(state.concurrentPlayCountLimit != -1 && state.playhead.filter(() => true).length >= state.concurrentPlayCountLimit){ return -1; }
                     
                                 playhead = generatePlayheadNumber();
                                 state.playhead[playhead] = { position:this.duration()*position, lastSightingTime:0 };
+                                dev.log.circuit('.player.createPlayhead -> playhead: '+playhead); //#development
                             };
                     
                         //info
@@ -25098,17 +25503,24 @@
                             this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
                             this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
                             this.currentTime = function(playhead){
+                                dev.log.circuit('.player.currentTime('+playhead+')'); //#development
                                 //check if file is loaded
                                     if(!state.fileLoaded){return -1;}
                                 //if no playhead is selected, do all of them
                                     if(playhead == undefined){ return Object.keys(state.playhead).map(key => self.currentTime(key)); }
                                 //if playback is stopped, return the playhead position, 
+                                    dev.log.circuit('.player.currentTime -> state.playhead[playhead]: '+JSON.stringify(state.playhead[playhead])); //#development
                                     if(state.playhead[playhead] == undefined){return -1;}
                                     if(!state.playhead[playhead].playing){return state.playhead[playhead].position;}
                                 //otherwise, calculate the current position
+                                    dev.log.circuit('.player.currentTime -> '+'state.playhead[playhead].position: '+state.playhead[playhead].position+' state.rate: '+state.rate+' context.currentTime: '+context.currentTime+' state.playhead[playhead].lastSightingTime: '+state.playhead[playhead].lastSightingTime); //#development
+                                    dev.log.circuit('.player.currentTime -> time passed: '+(context.currentTime - state.playhead[playhead].lastSightingTime)); //#development
+                                    dev.log.circuit('.player.currentTime -> file time passed: '+state.rate*(context.currentTime - state.playhead[playhead].lastSightingTime)); //#development
+                                    dev.log.circuit('.player.currentTime -> playhead "'+playhead+'" position: '+(state.playhead[playhead].position + state.rate*(context.currentTime - state.playhead[playhead].lastSightingTime))); //#development
                                     return state.playhead[playhead].position + state.rate*(context.currentTime - state.playhead[playhead].lastSightingTime);
                             };
                             this.progress = function(playhead){
+                                dev.log.circuit('.player.progress('+playhead+')'); //#development
                                 //if no playhead is selected, do all of them
                                     if(playhead == undefined){ return Object.keys(state.playhead).map(key => self.progress(key)); }
                     
@@ -25117,6 +25529,7 @@
                                 return time/this.duration();
                             };
                             this.waveformSegment = function(data={start:0,end:1},resolution){
+                                dev.log.circuit('.player.waveformSegment('+JSON.stringify(data)+','+resolution+')'); //#development
                                 if(data==undefined || !state.fileLoaded){return [];}
                                 return _canvas_.library.audio.waveformSegment(flow.track.buffer, data, resolution);
                             };
@@ -25465,6 +25878,7 @@
                     
                     this.partLibrary = {};
                     this.builder = function(collection,type,name,data){
+                        dev.log.part('.builder('+collection+','+type+','+name+','+data+')'); //#development
                         if(!data){data={};}
                         if(data.style == undefined){data.style={};}
                     
@@ -25479,6 +25893,7 @@
                         this.basic = new function(){
                             interfacePart.partLibrary.basic = {};
                             this.polygon = function(name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}){
+                                dev.log.partBasic('.polygon('+name+','+JSON.stringify(points)+','+JSON.stringify(pointsAsXYArray)+','+ignored+','+JSON.stringify(colour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('polygon',name);
                                 element.unifiedAttribute({
@@ -25496,6 +25911,7 @@
                                 );
                             };
                             this.rectangleWithOutline = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
+                                dev.log.partBasic('.rectangleWithOutline('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+JSON.stringify(colour)+','+thickness+','+JSON.stringify(lineColour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('rectangleWithOutline',name);
                                 element.unifiedAttribute({
@@ -25519,6 +25935,7 @@
                                 );
                             };
                             this.circle = function(name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}){
+                                dev.log.partBasic('.circle('+name+','+x+','+y+','+radius+','+detail+','+ignored+','+JSON.stringify(colour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('circle',name);
                                 element.unifiedAttribute({
@@ -25538,6 +25955,7 @@
                                 );
                             };
                             this.polygonWithOutline = function(name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
+                                dev.log.partBasic('.polygonWithOutline('+name+','+JSON.stringify(points)+','+JSON.stringify(pointsAsXYArray)+','+ignored+','+JSON.stringify(colour)+','+thickness+','+JSON.stringify(lineColour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('polygonWithOutline',name);
                                 element.unifiedAttribute({
@@ -25557,6 +25975,7 @@
                                 );
                             };
                             this.canvas = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1){
+                                dev.log.partBasic('.canvas('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+resolution+')'); //#development
                                     
                                 const element = _canvas_.core.element.create('canvas',name);
                                 element.unifiedAttribute({
@@ -25578,6 +25997,7 @@
                                 );
                             };
                             this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
+                                dev.log.partBasic('.image('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+url+')'); //#development
                             
                                 const element = _canvas_.core.element.create('image',name);
                                 element.unifiedAttribute({
@@ -25599,6 +26019,7 @@
                                 );
                             };
                             this.path = function(name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[], jointType='sharp', capType='none', looping=false, jointDetail=25, sharpLimit=4){
+                                dev.log.partBasic('.path('+name+','+JSON.stringify(points)+','+thickness+','+ignored+','+JSON.stringify(colour)+','+JSON.stringify(pointsAsXYArray)+','+jointType+','+capType+','+looping+','+jointDetail+','+sharpLimit+')'); //#development
                             
                                 const element = _canvas_.core.element.create('path',name);
                                 element.unifiedAttribute({
@@ -25622,6 +26043,7 @@
                                 );
                             };
                             this.rectangle = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}){
+                                dev.log.partBasic('.rectangle('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+JSON.stringify(colour)+')'); //#development
                                 
                                 const element = _canvas_.core.element.create('rectangle',name);
                                 element.unifiedAttribute({
@@ -25643,6 +26065,7 @@
                                 );
                             };
                             this.group = function(name=null, x=0, y=0, angle=0, ignored=false, clipActive=false){
+                                dev.log.partBasic('.group('+name+','+x+','+y+','+angle+','+ignored+')'); //#development
                             
                                 const element = _canvas_.core.element.create('group',name);
                                 element.unifiedAttribute({
@@ -25661,6 +26084,7 @@
                                 );
                             };
                             this.text = function(name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.5, interCharacterSpacing=0.0){
+                                dev.log.partBasic('.text('+name+','+text+','+x+','+y+','+width+','+height+','+angle+','+ignored+','+JSON.stringify(colour)+','+fontName+','+JSON.stringify(printingMode)+','+spacing+','+interCharacterSpacing+')'); //#development
                             
                                 const element = _canvas_.core.element.create('characterString',name);
                                 element.unifiedAttribute({
@@ -25686,6 +26110,7 @@
                                 );
                             };
                             this.circleWithOutline = function(name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
+                                dev.log.partBasic('.circleWithOutline('+name+','+x+','+y+','+radius+','+detail+','+ignored+','+JSON.stringify(colour)+','+thickness+','+JSON.stringify(lineColour)+')'); //#development
                             
                                 const element = _canvas_.core.element.create('circleWithOutline',name);
                                 element.unifiedAttribute({
@@ -25715,6 +26140,7 @@
                                 glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
                                 dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
                             ){
+                                dev.log.partDisplay('.glowbox_rectangle('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                             
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y});
@@ -25723,9 +26149,11 @@
                             
                                 //methods
                                     object.on = function(){
+                                        dev.log.partDisplay('.glowbox_rectangle.on()'); //#development
                                         rectangle.colour(glowStyle);
                                     };
                                     object.off = function(){
+                                        dev.log.partDisplay('.glowbox_rectangle.off()'); //#development
                                         rectangle.colour(dimStyle);
                                     };
                             
@@ -25743,6 +26171,7 @@
                                 glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
                                 dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
                             ){
+                                dev.log.partDisplay('.glowbox_polygon('+name+','+x+','+y+','+JSON.stringify(points)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -25751,9 +26180,11 @@
                             
                                 //methods
                                     object.on = function(){
+                                        dev.log.partDisplay('.glowbox_polygon.on()'); //#development
                                         polygon.colour(glowStyle);
                                     };
                                     object.off = function(){
+                                        dev.log.partDisplay('.glowbox_polygon.off()'); //#development
                                         polygon.colour(dimStyle);
                                     };
                             
@@ -25771,6 +26202,7 @@
                                 glowURL='',
                                 dimURL='',
                             ){
+                                dev.log.partDisplay('.glowbox_image('+name+','+x+','+y+','+width+','+height+','+angle+','+glowURL+','+dimURL+')'); //#development
                                 
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y});
@@ -25779,9 +26211,11 @@
                             
                                 //methods
                                     object.on = function(){
+                                        dev.log.partDisplay('.glowbox_image.on()'); //#development
                                         backing.url(glowURL);
                                     };
                                     object.off = function(){
+                                        dev.log.partDisplay('.glowbox_image.off()'); //#development
                                         backing.url(dimURL);
                                     };
                             
@@ -25799,6 +26233,7 @@
                                 glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
                                 dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
                             ){
+                                dev.log.partDisplay('.glowbox_circle('+name+','+x+','+y+','+radius+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                             
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y});
@@ -25807,9 +26242,11 @@
                             
                                 //methods
                                     object.on = function(){
+                                        dev.log.partDisplay('.glowbox_circle.on()'); //#development
                                         circle.colour(glowStyle);
                                     };
                                     object.off = function(){
+                                        dev.log.partDisplay('.glowbox_circle.off()'); //#development
                                         circle.colour(dimStyle);
                                     };
                             
@@ -25828,6 +26265,7 @@
                                 glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
                                 dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
                             ){
+                                dev.log.partDisplay('.glowbox_path('+name+','+x+','+y+','+JSON.stringify(points)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 //elements 
                                     const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
@@ -25843,9 +26281,11 @@
                             
                                 //methods
                                     object.on = function(){
+                                        dev.log.partDisplay('.glowbox_path.on()'); //#development
                                         path.colour(glowStyle);
                                     };
                                     object.off = function(){
+                                        dev.log.partDisplay('.glowbox_path.off()'); //#development
                                         path.colour(dimStyle);
                                     };
                             
@@ -26471,6 +26911,11 @@
                                 backingStyle={r:0.04,g:0.04,b:0.04,a:1},
                                 needleColours=[{r:0.98,g:0.98,b:0.98,a:1}],
                             ){
+                                dev.log.partDisplay('.gauge('  //#development
+                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
+                                    +JSON.stringify(needleAngleBounds)+','+JSON.stringify(needleArticulationPoints)  //#development
+                                    +JSON.stringify(backingStyle)+','+JSON.stringify(needleColours)  //#development
+                                +')'); //#development
                                 
                                 const values = [];
                                 const defaultBoundingAngles = {
@@ -26510,6 +26955,7 @@
                                 //methods
                                     object.needle = function(value,layer=0){
                                         if(value==undefined){return values[layer];}
+                                        dev.log.partDisplay('.gauge.needle('+value+','+layer+')');  //#development
                             
                                         value = (value>1 ? 1 : value);
                                         value = (value<0 ? 0 : value);
@@ -26554,6 +27000,12 @@
                                 markingStyle_printingMode={widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
                                 markingStyle_size=2,
                             ){
+                                dev.log.partDisplay('.meter_gauge('  //#development
+                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
+                                    +JSON.stringify(needleAngleBounds)+JSON.stringify(backingStyle)+','+JSON.stringify(needleColours)  //#development
+                                    +JSON.stringify(markings)+','+JSON.stringify(markingStyle_fill)+','+JSON.stringify(markingStyle_font)  //#development
+                                    +JSON.stringify(markingStyle_printingMode)+','+JSON.stringify(markingStyle_size)  //#development
+                                +')'); //#development
                             
                                 const defaultBoundingAngles = {
                                     start:-Math.PI/6,
@@ -26568,6 +27020,7 @@
                                     });
                             
                                     function generateMark(angle,distance,text,name=''){
+                                        dev.log.partDisplay('.meter_gauge::generateMark('+angle+','+distance+','+text+','+name+')');  //#development
                                         const boundingAngles = needleAngleBounds[0] == undefined ? defaultBoundingAngles : needleAngleBounds[0];
                             
                                         const group = interfacePart.builder('basic', 'group', name, {
@@ -26620,6 +27073,7 @@
                             
                                 //method
                                     object.set = function(a){
+                                        dev.log.partDisplay('.meter_gauge.set('+a+')'); //#development
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         if(needleColours.length > 1){ mostRecentSetting = a; }
                                         else{ object.needle(a,0); }
@@ -26658,6 +27112,11 @@
                                 needleColours=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.65,g:0.65,b:0.65,a:1}],
                                 frontingURL,
                             ){
+                                dev.log.partDisplay('.meter_gauge_image('  //#development
+                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
+                                    +JSON.stringify(needleAngleBounds)  //#development
+                                    +JSON.stringify(backingURL)+','+JSON.stringify(needleColours)+','+JSON.stringify(frontingURL)  //#development
+                                +')'); //#development
                                 
                                 //elements
                                     const object = interfacePart.builder('display', 'gauge_image', name, {
@@ -26688,6 +27147,7 @@
                             
                                 //method
                                     object.set = function(a){
+                                        dev.log.partDisplay('.meter_gauge.set('+a+')'); //#development
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         if(needleColours.length > 1){ mostRecentSetting = a; }
                                         else{ object.needle(a,0); }
@@ -26721,6 +27181,11 @@
                                 needleColours=[{r:0.98,g:0.98,b:0.98,a:1}],
                                 frontingURL,
                             ){
+                                dev.log.partDisplay('.gauge_image('  //#development
+                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
+                                    +JSON.stringify(needleAngleBounds)+','+JSON.stringify(needleArticulationPoints)  //#development
+                                    +JSON.stringify(backingURL)+','+JSON.stringify(needleColours)+','+JSON.stringify(frontingURL)  //#development
+                                +')'); //#development
                                 
                                 const values = [];
                                 const defaultBoundingAngles = {
@@ -26765,6 +27230,7 @@
                                 //methods
                                     object.needle = function(value,layer=0){
                                         if(value==undefined){return values[layer];}
+                                        dev.log.partDisplay('.gauge_image.needle('+value+','+layer+')');  //#development
                             
                                         value = (value>1 ? 1 : value);
                                         value = (value<0 ? 0 : value);
@@ -26803,6 +27269,11 @@
                                 markingStyle_printingMode={widthCalculation:'absolute', horizontal:'left', vertical:'top'},
                                 markingStyle_size=2,
                             ){
+                                dev.log.partDisplay('.audio_meter_level('  //#development
+                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
+                                    +JSON.stringify(markings)+','+JSON.stringify(backingStyle)+','+JSON.stringify(levelStyles)  //#development
+                                    +JSON.stringify(markingStyle_fill)+','+JSON.stringify(markingStyle_font)+','+JSON.stringify(markingStyle_printingMode)+','+JSON.stringify(markingStyle_size)  //#development
+                                +')'); //#development
                             
                                 //elements
                                     const object = _canvas_.interface.part.builder('display', 'meter_level', name, {
@@ -26825,9 +27296,11 @@
                             
                                 //methods
                                     object.start = function(){
+                                        dev.log.partDisplay('.audio_meter_level.start()');  //#development
                                         converter.start();
                                     };
                                     object.stop = function(){
+                                        dev.log.partDisplay('.audio_meter_level.stop()');  //#development
                                         converter.stop();
                                     };
                             
@@ -26860,6 +27333,11 @@
                                 markingStyle_printingMode={widthCalculation:'absolute', horizontal:'left', vertical:'top'},
                                 markingStyle_size=2,
                             ){
+                                dev.log.partDisplay('.meter_level('  //#development
+                                    +name+','+x+','+y+','+angle+','+width+','+height+','  //#development
+                                    +JSON.stringify(markings)+','+JSON.stringify(backingStyle)+','+JSON.stringify(levelStyles)  //#development
+                                    +JSON.stringify(markingStyle_fill)+','+JSON.stringify(markingStyle_font)+','+JSON.stringify(markingStyle_printingMode)+','+JSON.stringify(markingStyle_size)  //#development
+                                +')'); //#development
                             
                                 levelStyles = levelStyles.reverse();
                                 
@@ -26898,6 +27376,7 @@
                                     
                                 //method
                                     object.set = function(a){
+                                        dev.log.partDisplay('.meter_level.set('+a+')'); //#development
                                         if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                         mostRecentSetting = a;
                                     };
@@ -26923,6 +27402,7 @@
                                 backingStyle={r:0.04,g:0.04,b:0.04,a:1},
                                 levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.78,g:0.78,b:0.78,a:1}]
                             ){
+                                dev.log.partDisplay('.level('+name+','+x+','+y+','+angle+','+width+','+height+','+JSON.stringify(backingStyle)+','+JSON.stringify(levelStyles)+')'); //#development
                                 
                                 const values = [];
                             
@@ -26938,6 +27418,7 @@
                             
                                 //methods
                                     object.layer = function(value,layer){
+                                        dev.log.partDisplay('.level.layer('+value+','+layer+')'); //#development
                                         if(layer == undefined){return values;}
                                         if(value == null){return values[layer];}
                             
@@ -27010,9 +27491,11 @@
                                 //control
                                     object.get = function(x,y){ return pixelValues[x][y]; };
                                     object.set = function(x,y,state){ 
+                                        dev.log.partDisplay('.rastorDisplay.set('+x+','+y+','+state+')');  //#development
                                         pixelValues[x][y] = state; render();
                                     };
                                     object.import = function(data){
+                                        dev.log.partDisplay('.rastorDisplay.import('+JSON.stringify(data)+')');  //#development
                                         for(let x = 0; x < xCount; x++){
                                             for(let y = 0; y < yCount; y++){
                                                 this.set(x,y,data[x][y]);
@@ -27022,6 +27505,7 @@
                                     };
                                     object.export = function(){ return pixelValues; }
                                     object.setAll = function(value){
+                                        dev.log.partDisplay('.rastorDisplay.setAll()');  //#development
                                         for(let x = 0; x < xCount; x++){
                                             for(let y = 0; y < yCount; y++){
                                                 this.set(x,y,value);
@@ -27029,6 +27513,7 @@
                                         }
                                     }
                                     object.test = function(){
+                                        dev.log.partDisplay('.rastorDisplay.test()');  //#development
                                         this.setAll([1,1,1]);
                                         this.set(1,1,[1,0.5,0.5]);
                                         this.set(2,2,[0.5,1,0.5]);
@@ -27052,6 +27537,7 @@
                                 glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
+                                dev.log.partDisplay('.readout_sevenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+count+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 //values
                                     let text = '';
@@ -27172,6 +27658,7 @@
                                         ]
                                     ];
                                     function getStamp(character){
+                                        dev.log.partDisplay('.readout_sevenSegmentDisplay::getStamp('+character+')'); //#development
                                         
                                         switch(character){
                                             case 0: case '0': return [1,1,1,0,1,1,1];
@@ -27199,11 +27686,13 @@
                             
                                     //internal
                                         function clear(requestUpdate=true){
+                                            dev.log.partDisplay('.readout_sevenSegmentDisplay::clear()'); //#development
                                             canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
                                             canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                             if(requestUpdate){canvas.requestUpdate();}
                                         };
                                         function drawCharacters(){
+                                            dev.log.partDisplay('.readout_sevenSegmentDisplay::drawChar()'); //#development
                             
                                             stamps.forEach((stamp,stampIndex) => {
                                                 const xOffset = stampIndex*(width/count);
@@ -27239,6 +27728,7 @@
                                             canvas.requestUpdate();
                                         }
                                         function print(style,offset=0,dontClear=false){
+                                            dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+','+offset+','+dontClear+')'); //#development
                                             
                                             if(decimalPlaces){ decimalPoints.forEach((point,index) => decimalPoints[index] = false); }
                                             if(!dontClear){ clearInterval(displayInterval); }
@@ -27292,9 +27782,11 @@
                                     //methods
                                         object.text = function(a){
                                             if(a==null){return text;}
+                                            dev.log.partDisplay('.readout_sevenSegmentDisplay.text('+a+')'); //#development
                                             text = a;
                                         };
                                         object.print = function(style){
+                                            dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+')'); //#development
                                             print(style);
                                         };  
                             
@@ -27331,6 +27823,7 @@
                             
                                     //methods
                                         function print(style,offset=0,dontClear=false){
+                                            dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+','+offset+','+dontClear+')'); //#development
                                             
                                             decimalPoints.forEach(point => point.off());
                                             if(!dontClear){ clearInterval(displayInterval); }
@@ -27370,9 +27863,11 @@
                             
                                         object.text = function(a){
                                             if(a==null){return text;}
+                                            dev.log.partDisplay('.readout_sevenSegmentDisplay.text('+a+')'); //#development
                                             text = a;
                                         };
                                         object.print = function(style){
+                                            dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+')'); //#development
                                             print(style);
                                         };  
                                 }
@@ -27393,6 +27888,7 @@
                                 glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
+                                dev.log.partDisplay('.sevenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 const margin = width/8;
                                 const division = width/8;
@@ -27505,6 +28001,7 @@
                                     ]
                                 ];
                                 function getStamp(character){
+                                    dev.log.partDisplay('.sevenSegmentDisplay::getStamp('+character+')'); //#development
                                     
                                     switch(character){
                                         case 0: case '0': return [1,1,1,0,1,1,1];
@@ -27539,12 +28036,14 @@
                             
                                     //graphics
                                         function clear(){
+                                            dev.log.partDisplay('.sevenSegmentDisplay::clear()'); //#development
                             
                                             canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
                                             canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                             canvas.requestUpdate();
                                         };
                                         function drawChar(){
+                                            dev.log.partDisplay('.sevenSegmentDisplay::drawChar()'); //#development
                             
                                             //draw segments in 
                                                 for(let a = 0; a < points.length; a++){
@@ -27562,6 +28061,7 @@
                             
                                     //methods
                                         object.set = function(segment,state){
+                                            dev.log.partDisplay('.sevenSegmentDisplay.set('+segment+','+state+')'); //#development
                                             clear();
                                             stamp[segment] = state;
                                             drawChar();
@@ -27574,6 +28074,7 @@
                                             return stamp[segment].state;
                                         };
                                         object.clear = function(){
+                                            dev.log.partDisplay('.sevenSegmentDisplay.clear()'); //#development
                                             clear();
                                             for(let a = 0; a < stamp.length; a++){
                                                 this.set(a,false);
@@ -27582,6 +28083,7 @@
                                         };
                             
                                         object.enterCharacter = function(char){
+                                            dev.log.partDisplay('.sevenSegmentDisplay.enterCharacter('+char+')'); //#development
                                             stamp = getStamp(char);
                             
                                             clear();
@@ -27611,6 +28113,7 @@
                             
                                         //methods
                                             object.set = function(segment,state){
+                                                dev.log.partDisplay('.sevenSegmentDisplay.set('+segment+','+state+')'); //#development
                                                 segments[segment].state = state;
                                                 if(state){ segments[segment].segment.colour(glowStyle); }
                                                 else{ segments[segment].segment.colour(dimStyle); }
@@ -27619,12 +28122,14 @@
                                                 return segments[segment].state;
                                             };
                                             object.clear = function(){
+                                                dev.log.partDisplay('.sevenSegmentDisplay.clear()'); //#development
                                                 for(let a = 0; a < segments.length; a++){
                                                     this.set(a,false);
                                                 }
                                             };
                             
                                             object.enterCharacter = function(char){
+                                                dev.log.partDisplay('.sevenSegmentDisplay.enterCharacter('+char+')'); //#development
                                                 stamp = getStamp(char);
                             
                                                 for(let a = 0; a < stamp.length; a++){
@@ -27649,6 +28154,7 @@
                                 glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
+                                dev.log.partDisplay('.sixteenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 const margin = width/8;
                                 const division = width/8;
@@ -27874,6 +28380,7 @@
                                     ],
                                 ];
                                 function getStamp(character){
+                                    dev.log.partDisplay('.sevenSegmentDisplay::getStamp('+character+')'); //#development
                             
                                     switch(character){
                                         case '!': 
@@ -28358,12 +28865,14 @@
                             
                                     //graphics
                                         function clear(){
+                                            dev.log.partDisplay('.sixteenSegmentDisplay::clear()'); //#development
                             
                                             canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
                                             canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                             canvas.requestUpdate();
                                         };
                                         function drawChar(){
+                                            dev.log.partDisplay('.sixteenSegmentDisplay::drawChar()'); //#development
                             
                                             //draw segments in 
                                                 for(let a = 0; a < points.length; a++){
@@ -28381,6 +28890,7 @@
                             
                                     //methods
                                         object.set = function(segment,state){
+                                            dev.log.partDisplay('.sixteenSegmentDisplay.set('+segment+','+state+')'); //#development
                                             clear();
                                             stamp[segment] = state;
                                             drawChar();
@@ -28393,6 +28903,7 @@
                                             return stamp[segment].state;
                                         };
                                         object.clear = function(){
+                                            dev.log.partDisplay('.sixteenSegmentDisplay.clear()'); //#development
                                             clear();
                                             for(let a = 0; a < stamp.length; a++){
                                                 this.set(a,false);
@@ -28401,6 +28912,7 @@
                                         };
                             
                                         object.enterCharacter = function(char){
+                                            dev.log.partDisplay('.sixteenSegmentDisplay.enterCharacter('+char+')'); //#development
                                             stamp = getStamp(char);
                             
                                             clear();
@@ -28430,6 +28942,7 @@
                             
                                     //methods
                                         object.set = function(segment,state){
+                                            dev.log.partDisplay('.sixteenSegmentDisplay.set('+segment+','+state+')'); //#development
                                             segments[segment].state = state;
                                             if(state){ segments[segment].segment.colour(glowStyle); }
                                             else{ segments[segment].segment.colour(dimStyle); }
@@ -28438,11 +28951,13 @@
                                             return segments[segment].state;
                                         };
                                         object.clear = function(){
+                                            dev.log.partDisplay('.sixteenSegmentDisplay.clear()'); //#development
                                             for(let a = 0; a < segments.length; a++){
                                                 this.set(a,false);
                                             }
                                         };
                                         object.enterCharacter = function(char){
+                                            dev.log.partDisplay('.sixteenSegmentDisplay.enterCharacter('+char+')'); //#development
                                             stamp = getStamp(char);
                             
                                             for(let a = 0; a < stamp.length; a++){
@@ -28467,6 +28982,7 @@
                                 glowStyle={r:0.78,g:0.78,b:0.78,a:1},
                                 dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
+                                dev.log.partDisplay('.readout_sixteenSegmentDisplay('+name+','+canvasBased+','+resolution+','+x+','+y+','+width+','+height+','+angle+','+decimalPlaces+','+JSON.stringify(backgroundStyle)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
                                 
                                 //values
                                     let text = '';
@@ -28702,6 +29218,7 @@
                                         ],
                                     ];
                                     function getStamp(character){
+                                        dev.log.partDisplay('.sevenSegmentDisplay::getStamp('+character+')'); //#development
                                 
                                         switch(character){
                                             case '!': 
@@ -29187,11 +29704,13 @@
                             
                                     //internal
                                         function clear(requestUpdate=true){
+                                            dev.log.partDisplay('.readout_sixteenSegmentDisplay::clear()'); //#development
                                             canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
                                             canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                             if(requestUpdate){canvas.requestUpdate();}
                                         };
                                         function drawCharacters(){
+                                            dev.log.partDisplay('.readout_sixteenSegmentDisplay::drawChar()'); //#development
                             
                                             stamps.forEach((stamp,stampIndex) => {
                                                 const xOffset = stampIndex*(width/count);
@@ -29227,6 +29746,7 @@
                                             canvas.requestUpdate();
                                         }
                                         function print(style,offset=0,dontClear=false){
+                                            dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+','+offset+','+dontClear+')'); //#development
                                             
                                             if(decimalPlaces){ decimalPoints.forEach((point,index) => decimalPoints[index] = false); }
                                             if(!dontClear){ clearInterval(displayInterval); }
@@ -29280,9 +29800,11 @@
                                     //methods
                                         object.text = function(a){
                                             if(a==null){return text;}
+                                            dev.log.partDisplay('.readout_sixteenSegmentDisplay.text('+a+')'); //#development
                                             text = a;
                                         };
                                         object.print = function(style){
+                                            dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development
                                             print(style);
                                         };
                             
@@ -29319,6 +29841,7 @@
                             
                                     //methods
                                         function print(style,offset=0,dontClear=false){
+                                            dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+','+offset+','+dontClear+')'); //#development
                                             
                                             decimalPoints.forEach(point => point.off());
                                             if(!dontClear){ clearInterval(displayInterval); }
@@ -29358,9 +29881,11 @@
                             
                                         object.text = function(a){
                                             if(a==null){return text;}
+                                            dev.log.partDisplay('.readout_sixteenSegmentDisplay.text('+a+')'); //#development
                                             text = a;
                                         };
                                         object.print = function(style){
+                                            dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development
                                             print(style);
                                         };  
                                 }
@@ -29387,6 +29912,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slidePanel_image(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -29572,6 +30098,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slidePanel(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -29620,6 +30147,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slide_continuous_image(...)'); //#development
                             
                                 //default to non-image version if handle image link is missing
                                     if(handleURL == undefined){
@@ -29770,6 +30298,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slide_continuous(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -29909,6 +30438,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.slide_discrete_image(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -30042,6 +30572,7 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkbox_rectangle(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -30098,6 +30629,7 @@
                                 uncheckURL='', checkURL='', uncheckGlowURL='', checkGlowStyle='',
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkbox_image(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -30144,6 +30676,7 @@
                             
                                 subject
                             ){
+                                dev.log.partControl('.checkbox_(...)'); //#development
                             
                                 if(subject == undefined){console.warn('checkbox_ : No subject provided');}
                             
@@ -30213,6 +30746,7 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkbox_polygon(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -30266,6 +30800,7 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkbox_circle(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -30320,6 +30855,7 @@
                                 backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
+                                dev.log.partControl('.checkboxgrid(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -30402,6 +30938,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_continuous_image(...)'); //#development
                             
                                 //default to non-image version if image links are missing
                                     if(handleURL == undefined && slotURL == undefined && needleURL == undefined){
@@ -30544,6 +31081,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_1_discrete(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -30662,6 +31200,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.checkboxgrid(...)'); //#development
                                 
                                 //elements 
                                     //main
@@ -30781,6 +31320,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_discrete_image(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -30898,6 +31438,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_2_discrete(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -31015,6 +31556,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.dial_2_continuous(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -31140,6 +31682,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.rangeslide_image(...)'); //#development
                             
                                 //default to non-image version if handle image link is missing
                                     if(handleURL == undefined){
@@ -31411,6 +31954,7 @@
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
+                                dev.log.partControl('.rangeslide(...)'); //#development
                             
                                 let grappled = false;
                                 const handleNames = ['start','end'];
@@ -31752,6 +32296,7 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                dev.log.partControl('.button_circle(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -31984,6 +32529,7 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                dev.log.partControl('.button_rectangle(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -32173,6 +32719,7 @@
                             
                                 subject
                             ){
+                                dev.log.partControl('.button_(...)'); //#development
                             
                                 if(subject == undefined){console.warn('button_ : No subject provided');}
                             
@@ -32384,6 +32931,7 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                dev.log.partControl('.button_polygon(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -32559,6 +33107,7 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
+                                dev.log.partControl('.button_image(...)'); //#development
                             
                                 //adding on the specific shapes
                                     //main
@@ -32668,6 +33217,7 @@
                                 onrelease=function(needle,value){}, 
                                 selectionAreaToggle=function(bool){},
                             ){
+                                dev.log.partControl('.needleOverlay(...)'); //#development
                             
                                 const needleData = {};
                                 const grappled = {};
@@ -33084,6 +33634,7 @@
                             //     onselection=function(a){/*console.log('onselection >',a);*/},
                             //     onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
                             // ){
+                            //     dev.log.partControl('.list_image(...)'); //#development
                             
                             //     //state
                             //         let self = this;
@@ -33360,11 +33911,13 @@
                             
                             // this.list_image.itemTypes = {};
                             // this.list_image.itemTypes.space = function(index, x, y, height){
+                            //     dev.log.partControl('.list_image.itemTypes.space(...)'); //#development
                             
                             //     const newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
                             //     return {item:newItem,height:height};
                             // };
                             // this.list_image.itemTypes.break = function(index, x, y, width, height, url){
+                            //     dev.log.partControl('.list_image.itemTypes.break(...)'); //#development
                             
                             //     const newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
                             //     const image = interfacePart.builder('basic', 'image', 'image', { width:width, height:height, url:url });
@@ -33373,6 +33926,7 @@
                             //     return {item:newItem,height:height};
                             // };
                             // this.list_image.itemTypes.image = function(index, x, y, width, height, url){
+                            //     dev.log.partControl('.list_image.itemTypes.image(...)'); //#development
                             
                             //     const newItem = interfacePart.builder('basic','group',index+'_image',{x:x,y:y});
                             //     const image = interfacePart.builder('basic', 'image', 'image', { width:width, height:height, url:url });
@@ -33546,6 +34100,7 @@
                                 onselection=function(a){/*console.log('onselection >',a);*/},
                                 onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
                             ){
+                                dev.log.partControl('.list(...)'); //#development
                             
                                 //state
                                     let self = this;
@@ -34309,11 +34864,13 @@
                             };
                             this.list.itemTypes = {};
                             this.list.itemTypes.space = function( index, x, y, height ){
+                                dev.log.partControl('.list.itemTypes.space(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_space',{x:x,y:y});
                                 return {item:newItem,height:height};
                             };
                             this.list.itemTypes.break = function( index, x, y, width, height, colour, lineMux){
+                                dev.log.partControl('.list.itemTypes.break(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_break',{x:x,y:y});
                                 const rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:colour });
@@ -34322,6 +34879,7 @@
                                 return {item:newItem,height:height};
                             };
                             this.list.itemTypes.textbreak = function( index, x, y, width, height, text, fontColour, printingMode, font, spacing, interCharacterSpacing, textToLineSpacing, textHeightMux, lineMux ){
+                                dev.log.partControl('.list.itemTypes.textbreak(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_textbreak',{x:x,y:y});
                                 const rectangle = interfacePart.builder('basic', 'rectangle', 'rectangle', { y:(height-height*lineMux)/2, width:width, height:height*lineMux, colour:fontColour });
@@ -34345,6 +34903,7 @@
                                 text_left, text_centre, text_right,
                                 size, font, fontColour, spacing, interCharacterSpacing, itemColour
                             ){
+                                dev.log.partControl('.list.itemTypes.text(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_text',{x:x,y:y});
                                 const backing = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:itemColour });
@@ -34458,6 +35017,7 @@
                             
                                 updateFunction, onclickFunction,
                             ){
+                                dev.log.partControl('.list.itemTypes.checkbox(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_checkbox',{x:x,y:y});
                                     newItem.state = false;
@@ -34690,6 +35250,7 @@
                                 onselect,
                                 ondeselect,
                             ){
+                                dev.log.partControl('.list.itemTypes.button(...)'); //#development
                             
                                 const button_rectangle = interfacePart.builder('control', 'button_rectangle', index+'_button', {
                                     x:x,y:y,
@@ -34887,6 +35448,7 @@
                             
                                     updateFunction, onclickFunction,
                             ){
+                                dev.log.partControl('.list.itemTypes.radio(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
                                 const button = interfacePart.builder('control', 'button_rectangle', 'button', {
@@ -35280,6 +35842,7 @@
                                     onselection,
                                     onpositionchange,
                             ){
+                                dev.log.partControl('.list.itemTypes.list(...)'); //#development
                             
                                 const newItem = interfacePart.builder('basic','group',index+'_list',{x:x,y:y});
                                 const button = interfacePart.builder('control', 'button_rectangle', 'button', {
@@ -35709,6 +36272,7 @@
                                 onchangeviewarea=function(data){},
                                 event=function(events){},
                             ){
+                                dev.log.partControl('.sequencer(...)'); //#development
                             
                                 const self = this;
                             
@@ -35871,6 +36435,7 @@
                                             }
                                     }
                                     function adjustZoom(x,y){
+                                        dev.log.partControl('.sequencer::adjustZoom('+x+','+y+')'); //#development
                                         
                                         if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
                                         const maxZoom = 0.01;
@@ -36013,10 +36578,13 @@
                                             }
                                     }
                                     function makeSignal(line, position, length, strength=signals.defaultStrength){
+                                        dev.log.partControl('.sequencer::makeSignal('+line+','+position+','+length+','+strength+')'); //#development
                             
                                         //register signal and get new id. From the registry, get the approved signal values
                                             const newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
+                                            dev.log.partControl('.sequencer::makeSignal -> newID:'+newID); //#development
                                             const approvedData = signals.signalRegistry.getSignal(newID);
+                                            dev.log.partControl('.sequencer::makeSignal -> approvedData:'+JSON.stringify(approvedData)); //#development
                             
                                         //create graphical signal with approved values and append it to the pane
                                             const newSignalBlock = self.sequencer.signalBlock(
@@ -36725,6 +37293,7 @@
                                 handleStyle={r:1,g:1,b:0,a:1},
                                 handleWidth=5,
                             ){
+                                dev.log.partControl('.sequencer.signalBlock(...)'); //#development
                             
                                 let selected = false;
                                 const minLength = handleWidth/4;
@@ -36775,6 +37344,7 @@
                                 //controls
                                     object.unit = function(x,y){
                                         if(x == undefined && y == undefined){return {x:unit_x,y:unit_y};}
+                                        dev.log.partControl('.sequencer.signalBlock.unit('+x+','+y+')'); //#development
                             
                                         //(awkward bid for speed)
                                         if( x == undefined ){
@@ -36794,21 +37364,25 @@
                                     };
                                     object.line = function(a){
                                         if(a == undefined){return line;}
+                                        dev.log.partControl('.sequencer.signalBlock.line('+a+')'); //#development
                                         line = a;
                                         updateLine();
                                     };
                                     object.position = function(a){
                                         if(a == undefined){return position;}
+                                        dev.log.partControl('.sequencer.signalBlock.position('+a+')'); //#development
                                         position = a;
                                         updatePosition();
                                     };
                                     object.length = function(a){
                                         if(a == undefined){return length;}
+                                        dev.log.partControl('.sequencer.signalBlock.length('+a+')'); //#development
                                         length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
                                         updateLength();
                                     };
                                     object.strength = function(a){
                                         if(a == undefined){return strength;}
+                                        dev.log.partControl('.sequencer.signalBlock.strength('+a+')'); //#development
                                         a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
                                         strength = a;
                                         currentStyles = {
@@ -36819,6 +37393,7 @@
                                     };
                                     object.glow = function(a){
                                         if(a == undefined){return glow;}
+                                        dev.log.partControl('.sequencer.signalBlock.glow('+a+')'); //#development
                                         glow = a;
                                         if(glow){ 
                                             object.body.colour(currentStyles.glow.colour);
@@ -36832,6 +37407,7 @@
                                     };
                                     object.selected = function(a){
                                         if(a == undefined){return selected;}
+                                        dev.log.partControl('.sequencer.signalBlock.selected('+a+')'); //#development
                                         selected = a;
                                     };
                             
@@ -36862,6 +37438,7 @@
                                 onrelease=function(needle,value){}, 
                                 selectionAreaToggle=function(bool){},
                             ){
+                                dev.log.partControl('.grapher_waveWorkspace(...)'); //#development
                             
                                 //elements 
                                     //main
@@ -37112,6 +37689,7 @@
                                 onconnect=function(instigator){},
                                 ondisconnect=function(instigator){},
                             ){
+                                dev.log.partDynamic('.connectionNode(...)'); //#development
                             
                                 //elements
                                     //main
@@ -37146,6 +37724,7 @@
                                         allowDisconnections = bool;
                                     };
                                     object.connectTo = function(new_foreignNode){
+                                        dev.log.partDynamic('.connectionNode.connectTo('+(new_foreignNode!=undefined?JSON.stringify(new_foreignNode.getAddress()):'-undefined-')+')'); //#development
                             
                                         if( new_foreignNode == undefined){ return; }
                                         if( new_foreignNode == this ){ return; }
@@ -37205,6 +37784,7 @@
                                         cable = new_cable;
                                     };
                                     object._removeCable = function(){
+                                        dev.log.partDynamic('.connectionNode._removeCable()'); //#development
                                         cable.parent.remove(cable);
                                         cable = undefined;
                                         foreignNode._loseCable();
@@ -37213,9 +37793,11 @@
                                         cable = undefined;
                                     };
                                     object.getAttachmentPoint = function(){
+                                        dev.log.partDynamic('.connectionNode.getAttachmentPoint()'); //#development
                                         const offset = object.getOffset();
                                         const diagonalLength = Math.sqrt( Math.pow((rectangle.height()),2)/4 + Math.pow((rectangle.width()),2)/4 ) * offset.scale;
                                         const collectedAngle = offset.angle + Math.atan( rectangle.height()/rectangle.width() );
+                                        dev.log.partDynamic('.connectionNode.getAttachmentPoint -> offset:'+JSON.stringify(offset)+' diagonalLength:'+diagonalLength+' collectedAngle:'+collectedAngle); //#development
                             
                                         return {
                                             x: offset.x + (diagonalLength*Math.cos(collectedAngle))*cableConnectionPosition.x*2, 
@@ -37234,6 +37816,7 @@
                             
                                 //mouse interaction
                                     rectangle.attachCallback('onmousedown', function(x,y,event){
+                                        dev.log.partDynamic('.connectionNode-onmousedown(...)'); //#development
                                         let displacedNode = undefined;
                             
                                         let liveCable;
@@ -37254,6 +37837,7 @@
                                                 if( object.getForeignNode() != undefined && object.getForeignNode().isConnected() && !object.getForeignNode().canDisconnect() ){return;}
                             
                                                 const mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                                dev.log.partDynamic('.connectionNode-onmousedown -> mousePoint:'+JSON.stringify(mousePoint)); //#development
                             
                                                 //gather connection nodes within proximity
                                                     const nodesWithinProximity = interfacePart.collection.dynamic.connectionNode.registry.map(node => {
@@ -37262,6 +37846,7 @@
                                                         const distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
                                                         if(distance < proximityThreshold.distance){ return {node:node,distance:distance}; }
                                                     }).filter(item => item!=undefined).sort((a, b) => {return a.distance-b.distance});
+                                                    dev.log.partDynamic('.connectionNode-onmousedown -> nodesWithinProximity:'+JSON.stringify(nodesWithinProximity.map(i => ({distance:i.distance, node:i.node.getAddress()}) ))); //#development
                             
                                                 //select node to snap to
                                                     let snapToNode = undefined;
@@ -37290,9 +37875,11 @@
                                                             snapToNode = currentlyConnectedNode.distance > relevantNodes[0].distance + proximityThreshold.hysteresisDistance ? relevantNodes[0].node : currentlyConnectedNode.node;
                                                         }
                                                     }
+                                                    dev.log.partDynamic('.connectionNode-onmousedown -> snapToNode:'+(snapToNode!=undefined?JSON.stringify(snapToNode.getAddress()):'-none-')); //#development
                                                 
                                                 //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
                                                     if( snapToNode == undefined || !snapToNode.allowConnections() || !object.isAppropiateConnectionNode(snapToNode) ){
+                                                        dev.log.partDynamic('.connectionNode-onmousedown -> no node found'); //#development
                                                         if( liveCable == undefined ){
                                                             if( object.isConnected() && displacedNode!=undefined ){
                                                                 object.getForeignNode().connectTo(displacedNode);
@@ -37307,6 +37894,7 @@
                                                         mousePoint.angle = _canvas_.library.math.getAngleOfTwoPoints(mousePoint,thisNode_point);
                                                         liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle, false );
                                                     }else{
+                                                        dev.log.partDynamic('.connectionNode-onmousedown -> node found'); //#development
                                                         if(liveCable != undefined){
                                                             liveCable.parent.remove(liveCable);
                                                             liveCable = undefined;
@@ -37444,6 +38032,7 @@
                                 dimStyle={r:1,g:0,b:0,a:1},
                                 glowStyle={r:1,g:0.39,b:0.39,a:1},
                             ){
+                                dev.log.partDynamic('.cable(...)');  //#development
                             
                                 //elements 
                                     //main
@@ -37489,6 +38078,7 @@
                                 dimStyle={r:1,g:0,b:0,a:1},
                                 glowStyle={r:1,g:0.39,b:0.39,a:1},
                             ){
+                                dev.log.partDynamic('.cable2(...)');  //#development
                             
                                 const push = 20;
                             
