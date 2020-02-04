@@ -49,80 +49,87 @@ this.characterString = function(_id,_name){
             this.y = innerGroup.y;
             this.angle = innerGroup.angle;
             this.scale = innerGroup.scale;
-                this.colour = function(a){
-                    if(a==undefined){return colour;}     
-                    colour = a;
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                    recolourCharacters();
-                };
-                this.width = function(a){
-                    if(a==undefined){return width;}  
-                    width = a;  
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-                    if(allowGenerateStringCharacters){generateStringCharacters();} 
-                };
-                this.height = function(a){
-                    if(a==undefined){return height;} 
-                    height = a; 
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-                    if(allowGenerateStringCharacters){generateStringCharacters();} 
-                };
-                this.font = function(newFont){
-                    if(newFont==undefined){return font;}
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
-    
-                    if( library.font.isApprovedFont(newFont) ){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+library.font.fontLoadAttempted(newFont)); //#development
-                        if( !library.font.fontLoadAttempted(newFont) ){ library.font.loadFont(newFont); }
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+library.font.isFontLoaded(newFont)); //#development
-                        if( !library.font.isFontLoaded(newFont) ){ 
-                            const timeoutId = setTimeout(function(){ 
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun < '+timeoutId); //#development
-                                self.font(newFont);
-                            }, 100, newFont);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun > '+timeoutId); //#development
-                            return;
-                        }
-    
-                        font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
-                    }else{
-                        console.warn('library.font : error : unknown font:',newFont);
-                        font = defaultFontName;
+            this.colour = function(a){
+                if(a==undefined){return colour;}     
+                colour = a;
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
+                recolourCharacters();
+                render.shouldRenderFrame = true;
+            };
+            this.width = function(a){
+                if(a==undefined){return width;}  
+                width = a;  
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
+                if(allowGenerateStringCharacters){generateStringCharacters();} 
+                render.shouldRenderFrame = true;
+            };
+            this.height = function(a){
+                if(a==undefined){return height;} 
+                height = a; 
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
+                if(allowGenerateStringCharacters){generateStringCharacters();} 
+                render.shouldRenderFrame = true;
+            };
+            this.font = function(newFont){
+                if(newFont==undefined){return font;}
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
+
+                if( library.font.isApprovedFont(newFont) ){
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+library.font.fontLoadAttempted(newFont)); //#development
+                    if( !library.font.fontLoadAttempted(newFont) ){ library.font.loadFont(newFont); }
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+library.font.isFontLoaded(newFont)); //#development
+                    if( !library.font.isFontLoaded(newFont) ){ 
+                        const timeoutId = setTimeout(function(){ 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun < '+timeoutId); //#development
+                            self.font(newFont);
+                        }, 100, newFont);
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun > '+timeoutId); //#development
+                        return;
                     }
-    
-                    if(allowGenerateStringCharacters){generateStringCharacters();} 
-                    self.onFontUpdateCallback();
+
+                    font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
+                }else{
+                    console.warn('library.font : error : unknown font:',newFont);
+                    font = defaultFontName;
+                }
+
+                if(allowGenerateStringCharacters){generateStringCharacters();} 
+                self.onFontUpdateCallback();
+                render.shouldRenderFrame = true;
+            };
+            this.string = function(a){ 
+                if(a==undefined){return string;} 
+                string = a;
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].string(',a); //#development
+                if(allowGenerateStringCharacters){generateStringCharacters();} 
+                render.shouldRenderFrame = true;
+            };
+            this.spacing = function(a){ 
+                if(a==undefined){return spacing;} 
+                spacing = a;
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].spacing(',a); //#development
+                if(allowGenerateStringCharacters){generateStringCharacters();} 
+                render.shouldRenderFrame = true;
+            };
+            this.interCharacterSpacing = function(a){
+                if(a==undefined){return interCharacterSpacing;}
+                interCharacterSpacing = a;
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].interCharacterSpacing(',a); //#development
+                if(allowGenerateStringCharacters){generateStringCharacters();}
+                render.shouldRenderFrame = true;
+            };
+            this.printingMode = function(a){
+                if(a==undefined){return printingMode;} 
+                printingMode = {
+                    widthCalculation: a.widthCalculation != undefined || a.widthCalculation != '' ? a.widthCalculation : printingMode.widthCalculation,
+                    horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
+                    vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
                 };
-                this.string = function(a){ 
-                    if(a==undefined){return string;} 
-                    string = a;
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].string(',a); //#development
-                    if(allowGenerateStringCharacters){generateStringCharacters();} 
-                };
-                this.spacing = function(a){ 
-                    if(a==undefined){return spacing;} 
-                    spacing = a;
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].spacing(',a); //#development
-                    if(allowGenerateStringCharacters){generateStringCharacters();} 
-                };
-                this.interCharacterSpacing = function(a){
-                    if(a==undefined){return interCharacterSpacing;}
-                    interCharacterSpacing = a;
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].interCharacterSpacing(',a); //#development
-                    if(allowGenerateStringCharacters){generateStringCharacters();}
-                };
-                this.printingMode = function(a){
-                    if(a==undefined){return printingMode;} 
-                    printingMode = {
-                        widthCalculation: a.widthCalculation != undefined || a.widthCalculation != '' ? a.widthCalculation : printingMode.widthCalculation,
-                        horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
-                        vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
-                    };
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].printingMode(',printingMode); //#development
-    
-                    if(allowGenerateStringCharacters){generateStringCharacters();}
-                };
-            // this.static = innerGroup.static;
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].printingMode(',printingMode); //#development
+
+                if(allowGenerateStringCharacters){generateStringCharacters();}
+                render.shouldRenderFrame = true;
+            };
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
                 if(attributes==undefined){ 
@@ -160,6 +167,7 @@ this.characterString = function(_id,_name){
 
                 generateStringCharacters();
                 self.onFontUpdateCallback();
+                render.shouldRenderFrame = true;
             }
     //string
         let resultingWidth = 0;
@@ -277,7 +285,6 @@ this.characterString = function(_id,_name){
             this.string = self.string;
             this.interCharacterSpacing = self.interCharacterSpacing;
             this.printingMode = self.printingMode;
-            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this.resultingWidth = self.resultingWidth;

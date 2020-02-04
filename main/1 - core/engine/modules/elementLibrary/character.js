@@ -20,12 +20,14 @@ this.character = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
+                render.shouldRenderFrame = true;
             };
             
         //advanced use attributes
@@ -49,48 +51,54 @@ this.character = function(_id,_name){
                 horizontal:'left', //left / middle / right
                 vertical:'bottom', //top  / middle / bottom
             };
-            // let isStatic = false;
             this.x = function(a){ 
                 if(a==undefined){return x;} 
                 x = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.y = function(a){ 
                 if(a==undefined){return y;} 
                 y = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.angle = function(a){ 
                 if(a==undefined){return angle;} 
                 angle = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.anchor = function(a){ 
                 if(a==undefined){return anchor;} 
                 anchor = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.width = function(a){
                 if(a==undefined){return width;}  
                 width = a;  
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.height = function(a){
                 if(a==undefined){return height;} 
                 height = a; 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.font = function(newFont){
                 if(newFont==undefined){return font;}
@@ -114,6 +122,7 @@ this.character = function(_id,_name){
 
                 if(allowProducePoints){producePoints();}
                 if(allowComputeExtremities){computeExtremities();} 
+                render.shouldRenderFrame = true;
             };
             this.character = function(a){
                 if(a==undefined){return character;} 
@@ -121,6 +130,7 @@ this.character = function(_id,_name){
                 character = a; 
                 if(allowProducePoints){producePoints();}
                 if(allowComputeExtremities){computeExtremities();} 
+                render.shouldRenderFrame = true;
             };
             this.printingMode = function(a){
                 if(a==undefined){return printingMode;} 
@@ -132,17 +142,12 @@ this.character = function(_id,_name){
 
                 if(allowProducePoints){producePoints();}
                 if(allowComputeExtremities){computeExtremities();} 
+                render.shouldRenderFrame = true;
             };
-            // this.static = function(a){
-            //     if(a==undefined){return isStatic;}  
-            //     isStatic = a;  
-            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-            //     if(allowComputeExtremities){computeExtremities();}
-            // };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, /*static:isStatic*/ }; } 
+                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowProducePoints = false;
@@ -160,6 +165,7 @@ this.character = function(_id,_name){
 
                 producePoints();
                 computeExtremities();
+                render.shouldRenderFrame = true;
             };
 
     //character data
@@ -299,7 +305,7 @@ this.character = function(_id,_name){
             
             //get offset from parent, if one isn't provided
                 if(offset == undefined){
-                    offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                    offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                     dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> no offset provided; generated offset:',offset); //#development
                 }
                 else{ dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> offset provided:',offset); }//#development
@@ -387,7 +393,6 @@ this.character = function(_id,_name){
             report.info(self.getAddress(),'._dump -> font: '+font);
             report.info(self.getAddress(),'._dump -> character: '+character);
             report.info(self.getAddress(),'._dump -> printingMode: '+JSON.stringify(printingMode));
-            // report.info(self.getAddress(),'._dump -> static: '+self.static());
         };
     
     //interface
@@ -404,7 +409,6 @@ this.character = function(_id,_name){
             this.font = self.font;
             this.character = self.character;
             this.printingMode = self.printingMode;
-            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;

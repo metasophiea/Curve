@@ -215,10 +215,25 @@ const render = new function(){
         };
 
     //actual render
-        function renderFrame(noClear=false){
-            dev.log.render('::renderFrame(',noClear); //#development
+        this.shouldRenderFrame = false;
+        let allowFrameSkipping = true;
+        this.allowFrameSkipping = function(bool){
+            dev.log.render('.allowFrameSkipping(',bool); //#development
+            if(bool == undefined){return allowFrameSkipping;}
+            allowFrameSkipping = bool;
+        };
+        function renderFrame(noClear=false,force=false){
+            dev.log.render('::renderFrame(',noClear,force); //#development
 
             function func(){
+                stats.collectFrameDecision( !allowFrameSkipping || (self.shouldRenderFrame || force) );
+
+                if(allowFrameSkipping && (!self.shouldRenderFrame && !force)){
+                    dev.log.render('::renderFrame::func -> not actually rendering frame'); //#development
+                    return;
+                }
+                self.shouldRenderFrame = false;
+
                 if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
                 arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
                 const transferableImage = canvas.transferToImageBitmap();
@@ -258,9 +273,9 @@ const render = new function(){
             //perform stats collection
                 stats.collectFrameTimestamp(timestamp);
         }
-        this.frame = function(noClear=false){
-            dev.log.render('.frame(',noClear); //#development
-            renderFrame(noClear);
+        this.frame = function(noClear=false,force=false){
+            dev.log.render('.frame(',noClear,force); //#development
+            renderFrame(noClear,force);
         };
         this.active = function(bool){
             dev.log.render('.active(',bool); //#development

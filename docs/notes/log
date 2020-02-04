@@ -1,4 +1,35 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-04
+  - added "shouldRenderFrame" to the render section of core's engine. This bool
+    is set to 'false' initially, and can be set to 'true' by any element. They
+    do so when some aspect of themselves has changed (size, colour, position,
+    etc) If it is set to true, when the next render request arrives, then a
+    full render takes place, after which the value is set to 'false' again. 
+    However, if the value remains at 'false' when the next render request
+    arrives; then that render is completely skipped. No image is transferred
+    out to core-console.
+      The idea here, is that frames are only rendered when there's something
+    new to show, otherwise the last rendered frame should do fine.
+      The "wavey boxes" test sees an improvement of ~10%, with any
+    still-image test improving 100% (basically not rendering at all)
+
+    It might make further sense, to somehow sync the canvas refreshes..maybe
+
+  - added an "autoPrint" method to core-console's stats section, just to make
+    getting stats easier
+  - added checkbox option to the dev dropdown, to give the option of allowing
+    frame skipping (allowed by default)
+
+
+2020-02-03
+  - removed all references to 'static' from core's engine (they'd been
+    commented out already anyway)
+  - played around with creating a new "getImageFromUrl" function that sits in
+    the library instead of being attached to the image element in core. Also
+    tried to add mipmapping, but then discovered webGL has its own feature for
+    this; "void gl.generateMipmap(target);" Investigation is needed
+
+
 2020-02-01
   - seems closure can't handle the new custom audio node code..so we're back
     to just the plain unminified code now
@@ -3198,11 +3229,11 @@
 2019-01-22
   - added way of selecting which colour to clear the canvas with (accessable
     with workspace.core.render.clearColour)
-  - added similar method to control; workspace.controlscene.backgroundColour
+  - added similar method to control; workspace.control.scene.backgroundColour
   - played around with adding "tron-like" stylings to the basicSynthesizer
     (with some success)
   - added slidePanel_image (which has an overlay texture)
-  - fixed slide_image a little. Seems to be a thung with the way shapes are
+  - fixed slide_image a little. Seems to be a thing with the way shapes are
     selected from a point with a callback. Core will search down for a shape that
     has the callback, while system will use the frontmost shape and search up
     through parents. This sometimes means that callbacks attached to groups are

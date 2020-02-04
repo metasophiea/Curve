@@ -75,7 +75,6 @@ const genericElementProxy = function(_type, _name){
         Object.entries({
             ignored: false,
             scale: 1,
-            // static: false,
         }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
         this.unifiedAttribute = function(attributes){
             if(attributes == undefined){ return cashedAttributes; }

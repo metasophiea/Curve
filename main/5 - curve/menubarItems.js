@@ -222,6 +222,10 @@ _canvas_.control.go.add( function(){
                             updateFunction:function(){return !_canvas_.control.interaction.unloadWarning(); }, 
                             onclickFunction:function(val){ _canvas_.control.interaction.unloadWarning(!val); }
                         },
+                        { type:'checkbox', text:'Frame Skipping', 
+                            updateFunction:function(){return _canvas_.core.render.allowFrameSkipping(); }, 
+                            onclickFunction:function(val){ _canvas_.core.render.allowFrameSkipping(val); }
+                        },
                         {type:'break'}
                     ].concat(
                         _canvas_.layers.getVersionInformation().map(item => {

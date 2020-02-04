@@ -19,12 +19,14 @@ this.path = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
+                render.shouldRenderFrame = true;
             };
             
         //advanced use attributes
@@ -43,7 +45,6 @@ this.path = function(_id,_name){
             let jointType = 'sharp';
             let jointDetail = 25;
             let sharpLimit = 4;
-            // let isStatic = false;
             this.points = function(a){
                 if(points==undefined){return points;}     
                 points = a;     
@@ -51,6 +52,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.pointsAsXYArray = function(a){
                 function pointsToXYArray(){ 
@@ -63,12 +65,14 @@ this.path = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
 
                 this.points( a.map((point) => [point.x,point.y]).flat() );
+                render.shouldRenderFrame = true;
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.thickness = function(a){
                 if(thickness==undefined){return thickness;}     
@@ -77,6 +81,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.looping = function(a){
                 if(looping==undefined){return looping;}     
@@ -85,6 +90,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.capType = function(a){
                 if(capType==undefined){return capType;}     
@@ -93,6 +99,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.jointType = function(a){
                 if(jointType==undefined){return jointType;}     
@@ -101,6 +108,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.jointDetail = function(a){
                 if(jointDetail==undefined){return jointDetail;}     
@@ -109,6 +117,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.sharpLimit = function(a){
                 if(sharpLimit==undefined){return sharpLimit;}     
@@ -117,17 +126,12 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
-            // this.static = function(a){
-            //     if(a==undefined){return isStatic;}  
-            //     isStatic = a;  
-            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-            //     if(allowComputeExtremities){computeExtremities();}
-            // };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, /*static:isStatic*/ }; } 
+            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -142,6 +146,7 @@ this.path = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
+                render.shouldRenderFrame = true;
             };
 
     //webGL rendering functions
@@ -242,7 +247,7 @@ this.path = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
             //calculate points based on the offset
                 self.extremities.points = [];
                 for(let a = 0; a < generatedPathPolygon.length; a+=2){
@@ -294,7 +299,6 @@ this.path = function(_id,_name){
             report.info(self.getAddress(),'._dump -> jointType: '+jointType);
             report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
             report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
-            // report.info(self.getAddress(),'._dump -> static: '+self.static());
         };
 
     //interface
@@ -310,7 +314,6 @@ this.path = function(_id,_name){
             this.jointType = self.jointType;
             this.jointDetail = self.jointDetail;
             this.sharpLimit = self.sharpLimit;
-            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;

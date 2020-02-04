@@ -28,6 +28,18 @@ const stats = new function(){
         timePerFrameArray:[],
         time:0,
     };
+    const frameDecision = {
+        compute:function(bool){
+            dev.log.stats('::frameDecision.compute(',bool); //#development
+
+            this.frameDecisionArray.push( bool );
+            if( this.frameDecisionArray.length > average){ this.frameDecisionArray.shift(); }
+
+            this.split = library.math.averageArray( this.frameDecisionArray );
+        },
+        frameDecisionArray:[],
+        split:0,
+    };
 
     this.collectFrameTimestamp = function(timestamp){
         dev.log.stats('.collectFrameTimestamp(',timestamp); //#development
@@ -43,6 +55,15 @@ const stats = new function(){
 
         timePerFrame.compute(time);
     };
+    this.collectFrameDecision = function(bool){
+        dev.log.stats('.collectFrameDecision(',bool); //#development
+        //if stats are turned off, just bail
+            if(!active){return;}
+
+        frameDecision.compute(bool);
+    };
+
+
     this._active = function(){ return active; };
     this.active = function(bool){
         dev.log.stats('.active(',bool); //#development
@@ -53,7 +74,8 @@ const stats = new function(){
         dev.log.stats('.getReport()'); //#development
         return {
             framesPerSecond: framesPerSecond.rate,
-            secondsPerFrame: timePerFrame.time,
+            secondsPerFrameOverTheLastThirtyFrames: timePerFrame.time,
+            renderNonRenderSplitOverTheLastThirtyFrames: frameDecision.split,
         };
     };
 };

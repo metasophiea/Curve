@@ -206,6 +206,11 @@
         dev.count('service-render.frameRateLimit'); //#development
         return render.frameRateLimit(rate);
     };
+    communicationModule.function['render.allowFrameSkipping'] = function(active){
+        dev.log.service('.render.allowFrameSkipping(',active); //#development
+        dev.count('service-render.allowFrameSkipping'); //#development
+        return render.allowFrameSkipping(active);
+    };
     communicationModule.function['render.frame'] = function(){
         dev.log.service('.render.frame()'); //#development
         dev.count('service-render.frame'); //#development

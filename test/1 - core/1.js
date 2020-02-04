@@ -140,7 +140,6 @@ _canvas_.core.go.add( function(){
             elements.test_clippingGroup_rectangle_stencil.unifiedAttribute({ width:60, height:60 });
             elements.clippingGroup.stencil(elements.test_clippingGroup_rectangle_stencil);
 
-
     //transparency test
         elements.rectangle_2 = _canvas_.core.element.create('rectangle','test_rectangle_2');
         elements.rectangle_2.unifiedAttribute({ 
@@ -149,6 +148,17 @@ _canvas_.core.go.add( function(){
         });
         _canvas_.core.arrangement.append(elements.rectangle_2);
 
+
+
+
+
     setTimeout(_canvas_.core.render.frame,100);
     setTimeout(_canvas_.core.render.frame,1100);
+    // _canvas_.core.render.activeLimitToFrameRate(true);
+    // _canvas_.core.render.frameRateLimit(20);
+    // _canvas_.core.render.active(true);
+    // _canvas_.core.stats.active(true);
+    // setInterval(() => {
+    //     _canvas_.core.stats.getReport().then(console.log)
+    // }, 500);
 } );

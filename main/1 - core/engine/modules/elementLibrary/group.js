@@ -19,6 +19,7 @@ this.group = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             
         //advanced use attributes
@@ -33,47 +34,45 @@ this.group = function(_id,_name){
             let angle = 0; 
             let scale = 1; 
             let heedCamera = false;
-            // let isStatic = false;
             this.x = function(a){ 
                 if(a==undefined){return x;}     
                 x = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.y = function(a){ 
                 if(a==undefined){return y;}     
                 y = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.angle = function(a){ 
                 if(a==undefined){return angle;} 
                 angle = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.heedCamera = function(a){
                 if(a==undefined){return heedCamera;}     
                 heedCamera = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].heedCamera(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
-            // this.static = function(a){
-            //     if(a==undefined){return isStatic;}  
-            //     isStatic = a;  
-            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-            //     if(allowComputeExtremities){computeExtremities();}
-            // };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera, /*static:isStatic*/ }; } 
+                if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -88,6 +87,7 @@ this.group = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
+                render.shouldRenderFrame = true;
             };
 
     //group functions
@@ -121,6 +121,7 @@ this.group = function(_id,_name){
                 this.append(child);
             });
             dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
+            render.shouldRenderFrame = true;
         };
         this.getChildByName = function(name){return getChildByName(name);};
         this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
@@ -137,6 +138,7 @@ this.group = function(_id,_name){
 
             childRegistry[newElement.name] = newElement;
 
+            render.shouldRenderFrame = true;
             return true;
         };
         this.prepend = function(newElement){
@@ -150,6 +152,7 @@ this.group = function(_id,_name){
 
             childRegistry[newElement.name] = newElement;
 
+            render.shouldRenderFrame = true;
             return true;
         };
         this.remove = function(newElement){
@@ -162,11 +165,13 @@ this.group = function(_id,_name){
 
             newElement.parent = undefined;
             delete childRegistry[newElement.name];
+            render.shouldRenderFrame = true;
         };
         this.clear = function(){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].clear()'); //#development
             children = [];
             childRegistry = {};
+            render.shouldRenderFrame = true;
             return true;
         };
         this.getElementsUnderPoint = function(x,y){
@@ -232,12 +237,14 @@ this.group = function(_id,_name){
             clipping.stencil = element;
             clipping.stencil.parent = this;
             if(clipping.active){ computeExtremities(); }
+            render.shouldRenderFrame = true;
         };
         this.clipActive = function(bool){
             if(bool == undefined){return clipping.active;}
             dev.log.elementLibrary[type]('['+self.getAddress()+'].clipActive(',bool); //#development
             clipping.active = bool;
             computeExtremities();
+            render.shouldRenderFrame = true;
         };
 
     //extremities
@@ -293,7 +300,7 @@ this.group = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities(',element); //#development
 
             //get offset from parent
-                const offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                const offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
             //combine offset with group's position, angle and scale to produce new offset for children
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const newOffset = { 
@@ -316,7 +323,7 @@ this.group = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //combine offset with group's position, angle and scale to produce new offset for children
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const newOffset = { 
@@ -336,7 +343,7 @@ this.group = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add(',element); //#development
 
             //get offset from parent
-                const offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                const offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                 dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add -> generated offset:',offset); //#development
             //combine offset with group's position, angle and scale to produce new offset for children
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -508,7 +515,6 @@ this.group = function(_id,_name){
             console.log(self.getAddress(),'._dump -> angle: '+angle);
             console.log(self.getAddress(),'._dump -> scale: '+scale);
             console.log(self.getAddress(),'._dump -> heedCamera: '+heedCamera);
-            // console.log(self.getAddress(),'._dump -> static: '+self.static());
             console.log(self.getAddress(),'._dump -> children.length: '+children.length);
             console.log(self.getAddress(),'._dump -> children:',children);
             console.log(self.getAddress(),'._dump -> childRegistry:',childRegistry);
@@ -523,7 +529,6 @@ this.group = function(_id,_name){
             this.angle = self.angle;
             this.scale = self.scale;
             this.heedCamera = self.heedCamera;
-            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
 
             this.getAddress = self.getAddress;

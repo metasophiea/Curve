@@ -23,7 +23,7 @@ _canvas_.core.go.add( function(){
 
             const tmp = _canvas_.core.element.create('image','test_image_'+y+'_'+x);
             tmp.unifiedAttribute({ 
-                x:10 + (size+1)*x, y:10 + (size+1)*y, width:size, height:size, url:'/images/testImages/mikeandbrian_10px.png',
+                x:10 + (size+1)*x, y:10 + (size+1)*y, width:size, height:size, url:'/images/testImages/mikeandbrian.png',
             });
             group.append(tmp);
 

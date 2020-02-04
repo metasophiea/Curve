@@ -19,18 +19,21 @@ this.polygonWithOutline = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
+                render.shouldRenderFrame = true;
             };
             let lineColour = {r:1,g:0,b:0,a:1};
             this.lineColour = function(a){
                 if(a==undefined){return lineColour;}     
                 lineColour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
+                render.shouldRenderFrame = true;
             };
             
         //advanced use attributes
@@ -42,18 +45,18 @@ this.polygonWithOutline = function(_id,_name){
         //attributes pertinent to extremity calculation
             let points = [];
             let pointsChanged = true;
-            let scale = 1;   
-            let thickness = 0;       
-            let jointDetail = 25;   
+            let scale = 1;
+            let thickness = 0;
+            let jointDetail = 25;
             let jointType = 'sharp';
-            let sharpLimit = 4;     
-            // let isStatic = false;
+            let sharpLimit = 4;
             this.points = function(a){
                 if(points==undefined){return points;}     
                 points = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].points(',points); //#development
                 if(allowComputeExtremities){computeExtremities();}
                 pointsChanged = true;
+                render.shouldRenderFrame = true;
             };
             this.pointsAsXYArray = function(a){
                 function pointsToXYArray(){ 
@@ -66,18 +69,21 @@ this.polygonWithOutline = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
 
                 this.points( a.map((point) => [point.x,point.y]).flat() );
+                render.shouldRenderFrame = true;
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.thickness = function(a){
                 if(thickness==undefined){return thickness;}     
                 thickness = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness('+thickness+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
                 pointsChanged = true;
             };
             this.jointDetail = function(a){
@@ -85,6 +91,7 @@ this.polygonWithOutline = function(_id,_name){
                 jointDetail = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].jointDetail('+jointDetail+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
                 pointsChanged = true;
             };
             this.jointType = function(a){
@@ -92,6 +99,7 @@ this.polygonWithOutline = function(_id,_name){
                 jointType = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].jointType('+jointType+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
                 pointsChanged = true;
             };
             this.sharpLimit = function(a){
@@ -99,18 +107,13 @@ this.polygonWithOutline = function(_id,_name){
                 sharpLimit = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].sharpLimit('+sharpLimit+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
                 pointsChanged = true;
             };
-            // this.static = function(a){
-            //     if(a==undefined){return isStatic;}  
-            //     isStatic = a;  
-            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-            //     if(allowComputeExtremities){computeExtremities();}
-            // };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit, /*static:isStatic*/ }; } 
+            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -125,6 +128,7 @@ this.polygonWithOutline = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
+                render.shouldRenderFrame = true;
             };
 
     //webGL rendering functions
@@ -258,7 +262,7 @@ this.polygonWithOutline = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
              
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
             //calculate points based on the offset
                 self.extremities.points = [];
                 for(let a = 0; a < points.length; a+=2){
@@ -308,7 +312,6 @@ this.polygonWithOutline = function(_id,_name){
             report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
             report.info(self.getAddress(),'._dump -> jointType: '+jointType);
             report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
-            // report.info(self.getAddress(),'._dump -> static: '+self.static());
         };
 
     //interface
@@ -323,7 +326,6 @@ this.polygonWithOutline = function(_id,_name){
             this.jointDetail = self.jointDetail;
             this.jointType = self.jointType;
             this.sharpLimit = self.sharpLimit;
-            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;

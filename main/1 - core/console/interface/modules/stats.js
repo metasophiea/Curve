@@ -11,4 +11,18 @@ this.stats = new function(){
             communicationModule.run('stats.getReport',[],resolve);
         });
     };
+    let autoPrintActive = false;
+    let autoPrintIntervalId = undefined;
+    this.autoPrint = function(bool){
+        if(bool == undefined){ return autoPrintActive; }
+        autoPrintActive = bool;
+
+        if(autoPrintActive){
+            autoPrintIntervalId = setInterval(() => {
+                _canvas_.core.stats.getReport().then(console.log)
+            }, 500);
+        }else{
+            clearInterval(autoPrintIntervalId);
+        }
+    };
 };

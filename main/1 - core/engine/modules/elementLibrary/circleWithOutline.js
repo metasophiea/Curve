@@ -19,18 +19,21 @@ this.circleWithOutline = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
+                render.shouldRenderFrame = true;
             };
             let lineColour = {r:1,g:0,b:0,a:1};
             this.lineColour = function(a){
                 if(a==undefined){return lineColour;}     
                 lineColour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
+                render.shouldRenderFrame = true;
             };
         
         //advanced use attributes
@@ -47,24 +50,26 @@ this.circleWithOutline = function(_id,_name){
             let detail = 25;
             let scale = 1;
             let thickness = 0;
-            // let isStatic = false;
             this.x = function(a){ 
                 if(a==undefined){return x;}     
                 x = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.y = function(a){ 
                 if(a==undefined){return y;}     
                 y = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.radius = function(a){ 
                 if(a==undefined){return radius;} 
                 radius = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].radius(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.detail = function(a){ 
                 if(a==undefined){return detail;}
@@ -72,29 +77,26 @@ this.circleWithOutline = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].detail(',a); //#development
                 calculateCirclePoints();
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
             this.thickness = function(a){ 
                 if(a==undefined){return thickness;} 
                 thickness = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
+                render.shouldRenderFrame = true;
             };
-            // this.static = function(a){
-            //     if(a==undefined){return isStatic;}  
-            //     isStatic = a;  
-            //     dev.log.elementLibrary[type]('['+self.getAddress()+'].static(',a); //#development
-            //     if(allowComputeExtremities){computeExtremities();}
-            // };
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, radius:radius, detail:detail, scale:scale, thickness:thickness, /*static:isStatic*/}; } 
+            if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, radius:radius, detail:detail, scale:scale, thickness:thickness }; } 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
 
                 allowComputeExtremities = false;
@@ -109,6 +111,7 @@ this.circleWithOutline = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
+                render.shouldRenderFrame = true;
             };
 
     //webGL rendering functions
@@ -129,6 +132,7 @@ this.circleWithOutline = function(_id,_name){
                     points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
                 }
             pointsChanged = true;
+            render.shouldRenderFrame = true;
         }
         calculateCirclePoints();
 
@@ -266,7 +270,7 @@ this.circleWithOutline = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
 
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent /*&& !self.static()*/ ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const adjusted = { 
@@ -334,7 +338,6 @@ this.circleWithOutline = function(_id,_name){
             report.info(self.getAddress(),'._dump -> detail: '+detail);
             report.info(self.getAddress(),'._dump -> scale: '+scale);
             report.info(self.getAddress(),'._dump -> thickness: '+thickness);
-            // report.info(self.getAddress(),'._dump -> static: '+self.static());
         };
     
     //interface
@@ -347,7 +350,6 @@ this.circleWithOutline = function(_id,_name){
             this.radius = self.radius;
             this.scale = self.scale;
             this.thickness = self.thickness;
-            // this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;

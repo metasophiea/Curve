@@ -59,13 +59,6 @@ console.log('%cTesting - library.misc', 'font-size:15px; font-weight:bold;');
         var ser_data = JSON.stringify([{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="}]);
         doBoth(org_data,ser_data,org_data);
 
-//loadFileFromURL
-    //(the results of this are dependent on when the response is received, so, they could arrive out of order with the rest)
-    _canvas_.library.misc.loadFileFromURL('http://localhost:8000/CNAME', function(response){
-        console.log('%c- loadFileFromURL', 'font-weight: bold;');
-        tester(response,'curve.metasophiea.com\n');
-    }, 'text');
-
 // //openFile
 //     _canvas_.library.misc.openFile(function(response){
 //         console.log('%c- openFile', 'font-weight: bold;');
@@ -106,3 +99,10 @@ console.log('%cTesting - library.misc', 'font-size:15px; font-weight:bold;');
     tester( _canvas_.library.misc.getDifferenceOfArrays([],[]),{a:[],b:[]} );
     tester( _canvas_.library.misc.getDifferenceOfArrays([5,9,4,1,8,0,4,0,65],[14,85,960,1,8,40,0,0,0,0]),{a:[5,9,4,4,65],b:[14,85,960,40,0,0]} );
     console.log('');
+
+//loadFileFromURL
+    //(the results of this are dependent on when the response is received, so, they could arrive out of order with the rest)
+    _canvas_.library.misc.loadFileFromURL('http://localhost:8000/CNAME', function(response){
+        console.log('%c- loadFileFromURL', 'font-weight: bold;');
+        tester(response,'curve.metasophiea.com\n');
+    }, 'text');

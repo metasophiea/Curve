@@ -2,6 +2,7 @@ this.render = new function(){
     const cachedValues = {
         clearColour:{r:1,g:1,b:1,a:1},
         frameRateLimit:30,
+        allowFrameSkipping:true,
         active:false,
         activeLimitToFrameRate:false,
     };
@@ -46,6 +47,15 @@ this.render = new function(){
             communicationModule.run('render.frameRateLimit',[rate],resolve);
         });
     };
+    this.allowFrameSkipping = function(active){
+        dev.log.interface('.render.allowFrameSkipping(',active); //#development
+        if(active == undefined){return cachedValues.allowFrameSkipping;}
+        cachedValues.allowFrameSkipping = active;
+        return new Promise((resolve, reject) => {
+            communicationModule.run('render.allowFrameSkipping',[active],resolve);
+        });
+    };
+    this.fra
     this.frame = function(){
         dev.log.interface('.render.frame()'); //#development
         communicationModule.run('render.frame',[]);

@@ -135,20 +135,13 @@ _canvas_.core.go.add( function(){
         },1000/40);
 
     //rendering controls
-        _canvas_.core.render.active(true);
+        // _canvas_.core.render.active(true);
         // _canvas_.core.render.activeLimitToFrameRate(true);
-        _canvas_.core.render.frameRateLimit(40);
+        // _canvas_.core.render.frameRateLimit(40);
 
-        // _canvas_.core.stats.active(true);
-        // let averages = [];
-        // let rollingAverage = 0;
-        // let rollingAverageIndex = 1;
-        // setInterval(function(){
-        //     let tmp = _canvas_.core.stats.getReport(); 
-        //     tmp.then(data => {
-        //         averages.push(data.framesPerSecond);
-        //         console.log( 'rollingAverage:', averages.reduce( ( p, c ) => p + c, 0 ) / averages.length, data.framesPerSecond );
-        //     });
-        // },1000);
-
+        _canvas_.core.render.active(true);
+        _canvas_.core.stats.active(true);
+        setInterval(() => {
+            _canvas_.core.stats.getReport().then(console.log)
+        }, 500);
 } );
