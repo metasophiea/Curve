@@ -2670,14 +2670,14 @@ const library = new function(){
                 const filename = vectorLibrary[fontName].fileName;
                 library.misc.loadFileFromURL(
                     fontFilesLocation+filename,
-                    (fontData) => {
-                        const vectors = library.font.extractGlyphs(fontData,reducedGlyphSet);
+                    fontData => {
+                        const vectors = library.font.extractGlyphs(fontData.response,reducedGlyphSet);
                         Object.keys(vectors).forEach(glyphName => vectorLibrary[fontName][glyphName] = vectors[glyphName] );
                         vectorLibrary[fontName].isLoaded = true;
                         onLoaded(true);
                     },
-                    'arraybuffer',
                     () => { onLoaded(false); },
+                    'arraybuffer',
                 );
         };
         this.getVector = function(fontName,character){
@@ -2924,8 +2924,7 @@ const library = new function(){
                 b:arrayRemovals(array_a,array_b.slice())
             };
         };
-        
-        this.loadFileFromURL = function(url,callback,responseType='blob',errorCallback){
+        this.loadFileFromURL = function(url,callback,errorCallback,responseType='blob'){
         
             //responseType: text / arraybuffer / blob / document / json 
         
@@ -2933,9 +2932,9 @@ const library = new function(){
             xhttp.onloadend = a => {
                 if(a.target.status == 200){ 
                     if(callback != undefined){
-                        callback(a.target.response);
+                        callback(a.target);
                     }else{
-                        console.log(a.target.response);
+                        console.log(a.target);
                     }
                 }else{ 
                     if(errorCallback != undefined){
@@ -2949,83 +2948,58 @@ const library = new function(){
             xhttp.responseType = responseType;
             xhttp.send();
         };
-        // this.loadFileFromURL2 = function(url,callback,errorCallback,responseType='blob'){
+        this.loadImageFromURL = function(url,callback,errorCallback,forceUpdate=false,scale=1){
         
-        //     //responseType: text / arraybuffer / blob / document / json 
+            const dataStore = this.loadImageFromURL.loadedImageData;
         
-        //     const xhttp = new XMLHttpRequest();
-        //     xhttp.onloadend = a => {
-        //         if(a.target.status == 200){ 
-        //             if(callback != undefined){
-        //                 callback(a.target);
-        //             }else{
-        //                 console.log(a.target);
-        //             }
-        //         }else{ 
-        //             if(errorCallback != undefined){
-        //                 errorCallback(a.target);
-        //             }else{
-        //                 console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL);
-        //             }
-        //         }
-        //     };
-        //     xhttp.open('get',url,true);
-        //     xhttp.responseType = responseType;
-        //     xhttp.send();
-        // };
-        // this.loadImageFromURL = function(url,callback,errorCallback,forceUpdate=false,scale=1){
+            function getImageFromDataStoreByUrlWithScale(url,scale=1){
+                global = dataStore[url];
+                return dataStore[url].mipmap[1];
+            }
         
-        //     const dataStore = this.loadImageFromURL.loadedImageData;
+            if(dataStore[url] == undefined || forceUpdate && dataStore[url].state != 'requested' ){
+                dataStore[url] = { state:'requested', mipmap:{}, callbacks:[{success:callback,failure:errorCallback,scale:scale}], timestamp:undefined };
         
-        //     if(dataStore[url] == undefined || forceUpdate && dataStore[url].state != 'requested' ){
-        //         dataStore[url] = { state:'requested', mipmap:{}, callbacks:[{success:callback,failure:errorCallback,scale:scale}], timestamp:undefined };
+                library.misc.loadFileFromURL(
+                    url,
+                    response => {
+                        dataStore[url].response = response.response;
+                        createImageBitmap(response.response).then(bitmap => {
+                            dataStore[url].mipmap[1] = bitmap;
+                            dataStore[url].state = 'ready';
+                            dataStore[url].timestamp = Date.now();
+                            dataStore[url].callbacks.forEach(callbackBlock => {
+                                if(callbackBlock.success != undefined){callbackBlock.success( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) );}
+                            } );
+                            dataStore[url].callbacks = [];
+                        }).catch(error => {
+                            dataStore[url].state = 'failed';
+                            dataStore[url].timestamp = Date.now();
+                            dataStore[url].callbacks.forEach(callbackBlock => {
+                                if(callbackBlock.failure != undefined){ callbackBlock.failure('imageDecodingError',response,error); }
+                            } );
+                            dataStore[url].callbacks = [];
+                        });
+                    },
+                    response => {
+                        dataStore[url].state = 'failed';
+                        dataStore[url].timestamp = Date.now();
+                        dataStore[url].callbacks.forEach(callbackBlock => {
+                            if(callbackBlock.failure != undefined){ callbackBlock.failure('badURL',response); }
+                        } );
+                        dataStore[url].callbacks = [];
+                    },
+                );
         
-        //         function getImageFromDataStoreByUrlWithScale(url,scale=1){
-        //             console.log( dataStore[url] );
-        //             global = dataStore[url];
-        //             return dataStore[url].mipmap[1];
-        //         }
-        
-        //         library.misc.loadFileFromURL2(
-        //             url,
-        //             response => {
-        //                 dataStore[url].response = response.response;
-        //                 createImageBitmap(response.response).then(bitmap => {
-        //                     dataStore[url].mipmap[1] = bitmap;
-        //                     dataStore[url].state = 'ready';
-        //                     dataStore[url].timestamp = Date.now();
-        //                     dataStore[url].callbacks.forEach(callbackBlock => {
-        //                         if(callbackBlock.success != undefined){callbackBlock.success( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) );}
-        //                     } );
-        //                     dataStore[url].callbacks = [];
-        //                 }).catch(error => {
-        //                     dataStore[url].state = 'failed';
-        //                     dataStore[url].timestamp = Date.now();
-        //                     dataStore[url].callbacks.forEach(callbackBlock => {
-        //                         if(callbackBlock.failure != undefined){ callbackBlock.failure('imageDecodingError',response,error); }
-        //                     } );
-        //                     dataStore[url].callbacks = [];
-        //                 });
-        //             },
-        //             response => {
-        //                 dataStore[url].state = 'failed';
-        //                 dataStore[url].timestamp = Date.now();
-        //                 dataStore[url].callbacks.forEach(callbackBlock => {
-        //                     if(callbackBlock.failure != undefined){ callbackBlock.failure('badURL',response); }
-        //                 } );
-        //                 dataStore[url].callbacks = [];
-        //             },
-        //         );
-        
-        //     }else if( dataStore[url].state == 'ready' ){
-        //         if(callback != undefined){ callback( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) ); }
-        //     }else if( dataStore[url].state == 'requested' ){
-        //         dataStore[url].callbacks.push({success:callback,failure:errorCallback,scale:scale});
-        //     }else if( dataStore[url].state == 'failed' ){
-        //         if(errorCallback != undefined){ errorCallback('previousFailure'); }
-        //     }
-        // };
-        // this.loadImageFromURL.loadedImageData = {};
+            }else if( dataStore[url].state == 'ready' ){
+                if(callback != undefined){ callback( getImageFromDataStoreByUrlWithScale(url,scale) ); }
+            }else if( dataStore[url].state == 'requested' ){
+                dataStore[url].callbacks.push({success:callback,failure:errorCallback,scale:scale});
+            }else if( dataStore[url].state == 'failed' ){
+                if(errorCallback != undefined){ errorCallback('previousFailure'); }
+            }
+        };
+        this.loadImageFromURL.loadedImageData = {};
     };
     const _thirdparty = new function(){
         const thirdparty = this;
@@ -21453,7 +21427,7 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -21472,31 +21446,31 @@ const element = new function(){
                             if(a==undefined){return x;}     
                             x = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.heedCamera = function(a){
                             if(a==undefined){return heedCamera;}     
                             heedCamera = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -21514,7 +21488,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //group functions
@@ -21544,7 +21518,7 @@ const element = new function(){
                         foreignChildren.forEach(child => {
                             this.append(child);
                         });
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                     };
                     this.getChildByName = function(name){return getChildByName(name);};
                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
@@ -21559,7 +21533,7 @@ const element = new function(){
             
                         childRegistry[newElement.name] = newElement;
             
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                         return true;
                     };
                     this.prepend = function(newElement){
@@ -21572,7 +21546,7 @@ const element = new function(){
             
                         childRegistry[newElement.name] = newElement;
             
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                         return true;
                     };
                     this.remove = function(newElement){
@@ -21584,12 +21558,12 @@ const element = new function(){
             
                         newElement.parent = undefined;
                         delete childRegistry[newElement.name];
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                     };
                     this.clear = function(){
                         children = [];
                         childRegistry = {};
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                         return true;
                     };
                     this.getElementsUnderPoint = function(x,y){
@@ -21652,13 +21626,13 @@ const element = new function(){
                         clipping.stencil = element;
                         clipping.stencil.parent = this;
                         if(clipping.active){ computeExtremities(); }
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                     };
                     this.clipActive = function(bool){
                         if(bool == undefined){return clipping.active;}
                         clipping.active = bool;
                         computeExtremities();
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                     };
             
                 //extremities
@@ -21832,13 +21806,34 @@ const element = new function(){
                     this.computeExtremities = computeExtremities;
                     this.updateExtremities = updateExtremities;
                 
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw bounding box top left and bottom right points
                         render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:0,b:0,a:0.75});
                         render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
                     }
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context, offset){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
+            
                         //combine offset with group's position, angle and scale to produce new offset for children
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const newOffset = { 
@@ -21864,16 +21859,8 @@ const element = new function(){
                             }
                         
                         //render children
-                            children.forEach(function(a){
-                                if(
-                                    library.math.detectIntersect.boundingBoxes(
-                                        clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox(),
-                                        a.extremities.boundingBox
-                                    )
-                                ){ 
-                                    a.render(context,newOffset);
-                                }else{
-                                }
+                            children.forEach(child => {
+                                child.render(context,newOffset);
                             });
             
                         //deactivate clipping
@@ -21959,13 +21946,13 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -21986,43 +21973,43 @@ const element = new function(){
                             if(a==undefined){return x;}     
                             x = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -22040,7 +22027,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //webGL rendering functions
@@ -22165,7 +22152,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
             
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -22173,7 +22160,28 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
+            
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -22247,19 +22255,19 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -22282,49 +22290,49 @@ const element = new function(){
                             if(a==undefined){return x;}     
                             x = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.thickness = function(a){ 
                             if(a==undefined){return thickness;} 
                             thickness = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -22342,7 +22350,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //webGL rendering functions
@@ -22541,7 +22549,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
             
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -22549,7 +22557,28 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
+            
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -22568,25 +22597,25 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> angle: '+angle);
-                        report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        report.info(self.getAddress(),'._dump -> width: '+width);
-                        report.info(self.getAddress(),'._dump -> height: '+height);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> thickness: '+thickness);
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+                        console.log(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
+                        console.log(self.getAddress(),'._dump -> x: '+x);
+                        console.log(self.getAddress(),'._dump -> y: '+y);
+                        console.log(self.getAddress(),'._dump -> angle: '+angle);
+                        console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
+                        console.log(self.getAddress(),'._dump -> width: '+width);
+                        console.log(self.getAddress(),'._dump -> height: '+height);
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump -> thickness: '+thickness);
                     };
                 
                 //interface
@@ -22627,13 +22656,13 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -22653,32 +22682,32 @@ const element = new function(){
                             if(a==undefined){return x;}     
                             x = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.radius = function(a){ 
                             if(a==undefined){return radius;} 
                             radius = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.detail = function(a){ 
                             if(a==undefined){return detail;}
                             detail = a;
                             calculateCirclePoints();
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -22696,7 +22725,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //webGL rendering functions
@@ -22711,7 +22740,7 @@ const element = new function(){
                             );
                         }
                         pointsChanged = true;
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                     }
                     calculateCirclePoints();
             
@@ -22823,7 +22852,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
             
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -22831,7 +22860,27 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
                     };
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){    
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
                     
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -22851,21 +22900,21 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> radius: '+radius);
-                        report.info(self.getAddress(),'._dump -> detail: '+detail);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+                        console.log(self.getAddress(),'._dump -> x: '+x);
+                        console.log(self.getAddress(),'._dump -> y: '+y);
+                        console.log(self.getAddress(),'._dump -> radius: '+radius);
+                        console.log(self.getAddress(),'._dump -> detail: '+detail);
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
                     };
                 
                 //interface
@@ -22901,19 +22950,19 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                     
                     //advanced use attributes
@@ -22934,38 +22983,38 @@ const element = new function(){
                             if(a==undefined){return x;}     
                             x = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.radius = function(a){ 
                             if(a==undefined){return radius;} 
                             radius = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.detail = function(a){ 
                             if(a==undefined){return detail;}
                             detail = a;
                             calculateCirclePoints();
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.thickness = function(a){ 
                             if(a==undefined){return thickness;} 
                             thickness = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -22983,7 +23032,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //webGL rendering functions
@@ -23004,7 +23053,7 @@ const element = new function(){
                                 points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
                             }
                         pointsChanged = true;
-                        render.shouldRenderFrame = true;
+                        activateShouldRenderFrame();
                     }
                     calculateCirclePoints();
             
@@ -23148,7 +23197,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
             
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -23156,7 +23205,28 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
                     };
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
+            
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -23175,23 +23245,23 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> radius: '+radius);
-                        report.info(self.getAddress(),'._dump -> detail: '+detail);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> thickness: '+thickness);
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+                        console.log(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
+                        console.log(self.getAddress(),'._dump -> x: '+x);
+                        console.log(self.getAddress(),'._dump -> y: '+y);
+                        console.log(self.getAddress(),'._dump -> radius: '+radius);
+                        console.log(self.getAddress(),'._dump -> detail: '+detail);
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump -> thickness: '+thickness);
                     };
                 
                 //interface
@@ -23229,13 +23299,13 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -23253,7 +23323,7 @@ const element = new function(){
                             points = a;     
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.pointsAsXYArray = function(a){
                             function pointsToXYArray(){ 
@@ -23265,13 +23335,13 @@ const element = new function(){
                             if(a==undefined){ return pointsToXYArray(); }
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -23289,7 +23359,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //webGL rendering functions
@@ -23387,7 +23457,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
             
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -23395,7 +23465,27 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -23406,19 +23496,19 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
-                        report.info(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+                        console.log(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
+                        console.log(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
                     };
                 
                 //interface
@@ -23453,19 +23543,19 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -23487,7 +23577,7 @@ const element = new function(){
                             points = a;     
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.pointsAsXYArray = function(a){
                             function pointsToXYArray(){ 
@@ -23499,40 +23589,40 @@ const element = new function(){
                             if(a==undefined){ return pointsToXYArray(); }
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.thickness = function(a){
                             if(thickness==undefined){return thickness;}     
                             thickness = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                             pointsChanged = true;
                         };
                         this.jointDetail = function(a){
                             if(jointDetail==undefined){return jointDetail;}     
                             jointDetail = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                             pointsChanged = true;
                         };
                         this.jointType = function(a){
                             if(jointType==undefined){return jointType;}     
                             jointType = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                             pointsChanged = true;
                         };
                         this.sharpLimit = function(a){
                             if(sharpLimit==undefined){return sharpLimit;}     
                             sharpLimit = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                             pointsChanged = true;
                         };
             
@@ -23551,7 +23641,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //webGL rendering functions
@@ -23681,7 +23771,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
             
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -23689,7 +23779,27 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -23700,23 +23810,23 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
-                        report.info(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> thickness: '+thickness);
-                        report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
-                        report.info(self.getAddress(),'._dump -> jointType: '+jointType);
-                        report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+                        console.log(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
+                        console.log(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump -> thickness: '+thickness);
+                        console.log(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
+                        console.log(self.getAddress(),'._dump -> jointType: '+jointType);
+                        console.log(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
                     };
             
                 //interface
@@ -23757,13 +23867,13 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -23788,7 +23898,7 @@ const element = new function(){
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.pointsAsXYArray = function(a){
                             function pointsToXYArray(){ 
@@ -23800,13 +23910,13 @@ const element = new function(){
                             if(a==undefined){ return pointsToXYArray(); }
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.thickness = function(a){
                             if(thickness==undefined){return thickness;}     
@@ -23814,7 +23924,7 @@ const element = new function(){
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.looping = function(a){
                             if(looping==undefined){return looping;}     
@@ -23822,7 +23932,7 @@ const element = new function(){
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.capType = function(a){
                             if(capType==undefined){return capType;}     
@@ -23830,7 +23940,7 @@ const element = new function(){
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.jointType = function(a){
                             if(jointType==undefined){return jointType;}     
@@ -23838,7 +23948,7 @@ const element = new function(){
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.jointDetail = function(a){
                             if(jointDetail==undefined){return jointDetail;}     
@@ -23846,7 +23956,7 @@ const element = new function(){
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.sharpLimit = function(a){
                             if(sharpLimit==undefined){return sharpLimit;}     
@@ -23854,7 +23964,7 @@ const element = new function(){
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -23872,7 +23982,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //webGL rendering functions
@@ -23972,7 +24082,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
             
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -23980,7 +24090,27 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -23991,25 +24121,25 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
-                        report.info(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> looping: '+looping);
-                        report.info(self.getAddress(),'._dump -> thickness: '+thickness);
-                        report.info(self.getAddress(),'._dump -> capType: '+capType);
-                        report.info(self.getAddress(),'._dump -> jointType: '+jointType);
-                        report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
-                        report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+                        console.log(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
+                        console.log(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump -> looping: '+looping);
+                        console.log(self.getAddress(),'._dump -> thickness: '+thickness);
+                        console.log(self.getAddress(),'._dump -> capType: '+capType);
+                        console.log(self.getAddress(),'._dump -> jointType: '+jointType);
+                        console.log(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
+                        console.log(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
                     };
             
                 //interface
@@ -24031,6 +24161,887 @@ const element = new function(){
                     };
             };
             
+            /////original
+            // this.image = function(_id,_name){
+            //     const self = this;
+            
+            //     //attributes 
+            //         //protected attributes
+            //             const type = 'image'; 
+            //             this.getType = function(){return type;}
+            //             const id = _id; 
+            //             this.getId = function(){return id;}
+            
+            //         //simple attributes
+            //             this.name = _name;
+            //             this.parent = undefined;
+            //             this.dotFrame = false;
+            //             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
+            //             let ignored = false;
+            //             this.ignored = function(a){
+            //                 if(a==undefined){return ignored;}     
+            //                 ignored = a;
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+                        
+            //         //advanced use attributes
+            //             let allowComputeExtremities = true;
+            
+            //         //addressing
+            //             this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
+            
+            //         //attributes pertinent to extremity calculation
+            //             let x = 0;
+            //             let y = 0; 
+            //             let angle = 0;
+            //             let anchor = {x:0,y:0};
+            //             let width = 10;
+            //             let height = 10;
+            //             let scale = 1;
+            //             this.x = function(a){ 
+            //                 if(a==undefined){return x;}     
+            //                 x = a;     
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.y = function(a){ 
+            //                 if(a==undefined){return y;}     
+            //                 y = a;
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.angle = function(a){ 
+            //                 if(a==undefined){return angle;} 
+            //                 angle = a;
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.anchor = function(a){
+            //                 if(a==undefined){return anchor;} 
+            //                 anchor = a; 
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.width = function(a){
+            //                 if(a==undefined){return width;}  
+            //                 width = a;  
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.height = function(a){
+            //                 if(a==undefined){return height;} 
+            //                 height = a; 
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.scale = function(a){ 
+            //                 if(a==undefined){return scale;} 
+            //                 scale = a;
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            
+            //         //image data
+            //             const image = { 
+            //                 bitmap:undefined, 
+            //                 textureData:undefined, 
+            //                 url:'', 
+            //                 isLoaded:false, 
+            //                 isChanged:false, 
+            //                 defaultURL:'/images/noimageimage.png'
+            //             };
+            //             function loadImage(url,forceUpdate=false){
+                            
+            //                 if(url == ''){
+            //                     image.url = image.defaultURL;
+            //                     url = image.defaultURL;
+            //                 }
+            
+            //                 image.isLoaded = false;
+            
+            //                 library.misc.loadImageFromURL(
+            //                     url, 
+            //                     bitmap => {
+            //                         if(url != image.url){
+            //                             loadImage(image.url);
+            //                             return;
+            //                         }
+            
+            //                         image.bitmap = bitmap;
+            //                         image.isLoaded = true;
+            //                         image.isChanged = true;
+            //                         activateShouldRenderFrame();
+            //                     },
+            //                     (errorType, response, error) => {
+            //                         if(errorType == 'badURL'){
+            //                             console.warn(type,id,self.getAddress(),'could not find image at: '+url);
+            //                             console.warn(response);
+            //                             loadImage(image.defaultURL);
+            //                         }else if(errorType == 'imageDecodingError'){
+            //                             console.error('Image decoding error :: url:',url);
+            //                             console.error('-- -- -- -- -- -- -- :: response:',response);
+            //                             console.error(error);
+            //                             loadImage(image.defaultURL);
+            //                         }else if(errorType == 'previousFailure'){
+            //                             console.warn('previous failure to load "'+url+'" - load not attempted this time');
+            //                         }else{
+            //                             console.error('Unknown error :: errorType:',errorType);
+            //                             loadImage(image.defaultURL);
+            //                         }
+            //                     },
+            //                     forceUpdate
+            //                 );
+            //             }
+            //             setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
+            
+            //             this.url = function(a,forceUpdate=false){
+            
+            //                 if(a==undefined){return image.url;}
+            //                 if(a==image.url){return;} //no need to reload the same image
+            //                 image.url = a;
+            
+            //                 if(image.url == ''){ image.url = image.defaultURL; }
+            
+            //                 loadImage(image.url,forceUpdate);
+            //             };
+            //             this.bitmap = function(a){
+            
+            //                 if(a==undefined){return image.bitmap;}
+            //                 image.bitmap = a;
+            //                 image.url = 'internal bitmap';
+            
+            //                 image.isChanged = true;
+            //                 image.isLoaded = true;
+            //                 activateShouldRenderFrame();
+            //             };
+            
+            //         //unifiedAttribute
+            //             this.unifiedAttribute = function(attributes){
+            //                 if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, url:image.url }; } 
+            
+            //                 allowComputeExtremities = false;
+            //                 Object.keys(attributes).forEach(key => {
+            //                     try{
+            //                         self[key](attributes[key]);
+            //                     }catch(err){
+            //                         console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+            //                     }
+            //                 });
+            //                 allowComputeExtremities = true;
+            
+            //                 computeExtremities();
+            //             };
+            
+            //     //webGL rendering functions
+            //         const points = [
+            //             0,0,
+            //             1,0,
+            //             1,1,
+            //             0,1,
+            //         ];
+            //         const vertexShaderSource = `#version 300 es
+            //             //constants
+            //                 in vec2 point;
+            
+            //             //variables
+            //                 struct location{
+            //                     vec2 xy;
+            //                     float scale;
+            //                     float angle;
+            //                 };
+            //                 uniform location adjust;
+            
+            //                 uniform vec2 resolution;
+            //                 uniform vec2 dimensions;
+            //                 uniform vec2 anchor;
+            
+            //             //vertex/fragment shader transfer variables
+            //                 out vec2 textureCoordinates;
+            
+            //             void main(){
+            //                 //transfer point to fragment shader
+            //                     textureCoordinates = point;
+            
+            //                 //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
+            //                     vec2 P = dimensions * adjust.scale * (point - anchor);
+            //                     P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
+            
+            //                 //convert from unit space to clipspace
+            //                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+            //             }
+            //         `;
+            //         const fragmentShaderSource = `#version 300 es
+            //             precision mediump float;
+            //             out vec4 outputColour;
+            
+            //             uniform sampler2D textureImage;
+            //             in vec2 textureCoordinates;
+                                                                                    
+            //             void main(){
+            //                 outputColour = texture(textureImage, textureCoordinates);
+            //             }
+            //         `;
+            //         const point = { buffer:undefined, attributeLocation:undefined };
+            //         let uniformLocations;
+            //         function updateGLAttributes(context,adjust){
+            
+            //             //buffers
+            //                 //points
+            //                     if(point.buffer == undefined){
+            //                         point.attributeLocation = context.getAttribLocation(program, "point");
+            //                         point.buffer = context.createBuffer();
+            //                         context.enableVertexAttribArray(point.attributeLocation);
+            //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+            //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+            //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+            //                     }else{
+            //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+            //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+            //                     }
+            
+            //                 //texture
+            //                     if(image.isChanged){
+            //                         image.isChanged = false;
+            //                         image.textureData = context.createTexture();
+            //                         context.bindTexture(context.TEXTURE_2D, image.textureData);
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
+            //                         context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
+            //                     }else{
+            //                         context.bindTexture(context.TEXTURE_2D, image.textureData);
+            //                     }
+            
+            //             //uniforms
+            //                 if( uniformLocations == undefined ){
+            //                     uniformLocations = {
+            //                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+            //                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+            //                         "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+            //                         "resolution": context.getUniformLocation(program, "resolution"),
+            //                         "dimensions": context.getUniformLocation(program, "dimensions"),
+            //                         "anchor": context.getUniformLocation(program, "anchor"),
+            //                     };
+            //                 }
+            
+            //                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+            //                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+            //                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+            //                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+            //                 context.uniform2f(uniformLocations["dimensions"], width, height);
+            //                 context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
+            //         }
+            //         let program;
+            //         function activateGLRender(context,adjust){
+            //             if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                        
+            //             if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
+            
+            //             context.useProgram(program);
+            //             updateGLAttributes(context,adjust);
+            //             context.drawArrays(context.TRIANGLE_FAN, 0, 4);
+            //         }
+                    
+            //     //extremities
+            //         function computeExtremities(informParent=true,offset){
+                        
+            //             //get offset from parent, if one isn't provided
+            //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+            //             //calculate adjusted offset based on the offset
+            //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+            //                 const adjusted = { 
+            //                     x: point.x*offset.scale + offset.x,
+            //                     y: point.y*offset.scale + offset.y,
+            //                     scale: offset.scale*scale,
+            //                     angle: -(offset.angle + angle),
+            //                 };
+            //             //calculate points based on the adjusted offset
+            //                 self.extremities.points = [];
+            //                 for(let a = 0; a < points.length; a+=2){
+            //                     const P = {
+            //                         x: adjusted.scale * width * (points[a] - anchor.x), 
+            //                         y: adjusted.scale * height * (points[a+1] - anchor.y), 
+            //                     };
+            
+            //                     self.extremities.points.push({ 
+            //                         x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
+            //                         y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
+            //                     });
+            //                 }
+            //                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                    
+            //             //if told to do so, inform parent (if there is one) that extremities have changed
+            //                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+            //         }
+            //         this.computeExtremities = computeExtremities;
+                    
+            //     //render
+            //         function drawDotFrame(){
+            //             //draw shape extremity points
+            //                 self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
+            //             //draw bounding box top left and bottom right points
+            //                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+            //                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
+            //         };
+            //         function activateShouldRenderFrame(){
+            //             if(render.shouldRenderFrame){
+            //                 return;
+            //             }
+            //             render.shouldRenderFrame = shouldThisElementRender();
+            //         }
+            //         function shouldThisElementRender(){
+            //             if( self.parent == undefined || self.parent.clipActive == undefined ){
+            //                 return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+            //             }
+            //             return library.math.detectIntersect.boundingBoxes(
+            //                 self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+            //                 self.extremities.boundingBox
+            //             );
+            //         }
+            //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+            //             //judge whether element should be rendered
+            //                 if( !shouldThisElementRender() ){
+            //                     return;
+            //                 }
+            
+            //             //combine offset with shape's position, angle and scale to produce adjust value for render
+            //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+            //                 const adjust = { 
+            //                     x: point.x*offset.scale + offset.x,
+            //                     y: point.y*offset.scale + offset.y,
+            //                     scale: offset.scale*scale,
+            //                     angle: -(offset.angle + angle),
+            //                 };
+            
+            //             //activate shape render code
+            //                 activateGLRender(context,adjust);
+            
+            //             //if requested; draw dot frame
+            //                 if(self.dotFrame){drawDotFrame();}
+            //         };
+            
+            //     //info dump
+            //         this._dump = function(){
+            //             report.info(self.getAddress(),'._dump()');
+            //             report.info(self.getAddress(),'._dump -> id: '+id);
+            //             report.info(self.getAddress(),'._dump -> type: '+type);
+            //             report.info(self.getAddress(),'._dump -> name: '+self.name);
+            //             report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
+            //             report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+            //             report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+            //             report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+            //             report.info(self.getAddress(),'._dump -> ignored: '+ignored);
+            //             report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
+            //             report.info(self.getAddress(),'._dump -> x: '+x);
+            //             report.info(self.getAddress(),'._dump -> y: '+y);
+            //             report.info(self.getAddress(),'._dump -> angle: '+angle);
+            //             report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
+            //             report.info(self.getAddress(),'._dump -> width: '+width);
+            //             report.info(self.getAddress(),'._dump -> height: '+height);
+            //             report.info(self.getAddress(),'._dump -> scale: '+scale);
+            //             report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
+            //         };
+                
+            //     //interface
+            //         this.interface = new function(){
+            //             this.ignored = self.ignored;
+            //             this.x = self.x;
+            //             this.y = self.y;
+            //             this.angle = self.angle;
+            //             this.anchor = self.anchor;
+            //             this.width = self.width;
+            //             this.height = self.height;
+            //             this.scale = self.scale;
+            //             this.url = self.url;
+            //             this.bitmap = self.bitmap;
+            //             this.unifiedAttribute = self.unifiedAttribute;
+            //             this.getAddress = self.getAddress;
+            //             this._dump = self._dump;
+            //         };
+            // };
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            /////failed draft
+            // this.image = function(_id,_name){
+            //     const self = this;
+            
+            //     //attributes 
+            //         //protected attributes
+            //             const type = 'image'; 
+            //             this.getType = function(){return type;}
+            //             const id = _id; 
+            //             this.getId = function(){return id;}
+            
+            //         //simple attributes
+            //             this.name = _name;
+            //             this.parent = undefined;
+            //             this.dotFrame = false;
+            //             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
+            //             let ignored = false;
+            //             this.ignored = function(a){
+            //                 if(a==undefined){return ignored;}     
+            //                 ignored = a;
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+                        
+            //         //advanced use attributes
+            //             let allowComputeExtremities = true;
+            
+            //         //addressing
+            //             this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
+            
+            //         //attributes pertinent to extremity calculation
+            //             let x = 0;
+            //             let y = 0; 
+            //             let angle = 0;
+            //             let anchor = {x:0,y:0};
+            //             let width = 10;
+            //             let height = 10;
+            //             let scale = 1;
+            //             this.x = function(a){ 
+            //                 if(a==undefined){return x;}     
+            //                 x = a;     
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.y = function(a){ 
+            //                 if(a==undefined){return y;}     
+            //                 y = a;
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.angle = function(a){ 
+            //                 if(a==undefined){return angle;} 
+            //                 angle = a;
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.anchor = function(a){
+            //                 if(a==undefined){return anchor;} 
+            //                 anchor = a; 
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.width = function(a){
+            //                 if(a==undefined){return width;}  
+            //                 width = a;  
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.height = function(a){
+            //                 if(a==undefined){return height;} 
+            //                 height = a; 
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            //             this.scale = function(a){ 
+            //                 if(a==undefined){return scale;} 
+            //                 scale = a;
+            //                 if(allowComputeExtremities){computeExtremities();}
+            //                 activateShouldRenderFrame();
+            //             };
+            
+            //         //image data
+            //             const image = { 
+            //                 bitmap:undefined, 
+            //                 url:'', 
+            //                 defaultURL:'/images/noimageimage.png'
+            //             };
+            //             function loadImage(url,forceUpdate=false){
+                            
+            //                 if(url == ''){
+            //                     image.url = image.defaultURL;
+            //                     url = image.defaultURL;
+            //                 }
+            //                 if( elementLibrary.image.webglDataStore[image.url] != undefined ){
+            //                     activateShouldRenderFrame();
+            //                     return;
+            //                 }
+            
+            //                 elementLibrary.image.webglDataStore[image.url] = {isLoaded:false};
+            //                 console.log('loading:',image.url);
+            
+            //                 library.misc.loadImageFromURL(
+            //                     url, 
+            //                     bitmap => {
+            //                         console.log('loaded:',image.url);
+            //                         if(url != image.url){
+            //                             loadImage(image.url);
+            //                             return;
+            //                         }
+            
+            //                         elementLibrary.image.webglDataStore[image.url].isLoaded = true;
+            //                         elementLibrary.image.webglDataStore[image.url].bitmap = bitmap;
+            //                         activateShouldRenderFrame();
+            //                     },
+            //                     (errorType, response, error) => {
+            //                         if(errorType == 'badURL'){
+            //                             console.warn(type,id,self.getAddress(),'could not find image at: '+url);
+            //                             console.warn(response);
+            //                             loadImage(image.defaultURL);
+            //                         }else if(errorType == 'imageDecodingError'){
+            //                             console.error('Image decoding error :: url:',url);
+            //                             console.error('-- -- -- -- -- -- -- :: response:',response);
+            //                             console.error(error);
+            //                             loadImage(image.defaultURL);
+            //                         }else if(errorType == 'previousFailure'){
+            //                             console.warn('previous failure to load "'+url+'" - load not attempted this time');
+            //                         }else{
+            //                             console.error('Unknown error :: errorType:',errorType);
+            //                             loadImage(image.defaultURL);
+            //                         }
+            //                     },
+            //                     forceUpdate
+            //                 );
+            //             }
+            //             setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
+            
+            //             this.url = function(a,forceUpdate=false){
+            
+            //                 if(a==undefined){return image.url;}
+            //                 if(a==image.url){return;} //no need to reload the same image
+            //                 image.url = a;
+            
+            //                 if(image.url == ''){ image.url = image.defaultURL; }
+            
+            //                 loadImage(image.url,forceUpdate);
+            //             };
+            //             this.bitmap = function(a){
+            
+            //                 if(a==undefined){
+            //                     return elementLibrary.image.webglDataStore[image.url] != undefined ? elementLibrary.image.webglDataStore[image.url].bitmap : undefined;
+            //                 }
+            //                 image.url = id+':internalBitmap';
+            //                 elementLibrary.image.webglDataStore[image.url].bitmap = bitmap;
+            
+            //                 activateShouldRenderFrame();
+            //             };
+            
+            //         //unifiedAttribute
+            //             this.unifiedAttribute = function(attributes){
+            //                 if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, url:image.url }; } 
+            
+            //                 allowComputeExtremities = false;
+            //                 Object.keys(attributes).forEach(key => {
+            //                     try{
+            //                         self[key](attributes[key]);
+            //                     }catch(err){
+            //                         console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+            //                     }
+            //                 });
+            //                 allowComputeExtremities = true;
+            
+            //                 computeExtremities();
+            //             };
+            
+            //     //webGL rendering functions
+            //         const points = [
+            //             0,0,
+            //             1,0,
+            //             1,1,
+            //             0,1,
+            //         ];
+            //         const vertexShaderSource = `#version 300 es
+            //             //constants
+            //                 in vec2 point;
+            
+            //             //variables
+            //                 struct location{
+            //                     vec2 xy;
+            //                     float scale;
+            //                     float angle;
+            //                 };
+            //                 uniform location adjust;
+            
+            //                 uniform vec2 resolution;
+            //                 uniform vec2 dimensions;
+            //                 uniform vec2 anchor;
+            
+            //             //vertex/fragment shader transfer variables
+            //                 out vec2 textureCoordinates;
+            
+            //             void main(){
+            //                 //transfer point to fragment shader
+            //                     textureCoordinates = point;
+            
+            //                 //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
+            //                     vec2 P = dimensions * adjust.scale * (point - anchor);
+            //                     P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
+            
+            //                 //convert from unit space to clipspace
+            //                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+            //             }
+            //         `;
+            //         const fragmentShaderSource = `#version 300 es
+            //             precision mediump float;
+            //             out vec4 outputColour;
+            
+            //             uniform sampler2D textureImage;
+            //             in vec2 textureCoordinates;
+                                                                                    
+            //             void main(){
+            //                 outputColour = texture(textureImage, textureCoordinates);
+            //             }
+            //         `;
+            //         const point = { buffer:undefined, attributeLocation:undefined };
+            //         let uniformLocations;
+            //         function updateGLAttributes(context,adjust){
+            
+            //             //buffers
+            //                 //points
+            //                     if(point.buffer == undefined){
+            //                         point.attributeLocation = context.getAttribLocation(program, "point");
+            //                         point.buffer = context.createBuffer();
+            //                         context.enableVertexAttribArray(point.attributeLocation);
+            //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+            //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+            //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+            //                     }else{
+            //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+            //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+            //                     }
+            
+            //                 //texture
+            //                     if(elementLibrary.image.webglDataStore[image.url].texture == undefined){
+            //                         elementLibrary.image.webglDataStore[image.url].texture = context.createTexture();
+            //                         context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[image.url].texture );
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
+            //                         context.texImage2D( context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, elementLibrary.image.webglDataStore[image.url].bitmap );
+            
+            //                         context.generateMipmap( context.TEXTURE_2D );
+            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST_MIPMAP_LINEAR );
+            //                     }else{
+            //                         context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[image.url].texture );
+            //                     }
+            
+            //             //uniforms
+            //                 if( uniformLocations == undefined ){
+            //                     uniformLocations = {
+            //                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+            //                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+            //                         "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+            //                         "resolution": context.getUniformLocation(program, "resolution"),
+            //                         "dimensions": context.getUniformLocation(program, "dimensions"),
+            //                         "anchor": context.getUniformLocation(program, "anchor"),
+            //                     };
+            //                 }
+            
+            //                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+            //                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+            //                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+            //                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+            //                 context.uniform2f(uniformLocations["dimensions"], width, height);
+            //                 context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
+            //         }
+            //         let program;
+            //         function activateGLRender(context,adjust){
+            //             if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                        
+            //             if(!elementLibrary.image.webglDataStore[image.url].isLoaded){return;} //do not render, if the image has not yet been loaded
+            
+            //             context.useProgram(program);
+            //             updateGLAttributes(context,adjust);
+            //             context.drawArrays(context.TRIANGLE_FAN, 0, 4);
+            //         }
+                    
+            //     //extremities
+            //         function computeExtremities(informParent=true,offset){
+                        
+            //             //get offset from parent, if one isn't provided
+            //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+            //             //calculate adjusted offset based on the offset
+            //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+            //                 const adjusted = { 
+            //                     x: point.x*offset.scale + offset.x,
+            //                     y: point.y*offset.scale + offset.y,
+            //                     scale: offset.scale*scale,
+            //                     angle: -(offset.angle + angle),
+            //                 };
+            //             //calculate points based on the adjusted offset
+            //                 self.extremities.points = [];
+            //                 for(let a = 0; a < points.length; a+=2){
+            //                     const P = {
+            //                         x: adjusted.scale * width * (points[a] - anchor.x), 
+            //                         y: adjusted.scale * height * (points[a+1] - anchor.y), 
+            //                     };
+            
+            //                     self.extremities.points.push({ 
+            //                         x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
+            //                         y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
+            //                     });
+            //                 }
+            //                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                    
+            //             //if told to do so, inform parent (if there is one) that extremities have changed
+            //                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+            //         }
+            //         this.computeExtremities = computeExtremities;
+                    
+            //     //render
+            //         function drawDotFrame(){
+            //             //draw shape extremity points
+            //                 self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
+            //             //draw bounding box top left and bottom right points
+            //                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+            //                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
+            //         };
+            //         function activateShouldRenderFrame(){
+            //             if(render.shouldRenderFrame){
+            //                 return;
+            //             }
+            //             render.shouldRenderFrame = shouldThisElementRender();
+            //         }
+            //         function shouldThisElementRender(){
+            //             if( self.parent == undefined || self.parent.clipActive == undefined ){
+            //                 return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+            //             }
+            //             return library.math.detectIntersect.boundingBoxes(
+            //                 self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+            //                 self.extremities.boundingBox
+            //             );
+            //         }
+            //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+            //             //judge whether element should be rendered
+            //                 if( !shouldThisElementRender() ){
+            //                     return;
+            //                 }
+            
+            //             //combine offset with shape's position, angle and scale to produce adjust value for render
+            //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+            //                 const adjust = { 
+            //                     x: point.x*offset.scale + offset.x,
+            //                     y: point.y*offset.scale + offset.y,
+            //                     scale: offset.scale*scale,
+            //                     angle: -(offset.angle + angle),
+            //                 };
+            
+            //             //activate shape render code
+            //                 activateGLRender(context,adjust);
+            
+            //             //if requested; draw dot frame
+            //                 if(self.dotFrame){drawDotFrame();}
+            //         };
+            
+            //     //info dump
+            //         this._dump = function(){
+            //             console.log(self.getAddress(),'._dump()');
+            //             console.log(self.getAddress(),'._dump -> id: '+id);
+            //             console.log(self.getAddress(),'._dump -> type: '+type);
+            //             console.log(self.getAddress(),'._dump -> name: '+self.name);
+            //             console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+            //             console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+            //             console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+            //             console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+            //             console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+            //             console.log(self.getAddress(),'._dump -> image: ',image);
+            //             console.log(self.getAddress(),'._dump -> x: '+x);
+            //             console.log(self.getAddress(),'._dump -> y: '+y);
+            //             console.log(self.getAddress(),'._dump -> angle: '+angle);
+            //             console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
+            //             console.log(self.getAddress(),'._dump -> width: '+width);
+            //             console.log(self.getAddress(),'._dump -> height: '+height);
+            //             console.log(self.getAddress(),'._dump -> scale: '+scale);
+            //             console.log(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
+            //             console.log(self.getAddress(),'._dump -> elementLibrary.image.webglDataStore:',elementLibrary.image.webglDataStore);
+                        
+            //         };
+                
+            //     //interface
+            //         this.interface = new function(){
+            //             this.ignored = self.ignored;
+            //             this.x = self.x;
+            //             this.y = self.y;
+            //             this.angle = self.angle;
+            //             this.anchor = self.anchor;
+            //             this.width = self.width;
+            //             this.height = self.height;
+            //             this.scale = self.scale;
+            //             this.url = self.url;
+            //             this.bitmap = self.bitmap;
+            //             this.unifiedAttribute = self.unifiedAttribute;
+            //             this.getAddress = self.getAddress;
+            //             this._dump = self._dump;
+            //         };
+            // };
+            // this.image.webglDataStore = {};
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            /////draft 2
             this.image = function(_id,_name){
                 const self = this;
             
@@ -24051,7 +25062,7 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -24072,116 +25083,128 @@ const element = new function(){
                             if(a==undefined){return x;}     
                             x = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //image data
-                        const image = { 
-                            bitmap:undefined, 
-                            textureData:undefined, 
-                            url:'', 
-                            isLoaded:false, 
-                            isChanged:false, 
+                        const state = {
+                            url:'',
                             defaultURL:'/images/noimageimage.png'
                         };
                         function loadImage(url,forceUpdate=false){
                             
                             if(url == ''){
-                                image.url = image.defaultURL;
-                                url = image.defaultURL;
+                                state.url = state.defaultURL;
+                                url = state.defaultURL;
+                            }
+                            if(elementLibrary.image.webglDataStore[state.url] != undefined && !forceUpdate){
+                                activateShouldRenderFrame();
+                                return;
                             }
             
-                            image.isLoaded = false;
+                            elementLibrary.image.webglDataStore[state.url] = {
+                                bitmap: undefined,
+                                textureData: undefined,
+                                isLoaded: false,
+                                isProcessed: false,
+                            };
             
-                            elementLibrary.image.getImageFromURL(
+                            library.misc.loadImageFromURL(
                                 url, 
                                 bitmap => {
-                                    if(url != image.url){
-                                        loadImage(image.url);
+                                    elementLibrary.image.webglDataStore[url].bitmap = bitmap;
+                                    elementLibrary.image.webglDataStore[url].isLoaded = true;
+                                    elementLibrary.image.webglDataStore[url].isProcessed = false;
+            
+                                    if(url != state.url){
+                                        loadImage(state.url);
                                         return;
                                     }
             
-                                    image.bitmap = bitmap;
-                                    image.isLoaded = true;
-                                    image.isChanged = true;
-                                    render.shouldRenderFrame = true;
+                                    activateShouldRenderFrame();
                                 },
                                 (errorType, response, error) => {
                                     if(errorType == 'badURL'){
                                         console.warn(type,id,self.getAddress(),'could not find image at: '+url);
                                         console.warn(response);
-                                        loadImage(image.defaultURL);
+                                        loadImage(state.defaultURL);
                                     }else if(errorType == 'imageDecodingError'){
                                         console.error('Image decoding error :: url:',url);
                                         console.error('-- -- -- -- -- -- -- :: response:',response);
                                         console.error(error);
-                                        loadImage(image.defaultURL);
+                                        loadImage(state.defaultURL);
                                     }else if(errorType == 'previousFailure'){
                                         console.warn('previous failure to load "'+url+'" - load not attempted this time');
                                     }else{
                                         console.error('Unknown error :: errorType:',errorType);
-                                        loadImage(image.defaultURL);
+                                        loadImage(state.defaultURL);
                                     }
                                 },
                                 forceUpdate
                             );
                         }
-                        setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
+                        setTimeout(()=>{ if(state.url == ''){ loadImage(state.defaultURL); } },1000);
             
                         this.url = function(a,forceUpdate=false){
             
-                            if(a==undefined){return image.url;}
-                            if(a==image.url){return;} //no need to reload the same image
-                            image.url = a;
+                            if(a==undefined){return state.url;}
+                            if(a==state.url){return;} //no need to reload the same image
+                            state.url = a;
             
-                            if(image.url == ''){ image.url = image.defaultURL; }
+                            if(state.url == ''){ state.url = state.defaultURL; }
             
-                            loadImage(image.url,forceUpdate);
+                            loadImage(state.url,forceUpdate);
                         };
                         this.bitmap = function(a){
             
-                            if(a==undefined){return image.bitmap;}
-                            image.bitmap = a;
-                            image.url = 'internal bitmap';
+                            if(a==undefined){
+                                return elementLibrary.image.webglDataStore[state.url] != undefined ? elementLibrary.image.webglDataStore[state.url].bitmap : undefined;
+                            }
+                            state.url = id+':internalBitmap';
+                            elementLibrary.image.webglDataStore[state.url] = {
+                                bitmap: a,
+                                textureData: undefined,
+                                isLoaded: true,
+                                isProcessed: false,
+                            };
             
-                            image.isChanged = true;
-                            image.isLoaded = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -24259,27 +25282,32 @@ const element = new function(){
                                 if(point.buffer == undefined){
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                    context.enableVertexAttribArray( point.attributeLocation );
+                                    context.bindBuffer( context.ARRAY_BUFFER, point.buffer ); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                    context.bufferData( context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW );
                                 }else{
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                    context.bindBuffer( context.ARRAY_BUFFER, point.buffer ); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                             //texture
-                                if(image.isChanged){
-                                    image.isChanged = false;
-                                    image.textureData = context.createTexture();
-                                    context.bindTexture(context.TEXTURE_2D, image.textureData);
+                                if( !elementLibrary.image.webglDataStore[state.url].isProcessed ){
+                                    elementLibrary.image.webglDataStore[state.url].textureData = context.createTexture();
+                                    context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[state.url].textureData );
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
-                                    context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
+                                    context.texImage2D( context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, elementLibrary.image.webglDataStore[state.url].bitmap );
+            
+                                    context.generateMipmap( context.TEXTURE_2D );
+                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST_MIPMAP_LINEAR );
+            
+                                    elementLibrary.image.webglDataStore[state.url].isProcessed = true;
+                                    activateShouldRenderFrame();
                                 }else{
-                                    context.bindTexture(context.TEXTURE_2D, image.textureData);
+                                    context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[state.url].textureData );
                                 }
             
                         //uniforms
@@ -24305,7 +25333,7 @@ const element = new function(){
                     function activateGLRender(context,adjust){
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                         
-                        if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
+                        if(!elementLibrary.image.webglDataStore[state.url].isLoaded){return;} //do not render, if the image has not yet been loaded and processed
             
                         context.useProgram(program);
                         updateGLAttributes(context,adjust);
@@ -24345,7 +25373,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
                     
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -24353,7 +25381,28 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     };
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
+            
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -24372,24 +25421,24 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> angle: '+angle);
-                        report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        report.info(self.getAddress(),'._dump -> width: '+width);
-                        report.info(self.getAddress(),'._dump -> height: '+height);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> state:',state);
+                        console.log(self.getAddress(),'._dump -> x: '+x);
+                        console.log(self.getAddress(),'._dump -> y: '+y);
+                        console.log(self.getAddress(),'._dump -> angle: '+angle);
+                        console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
+                        console.log(self.getAddress(),'._dump -> width: '+width);
+                        console.log(self.getAddress(),'._dump -> height: '+height);
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump -> elementLibrary.image.webglDataStore:',elementLibrary.image.webglDataStore);
                     };
                 
                 //interface
@@ -24409,38 +25458,7 @@ const element = new function(){
                         this._dump = self._dump;
                     };
             };
-            this.image.loadedImageData = {}; // { state:'requested/ready/failed', bitmap:-bitmap-, callbacks:[] }
-            this.image.getImageFromURL = function(url,callback,errorCallback,forceUpdate=false){
-            
-                if(this.loadedImageData[url] == undefined || forceUpdate && this.loadedImageData[url].state != 'requested' ){
-                    this.loadedImageData[url] = { state:'requested', bitmap:undefined, callbacks:[[callback,errorCallback]] };
-            
-                    fetch(url).then( response => {
-                        if(response.status != 200){
-                            this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[1]('badURL',response); } );
-                            return;
-                        }
-            
-                        response.blob().then(data => {
-                            createImageBitmap(data).then(bitmap => {
-                                this.loadedImageData[url].bitmap = bitmap;
-                                this.loadedImageData[url].state = 'ready';
-                                this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[0](bitmap); } );
-                            }).catch(error => {
-                                this.loadedImageData[url].callbacks.forEach(callbackPairs => { callbackPairs[1]('imageDecodingError',response,error); } );
-                            });
-                        });
-                    });
-            
-            
-                }else if( this.loadedImageData[url].state == 'ready' ){
-                    if(callback != undefined){ callback(this.loadedImageData[url].bitmap); }
-                }else if( this.loadedImageData[url].state == 'requested' ){
-                    this.loadedImageData[url].callbacks.push([callback,errorCallback]);
-                }else if( this.loadedImageData[url].state == 'failed' ){
-                    errorCallback('previousFailure');
-                }
-            };
+            this.image.webglDataStore = {};
             //this element is exactly the same as the image element; except the name and 
             //type have been changed to 'canvas'
             
@@ -24464,7 +25482,7 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -24485,43 +25503,43 @@ const element = new function(){
                             if(a==undefined){return x;}     
                             x = a;     
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //image data
@@ -24546,7 +25564,7 @@ const element = new function(){
                                         image.bitmap = bitmap;
                                         image.isLoaded = true;
                                         image.isChanged = true;
-                                        render.shouldRenderFrame = true;
+                                        activateShouldRenderFrame();
                                     });
                                 });
                             });
@@ -24572,7 +25590,7 @@ const element = new function(){
             
                             image.isChanged = true;
                             image.isLoaded = true;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -24590,7 +25608,7 @@ const element = new function(){
                             allowComputeExtremities = true;
             
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //webGL rendering functions
@@ -24737,7 +25755,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
                     
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -24745,7 +25763,28 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     };
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
+            
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjust = { 
@@ -24764,23 +25803,23 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> angle: '+angle);
-                        report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        report.info(self.getAddress(),'._dump -> width: '+width);
-                        report.info(self.getAddress(),'._dump -> height: '+height);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
+                        console.log(self.getAddress(),'._dump -> x: '+x);
+                        console.log(self.getAddress(),'._dump -> y: '+y);
+                        console.log(self.getAddress(),'._dump -> angle: '+angle);
+                        console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
+                        console.log(self.getAddress(),'._dump -> width: '+width);
+                        console.log(self.getAddress(),'._dump -> height: '+height);
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
                     };
                 
                 //interface
@@ -24822,13 +25861,13 @@ const element = new function(){
                             if(a==undefined){return ignored;}     
                             ignored = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         let colour = {r:1,g:0,b:0,a:1};
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         
                     //advanced use attributes
@@ -24856,43 +25895,43 @@ const element = new function(){
                             if(a==undefined){return x;} 
                             x = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;} 
                             y = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.anchor = function(a){ 
                             if(a==undefined){return anchor;} 
                             anchor = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
                             if(allowComputeExtremities){computeExtremities();}
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.font = function(newFont){
                             if(newFont==undefined){return font;}
@@ -24912,14 +25951,14 @@ const element = new function(){
             
                             if(allowProducePoints){producePoints();}
                             if(allowComputeExtremities){computeExtremities();} 
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.character = function(a){
                             if(a==undefined){return character;} 
                             character = a; 
                             if(allowProducePoints){producePoints();}
                             if(allowComputeExtremities){computeExtremities();} 
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
                         this.printingMode = function(a){
                             if(a==undefined){return printingMode;} 
@@ -24930,7 +25969,7 @@ const element = new function(){
             
                             if(allowProducePoints){producePoints();}
                             if(allowComputeExtremities){computeExtremities();} 
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                     //unifiedAttribute
@@ -24951,7 +25990,7 @@ const element = new function(){
             
                             producePoints();
                             computeExtremities();
-                            render.shouldRenderFrame = true;
+                            activateShouldRenderFrame();
                         };
             
                 //character data
@@ -25113,7 +26152,7 @@ const element = new function(){
                     }
                     this.computeExtremities = computeExtremities;
             
-                //lead render
+                //render
                     function drawDotFrame(){
                         //draw shape extremity points
                             self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -25121,7 +26160,27 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
+                    function activateShouldRenderFrame(){
+                        if(render.shouldRenderFrame){
+                            return;
+                        }
+                        render.shouldRenderFrame = shouldThisElementRender();
+                    }
+                    function shouldThisElementRender(){
+                        if( self.parent == undefined || self.parent.clipActive == undefined ){
+                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+                        }
+                        return library.math.detectIntersect.boundingBoxes(
+                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                            self.extremities.boundingBox
+                        );
+                    }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            
+                        //judge whether element should be rendered
+                            if( !shouldThisElementRender() ){
+                                return;
+                            }
             
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -25141,26 +26200,26 @@ const element = new function(){
             
                 //info dump
                     this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> type: '+type);
-                        report.info(self.getAddress(),'._dump -> name: '+self.name);
-                        report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> angle: '+angle);
-                        report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        report.info(self.getAddress(),'._dump -> width: '+width);
-                        report.info(self.getAddress(),'._dump -> height: '+height);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> font: '+font);
-                        report.info(self.getAddress(),'._dump -> character: '+character);
-                        report.info(self.getAddress(),'._dump -> printingMode: '+JSON.stringify(printingMode));
+                        console.log(self.getAddress(),'._dump()');
+                        console.log(self.getAddress(),'._dump -> id: '+id);
+                        console.log(self.getAddress(),'._dump -> type: '+type);
+                        console.log(self.getAddress(),'._dump -> name: '+self.name);
+                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+                        console.log(self.getAddress(),'._dump -> x: '+x);
+                        console.log(self.getAddress(),'._dump -> y: '+y);
+                        console.log(self.getAddress(),'._dump -> angle: '+angle);
+                        console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
+                        console.log(self.getAddress(),'._dump -> width: '+width);
+                        console.log(self.getAddress(),'._dump -> height: '+height);
+                        console.log(self.getAddress(),'._dump -> scale: '+scale);
+                        console.log(self.getAddress(),'._dump -> font: '+font);
+                        console.log(self.getAddress(),'._dump -> character: '+character);
+                        console.log(self.getAddress(),'._dump -> printingMode: '+JSON.stringify(printingMode));
                     };
                 
                 //interface
@@ -25237,19 +26296,16 @@ const element = new function(){
                             if(a==undefined){return colour;}     
                             colour = a;
                             recolourCharacters();
-                            render.shouldRenderFrame = true;
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
-                            if(allowGenerateStringCharacters){generateStringCharacters();} 
-                            render.shouldRenderFrame = true;
+                            if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
-                            if(allowGenerateStringCharacters){generateStringCharacters();} 
-                            render.shouldRenderFrame = true;
+                            if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.font = function(newFont){
                             if(newFont==undefined){return font;}
@@ -25271,25 +26327,21 @@ const element = new function(){
             
                             if(allowGenerateStringCharacters){generateStringCharacters();} 
                             self.onFontUpdateCallback();
-                            render.shouldRenderFrame = true;
                         };
                         this.string = function(a){ 
                             if(a==undefined){return string;} 
                             string = a;
-                            if(allowGenerateStringCharacters){generateStringCharacters();} 
-                            render.shouldRenderFrame = true;
+                            if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.spacing = function(a){ 
                             if(a==undefined){return spacing;} 
                             spacing = a;
-                            if(allowGenerateStringCharacters){generateStringCharacters();} 
-                            render.shouldRenderFrame = true;
+                            if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.interCharacterSpacing = function(a){
                             if(a==undefined){return interCharacterSpacing;}
                             interCharacterSpacing = a;
                             if(allowGenerateStringCharacters){generateStringCharacters();}
-                            render.shouldRenderFrame = true;
                         };
                         this.printingMode = function(a){
                             if(a==undefined){return printingMode;} 
@@ -25300,7 +26352,6 @@ const element = new function(){
                             };
             
                             if(allowGenerateStringCharacters){generateStringCharacters();}
-                            render.shouldRenderFrame = true;
                         };
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
@@ -25337,7 +26388,6 @@ const element = new function(){
             
                             generateStringCharacters();
                             self.onFontUpdateCallback();
-                            render.shouldRenderFrame = true;
                         }
                 //string
                     let resultingWidth = 0;
@@ -25430,7 +26480,7 @@ const element = new function(){
                     this.getOffset = function(){
                         return this.parent ? this.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                     };
-                //lead render
+                //render
                     this.render = innerGroup.render;
                 //info dump
                     this.getTree = innerGroup.getTree;
@@ -25567,8 +26617,7 @@ const arrangement = new function(){
     this.getElementByAddress = function(address){
 
         const route = address.split('/'); 
-        route.shift(); 
-        route.shift(); 
+        route.shift();
 
         let currentObject = design;
         route.forEach(function(a){

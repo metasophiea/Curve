@@ -72,7 +72,7 @@ this.load = function(url,callback,askForConfirmation=true){
         if(url == undefined){ //load from file
             _canvas_.library.misc.openFile(function(data){procedure(data,callback);});
         }else{ //load from url
-            _canvas_.library.misc.loadFileFromURL(url,function(text){ procedure(text,callback); },'text');
+            _canvas_.library.misc.loadFileFromURL(url,function(text){ procedure(text.response,callback); },undefined,'text');
         }
 };
 this.save = function(filename='project.crv',compress=false){

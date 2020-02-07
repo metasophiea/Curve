@@ -32,9 +32,14 @@ _canvas_.core.go.add( function(){
         }
     }
 
+    // setTimeout(_canvas_.core.render.frame,100);
+    // setTimeout(_canvas_.core.render.frame,1100);
+
     // _canvas_.core.render.activeLimitToFrameRate(true);
     // _canvas_.core.render.frameRateLimit(20);
+
     _canvas_.core.render.active(true);
+    _canvas_.core.render.allowFrameSkipping(false);
     _canvas_.core.stats.active(true);
     setInterval(() => {
         _canvas_.core.stats.getReport().then(console.log)

@@ -19,21 +19,21 @@ this.circleWithOutline = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             let lineColour = {r:1,g:0,b:0,a:1};
             this.lineColour = function(a){
                 if(a==undefined){return lineColour;}     
                 lineColour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
         
         //advanced use attributes
@@ -55,21 +55,21 @@ this.circleWithOutline = function(_id,_name){
                 x = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.y = function(a){ 
                 if(a==undefined){return y;}     
                 y = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.radius = function(a){ 
                 if(a==undefined){return radius;} 
                 radius = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].radius(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.detail = function(a){ 
                 if(a==undefined){return detail;}
@@ -77,21 +77,21 @@ this.circleWithOutline = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].detail(',a); //#development
                 calculateCirclePoints();
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.thickness = function(a){ 
                 if(a==undefined){return thickness;} 
                 thickness = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
         //unifiedAttribute
@@ -111,7 +111,7 @@ this.circleWithOutline = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
     //webGL rendering functions
@@ -132,7 +132,7 @@ this.circleWithOutline = function(_id,_name){
                     points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
                 }
             pointsChanged = true;
-            render.shouldRenderFrame = true;
+            activateShouldRenderFrame();
         }
         calculateCirclePoints();
 
@@ -293,7 +293,7 @@ this.circleWithOutline = function(_id,_name){
         }
         this.computeExtremities = computeExtremities;
 
-    //lead render
+    //render
         function drawDotFrame(){
             //draw shape extremity points
                 self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -301,8 +301,34 @@ this.circleWithOutline = function(_id,_name){
                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
         };
+        function activateShouldRenderFrame(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
+            if(render.shouldRenderFrame){
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
+                return;
+            }
+            render.shouldRenderFrame = shouldThisElementRender();
+        }
+        function shouldThisElementRender(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
+            if( self.parent == undefined || self.parent.clipActive == undefined ){
+                return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+            }
+            return library.math.detectIntersect.boundingBoxes(
+                self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                self.extremities.boundingBox
+            );
+        }
         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
+
+            //judge whether element should be rendered
+                if( !shouldThisElementRender() ){
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
+                    return;
+                }
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
+
             //combine offset with shape's position, angle and scale to produce adjust value for render
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const adjust = { 
@@ -321,23 +347,23 @@ this.circleWithOutline = function(_id,_name){
 
     //info dump
         this._dump = function(){
-            report.info(self.getAddress(),'._dump()');
-            report.info(self.getAddress(),'._dump -> id: '+id);
-            report.info(self.getAddress(),'._dump -> type: '+type);
-            report.info(self.getAddress(),'._dump -> name: '+self.name);
-            report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-            report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-            report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-            report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-            report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-            report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-            report.info(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
-            report.info(self.getAddress(),'._dump -> x: '+x);
-            report.info(self.getAddress(),'._dump -> y: '+y);
-            report.info(self.getAddress(),'._dump -> radius: '+radius);
-            report.info(self.getAddress(),'._dump -> detail: '+detail);
-            report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> thickness: '+thickness);
+            console.log(self.getAddress(),'._dump()');
+            console.log(self.getAddress(),'._dump -> id: '+id);
+            console.log(self.getAddress(),'._dump -> type: '+type);
+            console.log(self.getAddress(),'._dump -> name: '+self.name);
+            console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+            console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+            console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+            console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+            console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+            console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+            console.log(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
+            console.log(self.getAddress(),'._dump -> x: '+x);
+            console.log(self.getAddress(),'._dump -> y: '+y);
+            console.log(self.getAddress(),'._dump -> radius: '+radius);
+            console.log(self.getAddress(),'._dump -> detail: '+detail);
+            console.log(self.getAddress(),'._dump -> scale: '+scale);
+            console.log(self.getAddress(),'._dump -> thickness: '+thickness);
         };
     
     //interface

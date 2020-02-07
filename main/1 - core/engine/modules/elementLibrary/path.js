@@ -19,14 +19,14 @@ this.path = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             
         //advanced use attributes
@@ -52,7 +52,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.pointsAsXYArray = function(a){
                 function pointsToXYArray(){ 
@@ -65,14 +65,14 @@ this.path = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
 
                 this.points( a.map((point) => [point.x,point.y]).flat() );
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.thickness = function(a){
                 if(thickness==undefined){return thickness;}     
@@ -81,7 +81,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.looping = function(a){
                 if(looping==undefined){return looping;}     
@@ -90,7 +90,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.capType = function(a){
                 if(capType==undefined){return capType;}     
@@ -99,7 +99,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.jointType = function(a){
                 if(jointType==undefined){return jointType;}     
@@ -108,7 +108,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.jointDetail = function(a){
                 if(jointDetail==undefined){return jointDetail;}     
@@ -117,7 +117,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.sharpLimit = function(a){
                 if(sharpLimit==undefined){return sharpLimit;}     
@@ -126,7 +126,7 @@ this.path = function(_id,_name){
                 generatedPathPolygon = lineGenerator();
                 pointsChanged = true;
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
         //unifiedAttribute
@@ -146,7 +146,7 @@ this.path = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
     //webGL rendering functions
@@ -260,7 +260,7 @@ this.path = function(_id,_name){
         }
         this.computeExtremities = computeExtremities;
 
-    //lead render
+    //render
         function drawDotFrame(){
             //draw shape extremity points
                 self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -268,8 +268,33 @@ this.path = function(_id,_name){
                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
         }
+        function activateShouldRenderFrame(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
+            if(render.shouldRenderFrame){
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
+                return;
+            }
+            render.shouldRenderFrame = shouldThisElementRender();
+        }
+        function shouldThisElementRender(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
+            if( self.parent == undefined || self.parent.clipActive == undefined ){
+                return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+            }
+            return library.math.detectIntersect.boundingBoxes(
+                self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                self.extremities.boundingBox
+            );
+        }
         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-            dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development     
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
+
+            //judge whether element should be rendered
+                if( !shouldThisElementRender() ){
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
+                    return;
+                }
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
 
             //activate shape render code
                 activateGLRender(context,offset);
@@ -280,25 +305,25 @@ this.path = function(_id,_name){
 
     //info dump
         this._dump = function(){
-            report.info(self.getAddress(),'._dump()');
-            report.info(self.getAddress(),'._dump -> id: '+id);
-            report.info(self.getAddress(),'._dump -> type: '+type);
-            report.info(self.getAddress(),'._dump -> name: '+self.name);
-            report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-            report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-            report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-            report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-            report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-            report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-            report.info(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
-            report.info(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
-            report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> looping: '+looping);
-            report.info(self.getAddress(),'._dump -> thickness: '+thickness);
-            report.info(self.getAddress(),'._dump -> capType: '+capType);
-            report.info(self.getAddress(),'._dump -> jointType: '+jointType);
-            report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
-            report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
+            console.log(self.getAddress(),'._dump()');
+            console.log(self.getAddress(),'._dump -> id: '+id);
+            console.log(self.getAddress(),'._dump -> type: '+type);
+            console.log(self.getAddress(),'._dump -> name: '+self.name);
+            console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+            console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+            console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+            console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+            console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+            console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+            console.log(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
+            console.log(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
+            console.log(self.getAddress(),'._dump -> scale: '+scale);
+            console.log(self.getAddress(),'._dump -> looping: '+looping);
+            console.log(self.getAddress(),'._dump -> thickness: '+thickness);
+            console.log(self.getAddress(),'._dump -> capType: '+capType);
+            console.log(self.getAddress(),'._dump -> jointType: '+jointType);
+            console.log(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
+            console.log(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
         };
 
     //interface

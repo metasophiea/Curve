@@ -302,14 +302,14 @@ this.loadFont = function(fontName,onLoaded=()=>{}){
         const filename = vectorLibrary[fontName].fileName;
         library.misc.loadFileFromURL(
             fontFilesLocation+filename,
-            (fontData) => {
-                const vectors = library.font.extractGlyphs(fontData,reducedGlyphSet);
+            fontData => {
+                const vectors = library.font.extractGlyphs(fontData.response,reducedGlyphSet);
                 Object.keys(vectors).forEach(glyphName => vectorLibrary[fontName][glyphName] = vectors[glyphName] );
                 vectorLibrary[fontName].isLoaded = true;
                 onLoaded(true);
             },
-            'arraybuffer',
             () => { onLoaded(false); },
+            'arraybuffer',
         );
 };
 this.getVector = function(fontName,character){

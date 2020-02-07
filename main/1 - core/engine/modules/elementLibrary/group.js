@@ -19,7 +19,7 @@ this.group = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             
         //advanced use attributes
@@ -39,35 +39,35 @@ this.group = function(_id,_name){
                 x = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.y = function(a){ 
                 if(a==undefined){return y;}     
                 y = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.angle = function(a){ 
                 if(a==undefined){return angle;} 
                 angle = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.heedCamera = function(a){
                 if(a==undefined){return heedCamera;}     
                 heedCamera = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].heedCamera(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
         //unifiedAttribute
@@ -87,7 +87,7 @@ this.group = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
     //group functions
@@ -121,7 +121,7 @@ this.group = function(_id,_name){
                 this.append(child);
             });
             dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
-            render.shouldRenderFrame = true;
+            activateShouldRenderFrame();
         };
         this.getChildByName = function(name){return getChildByName(name);};
         this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
@@ -138,7 +138,7 @@ this.group = function(_id,_name){
 
             childRegistry[newElement.name] = newElement;
 
-            render.shouldRenderFrame = true;
+            activateShouldRenderFrame();
             return true;
         };
         this.prepend = function(newElement){
@@ -152,7 +152,7 @@ this.group = function(_id,_name){
 
             childRegistry[newElement.name] = newElement;
 
-            render.shouldRenderFrame = true;
+            activateShouldRenderFrame();
             return true;
         };
         this.remove = function(newElement){
@@ -165,13 +165,13 @@ this.group = function(_id,_name){
 
             newElement.parent = undefined;
             delete childRegistry[newElement.name];
-            render.shouldRenderFrame = true;
+            activateShouldRenderFrame();
         };
         this.clear = function(){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].clear()'); //#development
             children = [];
             childRegistry = {};
-            render.shouldRenderFrame = true;
+            activateShouldRenderFrame();
             return true;
         };
         this.getElementsUnderPoint = function(x,y){
@@ -237,14 +237,14 @@ this.group = function(_id,_name){
             clipping.stencil = element;
             clipping.stencil.parent = this;
             if(clipping.active){ computeExtremities(); }
-            render.shouldRenderFrame = true;
+            activateShouldRenderFrame();
         };
         this.clipActive = function(bool){
             if(bool == undefined){return clipping.active;}
             dev.log.elementLibrary[type]('['+self.getAddress()+'].clipActive(',bool); //#development
             clipping.active = bool;
             computeExtremities();
-            render.shouldRenderFrame = true;
+            activateShouldRenderFrame();
         };
 
     //extremities
@@ -441,14 +441,40 @@ this.group = function(_id,_name){
         this.computeExtremities = computeExtremities;
         this.updateExtremities = updateExtremities;
     
-    //lead render
+    //render
         function drawDotFrame(){
             //draw bounding box top left and bottom right points
             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:0,b:0,a:0.75});
             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
         }
+        function activateShouldRenderFrame(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
+            if(render.shouldRenderFrame){
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
+                return;
+            }
+            render.shouldRenderFrame = shouldThisElementRender();
+        }
+        function shouldThisElementRender(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
+            if( self.parent == undefined || self.parent.clipActive == undefined ){
+                return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+            }
+            return library.math.detectIntersect.boundingBoxes(
+                self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                self.extremities.boundingBox
+            );
+        }
         this.render = function(context, offset){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
+
+            //judge whether element should be rendered
+                if( !shouldThisElementRender() ){
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
+                    return;
+                }
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
+
             //combine offset with group's position, angle and scale to produce new offset for children
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const newOffset = { 
@@ -474,19 +500,8 @@ this.group = function(_id,_name){
                 }
             
             //render children
-                children.forEach(function(a){
-                    dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> '+JSON.stringify(clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox())+' / '+JSON.stringify(a.extremities.boundingBox)); //#development
-                    if(
-                        library.math.detectIntersect.boundingBoxes(
-                            clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox(),
-                            a.extremities.boundingBox
-                        )
-                    ){ 
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering shape:',a.name); //#development
-                        a.render(context,newOffset);
-                    }else{
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering shape:',a.name); //#development
-                    }
+                children.forEach(child => {
+                    child.render(context,newOffset);
                 });
 
             //deactivate clipping

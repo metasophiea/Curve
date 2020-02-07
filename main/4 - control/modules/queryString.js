@@ -13,17 +13,17 @@ this.modLoader = function(loadingCompleteCallback){
         _canvas_.library.misc.loadFileFromURL(modURL,function(responseText){
             var modListFileExtension = '.'+_canvas_.control.queryString.controlModListPostfix;
             if( modURL.slice(-modListFileExtension.length) == modListFileExtension ){
-                responseText.split('\n').forEach(url => loadMod(url));
+                responseText.response.split('\n').forEach(url => loadMod(url));
             }else{
                 var newScript = document.createElement('script');
-                newScript.innerHTML = responseText;
+                newScript.innerHTML = responseText.response;
                 newScript.id = modURL;
                 document.body.append(newScript);
             }
             modsBeingLoaded--;
 
             if(modsBeingLoaded == 0 && loadingCompleteCallback){loadingCompleteCallback();}
-        },'text');
+        },undefined,'text');
     }
     
     var tmp = (new URL(window.location.href)).searchParams.get(_canvas_.control.queryString.modParameterKey);

@@ -311,7 +311,7 @@ this.loadFont = function(fontName,onLoaded=()=>{}){
                 vectorLibrary[fontName].isLoaded = true;
                 onLoaded(true);
             },
-            'arraybuffer',
             () => { onLoaded(false); },
+            'arraybuffer',
         );
 };

@@ -100,7 +100,7 @@ _canvas_.system.mouse.functionList.onwheel.push(
                 if(!interactionState.mouseWheelZoom){return;}
 
             const scaleLimits = {'max':20, 'min':0.1};
-
+            
             let delta = data.event.wheelDeltaY;
             switch(control.mouseWheelMode){
                 case 'magic':
@@ -117,8 +117,8 @@ _canvas_.system.mouse.functionList.onwheel.push(
                 //perform actual scaling
                     let scale = _canvas_.control.viewport.scale();
                     scale += scale*(delta/100);
-                    if( scale > scaleLimits.max ){scale = scaleLimits.max;}
-                    if( scale < scaleLimits.min ){scale = scaleLimits.min;}
+                    if( scale > scaleLimits.max ){ scale = scaleLimits.max; }
+                    else if( scale < scaleLimits.min ){ scale = scaleLimits.min; }
                     _canvas_.control.viewport.scale(scale);
                 //discover new point under mouse
                     const newPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);

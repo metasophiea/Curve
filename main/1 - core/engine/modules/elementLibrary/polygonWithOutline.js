@@ -19,21 +19,21 @@ this.polygonWithOutline = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             let lineColour = {r:1,g:0,b:0,a:1};
             this.lineColour = function(a){
                 if(a==undefined){return lineColour;}     
                 lineColour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             
         //advanced use attributes
@@ -56,7 +56,7 @@ this.polygonWithOutline = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].points(',points); //#development
                 if(allowComputeExtremities){computeExtremities();}
                 pointsChanged = true;
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.pointsAsXYArray = function(a){
                 function pointsToXYArray(){ 
@@ -69,21 +69,21 @@ this.polygonWithOutline = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
 
                 this.points( a.map((point) => [point.x,point.y]).flat() );
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.thickness = function(a){
                 if(thickness==undefined){return thickness;}     
                 thickness = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness('+thickness+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
                 pointsChanged = true;
             };
             this.jointDetail = function(a){
@@ -91,7 +91,7 @@ this.polygonWithOutline = function(_id,_name){
                 jointDetail = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].jointDetail('+jointDetail+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
                 pointsChanged = true;
             };
             this.jointType = function(a){
@@ -99,7 +99,7 @@ this.polygonWithOutline = function(_id,_name){
                 jointType = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].jointType('+jointType+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
                 pointsChanged = true;
             };
             this.sharpLimit = function(a){
@@ -107,7 +107,7 @@ this.polygonWithOutline = function(_id,_name){
                 sharpLimit = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].sharpLimit('+sharpLimit+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
                 pointsChanged = true;
             };
 
@@ -128,7 +128,7 @@ this.polygonWithOutline = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
     //webGL rendering functions
@@ -275,7 +275,7 @@ this.polygonWithOutline = function(_id,_name){
         }
         this.computeExtremities = computeExtremities;
 
-    //lead render
+    //render
         function drawDotFrame(){
             //draw shape extremity points
                 self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -283,8 +283,33 @@ this.polygonWithOutline = function(_id,_name){
                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
         }
+        function activateShouldRenderFrame(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
+            if(render.shouldRenderFrame){
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
+                return;
+            }
+            render.shouldRenderFrame = shouldThisElementRender();
+        }
+        function shouldThisElementRender(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
+            if( self.parent == undefined || self.parent.clipActive == undefined ){
+                return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+            }
+            return library.math.detectIntersect.boundingBoxes(
+                self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                self.extremities.boundingBox
+            );
+        }
         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-            dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development     
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
+
+            //judge whether element should be rendered
+                if( !shouldThisElementRender() ){
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
+                    return;
+                }
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
 
             //activate shape render code
                 activateGLRender(context,offset);
@@ -295,23 +320,23 @@ this.polygonWithOutline = function(_id,_name){
 
     //info dump
         this._dump = function(){
-            report.info(self.getAddress(),'._dump()');
-            report.info(self.getAddress(),'._dump -> id: '+id);
-            report.info(self.getAddress(),'._dump -> type: '+type);
-            report.info(self.getAddress(),'._dump -> name: '+self.name);
-            report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-            report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-            report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-            report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-            report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-            report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-            report.info(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
-            report.info(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
-            report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> thickness: '+thickness);
-            report.info(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
-            report.info(self.getAddress(),'._dump -> jointType: '+jointType);
-            report.info(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
+            console.log(self.getAddress(),'._dump()');
+            console.log(self.getAddress(),'._dump -> id: '+id);
+            console.log(self.getAddress(),'._dump -> type: '+type);
+            console.log(self.getAddress(),'._dump -> name: '+self.name);
+            console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
+            console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+            console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+            console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+            console.log(self.getAddress(),'._dump -> ignored: '+ignored);
+            console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+            console.log(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
+            console.log(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
+            console.log(self.getAddress(),'._dump -> scale: '+scale);
+            console.log(self.getAddress(),'._dump -> thickness: '+thickness);
+            console.log(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
+            console.log(self.getAddress(),'._dump -> jointType: '+jointType);
+            console.log(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
         };
 
     //interface

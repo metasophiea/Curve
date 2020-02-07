@@ -30,12 +30,14 @@
 #get location of script
     dir=$(cd "$(dirname "$0")" && pwd)
 
+
 #assemble master JS files
     echo "running Gravity"
     for name in ${nameArray[@]}; do 
         echo "-> "$name".js"
         "$dir"/gravity "$dir"/../main/$name.js "$dir"/../docs/js/$name.min.js
     done
+
 
 #clean out development logging (if requested)
     if $removeDev; then
@@ -45,6 +47,7 @@
             mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
         done
     fi
+
 
 #produce non-minified versions
     for name in ${nameArray[@]}; do 
@@ -58,25 +61,35 @@ echo "telling core to use core_engine.min.js instead of core_engine.js"
     done
     
 
-echo "running Closure"
-    for name in ${nameArray[@]}; do 
+# echo "running Closure"
+#     for name in ${nameArray[@]}; do 
+#         echo "-> "$name".js"
+#         #make the following change:
+#         #   interface => _interface
+#             cat "$dir"/../docs/js/$name.min.js | sed -e "s/interface/_interface/g" > "$dir"/../docs/js/$name.min.tmp.js
+#             mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
 
-        echo "-> "$name".js"
-        #make the following change:
-        #   interface => _interface
-            cat "$dir"/../docs/js/$name.min.js | sed -e "s/interface/_interface/g" > "$dir"/../docs/js/$name.min.tmp.js
-            mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
-
-        #push temp file through closure then delete
-            java -jar "$dir"/closure-compiler* --js_output_file="$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
-            mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
-            if [ $? -ne 0 ]; then
-                echo "";
-                echo "Closure has encountered an error; bailing";
-                exit 1;
-            fi
-
-    done
+#         #push temp file through closure then delete
+#             java -jar "$dir"/closure-compiler* --js_output_file="$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js --compilation_level WHITESPACE_ONLY --force_inject_library es6_runtime
+#             mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
+#             if [ $? -ne 0 ]; then
+#                 echo "";
+#                 echo "Closure has encountered an error; bailing";
+#                 exit 1;
+#             fi
+#     done
+echo "running Closure on core_engine"
+    #make the following change:
+        cat "$dir"/../docs/js/core_engine.min.js | sed -e "s/interface/_interface/g" > "$dir"/../docs/js/core_engine.min.tmp.js
+        mv "$dir"/../docs/js/core_engine.min.tmp.js "$dir"/../docs/js/core_engine.min.js
+    #push temp file through closure then delete
+        java -jar "$dir"/closure-compiler* --js_output_file="$dir"/../docs/js/core_engine.min.tmp.js "$dir"/../docs/js/core_engine.min.js
+        mv "$dir"/../docs/js/core_engine.min.tmp.js "$dir"/../docs/js/core_engine.min.js
+        if [ $? -ne 0 ]; then
+            echo "";
+            echo "Closure has encountered an error; bailing";
+            exit 1;
+        fi
 
 #report on how things went
     echo; echo;

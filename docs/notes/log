@@ -1,4 +1,75 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-07
+  - had another try at core-engine's image element, and I think it's gone much
+    better
+  - updated core-engine's element's "_dump" method to not use that 'report.log'
+    function that doesn't exist. They just use "console.log" now
+  - updated heavyComp so that it only runs closure on core-engine (I'm still
+    trying to get it to work like it did before) When you try to make a unit
+    with a custom AudioWorklet you get
+      curve.min.js:427 Uncaught TypeError: Failed to construct
+      'AudioWorkletNode': Please use the 'new' operator, this DOM object
+      constructor cannot be called as a function.
+  
+  turns out the situation with the very slow rendering with the old image
+  element wasn't only on the mac. Apparently Linux was just doing the
+  mipmapping automatically (or something) with my own mipmapping now, the mac
+  runs the test fine
+
+  - fixed bug with the new image element, where if the url had been changed
+    when a previous image had just finished loading, then that old image
+    wouldn't be loaded at all, and could never be as now that section in the
+    memory was no longer 'undefined'. Now the system saves the image data (we
+    spent that long loading it) to be processed when it's required next
+    
+    
+2020-02-06
+  - some coding errors in the "loadImageFromURL" function in the library, all
+    is well now
+  - made some modifications to core-engine's image element, to include a step
+    to perform mipmap generation. I found it to be rather slow, adding a lot of
+    processing time to each element. So, I also added a class library to store
+    previously processed images. This has drastically improved the load time of
+    one of the stress tests, reducing the waiting from load to first render
+    dramatically.
+    ...but. It seems as though I've lost the test that showed that mipmapping
+    was required. I have the old version of the image element still, but aside
+    from the initial loading time it quickly speeds up the render-time to
+    ~0.05 seconds. The newer element has the same render time...I'm not sure
+    what I've done here. I've left the newer one in though, as I figure it's
+    probably better anyway. I've kept the old one around just incase I figure
+    out how to reproduce the old issue on a different machine
+  - one more modification to core-engine's image element, so that now when a
+    request for a differnt url is recieved, but the has been loaded in the
+    past, that old data is used again. It's also shared amongst all the
+    image elements
+  - ...put a lot of bugs into core-engine's image element. Hopefully I've
+    worked them out now
+  - ...I haven't worked them out. Set things back to the old version. I'll
+    need to do another draft of this
+
+
+2020-02-05
+  - modified core-engine's elements further, removing the "should render"
+    judgements from the group shape, and placing them in each element (group
+    get's its own judgement code to, but now its only for itself)
+  - atop this, I've improved the "shouldRenderFrame" code from yesterday, so
+    that the value is only set when the changed element is within the viewport.
+    Thus changes that are made to elements that are not to be rendered anyway,
+    do not trigger the render of a new frame. There's nothing worse than
+    someone having say over a place they aren't in.
+  - reinstated that newer "loadImageFromURL" in the library, and removed
+    core-engine's image element's use of the old one. The new function has
+    some more features than the last one did, though doesn't really use any
+    of them... it sets the stage for those new features
+  - made a small adjustment to the argument list of the
+    library.misc.loadFileFromURL2 function (and subsequently, every where else
+    that used it)
+  - added new dev checkbox option that created a html section filled with data
+    about what the system is doing, with the help of a new section added to
+    core-console's stat section
+
+
 2020-02-04
   - added "shouldRenderFrame" to the render section of core's engine. This bool
     is set to 'false' initially, and can be set to 'true' by any element. They

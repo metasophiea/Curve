@@ -267,8 +267,7 @@ this.getDifferenceOfArrays = function(array_a,array_b){
         b:arrayRemovals(array_a,array_b.slice())
     };
 };
-
-this.loadFileFromURL = function(url,callback,responseType='blob',errorCallback){
+this.loadFileFromURL = function(url,callback,errorCallback,responseType='blob'){
     dev.log.misc('.loadFileFromURL(',url,callback,responseType,errorCallback); //#development
     dev.count('.misc.loadFileFromURL'); //#development
 
@@ -278,9 +277,9 @@ this.loadFileFromURL = function(url,callback,responseType='blob',errorCallback){
     xhttp.onloadend = a => {
         if(a.target.status == 200){ 
             if(callback != undefined){
-                callback(a.target.response);
+                callback(a.target);
             }else{
-                console.log(a.target.response);
+                console.log(a.target);
             }
         }else{ 
             if(errorCallback != undefined){
@@ -294,96 +293,69 @@ this.loadFileFromURL = function(url,callback,responseType='blob',errorCallback){
     xhttp.responseType = responseType;
     xhttp.send();
 };
-// this.loadFileFromURL2 = function(url,callback,errorCallback,responseType='blob'){
-//     dev.log.misc('.loadFileFromURL2(',url,callback,responseType,errorCallback); //#development
-//     dev.count('.misc.loadFileFromURL2'); //#development
+this.loadImageFromURL = function(url,callback,errorCallback,forceUpdate=false,scale=1){
+    dev.log.misc('.loadImageFromURL(',url,callback,errorCallback,forceUpdate,scale); //#development
+    dev.count('.misc.loadImageFromURL'); //#development
 
-//     //responseType: text / arraybuffer / blob / document / json 
+    const dataStore = this.loadImageFromURL.loadedImageData;
 
-//     const xhttp = new XMLHttpRequest();
-//     xhttp.onloadend = a => {
-//         if(a.target.status == 200){ 
-//             if(callback != undefined){
-//                 callback(a.target);
-//             }else{
-//                 console.log(a.target);
-//             }
-//         }else{ 
-//             if(errorCallback != undefined){
-//                 errorCallback(a.target);
-//             }else{
-//                 console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL);
-//             }
-//         }
-//     };
-//     xhttp.open('get',url,true);
-//     xhttp.responseType = responseType;
-//     xhttp.send();
-// };
-// this.loadImageFromURL = function(url,callback,errorCallback,forceUpdate=false,scale=1){
-//     dev.log.misc('.loadImageFromURL(',url,callback,errorCallback,forceUpdate,scale); //#development
-//     dev.count('.misc.loadImageFromURL'); //#development
+    function getImageFromDataStoreByUrlWithScale(url,scale=1){
+        dev.log.misc('.loadImageFromURL::getImageFromdataStoreByUrl(',url,scale); //#development
+        global = dataStore[url];
+        return dataStore[url].mipmap[1];
+    }
 
-//     const dataStore = this.loadImageFromURL.loadedImageData;
+    if(dataStore[url] == undefined || forceUpdate && dataStore[url].state != 'requested' ){
+        dev.log.misc('.loadImageFromURL -> no previously requested image bitmap for this URL, requesting now...'); //#development
+        dataStore[url] = { state:'requested', mipmap:{}, callbacks:[{success:callback,failure:errorCallback,scale:scale}], timestamp:undefined };
 
-//     if(dataStore[url] == undefined || forceUpdate && dataStore[url].state != 'requested' ){
-//         dev.log.misc('.loadImageFromURL -> no previously requested image bitmap for this URL, requesting now...'); //#development
-//         dataStore[url] = { state:'requested', mipmap:{}, callbacks:[{success:callback,failure:errorCallback,scale:scale}], timestamp:undefined };
+        library.misc.loadFileFromURL(
+            url,
+            response => {
+                dev.log.misc('.loadImageFromURL -> response:',response); //#development
+                dataStore[url].response = response.response;
+                createImageBitmap(response.response).then(bitmap => {
+                    dev.log.misc('.loadImageFromURL -> bitmap:',bitmap); //#development
+                    dataStore[url].mipmap[1] = bitmap;
+                    dataStore[url].state = 'ready';
+                    dataStore[url].timestamp = Date.now();
+                    dataStore[url].callbacks.forEach(callbackBlock => {
+                        dev.log.misc('.loadImageFromURL -> running success callback from callbackBlock:',callbackBlock); //#development
+                        if(callbackBlock.success != undefined){callbackBlock.success( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) );}
+                    } );
+                    dataStore[url].callbacks = [];
+                }).catch(error => {
+                    dev.log.misc('.loadImageFromURL -> image decoding error:',error); //#development
+                    dataStore[url].state = 'failed';
+                    dataStore[url].timestamp = Date.now();
+                    dataStore[url].callbacks.forEach(callbackBlock => {
+                        dev.log.misc('.loadImageFromURL -> running failure callback from callbackBlock:',callbackBlock); //#development
+                        if(callbackBlock.failure != undefined){ callbackBlock.failure('imageDecodingError',response,error); }
+                    } );
+                    dataStore[url].callbacks = [];
+                });
+            },
+            response => {
+                dev.log.misc('.loadImageFromURL -> image was not found at url: '+url); //#development
+                dataStore[url].state = 'failed';
+                dataStore[url].timestamp = Date.now();
+                dataStore[url].callbacks.forEach(callbackBlock => {
+                    dev.log.misc('.loadImageFromURL -> running failure callback from callbackBlock:',callbackBlock); //#development
+                    if(callbackBlock.failure != undefined){ callbackBlock.failure('badURL',response); }
+                } );
+                dataStore[url].callbacks = [];
+            },
+        );
 
-//         function getImageFromDataStoreByUrlWithScale(url,scale=1){
-//             dev.log.misc('.loadImageFromURL::getImageFromdataStoreByUrl(',url,scale); //#development
-//             console.log( dataStore[url] );
-//             global = dataStore[url];
-//             return dataStore[url].mipmap[1];
-//         }
-
-//         library.misc.loadFileFromURL2(
-//             url,
-//             response => {
-//                 dev.log.misc('.loadImageFromURL -> response:',response); //#development
-//                 dataStore[url].response = response.response;
-//                 createImageBitmap(response.response).then(bitmap => {
-//                     dev.log.misc('.loadImageFromURL -> bitmap:',bitmap); //#development
-//                     dataStore[url].mipmap[1] = bitmap;
-//                     dataStore[url].state = 'ready';
-//                     dataStore[url].timestamp = Date.now();
-//                     dataStore[url].callbacks.forEach(callbackBlock => {
-//                         dev.log.misc('.loadImageFromURL -> running success callback from callbackBlock:',callbackBlock); //#development
-//                         if(callbackBlock.success != undefined){callbackBlock.success( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) );}
-//                     } );
-//                     dataStore[url].callbacks = [];
-//                 }).catch(error => {
-//                     dev.log.misc('.loadImageFromURL -> image decoding error:',error); //#development
-//                     dataStore[url].state = 'failed';
-//                     dataStore[url].timestamp = Date.now();
-//                     dataStore[url].callbacks.forEach(callbackBlock => {
-//                         dev.log.misc('.loadImageFromURL -> running failure callback from callbackBlock:',callbackBlock); //#development
-//                         if(callbackBlock.failure != undefined){ callbackBlock.failure('imageDecodingError',response,error); }
-//                     } );
-//                     dataStore[url].callbacks = [];
-//                 });
-//             },
-//             response => {
-//                 dev.log.misc('.loadImageFromURL -> image was not found at url: '+url); //#development
-//                 dataStore[url].state = 'failed';
-//                 dataStore[url].timestamp = Date.now();
-//                 dataStore[url].callbacks.forEach(callbackBlock => {
-//                     dev.log.misc('.loadImageFromURL -> running failure callback from callbackBlock:',callbackBlock); //#development
-//                     if(callbackBlock.failure != undefined){ callbackBlock.failure('badURL',response); }
-//                 } );
-//                 dataStore[url].callbacks = [];
-//             },
-//         );
-
-//     }else if( dataStore[url].state == 'ready' ){
-//         dev.log.misc('.loadImageFromURL -> found a previously loaded image bitmap for this URL'); //#development
-//         if(callback != undefined){ callback( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) ); }
-//     }else if( dataStore[url].state == 'requested' ){
-//         dev.log.misc('.loadImageFromURL -> bitmap is being loaded, adding callbacks to list'); //#development
-//         dataStore[url].callbacks.push({success:callback,failure:errorCallback,scale:scale});
-//     }else if( dataStore[url].state == 'failed' ){
-//         dev.log.misc('.loadImageFromURL -> previous attempt to load from the URL has failed'); //#development
-//         if(errorCallback != undefined){ errorCallback('previousFailure'); }
-//     }
-// };
-// this.loadImageFromURL.loadedImageData = {};
+    }else if( dataStore[url].state == 'ready' ){
+        dev.log.misc('.loadImageFromURL -> found a previously loaded image bitmap for this URL'); //#development
+        if(callback != undefined){ callback( getImageFromDataStoreByUrlWithScale(url,scale) ); }
+    }else if( dataStore[url].state == 'requested' ){
+        dev.log.misc('.loadImageFromURL -> bitmap is being loaded, adding callbacks to list'); //#development
+        dataStore[url].callbacks.push({success:callback,failure:errorCallback,scale:scale});
+    }else if( dataStore[url].state == 'failed' ){
+        dev.log.misc('.loadImageFromURL -> previous attempt to load from the URL has failed'); //#development
+        if(errorCallback != undefined){ errorCallback('previousFailure'); }
+    }
+};
+this.loadImageFromURL.loadedImageData = {};

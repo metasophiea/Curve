@@ -193,6 +193,7 @@ future unit ideas
         multi-band distortion box
         amplitude modulator
         lag processor (a box that reacts slowly to input changes, rounding things out)
+        noise gate
         (some of these could use AudioWorkletProcessor-based custom audio nodes)
 
         tuner (like the one on the phone)

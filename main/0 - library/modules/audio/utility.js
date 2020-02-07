@@ -54,13 +54,13 @@ this.loadAudioFile = function(callback,type='file',url='',errorCallback,forceReq
             library.misc.loadFileFromURL(
                 url, 
                 data => {
-                    library.audio.context.decodeAudioData(data, function(data){
+                    library.audio.context.decodeAudioData(data.response, data => {
                         loadedAudioFiles[url] = { buffer:data, name:(url.split('/')).pop(), duration:data.duration };
                         callback(loadedAudioFiles[url]);
                     });
                 },
+                errorCallback,
                 'arraybuffer',
-                errorCallback
             );
         break;
         case 'file': default:

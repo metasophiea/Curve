@@ -19,14 +19,14 @@ this.rectangle = function(_id,_name){
                 ignored = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             let colour = {r:1,g:0,b:0,a:1};
             this.colour = function(a){
                 if(a==undefined){return colour;}     
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             
         //advanced use attributes
@@ -48,49 +48,49 @@ this.rectangle = function(_id,_name){
                 x = a;     
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.y = function(a){ 
                 if(a==undefined){return y;}     
                 y = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.angle = function(a){ 
                 if(a==undefined){return angle;} 
                 angle = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.anchor = function(a){
                 if(a==undefined){return anchor;} 
                 anchor = a; 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.width = function(a){
                 if(a==undefined){return width;}  
                 width = a;  
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.height = function(a){
                 if(a==undefined){return height;} 
                 height = a; 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                 if(allowComputeExtremities){computeExtremities();}
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
         //unifiedAttribute
@@ -110,7 +110,7 @@ this.rectangle = function(_id,_name){
                 allowComputeExtremities = true;
 
                 computeExtremities();
-                render.shouldRenderFrame = true;
+                activateShouldRenderFrame();
             };
 
     //webGL rendering functions
@@ -252,7 +252,7 @@ this.rectangle = function(_id,_name){
         }
         this.computeExtremities = computeExtremities;
 
-    //lead render
+    //render
         function drawDotFrame(){
             //draw shape extremity points
                 self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
@@ -260,8 +260,34 @@ this.rectangle = function(_id,_name){
                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
         }
+        function activateShouldRenderFrame(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
+            if(render.shouldRenderFrame){
+                dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
+                return;
+            }
+            render.shouldRenderFrame = shouldThisElementRender();
+        }
+        function shouldThisElementRender(){
+            dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
+            if( self.parent == undefined || self.parent.clipActive == undefined ){
+                return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
+            }
+            return library.math.detectIntersect.boundingBoxes(
+                self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
+                self.extremities.boundingBox
+            );
+        }
         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
+
+            //judge whether element should be rendered
+                if( !shouldThisElementRender() ){
+                    dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
+                    return;
+                }
+                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
+
             //combine offset with shape's position, angle and scale to produce adjust value for render
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const adjust = { 

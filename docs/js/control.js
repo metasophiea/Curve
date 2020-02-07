@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:3} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:6} };
                 const library = this;
             
                 this.go = new function(){
@@ -2949,14 +2949,14 @@
                             const filename = vectorLibrary[fontName].fileName;
                             library.misc.loadFileFromURL(
                                 fontFilesLocation+filename,
-                                (fontData) => {
-                                    const vectors = library.font.extractGlyphs(fontData,reducedGlyphSet);
+                                fontData => {
+                                    const vectors = library.font.extractGlyphs(fontData.response,reducedGlyphSet);
                                     Object.keys(vectors).forEach(glyphName => vectorLibrary[fontName][glyphName] = vectors[glyphName] );
                                     vectorLibrary[fontName].isLoaded = true;
                                     onLoaded(true);
                                 },
-                                'arraybuffer',
                                 () => { onLoaded(false); },
+                                'arraybuffer',
                             );
                     };
                     this.getVector = function(fontName,character){
@@ -3203,8 +3203,7 @@
                             b:arrayRemovals(array_a,array_b.slice())
                         };
                     };
-                    
-                    this.loadFileFromURL = function(url,callback,responseType='blob',errorCallback){
+                    this.loadFileFromURL = function(url,callback,errorCallback,responseType='blob'){
                     
                         //responseType: text / arraybuffer / blob / document / json 
                     
@@ -3212,9 +3211,9 @@
                         xhttp.onloadend = a => {
                             if(a.target.status == 200){ 
                                 if(callback != undefined){
-                                    callback(a.target.response);
+                                    callback(a.target);
                                 }else{
-                                    console.log(a.target.response);
+                                    console.log(a.target);
                                 }
                             }else{ 
                                 if(errorCallback != undefined){
@@ -3228,83 +3227,58 @@
                         xhttp.responseType = responseType;
                         xhttp.send();
                     };
-                    // this.loadFileFromURL2 = function(url,callback,errorCallback,responseType='blob'){
+                    this.loadImageFromURL = function(url,callback,errorCallback,forceUpdate=false,scale=1){
                     
-                    //     //responseType: text / arraybuffer / blob / document / json 
+                        const dataStore = this.loadImageFromURL.loadedImageData;
                     
-                    //     const xhttp = new XMLHttpRequest();
-                    //     xhttp.onloadend = a => {
-                    //         if(a.target.status == 200){ 
-                    //             if(callback != undefined){
-                    //                 callback(a.target);
-                    //             }else{
-                    //                 console.log(a.target);
-                    //             }
-                    //         }else{ 
-                    //             if(errorCallback != undefined){
-                    //                 errorCallback(a.target);
-                    //             }else{
-                    //                 console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL);
-                    //             }
-                    //         }
-                    //     };
-                    //     xhttp.open('get',url,true);
-                    //     xhttp.responseType = responseType;
-                    //     xhttp.send();
-                    // };
-                    // this.loadImageFromURL = function(url,callback,errorCallback,forceUpdate=false,scale=1){
+                        function getImageFromDataStoreByUrlWithScale(url,scale=1){
+                            global = dataStore[url];
+                            return dataStore[url].mipmap[1];
+                        }
                     
-                    //     const dataStore = this.loadImageFromURL.loadedImageData;
+                        if(dataStore[url] == undefined || forceUpdate && dataStore[url].state != 'requested' ){
+                            dataStore[url] = { state:'requested', mipmap:{}, callbacks:[{success:callback,failure:errorCallback,scale:scale}], timestamp:undefined };
                     
-                    //     if(dataStore[url] == undefined || forceUpdate && dataStore[url].state != 'requested' ){
-                    //         dataStore[url] = { state:'requested', mipmap:{}, callbacks:[{success:callback,failure:errorCallback,scale:scale}], timestamp:undefined };
+                            library.misc.loadFileFromURL(
+                                url,
+                                response => {
+                                    dataStore[url].response = response.response;
+                                    createImageBitmap(response.response).then(bitmap => {
+                                        dataStore[url].mipmap[1] = bitmap;
+                                        dataStore[url].state = 'ready';
+                                        dataStore[url].timestamp = Date.now();
+                                        dataStore[url].callbacks.forEach(callbackBlock => {
+                                            if(callbackBlock.success != undefined){callbackBlock.success( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) );}
+                                        } );
+                                        dataStore[url].callbacks = [];
+                                    }).catch(error => {
+                                        dataStore[url].state = 'failed';
+                                        dataStore[url].timestamp = Date.now();
+                                        dataStore[url].callbacks.forEach(callbackBlock => {
+                                            if(callbackBlock.failure != undefined){ callbackBlock.failure('imageDecodingError',response,error); }
+                                        } );
+                                        dataStore[url].callbacks = [];
+                                    });
+                                },
+                                response => {
+                                    dataStore[url].state = 'failed';
+                                    dataStore[url].timestamp = Date.now();
+                                    dataStore[url].callbacks.forEach(callbackBlock => {
+                                        if(callbackBlock.failure != undefined){ callbackBlock.failure('badURL',response); }
+                                    } );
+                                    dataStore[url].callbacks = [];
+                                },
+                            );
                     
-                    //         function getImageFromDataStoreByUrlWithScale(url,scale=1){
-                    //             console.log( dataStore[url] );
-                    //             global = dataStore[url];
-                    //             return dataStore[url].mipmap[1];
-                    //         }
-                    
-                    //         library.misc.loadFileFromURL2(
-                    //             url,
-                    //             response => {
-                    //                 dataStore[url].response = response.response;
-                    //                 createImageBitmap(response.response).then(bitmap => {
-                    //                     dataStore[url].mipmap[1] = bitmap;
-                    //                     dataStore[url].state = 'ready';
-                    //                     dataStore[url].timestamp = Date.now();
-                    //                     dataStore[url].callbacks.forEach(callbackBlock => {
-                    //                         if(callbackBlock.success != undefined){callbackBlock.success( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) );}
-                    //                     } );
-                    //                     dataStore[url].callbacks = [];
-                    //                 }).catch(error => {
-                    //                     dataStore[url].state = 'failed';
-                    //                     dataStore[url].timestamp = Date.now();
-                    //                     dataStore[url].callbacks.forEach(callbackBlock => {
-                    //                         if(callbackBlock.failure != undefined){ callbackBlock.failure('imageDecodingError',response,error); }
-                    //                     } );
-                    //                     dataStore[url].callbacks = [];
-                    //                 });
-                    //             },
-                    //             response => {
-                    //                 dataStore[url].state = 'failed';
-                    //                 dataStore[url].timestamp = Date.now();
-                    //                 dataStore[url].callbacks.forEach(callbackBlock => {
-                    //                     if(callbackBlock.failure != undefined){ callbackBlock.failure('badURL',response); }
-                    //                 } );
-                    //                 dataStore[url].callbacks = [];
-                    //             },
-                    //         );
-                    
-                    //     }else if( dataStore[url].state == 'ready' ){
-                    //         if(callback != undefined){ callback( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) ); }
-                    //     }else if( dataStore[url].state == 'requested' ){
-                    //         dataStore[url].callbacks.push({success:callback,failure:errorCallback,scale:scale});
-                    //     }else if( dataStore[url].state == 'failed' ){
-                    //         if(errorCallback != undefined){ errorCallback('previousFailure'); }
-                    //     }
-                    // };
-                    // this.loadImageFromURL.loadedImageData = {};
+                        }else if( dataStore[url].state == 'ready' ){
+                            if(callback != undefined){ callback( getImageFromDataStoreByUrlWithScale(url,scale) ); }
+                        }else if( dataStore[url].state == 'requested' ){
+                            dataStore[url].callbacks.push({success:callback,failure:errorCallback,scale:scale});
+                        }else if( dataStore[url].state == 'failed' ){
+                            if(errorCallback != undefined){ errorCallback('previousFailure'); }
+                        }
+                    };
+                    this.loadImageFromURL.loadedImageData = {};
                 };
                 this.audio = new function(){
                     const audio = this;
@@ -3452,13 +3426,13 @@
                                 library.misc.loadFileFromURL(
                                     url, 
                                     data => {
-                                        library.audio.context.decodeAudioData(data, function(data){
+                                        library.audio.context.decodeAudioData(data.response, data => {
                                             loadedAudioFiles[url] = { buffer:data, name:(url.split('/')).pop(), duration:data.duration };
                                             callback(loadedAudioFiles[url]);
                                         });
                                     },
+                                    errorCallback,
                                     'arraybuffer',
-                                    errorCallback
                                 );
                             break;
                             case 'file': default:
@@ -22640,7 +22614,7 @@
             };
 
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:4} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:7} };
                 const core_engine = new Worker("/js/core_engine.js");
                 const self = this;
                 
@@ -23740,6 +23714,7 @@
                             communicationModule.run('stats.getReport',[],resolve);
                         });
                     };
+                
                     let autoPrintActive = false;
                     let autoPrintIntervalId = undefined;
                     this.autoPrint = function(bool){
@@ -23752,6 +23727,42 @@
                             }, 500);
                         }else{
                             clearInterval(autoPrintIntervalId);
+                        }
+                    };
+                
+                    let onScreenAutoPrint_active = false;
+                    let onScreenAutoPrint_intervalId = false;
+                    let onScreenAutoPrint_section = undefined;
+                    this.onScreenAutoPrint = function(bool){
+                        if(bool == undefined){ return onScreenAutoPrint_active; }
+                        onScreenAutoPrint_active = bool;
+                
+                        _canvas_.core.stats.active(bool);
+                
+                        if(onScreenAutoPrint_active){
+                            onScreenAutoPrint_section = document.createElement('section');
+                                onScreenAutoPrint_section.style = 'position:fixed; z-index:1; margin:0; font-family:Helvetica;';
+                                document.body.prepend(onScreenAutoPrint_section);
+                                
+                            onScreenAutoPrint_intervalId = setInterval(() => {
+                                onScreenAutoPrint_section.style.top = (window.innerHeight-onScreenAutoPrint_section.offsetHeight)+'px';
+                                _canvas_.core.stats.getReport().then(data => {
+                                    const position = _canvas_.core.viewport.position();
+                        
+                                    onScreenAutoPrint_section.innerHTML = ''+
+                                        '<p style="margin:1px"> position: x:'+ position.x + ' y:' + position.y +'</p>' +
+                                        '<p style="margin:1px"> scale:'+ _canvas_.core.viewport.scale() +'</p>' +
+                                        '<p style="margin:1px"> angle:'+ _canvas_.core.viewport.angle()+'</p>' +
+                                        '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond +'</p>' +
+                                        '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames +'</p>' +
+                                        '<p style="margin:1px"> renderNonRenderSplitOverTheLastThirtyFrames: '+ data.renderNonRenderSplitOverTheLastThirtyFrames +'</p>' +
+                                    '';
+                                });
+                            }, 100);
+                        }else{
+                            clearInterval(onScreenAutoPrint_intervalId);
+                            if(onScreenAutoPrint_section != undefined){ onScreenAutoPrint_section.remove(); }
+                            onScreenAutoPrint_section = undefined;
                         }
                     };
                 };
@@ -39745,7 +39756,7 @@
                             if(url == undefined){ //load from file
                                 _canvas_.library.misc.openFile(function(data){procedure(data,callback);});
                             }else{ //load from url
-                                _canvas_.library.misc.loadFileFromURL(url,function(text){ procedure(text,callback); },'text');
+                                _canvas_.library.misc.loadFileFromURL(url,function(text){ procedure(text.response,callback); },undefined,'text');
                             }
                     };
                     this.save = function(filename='project.crv',compress=false){
@@ -40121,17 +40132,17 @@
                             _canvas_.library.misc.loadFileFromURL(modURL,function(responseText){
                                 var modListFileExtension = '.'+_canvas_.control.queryString.controlModListPostfix;
                                 if( modURL.slice(-modListFileExtension.length) == modListFileExtension ){
-                                    responseText.split('\n').forEach(url => loadMod(url));
+                                    responseText.response.split('\n').forEach(url => loadMod(url));
                                 }else{
                                     var newScript = document.createElement('script');
-                                    newScript.innerHTML = responseText;
+                                    newScript.innerHTML = responseText.response;
                                     newScript.id = modURL;
                                     document.body.append(newScript);
                                 }
                                 modsBeingLoaded--;
                     
                                 if(modsBeingLoaded == 0 && loadingCompleteCallback){loadingCompleteCallback();}
-                            },'text');
+                            },undefined,'text');
                         }
                         
                         var tmp = (new URL(window.location.href)).searchParams.get(_canvas_.control.queryString.modParameterKey);
@@ -40465,7 +40476,7 @@
                                 if(!interactionState.mouseWheelZoom){return;}
                 
                             const scaleLimits = {'max':20, 'min':0.1};
-                
+                            
                             let delta = data.event.wheelDeltaY;
                             switch(control.mouseWheelMode){
                                 case 'magic':
@@ -40482,8 +40493,8 @@
                                 //perform actual scaling
                                     let scale = _canvas_.control.viewport.scale();
                                     scale += scale*(delta/100);
-                                    if( scale > scaleLimits.max ){scale = scaleLimits.max;}
-                                    if( scale < scaleLimits.min ){scale = scaleLimits.min;}
+                                    if( scale > scaleLimits.max ){ scale = scaleLimits.max; }
+                                    else if( scale < scaleLimits.min ){ scale = scaleLimits.min; }
                                     _canvas_.control.viewport.scale(scale);
                                 //discover new point under mouse
                                     const newPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);

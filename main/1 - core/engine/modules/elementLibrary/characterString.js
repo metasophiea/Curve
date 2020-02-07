@@ -54,21 +54,18 @@ this.characterString = function(_id,_name){
                 colour = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                 recolourCharacters();
-                render.shouldRenderFrame = true;
             };
             this.width = function(a){
                 if(a==undefined){return width;}  
                 width = a;  
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-                if(allowGenerateStringCharacters){generateStringCharacters();} 
-                render.shouldRenderFrame = true;
+                if(allowGenerateStringCharacters){generateStringCharacters();}
             };
             this.height = function(a){
                 if(a==undefined){return height;} 
                 height = a; 
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-                if(allowGenerateStringCharacters){generateStringCharacters();} 
-                render.shouldRenderFrame = true;
+                if(allowGenerateStringCharacters){generateStringCharacters();}
             };
             this.font = function(newFont){
                 if(newFont==undefined){return font;}
@@ -95,28 +92,24 @@ this.characterString = function(_id,_name){
 
                 if(allowGenerateStringCharacters){generateStringCharacters();} 
                 self.onFontUpdateCallback();
-                render.shouldRenderFrame = true;
             };
             this.string = function(a){ 
                 if(a==undefined){return string;} 
                 string = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].string(',a); //#development
-                if(allowGenerateStringCharacters){generateStringCharacters();} 
-                render.shouldRenderFrame = true;
+                if(allowGenerateStringCharacters){generateStringCharacters();}
             };
             this.spacing = function(a){ 
                 if(a==undefined){return spacing;} 
                 spacing = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].spacing(',a); //#development
-                if(allowGenerateStringCharacters){generateStringCharacters();} 
-                render.shouldRenderFrame = true;
+                if(allowGenerateStringCharacters){generateStringCharacters();}
             };
             this.interCharacterSpacing = function(a){
                 if(a==undefined){return interCharacterSpacing;}
                 interCharacterSpacing = a;
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].interCharacterSpacing(',a); //#development
                 if(allowGenerateStringCharacters){generateStringCharacters();}
-                render.shouldRenderFrame = true;
             };
             this.printingMode = function(a){
                 if(a==undefined){return printingMode;} 
@@ -128,7 +121,6 @@ this.characterString = function(_id,_name){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].printingMode(',printingMode); //#development
 
                 if(allowGenerateStringCharacters){generateStringCharacters();}
-                render.shouldRenderFrame = true;
             };
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
@@ -167,7 +159,6 @@ this.characterString = function(_id,_name){
 
                 generateStringCharacters();
                 self.onFontUpdateCallback();
-                render.shouldRenderFrame = true;
             }
     //string
         let resultingWidth = 0;
@@ -266,7 +257,7 @@ this.characterString = function(_id,_name){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
             return this.parent ? this.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
         };
-    //lead render
+    //render
         this.render = innerGroup.render;
     //info dump
         this.getTree = innerGroup.getTree;

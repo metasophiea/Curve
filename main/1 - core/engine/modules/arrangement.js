@@ -43,8 +43,7 @@ const arrangement = new function(){
         dev.log.arrangement('.getElementByAddress(',address); //#development
 
         const route = address.split('/'); 
-        route.shift(); 
-        route.shift(); 
+        route.shift();
 
         let currentObject = design;
         route.forEach(function(a){
