@@ -63,20 +63,22 @@ this.arrangement = new function(){
             });
         });
     };
-    this.printTree = function(mode='spaced',local=false){
+    this.printTree = function(mode='spaced',local=false,includeTypes=false){
         dev.log.interface('.arrangement.printTree(',mode,local); //#development
 
         if(local){
             function recursivePrint(grouping,prefix=''){
                 grouping.children.forEach(function(a){
+                    const data = '('+a.id + (includeTypes ? ' : '+a.type : '') +')';
+
                     if(mode == 'spaced'){
-                        console.log(prefix+' -  '+a.name+' ('+a.id+')');
+                        console.log(prefix+' -  '+a.name+' '+data);
                         if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
                     }else if(mode == 'tabular'){
-                        console.log(prefix+'\t-\t\t'+a.name+' ('+a.id+')');
+                        console.log(prefix+'\t-\t\t'+a.name+' '+data);
                         if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
                     }else if(mode == 'address'){
-                        console.log(prefix+'/'+a.name+' ('+a.id+')');
+                        console.log(prefix+'/'+a.name+' '+data);
                         if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
                     }
                 });
@@ -86,7 +88,30 @@ this.arrangement = new function(){
             console.log(design.getName()+' ('+design.getId()+')');
             recursivePrint(design.getTree(), '');
         }else{
-            communicationModule.run('arrangement.printTree',[mode]);
+            communicationModule.run('arrangement.printTree',[mode,includeTypes]);
+        }
+    };
+    this.printSurvey = function(local=true){
+        if(local){
+            const results = {};
+
+            function recursiveSearch(grouping){
+                grouping.children.forEach(child => {
+                    results[child.type] = results[child.type] == undefined ? 1 : results[child.type]+1;
+                    if(child.type == 'group'){
+                        recursiveSearch(child)
+                    }
+                });
+            }
+
+            recursiveSearch(design.getTree());
+            return results;
+        }else{
+            return new Promise((resolve, reject) => {
+                communicationModule.run('arrangement.printSurvey',[],results => {
+                    resolve(results);
+                });
+            });
         }
     };
     this.areParents = function(element,potentialParents=[]){

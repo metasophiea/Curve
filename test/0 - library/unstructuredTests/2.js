@@ -43,7 +43,7 @@ _canvas_.library.go.add( function(){
         const osc = new OscillatorNode(_canvas_.library.audio.context);
         const gain_1 = new GainNode(_canvas_.library.audio.context);
         const gain_2 = new GainNode(_canvas_.library.audio.context);
-        const MAM = _canvas_.library.audio.context.createMomentaryAmplitudeMeter();
+        const MAM = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(_canvas_.library.audio.context);
         osc.connect(gain_1);
         gain_2.connect(_canvas_.library.audio.context.destination);
         gain_2.connect(MAM);
@@ -89,20 +89,23 @@ _canvas_.library.go.add( function(){
 
 
     //system to test
-        const filterNode = _canvas_.library.audio.context.createBiquadFilter();
-	    filterNode.type = "bandpass";
-        _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, filterNode.frequency,660,0.01,'instant',true);
-        _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, filterNode.gain,0.1,0.01,'instant',true);
-        _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, filterNode.Q,10,0.01,'instant',true);
-
-        gain_1.connect(filterNode).connect(gain_2);
+        // //filterNode
+        //     const filterNode = _canvas_.library.audio.context.createBiquadFilter();
+        //     filterNode.type = "bandpass";
+        //     _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, filterNode.frequency,660,0.01,'instant',true);
+        //     _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, filterNode.gain,0.1,0.01,'instant',true);
+        //     _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, filterNode.Q,10,0.01,'instant',true);
+        //     gain_1.connect(filterNode).connect(gain_2);
+        //amplitudePeakAttenuator
+            const amplitudePeakAttenuator = new _canvas_.library.audio.audioWorklet.amplitudePeakAttenuator(_canvas_.library.audio.context);
+            gain_1.connect(amplitudePeakAttenuator).connect(gain_2);
 
 
     //activate test
         grapher.newCanvas();
         grapher.clear();
         grapher.drawLine({x:0,y:250},{x:500,y:250},'rgba(200,200,200,1)');
-        runTest( 0, 2000, 1, 1, 100, data=>{
+        runTest( 0, 2000, 0.01, 10, 100, data=>{
             console.log( (data.frequency/2000)*500, data.gain, 500-data.value*250 );
             grapher.drawCircle( 
                 (data.frequency/2000)*500,

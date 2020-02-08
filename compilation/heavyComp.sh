@@ -61,35 +61,19 @@ echo "telling core to use core_engine.min.js instead of core_engine.js"
     done
     
 
-# echo "running Closure"
-#     for name in ${nameArray[@]}; do 
-#         echo "-> "$name".js"
-#         #make the following change:
-#         #   interface => _interface
-#             cat "$dir"/../docs/js/$name.min.js | sed -e "s/interface/_interface/g" > "$dir"/../docs/js/$name.min.tmp.js
-#             mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
+echo "running Terser"
+    for name in ${nameArray[@]}; do 
+        echo "-> "$name".js"
 
-#         #push temp file through closure then delete
-#             java -jar "$dir"/closure-compiler* --js_output_file="$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js --compilation_level WHITESPACE_ONLY --force_inject_library es6_runtime
-#             mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
-#             if [ $? -ne 0 ]; then
-#                 echo "";
-#                 echo "Closure has encountered an error; bailing";
-#                 exit 1;
-#             fi
-#     done
-echo "running Closure on core_engine"
-    #make the following change:
-        cat "$dir"/../docs/js/core_engine.min.js | sed -e "s/interface/_interface/g" > "$dir"/../docs/js/core_engine.min.tmp.js
-        mv "$dir"/../docs/js/core_engine.min.tmp.js "$dir"/../docs/js/core_engine.min.js
-    #push temp file through closure then delete
-        java -jar "$dir"/closure-compiler* --js_output_file="$dir"/../docs/js/core_engine.min.tmp.js "$dir"/../docs/js/core_engine.min.js
-        mv "$dir"/../docs/js/core_engine.min.tmp.js "$dir"/../docs/js/core_engine.min.js
-        if [ $? -ne 0 ]; then
-            echo "";
-            echo "Closure has encountered an error; bailing";
-            exit 1;
-        fi
+        #push temp file through closure then delete
+            terser "$dir"/../docs/js/$name.min.js > "$dir"/../docs/js/$name.min.tmp.js -c -m
+            mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
+            if [ $? -ne 0 ]; then
+                echo "";
+                echo "Terser has encountered an error; bailing";
+                exit 1;
+            fi
+    done
 
 #report on how things went
     echo; echo;

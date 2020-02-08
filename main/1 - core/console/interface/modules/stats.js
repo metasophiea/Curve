@@ -45,14 +45,16 @@ this.stats = new function(){
                 onScreenAutoPrint_section.style.top = (window.innerHeight-onScreenAutoPrint_section.offsetHeight)+'px';
                 _canvas_.core.stats.getReport().then(data => {
                     const position = _canvas_.core.viewport.position();
+
+                    const potentialFPS = data.secondsPerFrameOverTheLastThirtyFrames != 0 ? (1/data.secondsPerFrameOverTheLastThirtyFrames).toFixed(2) : 'infinite ';
         
                     onScreenAutoPrint_section.innerHTML = ''+
                         '<p style="margin:1px"> position: x:'+ position.x + ' y:' + position.y +'</p>' +
                         '<p style="margin:1px"> scale:'+ _canvas_.core.viewport.scale() +'</p>' +
                         '<p style="margin:1px"> angle:'+ _canvas_.core.viewport.angle()+'</p>' +
-                        '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond +'</p>' +
-                        '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames +'</p>' +
-                        '<p style="margin:1px"> renderNonRenderSplitOverTheLastThirtyFrames: '+ data.renderNonRenderSplitOverTheLastThirtyFrames +'</p>' +
+                        '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond.toFixed(2) +'</p>' +
+                        '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(5) +' (potentially '+ potentialFPS +'fps)</p>' +
+                        '<p style="margin:1px"> renderNonRenderSplitOverTheLastThirtyFrames: '+ data.renderNonRenderSplitOverTheLastThirtyFrames.toFixed(2) +'</p>' +
                     '';
                 });
             }, 100);

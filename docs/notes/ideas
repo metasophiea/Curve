@@ -172,11 +172,12 @@
 - LAZERS DOING LAZER THINGS (shooter/receiver/mirror/splitter/etc)
 - advanced (easier) unit placement (like stamping or/and click-n-plop)
 - rotate unit around point other than their origin (maybe it's 'centre')
-- dev output text console thing. Maybe activate with F3 or something (maybe just the url which adds an option in the menubar dropdown)
 - auto-generated "blotchy" background (maybe other background types too)
 - redo Alpha collection to be in the 100x100 pixel-per-cm resolution (and probably in a slightly different style that is less similar to any other collection)
 - connection nodes reveal text when moused over (to say what they're named or if they are an input or output)
 - some way of telling when a file is being loaded and the user just needs to wait
-- networking cable for all units which uses the interface, to allow units to be computer controllled (whenever the computer unit gets made)
-- some kind of bluring for when elements are far from the camera enough to cause them to look weird
+- networking cable for all units which uses the interface, to allow units to be computer controlled (whenever the computer unit gets made)
+- some kind of blurring for when elements are far from the camera enough to cause them to look weird
 - have dial control be like actual dials instead of like sliders
+- advanced rendering, where only the sections of the viewport that are different to the last frame, are actually rendered
+- sync canvas update sends, to maximize the render efficiency

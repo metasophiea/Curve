@@ -72,7 +72,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:6} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8} };
             const library = this;
         
             this.go = new function(){
@@ -4196,7 +4196,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         
                         
                         
-                        
                         {
                             name:'amplitudeModifier',
                             worklet:new Blob([`
@@ -4586,6 +4585,69 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         options.numberOfOutputs = 1;
                                         options.channelCount = 1;
                                         super(context, 'whiteNoiseGenerator', options);
+                                    }
+                                }
+                            ,
+                        },
+                        
+                        {
+                            name:'amplitudePeakAttenuator',
+                            worklet:new Blob([`
+                                class amplitudePeakAttenuator extends AudioWorkletProcessor{
+                                    static get parameterDescriptors(){
+                                        return [
+                                            {
+                                                name: 'sharpness',
+                                                defaultValue: 10,
+                                                minValue: 1,
+                                                maxValue: 100,
+                                                automationRate: 'a-rate',
+                                            }
+                                        ];
+                                    }
+                                
+                                    constructor(options){
+                                        super(options);
+                                    }
+                                
+                                    process(inputs, outputs, parameters){
+                                        const input = inputs[0];
+                                        const output = outputs[0];
+                                        const sharpness = parameters.sharpness;
+                                    
+                                        for(let channel = 0; channel < input.length; channel++){
+                                            const inputChannel = input[channel];
+                                            const outputChannel = output[channel];
+                                    
+                                            for(let a = 0; a < inputChannel.length; a++){
+                                                const mux = inputChannel[a]*sharpness;
+                                                outputChannel[a] = mux / ( 1 + Math.abs(mux) );
+                                            }
+                                        }
+                                        return true;
+                                    }
+                                }
+                                registerProcessor('amplitudePeakAttenuator', amplitudePeakAttenuator);
+                                
+                                
+                                
+                                
+                                
+                                // 2*(x - x^2)
+                            `], { type: "text/javascript" }),
+                            class:
+                                class amplitudePeakAttenuator extends AudioWorkletNode{
+                                    constructor(context, options={}){
+                                        options.numberOfInputs = 1;
+                                        options.numberOfOutputs = 1;
+                                        options.channelCount = 1;
+                                        super(context, 'amplitudePeakAttenuator', options);
+                                        
+                                        this._sharpness = 10;
+                                    }
+                                
+                                    get sharpness(){
+                                        return this.parameters.get('sharpness');
                                     }
                                 }
                             ,
@@ -22921,7 +22983,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         };
 
         _canvas_.core = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:7} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8} };
             const core_engine = new Worker("/js/core_engine.js");
             const self = this;
             
@@ -23878,20 +23940,22 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         });
                     });
                 };
-                this.printTree = function(mode='spaced',local=false){
+                this.printTree = function(mode='spaced',local=false,includeTypes=false){
                     dev.log.interface('.arrangement.printTree(',mode,local); //#development
             
                     if(local){
                         function recursivePrint(grouping,prefix=''){
                             grouping.children.forEach(function(a){
+                                const data = '('+a.id + (includeTypes ? ' : '+a.type : '') +')';
+            
                                 if(mode == 'spaced'){
-                                    console.log(prefix+' -  '+a.name+' ('+a.id+')');
+                                    console.log(prefix+' -  '+a.name+' '+data);
                                     if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
                                 }else if(mode == 'tabular'){
-                                    console.log(prefix+'\t-\t\t'+a.name+' ('+a.id+')');
+                                    console.log(prefix+'\t-\t\t'+a.name+' '+data);
                                     if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
                                 }else if(mode == 'address'){
-                                    console.log(prefix+'/'+a.name+' ('+a.id+')');
+                                    console.log(prefix+'/'+a.name+' '+data);
                                     if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
                                 }
                             });
@@ -23901,7 +23965,30 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         console.log(design.getName()+' ('+design.getId()+')');
                         recursivePrint(design.getTree(), '');
                     }else{
-                        communicationModule.run('arrangement.printTree',[mode]);
+                        communicationModule.run('arrangement.printTree',[mode,includeTypes]);
+                    }
+                };
+                this.printSurvey = function(local=true){
+                    if(local){
+                        const results = {};
+            
+                        function recursiveSearch(grouping){
+                            grouping.children.forEach(child => {
+                                results[child.type] = results[child.type] == undefined ? 1 : results[child.type]+1;
+                                if(child.type == 'group'){
+                                    recursiveSearch(child)
+                                }
+                            });
+                        }
+            
+                        recursiveSearch(design.getTree());
+                        return results;
+                    }else{
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.printSurvey',[],results => {
+                                resolve(results);
+                            });
+                        });
                     }
                 };
                 this.areParents = function(element,potentialParents=[]){
@@ -24163,14 +24250,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             onScreenAutoPrint_section.style.top = (window.innerHeight-onScreenAutoPrint_section.offsetHeight)+'px';
                             _canvas_.core.stats.getReport().then(data => {
                                 const position = _canvas_.core.viewport.position();
+            
+                                const potentialFPS = data.secondsPerFrameOverTheLastThirtyFrames != 0 ? (1/data.secondsPerFrameOverTheLastThirtyFrames).toFixed(2) : 'infinite ';
                     
                                 onScreenAutoPrint_section.innerHTML = ''+
                                     '<p style="margin:1px"> position: x:'+ position.x + ' y:' + position.y +'</p>' +
                                     '<p style="margin:1px"> scale:'+ _canvas_.core.viewport.scale() +'</p>' +
                                     '<p style="margin:1px"> angle:'+ _canvas_.core.viewport.angle()+'</p>' +
-                                    '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond +'</p>' +
-                                    '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames +'</p>' +
-                                    '<p style="margin:1px"> renderNonRenderSplitOverTheLastThirtyFrames: '+ data.renderNonRenderSplitOverTheLastThirtyFrames +'</p>' +
+                                    '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond.toFixed(2) +'</p>' +
+                                    '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(5) +' (potentially '+ potentialFPS +'fps)</p>' +
+                                    '<p style="margin:1px"> renderNonRenderSplitOverTheLastThirtyFrames: '+ data.renderNonRenderSplitOverTheLastThirtyFrames.toFixed(2) +'</p>' +
                                 '';
                             });
                         }, 100);
@@ -24568,7 +24657,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:28} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8} };
             const interface = this;
         
             const dev = {
@@ -24836,6 +24925,33 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             }
                         };
                 
+                };
+                this.amplitudePeakAttenuator = function(
+                    context
+                ){
+                    //flow
+                        //flow chain
+                            const flow = {
+                                amplitudePeakAttenuator:{}
+                            };
+                
+                    //amplitudePeakAttenuator
+                        flow.amplitudePeakAttenuator = {
+                            sharpness: 10,
+                            node: new _canvas_.library.audio.audioWorklet.amplitudePeakAttenuator(_canvas_.library.audio.context),
+                        };
+                
+                    //input/output node
+                        this.in = function(){return flow.amplitudePeakAttenuator.node;}
+                        this.out = function(a){return flow.amplitudePeakAttenuator.node;}
+                
+                    //controls
+                        this.sharpness = function(value){
+                            if(value == undefined){ return flow.amplitudePeakAttenuator.sharpness; }
+                            if(value < 1){value = 1;}
+                            flow.amplitudePeakAttenuator.sharpness = value;
+                            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudePeakAttenuator.node.sharpness, value, 0.01, 'instant', true);
+                        };
                 };
                 this.gain = function(
                     context
@@ -41377,7 +41493,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         } );
 
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:5 } };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8 } };
             this.go = new function(){
                 const functionList = [];
         
@@ -50574,6 +50690,89 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     category:'',
                     helpURL:''
                 };
+                this['amplitude_peak_attenuator'] = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
+                                this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_peak_attenuator/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:675, height:600 },
+                                    design: { width:6.75, height:6 },
+                                };
+                
+                                this.offset = {x:0,y:0};
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                        };
+                
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'amplitude_peak_attenuator',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height/2 - 15/2, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height/2 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                },
+                
+                                {collection:'control', type:'dial_continuous_image', name:'sharpness', data:{
+                                    x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.1, resetValue:0.1, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                }},
+                            ]
+                        });
+                
+                    //circuitry
+                        const state = {
+                            sharpness:10,
+                        };
+                        const amplitudePeakAttenuator = new _canvas_.interface.circuit.amplitudePeakAttenuator(_canvas_.library.audio.context);
+                
+                    //wiring
+                        //hid
+                            object.elements.dial_continuous_image.sharpness.onchange = function(value){
+                                amplitudePeakAttenuator.sharpness(value*100);
+                            };
+                        //io
+                            object.io.audio.input.out().connect( amplitudePeakAttenuator.in() );
+                            amplitudePeakAttenuator.out().connect(object.io.audio.output.in());
+                
+                    //interface
+                        object.i = {
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                        };
+                        object.importData = function(data){
+                        };
+                        
+                    return object;
+                };
+                this['amplitude_peak_attenuator'].metadata = {
+                    name:'Amplitude Peak Attenuator',
+                    category:'',
+                    helpURL:''
+                };
                 this['amplitude_modifier'] = function(name,x,y,angle){
                     //style data
                         const unitStyle = new function(){
@@ -50998,8 +51197,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         _canvas_.curve.go.add( function(){
             // _canvas_.core.render.frameRateLimit(10);
         
-            const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
-            const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
+            // const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
+            // const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
+            const apa = _canvas_.control.scene.addUnit(10,10,0,'amplitude_peak_attenuator','acousticresearch');
             
         
         

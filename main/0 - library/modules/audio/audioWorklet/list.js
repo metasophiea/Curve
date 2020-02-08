@@ -24,7 +24,6 @@
 
 
 
-
 {
     name:'amplitudeModifier',
     worklet:new Blob([`
@@ -72,5 +71,15 @@
     `], { type: "text/javascript" }),
     class:
         {{include:modules/whiteNoiseGenerator/node.js}}
+    ,
+},
+
+{
+    name:'amplitudePeakAttenuator',
+    worklet:new Blob([`
+        {{include:modules/amplitudePeakAttenuator/worklet.js}}
+    `], { type: "text/javascript" }),
+    class:
+        {{include:modules/amplitudePeakAttenuator/node.js}}
     ,
 },

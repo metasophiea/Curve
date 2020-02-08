@@ -1,4 +1,51 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-08
+  - switched from Closure to Terser. The compression seems to be just as good,
+    though one will need to install terser with npm/node.js before running 
+    heavyComp.sh
+
+    - results -
+      -> core_engine
+            core_engine.js 1287kb
+            core_engine.min.js 422kb
+            reduced to 32.82% of original size
+      -> core
+            core.js 1374kb
+            core.min.js 380kb
+            reduced to 27.70% of original size
+      -> system
+            system.js 1386kb
+            system.min.js 385kb
+            reduced to 27.83% of original size
+      -> interface
+            interface.js 2472kb
+            interface.min.js 673kb
+            reduced to 27.23% of original size
+      -> control
+            control.js 2608kb
+            control.min.js 723kb
+            reduced to 27.72% of original size
+      -> curve
+            curve.js 3295kb
+            curve.min.js 986kb
+            reduced to 29.94% of original size
+
+  - added "printSurvey" method to core's arrangement section, which returns
+    a count of all the types of element in the scene
+  - updated core's arrangement.printTree method to include an option for
+    getting it to print out the element's type along with the id
+  - updated core-engine's group element so that it doesn't even start to
+    render or do any of the calculations for doing so if there are no
+    children
+  - finished off the amplitudePeakAttenuator audioWorklet
+  - added the amplitudePeakAttenuator circuit
+  - added the amplitudePeakAttenuator unit (though I've discovered that the
+    math for the worklet isn't right yet)
+  - modified the on-scree stat readout to have a little less useless
+    information, and a calculation of how many frames per second are
+    theoretically possible 
+
+
 2020-02-07
   - had another try at core-engine's image element, and I think it's gone much
     better

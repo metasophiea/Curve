@@ -1,10 +1,13 @@
 const grapher = new function(){
     let canvas;
     let context;
+    
+    this._width = 500;
+    this._height = 500;
     this.newCanvas = function(){
         canvas = document.createElement('canvas');
-        canvas.width = 500;
-        canvas.height = 500;
+        canvas.width = this._width;
+        canvas.height = this._height;
         context = canvas.getContext('2d');
         document.body.append(canvas);
     };

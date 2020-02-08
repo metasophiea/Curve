@@ -127,13 +127,13 @@ _canvas_.library.go.add( function(){
     const SWG = new _canvas_.library.audio.audioWorklet.squareWaveGenerator(_canvas_.library.audio.context);
     const gain = new GainNode(_canvas_.library.audio.context);
     SWG.connect(gain).connect(_canvas_.library.audio.context.destination);
-    gain.gain.linearRampToValueAtTime(0.0001, _canvas_.library.audio.context.currentTime);
+    gain.gain.linearRampToValueAtTime(0.05, _canvas_.library.audio.context.currentTime);
 
     s = SWG;
 
 
-    const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
-    o = osc_1;
+    // const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
+    // o = osc_1;
     // // const osc_2 = new OscillatorNode(_canvas_.library.audio.context);
     // const gain_1 = new GainNode(_canvas_.library.audio.context);
     // // const gain_2 = new GainNode(_canvas_.library.audio.context);
@@ -144,7 +144,7 @@ _canvas_.library.go.add( function(){
     // osc_1.type = 'square';
     // // osc_2.type = 'sine';
 
-    // gain_1.gain.linearRampToValueAtTime(0.01, _canvas_.library.audio.context.currentTime);
+    // gain_1.gain.linearRampToValueAtTime(0.05, _canvas_.library.audio.context.currentTime);
     // // gain_2.gain.linearRampToValueAtTime(0.01, _canvas_.library.audio.context.currentTime);
 
     // osc_1.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);

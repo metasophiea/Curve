@@ -61,17 +61,19 @@ const arrangement = new function(){
         return design.getElementsUnderArea(points); 
     };
         
-    this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address 
+    this.printTree = function(mode='spaced',includeTypes=false){ //modes: spaced / tabular / address 
         function recursivePrint(grouping,prefix=''){
             grouping.children.forEach(function(a){
+                const data = '('+a.id + (includeTypes ? ' : '+a.type : '') +')';
+
                 if(mode == 'spaced'){
-                    console.log(prefix+' -  '+a.name+' ('+a.id+')');
+                    console.log(prefix+' -  '+a.name+' '+data);
                     if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
                 }else if(mode == 'tabular'){
-                    console.log(prefix+'\t-\t\t'+a.name+' ('+a.id+')');
+                    console.log(prefix+'\t-\t\t'+a.name+' '+data);
                     if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
                 }else if(mode == 'address'){
-                    console.log(prefix+'/'+a.name+' ('+a.id+')');
+                    console.log(prefix+'/'+a.name+' '+data);
                     if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
                 }
             });
@@ -80,6 +82,21 @@ const arrangement = new function(){
         if(design.children().length == 0){console.log('-empty-');}
         console.log(design.name+' ('+design.getId()+')');
         recursivePrint(design.getTree(), '');
+    };
+    this.printSurvey = function(){
+        const results = {};
+
+        function recursiveSearch(grouping){
+            grouping.children.forEach(child => {
+                results[child.type] = results[child.type] == undefined ? 1 : results[child.type]+1;
+                if(child.type == 'group'){
+                    recursiveSearch(child)
+                }
+            });
+        }
+
+        recursiveSearch(design.getTree());
+        return results;
     };
     this.areParents = function(elementId,potentialParents=[]){
         dev.log.arrangement('.areParents(',elementId,potentialParents); //#development

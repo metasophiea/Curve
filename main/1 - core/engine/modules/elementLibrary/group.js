@@ -468,6 +468,11 @@ this.group = function(_id,_name){
         this.render = function(context, offset){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
 
+            //if there's no children anyway, then don't worry about it
+                if(children.length == 0){
+                    return;
+                }
+
             //judge whether element should be rendered
                 if( !shouldThisElementRender() ){
                     dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development

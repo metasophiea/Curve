@@ -165,9 +165,14 @@
         return arrangement.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele));
     };
     communicationModule.function['arrangement.printTree'] = function(mode){
-        dev.log.service('.arrangement.printTree(',mode); //#development
+        dev.log.service('.arrangement.printTree(',mode,includeTypes); //#development
         dev.count('service-arrangement.printTree'); //#development
-        arrangement.printTree(mode);
+        arrangement.printTree(mode,includeTypes);
+    };
+    communicationModule.function['arrangement.printSurvey'] = function(mode){
+        dev.log.service('.arrangement.printSurvey()'); //#development
+        dev.count('service-arrangement.printSurvey'); //#development
+        return arrangement.printSurvey();
     };
     communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
         dev.log.service('.arrangement.areParents('+elementId+','+potentialParents+')'); //#development

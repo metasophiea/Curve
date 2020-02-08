@@ -21829,6 +21829,11 @@ const element = new function(){
                     }
                     this.render = function(context, offset){
             
+                        //if there's no children anyway, then don't worry about it
+                            if(children.length == 0){
+                                return;
+                            }
+            
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
                                 return;
@@ -24563,485 +24568,7 @@ const element = new function(){
             //         };
             // };
             
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            /////failed draft
-            // this.image = function(_id,_name){
-            //     const self = this;
-            
-            //     //attributes 
-            //         //protected attributes
-            //             const type = 'image'; 
-            //             this.getType = function(){return type;}
-            //             const id = _id; 
-            //             this.getId = function(){return id;}
-            
-            //         //simple attributes
-            //             this.name = _name;
-            //             this.parent = undefined;
-            //             this.dotFrame = false;
-            //             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-            //             let ignored = false;
-            //             this.ignored = function(a){
-            //                 if(a==undefined){return ignored;}     
-            //                 ignored = a;
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-                        
-            //         //advanced use attributes
-            //             let allowComputeExtremities = true;
-            
-            //         //addressing
-            //             this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-            //         //attributes pertinent to extremity calculation
-            //             let x = 0;
-            //             let y = 0; 
-            //             let angle = 0;
-            //             let anchor = {x:0,y:0};
-            //             let width = 10;
-            //             let height = 10;
-            //             let scale = 1;
-            //             this.x = function(a){ 
-            //                 if(a==undefined){return x;}     
-            //                 x = a;     
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.y = function(a){ 
-            //                 if(a==undefined){return y;}     
-            //                 y = a;
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.angle = function(a){ 
-            //                 if(a==undefined){return angle;} 
-            //                 angle = a;
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.anchor = function(a){
-            //                 if(a==undefined){return anchor;} 
-            //                 anchor = a; 
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.width = function(a){
-            //                 if(a==undefined){return width;}  
-            //                 width = a;  
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.height = function(a){
-            //                 if(a==undefined){return height;} 
-            //                 height = a; 
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.scale = function(a){ 
-            //                 if(a==undefined){return scale;} 
-            //                 scale = a;
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            
-            //         //image data
-            //             const image = { 
-            //                 bitmap:undefined, 
-            //                 url:'', 
-            //                 defaultURL:'/images/noimageimage.png'
-            //             };
-            //             function loadImage(url,forceUpdate=false){
-                            
-            //                 if(url == ''){
-            //                     image.url = image.defaultURL;
-            //                     url = image.defaultURL;
-            //                 }
-            //                 if( elementLibrary.image.webglDataStore[image.url] != undefined ){
-            //                     activateShouldRenderFrame();
-            //                     return;
-            //                 }
-            
-            //                 elementLibrary.image.webglDataStore[image.url] = {isLoaded:false};
-            //                 console.log('loading:',image.url);
-            
-            //                 library.misc.loadImageFromURL(
-            //                     url, 
-            //                     bitmap => {
-            //                         console.log('loaded:',image.url);
-            //                         if(url != image.url){
-            //                             loadImage(image.url);
-            //                             return;
-            //                         }
-            
-            //                         elementLibrary.image.webglDataStore[image.url].isLoaded = true;
-            //                         elementLibrary.image.webglDataStore[image.url].bitmap = bitmap;
-            //                         activateShouldRenderFrame();
-            //                     },
-            //                     (errorType, response, error) => {
-            //                         if(errorType == 'badURL'){
-            //                             console.warn(type,id,self.getAddress(),'could not find image at: '+url);
-            //                             console.warn(response);
-            //                             loadImage(image.defaultURL);
-            //                         }else if(errorType == 'imageDecodingError'){
-            //                             console.error('Image decoding error :: url:',url);
-            //                             console.error('-- -- -- -- -- -- -- :: response:',response);
-            //                             console.error(error);
-            //                             loadImage(image.defaultURL);
-            //                         }else if(errorType == 'previousFailure'){
-            //                             console.warn('previous failure to load "'+url+'" - load not attempted this time');
-            //                         }else{
-            //                             console.error('Unknown error :: errorType:',errorType);
-            //                             loadImage(image.defaultURL);
-            //                         }
-            //                     },
-            //                     forceUpdate
-            //                 );
-            //             }
-            //             setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
-            
-            //             this.url = function(a,forceUpdate=false){
-            
-            //                 if(a==undefined){return image.url;}
-            //                 if(a==image.url){return;} //no need to reload the same image
-            //                 image.url = a;
-            
-            //                 if(image.url == ''){ image.url = image.defaultURL; }
-            
-            //                 loadImage(image.url,forceUpdate);
-            //             };
-            //             this.bitmap = function(a){
-            
-            //                 if(a==undefined){
-            //                     return elementLibrary.image.webglDataStore[image.url] != undefined ? elementLibrary.image.webglDataStore[image.url].bitmap : undefined;
-            //                 }
-            //                 image.url = id+':internalBitmap';
-            //                 elementLibrary.image.webglDataStore[image.url].bitmap = bitmap;
-            
-            //                 activateShouldRenderFrame();
-            //             };
-            
-            //         //unifiedAttribute
-            //             this.unifiedAttribute = function(attributes){
-            //                 if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, url:image.url }; } 
-            
-            //                 allowComputeExtremities = false;
-            //                 Object.keys(attributes).forEach(key => {
-            //                     try{
-            //                         self[key](attributes[key]);
-            //                     }catch(err){
-            //                         console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-            //                     }
-            //                 });
-            //                 allowComputeExtremities = true;
-            
-            //                 computeExtremities();
-            //             };
-            
-            //     //webGL rendering functions
-            //         const points = [
-            //             0,0,
-            //             1,0,
-            //             1,1,
-            //             0,1,
-            //         ];
-            //         const vertexShaderSource = `#version 300 es
-            //             //constants
-            //                 in vec2 point;
-            
-            //             //variables
-            //                 struct location{
-            //                     vec2 xy;
-            //                     float scale;
-            //                     float angle;
-            //                 };
-            //                 uniform location adjust;
-            
-            //                 uniform vec2 resolution;
-            //                 uniform vec2 dimensions;
-            //                 uniform vec2 anchor;
-            
-            //             //vertex/fragment shader transfer variables
-            //                 out vec2 textureCoordinates;
-            
-            //             void main(){
-            //                 //transfer point to fragment shader
-            //                     textureCoordinates = point;
-            
-            //                 //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-            //                     vec2 P = dimensions * adjust.scale * (point - anchor);
-            //                     P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-            
-            //                 //convert from unit space to clipspace
-            //                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-            //             }
-            //         `;
-            //         const fragmentShaderSource = `#version 300 es
-            //             precision mediump float;
-            //             out vec4 outputColour;
-            
-            //             uniform sampler2D textureImage;
-            //             in vec2 textureCoordinates;
-                                                                                    
-            //             void main(){
-            //                 outputColour = texture(textureImage, textureCoordinates);
-            //             }
-            //         `;
-            //         const point = { buffer:undefined, attributeLocation:undefined };
-            //         let uniformLocations;
-            //         function updateGLAttributes(context,adjust){
-            
-            //             //buffers
-            //                 //points
-            //                     if(point.buffer == undefined){
-            //                         point.attributeLocation = context.getAttribLocation(program, "point");
-            //                         point.buffer = context.createBuffer();
-            //                         context.enableVertexAttribArray(point.attributeLocation);
-            //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-            //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-            //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-            //                     }else{
-            //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-            //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-            //                     }
-            
-            //                 //texture
-            //                     if(elementLibrary.image.webglDataStore[image.url].texture == undefined){
-            //                         elementLibrary.image.webglDataStore[image.url].texture = context.createTexture();
-            //                         context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[image.url].texture );
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
-            //                         context.texImage2D( context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, elementLibrary.image.webglDataStore[image.url].bitmap );
-            
-            //                         context.generateMipmap( context.TEXTURE_2D );
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST_MIPMAP_LINEAR );
-            //                     }else{
-            //                         context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[image.url].texture );
-            //                     }
-            
-            //             //uniforms
-            //                 if( uniformLocations == undefined ){
-            //                     uniformLocations = {
-            //                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-            //                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-            //                         "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-            //                         "resolution": context.getUniformLocation(program, "resolution"),
-            //                         "dimensions": context.getUniformLocation(program, "dimensions"),
-            //                         "anchor": context.getUniformLocation(program, "anchor"),
-            //                     };
-            //                 }
-            
-            //                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-            //                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-            //                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-            //                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-            //                 context.uniform2f(uniformLocations["dimensions"], width, height);
-            //                 context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-            //         }
-            //         let program;
-            //         function activateGLRender(context,adjust){
-            //             if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                        
-            //             if(!elementLibrary.image.webglDataStore[image.url].isLoaded){return;} //do not render, if the image has not yet been loaded
-            
-            //             context.useProgram(program);
-            //             updateGLAttributes(context,adjust);
-            //             context.drawArrays(context.TRIANGLE_FAN, 0, 4);
-            //         }
-                    
-            //     //extremities
-            //         function computeExtremities(informParent=true,offset){
-                        
-            //             //get offset from parent, if one isn't provided
-            //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-            //             //calculate adjusted offset based on the offset
-            //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-            //                 const adjusted = { 
-            //                     x: point.x*offset.scale + offset.x,
-            //                     y: point.y*offset.scale + offset.y,
-            //                     scale: offset.scale*scale,
-            //                     angle: -(offset.angle + angle),
-            //                 };
-            //             //calculate points based on the adjusted offset
-            //                 self.extremities.points = [];
-            //                 for(let a = 0; a < points.length; a+=2){
-            //                     const P = {
-            //                         x: adjusted.scale * width * (points[a] - anchor.x), 
-            //                         y: adjusted.scale * height * (points[a+1] - anchor.y), 
-            //                     };
-            
-            //                     self.extremities.points.push({ 
-            //                         x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-            //                         y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-            //                     });
-            //                 }
-            //                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                    
-            //             //if told to do so, inform parent (if there is one) that extremities have changed
-            //                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-            //         }
-            //         this.computeExtremities = computeExtremities;
-                    
-            //     //render
-            //         function drawDotFrame(){
-            //             //draw shape extremity points
-            //                 self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-            //             //draw bounding box top left and bottom right points
-            //                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-            //                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-            //         };
-            //         function activateShouldRenderFrame(){
-            //             if(render.shouldRenderFrame){
-            //                 return;
-            //             }
-            //             render.shouldRenderFrame = shouldThisElementRender();
-            //         }
-            //         function shouldThisElementRender(){
-            //             if( self.parent == undefined || self.parent.clipActive == undefined ){
-            //                 return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-            //             }
-            //             return library.math.detectIntersect.boundingBoxes(
-            //                 self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-            //                 self.extremities.boundingBox
-            //             );
-            //         }
-            //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-            
-            //             //judge whether element should be rendered
-            //                 if( !shouldThisElementRender() ){
-            //                     return;
-            //                 }
-            
-            //             //combine offset with shape's position, angle and scale to produce adjust value for render
-            //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-            //                 const adjust = { 
-            //                     x: point.x*offset.scale + offset.x,
-            //                     y: point.y*offset.scale + offset.y,
-            //                     scale: offset.scale*scale,
-            //                     angle: -(offset.angle + angle),
-            //                 };
-            
-            //             //activate shape render code
-            //                 activateGLRender(context,adjust);
-            
-            //             //if requested; draw dot frame
-            //                 if(self.dotFrame){drawDotFrame();}
-            //         };
-            
-            //     //info dump
-            //         this._dump = function(){
-            //             console.log(self.getAddress(),'._dump()');
-            //             console.log(self.getAddress(),'._dump -> id: '+id);
-            //             console.log(self.getAddress(),'._dump -> type: '+type);
-            //             console.log(self.getAddress(),'._dump -> name: '+self.name);
-            //             console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-            //             console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-            //             console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-            //             console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-            //             console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-            //             console.log(self.getAddress(),'._dump -> image: ',image);
-            //             console.log(self.getAddress(),'._dump -> x: '+x);
-            //             console.log(self.getAddress(),'._dump -> y: '+y);
-            //             console.log(self.getAddress(),'._dump -> angle: '+angle);
-            //             console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-            //             console.log(self.getAddress(),'._dump -> width: '+width);
-            //             console.log(self.getAddress(),'._dump -> height: '+height);
-            //             console.log(self.getAddress(),'._dump -> scale: '+scale);
-            //             console.log(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
-            //             console.log(self.getAddress(),'._dump -> elementLibrary.image.webglDataStore:',elementLibrary.image.webglDataStore);
-                        
-            //         };
-                
-            //     //interface
-            //         this.interface = new function(){
-            //             this.ignored = self.ignored;
-            //             this.x = self.x;
-            //             this.y = self.y;
-            //             this.angle = self.angle;
-            //             this.anchor = self.anchor;
-            //             this.width = self.width;
-            //             this.height = self.height;
-            //             this.scale = self.scale;
-            //             this.url = self.url;
-            //             this.bitmap = self.bitmap;
-            //             this.unifiedAttribute = self.unifiedAttribute;
-            //             this.getAddress = self.getAddress;
-            //             this._dump = self._dump;
-            //         };
-            // };
-            // this.image.webglDataStore = {};
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            /////draft 2
+            /////fresh
             this.image = function(_id,_name){
                 const self = this;
             
@@ -26633,17 +26160,19 @@ const arrangement = new function(){
         return design.getElementsUnderArea(points); 
     };
         
-    this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address 
+    this.printTree = function(mode='spaced',includeTypes=false){ //modes: spaced / tabular / address 
         function recursivePrint(grouping,prefix=''){
             grouping.children.forEach(function(a){
+                const data = '('+a.id + (includeTypes ? ' : '+a.type : '') +')';
+
                 if(mode == 'spaced'){
-                    console.log(prefix+' -  '+a.name+' ('+a.id+')');
+                    console.log(prefix+' -  '+a.name+' '+data);
                     if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
                 }else if(mode == 'tabular'){
-                    console.log(prefix+'\t-\t\t'+a.name+' ('+a.id+')');
+                    console.log(prefix+'\t-\t\t'+a.name+' '+data);
                     if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
                 }else if(mode == 'address'){
-                    console.log(prefix+'/'+a.name+' ('+a.id+')');
+                    console.log(prefix+'/'+a.name+' '+data);
                     if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
                 }
             });
@@ -26652,6 +26181,21 @@ const arrangement = new function(){
         if(design.children().length == 0){console.log('-empty-');}
         console.log(design.name+' ('+design.getId()+')');
         recursivePrint(design.getTree(), '');
+    };
+    this.printSurvey = function(){
+        const results = {};
+
+        function recursiveSearch(grouping){
+            grouping.children.forEach(child => {
+                results[child.type] = results[child.type] == undefined ? 1 : results[child.type]+1;
+                if(child.type == 'group'){
+                    recursiveSearch(child)
+                }
+            });
+        }
+
+        recursiveSearch(design.getTree());
+        return results;
     };
     this.areParents = function(elementId,potentialParents=[]){
 
@@ -27454,7 +26998,10 @@ const callback = new function(){
         return arrangement.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele));
     };
     communicationModule.function['arrangement.printTree'] = function(mode){
-        arrangement.printTree(mode);
+        arrangement.printTree(mode,includeTypes);
+    };
+    communicationModule.function['arrangement.printSurvey'] = function(mode){
+        return arrangement.printSurvey();
     };
     communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
         return arrangement.areParents(elementId,potentialParents);
