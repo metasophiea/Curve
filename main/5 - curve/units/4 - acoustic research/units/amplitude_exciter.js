@@ -1,9 +1,9 @@
-this['amplitude_peak_attenuator'] = function(name,x,y,angle){
+this['amplitude_exciter'] = function(name,x,y,angle){
     //style data
         const unitStyle = new function(){
             //image store location URL
                 this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
-                this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_peak_attenuator/';
+                this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_exciter/';
 
             //calculation of measurements
                 const div = 10;
@@ -22,7 +22,7 @@ this['amplitude_peak_attenuator'] = function(name,x,y,angle){
     //main object creation
         const object = _canvas_.interface.unit.builder({
             name:name,
-            model:'amplitude_peak_attenuator',
+            model:'amplitude_exciter',
             x:x, y:y, angle:angle,
             space:[
                 {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
@@ -53,16 +53,16 @@ this['amplitude_peak_attenuator'] = function(name,x,y,angle){
         const state = {
             sharpness:10,
         };
-        const amplitudePeakAttenuator = new _canvas_.interface.circuit.amplitudePeakAttenuator(_canvas_.library.audio.context);
+        const amplitudeExciter = new _canvas_.interface.circuit.amplitudeExciter(_canvas_.library.audio.context);
 
     //wiring
         //hid
             object.elements.dial_continuous_image.sharpness.onchange = function(value){
-                amplitudePeakAttenuator.sharpness(value*100);
+                amplitudeExciter.sharpness(value*100);
             };
         //io
-            object.io.audio.input.out().connect( amplitudePeakAttenuator.in() );
-            amplitudePeakAttenuator.out().connect(object.io.audio.output.in());
+            object.io.audio.input.out().connect( amplitudeExciter.in() );
+            amplitudeExciter.out().connect(object.io.audio.output.in());
 
     //interface
         object.i = {
@@ -76,8 +76,8 @@ this['amplitude_peak_attenuator'] = function(name,x,y,angle){
         
     return object;
 };
-this['amplitude_peak_attenuator'].metadata = {
-    name:'Amplitude Peak Attenuator',
+this['amplitude_exciter'].metadata = {
+    name:'Amplitude Exciter',
     category:'',
     helpURL:''
 };

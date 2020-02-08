@@ -4591,9 +4591,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         },
                         
                         {
-                            name:'amplitudePeakAttenuator',
+                            name:'amplitudeExciter',
                             worklet:new Blob([`
-                                class amplitudePeakAttenuator extends AudioWorkletProcessor{
+                                class amplitudeExciter extends AudioWorkletProcessor{
                                     static get parameterDescriptors(){
                                         return [
                                             {
@@ -4613,7 +4613,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     process(inputs, outputs, parameters){
                                         const input = inputs[0];
                                         const output = outputs[0];
-                                        const sharpness = parameters.sharpness;
+                                        const sharpness = parameters.sharpness[0];
                                     
                                         for(let channel = 0; channel < input.length; channel++){
                                             const inputChannel = input[channel];
@@ -4627,21 +4627,17 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         return true;
                                     }
                                 }
-                                registerProcessor('amplitudePeakAttenuator', amplitudePeakAttenuator);
-                                
-                                
-                                
-                                
+                                registerProcessor('amplitudeExciter', amplitudeExciter);
                                 
                                 // 2*(x - x^2)
                             `], { type: "text/javascript" }),
                             class:
-                                class amplitudePeakAttenuator extends AudioWorkletNode{
+                                class amplitudeExciter extends AudioWorkletNode{
                                     constructor(context, options={}){
                                         options.numberOfInputs = 1;
                                         options.numberOfOutputs = 1;
                                         options.channelCount = 1;
-                                        super(context, 'amplitudePeakAttenuator', options);
+                                        super(context, 'amplitudeExciter', options);
                                         
                                         this._sharpness = 10;
                                     }
@@ -24846,6 +24842,33 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //setup
                         if(setupConnect){this.selectDevice('default');}
                 };
+                this.amplitudeExciter = function(
+                    context
+                ){
+                    //flow
+                        //flow chain
+                            const flow = {
+                                amplitudeExciter:{}
+                            };
+                
+                    //amplitudeExciter
+                        flow.amplitudeExciter = {
+                            sharpness: 10,
+                            node: new _canvas_.library.audio.audioWorklet.amplitudeExciter(_canvas_.library.audio.context),
+                        };
+                
+                    //input/output node
+                        this.in = function(){return flow.amplitudeExciter.node;}
+                        this.out = function(a){return flow.amplitudeExciter.node;}
+                
+                    //controls
+                        this.sharpness = function(value){
+                            if(value == undefined){ return flow.amplitudeExciter.sharpness; }
+                            if(value < 1){value = 1;}
+                            flow.amplitudeExciter.sharpness = value;
+                            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeExciter.node.sharpness, value, 0.01, 'instant', true);
+                        };
+                };
                 this.rapidAmplitudeModulator = function(
                     context
                 ){
@@ -24925,33 +24948,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             }
                         };
                 
-                };
-                this.amplitudePeakAttenuator = function(
-                    context
-                ){
-                    //flow
-                        //flow chain
-                            const flow = {
-                                amplitudePeakAttenuator:{}
-                            };
-                
-                    //amplitudePeakAttenuator
-                        flow.amplitudePeakAttenuator = {
-                            sharpness: 10,
-                            node: new _canvas_.library.audio.audioWorklet.amplitudePeakAttenuator(_canvas_.library.audio.context),
-                        };
-                
-                    //input/output node
-                        this.in = function(){return flow.amplitudePeakAttenuator.node;}
-                        this.out = function(a){return flow.amplitudePeakAttenuator.node;}
-                
-                    //controls
-                        this.sharpness = function(value){
-                            if(value == undefined){ return flow.amplitudePeakAttenuator.sharpness; }
-                            if(value < 1){value = 1;}
-                            flow.amplitudePeakAttenuator.sharpness = value;
-                            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudePeakAttenuator.node.sharpness, value, 0.01, 'instant', true);
-                        };
                 };
                 this.gain = function(
                     context
@@ -50549,6 +50545,89 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
             };
             this.acousticresearch = new function(){
+                this['amplitudeExciter'] = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
+                                this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_exciter/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:675, height:600 },
+                                    design: { width:6.75, height:6 },
+                                };
+                
+                                this.offset = {x:0,y:0};
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                        };
+                
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'amplitude_exciter',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height/2 - 15/2, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height/2 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                },
+                
+                                {collection:'control', type:'dial_continuous_image', name:'sharpness', data:{
+                                    x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.1, resetValue:0.1, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                }},
+                            ]
+                        });
+                
+                    //circuitry
+                        const state = {
+                            sharpness:10,
+                        };
+                        const amplitudeExciter = new _canvas_.interface.circuit.amplitudeExciter(_canvas_.library.audio.context);
+                
+                    //wiring
+                        //hid
+                            object.elements.dial_continuous_image.sharpness.onchange = function(value){
+                                amplitudeExciter.sharpness(value*100);
+                            };
+                        //io
+                            object.io.audio.input.out().connect( amplitudeExciter.in() );
+                            amplitudeExciter.out().connect(object.io.audio.output.in());
+                
+                    //interface
+                        object.i = {
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                        };
+                        object.importData = function(data){
+                        };
+                        
+                    return object;
+                };
+                this['amplitude_exciter'].metadata = {
+                    name:'Amplitude Exciter',
+                    category:'',
+                    helpURL:''
+                };
                 const imageStoreURL = '/images/units/4 - acoustic research/';
                 const style = {
                     connectionNode:{
@@ -50687,89 +50766,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
                 this['bitcrusher'].metadata = {
                     name:'Bitcrusher',
-                    category:'',
-                    helpURL:''
-                };
-                this['amplitude_peak_attenuator'] = function(name,x,y,angle){
-                    //style data
-                        const unitStyle = new function(){
-                            //image store location URL
-                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
-                                this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_peak_attenuator/';
-                
-                            //calculation of measurements
-                                const div = 10;
-                                const measurement = { 
-                                    file: { width:675, height:600 },
-                                    design: { width:6.75, height:6 },
-                                };
-                
-                                this.offset = {x:0,y:0};
-                                this.drawingValue = { 
-                                    width: measurement.file.width/div, 
-                                    height: measurement.file.height/div
-                                };
-                        };
-                
-                    //main object creation
-                        const object = _canvas_.interface.unit.builder({
-                            name:name,
-                            model:'amplitude_peak_attenuator',
-                            x:x, y:y, angle:angle,
-                            space:[
-                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
-                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
-                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
-                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height/2 - 15/2, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
-                                }},
-                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height/2 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
-                                }},
-                                
-                                {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
-                                },
-                
-                                {collection:'control', type:'dial_continuous_image', name:'sharpness', data:{
-                                    x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.1, resetValue:0.1, arcDistance:1.2,
-                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
-                                }},
-                            ]
-                        });
-                
-                    //circuitry
-                        const state = {
-                            sharpness:10,
-                        };
-                        const amplitudePeakAttenuator = new _canvas_.interface.circuit.amplitudePeakAttenuator(_canvas_.library.audio.context);
-                
-                    //wiring
-                        //hid
-                            object.elements.dial_continuous_image.sharpness.onchange = function(value){
-                                amplitudePeakAttenuator.sharpness(value*100);
-                            };
-                        //io
-                            object.io.audio.input.out().connect( amplitudePeakAttenuator.in() );
-                            amplitudePeakAttenuator.out().connect(object.io.audio.output.in());
-                
-                    //interface
-                        object.i = {
-                        };
-                
-                    //import/export
-                        object.exportData = function(){
-                        };
-                        object.importData = function(data){
-                        };
-                        
-                    return object;
-                };
-                this['amplitude_peak_attenuator'].metadata = {
-                    name:'Amplitude Peak Attenuator',
                     category:'',
                     helpURL:''
                 };

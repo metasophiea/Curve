@@ -75,11 +75,11 @@
 },
 
 {
-    name:'amplitudePeakAttenuator',
+    name:'amplitudeExciter',
     worklet:new Blob([`
-        {{include:modules/amplitudePeakAttenuator/worklet.js}}
+        {{include:modules/amplitudeExciter/worklet.js}}
     `], { type: "text/javascript" }),
     class:
-        {{include:modules/amplitudePeakAttenuator/node.js}}
+        {{include:modules/amplitudeExciter/node.js}}
     ,
 },

@@ -4286,9 +4286,9 @@
                             },
                             
                             {
-                                name:'amplitudePeakAttenuator',
+                                name:'amplitudeExciter',
                                 worklet:new Blob([`
-                                    class amplitudePeakAttenuator extends AudioWorkletProcessor{
+                                    class amplitudeExciter extends AudioWorkletProcessor{
                                         static get parameterDescriptors(){
                                             return [
                                                 {
@@ -4308,13 +4308,14 @@
                                         process(inputs, outputs, parameters){
                                             const input = inputs[0];
                                             const output = outputs[0];
-                                            const sharpness = parameters.sharpness;
+                                            const sharpness_useFirstOnly = parameters.sharpness.length == 1;
                                         
                                             for(let channel = 0; channel < input.length; channel++){
                                                 const inputChannel = input[channel];
                                                 const outputChannel = output[channel];
                                         
                                                 for(let a = 0; a < inputChannel.length; a++){
+                                                    const sharpness = sharpness_useFirstOnly ? parameters.sharpness[0] : parameters.sharpness[a];
                                                     const mux = inputChannel[a]*sharpness;
                                                     outputChannel[a] = mux / ( 1 + Math.abs(mux) );
                                                 }
@@ -4322,21 +4323,17 @@
                                             return true;
                                         }
                                     }
-                                    registerProcessor('amplitudePeakAttenuator', amplitudePeakAttenuator);
-                                    
-                                    
-                                    
-                                    
+                                    registerProcessor('amplitudeExciter', amplitudeExciter);
                                     
                                     // 2*(x - x^2)
                                 `], { type: "text/javascript" }),
                                 class:
-                                    class amplitudePeakAttenuator extends AudioWorkletNode{
+                                    class amplitudeExciter extends AudioWorkletNode{
                                         constructor(context, options={}){
                                             options.numberOfInputs = 1;
                                             options.numberOfOutputs = 1;
                                             options.channelCount = 1;
-                                            super(context, 'amplitudePeakAttenuator', options);
+                                            super(context, 'amplitudeExciter', options);
                                             
                                             this._sharpness = 10;
                                         }
@@ -24414,6 +24411,33 @@
                         //setup
                             if(setupConnect){this.selectDevice('default');}
                     };
+                    this.amplitudeExciter = function(
+                        context
+                    ){
+                        //flow
+                            //flow chain
+                                const flow = {
+                                    amplitudeExciter:{}
+                                };
+                    
+                        //amplitudeExciter
+                            flow.amplitudeExciter = {
+                                sharpness: 10,
+                                node: new _canvas_.library.audio.audioWorklet.amplitudeExciter(_canvas_.library.audio.context),
+                            };
+                    
+                        //input/output node
+                            this.in = function(){return flow.amplitudeExciter.node;}
+                            this.out = function(a){return flow.amplitudeExciter.node;}
+                    
+                        //controls
+                            this.sharpness = function(value){
+                                if(value == undefined){ return flow.amplitudeExciter.sharpness; }
+                                if(value < 1){value = 1;}
+                                flow.amplitudeExciter.sharpness = value;
+                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeExciter.node.sharpness, value, 0.01, 'instant', true);
+                            };
+                    };
                     this.rapidAmplitudeModulator = function(
                         context
                     ){
@@ -24493,33 +24517,6 @@
                                 }
                             };
                     
-                    };
-                    this.amplitudePeakAttenuator = function(
-                        context
-                    ){
-                        //flow
-                            //flow chain
-                                const flow = {
-                                    amplitudePeakAttenuator:{}
-                                };
-                    
-                        //amplitudePeakAttenuator
-                            flow.amplitudePeakAttenuator = {
-                                sharpness: 10,
-                                node: new _canvas_.library.audio.audioWorklet.amplitudePeakAttenuator(_canvas_.library.audio.context),
-                            };
-                    
-                        //input/output node
-                            this.in = function(){return flow.amplitudePeakAttenuator.node;}
-                            this.out = function(a){return flow.amplitudePeakAttenuator.node;}
-                    
-                        //controls
-                            this.sharpness = function(value){
-                                if(value == undefined){ return flow.amplitudePeakAttenuator.sharpness; }
-                                if(value < 1){value = 1;}
-                                flow.amplitudePeakAttenuator.sharpness = value;
-                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudePeakAttenuator.node.sharpness, value, 0.01, 'instant', true);
-                            };
                     };
                     this.gain = function(
                         context
@@ -49944,12 +49941,12 @@
                         category:'',
                         helpURL:''
                     };
-                    this['amplitude_peak_attenuator'] = function(name,x,y,angle){
+                    this['amplitude_exciter'] = function(name,x,y,angle){
                         //style data
                             const unitStyle = new function(){
                                 //image store location URL
                                     this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_peak_attenuator/';
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_exciter/';
                     
                                 //calculation of measurements
                                     const div = 10;
@@ -49968,7 +49965,7 @@
                         //main object creation
                             const object = _canvas_.interface.unit.builder({
                                 name:name,
-                                model:'amplitude_peak_attenuator',
+                                model:'amplitude_exciter',
                                 x:x, y:y, angle:angle,
                                 space:[
                                     {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
@@ -49999,16 +49996,16 @@
                             const state = {
                                 sharpness:10,
                             };
-                            const amplitudePeakAttenuator = new _canvas_.interface.circuit.amplitudePeakAttenuator(_canvas_.library.audio.context);
+                            const amplitudeExciter = new _canvas_.interface.circuit.amplitudeExciter(_canvas_.library.audio.context);
                     
                         //wiring
                             //hid
                                 object.elements.dial_continuous_image.sharpness.onchange = function(value){
-                                    amplitudePeakAttenuator.sharpness(value*100);
+                                    amplitudeExciter.sharpness(value*100);
                                 };
                             //io
-                                object.io.audio.input.out().connect( amplitudePeakAttenuator.in() );
-                                amplitudePeakAttenuator.out().connect(object.io.audio.output.in());
+                                object.io.audio.input.out().connect( amplitudeExciter.in() );
+                                amplitudeExciter.out().connect(object.io.audio.output.in());
                     
                         //interface
                             object.i = {
@@ -50022,8 +50019,8 @@
                             
                         return object;
                     };
-                    this['amplitude_peak_attenuator'].metadata = {
-                        name:'Amplitude Peak Attenuator',
+                    this['amplitude_exciter'].metadata = {
+                        name:'Amplitude Exciter',
                         category:'',
                         helpURL:''
                     };

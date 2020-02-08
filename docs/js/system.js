@@ -4286,9 +4286,9 @@
                             },
                             
                             {
-                                name:'amplitudePeakAttenuator',
+                                name:'amplitudeExciter',
                                 worklet:new Blob([`
-                                    class amplitudePeakAttenuator extends AudioWorkletProcessor{
+                                    class amplitudeExciter extends AudioWorkletProcessor{
                                         static get parameterDescriptors(){
                                             return [
                                                 {
@@ -4308,13 +4308,14 @@
                                         process(inputs, outputs, parameters){
                                             const input = inputs[0];
                                             const output = outputs[0];
-                                            const sharpness = parameters.sharpness;
+                                            const sharpness_useFirstOnly = parameters.sharpness.length == 1;
                                         
                                             for(let channel = 0; channel < input.length; channel++){
                                                 const inputChannel = input[channel];
                                                 const outputChannel = output[channel];
                                         
                                                 for(let a = 0; a < inputChannel.length; a++){
+                                                    const sharpness = sharpness_useFirstOnly ? parameters.sharpness[0] : parameters.sharpness[a];
                                                     const mux = inputChannel[a]*sharpness;
                                                     outputChannel[a] = mux / ( 1 + Math.abs(mux) );
                                                 }
@@ -4322,21 +4323,17 @@
                                             return true;
                                         }
                                     }
-                                    registerProcessor('amplitudePeakAttenuator', amplitudePeakAttenuator);
-                                    
-                                    
-                                    
-                                    
+                                    registerProcessor('amplitudeExciter', amplitudeExciter);
                                     
                                     // 2*(x - x^2)
                                 `], { type: "text/javascript" }),
                                 class:
-                                    class amplitudePeakAttenuator extends AudioWorkletNode{
+                                    class amplitudeExciter extends AudioWorkletNode{
                                         constructor(context, options={}){
                                             options.numberOfInputs = 1;
                                             options.numberOfOutputs = 1;
                                             options.channelCount = 1;
-                                            super(context, 'amplitudePeakAttenuator', options);
+                                            super(context, 'amplitudeExciter', options);
                                             
                                             this._sharpness = 10;
                                         }
