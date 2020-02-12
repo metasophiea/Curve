@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:12} };
                 const library = this;
             
                 this.go = new function(){
@@ -240,6 +240,27 @@
                     
                             return outputArray;
                         };
+                        this.sigmoid = function(stepCount=2, start=0, end=1, sharpness=0.5){
+                            if(sharpness < 0){sharpness = 0;}
+                            if(sharpness > 1){sharpness = 1;}
+                    
+                            stepCount--;
+                    
+                            let curve = [];
+                            for(let a = 0; a <= stepCount; a++){
+                                const x = a/stepCount;
+                                curve.push(
+                                    0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2
+                                );
+                            }
+                    
+                            const mux = end-start;
+                            for(let a = 0 ; a < curve.length; a++){
+                                curve[a] = curve[a]*mux + start;
+                            }
+                    
+                            return curve;
+                        };
                         this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
                     
                             stepCount = stepCount-1;
@@ -280,6 +301,10 @@
                                 1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
                             ]);
                             return temp[1] *(end-start)+start;
+                        };
+                        this.sigmoid = function(x=0.5, start=0, end=1, sharpness=0.5){
+                    
+                            return ( 0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2 ) *(end-start)+start;
                         };
                         this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
                     
@@ -4286,16 +4311,23 @@
                             },
                             
                             {
-                                name:'amplitudeExciter',
+                                name:'sigmoid',
                                 worklet:new Blob([`
-                                    class amplitudeExciter extends AudioWorkletProcessor{
+                                    class sigmoid extends AudioWorkletProcessor{
                                         static get parameterDescriptors(){
                                             return [
                                                 {
+                                                    name: 'gain',
+                                                    defaultValue: 1,
+                                                    minValue: 0,
+                                                    maxValue: 1,
+                                                    automationRate: 'a-rate',
+                                                },
+                                                {
                                                     name: 'sharpness',
-                                                    defaultValue: 10,
-                                                    minValue: 1,
-                                                    maxValue: 100,
+                                                    defaultValue: 0,
+                                                    minValue: 0,
+                                                    maxValue: 1,
                                                     automationRate: 'a-rate',
                                                 }
                                             ];
@@ -4308,6 +4340,7 @@
                                         process(inputs, outputs, parameters){
                                             const input = inputs[0];
                                             const output = outputs[0];
+                                            const gain_useFirstOnly = parameters.gain.length == 1;
                                             const sharpness_useFirstOnly = parameters.sharpness.length == 1;
                                         
                                             for(let channel = 0; channel < input.length; channel++){
@@ -4315,29 +4348,28 @@
                                                 const outputChannel = output[channel];
                                         
                                                 for(let a = 0; a < inputChannel.length; a++){
+                                                    const gain = gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a];
                                                     const sharpness = sharpness_useFirstOnly ? parameters.sharpness[0] : parameters.sharpness[a];
-                                                    const mux = inputChannel[a]*sharpness;
-                                                    outputChannel[a] = mux / ( 1 + Math.abs(mux) );
+                                                    outputChannel[a] = gain * ( inputChannel[a] / ( 1 - sharpness + sharpness*Math.abs(inputChannel[a]) ) );
                                                 }
                                             }
                                             return true;
                                         }
                                     }
-                                    registerProcessor('amplitudeExciter', amplitudeExciter);
-                                    
-                                    // 2*(x - x^2)
+                                    registerProcessor('sigmoid', sigmoid);
                                 `], { type: "text/javascript" }),
                                 class:
-                                    class amplitudeExciter extends AudioWorkletNode{
+                                    class sigmoid extends AudioWorkletNode{
                                         constructor(context, options={}){
                                             options.numberOfInputs = 1;
                                             options.numberOfOutputs = 1;
                                             options.channelCount = 1;
-                                            super(context, 'amplitudeExciter', options);
-                                            
-                                            this._sharpness = 10;
+                                            super(context, 'sigmoid', options);
                                         }
                                     
+                                        get gain(){
+                                            return this.parameters.get('gain');
+                                        }
                                         get sharpness(){
                                             return this.parameters.get('sharpness');
                                         }
@@ -24222,7 +24254,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:11} };
                 const interface = this;
             
                 const dev = {
@@ -24410,33 +24442,6 @@
                     
                         //setup
                             if(setupConnect){this.selectDevice('default');}
-                    };
-                    this.amplitudeExciter = function(
-                        context
-                    ){
-                        //flow
-                            //flow chain
-                                const flow = {
-                                    amplitudeExciter:{}
-                                };
-                    
-                        //amplitudeExciter
-                            flow.amplitudeExciter = {
-                                sharpness: 10,
-                                node: new _canvas_.library.audio.audioWorklet.amplitudeExciter(_canvas_.library.audio.context),
-                            };
-                    
-                        //input/output node
-                            this.in = function(){return flow.amplitudeExciter.node;}
-                            this.out = function(a){return flow.amplitudeExciter.node;}
-                    
-                        //controls
-                            this.sharpness = function(value){
-                                if(value == undefined){ return flow.amplitudeExciter.sharpness; }
-                                if(value < 1){value = 1;}
-                                flow.amplitudeExciter.sharpness = value;
-                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeExciter.node.sharpness, value, 0.01, 'instant', true);
-                            };
                     };
                     this.rapidAmplitudeModulator = function(
                         context
@@ -24637,6 +24642,42 @@
                                 if(value == undefined){ return flow.amplitudeModifierNode.floor; }
                                 flow.amplitudeModifierNode.floor = value;
                                 _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.floor, value, 0.01, 'instant', true);
+                            };
+                    };
+                    this.sigmoid = function(
+                        context
+                    ){
+                        //flow
+                            //flow chain
+                                const flow = {
+                                    sigmoid:{}
+                                };
+                    
+                        //sigmoid
+                            flow.sigmoid = {
+                                gain: 1,
+                                sharpness: 0,
+                                node: new _canvas_.library.audio.audioWorklet.sigmoid(_canvas_.library.audio.context),
+                            };
+                    
+                        //input/output node
+                            this.in = function(){return flow.sigmoid.node;}
+                            this.out = function(a){return flow.sigmoid.node;}
+                    
+                        //controls
+                            this.gain = function(value){
+                                if(value == undefined){ return flow.sigmoid.gain; }
+                                if(value > 1){value = 1;}
+                                if(value < 0){value = 0;}
+                                flow.sigmoid.gain = value;
+                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.sigmoid.node.gain, value, 0.01, 'instant', true);
+                            };
+                            this.sharpness = function(value){
+                                if(value == undefined){ return flow.sigmoid.sharpness; }
+                                if(value > 1){value = 1;}
+                                if(value < 0){value = 0;}
+                                flow.sigmoid.sharpness = value;
+                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.sigmoid.node.sharpness, value, 0.01, 'instant', true);
                             };
                     };
                     this.reverbUnit = function(

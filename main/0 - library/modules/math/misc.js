@@ -189,6 +189,29 @@ this.curveGenerator = new function(){
 
         return outputArray;
     };
+    this.sigmoid = function(stepCount=2, start=0, end=1, sharpness=0.5){
+        dev.log.math('.curveGenerator.sigmoid(',stepCount,start,end,sharpness); //#development
+        dev.count('.math.curveGenerator.sigmoid'); //#development
+        if(sharpness < 0){sharpness = 0;}
+        if(sharpness > 1){sharpness = 1;}
+
+        stepCount--;
+
+        let curve = [];
+        for(let a = 0; a <= stepCount; a++){
+            const x = a/stepCount;
+            curve.push(
+                0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2
+            );
+        }
+
+        const mux = end-start;
+        for(let a = 0 ; a < curve.length; a++){
+            curve[a] = curve[a]*mux + start;
+        }
+
+        return curve;
+    };
     this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
         dev.log.math('.curveGenerator.exponential(',stepCount,start,end,sharpness); //#development
         dev.count('.math.curveGenerator.exponential'); //#development
@@ -239,6 +262,12 @@ this.curvePoint = new function(){
             1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
         ]);
         return temp[1] *(end-start)+start;
+    };
+    this.sigmoid = function(x=0.5, start=0, end=1, sharpness=0.5){
+        dev.log.math('.curvePoint.sigmoid(',x,start,end,sharpness); //#development
+        dev.count('.math.curvePoint.sigmoid'); //#development
+
+        return ( 0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2 ) *(end-start)+start;
     };
     this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
         dev.log.math('.curvePoint.exponential(',x,start,end,sharpness); //#development

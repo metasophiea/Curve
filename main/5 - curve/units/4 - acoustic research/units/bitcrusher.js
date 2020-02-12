@@ -44,11 +44,11 @@ this['bitcrusher'] = function(name,x,y,angle){
 
                 {collection:'control', type:'dial_continuous_image', name:'amplitudeResolution', data:{
                     x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:128, 
-                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                 }},
                 {collection:'control', type:'dial_discrete_image', name:'sampleFrequency', data:{
                     x:65, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:8, 
-                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                 }},
             ]
         });

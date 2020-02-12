@@ -1,4 +1,19 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-12
+  - added 'sigmoid' curve functions to library.math (I might place the S
+    functions with it)
+  - redid the design for Accoustic Research's Sigmoid's Affecter and finished
+    off its internals
+
+
+2020-02-11
+  - created the "Sigmoid" audio worklet in the library
+  - created the "Sigmoid" circuit in the interface layer
+  - replace the circuit inside the Accoustic Research Amplitude Exciter with
+    the new Sigmoid one (will have to redo the art) It's also gained a gain
+    dial, so the unit will have to be re-designed
+
+
 2020-02-08
   - switched from Closure to Terser. The compression seems to be just as good,
     though one will need to install terser with npm/node.js before running 

@@ -75,11 +75,11 @@
 },
 
 {
-    name:'amplitudeExciter',
+    name:'sigmoid',
     worklet:new Blob([`
-        {{include:modules/amplitudeExciter/worklet.js}}
+        {{include:modules/sigmoid/worklet.js}}
     `], { type: "text/javascript" }),
     class:
-        {{include:modules/amplitudeExciter/node.js}}
+        {{include:modules/sigmoid/node.js}}
     ,
 },

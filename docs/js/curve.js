@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:12} };
                 const library = this;
             
                 this.go = new function(){
@@ -240,6 +240,27 @@
                     
                             return outputArray;
                         };
+                        this.sigmoid = function(stepCount=2, start=0, end=1, sharpness=0.5){
+                            if(sharpness < 0){sharpness = 0;}
+                            if(sharpness > 1){sharpness = 1;}
+                    
+                            stepCount--;
+                    
+                            let curve = [];
+                            for(let a = 0; a <= stepCount; a++){
+                                const x = a/stepCount;
+                                curve.push(
+                                    0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2
+                                );
+                            }
+                    
+                            const mux = end-start;
+                            for(let a = 0 ; a < curve.length; a++){
+                                curve[a] = curve[a]*mux + start;
+                            }
+                    
+                            return curve;
+                        };
                         this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
                     
                             stepCount = stepCount-1;
@@ -280,6 +301,10 @@
                                 1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
                             ]);
                             return temp[1] *(end-start)+start;
+                        };
+                        this.sigmoid = function(x=0.5, start=0, end=1, sharpness=0.5){
+                    
+                            return ( 0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2 ) *(end-start)+start;
                         };
                         this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
                     
@@ -4286,16 +4311,23 @@
                             },
                             
                             {
-                                name:'amplitudeExciter',
+                                name:'sigmoid',
                                 worklet:new Blob([`
-                                    class amplitudeExciter extends AudioWorkletProcessor{
+                                    class sigmoid extends AudioWorkletProcessor{
                                         static get parameterDescriptors(){
                                             return [
                                                 {
+                                                    name: 'gain',
+                                                    defaultValue: 1,
+                                                    minValue: 0,
+                                                    maxValue: 1,
+                                                    automationRate: 'a-rate',
+                                                },
+                                                {
                                                     name: 'sharpness',
-                                                    defaultValue: 10,
-                                                    minValue: 1,
-                                                    maxValue: 100,
+                                                    defaultValue: 0,
+                                                    minValue: 0,
+                                                    maxValue: 1,
                                                     automationRate: 'a-rate',
                                                 }
                                             ];
@@ -4308,6 +4340,7 @@
                                         process(inputs, outputs, parameters){
                                             const input = inputs[0];
                                             const output = outputs[0];
+                                            const gain_useFirstOnly = parameters.gain.length == 1;
                                             const sharpness_useFirstOnly = parameters.sharpness.length == 1;
                                         
                                             for(let channel = 0; channel < input.length; channel++){
@@ -4315,29 +4348,28 @@
                                                 const outputChannel = output[channel];
                                         
                                                 for(let a = 0; a < inputChannel.length; a++){
+                                                    const gain = gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a];
                                                     const sharpness = sharpness_useFirstOnly ? parameters.sharpness[0] : parameters.sharpness[a];
-                                                    const mux = inputChannel[a]*sharpness;
-                                                    outputChannel[a] = mux / ( 1 + Math.abs(mux) );
+                                                    outputChannel[a] = gain * ( inputChannel[a] / ( 1 - sharpness + sharpness*Math.abs(inputChannel[a]) ) );
                                                 }
                                             }
                                             return true;
                                         }
                                     }
-                                    registerProcessor('amplitudeExciter', amplitudeExciter);
-                                    
-                                    // 2*(x - x^2)
+                                    registerProcessor('sigmoid', sigmoid);
                                 `], { type: "text/javascript" }),
                                 class:
-                                    class amplitudeExciter extends AudioWorkletNode{
+                                    class sigmoid extends AudioWorkletNode{
                                         constructor(context, options={}){
                                             options.numberOfInputs = 1;
                                             options.numberOfOutputs = 1;
                                             options.channelCount = 1;
-                                            super(context, 'amplitudeExciter', options);
-                                            
-                                            this._sharpness = 10;
+                                            super(context, 'sigmoid', options);
                                         }
                                     
+                                        get gain(){
+                                            return this.parameters.get('gain');
+                                        }
                                         get sharpness(){
                                             return this.parameters.get('sharpness');
                                         }
@@ -24222,7 +24254,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:11} };
                 const interface = this;
             
                 const dev = {
@@ -24410,33 +24442,6 @@
                     
                         //setup
                             if(setupConnect){this.selectDevice('default');}
-                    };
-                    this.amplitudeExciter = function(
-                        context
-                    ){
-                        //flow
-                            //flow chain
-                                const flow = {
-                                    amplitudeExciter:{}
-                                };
-                    
-                        //amplitudeExciter
-                            flow.amplitudeExciter = {
-                                sharpness: 10,
-                                node: new _canvas_.library.audio.audioWorklet.amplitudeExciter(_canvas_.library.audio.context),
-                            };
-                    
-                        //input/output node
-                            this.in = function(){return flow.amplitudeExciter.node;}
-                            this.out = function(a){return flow.amplitudeExciter.node;}
-                    
-                        //controls
-                            this.sharpness = function(value){
-                                if(value == undefined){ return flow.amplitudeExciter.sharpness; }
-                                if(value < 1){value = 1;}
-                                flow.amplitudeExciter.sharpness = value;
-                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeExciter.node.sharpness, value, 0.01, 'instant', true);
-                            };
                     };
                     this.rapidAmplitudeModulator = function(
                         context
@@ -24637,6 +24642,42 @@
                                 if(value == undefined){ return flow.amplitudeModifierNode.floor; }
                                 flow.amplitudeModifierNode.floor = value;
                                 _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.amplitudeModifierNode.node.floor, value, 0.01, 'instant', true);
+                            };
+                    };
+                    this.sigmoid = function(
+                        context
+                    ){
+                        //flow
+                            //flow chain
+                                const flow = {
+                                    sigmoid:{}
+                                };
+                    
+                        //sigmoid
+                            flow.sigmoid = {
+                                gain: 1,
+                                sharpness: 0,
+                                node: new _canvas_.library.audio.audioWorklet.sigmoid(_canvas_.library.audio.context),
+                            };
+                    
+                        //input/output node
+                            this.in = function(){return flow.sigmoid.node;}
+                            this.out = function(a){return flow.sigmoid.node;}
+                    
+                        //controls
+                            this.gain = function(value){
+                                if(value == undefined){ return flow.sigmoid.gain; }
+                                if(value > 1){value = 1;}
+                                if(value < 0){value = 0;}
+                                flow.sigmoid.gain = value;
+                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.sigmoid.node.gain, value, 0.01, 'instant', true);
+                            };
+                            this.sharpness = function(value){
+                                if(value == undefined){ return flow.sigmoid.sharpness; }
+                                if(value > 1){value = 1;}
+                                if(value < 0){value = 0;}
+                                flow.sigmoid.sharpness = value;
+                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, flow.sigmoid.node.sharpness, value, 0.01, 'instant', true);
                             };
                     };
                     this.reverbUnit = function(
@@ -40744,7 +40785,7 @@
             } );
 
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8 } };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:12 } };
                 this.go = new function(){
                     const functionList = [];
             
@@ -49875,11 +49916,11 @@
                     
                                     {collection:'control', type:'dial_continuous_image', name:'amplitudeResolution', data:{
                                         x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:128, 
-                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                     }},
                                     {collection:'control', type:'dial_discrete_image', name:'sampleFrequency', data:{
                                         x:65, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:8, 
-                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                     }},
                                 ]
                             });
@@ -49941,18 +49982,18 @@
                         category:'',
                         helpURL:''
                     };
-                    this['amplitude_exciter'] = function(name,x,y,angle){
+                    this['sigmoids_affecter'] = function(name,x,y,angle){
                         //style data
                             const unitStyle = new function(){
                                 //image store location URL
                                     this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_exciter/';
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'sigmoids_affecter/';
                     
                                 //calculation of measurements
                                     const div = 10;
                                     const measurement = { 
-                                        file: { width:675, height:600 },
-                                        design: { width:6.75, height:6 },
+                                        file: { width:875, height:600 },
+                                        design: { width:8.75, height:6 },
                                     };
                     
                                     this.offset = {x:0,y:0};
@@ -49965,7 +50006,7 @@
                         //main object creation
                             const object = _canvas_.interface.unit.builder({
                                 name:name,
-                                model:'amplitude_exciter',
+                                model:'sigmoids_affecter',
                                 x:x, y:y, angle:angle,
                                 space:[
                                     {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
@@ -49985,23 +50026,33 @@
                                         data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                     },
                     
+                                    {collection:'control', type:'dial_continuous_image', name:'gain', data:{
+                                        x:15, y:22.5, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, resetValue:0.5, arcDistance:1.2,
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
+                                    }},
                                     {collection:'control', type:'dial_continuous_image', name:'sharpness', data:{
-                                        x:25, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.1, resetValue:0.1, arcDistance:1.2,
-                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                        x:45, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:0.5, arcDistance:1.2,
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                     }},
                                 ]
                             });
                     
                         //circuitry
                             const state = {
-                                sharpness:10,
+                                gain:1,
+                                sharpness:0,
                             };
-                            const amplitudeExciter = new _canvas_.interface.circuit.amplitudeExciter(_canvas_.library.audio.context);
+                            const amplitudeExciter = new _canvas_.interface.circuit.sigmoid(_canvas_.library.audio.context);
                     
                         //wiring
                             //hid
+                                object.elements.dial_continuous_image.gain.onchange = function(value){
+                                    amplitudeExciter.gain(value);
+                                    state.gain = value;
+                                };
                                 object.elements.dial_continuous_image.sharpness.onchange = function(value){
-                                    amplitudeExciter.sharpness(value*100);
+                                    amplitudeExciter.sharpness(value);
+                                    state.sharpness = value;
                                 };
                             //io
                                 object.io.audio.input.out().connect( amplitudeExciter.in() );
@@ -50009,18 +50060,30 @@
                     
                         //interface
                             object.i = {
+                                gain:function(value){
+                                    object.elements.dial_continuous_image.gain.set(value);
+                                },
+                                sharpness:function(value){
+                                    object.elements.dial_continuous_image.sharpness.set(value);
+                                },
                             };
                     
                         //import/export
                             object.exportData = function(){
+                                return {
+                                    gain:state.gain,
+                                    sharpness:state.sharpness,
+                                };
                             };
                             object.importData = function(data){
+                                object.elements.dial_continuous_image.gain.set(data.gain);
+                                object.elements.dial_continuous_image.sharpness.set(data.sharpness);
                             };
                             
                         return object;
                     };
-                    this['amplitude_exciter'].metadata = {
-                        name:'Amplitude Exciter',
+                    this['sigmoids_affecter'].metadata = {
+                        name:'Sigmoid\'s Affecter',
                         category:'',
                         helpURL:''
                     };
@@ -50070,19 +50133,19 @@
                     
                                     {collection:'control', type:'dial_continuous_image', name:'offset', data:{
                                         x:35, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, resetValue:0.5, arcDistance:1.2,
-                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                     }},
                                     {collection:'control', type:'dial_continuous_image', name:'divideBy', data:{
                                         x:35, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:1/7, arcDistance:1.2,
-                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                     }},
                                     {collection:'control', type:'dial_continuous_image', name:'ceiling', data:{
                                         x:75, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2,
-                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                     }},
                                     {collection:'control', type:'dial_continuous_image', name:'floor', data:{
                                         x:75, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
-                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                     }},
                                     {collection:'control', type:'checkbox_image', name:'invert', data:{
                                         x:5, y:35, width:10, height:20,

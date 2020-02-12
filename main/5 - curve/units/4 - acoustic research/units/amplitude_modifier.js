@@ -44,19 +44,19 @@ this['amplitude_modifier'] = function(name,x,y,angle){
 
                 {collection:'control', type:'dial_continuous_image', name:'offset', data:{
                     x:35, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, resetValue:0.5, arcDistance:1.2,
-                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                 }},
                 {collection:'control', type:'dial_continuous_image', name:'divideBy', data:{
                     x:35, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:1/7, arcDistance:1.2,
-                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                 }},
                 {collection:'control', type:'dial_continuous_image', name:'ceiling', data:{
                     x:75, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2,
-                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                 }},
                 {collection:'control', type:'dial_continuous_image', name:'floor', data:{
                     x:75, y:65, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
-                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial.png',
+                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                 }},
                 {collection:'control', type:'checkbox_image', name:'invert', data:{
                     x:5, y:35, width:10, height:20,
