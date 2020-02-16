@@ -14,7 +14,8 @@ class amplitudeControlledModulator extends AudioWorkletProcessor{
 
         for(let channel = 0; channel < input_1.length; channel++){    
             for(let a = 0; a < output_1[channel].length; a++){
-                output_1[channel][a] = input_1[channel][a] * (input_2[channel][a]+1)/2;
+                // output_1[channel][a] = input_1[channel][a] * (input_2[channel][a]+1)/2;
+                output_1[channel][a] = input_1[channel][a] * input_2[channel][a];
             }
         }
 

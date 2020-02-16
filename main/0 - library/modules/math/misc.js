@@ -212,6 +212,38 @@ this.curveGenerator = new function(){
 
         return curve;
     };
+    this.halfSigmoid_up = function(stepCount=2, start=0, end=1, sharpness=0.5){
+        dev.log.math('.curveGenerator.halfSigmoid_up(',stepCount,start,end,sharpness); //#development
+        dev.count('.math.curveGenerator.halfSigmoid_up'); //#development
+        if(sharpness < 0){sharpness = 0;}
+        if(sharpness > 1){sharpness = 1;}
+
+        let curve = [];
+
+        stepCount--;
+        for(let a = 0; a <= stepCount; a++){
+            const x = a/stepCount;
+            curve.push( library.math.curvePoint.halfSigmoid_up(x,start,end,sharpness) );
+        }
+
+        return curve;
+    };
+    this.halfSigmoid_down = function(stepCount=2, start=0, end=1, sharpness=0.5){
+        dev.log.math('.curveGenerator.halfSigmoid_down(',stepCount,start,end,sharpness); //#development
+        dev.count('.math.curveGenerator.halfSigmoid_down'); //#development
+        if(sharpness < 0){sharpness = 0;}
+        if(sharpness > 1){sharpness = 1;}
+
+        let curve = [];
+
+        stepCount--;
+        for(let a = 0; a <= stepCount; a++){
+            const x = a/stepCount;
+            curve.push( library.math.curvePoint.halfSigmoid_down(x,start,end,sharpness) );
+        }
+
+        return curve;
+    };
     this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
         dev.log.math('.curveGenerator.exponential(',stepCount,start,end,sharpness); //#development
         dev.count('.math.curveGenerator.exponential'); //#development
@@ -268,6 +300,18 @@ this.curvePoint = new function(){
         dev.count('.math.curvePoint.sigmoid'); //#development
 
         return ( 0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2 ) *(end-start)+start;
+    };
+    this.halfSigmoid_up = function(x=0.5, start=0, end=1, sharpness=0.5){
+        dev.log.math('.curvePoint.halfSigmoid_up(',x,start,end,sharpness); //#development
+        dev.count('.math.curvePoint.halfSigmoid_up'); //#development
+
+        return (x / ( 1 - sharpness + sharpness*Math.abs(x))) *(end-start)+start;
+    };
+    this.halfSigmoid_down = function(x=0.5, start=0, end=1, sharpness=0.5){
+        dev.log.math('.curvePoint.halfSigmoid_down(',x,start,end,sharpness); //#development
+        dev.count('.math.curvePoint.halfSigmoid_down'); //#development
+
+        return library.math.curvePoint.halfSigmoid_up(1-x,end,start,sharpness);
     };
     this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
         dev.log.math('.curvePoint.exponential(',x,start,end,sharpness); //#development

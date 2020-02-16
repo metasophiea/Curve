@@ -1,4 +1,38 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-15
+  - added more curve functions to library.math. "halfSigmoid_up" and
+    "halfSigmoid_down". I should do a clean up of these functions
+  - updated Sigmoid's Affecter's design to incorporate the new switches and
+    functions..it's a little noisy but I think it's fine
+  - created all the art and interface for the new unit, Accoustic Research's
+    Amplitude Controlled Modulator. I'm a little worried about the layout
+    though, as it seems the designs are getting more compressed
+
+
+2020-02-14
+  - more work on the new synthesizer, its less simple now, though I think does
+    things in a more elegant way. For example, instead of using timeouts for
+    gain modulation like the old synthesizer did; this one uses a LFO with an
+    amplitudeModifier circuit attached.
+      I haven't figured out detune modulation yet though..so that' just a dud
+    value for now.
+  - modified the audioWorklet 'amplitudeModifier' to be more straightforward
+  - modified library.audio.changeAudioParam's "instant" mode, so use the
+    instant value setting...I might switch that bad if it doesn't work out
+  - updated the Alpha unit "basic_synthesizer" to use the new synthesizer
+    (only needed to change one method name to make it fit)
+  - named the new synthesizer just "synthesizer", commenting out the old one
+
+
+2020-02-13
+  - further modified the Sigmoid's Affecter to have switches. One allows the
+    circuit to use "1" as a value for the sharpness (otherwise, 0.999) the
+    other switches the dial into exponential mode, so help with detailed
+    adjustment in the higher values. Artwork hasn't been changed however, so
+    that will need to be done in future
+  - began work on a new synthesizer, which uses oscillators more efficiently
+
+
 2020-02-12
   - added 'sigmoid' curve functions to library.math (I might place the S
     functions with it)

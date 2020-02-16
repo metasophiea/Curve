@@ -50,6 +50,16 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
                     x:45, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:0.5, arcDistance:1.2,
                     handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                 }},
+                {collection:'control', type:'checkbox_image', name:'allowOne', data:{
+                    x:8.5, y:35, width:5, height:10,
+                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_small_down.png', 
+                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_small_up.png',
+                }},
+                {collection:'control', type:'checkbox_image', name:'exponentialMode', data:{
+                    x:16.5, y:35, width:5, height:10,
+                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_small_down.png', 
+                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_small_up.png',
+                }},
             ]
         });
 
@@ -57,8 +67,24 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
         const state = {
             gain:1,
             sharpness:0,
+            sharpnessDial:0,
+            allowOne:false,
+            exponentialMode:false,
+            asCloseToOneAsIsAllowed:0.999,
         };
         const amplitudeExciter = new _canvas_.interface.circuit.sigmoid(_canvas_.library.audio.context);
+        function setSharpness(value){
+            if(state.exponentialMode){
+                value = _canvas_.library.math.curvePoint.halfSigmoid_up( value, 0, 1, 0.75 );
+            }
+
+            if(!state.allowOne && value == 1){
+                value = state.asCloseToOneAsIsAllowed;
+            }
+
+            amplitudeExciter.sharpness(value);
+            state.sharpness = value;
+        }
 
     //wiring
         //hid
@@ -67,8 +93,16 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
                 state.gain = value;
             };
             object.elements.dial_continuous_image.sharpness.onchange = function(value){
-                amplitudeExciter.sharpness(value);
-                state.sharpness = value;
+                state.sharpnessDial = value;
+                setSharpness(value);
+            };
+            object.elements.checkbox_image.allowOne.onchange = function(value){
+                state.allowOne = value;
+                setSharpness(state.sharpnessDial);
+            };
+            object.elements.checkbox_image.exponentialMode.onchange = function(value){
+                state.exponentialMode = value;
+                setSharpness(state.sharpnessDial);
             };
         //io
             object.io.audio.input.out().connect( amplitudeExciter.in() );
@@ -77,10 +111,30 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
     //interface
         object.i = {
             gain:function(value){
+                if(value == undefined){
+                    return object.elements.dial_continuous_image.gain.get();
+                }
                 object.elements.dial_continuous_image.gain.set(value);
             },
             sharpness:function(value){
+                if(value == undefined){
+                    return object.elements.dial_continuous_image.sharpness.get();
+                }
                 object.elements.dial_continuous_image.sharpness.set(value);
+            },
+            allowOne:function(bool){
+                if(bool == undefined){
+                    return state.allowOne;
+                }
+                state.allowOne = bool;
+                object.elements.checkbox_image.allowOne.set(bool);
+            },
+            exponentialMode:function(bool){
+                if(bool == undefined){
+                    return state.exponentialMode;
+                }
+                state.exponentialMode = bool;
+                object.elements.checkbox_image.exponentialMode.set(bool);
             },
         };
 
@@ -88,12 +142,16 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
         object.exportData = function(){
             return {
                 gain:state.gain,
-                sharpness:state.sharpness,
+                sharpnessDial:state.sharpnessDial,
+                allowOne:state.allowOne,
+                exponentialMode:state.exponentialMode,
             };
         };
         object.importData = function(data){
             object.elements.dial_continuous_image.gain.set(data.gain);
-            object.elements.dial_continuous_image.sharpness.set(data.sharpness);
+            object.elements.dial_continuous_image.sharpness.set(data.sharpnessDial);
+            object.elements.checkbox_image.allowOne.set(data.allowOne);
+            object.elements.checkbox_image.exponentialMode.set(data.exponentialMode);
         };
         
     return object;

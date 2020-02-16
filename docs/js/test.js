@@ -72,7 +72,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:12} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:15} };
             const library = this;
         
             this.go = new function(){
@@ -335,6 +335,38 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                         return curve;
                     };
+                    this.halfSigmoid_up = function(stepCount=2, start=0, end=1, sharpness=0.5){
+                        dev.log.math('.curveGenerator.halfSigmoid_up(',stepCount,start,end,sharpness); //#development
+                        dev.count('.math.curveGenerator.halfSigmoid_up'); //#development
+                        if(sharpness < 0){sharpness = 0;}
+                        if(sharpness > 1){sharpness = 1;}
+                
+                        let curve = [];
+                
+                        stepCount--;
+                        for(let a = 0; a <= stepCount; a++){
+                            const x = a/stepCount;
+                            curve.push( library.math.curvePoint.halfSigmoid_up(x,start,end,sharpness) );
+                        }
+                
+                        return curve;
+                    };
+                    this.halfSigmoid_down = function(stepCount=2, start=0, end=1, sharpness=0.5){
+                        dev.log.math('.curveGenerator.halfSigmoid_down(',stepCount,start,end,sharpness); //#development
+                        dev.count('.math.curveGenerator.halfSigmoid_down'); //#development
+                        if(sharpness < 0){sharpness = 0;}
+                        if(sharpness > 1){sharpness = 1;}
+                
+                        let curve = [];
+                
+                        stepCount--;
+                        for(let a = 0; a <= stepCount; a++){
+                            const x = a/stepCount;
+                            curve.push( library.math.curvePoint.halfSigmoid_down(x,start,end,sharpness) );
+                        }
+                
+                        return curve;
+                    };
                     this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
                         dev.log.math('.curveGenerator.exponential(',stepCount,start,end,sharpness); //#development
                         dev.count('.math.curveGenerator.exponential'); //#development
@@ -391,6 +423,18 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         dev.count('.math.curvePoint.sigmoid'); //#development
                 
                         return ( 0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2 ) *(end-start)+start;
+                    };
+                    this.halfSigmoid_up = function(x=0.5, start=0, end=1, sharpness=0.5){
+                        dev.log.math('.curvePoint.halfSigmoid_up(',x,start,end,sharpness); //#development
+                        dev.count('.math.curvePoint.halfSigmoid_up'); //#development
+                
+                        return (x / ( 1 - sharpness + sharpness*Math.abs(x))) *(end-start)+start;
+                    };
+                    this.halfSigmoid_down = function(x=0.5, start=0, end=1, sharpness=0.5){
+                        dev.log.math('.curvePoint.halfSigmoid_down(',x,start,end,sharpness); //#development
+                        dev.count('.math.curvePoint.halfSigmoid_down'); //#development
+                
+                        return library.math.curvePoint.halfSigmoid_up(1-x,end,start,sharpness);
                     };
                     this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
                         dev.log.math('.curvePoint.exponential(',x,start,end,sharpness); //#development
@@ -3724,7 +3768,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
                             break;
                             case 'instant': default:
-                                audioParam.setTargetAtTime(target, context.currentTime, 0.01);
+                                // audioParam.setTargetAtTime(target, context.currentTime, 0.01);
+                                audioParam.setValueAtTime(target, 0);
                             break;
                         }
                     }catch(e){
@@ -4560,7 +4605,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 
                                         for(let channel = 0; channel < input_1.length; channel++){    
                                             for(let a = 0; a < output_1[channel].length; a++){
-                                                output_1[channel][a] = input_1[channel][a] * (input_2[channel][a]+1)/2;
+                                                // output_1[channel][a] = input_1[channel][a] * (input_2[channel][a]+1)/2;
+                                                output_1[channel][a] = input_1[channel][a] * input_2[channel][a];
                                             }
                                         }
                                 
@@ -24690,7 +24736,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:11} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:14} };
             const interface = this;
         
             const dev = {
@@ -25988,232 +26034,448 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         };
                 };
 
-                this.synthesizer = function(
-                    context,
-                    waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-                    gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
-                    attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-                    octave=0,
-                    detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
-                ){
-                    //flow chain
-                        const flow = {
-                            OSCmaker:{},
-                            liveOscillators: {},
-                            wobbler_detune: {},
-                            aggregator: {},
-                            wobbler_gain: {},
-                            mainOut: {}
-                        };
+                // this.synthesizer = function(
+                //     context,
+                //     waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+                //     gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
+                //     attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                //     octave=0,
+                //     detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
+                // ){
+                //     //flow chain
+                //         const flow = {
+                //             OSCmaker:{},
+                //             liveOscillators: {},
+                //             wobbler_detune: {},
+                //             aggregator: {},
+                //             wobbler_gain: {},
+                //             mainOut: {}
+                //         };
                 
                 
-                        flow.OSCmaker.waveType = waveType;
-                        flow.OSCmaker.periodicWave = periodicWave;
-                        flow.OSCmaker.attack = attack;
-                        flow.OSCmaker.release = release;
-                        flow.OSCmaker.octave  = octave;
-                        flow.OSCmaker.detune  = detune;
-                        flow.OSCmaker.func = function(
-                            context, connection, midinumber,
-                            type, periodicWave, 
-                            gain, attack, release,
-                            detune, octave
-                        ){
-                            return new function(){
-                                this.generator = context.createOscillator();
-                                    if(type == 'custom'){ 
-                                        this.generator.setPeriodicWave(
-                                            context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
-                                        ); 
-                                    }else{ this.generator.type = type; }
-                                    this.generator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
-                                    this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
-                                    this.generator.start(0);
+                //         flow.OSCmaker.waveType = waveType;
+                //         flow.OSCmaker.periodicWave = periodicWave;
+                //         flow.OSCmaker.attack = attack;
+                //         flow.OSCmaker.release = release;
+                //         flow.OSCmaker.octave  = octave;
+                //         flow.OSCmaker.detune  = detune;
+                //         flow.OSCmaker.func = function(
+                //             context, connection, midinumber,
+                //             type, periodicWave, 
+                //             gain, attack, release,
+                //             detune, octave
+                //         ){
+                //             return new function(){
+                //                 this.generator = context.createOscillator();
+                //                     if(type == 'custom'){ 
+                //                         this.generator.setPeriodicWave(
+                //                             context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                //                         ); 
+                //                     }else{ this.generator.type = type; }
+                //                     this.generator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
+                //                     this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                //                     this.generator.start(0);
                 
-                                this.gain = context.createGain();
-                                this.generator.connect(this.gain);
-                                this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                                _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
-                                this.gain.connect(connection);
+                //                 this.gain = context.createGain();
+                //                 this.generator.connect(this.gain);
+                //                 this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                //                 _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                //                 this.gain.connect(connection);
                 
-                                this.detune = function(target,time,curve){
-                                    _canvas_.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
-                                };
-                                this.changeVelocity = function(a){
-                                    _canvas_.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
-                                };
-                                this.stop = function(){
-                                    _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve);
-                                    setTimeout(function(that){
-                                        that.gain.disconnect(); 
-                                        that.generator.stop(); 
-                                        that.generator.disconnect(); 
-                                        that.gain=null; 
-                                        that.generator=null; 
-                                        that=null;
-                                    }, release.time*1000, this);
-                                };
-                            };
-                        };
-                
-                
-                        flow.wobbler_detune.depth = detuneWobbleDepth;
-                        flow.wobbler_detune.period = detuneWobblePeriod;
-                        flow.wobbler_detune.phase = true;
-                        flow.wobbler_detune.wave = 's';
-                        flow.wobbler_detune.interval = null;
-                        flow.wobbler_detune.start = function(){
-                            if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
-                            flow.wobbler_detune.interval = setInterval(function(){
-                                const OSCs = Object.keys(flow.liveOscillators);
-                                if(flow.wobbler_detune.phase){
-                                    for(let b = 0; b < OSCs.length; b++){ 
-                                        flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
-                                    }
-                                }else{
-                                    for(let b = 0; b < OSCs.length; b++){ 
-                                        flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
-                                    }
-                                }
-                                flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
-                            }, 1000*flow.wobbler_detune.period);
-                        };
-                        flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
+                //                 this.detune = function(target,time,curve){
+                //                     _canvas_.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
+                //                 };
+                //                 this.changeVelocity = function(a){
+                //                     _canvas_.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
+                //                 };
+                //                 this.stop = function(){
+                //                     _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve);
+                //                     setTimeout(function(that){
+                //                         that.gain.disconnect(); 
+                //                         that.generator.stop(); 
+                //                         that.generator.disconnect(); 
+                //                         that.gain=null; 
+                //                         that.generator=null; 
+                //                         that=null;
+                //                     }, release.time*1000, this);
+                //                 };
+                //             };
+                //         };
                 
                 
-                        flow.aggregator.node = context.createGain();    
-                        flow.aggregator.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                //         flow.wobbler_detune.depth = detuneWobbleDepth;
+                //         flow.wobbler_detune.period = detuneWobblePeriod;
+                //         flow.wobbler_detune.phase = true;
+                //         flow.wobbler_detune.wave = 's';
+                //         flow.wobbler_detune.interval = null;
+                //         flow.wobbler_detune.start = function(){
+                //             if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
+                //             flow.wobbler_detune.interval = setInterval(function(){
+                //                 const OSCs = Object.keys(flow.liveOscillators);
+                //                 if(flow.wobbler_detune.phase){
+                //                     for(let b = 0; b < OSCs.length; b++){ 
+                //                         flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                //                     }
+                //                 }else{
+                //                     for(let b = 0; b < OSCs.length; b++){ 
+                //                         flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                //                     }
+                //                 }
+                //                 flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
+                //             }, 1000*flow.wobbler_detune.period);
+                //         };
+                //         flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
                 
                 
-                        flow.wobbler_gain.depth = gainWobbleDepth;
-                        flow.wobbler_gain.period = gainWobblePeriod;
-                        flow.wobbler_gain.phase = true;
-                        flow.wobbler_gain.wave = 's';
-                        flow.wobbler_gain.interval = null;
-                        flow.wobbler_gain.start = function(){
-                            if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
-                                _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
-                                return;
-                            }
-                            flow.wobbler_gain.interval = setInterval(function(){
-                                if(flow.wobbler_gain.phase){ _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
-                                else{                        _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
-                                flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
-                            }, 1000*flow.wobbler_gain.period);
-                        };
-                        flow.wobbler_gain.stop = function(){clearInterval(flow.wobbler_gain.interval);};
-                        flow.wobbler_gain.node = context.createGain();
-                        flow.wobbler_gain.node.gain.setTargetAtTime(1, context.currentTime, 0);
-                        flow.aggregator.node.connect(flow.wobbler_gain.node);
+                //         flow.aggregator.node = context.createGain();    
+                //         flow.aggregator.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                
+                
+                //         flow.wobbler_gain.depth = gainWobbleDepth;
+                //         flow.wobbler_gain.period = gainWobblePeriod;
+                //         flow.wobbler_gain.phase = true;
+                //         flow.wobbler_gain.wave = 's';
+                //         flow.wobbler_gain.interval = null;
+                //         flow.wobbler_gain.start = function(){
+                //             if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
+                //                 _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
+                //                 return;
+                //             }
+                //             flow.wobbler_gain.interval = setInterval(function(){
+                //                 if(flow.wobbler_gain.phase){ _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                //                 else{                        _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                //                 flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
+                //             }, 1000*flow.wobbler_gain.period);
+                //         };
+                //         flow.wobbler_gain.stop = function(){clearInterval(flow.wobbler_gain.interval);};
+                //         flow.wobbler_gain.node = context.createGain();
+                //         flow.wobbler_gain.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                //         flow.aggregator.node.connect(flow.wobbler_gain.node);
                 
                         
-                        flow.mainOut.gain = gain;
-                        flow.mainOut.node = context.createGain();
-                        flow.mainOut.node.gain.setTargetAtTime(gain, context.currentTime, 0);
-                        flow.wobbler_gain.node.connect(flow.mainOut.node);
+                //         flow.mainOut.gain = gain;
+                //         flow.mainOut.node = context.createGain();
+                //         flow.mainOut.node.gain.setTargetAtTime(gain, context.currentTime, 0);
+                //         flow.wobbler_gain.node.connect(flow.mainOut.node);
+                
+                //     //output node
+                //         this.out = function(){return flow.mainOut.node;}
+                
+                //     //controls
+                //         this.perform = function(note){
+                //             if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+                //             else if( !flow.liveOscillators[note.num] && note.velocity != 0 ){ 
+                //                 //create new tone
+                //                 flow.liveOscillators[note.num] = flow.OSCmaker.func(
+                //                     context, 
+                //                     flow.aggregator.node, 
+                //                     note.num, 
+                //                     flow.OSCmaker.waveType, 
+                //                     flow.OSCmaker.periodicWave, 
+                //                     note.velocity, 
+                //                     flow.OSCmaker.attack, 
+                //                     flow.OSCmaker.release, 
+                //                     flow.OSCmaker.detune, 
+                //                     flow.OSCmaker.octave
+                //                 );
+                //             }
+                //             else if( note.velocity == 0 ){ 
+                //                 //stop and destroy tone
+                //                 flow.liveOscillators[note.num].stop();
+                //                 delete flow.liveOscillators[note.num];
+                //             }
+                //             else{
+                //                 //adjust tone
+                //                 flow.liveOscillators[note.num].changeVelocity(note.velocity);
+                //             }
+                //         };
+                //         this.panic = function(){
+                //             const OSCs = Object.keys(flow.liveOscillators);
+                //             for(let a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                //         };
+                //         this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
+                //         this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
+                //         this.gain = function(target,time,curve){ return _canvas_.library.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
+                //         this.attack = function(time,curve){
+                //             if(time==null&&curve==null){return flow.OSCmaker.attack;}
+                //             flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;
+                //             flow.OSCmaker.attack.curve = curve ? curve : flow.OSCmaker.attack.curve;
+                //         };
+                //         this.release = function(time,curve){
+                //             if(time==null&&curve==null){return flow.OSCmaker.release;}
+                //             flow.OSCmaker.release.time = time ? time : flow.OSCmaker.release.time;
+                //             flow.OSCmaker.release.curve = curve ? curve : flow.OSCmaker.release.curve;
+                //         };
+                //         this.octave = function(a){if(a==null){return flow.OSCmaker.octave;}flow.OSCmaker.octave=a;};
+                //         this.detune = function(target,time,curve){
+                //             if(target==null){return flow.OSCmaker.detune;}
+                
+                //             //change stored value for any new oscillators that are made
+                //                 const start = flow.OSCmaker.detune;
+                //                 const mux = target-start;
+                //                 const stepsPerSecond = Math.round(Math.abs(mux));
+                //                 const totalSteps = stepsPerSecond*time;
+                
+                //                 let steps = [1];
+                //                 switch(curve){
+                //                     case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
+                //                     case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
+                //                     case 's': steps = system.utility.math.curveGenerator.s(totalSteps,8); break;
+                //                     case 'instant': default: break;
+                //                 }
+                                
+                //                 if(steps.length != 0){
+                //                     const interval = setInterval(function(){
+                //                         flow.OSCmaker.detune = start+(steps.shift()*mux);
+                //                         if(steps.length == 0){clearInterval(interval);}
+                //                     },1000/stepsPerSecond);
+                //                 }
+                
+                //             //instruct liveOscillators to adjust their values
+                //                 const OSCs = Object.keys(flow.liveOscillators);
+                //                 for(let b = 0; b < OSCs.length; b++){ 
+                //                     flow.liveOscillators[OSCs[b]].detune(target,time,curve);
+                //                 }
+                //         };
+                //         this.gainWobbleDepth = function(value){
+                //             if(value==null){return flow.wobbler_gain.depth; }
+                //             flow.wobbler_gain.depth = value;
+                //             flow.wobbler_gain.stop();
+                //             flow.wobbler_gain.start();
+                //         };
+                //         this.gainWobblePeriod = function(value){
+                //             if(value==null){return flow.wobbler_gain.period; }
+                //             flow.wobbler_gain.period = value;
+                //             flow.wobbler_gain.stop();
+                //             flow.wobbler_gain.start();
+                //         };
+                //         this.detuneWobbleDepth = function(value){
+                //             if(value==null){return flow.wobbler_detune.depth; }
+                //             flow.wobbler_detune.depth = value;
+                //             flow.wobbler_detune.stop();
+                //             flow.wobbler_detune.start();
+                //         };
+                //         this.detuneWobblePeriod = function(value){
+                //             if(value==null){return flow.wobbler_detune.period; }
+                //             flow.wobbler_detune.period = value;
+                //             flow.wobbler_detune.stop();
+                //             flow.wobbler_detune.start();
+                //         };
+                // };
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                this.synthesizer = function(
+                    context,
+                    waveType='sine', periodicWave={'sin':[0,1,0], 'cos':[0,0,1]}, 
+                    gain=1, octave=0, detune=0,
+                    attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                    gainWobble={depth:0, period:1, periodMin:0.01, periodMax:1},
+                    detuneWobble={depth:0, period:1, periodMin:0.01, periodMax:1},
+                ){
+                    function createOscillator(){
+                        const data = {
+                            oscillator: context.createOscillator(),
+                            gain: context.createGain(),
+                            // active: false,
+                        };
+                
+                        data.oscillator.connect(data.gain);
+                        data.oscillator.start(0);
+                        _canvas_.library.audio.changeAudioParam(context, data.gain.gain, 0, 0, 'instant');
+                        return data;
+                    }
+                
+                    //flow chain
+                        const flow = {
+                            oscillators: [],
+                            aggregator: {},
+                            LFO: {},
+                            amplitudeModifier: {},
+                            amplitudeControlledModulator: {},
+                        };
+                
+                    //flow
+                        flow.oscillators[0] = createOscillator();
+                
+                        flow.aggregator.node = context.createGain();    
+                        flow.aggregator.node.gain.setTargetAtTime(gain, context.currentTime, 0);
+                        flow.oscillators[0].gain.connect(flow.aggregator.node);
+                
+                        flow.LFO = {
+                            oscillator: context.createOscillator(),
+                            gain: context.createGain(),
+                        };
+                        flow.LFO.oscillator.start(0);
+                        flow.LFO.oscillator.frequency.setTargetAtTime(1/gainWobble.period, context.currentTime, 0);
+                        flow.LFO.gain.gain.setTargetAtTime(gainWobble.depth, context.currentTime, 0);
+                        flow.LFO.oscillator.connect(flow.LFO.gain);
+                
+                        flow.amplitudeModifier = new _canvas_.library.audio.audioWorklet.amplitudeModifier(_canvas_.library.audio.context);
+                        flow.LFO.gain.connect(flow.amplitudeModifier);
+                        flow.amplitudeModifier.divisor.setTargetAtTime(2, context.currentTime, 0);
+                        flow.amplitudeModifier.offset.setTargetAtTime(1 - gainWobble.depth/2, context.currentTime, 0);
+                
+                        flow.amplitudeControlledModulator.node = new _canvas_.library.audio.audioWorklet.amplitudeControlledModulator(_canvas_.library.audio.context);
+                        flow.aggregator.node.connect(flow.amplitudeControlledModulator.node,undefined,0);
+                        flow.amplitudeModifier.connect(flow.amplitudeControlledModulator.node,undefined,1);
                 
                     //output node
-                        this.out = function(){return flow.mainOut.node;}
-                
+                        this.out = function(){
+                            return flow.amplitudeControlledModulator.node;
+                        }
+                    
                     //controls
                         this.perform = function(note){
-                            if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-                            else if( !flow.liveOscillators[note.num] && note.velocity != 0 ){ 
-                                //create new tone
-                                flow.liveOscillators[note.num] = flow.OSCmaker.func(
-                                    context, 
-                                    flow.aggregator.node, 
-                                    note.num, 
-                                    flow.OSCmaker.waveType, 
-                                    flow.OSCmaker.periodicWave, 
-                                    note.velocity, 
-                                    flow.OSCmaker.attack, 
-                                    flow.OSCmaker.release, 
-                                    flow.OSCmaker.detune, 
-                                    flow.OSCmaker.octave
-                                );
-                            }
-                            else if( note.velocity == 0 ){ 
-                                //stop and destroy tone
-                                flow.liveOscillators[note.num].stop();
-                                delete flow.liveOscillators[note.num];
-                            }
-                            else{
-                                //adjust tone
-                                flow.liveOscillators[note.num].changeVelocity(note.velocity);
-                            }
+                            //find the oscillator for this note (if there is one)
+                                const oscillator = flow.oscillators.filter(oscillator => oscillator.noteNumber == note.num)[0];
+                
+                                if( oscillator != undefined && note.velocity == 0 ){ 
+                                //tone stopping
+                                    _canvas_.library.audio.changeAudioParam(context, oscillator.gain.gain, 0, release.time, release.curve);
+                                    oscillator.stoppingTimeout = setTimeout(function(){
+                                        oscillator.noteNumber = undefined;
+                                    }, release.time*1000);
+                                }else if( oscillator != undefined ){
+                                //tone velocity adjustment (not done)
+                                    clearTimeout(oscillator.stoppingTimeout);
+                                    _canvas_.library.audio.changeAudioParam(context, oscillator.gain.gain, note.velocity, 0, 'instant');
+                                    oscillator.stoppingTimeout = undefined;
+                                }else if( oscillator == undefined && note.velocity == 0 ){ 
+                                    //don't do anything
+                                }else{
+                                //fresh tone
+                                    //get free oscillators
+                                        const freeOscillators = flow.oscillators.filter(oscillator => oscillator.noteNumber == undefined);
+                                        
+                                    //maintain oscillator pool
+                                        if( freeOscillators.length < 1 ){
+                                            const tmpOSC = createOscillator();
+                                            tmpOSC.gain.connect(flow.aggregator.node);
+                                            flow.oscillators.push(tmpOSC);
+                                        }
+                
+                                    //select oscillator
+                                        const freshOscillator = freeOscillators.length == 0;
+                                        const oscillatorToUse = freshOscillator ? flow.oscillators[flow.oscillators.length-1] : freeOscillators[0];
+                
+                                    //activate oscillator
+                                        if(waveType == 'custom'){
+                                            oscillatorToUse.oscillator.setPeriodicWave(
+                                                context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                            );
+                                        }else{
+                                            oscillatorToUse.oscillator.type = waveType;
+                                        }
+                                        oscillatorToUse.oscillator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(note.num+12*octave), context.currentTime, 0);
+                                        oscillatorToUse.noteNumber = note.num;
+                                        oscillatorToUse.oscillator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                        _canvas_.library.audio.changeAudioParam(context, oscillatorToUse.gain.gain, note.velocity, attack.time, attack.curve, !freshOscillator);
+                                }
                         };
                         this.panic = function(){
-                            const OSCs = Object.keys(flow.liveOscillators);
-                            for(let a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                            flow.oscillators.map(a => a.noteNumber).forEach(a => {
+                                this.perform({num:a,velocity:0});
+                            });
                         };
-                        this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
-                        this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
-                        this.gain = function(target,time,curve){ return _canvas_.library.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
+                        this.waveType = function(type,periodicWaveData){
+                            if(type == undefined && periodicWaveData == undefined){return { type:waveType, periodicWave:periodicWaveData };}
+                
+                            if(type != undefined){
+                                waveType = type;
+                            }
+                            if(periodicWaveData != undefined){
+                                periodicWave = periodicWaveData;
+                            }
+                
+                            if(type == 'custom'){
+                                flow.oscillators.forEach(oscillator => {
+                                    oscillator.oscillator.setPeriodicWave(
+                                        context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                    );
+                                });
+                            }else{
+                                flow.oscillators.forEach(oscillator => {
+                                    oscillator.oscillator.type = waveType;
+                                });
+                            }
+                        };
+                        this.gain = function(target){
+                            flow.aggregator.node.gain.setTargetAtTime(target, context.currentTime, 0);
+                        };
+                        this.octave = function(o){
+                            if(o == null){return octave;}
+                            octave = o;
+                            flow.oscillators.forEach(oscillator => {
+                                if(oscillator.noteNumber == undefined){return;}
+                                oscillator.oscillator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(oscillator.noteNumber+12*octave), context.currentTime, 0);
+                            });
+                        };
+                        this.detune = function(target){
+                            if(target == null){return detune;}
+                            detune = target;
+                            flow.oscillators.forEach(oscillator => {
+                                oscillator.oscillator.detune.setTargetAtTime(target, context.currentTime, 0);
+                            });
+                        };
                         this.attack = function(time,curve){
-                            if(time==null&&curve==null){return flow.OSCmaker.attack;}
-                            flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;
-                            flow.OSCmaker.attack.curve = curve ? curve : flow.OSCmaker.attack.curve;
+                            if( time == undefined && curve == undefined ){ return {time:attack.time, curve:attack.curve}; }
+                            if(time != undefined){ attack.time = time; }
+                            if(curve != undefined){ attack.curve = curve; }
                         };
                         this.release = function(time,curve){
-                            if(time==null&&curve==null){return flow.OSCmaker.release;}
-                            flow.OSCmaker.release.time = time ? time : flow.OSCmaker.release.time;
-                            flow.OSCmaker.release.curve = curve ? curve : flow.OSCmaker.release.curve;
+                            if( time == undefined && curve == undefined ){ return {time:release.time, curve:release.curve}; }
+                            if(time != undefined){ release.time = time; }
+                            if(curve != undefined){ release.curve = curve; }
                         };
-                        this.octave = function(a){if(a==null){return flow.OSCmaker.octave;}flow.OSCmaker.octave=a;};
-                        this.detune = function(target,time,curve){
-                            if(target==null){return flow.OSCmaker.detune;}
                 
-                            //change stored value for any new oscillators that are made
-                                const start = flow.OSCmaker.detune;
-                                const mux = target-start;
-                                const stepsPerSecond = Math.round(Math.abs(mux));
-                                const totalSteps = stepsPerSecond*time;
-                
-                                let steps = [1];
-                                switch(curve){
-                                    case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
-                                    case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
-                                    case 's': steps = system.utility.math.curveGenerator.s(totalSteps,8); break;
-                                    case 'instant': default: break;
-                                }
-                                
-                                if(steps.length != 0){
-                                    const interval = setInterval(function(){
-                                        flow.OSCmaker.detune = start+(steps.shift()*mux);
-                                        if(steps.length == 0){clearInterval(interval);}
-                                    },1000/stepsPerSecond);
-                                }
-                
-                            //instruct liveOscillators to adjust their values
-                                const OSCs = Object.keys(flow.liveOscillators);
-                                for(let b = 0; b < OSCs.length; b++){ 
-                                    flow.liveOscillators[OSCs[b]].detune(target,time,curve);
-                                }
-                        };
                         this.gainWobbleDepth = function(value){
-                            if(value==null){return flow.wobbler_gain.depth; }
-                            flow.wobbler_gain.depth = value;
-                            flow.wobbler_gain.stop();
-                            flow.wobbler_gain.start();
+                            if(value == null){return gainWobble.depth; }
+                            if(value < 0){ value = 0; }
+                            else if(value > 1){ value = 1; }
+                            gainWobble.depth = value;
+                            flow.LFO.gain.gain.setTargetAtTime(value, context.currentTime, 0);
+                            flow.amplitudeModifier.offset.setTargetAtTime(1 - gainWobble.depth/2, context.currentTime, 0);
                         };
-                        this.gainWobblePeriod = function(value){
-                            if(value==null){return flow.wobbler_gain.period; }
-                            flow.wobbler_gain.period = value;
-                            flow.wobbler_gain.stop();
-                            flow.wobbler_gain.start();
+                        this.gainWobblePeriod = function(value){ console.log(value);
+                            if(value == null){return gainWobble.period; }
+                            if(value < gainWobble.periodMin){ value = gainWobble.periodMin; }
+                            else if(value > gainWobble.periodMax){ value = gainWobble.periodMax; }
+                            gainWobble.period = value;
+                            flow.LFO.oscillator.frequency.setTargetAtTime(1/value, context.currentTime, 0);
                         };
                         this.detuneWobbleDepth = function(value){
-                            if(value==null){return flow.wobbler_detune.depth; }
-                            flow.wobbler_detune.depth = value;
-                            flow.wobbler_detune.stop();
-                            flow.wobbler_detune.start();
+                            if(value == null){return detuneWobble.depth; }
+                            if(value < 0){ value = 0; }
+                            else if(value > 1){ value = 1; }
+                            detuneWobble.depth = value;
+                            // to do //
                         };
                         this.detuneWobblePeriod = function(value){
-                            if(value==null){return flow.wobbler_detune.period; }
-                            flow.wobbler_detune.period = value;
-                            flow.wobbler_detune.stop();
-                            flow.wobbler_detune.start();
+                            if(value == null){return detuneWobble.period; }
+                            if(value < detuneWobble.periodMin){ value = detuneWobble.periodMin; }
+                            else if(value > detuneWobble.periodMax){ value = detuneWobble.periodMax; }
+                            detuneWobble.period = value;
+                            // to do //
+                        };
+                
+                        this._dump = function(){
+                            console.log( 'waveType:',waveType );
+                            console.log( 'gain:',gain );
+                            console.log( 'octave:',octave );
+                            console.log( 'detune:',detune );
+                            console.log( 'attack:',attack );
+                            console.log( 'release:',release );
+                            flow.oscillators.forEach((oscillator,index) => {
+                                console.log( 'flow.oscillators['+index+']', oscillator );
+                            });
+                            console.log( 'flow.aggregator:', flow.aggregator );
                         };
                 };
             };
@@ -41535,7 +41797,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         } );
 
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:11 } };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:15 } };
             this.go = new function(){
                 const functionList = [];
         
@@ -43905,7 +44167,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             };
                             object.io.data.io_periodicWaveType_dataIn.onreceive = function(address,data){
                                 if(address != 'periodicWave'){return;}
-                                synthesizerCircuit.periodicWave(data);
+                                synthesizerCircuit.waveType(undefined, data);
                             };
                             object.io.voltage.io_outputGain.onchange = function(value){
                                 object.elements.dial_2_continuous.outputGain.set(value);
@@ -50620,6 +50882,177 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         },
                     },
                 };
+                this['amplitude_controlled_modulator'] = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
+                                this.imageStoreURL_localPrefix = imageStoreURL+'amplitude_controlled_modulator/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:775, height:675 },
+                                    design: { width:7.75, height:6.75 },
+                                };
+                
+                                this.offset = {x:0,y:0};
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                        };
+                
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'amplitude_controlled_modulator',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'ext', data:{ 
+                                    x:45 + 15/2, y:6.75*10, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6.75*5 - 15/2, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                    x:0, y:6.75*5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                },
+                
+                                {collection:'control', type:'checkbox_image', name:'mode', data:{
+                                    x:2.5, y:44.5, width:10, height:20,
+                                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png', 
+                                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'LFO_freq', data:{
+                                    x:20, y:24, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:1/3, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'LFO_gain', data:{
+                                    x:45, y:32.5, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, resetValue:1, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'ext_gain', data:{
+                                    x:45, y:55, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, resetValue:1, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_small.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'LFO_wave_sine', data:{
+                                    x:37.2, y:5.7, width:15/2, height:15/2,
+                                    uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_sine_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_localPrefix+'button_sine_down.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'LFO_wave_triangle', data:{
+                                    x:45.3, y:5.7, width:15/2, height:15/2,
+                                    uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_triangle_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_localPrefix+'button_triangle_down.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'LFO_wave_square', data:{
+                                    x:37.2, y:13.73, width:15/2, height:15/2,
+                                    uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_square_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_localPrefix+'button_square_down.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'LFO_wave_sawtooth', data:{
+                                    x:45.3, y:13.73, width:15/2, height:15/2,
+                                    uncheckURL:unitStyle.imageStoreURL_localPrefix+'button_sawtooth_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_localPrefix+'button_sawtooth_down.png',
+                                }},
+                            ]
+                        });
+                
+                    //circuitry
+                        const state = {
+                            LFO_freq: 0,
+                            LFO_freq_dial: 0,
+                            LFO_gain: 0,
+                            LFO_wave: undefined,
+                            mode: false,
+                        };
+                        function selectWave(wave){
+                            if(wave == state.LFO_wave){ return; }
+                            [ 'sine', 'triangle', 'square', 'sawtooth' ].filter(a => a!=wave).forEach(a => {
+                                object.elements.checkbox_image['LFO_wave_'+a].set(false,false);
+                            });
+                        }
+                
+                    //wiring
+                        //hid
+                            object.elements.dial_continuous_image.LFO_freq.onchange = function(value){
+                                state.LFO_freq = _canvas_.library.math.curvePoint.exponential(value,0.1,100,6.907755278982135);
+                                state.LFO_freq_dial = value;
+                            };
+                            object.elements.dial_continuous_image.LFO_gain.onchange = function(value){
+                                state.LFO_gain = value;
+                            };
+                            object.elements.dial_continuous_image.ext_gain.onchange = function(value){
+                                state.ext_gain = value;
+                            };
+                            object.elements.checkbox_image.mode.onchange = function(value){
+                                state.mode = value;
+                            };
+                
+                            object.elements.checkbox_image.LFO_wave_sine.onchange = function(value){
+                                if(value == false){
+                                    object.elements.checkbox_image.LFO_wave_sine.set(true,false);
+                                    return;
+                                }
+                                selectWave('sine');
+                            };
+                            object.elements.checkbox_image.LFO_wave_triangle.onchange = function(value){
+                                if(value == false){
+                                    object.elements.checkbox_image.LFO_wave_triangle.set(true,false);
+                                    return;
+                                }
+                                selectWave('triangle');
+                            };
+                            object.elements.checkbox_image.LFO_wave_square.onchange = function(value){
+                                if(value == false){
+                                    object.elements.checkbox_image.LFO_wave_square.set(true,false);
+                                    return;
+                                }
+                                selectWave('square');
+                            };
+                            object.elements.checkbox_image.LFO_wave_sawtooth.onchange = function(value){
+                                if(value == false){
+                                    object.elements.checkbox_image.LFO_wave_sawtooth.set(true,false);
+                                    return;
+                                }
+                                selectWave('sawtooth');
+                            };
+                            
+                        //io
+                
+                    //interface
+                        object.i = {
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                        };
+                        object.importData = function(data){
+                        };
+                
+                    //setup/tearDown
+                        object.oncreate = function(){
+                            object.elements.checkbox_image.LFO_wave_sine.set(true);
+                        };
+                
+                    return object;
+                };
+                this['amplitude_controlled_modulator'].metadata = {
+                    name:'Amplitude Controlled Modulator',
+                    category:'',
+                    helpURL:''
+                };
                 this['bitcrusher'] = function(name,x,y,angle){
                     //style data
                         const unitStyle = new function(){
@@ -50784,6 +51217,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     x:45, y:30, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:0.5, arcDistance:1.2,
                                     handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                 }},
+                                {collection:'control', type:'checkbox_image', name:'allowOne', data:{
+                                    x:8.5, y:35, width:5, height:10,
+                                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_small_down.png', 
+                                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_small_up.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'exponentialMode', data:{
+                                    x:16.5, y:35, width:5, height:10,
+                                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_small_down.png', 
+                                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_small_up.png',
+                                }},
                             ]
                         });
                 
@@ -50791,8 +51234,24 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         const state = {
                             gain:1,
                             sharpness:0,
+                            sharpnessDial:0,
+                            allowOne:false,
+                            exponentialMode:false,
+                            asCloseToOneAsIsAllowed:0.999,
                         };
                         const amplitudeExciter = new _canvas_.interface.circuit.sigmoid(_canvas_.library.audio.context);
+                        function setSharpness(value){
+                            if(state.exponentialMode){
+                                value = _canvas_.library.math.curvePoint.halfSigmoid_up( value, 0, 1, 0.75 );
+                            }
+                
+                            if(!state.allowOne && value == 1){
+                                value = state.asCloseToOneAsIsAllowed;
+                            }
+                
+                            amplitudeExciter.sharpness(value);
+                            state.sharpness = value;
+                        }
                 
                     //wiring
                         //hid
@@ -50801,8 +51260,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 state.gain = value;
                             };
                             object.elements.dial_continuous_image.sharpness.onchange = function(value){
-                                amplitudeExciter.sharpness(value);
-                                state.sharpness = value;
+                                state.sharpnessDial = value;
+                                setSharpness(value);
+                            };
+                            object.elements.checkbox_image.allowOne.onchange = function(value){
+                                state.allowOne = value;
+                                setSharpness(state.sharpnessDial);
+                            };
+                            object.elements.checkbox_image.exponentialMode.onchange = function(value){
+                                state.exponentialMode = value;
+                                setSharpness(state.sharpnessDial);
                             };
                         //io
                             object.io.audio.input.out().connect( amplitudeExciter.in() );
@@ -50811,10 +51278,30 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //interface
                         object.i = {
                             gain:function(value){
+                                if(value == undefined){
+                                    return object.elements.dial_continuous_image.gain.get();
+                                }
                                 object.elements.dial_continuous_image.gain.set(value);
                             },
                             sharpness:function(value){
+                                if(value == undefined){
+                                    return object.elements.dial_continuous_image.sharpness.get();
+                                }
                                 object.elements.dial_continuous_image.sharpness.set(value);
+                            },
+                            allowOne:function(bool){
+                                if(bool == undefined){
+                                    return state.allowOne;
+                                }
+                                state.allowOne = bool;
+                                object.elements.checkbox_image.allowOne.set(bool);
+                            },
+                            exponentialMode:function(bool){
+                                if(bool == undefined){
+                                    return state.exponentialMode;
+                                }
+                                state.exponentialMode = bool;
+                                object.elements.checkbox_image.exponentialMode.set(bool);
                             },
                         };
                 
@@ -50822,12 +51309,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         object.exportData = function(){
                             return {
                                 gain:state.gain,
-                                sharpness:state.sharpness,
+                                sharpnessDial:state.sharpnessDial,
+                                allowOne:state.allowOne,
+                                exponentialMode:state.exponentialMode,
                             };
                         };
                         object.importData = function(data){
                             object.elements.dial_continuous_image.gain.set(data.gain);
-                            object.elements.dial_continuous_image.sharpness.set(data.sharpness);
+                            object.elements.dial_continuous_image.sharpness.set(data.sharpnessDial);
+                            object.elements.checkbox_image.allowOne.set(data.allowOne);
+                            object.elements.checkbox_image.exponentialMode.set(data.exponentialMode);
                         };
                         
                     return object;
@@ -50899,8 +51390,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }},
                                 {collection:'control', type:'checkbox_image', name:'invert', data:{
                                     x:5, y:35, width:10, height:20,
-                                    uncheckURL:unitStyle.imageStoreURL_localPrefix+'switch_up.png', 
-                                    checkURL:unitStyle.imageStoreURL_localPrefix+'switch_down.png',
+                                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
                                 }},
                             ]
                         });
@@ -50987,7 +51478,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                 this._collectionData = {
                     name:'Acoustic Research',
-                    itemWidth:210,
+                    itemWidth:230,
                     categoryOrder:[
                     ],   
                 };
@@ -51263,7 +51754,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         
             // const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
             // const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
-            const sa = _canvas_.control.scene.addUnit(10,10,0,'sigmoids_affecter','acousticresearch');
+            // const sa = _canvas_.control.scene.addUnit(10,10,0,'sigmoids_affecter','acousticresearch');
+            const sa = _canvas_.control.scene.addUnit(10,10,0,'amplitude_controlled_modulator','acousticresearch');
             
         
         

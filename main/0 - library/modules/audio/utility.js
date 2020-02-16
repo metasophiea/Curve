@@ -25,7 +25,8 @@ this.changeAudioParam = function(context,audioParam,target,time,curve,cancelSche
                 audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
             break;
             case 'instant': default:
-                audioParam.setTargetAtTime(target, context.currentTime, 0.01);
+                // audioParam.setTargetAtTime(target, context.currentTime, 0.01);
+                audioParam.setValueAtTime(target, 0);
             break;
         }
     }catch(e){

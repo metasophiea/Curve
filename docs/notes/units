@@ -75,6 +75,8 @@ Harbinger
 Acoustic Research
     Bitcrusher (amplitudeResolution:1-128(10), sampleFrequency:0-7(^2)(16))
     Amplitude Modifier (invert, offset, divideBy, floor/ceiling)
+    Sigmoid's Affecter
+
     _ Amplitude Peak Attenuator
     _ Momentary Amplitude Meter
     _ White Noise Generator
@@ -127,6 +129,7 @@ future unit ideas
         Yonder Electronics
         Swift
         The Sunset Initiative / The Sunrise Initiative
+        Resistor (with that resistor-head logo)
 
         Fysical Utilities (PH.U.) : effect boxes
         CoLoUR : effect boxes

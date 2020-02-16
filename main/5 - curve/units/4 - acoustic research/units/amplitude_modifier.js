@@ -60,8 +60,8 @@ this['amplitude_modifier'] = function(name,x,y,angle){
                 }},
                 {collection:'control', type:'checkbox_image', name:'invert', data:{
                     x:5, y:35, width:10, height:20,
-                    uncheckURL:unitStyle.imageStoreURL_localPrefix+'switch_up.png', 
-                    checkURL:unitStyle.imageStoreURL_localPrefix+'switch_down.png',
+                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
                 }},
             ]
         });

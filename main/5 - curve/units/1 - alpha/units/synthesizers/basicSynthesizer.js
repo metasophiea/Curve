@@ -165,7 +165,7 @@ this.basic_synthesizer = function(name,x,y,angle){
             };
             object.io.data.io_periodicWaveType_dataIn.onreceive = function(address,data){
                 if(address != 'periodicWave'){return;}
-                synthesizerCircuit.periodicWave(data);
+                synthesizerCircuit.waveType(undefined, data);
             };
             object.io.voltage.io_outputGain.onchange = function(value){
                 object.elements.dial_2_continuous.outputGain.set(value);

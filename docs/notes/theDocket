@@ -1,4 +1,4 @@
-- sort out the custom oscillator / redo the basic synthesiser so that its not constantly creating and destroying oscillators
+- sort out the custom oscillator
 - create the amplitude peak attenuator unit 
 - create the momentary amplitude meter unit
 - create the amplitude response unit
