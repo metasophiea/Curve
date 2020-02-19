@@ -58,6 +58,7 @@ this.builder = function(design){
             {key:'voltage', name:'connectionNode_voltage'},
             {key:'data', name:'connectionNode_data'},
             {key:'audio', name:'connectionNode_audio'},
+            {key:'audio2', name:'connectionNode_audio_2'},
         ].forEach(function(type){
             if(!unit.elements[type.name]){return;}
             const keys = Object.keys(unit.elements[type.name]);

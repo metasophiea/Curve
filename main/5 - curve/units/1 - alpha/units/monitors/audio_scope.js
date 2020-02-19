@@ -72,7 +72,7 @@ this.audio_scope = function(name,x,y,angle){
                 object.elements.grapher_audioScope.waveport.refreshRate(attributes.framerate);
             };
         //io 
-            object.io.audio.input.out().connect(object.elements.grapher_audioScope.waveport.getNode());
+            object.io.audio.input.audioNode = object.elements.grapher_audioScope.waveport.getNode();
 
     //interface
         object.i = {

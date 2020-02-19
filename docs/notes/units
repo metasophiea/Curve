@@ -77,13 +77,53 @@ Acoustic Research
     Amplitude Modifier (invert, offset, divideBy, floor/ceiling)
     Sigmoid's Affecter
 
-    _ Amplitude Peak Attenuator
-    _ Momentary Amplitude Meter
+    _ Gain
+        dial gain control (0 -> 1)
+        "multiply by 10" switch (giving the above dail a 0 -> 10 range)
+        "+1" switch (giving the above dail a range one higher)
+        amplitude gain control input
+        gain control selection switch
+    _ Frequency Generator
+        frequency select (0.01hz - 20khz)(maybe all the way to 25khz)
+        4 waves; sine, square, triangle, sawtooth + custom input
+        gain (-1 -> 1)
+    _ Momentary Amplitude Meter (MAM)
+        sample rate
+        sample length
+        readout meter
     _ White Noise Generator
-    _ Amplitude Controlled Modulator (Modulon) / Rapid Amplitude Modulator (Jaggedizer)
+        gain (0 -> 1)
+        generated value range select (mirrored for both sides)
+    _ Frequency/Amplitude Response Workstation (FARworkstation)
+        over-control
+            clear
+            start
+            stop
+        generator
+            start frequency
+            end frequency
+            step size
+            time per step
+        collector
+            graph
+    _ Simple Stream Adder
+        2 input streams
+        mix selection slider
+    _ Lap Processor
+        samples to average
 
-    _ Histogram Audio Visualizer (needs better name)
-    _ Frequency Response Workstation
+
+
+
+
+
+
+
+    _? Amplitude Peak Attenuator
+    _? Amplitude Controlled Modulator (Modulon) / Rapid Amplitude Modulator (Jaggedizer)
+
+    _? Histogram Audio Visualizer (needs better name)
+    _? Frequency Response Workstation
 
 
 

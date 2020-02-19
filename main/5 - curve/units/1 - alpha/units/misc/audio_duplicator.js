@@ -57,10 +57,14 @@ this.audio_duplicator = function(name,x,y,angle){
             ]
         });
 
+    //circuitry
+        const node = _canvas_.library.audio.context.createAnalyser();
+
     //wiring
         //io
-            object.io.audio.input.out().connect( object.io.audio.output_1.in() );
-            object.io.audio.input.out().connect( object.io.audio.output_2.in() );
+            object.io.audio.input.audioNode = node;
+            object.io.audio.output_1.audioNode = node;
+            object.io.audio.output_2.audioNode = node;
 
     return object;
 };

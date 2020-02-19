@@ -96,4 +96,23 @@ _canvas_.interface.go.add( function(){
     cn_aud_0.ondisconnect = function(instigator){ console.log('%c--- cn_aud_0 disconnected as instigator', 'font-weight: bold;'); tester(true,instigator); };
     cn_aud_1.ondisconnect = function(instigator){ console.log('%c--- cn_aud_1 disconnected not as instigator', 'font-weight: bold;'); tester(false,instigator); };
     cn_aud_0.disconnect();
+    console.log('');
+    
+    
+    console.log('%c- connectionNode : Audio 2', 'font-weight: bold;');
+    var cn_aud_2_0 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode_audio_2', 'test_connectionNode_audio_2-1', { x:10, y:510, isAudioOutput:true} );
+    var cn_aud_2_1 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode_audio_2', 'test_connectionNode_audio_2-2', { x:110, y:510 } );
+    cn_aud_2_0.audioNode = _canvas_.library.audio.context.createAnalyser();
+    cn_aud_2_1.audioNode = _canvas_.library.audio.context.createAnalyser();
+    _canvas_.system.pane.mm.append( cn_aud_2_0 );
+    _canvas_.system.pane.mm.append( cn_aud_2_1 );
+    console.log('%c-- connecting', 'font-weight: bold;');
+    cn_aud_2_0.onconnect = function(instigator){ console.log('%c--- cn_aud_0 connected as instigator', 'font-weight: bold;'); tester(true,instigator); };
+    cn_aud_2_1.onconnect = function(instigator){ console.log('%c--- cn_aud_1 connected not as instigator', 'font-weight: bold;'); tester(false,instigator); };
+    cn_aud_2_0.connectTo(cn_aud_2_1);
+    console.log('%c-- disconnecting', 'font-weight: bold;');
+    cn_aud_2_0.ondisconnect = function(instigator){ console.log('%c--- cn_aud_0 disconnected as instigator', 'font-weight: bold;'); tester(true,instigator); };
+    cn_aud_2_1.ondisconnect = function(instigator){ console.log('%c--- cn_aud_1 disconnected not as instigator', 'font-weight: bold;'); tester(false,instigator); };
+    cn_aud_2_0.disconnect();
+    console.log('');
 });

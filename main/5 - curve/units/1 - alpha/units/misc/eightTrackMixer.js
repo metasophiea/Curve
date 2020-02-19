@@ -79,6 +79,8 @@ this.eightTrackMixer = function(name,x,y,angle){
         });
 
     //circuitry
+        const outLeft = _canvas_.library.audio.context.createAnalyser();
+        const outRight = _canvas_.library.audio.context.createAnalyser();
         const audioLanes = []
         for(let a = 0; a < 8; a++){
             audioLanes.push( new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2) );
@@ -111,10 +113,13 @@ this.eightTrackMixer = function(name,x,y,angle){
                 }(a);
             }
         //io
+            object.io.audio.output_L.audioNode = outLeft;
+            object.io.audio.output_R.audioNode = outRight;
+
             for(let a = 0; a < 8; a++){
-                object.elements.connectionNode_audio['input_'+a].out().connect(audioLanes[a].in());
-                audioLanes[a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
-                audioLanes[a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
+                object.io.audio['input_'+a].audioNode = audioLanes[a].in();
+                audioLanes[a].out(0).connect( outLeft );
+                audioLanes[a].out(1).connect( outRight );
             }
 
     //interface

@@ -23,49 +23,25 @@ this['test_a'] = function(name,x,y,angle){
                 
                 {collection:'basic', type:'rectangle', name:'backing', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
 
-                {collection:'control', type:'dial_discrete', name:'a', data:{
-                    x:20, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
-                }},
-                {collection:'control', type:'dial_discrete', name:'b', data:{
-                    x:40, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:10, arcDistance:1.2, optionCount:21,
-                }},
-                {collection:'control', type:'dial_continuous', name:'c', data:{
+                {collection:'control', type:'dial_continuous', name:'a', data:{
                     x:60, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
-                }},
-                {collection:'control', type:'dial_continuous', name:'d', data:{
-                    x:20, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                }},
-                {collection:'control', type:'dial_continuous', name:'e', data:{
-                    x:40, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2, resetValue:0.5,
                 }},
             ]
         });
 
     //circuitry
-        const AM = new _canvas_.interface.circuit.amplitudeModifier(_canvas_.library.audio.context);
+        const LP = new _canvas_.library.audio.audioWorklet.lagProcessor(_canvas_.library.audio.context);
 
     //wiring
         //hid
-            object.elements.dial_discrete.a.onchange = function(value){
-                AM.invert(value!=0);
-            };
-            object.elements.dial_discrete.b.onchange = function(value){
-                AM.offset(value/10 - 1);
-            };
-            object.elements.dial_continuous.c.onchange = function(value){
-                AM.divisor(value+1);
-            };
-            object.elements.dial_continuous.d.onchange = function(value){
-                AM.floor(value*20 - 10);
-            };
-            object.elements.dial_continuous.e.onchange = function(value){
-                AM.ceiling(value*20 - 10);
+            object.elements.dial_continuous.a.onchange = function(value){
+                LP.samples.setValueAtTime(Math.round(1 + value*999), _canvas_.library.audio.context.currentTime);
             };
 
         //keycapture
         //io
-            object.io.audio.input_1.out().connect( AM.in() );
-            AM.out().connect(object.io.audio.output.in());
+            object.io.audio.input_1.audioNode = LP;
+            object.io.audio.output.audioNode = LP;
 
     //interface
         object.i = {
@@ -86,7 +62,7 @@ this['test_a'] = function(name,x,y,angle){
     return object;
 };
 this['test_a'].metadata = {
-    name:'amplitudeModifier',
+    name:'test a',
     category:'',
     helpURL:''
 };

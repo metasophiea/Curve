@@ -1,3 +1,7 @@
+Chrome Bugs
+    Garbage collection causes other threads to stop (causing the audio thread to glitch)
+        https://bugs.chromium.org/p/chromium/issues/detail?id=836306
+
 webASM
     Emscripten Documentation
         https://emscripten.org/docs/

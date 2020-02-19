@@ -1,4 +1,38 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-19
+  - correct a mistake made in the modifications made to the Eight Track Mixer
+    yesterday, where as value was being incorrectly set
+  - fixed some issues with the player circuit (that I tried to improve
+    yesterday by being more proactive with deleting audio buffers..seems I 
+    was a little too excited and was having the circuit delete things that
+    never needed to be deleted)
+      Also, interestingly, the audio file player doesn't seem to play files
+    right unless at least one of the output connections is connected to 
+    something.
+
+
+2020-02-18
+  - wrote up a new audio connection node which doesn't use an internal analyser
+    node. Instead, it requires that the unit description define what audio node
+    to use, and from there the connection node manages the connections as
+    normal. All units have been updated accordingly.
+      It was written in a bid for speed, in the hope that a reduced number of
+    audio nodes would improve performance and remove those audio glitches.
+    Unfortunately that hasn't been the case, as it seems that the glitching is
+    mainly caused by garbage colletion on different threads. There's a bug
+    logged for in in the chrome site
+
+
+2020-02-17
+  - began on the "lagProcessor" audioWorklet (which, when used in conjunction
+    with an amplitudeModifier inverting the same input signal and adding them
+    together; results in a form of high-pass filter. The lagProcessor on its
+    own sounds a lot like a low-pass filter. Acoustic Research making
+    discoveries once again)
+  - added the "nothing" audioWorklet, which is a node that does nothing at
+    all to the stream. In one ear and out the other
+
+
 2020-02-15
   - added more curve functions to library.math. "halfSigmoid_up" and
     "halfSigmoid_down". I should do a clean up of these functions

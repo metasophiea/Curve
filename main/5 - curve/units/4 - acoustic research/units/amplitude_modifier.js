@@ -99,8 +99,8 @@ this['amplitude_modifier'] = function(name,x,y,angle){
                 state.invert = value;
             };
         //io
-            object.io.audio.input.out().connect( amplitudeModifier.in() );
-            amplitudeModifier.out().connect(object.io.audio.output.in());
+            object.io.audio.input.audioNode = amplitudeModifier.in();
+            object.io.audio.output.audioNode = amplitudeModifier.out();
 
     //interface
         object.i = {

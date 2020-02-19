@@ -105,8 +105,8 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
                 setSharpness(state.sharpnessDial);
             };
         //io
-            object.io.audio.input.out().connect( amplitudeExciter.in() );
-            amplitudeExciter.out().connect(object.io.audio.output.in());
+            object.io.audio.input.audioNode = amplitudeExciter.in();
+            object.io.audio.output.audioNode = amplitudeExciter.out();
 
     //interface
         object.i = {

@@ -136,6 +136,7 @@ this.audio_file_player = function(name,x,y,angle){
                     );
                     object.elements.readout_sixteenSegmentDisplay.time.print();
                 }else{
+                    console.log( playerCircuit.currentTime() );
                     object.elements.readout_sixteenSegmentDisplay.time.text(
                         _canvas_.library.misc.padString(playerCircuit.currentTime().length,8,' ')
                     );
@@ -195,8 +196,9 @@ this.audio_file_player = function(name,x,y,angle){
                 return playerCircuit.area(area.A,area.B);
             };
         //io
-            playerCircuit.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
-            playerCircuit.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
+            object.io.audio.io_output_R.audioNode = playerCircuit.out_right()
+            object.io.audio.io_output_L.audioNode = playerCircuit.out_left()
+
             object.io.signal.io_play.onchange = function(value){
                 const part = object.elements.button_image.button_play;
                 value ? part.press() : part.release();

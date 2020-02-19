@@ -72,8 +72,8 @@ this['bitcrusher'] = function(name,x,y,angle){
             };
 
         //io
-            object.io.audio.input.out().connect( bitcrusher.in() );
-            bitcrusher.out().connect(object.io.audio.output.in());
+            object.io.audio.input.audioNode = bitcrusher.in();
+            object.io.audio.output.audioNode = bitcrusher.out();
 
     //interface
         object.i = {

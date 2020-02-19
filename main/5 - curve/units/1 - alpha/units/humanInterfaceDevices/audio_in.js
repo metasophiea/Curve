@@ -112,7 +112,7 @@ this.audio_in = function(name,x,y,angle,setupConnect=true){
             object.elements.button_image.button_previous.onpress = function(){ decSelection(); };
             object.elements.button_image.button_next.onpress = function(){ incSelection(); };
         //io
-            audioInCircuit.out().connect( object.io.audio.io_output.in() );
+            object.io.audio.io_output.audioNode = audioInCircuit.out();
             object.io.signal.io_previous.onchange = function(value){ if(value){ object.elements.button_image.button_previous.press(); }else{ object.elements.button_image.button_previous.release(); } };
             object.io.signal.io_next.onchange = function(value){ if(value){ object.elements.button_image.button_next.press(); }else{ object.elements.button_image.button_next.release(); } };
 

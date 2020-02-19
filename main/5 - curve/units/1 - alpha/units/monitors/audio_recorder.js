@@ -153,8 +153,8 @@ this.audio_recorder = function(name,x,y,angle){
                 recorderCircuit.clear();
             };
         //io
-            object.io.audio.io_input_R.out().connect( recorderCircuit.in_right() );
-            object.io.audio.io_input_L.out().connect( recorderCircuit.in_left() );
+            object.io.audio.io_input_R.audioNode = recorderCircuit.in_right();
+            object.io.audio.io_input_L.audioNode = recorderCircuit.in_left();
 
     //interface
         object.i = {

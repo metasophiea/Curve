@@ -86,8 +86,8 @@ this.filter = function(name,x,y,angle){
             object.elements.dial_2_continuous.dial_midBand.onchange = function(value){ setGain(1,value*2); };
             object.elements.dial_2_continuous.dial_highBand.onchange = function(value){ setGain(2,value*2); };
         //io
-            object.io.audio.input.out().connect( filterCircuit.in() );
-            filterCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+            object.io.audio.input.audioNode = filterCircuit.in();
+            object.io.audio.output.audioNode = filterCircuit.out();
 
     //interface
         object.i = {

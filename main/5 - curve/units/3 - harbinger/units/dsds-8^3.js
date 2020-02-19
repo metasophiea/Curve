@@ -289,16 +289,16 @@ this['dsds-8^3'] = function(name,x,y,angle){
                 ],
             ],
         };
-
+        
         const channelData = (new Array(8)).fill().map((item,index) => {
             return { bank:0, sample:0, rate:1, volume:1 }
         });
 
         const masterGain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
-        masterGain.out().connect( object.io.audio['audio_out_master'].in() );
+        object.io.audio.audio_out_master.audioNode = masterGain.out();
         const channelGains = (new Array(8)).fill().map((item,index) => {
             const gain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
-            gain.out().connect( object.io.audio['audio_out_'+index].in() );
+            object.io.audio['audio_out_'+index].audioNode = gain.out();
             gain.out().connect( masterGain.in() );
             return gain;
         });

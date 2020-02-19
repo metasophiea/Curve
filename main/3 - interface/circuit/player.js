@@ -247,7 +247,6 @@ this.player = function(context){
             //actually stop the buffer and destroy it
                 flow.bufferSource[playhead].onended = callback;
                 flow.bufferSource[playhead].stop(0);
-                delete flow.bufferSource[playhead];
         };
         this.resume = function(playhead){
             if(playhead == undefined){
@@ -274,11 +273,9 @@ this.player = function(context){
             //actually stop the buffer and destroy it
                 flow.bufferSource[playhead].onended = callback;
                 flow.bufferSource[playhead].stop(0);
-                delete flow.bufferSource[playhead];
             //playheadCompute and delete playhead
                 state.playhead[playhead].playing = false;
                 playheadCompute(playhead);
-                delete state.playhead[playhead];
         };
         this.restart = function(playhead){
             dev.log.circuit('.player.restart('+playhead+')'); //#development

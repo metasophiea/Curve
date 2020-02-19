@@ -175,8 +175,8 @@ this.reverb = function(name,x,y,angle){
             object.elements.button_image.rocker_up.onpress = function(){ incReverbType(); };
             object.elements.button_image.rocker_down.onpress = function(){ decReverbType(); };
         //io
-            object.io.audio.input.out().connect( reverbCircuit.in() );
-            reverbCircuit.out().connect( object.io.audio.output.in() );
+            object.io.audio.input.audioNode = reverbCircuit.in();
+            object.io.audio.output.audioNode = reverbCircuit.out();
             object.io.voltage.wet_connection.onchange = function(value){ object.elements.dial_2_continuous.wet.set(value); };
             object.io.voltage.dry_connection.onchange = function(value){ object.elements.dial_2_continuous.dry.set(value); };
             object.io.signal.rocker_down_connection.onchange = function(value){

@@ -18,6 +18,27 @@
     ,
 },
 
+{
+    name:'lagProcessor',
+    worklet:new Blob([`
+        {{include:workshop/lagProcessor/worklet.js}}
+    `], { type: "text/javascript" }),
+    class:
+        {{include:workshop/lagProcessor/node.js}}
+    ,
+},
+
+{
+    name:'nothing',
+    worklet:new Blob([`
+        {{include:workshop/nothing/worklet.js}}
+    `], { type: "text/javascript" }),
+    class:
+        {{include:workshop/nothing/node.js}}
+    ,
+},
+
+
 
 
 

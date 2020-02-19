@@ -407,7 +407,7 @@ this.synthesizer = function(
             flow.LFO.gain.gain.setTargetAtTime(value, context.currentTime, 0);
             flow.amplitudeModifier.offset.setTargetAtTime(1 - gainWobble.depth/2, context.currentTime, 0);
         };
-        this.gainWobblePeriod = function(value){ console.log(value);
+        this.gainWobblePeriod = function(value){
             if(value == null){return gainWobble.period; }
             if(value < gainWobble.periodMin){ value = gainWobble.periodMin; }
             else if(value > gainWobble.periodMax){ value = gainWobble.periodMax; }

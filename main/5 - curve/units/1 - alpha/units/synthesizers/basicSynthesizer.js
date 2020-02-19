@@ -157,7 +157,7 @@ this.basic_synthesizer = function(name,x,y,angle){
             object.elements.dial_2_continuous.detuneWobbleDepth.onchange = function(value){ synthesizerCircuit.detuneWobbleDepth( value*100 ); };
             object.elements.button_circle.panicButton.onpress = function(){ synthesizerCircuit.panic(); };
         //io
-            synthesizerCircuit.out().connect( object.io.audio.io_output.in() );
+            object.io.audio.io_output.audioNode = synthesizerCircuit.out();
 
             object.io.data.io_midiNoteInput.onreceive = function(address,data){
                 if(address != 'midinumber'){return;}

@@ -51,8 +51,9 @@ this.amplifier = function(name,x,y,angle){
         const flow = {
             destination:null,
             stereoCombiner: null,
-            pan_left:null, pan_right:null,
+            input_L: _canvas_.library.audio.context.createAnalyser(), input_R: _canvas_.library.audio.context.createAnalyser(), 
         };
+        // const node = _canvas_.library.audio.context.createAnalyser();
 
         //destination
             flow._destination = _canvas_.library.audio.destination;
@@ -61,9 +62,12 @@ this.amplifier = function(name,x,y,angle){
             flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
 
         //audio connections
+            //populate input nodes
+                object.io.audio.input_L.audioNode = flow.input_L;
+                object.io.audio.input_R.audioNode = flow.input_R;
             //inputs to stereo combiner
-                object.elements.connectionNode_audio.input_L.out().connect(flow.stereoCombiner, 0, 0);
-                object.elements.connectionNode_audio.input_R.out().connect(flow.stereoCombiner, 0, 1);
+                flow.input_L.connect(flow.stereoCombiner, 0, 0);
+                flow.input_R.connect(flow.stereoCombiner, 0, 1);
             //stereo combiner to main output
                 flow.stereoCombiner.connect(flow._destination);
 

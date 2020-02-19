@@ -93,8 +93,8 @@ this.distortion = function(name,x,y,angle){
             object.elements.dial_2_continuous.outGain.onchange = function(value){distortionCircuit.outGain(value);};
             object.elements.slide_discrete_image.oversample.onchange = function(value){distortionCircuit.oversample(['none','2x','4x'][value]);};
         //io
-            object.elements.connectionNode_audio.input.out().connect( distortionCircuit.in() );
-            distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+            object.io.audio.input.audioNode = distortionCircuit.in();
+            object.io.audio.output.audioNode = distortionCircuit.out();
             object.elements.connectionNode_signal.oversample_left.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() - 1 ); };
             object.elements.connectionNode_signal.oversample_right.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() + 1 ); };
             object.elements.connectionNode_voltage.inGain_connection.onchange = function(value){ object.elements.dial_2_continuous.inGain.set(value); };

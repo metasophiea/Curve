@@ -1,38 +1,45 @@
 _canvas_.curve.go.add( function(){
-    // _canvas_.control.scene.addUnit(10,-135,0,'distortion','alpha');
-    // _canvas_.control.scene.addUnit(-145,-170,0,'reverb','alpha');
-    // _canvas_.control.scene.addUnit(-180,240,0,'filter','alpha');
+    _canvas_.core.render.frameRateLimit(10);
 
-    // _canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','alpha');
-    // _canvas_.control.scene.addUnit(175,-95,0,'audio_in','alpha');
-    // _canvas_.control.scene.addUnit(140,-115,0,'signal_switch','alpha');
-    // _canvas_.control.scene.addUnit(-235,240,0,'voltage_dial','alpha');
+    const dsds = _canvas_.control.scene.addUnit(10,100,0,'dsds-8^3','harbinger');
+    // const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
+    // const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
 
-    // _canvas_.control.scene.addUnit(500,30,0,'signal_duplicator','alpha');
-    // _canvas_.control.scene.addUnit(385,30,0,'voltage_duplicator','alpha');
-    // _canvas_.control.scene.addUnit(435,-35,0,'data_duplicator','alpha');
-    // _canvas_.control.scene.addUnit(360,-90,0,'audio_duplicator','alpha');
-    // _canvas_.control.scene.addUnit(445,30,0,'signal_combiner','alpha');
-    // _canvas_.control.scene.addUnit(330,30,0,'voltage_combiner','alpha');
-    // _canvas_.control.scene.addUnit(370,-35,0,'data_combiner','alpha');
-    // _canvas_.control.scene.addUnit(-255,-60,0,'eightTrackMixer','alpha');
+    // setTimeout( () => {
+    //     const rdp2 = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
+    // },1000);
 
-    // _canvas_.control.scene.addUnit(10,-65,0,'amplifier','alpha');
-    // _canvas_.control.scene.addUnit(370,225,0,'audio_recorder','alpha');
-    // _canvas_.control.scene.addUnit(-280,85,0,'data_readout','alpha');
-    // _canvas_.control.scene.addUnit(-230,-110,0,'signal_readout','alpha');
-    // _canvas_.control.scene.addUnit(85,290,0,'voltage_readout','alpha');
-    // _canvas_.control.scene.addUnit(165,225,0,'audio_scope','alpha');
+    // for(let a = 0; a < 8; a++){
+    //     mrd.io.signal['signal_out_'+a].connectTo(dsds.io.signal['signal_in_'+a]);
+    // }
 
-    // _canvas_.control.scene.addUnit(370,275,0,'pulse_generator','alpha');
-    // _canvas_.control.scene.addUnit(-200,290,0,'eightStepSequencer','alpha');
-    // _canvas_.control.scene.addUnit(-70,85,0,'launchpad','alpha');
 
-    _canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer','alpha');
-    // _canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','alpha');
+    // const pulse = _canvas_.control.scene.addUnit(370,120,0,'pulse_generator','alpha');
+    // const amp = _canvas_.control.scene.addUnit(-150,-150,0,'amplifier','alpha');
+    // const dup = _canvas_.control.scene.addUnit(60,-60,0,'audio_duplicator','alpha');
+    // dsds.io.audio.audio_out_master.connectTo(dup.io.audio.input);
+    // dup.io.audio.output_1.connectTo(amp.io.audio.input_R);
+    // dup.io.audio.output_2.connectTo(amp.io.audio.input_L);
+    // pulse.io.signal.output.connectTo(mrd.io.signal.pulseIn);
+    // pulse.i.tempo(380);
 
-    // _canvas_.control.scene.addUnit(-10,-10,0,'ruler','alpha');
+    // mrd.i.pageData(0,0,
+    //     [true, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false]
+    // );
+    // mrd.i.pageData(1,0,
+    //     [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false]
+    // );
+    // mrd.i.pageData(2,0,
+    //     [false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, true]
+    // );
+    // mrd.i.pageData(6,0,
+    //     [false, false, true, false, false, false, true, false, false, false, true, true, false, false, true, false]
+    // );
+    
+    
 
-    // _canvas_.control.viewport.scale(6.5);
-    _canvas_.control.viewport.position(300, 200);
+
+
+    _canvas_.control.viewport.scale(4);
+    _canvas_.control.viewport.position(-5, -650);
 });
