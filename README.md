@@ -5,7 +5,7 @@
 </p>
 
 ## Demonstration Video
-[https://www.youtube.com/embed/vtJ5edNoNGA](https://www.youtube.com/embed/vtJ5edNoNGA)
+[https://youtu.be/vtJ5edNoNGA](https://youtu.be/vtJ5edNoNGA)
 
 
 ## A Project In Multiple Parts
