@@ -1,4 +1,4 @@
-class TestWorkerNode extends AudioWorkletNode{
+class testWorkerNode extends AudioWorkletNode{
     constructor(context, options={}){
         options.numberOfInputs = 6;
         options.numberOfOutputs = 6;

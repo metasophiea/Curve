@@ -2,7 +2,7 @@
 
 this._collectionData = {
     name:'Acoustic Research',
-    itemWidth:230,
+    itemWidth:160,
     categoryOrder:[
     ],   
 };

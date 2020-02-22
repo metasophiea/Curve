@@ -1,7 +1,25 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-22
+  - put together the first video demo (saved as demo number 6)
+
+
+2020-02-21
+  - did a little bit or rearranging in the interface/circuit directory.. might
+    need a little more
+
+
+2020-02-20
+  - created a citcuit for the Lag Processor audio worklet
+  - put together the Acoustic Research Lag Processor
+  - rearranged the audio worklets a little (need to do a clean up of these
+    things, because I feel like there's some poorly named worklets and some of
+    their functionalities overlap)
+  - began on the Stable Amplitude Generator audio worklet and circuit
+
+
 2020-02-19
-  - correct a mistake made in the modifications made to the Eight Track Mixer
-    yesterday, where as value was being incorrectly set
+  - corrected a mistake made in the modifications made to the Eight Track
+    Mixer yesterday, where a value was being incorrectly set
   - fixed some issues with the player circuit (that I tried to improve
     yesterday by being more proactive with deleting audio buffers..seems I 
     was a little too excited and was having the circuit delete things that
@@ -1571,7 +1589,7 @@
   - added "versionInformation" to every layer, which contains a date which
     (should) state when that layer was last modified (There's also a 'tick'
     value but I'm not sure what to do with it)
-  - added "_canvas_.getVersionInformation" which gathers togeter all the version
+  - added "_canvas_.getVersionInformation" which gathers together all the version
     information from each layer
   - added an item to the menubar/dev section that displays the lastDateModified
     version information of each layer (starting at either 0/0/0 or today)

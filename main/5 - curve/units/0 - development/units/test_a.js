@@ -30,18 +30,18 @@ this['test_a'] = function(name,x,y,angle){
         });
 
     //circuitry
-        const LP = new _canvas_.library.audio.audioWorklet.lagProcessor(_canvas_.library.audio.context);
+        const SAG = new _canvas_.library.audio.audioWorklet.stableAmplitudeGenerator(_canvas_.library.audio.context);
 
     //wiring
         //hid
             object.elements.dial_continuous.a.onchange = function(value){
-                LP.samples.setValueAtTime(Math.round(1 + value*999), _canvas_.library.audio.context.currentTime);
+                SAG.amplitude.setValueAtTime(value*2 -1, _canvas_.library.audio.context.currentTime);
             };
 
         //keycapture
         //io
-            object.io.audio.input_1.audioNode = LP;
-            object.io.audio.output.audioNode = LP;
+            // object.io.audio.input_1.audioNode = LP;
+            object.io.audio.output.audioNode = SAG;
 
     //interface
         object.i = {

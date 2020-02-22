@@ -76,16 +76,21 @@ Acoustic Research
     Bitcrusher (amplitudeResolution:1-128(10), sampleFrequency:0-7(^2)(16))
     Amplitude Modifier (invert, offset, divideBy, floor/ceiling)
     Sigmoid's Affecter
+    Lag Processor
 
-    _ Gain
-        dial gain control (0 -> 1)
-        "multiply by 10" switch (giving the above dail a 0 -> 10 range)
+    _ gain
+        dial gain control (-1 -> 1)
         "+1" switch (giving the above dail a range one higher)
+        "multiply by 10" switch (giving the above dail a -10 -> 10 range)
         amplitude gain control input
         gain control selection switch
+
+                            \/ input
+        output < gain circuit < |S| < x10 < +1 < dial
+                                | | < amplitude input
     _ Frequency Generator
         frequency select (0.01hz - 20khz)(maybe all the way to 25khz)
-        4 waves; sine, square, triangle, sawtooth + custom input
+        5 waves; none, sine, square, triangle, sawtooth + custom input
         gain (-1 -> 1)
     _ Momentary Amplitude Meter (MAM)
         sample rate
@@ -109,21 +114,12 @@ Acoustic Research
     _ Simple Stream Adder
         2 input streams
         mix selection slider
-    _ Lap Processor
-        samples to average
-
-
-
-
-
-
+    _ Stable Amplitude Generator
+        dial (-1 -> 1)
 
 
     _? Amplitude Peak Attenuator
-    _? Amplitude Controlled Modulator (Modulon) / Rapid Amplitude Modulator (Jaggedizer)
-
     _? Histogram Audio Visualizer (needs better name)
-    _? Frequency Response Workstation
 
 
 

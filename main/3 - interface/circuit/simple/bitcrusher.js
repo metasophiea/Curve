@@ -2,7 +2,7 @@ this.bitcrusher = function(
     context
 ){
     //bitcrusherNode
-        const bitcrusherNode = new _canvas_.library.audio.audioWorklet.bitcrusher(_canvas_.library.audio.context);
+        const bitcrusherNode = new _canvas_.library.audio.audioWorklet.bitcrusher(context);
 
     //input/output node
         this.in = function(){return bitcrusherNode;}

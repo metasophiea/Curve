@@ -10,7 +10,8 @@ this.audioWorklet = new function(){
     this.nowReady = function(){};
 
     const worklets = [
-        {{include:list.js}}
+        {{include:production/manifest.js}}
+        {{include:workshop/manifest.js}}
     ];
         
     worklets.forEach(worklet => {
