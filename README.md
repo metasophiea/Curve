@@ -1,5 +1,13 @@
 # [curve](https://curve.metasophiea.com/)
 
+<p align="center">
+    <a href="https://curve.metasophiea.com/"><img width="100%" src="https://curve.metasophiea.com/images/curve.png"></a>
+</p>
+
+## Demonstration Video
+[https://youtu.be/vtJ5edNoNGA](https://youtu.be/vtJ5edNoNGA)
+
+
 ## A Project In Multiple Parts
 - **_Core_** is a webGL-based graphical webWorker rendering engine written to replace the project's reliance on SVG. It's a little shaky, and is certainly not the best replacement of SVG; though is in its 3rd version now and for the needs of the project, works just fine. Core also comes with the ability to render single frames, so I'm also looking into it being used as a full-webpage display tool, for regular websites.
 
@@ -48,3 +56,5 @@ For now though, I think I'll just keep to working on Curve itself.
 - [Curve Demo 2](https://curve.metasophiea.com?demo=2)
 - [Curve Demo 3](https://curve.metasophiea.com?demo=3)
 - [Curve Demo 4](https://curve.metasophiea.com?demo=4)
+- [Curve Demo 5](https://curve.metasophiea.com?demo=5)
+- [Curve Demo 6](https://curve.metasophiea.com?demo=6)
