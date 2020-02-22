@@ -298,21 +298,20 @@ this.synthesizer = function(
     //controls
         this.perform = function(note){
             //find the oscillator for this note (if there is one)
-                const oscillator = flow.oscillators.filter(oscillator => oscillator.noteNumber == note.num)[0];
+                const oscillator = flow.oscillators.filter(oscillator => oscillator.noteNumber == note.num && oscillator.stoppingTimeout == undefined )[0];
 
                 if( oscillator != undefined && note.velocity == 0 ){ 
                 //tone stopping
                     _canvas_.library.audio.changeAudioParam(context, oscillator.gain.gain, 0, release.time, release.curve);
                     oscillator.stoppingTimeout = setTimeout(function(){
                         oscillator.noteNumber = undefined;
+                        oscillator.stoppingTimeout = undefined;
                     }, release.time*1000);
                 }else if( oscillator != undefined ){
-                //tone velocity adjustment (not done)
-                    clearTimeout(oscillator.stoppingTimeout);
+                //tone velocity adjustment
                     _canvas_.library.audio.changeAudioParam(context, oscillator.gain.gain, note.velocity, 0, 'instant');
-                    oscillator.stoppingTimeout = undefined;
                 }else if( oscillator == undefined && note.velocity == 0 ){ 
-                    //don't do anything
+                //don't do anything
                 }else{
                 //fresh tone
                     //get free oscillators

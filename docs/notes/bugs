@@ -40,6 +40,8 @@
     at all, just me not understanding how things work around here. I'll find another way around this issue
 [2020-01-05:1] there's a lot of re-requesting audio files that were already loaded. Modifications should be made to the library layer to stop this (probably adding an override "force reload" argument too)
     (log:2020-01-07) added a caching system to the audio file loader (only for URL loaded files) which stores previously loaded audio files
+[2020-02-22:1] something is up with the synthesizer, when you play notes rapidly or when you adjust the release
+    (log:2020-01-22) the synthesizer circuit just wasn't doing its job right
 
 [2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
 [2019-08-26:1] (?) connection nodes can work across panes (is it really an issue though?) 
@@ -51,4 +53,3 @@
 [2020-01-02:2] the audio file player can have its playback speed set to 0, or some very low value. The causes system slowdown when it's triggered alot in this state (not sure if this is all that solvable, unless we set some sort of minimum speed..which really depends on how maybe concurrant plays are requested)
 [2020-01-27:1] regarding the selector buttons on Harbinger rymthm designer units; the lights are quite difficult to distinguish. Particularly the yellow ones
 [2020-02-05:1] the active area of image-based dials, stretches beyond the cirlce to the entire square image of the handle
-[2020-02-22:1] something is up with the synthesizer, when you play notes rapidly or when you adjust the release

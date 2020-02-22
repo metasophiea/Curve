@@ -1,6 +1,16 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
 2020-02-22
   - put together the first video demo (saved as demo number 6)
+  - I think I've fixed the issue with the synthesizer circuit not being able to
+    played the same note twice in succession. Now if such an event occurs, the
+    circuit will create a new oscillator, but only if the existing one is set
+    to be stopped
+  - I think I've fixed the release issue too, seems the way oscillator
+    selection was being done was wrong, where it wasn't allowing old notes to
+    finish decaying if a new request of the same note came in. It's a little
+    smarter now, allowing oscillators to finish their release before they free 
+    themselves to be used again. New requests for the same notes that are
+    releasing go to a new oscillator
 
 
 2020-02-21
