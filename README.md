@@ -1,5 +1,3 @@
-# [curve](https://curve.metasophiea.com/)
-
 <p align="center">
     <a href="https://curve.metasophiea.com/"><img width="100%" src="https://curve.metasophiea.com/images/curve.png"></a>
 </p>
