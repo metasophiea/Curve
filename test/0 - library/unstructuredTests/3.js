@@ -13,7 +13,7 @@ const radius = 200*mux;
 // const angles = [
 //     -0.25, -0.5, -0.75, -1, -1.25, -1.5, -1.75
 // ];
-const angles = _canvas_.library.math.curveGenerator.linear(11,-0.25,-1.75);
+const angles = _canvas_.library.math.curveGenerator.linear(21,-0.25,-1.75);
 // const angles = _canvas_.library.math.curveGenerator.halfSigmoid_up(10,-0.25,-1,0.75);
 
 angles.forEach(angle => {

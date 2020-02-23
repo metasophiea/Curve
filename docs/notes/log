@@ -1,4 +1,16 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-23
+  - wrote a new gain audio worklet which comes with the usual control, plus an
+    input channel for amplitude control
+  - updated the gain circuit to use the new gain worklet instead of the
+    built-in one
+  - created Acoustic Research's Gain unit
+  - moved the 'nothing' audio worklet to production
+  - updated the synthesizer circuit to use the gain worklet instead of the
+    amplitudeControlledModulator, which I'm getting rid of
+  - created Acoustic Research's Stable Amplitude Generator unit
+
+
 2020-02-22
   - put together the first video demo (saved as demo number 6)
   - I think I've fixed the issue with the synthesizer circuit not being able to

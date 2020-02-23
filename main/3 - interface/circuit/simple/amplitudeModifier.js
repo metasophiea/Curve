@@ -7,15 +7,15 @@ this.amplitudeModifier = function(
                 amplitudeModifierNode:{}
             };
 
-    //amplitudeModifierNode
-        flow.amplitudeModifierNode = {
-            invert: false,
-            offset: 0,
-            divisor: 1,
-            ceiling: 10,
-            floor: -10,
-            node: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
-        };
+        //amplitudeModifierNode
+            flow.amplitudeModifierNode = {
+                invert: false,
+                offset: 0,
+                divisor: 1,
+                ceiling: 10,
+                floor: -10,
+                node: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
+            };
 
     //input/output node
         this.in = function(){return flow.amplitudeModifierNode.node;}

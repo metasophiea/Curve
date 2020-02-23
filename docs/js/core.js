@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:20} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:23} };
                 const library = this;
             
                 this.go = new function(){
@@ -3862,45 +3862,6 @@
                                 ,
                             },
                             {
-                                name:'amplitudeControlledModulator',
-                                worklet:new Blob([`
-                                    class amplitudeControlledModulator extends AudioWorkletProcessor{
-                                        static get parameterDescriptors(){
-                                            return [];
-                                        }
-                                        
-                                        constructor(options){
-                                            super(options);
-                                        }
-                                    
-                                        process(inputs, outputs, parameters){
-                                            const input_1 = inputs[0];
-                                            const input_2 = inputs[1];
-                                            const output_1 = outputs[0];
-                                    
-                                            for(let channel = 0; channel < input_1.length; channel++){    
-                                                for(let a = 0; a < output_1[channel].length; a++){
-                                                    output_1[channel][a] = input_1[channel][a] * input_2[channel][a];
-                                                }
-                                            }
-                                    
-                                            return true;
-                                        }
-                                    }
-                                    registerProcessor('amplitudeControlledModulator', amplitudeControlledModulator);
-                                `], { type: "text/javascript" }),
-                                class:
-                                    class amplitudeControlledModulator extends AudioWorkletNode{
-                                        constructor(context, options={}){
-                                            options.numberOfInputs = 2;
-                                            options.numberOfOutputs = 1;
-                                            options.channelCount = 1;
-                                            super(context, 'amplitudeControlledModulator', options);
-                                        }
-                                    }
-                                ,
-                            },
-                            {
                                 name:'whiteNoiseGenerator',
                                 worklet:new Blob([`
                                     class whiteNoiseGenerator extends AudioWorkletProcessor{
@@ -4008,8 +3969,7 @@
                                 worklet:new Blob([`
                                     class lagProcessor extends AudioWorkletProcessor{
                                         static get parameterDescriptors(){
-                                            return [
-                                                {
+                                            return [{
                                                     name: 'samples',
                                                     defaultValue: 1,
                                                     minValue: 1,
@@ -4039,7 +3999,7 @@
                                                     this._dataArray.pop();
                                                 }
                                             }
-                                    
+                                            
                                             for(let channel = 0; channel < input.length; channel++){ 
                                                 for(let a = 0; a < input[channel].length; a++){
                                                     if(this._dataArrayWorkingIndex < _samplesMinusOne){
@@ -4050,6 +4010,7 @@
                                     
                                                     this._dataArray[this._dataArrayWorkingIndex] = input[channel][a];
                                                     output[channel][a] = this._dataArray.reduce((a,b) => a + b) / samples;
+                                                    
                                                 }
                                             }
                                             
@@ -4124,6 +4085,118 @@
                                     
                                         get amplitude(){
                                             return this.parameters.get('amplitude');
+                                        }
+                                    }
+                                ,
+                            },
+                            {
+                                name:'gain',
+                                worklet:new Blob([`
+                                    class gain extends AudioWorkletProcessor{
+                                        static get parameterDescriptors(){
+                                            return [
+                                                {
+                                                    name: 'mode',
+                                                    defaultValue: 0,
+                                                    minValue: 0,
+                                                    maxValue: 1,
+                                                    automationRate: 'k-rate',
+                                                },{
+                                                    name: 'gain',
+                                                    defaultValue: 1,
+                                                    minValue: -100,
+                                                    maxValue: 100,
+                                                    automationRate: 'a-rate',
+                                                }
+                                            ];
+                                        }
+                                        
+                                        constructor(options){
+                                            super(options);
+                                        }
+                                    
+                                        process(inputs, outputs, parameters){
+                                            const input_1 = inputs[0];
+                                            const input_2 = inputs[1];
+                                            const output_1 = outputs[0];
+                                    
+                                            if( parameters.mode[0] == 1 ){
+                                                //automatic
+                                                for(let channel = 0; channel < input_1.length; channel++){    
+                                                    for(let a = 0; a < output_1[channel].length; a++){
+                                                        output_1[channel][a] = input_1[channel][a] * input_2[channel][a];
+                                                    }
+                                                }
+                                            }else{
+                                                //manual
+                                                const gain_useFirstOnly = parameters.gain.length == 1;
+                                                for(let channel = 0; channel < input_1.length; channel++){        
+                                                    for(let a = 0; a < input_1[channel].length; a++){
+                                                        const gain = gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a];
+                                                        output_1[channel][a] = input_1[channel][a] * gain;
+                                                    }
+                                                }
+                                            }
+                                    
+                                            return true;
+                                        }
+                                    }
+                                    registerProcessor('gain', gain);
+                                `], { type: "text/javascript" }),
+                                class:
+                                    class gain extends AudioWorkletNode{
+                                        constructor(context, options={}){
+                                            options.numberOfInputs = 2;
+                                            options.numberOfOutputs = 1;
+                                            options.channelCount = 1;
+                                            super(context, 'gain', options);
+                                    
+                                            this._invert = false;
+                                        }
+                                    
+                                        get mode(){
+                                            return this._mode;
+                                        }
+                                        set mode(value){
+                                            this._mode = value;
+                                            this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
+                                        }
+                                        get gain(){
+                                            return this.parameters.get('gain');
+                                        }
+                                    }
+                                ,
+                            },
+                            {
+                                name:'nothing',
+                                worklet:new Blob([`
+                                    class nothing extends AudioWorkletProcessor{
+                                        constructor(options){
+                                            super(options);
+                                        }
+                                    
+                                        process(inputs, outputs, parameters){
+                                            const input = inputs[0];
+                                            const output = outputs[0];
+                                    
+                                            for(let channel = 0; channel < input.length; channel++){
+                                                for(let a = 0; a < input[channel].length; a++){
+                                                    output[channel][a] = input[channel][a];
+                                                }
+                                            }
+                                    
+                                            return true;
+                                        }
+                                    }
+                                    registerProcessor('nothing', nothing);
+                                `], { type: "text/javascript" }),
+                                class:
+                                    class nothing extends AudioWorkletNode{
+                                        constructor(context, options={}){
+                                            options.numberOfInputs = 1;
+                                            options.numberOfOutputs = 1;
+                                            options.channelCount = 1;
+                                            super(context, 'nothing', options);
                                         }
                                     }
                                 ,
@@ -4522,40 +4595,6 @@
                                         }
                                         get dutyCycle(){
                                             return this.parameters.get('dutyCycle');
-                                        }
-                                    }
-                                ,
-                            },
-                            {
-                                name:'nothing',
-                                worklet:new Blob([`
-                                    class nothing extends AudioWorkletProcessor{
-                                        constructor(options){
-                                            super(options);
-                                        }
-                                    
-                                        process(inputs, outputs, parameters){
-                                            const input = inputs[0];
-                                            const output = outputs[0];
-                                    
-                                            for(let channel = 0; channel < input.length; channel++){
-                                                for(let a = 0; a < input[channel].length; a++){
-                                                    output[channel][a] = input[channel][a];
-                                                }
-                                            }
-                                    
-                                            return true;
-                                        }
-                                    }
-                                    registerProcessor('nothing', nothing);
-                                `], { type: "text/javascript" }),
-                                class:
-                                    class nothing extends AudioWorkletNode{
-                                        constructor(context, options={}){
-                                            options.numberOfInputs = 1;
-                                            options.numberOfOutputs = 1;
-                                            options.channelCount = 1;
-                                            super(context, 'nothing', options);
                                         }
                                     }
                                 ,

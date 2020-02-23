@@ -262,7 +262,7 @@ this.synthesizer = function(
             aggregator: {},
             LFO: {},
             amplitudeModifier: {},
-            amplitudeControlledModulator: {},
+            gain: {},
         };
 
     //flow
@@ -286,13 +286,13 @@ this.synthesizer = function(
         flow.amplitudeModifier.divisor.setTargetAtTime(2, context.currentTime, 0);
         flow.amplitudeModifier.offset.setTargetAtTime(1 - gainWobble.depth/2, context.currentTime, 0);
 
-        flow.amplitudeControlledModulator.node = new _canvas_.library.audio.audioWorklet.amplitudeControlledModulator(_canvas_.library.audio.context);
-        flow.aggregator.node.connect(flow.amplitudeControlledModulator.node,undefined,0);
-        flow.amplitudeModifier.connect(flow.amplitudeControlledModulator.node,undefined,1);
+        flow.gain.node = new _canvas_.library.audio.audioWorklet.gain(_canvas_.library.audio.context);
+        flow.aggregator.node.connect(flow.gain.node,undefined,0);
+        flow.amplitudeModifier.connect(flow.gain.node,undefined,1);
 
     //output node
         this.out = function(){
-            return flow.amplitudeControlledModulator.node;
+            return flow.gain.node;
         }
     
     //controls

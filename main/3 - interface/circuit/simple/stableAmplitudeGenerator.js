@@ -18,8 +18,8 @@ this.stableAmplitudeGenerator = function(
 
     //controls
         this.amplitude = function(value){
-            if(value == undefined){ return flow.amplitudeModifierNode.amplitude; }
-            flow.amplitudeModifierNode.amplitude = value;
-            _canvas_.library.audio.changeAudioParam(context, flow.amplitudeModifierNode.node.amplitude, value, 0.01, 'instant', true);
+            if(value == undefined){ return flow.stableAmplitudeGeneratorNode.amplitude; }
+            flow.stableAmplitudeGeneratorNode.amplitude = value;
+            _canvas_.library.audio.changeAudioParam(context, flow.stableAmplitudeGeneratorNode.node.amplitude, value, 0.01, 'instant', true);
         };
 };

@@ -1,7 +1,6 @@
 class lagProcessor extends AudioWorkletProcessor{
     static get parameterDescriptors(){
-        return [
-            {
+        return [{
                 name: 'samples',
                 defaultValue: 1,
                 minValue: 1,
@@ -31,7 +30,7 @@ class lagProcessor extends AudioWorkletProcessor{
                 this._dataArray.pop();
             }
         }
-
+        
         for(let channel = 0; channel < input.length; channel++){ 
             for(let a = 0; a < input[channel].length; a++){
                 if(this._dataArrayWorkingIndex < _samplesMinusOne){
@@ -42,6 +41,7 @@ class lagProcessor extends AudioWorkletProcessor{
 
                 this._dataArray[this._dataArrayWorkingIndex] = input[channel][a];
                 output[channel][a] = this._dataArray.reduce((a,b) => a + b) / samples;
+                
             }
         }
         

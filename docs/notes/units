@@ -77,17 +77,17 @@ Acoustic Research
     Amplitude Modifier (invert, offset, divideBy, floor/ceiling)
     Sigmoid's Affecter
     Lag Processor
-
-    _ gain
+    Gain
         dial gain control (-1 -> 1)
         "+1" switch (giving the above dail a range one higher)
         "multiply by 10" switch (giving the above dail a -10 -> 10 range)
         amplitude gain control input
         gain control selection switch
-
                             \/ input
         output < gain circuit < |S| < x10 < +1 < dial
                                 | | < amplitude input
+    Stable Amplitude Generator (dial (-1 -> 1))
+
     _ Frequency Generator
         frequency select (0.01hz - 20khz)(maybe all the way to 25khz)
         5 waves; none, sine, square, triangle, sawtooth + custom input
@@ -114,8 +114,6 @@ Acoustic Research
     _ Simple Stream Adder
         2 input streams
         mix selection slider
-    _ Stable Amplitude Generator
-        dial (-1 -> 1)
 
 
     _? Amplitude Peak Attenuator
