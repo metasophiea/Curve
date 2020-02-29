@@ -8,13 +8,18 @@ class momentaryAmplitudeMeter extends AudioWorkletProcessor{
                 maxValue: 1,
                 automationRate: 'k-rate',
             },{
+                name: 'updateMode',
+                defaultValue: 0, // 0 - by timer / 1 - by request
+                minValue: 0,
+                maxValue: 1,
+                automationRate: 'k-rate',
+            },{
                 name: 'updateDelay',
                 defaultValue: 100,
                 minValue: 1,
                 maxValue: 1000,
                 automationRate: 'k-rate',
-            },
-            {
+            },{
                 name: 'calculationMode',
                 defaultValue: 3, //max, min, average, absMax, absMin, absAverage
                 minValue: 0,
@@ -24,10 +29,19 @@ class momentaryAmplitudeMeter extends AudioWorkletProcessor{
         ];
     }
 
-    constructor(options) {
+    constructor(options){
         super(options);
+        const self = this;
         this._lastUpdate = currentTime;
         this._dataArray = [];
+        this._readingRequested = false;
+
+        this.port.onmessage = function(event){
+            if(event.data == 'readingRequest'){
+                self._readingRequested = true;
+            }
+        };
+        this.port.start();
     }
 
     process(inputs, outputs, parameters){
@@ -39,10 +53,14 @@ class momentaryAmplitudeMeter extends AudioWorkletProcessor{
         if(fullSample){
             this._dataArray.push(...input[0]);
         }else{
-            this._dataArray = input[0];
+            this._dataArray = new Array(...input[0]);
         }
 
-        if(currentTime - this._lastUpdate > updateDelay/1000){
+        if( 
+            (parameters.updateMode[0] == 0 && (currentTime - this._lastUpdate > updateDelay/1000)) ||
+            (parameters.updateMode[0] == 1 && this._readingRequested)
+        ){
+            this._readingRequested = false;
             this._lastUpdate = currentTime;
 
             switch(calculationMode[0]){

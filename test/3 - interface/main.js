@@ -13,4 +13,5 @@
 // {{include:8.js}} //secondary test of unit builder, with collection/test units
 // {{include:9.js}} //test of advanced cabling with units
 // {{include:10.js}} //rapidAmplitudeModulator circuit test 
-{{include:11.js}} //test of the synthesizer circuit
+// {{include:11.js}} //test of the synthesizer circuit
+{{include:12.js}} //test of frequencyResponseMeasure circuit 

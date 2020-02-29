@@ -1,4 +1,57 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-02-29
+  - created Acoustic Research's Stream Adder unit
+
+
+2020-02-28
+  - more work on the custom oscillator
+  - expanded the momentaryAmplitudeMeter audio worklet to include an on-request
+    mode
+  - set to work on the frequencyResponseMeasure circuit, but it's not totally
+    working out.. I'll have to try again
+
+
+2020-02-27
+  - added the whiteNoiseGenerator circuit
+  - created the streamAdder audio worklet and circuit
+  - more work on the custom oscillator
+
+
+2020-02-26
+  - created a circuit for the new oscillator and put together a test unit for
+    it.
+  - began experimenting with oscillator with multi level phase modulation,
+    which is pretty out-there and I've yet to figure out how to do it right
+      frequency = 1
+      phase1 = 4 amp1 = 1
+      phase2 = 3 amp1 = 1
+      phase3 = 2 amp1 = 1
+      phase4 = 1 amp1 = 1
+      func Z(x,freq,amp,phase,offset){
+        return sin(x*freq*phase + (pi/2)*amp*offset)
+      }
+
+      A = Z(x,frequency,amp1,phase1,0)
+      B = Z(x,frequency,amp2,phase2,A)
+      C = Z(x,frequency,amp3,phase3,B)
+      D = Z(x,frequency,amp4,phase4,C)
+
+
+2020-02-25
+  - even better progress on the custom oscillator audio worklet; now there's a
+    way of skewing the triangle waveform into a sawtooth (in either direction)
+    thus reducing the waveform modes to 3, but keeping every originally planned
+    waveform and adding a lot of adjustability. There's also gain and detune
+    inputs (though I'm not too sure on how detune should work..) which, along
+    with the dutyCycle parameter can all be controlled normally or with an
+    audio stream. Such control
+    
+
+2020-02-24
+  - added a link to the "units" doc file to the menubar
+  - good progress on the custom oscillator audio worklet
+
+
 2020-02-23
   - wrote a new gain audio worklet which comes with the usual control, plus an
     input channel for amplitude control

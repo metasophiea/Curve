@@ -6,7 +6,8 @@ _canvas_.curve.go.add( function(){
     // const sa = _canvas_.control.scene.addUnit(10,10,0,'sigmoids_affecter','acousticresearch');
     // const lp = _canvas_.control.scene.addUnit(10,10,0,'lag_processor','acousticresearch');
     // const g = _canvas_.control.scene.addUnit(10,10,0,'gain','acousticresearch');
-    const sag = _canvas_.control.scene.addUnit(10,10,0,'stable_amplitude_generator','acousticresearch');
+    // const sag = _canvas_.control.scene.addUnit(10,10,0,'stable_amplitude_generator','acousticresearch');
+    const sa = _canvas_.control.scene.addUnit(10,10,0,'stream_adder','acousticresearch');
     
 
 

@@ -50,7 +50,7 @@ this.gain = function(
 
     //input/output
         this.in = function(){return flow.gain.node;}
-        this.out = function(a){return flow.gain.node;}
+        this.out = function(){return flow.gain.node;}
         this.control = function(){return flow.controlIn.node;}
 
     //controls

@@ -3,6 +3,7 @@ const point_b = {x:490,y:490};
 let field = [
     [point_a],
     [point_b],
+
     [
         {x:400,y:400},
         {x:410,y:380},

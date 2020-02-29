@@ -52,6 +52,8 @@ class testWorklet extends AudioWorkletProcessor{
             console.log( 'parameters.valueA:',parameters.valueA );
             console.log( 'parameters.valueB:',parameters.valueB );
 
+            // console.log( testWorklet.MinimumValue );
+
             this._lastUpdate = currentTime;
             this._callCount = 0;
             return false;

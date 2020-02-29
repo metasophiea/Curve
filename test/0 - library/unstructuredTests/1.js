@@ -64,22 +64,24 @@
 
 
 
-// //momentaryAmplitudeMeter
-// _canvas_.library.go.add( function(){
-//     const osc = new OscillatorNode(_canvas_.library.audio.context);
-//     const gain = new GainNode(_canvas_.library.audio.context);
-//     const MAM = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(_canvas_.library.audio.context);
+//momentaryAmplitudeMeter
+_canvas_.library.go.add( function(){
+    const osc = new OscillatorNode(_canvas_.library.audio.context);
+    const gain = new GainNode(_canvas_.library.audio.context);
+    const MAM = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(_canvas_.library.audio.context);
     
-//     osc.connect(gain).connect(MAM);
+    osc.connect(gain).connect(MAM);
 
-//     MAM.reading = function(data){
-//         console.log(data);
-//     };
+    MAM.reading = function(data){
+        console.log(data);
+    };
+    MAM.updateMode = 1;
+    setTimeout( function(){ MAM.requestReading(); }, 500 );
 
-//     osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
-//     osc.start();
-//     gain.gain.linearRampToValueAtTime(0, _canvas_.library.audio.context.currentTime+10);
-// });
+    osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+    osc.start();
+    gain.gain.linearRampToValueAtTime(0, _canvas_.library.audio.context.currentTime+10);
+});
 
 
 
@@ -127,7 +129,7 @@
 //     const SWG = new _canvas_.library.audio.audioWorklet.squareWaveGenerator(_canvas_.library.audio.context);
 //     const gain = new GainNode(_canvas_.library.audio.context);
 //     SWG.connect(gain).connect(_canvas_.library.audio.context.destination);
-//     gain.gain.linearRampToValueAtTime(0.05, _canvas_.library.audio.context.currentTime);
+//     gain.gain.linearRampToValueAtTime(0.01, _canvas_.library.audio.context.currentTime);
 
 //     s = SWG;
 
@@ -156,19 +158,64 @@
 
 
 
-//lagProcessor
-_canvas_.library.go.add( function(){
-    const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
-    const gain_1 = new GainNode(_canvas_.library.audio.context);
-    const lag_1 = new _canvas_.library.audio.audioWorklet.lagProcessor(_canvas_.library.audio.context);
+// //oscillator
+// _canvas_.library.go.add( function(){
+//     grap = grapher;
 
-    osc_1.connect(gain_1).connect(lag_1).connect(_canvas_.library.audio.context.destination);
+//     O_1 = new _canvas_.library.audio.audioWorklet.oscillator(_canvas_.library.audio.context); 
+//     const gain_1 = new GainNode(_canvas_.library.audio.context);
+//     O_1.connect(gain_1);
+//     gain_1.gain.linearRampToValueAtTime(0.001, _canvas_.library.audio.context.currentTime);
+   
+//     O_2 = new _canvas_.library.audio.audioWorklet.oscillator(_canvas_.library.audio.context); 
+//     O_2.frequency.linearRampToValueAtTime(0.5, _canvas_.library.audio.context.currentTime);
+//     const gain_2 = new GainNode(_canvas_.library.audio.context);
+//     O_2.connect(gain_2);
+//     gain_2.gain.linearRampToValueAtTime(1, _canvas_.library.audio.context.currentTime);
 
-    osc_1.type = 'sawtooth';
-    osc_1.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
-    osc_1.start();
 
-    gain_1.gain.linearRampToValueAtTime(1, _canvas_.library.audio.context.currentTime);
+//     // O_1.waveform = 2;
+//     // O_1.dutyCycle_mode = 1;
+//     // gain_2.connect(O_1,undefined,0);
 
-    lag_1.samples.setTargetAtTime(25, _canvas_.library.audio.context.currentTime, 1)
-});
+//     // O_1.detune_mode = 1;
+//     // gain_2.connect(O_1,undefined,1);
+
+//     O_1.gain_mode = 1;
+//     gain_2.connect(O_1,undefined,2);
+
+//     gain_1.connect(_canvas_.library.audio.context.destination);
+// });
+
+
+
+
+// // oscillatorWithMultiLevelPhaseModulation
+// _canvas_.library.go.add( function(){
+//     O_1 = new _canvas_.library.audio.audioWorklet.oscillatorWithMultiLevelPhaseModulation(_canvas_.library.audio.context); 
+//     const gain_1 = new GainNode(_canvas_.library.audio.context);
+//     O_1.connect(gain_1);
+//     gain_1.gain.linearRampToValueAtTime(0.1, _canvas_.library.audio.context.currentTime);
+//     gain_1.connect(_canvas_.library.audio.context.destination);
+
+// });
+
+
+
+
+// //lagProcessor
+// _canvas_.library.go.add( function(){
+//     const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
+//     const gain_1 = new GainNode(_canvas_.library.audio.context);
+//     const lag_1 = new _canvas_.library.audio.audioWorklet.lagProcessor(_canvas_.library.audio.context);
+
+//     osc_1.connect(gain_1).connect(lag_1).connect(_canvas_.library.audio.context.destination);
+
+//     osc_1.type = 'sawtooth';
+//     osc_1.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+//     osc_1.start();
+
+//     gain_1.gain.linearRampToValueAtTime(1, _canvas_.library.audio.context.currentTime);
+
+//     lag_1.samples.setTargetAtTime(25, _canvas_.library.audio.context.currentTime, 1)
+// });

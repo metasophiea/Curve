@@ -5,7 +5,7 @@ class gain extends AudioWorkletNode{
         options.channelCount = 1;
         super(context, 'gain', options);
 
-        this._invert = false;
+        this._mode = false;
     }
 
     get mode(){

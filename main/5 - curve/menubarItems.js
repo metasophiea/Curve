@@ -197,6 +197,7 @@ _canvas_.control.go.add( function(){
                     {type:'button', text_left:'Development Log', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/log');}},
                     {type:'button', text_left:'Github', function:function(){window.open('https://github.com/metasophiea/curve');}},
                     {type:'button', text_left:'Ideas List', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/ideas');}},
+                    {type:'button', text_left:'Unit Development', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/units');}},
                     {type:'button', text_left:'Bug Tracker', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/bugs');}},
                 ]
             },

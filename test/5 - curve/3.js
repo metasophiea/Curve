@@ -2,8 +2,8 @@ _canvas_.curve.go.add( function(){
     _canvas_.core.render.frameRateLimit(10);
 
     const dsds = _canvas_.control.scene.addUnit(10,100,0,'dsds-8^3','harbinger');
-    // const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
-    // const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
+    const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
+    const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
 
     // setTimeout( () => {
     //     const rdp2 = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');

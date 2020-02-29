@@ -7,3 +7,5 @@
 {{include:stableAmplitudeGenerator/listing.js}}
 {{include:gain/listing.js}}
 {{include:nothing/listing.js}}
+{{include:oscillator/listing.js}}
+{{include:streamAdder/listing.js}}

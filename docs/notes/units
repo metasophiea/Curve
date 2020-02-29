@@ -90,16 +90,14 @@ Acoustic Research
 
     _ Frequency Generator
         frequency select (0.01hz - 20khz)(maybe all the way to 25khz)
-        5 waves; none, sine, square, triangle, sawtooth + custom input
+        3 waves;  sine, square, triangle ( + custom input ? )
         gain (-1 -> 1)
     _ Momentary Amplitude Meter (MAM)
         sample rate
         sample length
         readout meter
     _ White Noise Generator
-        gain (0 -> 1)
-        generated value range select (mirrored for both sides)
-    _ Frequency/Amplitude Response Workstation (FARworkstation)
+    _ Frequency/Amplitude Response Workstation (FARworkstation) (frequency response)
         over-control
             clear
             start
