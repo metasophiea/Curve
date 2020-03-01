@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:1} };
                 const library = this;
             
                 this.go = new function(){
@@ -3857,7 +3857,6 @@
                                             };
                                         }
                                     
-                                        
                                     
                                         get fullSample(){
                                             return this._fullSample;
@@ -3880,7 +3879,7 @@
                                         }
                                         set updateDelay(value){
                                             this._updateDelay = value;
-                                            this.parameters.get('updateDelay').setValueAtTime(this._updateDelay);
+                                            this.parameters.get('updateDelay').setValueAtTime(this._updateDelay,0);
                                         }
                                     
                                         get calculationMode(){
@@ -3888,7 +3887,7 @@
                                         }
                                         set calculationMode(value){
                                             this._calculationMode = value;
-                                            this.parameters.get('calculationMode').setValueAtTime(this._calculationMode);
+                                            this.parameters.get('calculationMode').setValueAtTime(this._calculationMode,0);
                                         }
                                     }
                                 ,
@@ -4369,9 +4368,9 @@
                                             return [
                                                 {
                                                     name: 'waveform',
-                                                    defaultValue: 0, // 0 - sine / 1 - square / 2 - triangle
+                                                    defaultValue: 0, // 0 - sine / 1 - square / 2 - triangle / 3 - noise
                                                     minValue: 0,
-                                                    maxValue: 2,
+                                                    maxValue: 3,
                                                     automationRate: 'k-rate',
                                                 },{
                                                     name: 'frequency',
@@ -4460,6 +4459,9 @@
                                                             }else{
                                                                 output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
                                                             }
+                                                        break;
+                                                        case 3: //noise
+                                                            output[channel][a] = gain*(Math.random()*2 - 1);
                                                         break;
                                                     }
                                                 }
@@ -25298,7 +25300,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:27} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:1} };
                 const interface = this;
             
                 const dev = {
@@ -26581,7 +26583,7 @@
                             this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
                     
                         //controls
-                            this.waveform = function(value){
+                            this.waveform = function(value){ // 0 - sine / 1 - square / 2 - triangle / 3 - noise
                                 if(value == undefined){ return flow.oscillator.node.waveform; }
                                 flow.oscillator.node.waveform = value;
                             };
@@ -27096,6 +27098,42 @@
                             setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
                     };
 
+                    this.momentaryAmplitudeMeter = function(
+                        context
+                    ){
+                        const self = this;
+                    
+                        const momentaryAmplitudeMeter = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(context);
+                        
+                        //io
+                            this.in = function(){ return momentaryAmplitudeMeter; }
+                    
+                        //methods
+                            this.fullSample = function(bool){
+                                if(bool == undefined){ return momentaryAmplitudeMeter.fullSample; }
+                                momentaryAmplitudeMeter.fullSample = bool;
+                            };
+                            this.updateMode = function(bool){
+                                if(bool == undefined){ return momentaryAmplitudeMeter.updateMode; }
+                                momentaryAmplitudeMeter.updateMode = bool;
+                            };
+                            this.updateDelay = function(value){
+                                if(value == undefined){ return momentaryAmplitudeMeter.updateDelay; }
+                                momentaryAmplitudeMeter.updateDelay = value;
+                            };
+                            this.calculationMode = function(mode){
+                                if(mode == undefined){ return momentaryAmplitudeMeter.calculationMode; }
+                                momentaryAmplitudeMeter.calculationMode = mode;
+                            };
+                    
+                        //callback
+                            this.reading = function(){};
+                            momentaryAmplitudeMeter.reading = function(data){
+                                if(self.reading != undefined){
+                                    self.reading(data);
+                                }
+                            };
+                    };
                     this.bitcrusher = function(
                         context
                     ){
@@ -34461,7 +34499,7 @@
                                             backingURL__hover_glow_press,       
                                             backingURL__hover_glow_select,      
                                             backingURL__hover_glow_select_press,
-                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]
+                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ];
                             
                                         if( newImageURL != undefined ){backing.url(newImageURL);}
                                     };

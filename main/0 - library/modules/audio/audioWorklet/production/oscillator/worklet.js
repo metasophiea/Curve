@@ -131,9 +131,9 @@ class oscillator extends AudioWorkletProcessor{
         return [
             {
                 name: 'waveform',
-                defaultValue: 0, // 0 - sine / 1 - square / 2 - triangle
+                defaultValue: 0, // 0 - sine / 1 - square / 2 - triangle / 3 - noise
                 minValue: 0,
-                maxValue: 2,
+                maxValue: 3,
                 automationRate: 'k-rate',
             },{
                 name: 'frequency',
@@ -222,6 +222,9 @@ class oscillator extends AudioWorkletProcessor{
                         }else{
                             output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
                         }
+                    break;
+                    case 3: //noise
+                        output[channel][a] = gain*(Math.random()*2 - 1);
                     break;
                 }
             }

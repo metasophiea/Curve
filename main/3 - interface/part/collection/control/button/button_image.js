@@ -89,7 +89,7 @@ this.button_image = function(
                 backingURL__hover_glow_press,       
                 backingURL__hover_glow_select,      
                 backingURL__hover_glow_select_press,
-            ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]
+            ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ];
 
             if( newImageURL != undefined ){backing.url(newImageURL);}
         };

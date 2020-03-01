@@ -87,16 +87,20 @@ Acoustic Research
         output < gain circuit < |S| < x10 < +1 < dial
                                 | | < amplitude input
     Stable Amplitude Generator (dial (-1 -> 1))
-
-    _ Frequency Generator
+    Simple Stream Adder
+        2 input streams
+        mix selection slider
+    Frequency Generator
         frequency select (0.01hz - 20khz)(maybe all the way to 25khz)
-        3 waves;  sine, square, triangle ( + custom input ? )
-        gain (-1 -> 1)
-    _ Momentary Amplitude Meter (MAM)
+        4 waves;  sine, square, triangle, noise ( + custom input ? )
+        gain (-1 -> 1) (plus mode select)
+        detune dial (plus mode select)
+        "adjuster" dial (plus mode select)
+    Momentary Amplitude Meter (MAM)
         sample rate
         sample length
         readout meter
-    _ White Noise Generator
+
     _ Frequency/Amplitude Response Workstation (FARworkstation) (frequency response)
         over-control
             clear
@@ -109,9 +113,6 @@ Acoustic Research
             time per step
         collector
             graph
-    _ Simple Stream Adder
-        2 input streams
-        mix selection slider
 
 
     _? Amplitude Peak Attenuator

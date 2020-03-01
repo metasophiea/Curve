@@ -72,7 +72,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:28} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:1} };
             const library = this;
         
             this.go = new function(){
@@ -4174,7 +4174,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         };
                                     }
                                 
-                                    
                                 
                                     get fullSample(){
                                         return this._fullSample;
@@ -4197,7 +4196,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                                     set updateDelay(value){
                                         this._updateDelay = value;
-                                        this.parameters.get('updateDelay').setValueAtTime(this._updateDelay);
+                                        this.parameters.get('updateDelay').setValueAtTime(this._updateDelay,0);
                                     }
                                 
                                     get calculationMode(){
@@ -4205,7 +4204,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                                     set calculationMode(value){
                                         this._calculationMode = value;
-                                        this.parameters.get('calculationMode').setValueAtTime(this._calculationMode);
+                                        this.parameters.get('calculationMode').setValueAtTime(this._calculationMode,0);
                                     }
                                 }
                             ,
@@ -4686,9 +4685,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         return [
                                             {
                                                 name: 'waveform',
-                                                defaultValue: 0, // 0 - sine / 1 - square / 2 - triangle
+                                                defaultValue: 0, // 0 - sine / 1 - square / 2 - triangle / 3 - noise
                                                 minValue: 0,
-                                                maxValue: 2,
+                                                maxValue: 3,
                                                 automationRate: 'k-rate',
                                             },{
                                                 name: 'frequency',
@@ -4777,6 +4776,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                         }else{
                                                             output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
                                                         }
+                                                    break;
+                                                    case 3: //noise
+                                                        output[channel][a] = gain*(Math.random()*2 - 1);
                                                     break;
                                                 }
                                             }
@@ -25742,7 +25744,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:27} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:1} };
             const interface = this;
         
             const dev = {
@@ -27072,7 +27074,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
                 
                     //controls
-                        this.waveform = function(value){
+                        this.waveform = function(value){ // 0 - sine / 1 - square / 2 - triangle / 3 - noise
                             if(value == undefined){ return flow.oscillator.node.waveform; }
                             flow.oscillator.node.waveform = value;
                         };
@@ -27587,6 +27589,42 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
                 };
 
+                this.momentaryAmplitudeMeter = function(
+                    context
+                ){
+                    const self = this;
+                
+                    const momentaryAmplitudeMeter = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(context);
+                    
+                    //io
+                        this.in = function(){ return momentaryAmplitudeMeter; }
+                
+                    //methods
+                        this.fullSample = function(bool){
+                            if(bool == undefined){ return momentaryAmplitudeMeter.fullSample; }
+                            momentaryAmplitudeMeter.fullSample = bool;
+                        };
+                        this.updateMode = function(bool){
+                            if(bool == undefined){ return momentaryAmplitudeMeter.updateMode; }
+                            momentaryAmplitudeMeter.updateMode = bool;
+                        };
+                        this.updateDelay = function(value){
+                            if(value == undefined){ return momentaryAmplitudeMeter.updateDelay; }
+                            momentaryAmplitudeMeter.updateDelay = value;
+                        };
+                        this.calculationMode = function(mode){
+                            if(mode == undefined){ return momentaryAmplitudeMeter.calculationMode; }
+                            momentaryAmplitudeMeter.calculationMode = mode;
+                        };
+                
+                    //callback
+                        this.reading = function(){};
+                        momentaryAmplitudeMeter.reading = function(data){
+                            if(self.reading != undefined){
+                                self.reading(data);
+                            }
+                        };
+                };
                 this.bitcrusher = function(
                     context
                 ){
@@ -35088,7 +35126,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         backingURL__hover_glow_press,       
                                         backingURL__hover_glow_select,      
                                         backingURL__hover_glow_select_press,
-                                    ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]
+                                    ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ];
                         
                                     if( newImageURL != undefined ){backing.url(newImageURL);}
                                 };
@@ -43196,7 +43234,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         } );
 
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:28 } };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:01 } };
             this.go = new function(){
                 const functionList = [];
         
@@ -52536,6 +52574,128 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
             };
             this.acousticresearch = new function(){
+                this['momentary_amplitude_meter'] = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
+                                this.imageStoreURL_localPrefix = imageStoreURL+'momentary_amplitude_meter/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:950, height:900 },
+                                    design: { width:9.5, height:9 },
+                                };
+                
+                                this.offset = {x:0,y:0};
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                
+                            this.gauge = {needles:[{r:0,g:0,b:0,a:1}]};
+                        };
+                
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'momentary_amplitude_meter',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height/2 - 15/2, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                },
+                
+                                {collection:'display', type:'meter_gauge', name:'gauge', data:{ 
+                                    x:10+0.5, y:10+0.5, width:60-1, height:40-1,
+                                    markings:{},
+                                    style:{
+                                        backing:{r:0,g:0,b:0,a:0},
+                                        needleColours:[{r:0.98,g:0.98,b:0.98,a:1}],
+                                    },
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'useFullSample', data:{
+                                    x:15, y:60, width:10, height:20,
+                                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'sampleRate', data:{
+                                    x:50, y:71, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, resetValue:0.5, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                                }},
+                            ]
+                        });
+                
+                    //circuitry
+                        const state = {
+                            sampleRate_dial:0,
+                            sampleRate:1,
+                            useFullSample:false,
+                        };
+                        const momentaryAmplitudeMeter = new _canvas_.interface.circuit.momentaryAmplitudeMeter(_canvas_.library.audio.context);
+                        momentaryAmplitudeMeter.reading = function(data){
+                            object.elements.meter_gauge.gauge.set( Math.abs(data) );
+                        };
+                
+                    //wiring
+                        //hid
+                            object.elements.dial_continuous_image.sampleRate.onchange = function(value){
+                                state.sampleRate_dial = value;
+                                value = Math.round(value*30);
+                                if(value < 1){value = 1;}
+                                momentaryAmplitudeMeter.updateDelay( 1000/value );
+                            };
+                            object.elements.checkbox_image.useFullSample.onchange = function(value){
+                                state.useFullSample = value;
+                                momentaryAmplitudeMeter.fullSample(value);
+                            };
+                        //io
+                            object.io.audio.input.audioNode = momentaryAmplitudeMeter.in();
+                
+                    //interface
+                        object.i = {
+                            sampleRate:function(value){
+                                if(value == undefined){ return state.sampleRate; }
+                
+                                if(value == 0 || value == 1){
+                                    object.elements.dial_continuous_image.sampleRate.set(0);
+                                    return;
+                                }
+                                object.elements.dial_continuous_image.sampleRate.set(value/30);
+                            },
+                            fullSample:function(bool){
+                                if(value == undefined){ return state.useFullSample; }
+                                object.elements.checkbox_image.useFullSample.set(bool);
+                            },
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                            return JSON.parse(JSON.stringify(state));
+                        };
+                        object.importData = function(data){
+                            object.elements.dial_continuous_image.sampleRate.set(data.sampleRate_dial);
+                            object.elements.checkbox_image.useFullSample.set(data.useFullSample);
+                        };
+                        
+                    return object;
+                };
+                this['momentary_amplitude_meter'].metadata = {
+                    name:'Momentary Amplitude Meter',
+                    category:'',
+                    helpURL:''
+                };
                 this['gain'] = function(name,x,y,angle){
                     //style data
                         const unitStyle = new function(){
@@ -52715,6 +52875,313 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             cable_glow:{r:247/255,g:203/255,b:133/255,a:1},
                         },
                     },
+                };
+                this['frequency_generator'] = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
+                                this.imageStoreURL_localPrefix = imageStoreURL+'frequency_generator/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:1900, height:1050 },
+                                    design: { width:19, height:10.5 },
+                                };
+                
+                                this.offset = {x:0,y:0};
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                        };
+                
+                    //main object creation
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'frequency_generator',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'control_gain', data:{ 
+                                    x:20, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'control_detune', data:{ 
+                                    x:75, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'control_adjust', data:{ 
+                                    x:130, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height/2 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                },
+                
+                                {collection:'display', type:'readout_sevenSegmentDisplay', name:'LCD', data:{ 
+                                    x:10+0.5, y:20+0.5, width:119-1, height:29.5-1, canvasBased:true, count:8, decimalPlaces:true, style:unitStyle.LCD, resolution:5,
+                                }},
+                
+                                {collection:'control', type:'button_image', name:'waveformSelect_sine', data:{ x:133.5, y:18.5, width:15, height:15, hoverable:false,
+                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_sine_up.png', 
+                                    backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_sine_down.png',
+                                    backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_sine_down.png'
+                                }},
+                                {collection:'control', type:'button_image', name:'waveformSelect_pointed', data:{ x:151.5, y:18.5, width:15, height:15, hoverable:false,
+                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_pointed_up.png', 
+                                    backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_pointed_down.png',
+                                    backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_pointed_down.png'
+                                }},
+                                {collection:'control', type:'button_image', name:'waveformSelect_square', data:{ x:133.5, y:36.5, width:15, height:15, hoverable:false,
+                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_square_up.png', 
+                                    backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_square_down.png',
+                                    backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_square_down.png'
+                                }},
+                                {collection:'control', type:'button_image', name:'waveformSelect_noise', data:{ x:151.5, y:36.5, width:15, height:15, hoverable:false,
+                                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_noise_up.png', 
+                                    backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_noise_down.png',
+                                    backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_noise_down.png'
+                                }},
+                
+                                {collection:'control', type:'button_image', name:'10000_up',    data:{ x:10, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'1000_up',     data:{ x:25, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'100_up',      data:{ x:40, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'10_up',       data:{ x:55, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'1_up',        data:{ x:70, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'0.1_up',      data:{ x:85, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'0.01_up',     data:{ x:100, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'0.001_up',    data:{ x:115, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'10000_down',  data:{ x:10, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'1000_down',   data:{ x:25, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'100_down',    data:{ x:40, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'10_down',     data:{ x:55, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'1_down',      data:{ x:70, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'0.1_down',    data:{ x:85, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'0.01_down',   data:{ x:100, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                {collection:'control', type:'button_image', name:'0.001_down',  data:{ x:115, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                
+                                {collection:'control', type:'dial_continuous_image', name:'gain', data:{
+                                    x:40, y:80, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,value:1, resetValue:0.5, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'detune', data:{
+                                    x:95, y:80, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,value:0.5, resetValue:0.5, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                                }},
+                                {collection:'control', type:'dial_continuous_image', name:'adjust', data:{
+                                    x:150, y:80, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,value:0.5, resetValue:0.5, arcDistance:1.2,
+                                    handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'gain_mode', data:{
+                                    x:7.5, y:70, width:10, height:20,
+                                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'detune_mode', data:{
+                                    x:62.5, y:70, width:10, height:20,
+                                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
+                                }},
+                                {collection:'control', type:'checkbox_image', name:'adjust_mode', data:{
+                                    x:117.5, y:70, width:10, height:20,
+                                    uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                                    checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
+                                }},
+                            ]
+                        });
+                
+                    //circuitry
+                        const state = {
+                            frequencyLimits:{top:20000, bottom:0.001},
+                            frequencyDigits:[0,0,1,0,0,0,0,0],
+                            waveform:'sine',
+                            gain:1,
+                            detune:0,
+                            adjust:0.5,
+                            gain_mode:false,
+                            detune_mode:false,
+                            adjust_mode:false,
+                        };
+                        const oscillator = new _canvas_.interface.circuit.oscillator(_canvas_.library.audio.context);
+                        function stepFrequencyCharacter(index,increment){
+                            if(increment){
+                                state.frequencyDigits[index]++;
+                                if(state.frequencyDigits[index] > 9){ state.frequencyDigits[index] = 0; }
+                            }else{
+                                state.frequencyDigits[index]--;
+                                if(state.frequencyDigits[index] < 0){ state.frequencyDigits[index] = 9; }
+                            }
+                            updateFrequency();
+                        }
+                        function updateFrequency(){
+                            let frequency = parseFloat(state.frequencyDigits.slice(0,5).join('') +'.'+ state.frequencyDigits.slice(5).join(''));
+                            if( frequency > state.frequencyLimits.top){
+                                state.frequencyDigits = [2,0,0,0,0,0,0,0];
+                            }else if(frequency < state.frequencyLimits.bottom){ 
+                                state.frequencyDigits = [0,0,0,0,0,0,0,1];
+                            }
+                            frequency = state.frequencyDigits.slice(0,5).join('') +'.'+ state.frequencyDigits.slice(5).join('');
+                
+                            object.elements.readout_sevenSegmentDisplay.LCD.text( frequency );
+                            object.elements.readout_sevenSegmentDisplay.LCD.print();
+                
+                            oscillator.frequency(parseFloat(frequency));
+                        }
+                        function selectWaveform(waveform){
+                            if(state.waveform == waveform){ return; }
+                            object.elements.button_image['waveformSelect_'+state.waveform].glow(false);
+                            state.waveform = waveform;
+                            object.elements.button_image['waveformSelect_'+state.waveform].glow(true);
+                
+                            oscillator.waveform(
+                                ['sine','square','pointed','noise'].indexOf(waveform)
+                            );
+                        }
+                
+                    //wiring
+                        //hid
+                            object.elements.button_image.waveformSelect_sine.onpress = function(){ selectWaveform('sine'); };
+                            object.elements.button_image.waveformSelect_pointed.onpress = function(){ selectWaveform('pointed'); };
+                            object.elements.button_image.waveformSelect_square.onpress = function(){ selectWaveform('square'); };
+                            object.elements.button_image.waveformSelect_noise.onpress = function(){ selectWaveform('noise'); };
+                            
+                            object.elements.button_image['10000_up'].onpress = function(){   stepFrequencyCharacter(0,true); };
+                            object.elements.button_image['1000_up'].onpress = function(){    stepFrequencyCharacter(1,true); };
+                            object.elements.button_image['100_up'].onpress = function(){     stepFrequencyCharacter(2,true); };
+                            object.elements.button_image['10_up'].onpress = function(){      stepFrequencyCharacter(3,true); };
+                            object.elements.button_image['1_up'].onpress = function(){       stepFrequencyCharacter(4,true); };
+                            object.elements.button_image['0.1_up'].onpress = function(){     stepFrequencyCharacter(5,true); };
+                            object.elements.button_image['0.01_up'].onpress = function(){    stepFrequencyCharacter(6,true); };
+                            object.elements.button_image['0.001_up'].onpress = function(){   stepFrequencyCharacter(7,true); };
+                            object.elements.button_image['10000_down'].onpress = function(){ stepFrequencyCharacter(0,false); };
+                            object.elements.button_image['1000_down'].onpress = function(){  stepFrequencyCharacter(1,false); };
+                            object.elements.button_image['100_down'].onpress = function(){   stepFrequencyCharacter(2,false); };
+                            object.elements.button_image['10_down'].onpress = function(){    stepFrequencyCharacter(3,false); };
+                            object.elements.button_image['1_down'].onpress = function(){     stepFrequencyCharacter(4,false); };
+                            object.elements.button_image['0.1_down'].onpress = function(){   stepFrequencyCharacter(5,false); };
+                            object.elements.button_image['0.01_down'].onpress = function(){  stepFrequencyCharacter(6,false); };
+                            object.elements.button_image['0.001_down'].onpress = function(){ stepFrequencyCharacter(7,false); };
+                
+                            object.elements.dial_continuous_image.gain.onchange = function(value){ 
+                                state.gain = value;
+                                oscillator.gain(value*2 - 1);
+                            };
+                            object.elements.dial_continuous_image.detune.onchange = function(value){ 
+                                state.detune = value;
+                                oscillator.detune(value*2 - 1);
+                            };
+                            object.elements.dial_continuous_image.adjust.onchange = function(value){ 
+                                state.adjust = value;
+                                oscillator.dutyCycle(value);
+                            };
+                            object.elements.checkbox_image.gain_mode.onchange = function(value){ 
+                                state.gain_mode = value;
+                                oscillator.gainMode(value?1:0);
+                            };
+                            object.elements.checkbox_image.detune_mode.onchange = function(value){ 
+                                state.detune_mode = value;
+                                oscillator.detuneMode(value?1:0);
+                            };
+                            object.elements.checkbox_image.adjust_mode.onchange = function(value){ 
+                                state.adjust_mode = value;
+                                oscillator.dutyCycleMode(value?1:0);
+                            };
+                
+                        //io
+                            object.io.audio.control_gain.audioNode = oscillator.gainControl();
+                            object.io.audio.control_detune.audioNode = oscillator.detuneControl();
+                            object.io.audio.control_adjust.audioNode = oscillator.dutyCycleControl();
+                            object.io.audio.output.audioNode = oscillator.out();
+                
+                    //interface
+                        object.i = {
+                            frequency:function(value){
+                                if(value == undefined){ return parseFloat(state.frequencyDigits.slice(0,5).join('') +'.'+ state.frequencyDigits.slice(5).join('')); }
+                
+                                if( value > state.frequencyLimits.top){
+                                    value = 20000;
+                                }else if(value < state.frequencyLimits.bottom){ 
+                                    value = 0.001;
+                                }
+                
+                                const sides = String(value).split('.');
+                                _canvas_.library.misc.padString(String(sides[0]).split('.')[0],5,'0').split('').forEach((value,index) => {
+                                    state.frequencyDigits[index] = value;
+                                });
+                                if(sides.length > 1){
+                                    _canvas_.library.misc.padString(String(sides[1]).split('.')[0],3,'0','r').split('').forEach((value,index) => {
+                                        state.frequencyDigits[index+5] = value;
+                                    });
+                                }
+                
+                                updateFrequency();
+                            },
+                            waveform:function(wavename){
+                                if(wavename == undefined){ return state.waveform; }
+                                selectWaveform(wavename);
+                            },
+                            gain:function(value){
+                                if(value == undefined){ return state.gain; }
+                                object.elements.dial_continuous_image.gain.set((value+1)/2);
+                            },
+                            detune:function(value){
+                                if(value == undefined){ return state.detune; }
+                                object.elements.dial_continuous_image.detune.set((value+1)/2);
+                            },
+                            adjust:function(value){
+                                if(value == undefined){ return state.adjust; }
+                                object.elements.dial_continuous_image.adjust.set(value);
+                            },
+                            gainMode:function(bool){
+                                if(bool == undefined){ return state.gain_mode; }
+                                object.elements.checkbox_image.gain_mode.set(bool);
+                            },
+                            detuneMode:function(bool){
+                                if(bool == undefined){ return state.detune_mode; }
+                                object.elements.checkbox_image.detune_mode.set(bool);
+                            },
+                            adjustMode:function(bool){
+                                if(bool == undefined){ return state.adjust_mode; }
+                                object.elements.checkbox_image.adjust_mode.set(bool);
+                            },
+                        };
+                
+                    //import/export
+                        object.exportData = function(){
+                            return JSON.parse(JSON.stringify(state));
+                        };
+                        object.importData = function(data){
+                            state.frequencyDigits = data.frequencyDigits;
+                            updateFrequency();
+                            selectWaveform(data.waveform);
+                            object.elements.dial_continuous_image.gain.set((data.gain+1)/2);
+                            object.elements.dial_continuous_image.detune.set((data.detune+1)/2);
+                            object.elements.dial_continuous_image.adjust.set(data.adjust);
+                            object.elements.checkbox_image.gain_mode.set(data.gain_mode);
+                            object.elements.checkbox_image.detune_mode.set(data.detune_mode);
+                            object.elements.checkbox_image.adjust_mode.set(data.adjust_mode);
+                        };
+                
+                    //oncreate/ondelete
+                        object.oncreate = function(){
+                            updateFrequency();
+                            object.elements.button_image.waveformSelect_sine.glow(true);
+                        };
+                    
+                    return object;
+                };
+                this['frequency_generator'].metadata = {
+                    name:'Frequency Generator',
+                    category:'',
+                    helpURL:''
                 };
                 this['bitcrusher'] = function(name,x,y,angle){
                     //style data
@@ -53374,7 +53841,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 }},
                                 
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                 },
                 
                                 {collection:'control', type:'dial_continuous_image', name:'samples', data:{
@@ -53713,7 +54180,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             // const lp = _canvas_.control.scene.addUnit(10,10,0,'lag_processor','acousticresearch');
             // const g = _canvas_.control.scene.addUnit(10,10,0,'gain','acousticresearch');
             // const sag = _canvas_.control.scene.addUnit(10,10,0,'stable_amplitude_generator','acousticresearch');
-            const sa = _canvas_.control.scene.addUnit(10,10,0,'stream_adder','acousticresearch');
+            // const sa = _canvas_.control.scene.addUnit(10,10,0,'stream_adder','acousticresearch');
+            // const fg = _canvas_.control.scene.addUnit(10,10,0,'frequency_generator','acousticresearch');
+            const mam = _canvas_.control.scene.addUnit(10,10,0,'momentary_amplitude_meter','acousticresearch');
+            
             
         
         

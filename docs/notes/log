@@ -1,6 +1,16 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-03-01
+  - finished off the Frequency Generator unit
+  - added the momentaryAmplitudeMeter circuit
+  - tiny bug-fix in the momentaryAmplitudeMeter worklet
+  - added Acoustic Research's Momentary Amplitude Meter unit
+  
+
 2020-02-29
   - created Acoustic Research's Stream Adder unit
+  - updated the custom oscillator to have a 'white noise' option (making the
+    whiteNoiseGenerator worklet obsolete, probably)
+  - created Acoustic Research's Frequency Generator unit
 
 
 2020-02-28

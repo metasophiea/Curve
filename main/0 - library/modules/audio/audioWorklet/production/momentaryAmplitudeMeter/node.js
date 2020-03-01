@@ -25,7 +25,6 @@ class momentaryAmplitudeMeter extends AudioWorkletNode{
         };
     }
 
-    
 
     get fullSample(){
         return this._fullSample;
@@ -48,7 +47,7 @@ class momentaryAmplitudeMeter extends AudioWorkletNode{
     }
     set updateDelay(value){
         this._updateDelay = value;
-        this.parameters.get('updateDelay').setValueAtTime(this._updateDelay);
+        this.parameters.get('updateDelay').setValueAtTime(this._updateDelay,0);
     }
 
     get calculationMode(){
@@ -56,6 +55,6 @@ class momentaryAmplitudeMeter extends AudioWorkletNode{
     }
     set calculationMode(value){
         this._calculationMode = value;
-        this.parameters.get('calculationMode').setValueAtTime(this._calculationMode);
+        this.parameters.get('calculationMode').setValueAtTime(this._calculationMode,0);
     }
 }

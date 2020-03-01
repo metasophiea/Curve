@@ -39,7 +39,7 @@ this['lag_processor'] = function(name,x,y,angle){
                 }},
                 
                 {collection:'basic', type:'image', name:'backing', 
-                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
+                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                 },
 
                 {collection:'control', type:'dial_continuous_image', name:'samples', data:{

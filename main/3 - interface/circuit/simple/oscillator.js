@@ -42,7 +42,7 @@ this.oscillator = function(
         this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
 
     //controls
-        this.waveform = function(value){
+        this.waveform = function(value){ // 0 - sine / 1 - square / 2 - triangle / 3 - noise
             if(value == undefined){ return flow.oscillator.node.waveform; }
             flow.oscillator.node.waveform = value;
         };
