@@ -215,6 +215,7 @@ _canvas_.control.go.add( function(){
                     spaceHeight: 1,
                     itemList:[
                         {type:'button', text_left:'Release All Keyboard Keys', function:function(){ _canvas_.system.keyboard.releaseAll(); } },
+                        {type:'button', text_left:'Reset Cursor', function:function(){ _canvas_.core.viewport.cursor('default'); } },
                         {type:'checkbox', text_left:'Limit Frame Rate (30fps)', 
                             updateFunction:_canvas_.core.render.activeLimitToFrameRate, 
                             onclickFunction:function(val){_canvas_.core.render.activeLimitToFrameRate(val);}

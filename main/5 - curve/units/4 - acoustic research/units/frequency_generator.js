@@ -31,11 +31,20 @@ this['frequency_generator'] = function(name,x,y,angle){
                 {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
             ],
             elements:[
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_gain', data:{ 
+                    x:45, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
                 {collection:'dynamic', type:'connectionNode_audio', name:'control_gain', data:{ 
                     x:20, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
                 }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_detune', data:{ 
+                    x:100, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
                 {collection:'dynamic', type:'connectionNode_audio', name:'control_detune', data:{ 
                     x:75, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_adjust', data:{ 
+                    x:155, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
                 }},
                 {collection:'dynamic', type:'connectionNode_audio', name:'control_adjust', data:{ 
                     x:130, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
@@ -53,42 +62,42 @@ this['frequency_generator'] = function(name,x,y,angle){
                 }},
 
                 {collection:'control', type:'button_image', name:'waveformSelect_sine', data:{ x:133.5, y:18.5, width:15, height:15, hoverable:false,
-                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_sine_up.png', 
-                    backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_sine_down.png',
-                    backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_sine_down.png'
+                    backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_sine_up.png', 
+                    backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_sine_down.png',
+                    backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_sine_down.png'
                 }},
                 {collection:'control', type:'button_image', name:'waveformSelect_pointed', data:{ x:151.5, y:18.5, width:15, height:15, hoverable:false,
-                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_pointed_up.png', 
-                    backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_pointed_down.png',
-                    backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_pointed_down.png'
+                    backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_pointed_up.png', 
+                    backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_pointed_down.png',
+                    backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_pointed_down.png'
                 }},
                 {collection:'control', type:'button_image', name:'waveformSelect_square', data:{ x:133.5, y:36.5, width:15, height:15, hoverable:false,
-                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_square_up.png', 
-                    backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_square_down.png',
-                    backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_square_down.png'
+                    backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_square_up.png', 
+                    backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_square_down.png',
+                    backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_square_down.png'
                 }},
                 {collection:'control', type:'button_image', name:'waveformSelect_noise', data:{ x:151.5, y:36.5, width:15, height:15, hoverable:false,
-                    backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_noise_up.png', 
-                    backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_noise_down.png',
-                    backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_noise_down.png'
+                    backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_noise_up.png', 
+                    backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_noise_down.png',
+                    backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_noise_down.png'
                 }},
 
-                {collection:'control', type:'button_image', name:'10000_up',    data:{ x:10, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'1000_up',     data:{ x:25, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'100_up',      data:{ x:40, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'10_up',       data:{ x:55, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'1_up',        data:{ x:70, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'0.1_up',      data:{ x:85, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'0.01_up',     data:{ x:100, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'0.001_up',    data:{ x:115, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'10000_down',  data:{ x:10, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'1000_down',   data:{ x:25, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'100_down',    data:{ x:40, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'10_down',     data:{ x:55, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'1_down',      data:{ x:70, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'0.1_down',    data:{ x:85, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'0.01_down',   data:{ x:100, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
-                {collection:'control', type:'button_image', name:'0.001_down',  data:{ x:115, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                {collection:'control', type:'button_image', name:'10000_up',    data:{ x:10, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'1000_up',     data:{ x:25, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'100_up',      data:{ x:40, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'10_up',       data:{ x:55, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'1_up',        data:{ x:70, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'0.1_up',      data:{ x:85, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'0.01_up',     data:{ x:100, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'0.001_up',    data:{ x:115, y:10, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'10000_down',  data:{ x:10, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'1000_down',   data:{ x:25, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'100_down',    data:{ x:40, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'10_down',     data:{ x:55, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'1_down',      data:{ x:70, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'0.1_down',    data:{ x:85, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'0.01_down',   data:{ x:100, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
+                {collection:'control', type:'button_image', name:'0.001_down',  data:{ x:115, y:50, width:14, height:9, hoverable:false, backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_tab_up.png', backingURL__press:unitStyle.imageStoreURL_commonPrefix+'button_tab_down.png' }},
 
                 {collection:'control', type:'dial_continuous_image', name:'gain', data:{
                     x:40, y:80, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,value:1, resetValue:0.5, arcDistance:1.2,
@@ -218,6 +227,15 @@ this['frequency_generator'] = function(name,x,y,angle){
             };
 
         //io
+            object.io.voltage.voltage_gain.onchange = function(value){
+                object.elements.dial_continuous_image.gain.set( (value+1)/2 );
+            };
+            object.io.voltage.voltage_detune.onchange = function(value){
+                object.elements.dial_continuous_image.detune.set( (value+1)/2 );
+            };
+            object.io.voltage.voltage_adjust.onchange = function(value){
+                object.elements.dial_continuous_image.adjust.set(value);
+            };
             object.io.audio.control_gain.audioNode = oscillator.gainControl();
             object.io.audio.control_detune.audioNode = oscillator.detuneControl();
             object.io.audio.control_adjust.audioNode = oscillator.dutyCycleControl();

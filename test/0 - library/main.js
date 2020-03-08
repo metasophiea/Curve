@@ -1,5 +1,5 @@
 {{include:../../main/0 - library/main.js}}
-{{include:grapher.js}}
+{{include:../grapher.js}}
 
 // {
 //     {{include:structuredTests/math/misc.js}}
@@ -35,9 +35,10 @@
 
 
 
-{{include:unstructuredTests/1.js}} //audioWorket tests
+// {{include:unstructuredTests/1.js}} //audioWorket tests
 // {{include:unstructuredTests/2.js}} //frequency/amplitude measure
 // {{include:unstructuredTests/3.js}} //angles around a circle maker
+{{include:unstructuredTests/4.js}} //custom oscillator 
 
 
 

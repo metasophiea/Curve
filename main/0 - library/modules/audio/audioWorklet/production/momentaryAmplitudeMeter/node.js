@@ -7,6 +7,7 @@ class momentaryAmplitudeMeter extends AudioWorkletNode{
 
         const self = this;
 
+        this._active = true;
         this._fullSample = false;
         this._updateMode = 0;
         this._updateDelay = 100;
@@ -23,8 +24,19 @@ class momentaryAmplitudeMeter extends AudioWorkletNode{
         this.requestReading = function(){
             this.port.postMessage('readingRequest');
         };
+        this.sync = function(){
+            this.port.postMessage('sync');
+        };
     }
 
+
+    get active(){
+        return this._active;
+    }
+    set active(value){
+        this._active = value;
+        this.parameters.get('active').setValueAtTime(this._active?1:0,0);
+    }
 
     get fullSample(){
         return this._fullSample;

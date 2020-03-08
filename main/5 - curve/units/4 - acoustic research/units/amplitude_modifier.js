@@ -37,6 +37,21 @@ this['amplitude_modifier'] = function(name,x,y,angle){
                 {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
                     x:0, y:unitStyle.drawingValue.height/2 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
                 }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_offset', data:{ 
+                    x:30, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_divideBy', data:{ 
+                    x:40, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_ceiling', data:{ 
+                    x:70, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_floor', data:{ 
+                    x:80, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
+                {collection:'dynamic', type:'connectionNode_signal', name:'signal_invert', data:{ 
+                    x:15, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                }},
                 
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
@@ -101,6 +116,24 @@ this['amplitude_modifier'] = function(name,x,y,angle){
         //io
             object.io.audio.input.audioNode = amplitudeModifier.in();
             object.io.audio.output.audioNode = amplitudeModifier.out();
+            object.io.voltage.voltage_offset.onchange = function(value){
+                object.elements.dial_continuous_image.offset.set( (value+1)/2 );
+            };
+            object.io.voltage.voltage_divideBy.onchange = function(value){
+                object.elements.dial_continuous_image.divideBy.set( value/8 );
+            };
+            object.io.voltage.voltage_ceiling.onchange = function(value){
+                object.elements.dial_continuous_image.ceiling.set( value/2 );
+            };
+            object.io.voltage.voltage_floor.onchange = function(value){
+                object.elements.dial_continuous_image.floor.set( (2+value)/2 );
+            };
+            object.io.signal.signal_invert.onchange = function(value){
+                if(!value){return;}
+                object.elements.checkbox_image.invert.set(
+                    !object.elements.checkbox_image.invert.get()
+                );
+            };
 
     //interface
         object.i = {

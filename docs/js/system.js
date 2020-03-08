@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:1} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:7} };
                 const library = this;
             
                 this.go = new function(){
@@ -3737,6 +3737,12 @@
                                         static get parameterDescriptors(){
                                             return [
                                                 {
+                                                    name: 'active',
+                                                    defaultValue: 1, // 0 - off / 1 - on
+                                                    minValue: 0,
+                                                    maxValue: 1,
+                                                    automationRate: 'k-rate',
+                                                },{
                                                     name: 'fullSample',
                                                     defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame since the last time a value was returned
                                                     minValue: 0,
@@ -3770,8 +3776,12 @@
                                             this._lastUpdate = currentTime;
                                             this._dataArray = [];
                                             this._readingRequested = false;
+                                            this._sync = false;
                                     
                                             this.port.onmessage = function(event){
+                                                if(event.data == 'sync'){
+                                                    self._sync = true;
+                                                }
                                                 if(event.data == 'readingRequest'){
                                                     self._readingRequested = true;
                                                 }
@@ -3785,6 +3795,8 @@
                                             const updateDelay = parameters.updateDelay[0];
                                             const calculationMode = parameters.calculationMode[0];
                                     
+                                            if( parameters.active[0] == 0 ){ return true; }
+                                    
                                             if(fullSample){
                                                 this._dataArray.push(...input[0]);
                                             }else{
@@ -3792,9 +3804,11 @@
                                             }
                                     
                                             if( 
+                                                this._sync ||
                                                 (parameters.updateMode[0] == 0 && (currentTime - this._lastUpdate > updateDelay/1000)) ||
                                                 (parameters.updateMode[0] == 1 && this._readingRequested)
                                             ){
+                                                this._sync = false;
                                                 this._readingRequested = false;
                                                 this._lastUpdate = currentTime;
                                     
@@ -3839,6 +3853,7 @@
                                     
                                             const self = this;
                                     
+                                            this._active = true;
                                             this._fullSample = false;
                                             this._updateMode = 0;
                                             this._updateDelay = 100;
@@ -3855,8 +3870,19 @@
                                             this.requestReading = function(){
                                                 this.port.postMessage('readingRequest');
                                             };
+                                            this.sync = function(){
+                                                this.port.postMessage('sync');
+                                            };
                                         }
                                     
+                                    
+                                        get active(){
+                                            return this._active;
+                                        }
+                                        set active(value){
+                                            this._active = value;
+                                            this.parameters.get('active').setValueAtTime(this._active?1:0,0);
+                                        }
                                     
                                         get fullSample(){
                                             return this._fullSample;
@@ -4557,6 +4583,413 @@
                                 ,
                             },
                             {
+                                name:'oscillator2',
+                                worklet:new Blob([`
+                                    class oscillator2 extends AudioWorkletProcessor{
+                                        static twoPI = Math.PI*2;
+                                        static starterFrequency = 440;
+                                        static maxFrequency = 20000;
+                                        static detuneMux = 0.1;
+                                        static detuneBounds = 1/oscillator2.detuneMux;
+                                    
+                                        static get parameterDescriptors(){
+                                            return [
+                                                {
+                                                    name: 'frequency',
+                                                    defaultValue: oscillator2.starterFrequency,
+                                                    minValue: 0,
+                                                    maxValue: oscillator2.maxFrequency,
+                                                    automationRate: 'a-rate',
+                                                },{
+                                                    name: 'gain',
+                                                    defaultValue: 1,
+                                                    minValue: -1,
+                                                    maxValue: 1,
+                                                    automationRate: 'a-rate',
+                                                },{
+                                                    name: 'detune',
+                                                    defaultValue: 0,
+                                                    minValue: -oscillator2.detuneBounds,
+                                                    maxValue: oscillator2.detuneBounds,
+                                                    automationRate: 'a-rate',
+                                                },{
+                                                    name: 'dutyCycle',
+                                                    defaultValue: 0.5,
+                                                    minValue: 0,
+                                                    maxValue: 1,
+                                                    automationRate: 'a-rate',
+                                                },
+                                            ];
+                                        }
+                                    
+                                        constructor(options){
+                                            super(options);
+                                            const self = this;
+                                            this._wavePosition = 0;
+                                    
+                                            this._state = {
+                                                waveform:'sine',
+                                                gain_useControl:false,
+                                                detune_useControl:false,
+                                                dutyCycle_useControl:false,
+                                            };
+                                            this._envelope = {
+                                                gain:{
+                                                    phase:'off', // front - wait - back - off
+                                                    requestedPhase:undefined,
+                                    
+                                                    step:0,
+                                                    previous:0,
+                                                    current:0,
+                                    
+                                                    procedure:{
+                                                        index:0,
+                                                        sample:0,
+                                                        front:[ {destination:1, elapse:0, _elapseSamples:1} ],
+                                                        back:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                    },
+                                                    defaultProcedurePoint:{
+                                                        front:{destination:1, elapse:0, _elapseSamples:1},
+                                                        back:{destination:0, elapse:0, _elapseSamples:1},
+                                                    },
+                                                },
+                                                detune:{
+                                                    phase:'off', // front - wait - back - off
+                                                    requestedPhase:undefined,
+                                    
+                                                    step:0,
+                                                    previous:0,
+                                                    current:0,
+                                    
+                                                    procedure:{
+                                                        index:0,
+                                                        sample:0,
+                                                        front:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                        back:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                    },
+                                                    defaultProcedurePoint:{
+                                                        front:{destination:0, elapse:0, _elapseSamples:1},
+                                                        back:{destination:0, elapse:0, _elapseSamples:1},
+                                                    },
+                                                },
+                                                dutyCycle:{
+                                                    phase:'off', // front - wait - back - off
+                                                    requestedPhase:undefined,
+                                    
+                                                    step:0,
+                                                    previous:0,
+                                                    current:0,
+                                    
+                                                    procedure:{
+                                                        index:0,
+                                                        sample:0,
+                                                        front:[ {destination:0.5, elapse:0, _elapseSamples:1} ],
+                                                        back:[ {destination:0.5, elapse:0, _elapseSamples:1} ],
+                                                    },
+                                                    defaultProcedurePoint:{
+                                                        front:{destination:0.5, elapse:0, _elapseSamples:1},
+                                                        back:{destination:0.5, elapse:0, _elapseSamples:1},
+                                                    },
+                                                },
+                                            };
+                                    
+                                            this.port.onmessage = function(event){
+                                                Object.entries(event.data).forEach(([key,value]) => {
+                                                    switch(key){
+                                                        case 'command':
+                                                            switch(value){
+                                                                case 'start':
+                                                                    Object.keys(self._envelope).forEach(aspect => {
+                                                                        if(self._envelope[aspect].requestedPhase == 'back' || self._envelope[aspect].phase == 'back' || self._envelope[aspect].phase == 'off'){
+                                                                            self._envelope[aspect].requestedPhase = 'front';
+                                                                        }
+                                                                    });
+                                                                break;
+                                                                case 'stop':
+                                                                    Object.keys(self._envelope).forEach(aspect => {
+                                                                        if(self._envelope[aspect].requestedPhase == 'front' || self._envelope[aspect].phase == 'front' || self._envelope[aspect].phase == 'wait'){
+                                                                            self._envelope[aspect].requestedPhase = 'back';
+                                                                        }
+                                                                    });
+                                                                break;
+                                                            }
+                                                        break;
+                                                        case 'waveform': 
+                                                            self._state.waveform = value;
+                                                        break;
+                                                        case 'gain_useControl': 
+                                                            self._state.gain_useControl = value;
+                                                        break;
+                                                        case 'detune_useControl': 
+                                                            self._state.detune_useControl = value;
+                                                        break;
+                                                        case 'dutyCycle_useControl': 
+                                                            self._state.dutyCycle_useControl = value;
+                                                        break;
+                                                        case 'gain_envelope':
+                                                            Object.entries(value).forEach(([phase,points]) => {
+                                                                if( points != undefined && points.length != 0 ){
+                                                                    self._envelope.gain.procedure[phase] = points.map(point => {
+                                                                        return {
+                                                                            destination:point.destination, 
+                                                                            elapse:point.elapse, 
+                                                                            _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
+                                                                        };
+                                                                    });
+                                                                }else{
+                                                                    self._envelope.gain.procedure[phase] = [self._envelope.gain.defaultProcedurePoint[phase]];
+                                                                }
+                                                            });
+                                                        break;
+                                                        case 'detune_envelope':
+                                                            Object.entries(value).forEach(([phase,points]) => {
+                                                                if( points != undefined && points.length != 0 ){
+                                                                    self._envelope.detune.procedure[phase] = points.map(point => {
+                                                                        return {
+                                                                            destination:point.destination, 
+                                                                            elapse:point.elapse, 
+                                                                            _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
+                                                                        };
+                                                                    });
+                                                                }else{
+                                                                    self._envelope.detune.procedure[phase] = [self._envelope.detune.defaultProcedurePoint[phase]];
+                                                                }
+                                                            });
+                                                        break;
+                                                        case 'dutyCycle_envelope':
+                                                            Object.entries(value).forEach(([phase,points]) => {
+                                                                if( points != undefined && points.length != 0 ){
+                                                                    self._envelope.dutyCycle.procedure[phase] = points.map(point => {
+                                                                        return {
+                                                                            destination:point.destination, 
+                                                                            elapse:point.elapse, 
+                                                                            _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
+                                                                        };
+                                                                    });
+                                                                }else{
+                                                                    self._envelope.dutyCycle.procedure[phase] = [self._envelope.dutyCycle.defaultProcedurePoint[phase]];
+                                                                }
+                                                            });
+                                                        break;
+                                                    }
+                                                });
+                                            };
+                                            this.port.start();
+                                        }
+                                    
+                                        process(inputs, outputs, parameters){
+                                            //envelope activation
+                                                this.activatePhase();
+                                                if( this._envelope.gain.phase == 'off'){ return true; }
+                                    
+                                            //io
+                                                const output = outputs[0];
+                                                const gainControl = inputs[0]; 
+                                                const detuneControl = inputs[1];
+                                                const dutyCycleControl = inputs[2];
+                                    
+                                            //oscillation generation
+                                                const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                                const detune_useFirstOnly = parameters.detune.length == 1;
+                                                const gain_useFirstOnly = parameters.gain.length == 1;
+                                    
+                                                for(let channel = 0; channel < output.length; channel++){
+                                                    for(let a = 0; a < output[channel].length; a++){
+                                                        //envelope calculation
+                                                            Object.keys(this._envelope).forEach(aspect => {
+                                                                if(this._envelope[aspect].phase == 'front' || this._envelope[aspect].phase == 'back'){
+                                                                    if( currentFrame+a - this._envelope[aspect].procedure.sample >= this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index]._elapseSamples ){
+                                                                        this._envelope[aspect].procedure.index++;
+                                                                        this._envelope[aspect].procedure.sample = currentFrame+a;
+                                                                        if( this._envelope[aspect].procedure.index >= this._envelope[aspect].procedure[this._envelope[aspect].phase].length){
+                                                                            if(this._envelope[aspect].phase == 'front'){
+                                                                                this._envelope[aspect].phase = 'wait';
+                                                                                this.reportPhase(aspect);
+                                                                                this._envelope[aspect].step = 0;
+                                                                            }else if(this._envelope[aspect].phase == 'back'){
+                                                                                this._envelope[aspect].phase = 'off';
+                                                                                this.reportPhase(aspect);
+                                                                                this._envelope[aspect].step = 0;
+                                                                            }
+                                                                        }else{
+                                                                            this._envelope[aspect].previous = this._envelope[aspect].current;
+                                                                            this._envelope[aspect].step = (this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index].destination - this._envelope[aspect].previous)/this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index]._elapseSamples;                    
+                                                                        }
+                                                                    }
+                                                                }
+                                                                this._envelope[aspect].current += this._envelope[aspect].step;
+                                                            });
+                                    
+                                                        //aspect calculation
+                                                            const gain = this._envelope.gain.current * (this._state.gain_useControl ? gainControl[channel][a] : (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]));
+                                                            const detune = this._envelope.detune.current + (this._state.detune_useControl ? detuneControl[channel][a] : (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]));
+                                                            const dutyCycle = this._envelope.dutyCycle.current + (this._state.dutyCycle_useControl ? dutyCycleControl[channel][a] : (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]));
+                                    
+                                                        //wave calculation
+                                                            const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                            this._wavePosition += (frequency*(detune*oscillator2.detuneMux + 1))/sampleRate;
+                                                            const localWavePosition = this._wavePosition % 1;
+                                    
+                                                            switch(this._state.waveform){
+                                                                case 'sine':
+                                                                    output[channel][a] = gain*Math.sin( localWavePosition * oscillator2.twoPI );
+                                                                break;
+                                                                case 'square':
+                                                                    output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                                                break;
+                                                                case 'triangle':
+                                                                    if(localWavePosition < dutyCycle/2){
+                                                                        output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                                                    }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                                        output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                                                    }else{
+                                                                        output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                                                    }
+                                                                break;
+                                                                case 'noise': default: 
+                                                                    output[channel][a] = gain*(Math.random()*2 - 1);
+                                                                break;
+                                                            }
+                                                    }
+                                                }
+                                    
+                                            return true;
+                                        }
+                                    
+                                        activatePhase(){
+                                            Object.keys(this._envelope).forEach(aspect => {
+                                                if( this._envelope[aspect].requestedPhase != undefined && this._envelope[aspect].requestedPhase != this._envelope[aspect].phase ){
+                                                    this._envelope[aspect].phase = this._envelope[aspect].requestedPhase;
+                                                    this.reportPhase(aspect);
+                                                    this._envelope[aspect].requestedPhase = undefined;
+                                                    this._envelope[aspect].procedure.sample = currentFrame;
+                                                    this._envelope[aspect].procedure.index = 0;
+                                                    this._envelope[aspect].previous = this._envelope[aspect].current;
+                                                    this._envelope[aspect].step = (this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index].destination - this._envelope[aspect].previous)/this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index]._elapseSamples;
+                                                    if( aspect == 'gain' && this._envelope.gain.phase == 'start' ){ this._wavePosition = 0; }
+                                                }
+                                            });
+                                        }
+                                    
+                                        reportPhase(aspect){
+                                            const self = this;
+                                            this.port.postMessage(
+                                                (() => {
+                                                    const tmp = {};
+                                                    tmp[aspect+'_phase'] = self._envelope[aspect].phase;
+                                                    return tmp;
+                                                })()
+                                            );
+                                        }
+                                    }
+                                    registerProcessor('oscillator2', oscillator2);
+                                `], { type: "text/javascript" }),
+                                class:
+                                    class oscillator2 extends AudioWorkletNode{
+                                        constructor(context, options={}){
+                                            options.numberOfInputs = 3;
+                                            options.numberOfOutputs = 1;
+                                            options.channelCount = 1;
+                                            super(context, 'oscillator2', options);
+                                            const self = this;
+                                    
+                                            this._state = {
+                                                waveform:'sin',
+                                                gain_useControl:false,
+                                                detune_useControl:false,
+                                                dutyCycle_useControl:false,
+                                            };
+                                            this._gainEnvelope = {
+                                                front:[ {destination:1, elapse:0} ],
+                                                back:[ {destination:0, elapse:0} ],
+                                            };
+                                    
+                                            this.port.onmessage = function(event){
+                                                if(self.onEnvelopeEvent == undefined){ return; }
+                                                self.onEnvelopeEvent(event.data.gain_phase);
+                                            };
+                                    
+                                            this.start = function(){
+                                                this.port.postMessage({command:'start'});
+                                            };
+                                            this.stop = function(){
+                                                this.port.postMessage({command:'stop'});
+                                            };
+                                    
+                                            this.onEnvelopeEvent = function(){};
+                                        }
+                                    
+                                    
+                                        get frequency(){
+                                            return this.parameters.get('frequency');
+                                        }
+                                        get gain(){
+                                            return this.parameters.get('gain');
+                                        }
+                                        get detune(){
+                                            return this.parameters.get('detune');
+                                        }
+                                        get dutyCycle(){
+                                            return this.parameters.get('dutyCycle');
+                                        }
+                                    
+                                    
+                                        get waveform(){
+                                            return this._waveform;
+                                        }
+                                        set waveform(value){
+                                            this._state.waveform = value;
+                                            this.port.postMessage({waveform:value});
+                                        }
+                                        get gain_useControl(){
+                                            return this._state.gain_useControl;
+                                        }
+                                        set gain_useControl(bool){
+                                            this._state.gain_useControl = bool;
+                                            this.port.postMessage({gain_useControl:bool});
+                                        }
+                                        get detune_useControl(){
+                                            return this._state.detune_useControl;
+                                        }
+                                        set detune_useControl(bool){
+                                            this._state.detune_useControl = bool;
+                                            this.port.postMessage({detune_useControl:bool});
+                                        }
+                                        get dutyCycle_useControl(){
+                                            return this._state.dutyCycle_useControl;
+                                        }
+                                        set dutyCycle_useControl(bool){
+                                            this._state.dutyCycle_useControl = bool;
+                                            this.port.postMessage({dutyCycle_useControl:bool});
+                                        }
+                                    
+                                        
+                                        get gain_envelope(){
+                                            return JSON.parse(JSON.stringify(this.gain_envelope));
+                                        }
+                                        set gain_envelope(newEnvelope){
+                                            this._gainEnvelope = newEnvelope;
+                                            this.port.postMessage({gain_envelope:newEnvelope});
+                                        }
+                                        get detune_envelope(){
+                                            return JSON.parse(JSON.stringify(this.detune_envelope));
+                                        }
+                                        set detune_envelope(newEnvelope){
+                                            this._detuneEnvelope = newEnvelope;
+                                            this.port.postMessage({detune_envelope:newEnvelope});
+                                        }
+                                        get dutyCycle_envelope(){
+                                            return JSON.parse(JSON.stringify(this.dutyCycle_envelope));
+                                        }
+                                        set dutyCycle_envelope(newEnvelope){
+                                            this._dutyCycleEnvelope = newEnvelope;
+                                            this.port.postMessage({dutyCycle_envelope:newEnvelope});
+                                        }
+                                    }
+                                ,
+                            },
+                            {
                                 name:'streamAdder',
                                 worklet:new Blob([`
                                     class streamAdder extends AudioWorkletProcessor{
@@ -4626,12 +5059,535 @@
                                     }
                                 ,
                             },
+                            {
+                                name:'frequencyAmplitudeResponseAnalyser',
+                                worklet:new Blob([`
+                                    // class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
+                                    //     static twoPI = Math.PI*2;
+                                    
+                                    //     static get parameterDescriptors(){
+                                    //         return [];
+                                    //     }
+                                    
+                                    //     #state = {
+                                    //         signalGeneratorGain:1,
+                                    //         waveform:0,
+                                    //         dutyCycle:0.5,
+                                    //         frequency:{
+                                    //             current:100,
+                                    //             range:{ start:100, end:1000 },
+                                    //             stepSize:10,
+                                    //             timePerStep:0.005
+                                    //         },
+                                    //         responseData: [],
+                                    //     };
+                                    //     #wavePosition = 0;
+                                    //     #lastUpdate = 0;
+                                    //     #start = false;
+                                    //     #active = false;
+                                    //     #stepData = [];
+                                    
+                                    //     constructor(options){
+                                    //         super(options);
+                                    //         const self = this;
+                                    
+                                    //         this.port.onmessage = function(event){
+                                    //             if(event.data == 'stop'){
+                                    //                 self._active = false;
+                                    //                 return;
+                                    //             }
+                                    
+                                    //             if(self._active){ return; }
+                                    
+                                    //             if(event.data == 'start'){
+                                    //                 self._start = true;
+                                    //                 self._active = true;
+                                    //                 return;
+                                    //             }
+                                    //             if(event.data == 'clear'){
+                                    //                 this._state.responseData = [];
+                                    //                 this._stepData = [];
+                                    //                 this._wavePosition = 0;
+                                    //                 return;
+                                    //             }
+                                    
+                                    //             Object.entries(event.data).forEach(([key,value]) => {
+                                    //                 switch(key){
+                                    //                     case 'waveform': self._state.waveform = value; break;
+                                    //                     case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
+                                    //                     case 'dutyCycle': self._state.dutyCycle = value; break;
+                                    
+                                    //                     case 'range.start': self._state.frequency.range.start = value; break;
+                                    //                     case 'range.end': self._state.frequency.range.end = value; break;
+                                    //                     case 'stepSize': self._state.frequency.stepSize = value; break;
+                                    //                     case 'timePerStep': self._state.frequency.timePerStep = value; break;
+                                    //                 }
+                                    //             });
+                                    //         };
+                                    //         this.port.start();
+                                    //     }
+                                    
+                                    //     process(inputs, outputs, parameters){
+                                    //         if(!this._active){ return true; }
+                                    
+                                    //         if(this._start){
+                                    //             this._state.frequency.current = this._state.frequency.range.start;
+                                    //             this._start = false;
+                                    //             this._lastUpdate = currentTime;
+                                    //         }
+                                    
+                                            
+                                    
+                                    //         //generator
+                                    //             const output = outputs[0];
+                                    
+                                    //             const gain = this._state.signalGeneratorGain;
+                                    //             const frequency = this._state.frequency.current;
+                                    //             const dutyCycle = this._state.frequency.dutyCycle;
+                                    
+                                    //             for(let channel = 0; channel < output.length; channel++){
+                                    //                 for(let a = 0; a < output[channel].length; a++){
+                                    
+                                    //                     this._wavePosition += frequency/sampleRate;
+                                    //                     const localWavePosition = this._wavePosition % 1;
+                                    
+                                    //                     switch(this._state.waveform){
+                                    //                         case 0: //sin
+                                    //                             output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
+                                    //                         break;
+                                    //                         case 1: //square
+                                    //                             output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                    //                         break;
+                                    //                         case 2: //triangle
+                                    //                             if(localWavePosition < dutyCycle/2){
+                                    //                                 output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                    //                             }else if(localWavePosition >= 1 - dutyCycle/2){
+                                    //                                 output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                    //                             }else{
+                                    //                                 output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                    //                             }
+                                    //                         break;
+                                    //                     }
+                                    //                 }
+                                    //             }
+                                    
+                                    //         //collector
+                                    //             const input = inputs[0];
+                                    //             this._stepData.push(...input[0]);
+                                                
+                                    
+                                    
+                                    //         if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
+                                    //             this._lastUpdate = currentTime;
+                                    
+                                    //             const result = {
+                                    //                 frequency:this._state.frequency.current,
+                                    //                 response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
+                                    //             };
+                                    //             this.port.postMessage({ onValue:result });
+                                    //             this._state.responseData.push(result);
+                                    //             this._stepData = [];
+                                    
+                                    //             this._state.frequency.current += this._state.frequency.stepSize;
+                                    //             if( this._state.frequency.current > this._state.frequency.range.end ){
+                                    //                 this.port.postMessage({ onCompletion:this._state.responseData });
+                                    //                 this._active = false;
+                                    //             }
+                                    //         }
+                                    
+                                    //         return true;
+                                    //     }
+                                    // }
+                                    // registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
+                                        static twoPI = Math.PI*2;
+                                    
+                                        static get parameterDescriptors(){
+                                            return [];
+                                        }
+                                    
+                                        constructor(options){
+                                            super(options);
+                                            const self = this;
+                                    
+                                            this._state = {
+                                                signalGeneratorGain:1,
+                                                waveform:'sine',
+                                                dutyCycle:0.5,
+                                                frequency:{
+                                                    current:100,
+                                                    range:{ start:100, end:1000 },
+                                                    stepSize:10,
+                                                    timePerStep:0.005
+                                                },
+                                                responseData: [],
+                                            };
+                                            this._wavePosition = 0;
+                                            this._lastUpdate = 0;
+                                            this._start = false;
+                                            this._active = false;
+                                            this._stepData = [];
+                                    
+                                            this.port.onmessage = function(event){
+                                                if(event.data == 'stop'){
+                                                    self._active = false;
+                                                    return;
+                                                }
+                                    
+                                                if(self._active){ return; }
+                                    
+                                                if(event.data == 'start'){
+                                                    self._start = true;
+                                                    self._active = true;
+                                                    return;
+                                                }
+                                                if(event.data == 'clear'){
+                                                    self._state.responseData = [];
+                                                    self._stepData = [];
+                                                    self._wavePosition = 0;
+                                                    return;
+                                                }
+                                    
+                                                Object.entries(event.data).forEach(([key,value]) => {
+                                                    switch(key){
+                                                        case 'waveform': self._state.waveform = value; break;
+                                                        case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
+                                                        case 'dutyCycle': self._state.dutyCycle = value; break;
+                                    
+                                                        case 'range.start': self._state.frequency.range.start = value; break;
+                                                        case 'range.end': self._state.frequency.range.end = value; break;
+                                                        case 'stepSize': self._state.frequency.stepSize = value; break;
+                                                        case 'timePerStep': self._state.frequency.timePerStep = value; break;
+                                                    }
+                                                });
+                                            };
+                                            this.port.start();
+                                        }
+                                    
+                                        process(inputs, outputs, parameters){
+                                            if(!this._active){ return true; }
+                                    
+                                            if(this._start){
+                                                this._state.frequency.current = this._state.frequency.range.start;
+                                                this._start = false;
+                                                this._lastUpdate = currentTime;
+                                            }
+                                    
+                                            
+                                    
+                                            //generator
+                                                const output = outputs[0];
+                                    
+                                                const gain = this._state.signalGeneratorGain;
+                                                const frequency = this._state.frequency.current;
+                                                const dutyCycle = this._state.dutyCycle;
+                                    
+                                                for(let channel = 0; channel < output.length; channel++){
+                                                    for(let a = 0; a < output[channel].length; a++){
+                                    
+                                                        this._wavePosition += frequency/sampleRate;
+                                                        const localWavePosition = this._wavePosition % 1;
+                                    
+                                                        switch(this._state.waveform){
+                                                            case 'sine':
+                                                                output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
+                                                            break;
+                                                            case 'square':
+                                                                output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                                            break;
+                                                            case 'triangle':
+                                                                if(localWavePosition < dutyCycle/2){
+                                                                    output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                                                }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                                    output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                                                }else{
+                                                                    output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                                                }
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                    
+                                            //collector
+                                                const input = inputs[0];
+                                                this._stepData.push(...input[0]);
+                                                
+                                    
+                                    
+                                            if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
+                                                this._lastUpdate = currentTime;
+                                    
+                                                const result = {
+                                                    frequency:this._state.frequency.current,
+                                                    response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
+                                                };
+                                                this.port.postMessage({ onValue:result });
+                                                this._state.responseData.push(result);
+                                                this._stepData = [];
+                                    
+                                                this._state.frequency.current += this._state.frequency.stepSize;
+                                                if( this._state.frequency.current > this._state.frequency.range.end ){
+                                                    this.port.postMessage({ onCompletion:this._state.responseData });
+                                                    this._active = false;
+                                                }
+                                            }
+                                    
+                                            return true;
+                                        }
+                                    }
+                                    registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
+                                `], { type: "text/javascript" }),
+                                class:
+                                    // class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
+                                    //     #state = {
+                                    //         waveform:0,
+                                    //         signalGeneratorGain:1,
+                                    //         dutyCycle:0.5,
+                                    //         frequency:{
+                                    //             range:{ start:100, end:1000 },
+                                    //             stepSize:10,
+                                    //             timePerStep:0.005,
+                                    //         },
+                                    //     };
+                                    
+                                    //     constructor(context, options={}){
+                                    //         options.numberOfInputs = 1;
+                                    //         options.numberOfOutputs = 1;
+                                    //         options.channelCount = 1;
+                                    //         super(context, 'frequencyAmplitudeResponseAnalyser', options);
+                                    //         const self = this;
+                                    
+                                    //         this.port.onmessage = function(event){
+                                    //             Object.entries(event.data).forEach(([key,value]) => {
+                                    //                 switch(key){
+                                    //                     case 'onValue':
+                                    //                         if(self.onValue != undefined){ self.onValue(value); }
+                                    //                     break;
+                                    //                     case 'onCompletion':
+                                    //                         if(self.onCompletion != undefined){ self.onCompletion(value); }
+                                    //                     break;
+                                    //                 }
+                                    //             });
+                                    //         };
+                                    
+                                    //         this.start = function(){
+                                    //             this.port.postMessage('start');
+                                    //         };
+                                    //         this.stop = function(){
+                                    //             this.port.postMessage('stop');
+                                    //         };
+                                    //         this.clear = function(){
+                                    //             this.port.postMessage('clear');
+                                    //         };
+                                    
+                                    //         this.onValue = function(){};
+                                    //         this.onCompletion = function(){};
+                                    //     }
+                                    
+                                    //     get waveform(){
+                                    //         return this._state.waveform;
+                                    //     }
+                                    //     set waveform(value){
+                                    //         this._state.waveform = value;
+                                    //         this.port.postMessage({waveform:value});
+                                    //     }
+                                    
+                                    //     get signalGeneratorGain(){
+                                    //         return this._state.signalGeneratorGain;
+                                    //     }
+                                    //     set signalGeneratorGain(value){
+                                    //         this._state.signalGeneratorGain = value;
+                                    //         this.port.postMessage({signalGeneratorGain:value});
+                                    //     }
+                                    
+                                    //     get dutyCycle(){
+                                    //         return this._state.dutyCycle;
+                                    //     }
+                                    //     set dutyCycle(value){
+                                    //         this._state.dutyCycle = value;
+                                    //         this.port.postMessage({dutyCycle:value});
+                                    //     }
+                                    
+                                    //     get range(){
+                                    //         return this._state.frequency.range;
+                                    //     }
+                                    //     set range(value){
+                                    //         if(value.start == undefined){
+                                    //             value.start = this._state.frequency.range.start;
+                                    //         }
+                                    //         if(value.end == undefined){
+                                    //             value.end = this._state.frequency.range.end;
+                                    //         }
+                                    
+                                    //         this._state.frequency.range = value;
+                                    //         this.port.postMessage({
+                                    //             'range.start':this._state.frequency.range.start,
+                                    //             'range.end':this._state.frequency.range.end,
+                                    //         });
+                                    //     }
+                                    
+                                    //     get stepSize(){ 
+                                    //         return this._state.frequency.stepSize;
+                                    //     }
+                                    //     set stepSize(value){
+                                    //         this._state.frequency.stepSize = value;
+                                    //         this.port.postMessage({stepSize:value});
+                                    //     }
+                                    
+                                    //     get timePerStep(){ 
+                                    //         return this._state.frequency.timePerStep;
+                                    //     }
+                                    //     set timePerStep(value){
+                                    //         this._state.frequency.timePerStep = value;
+                                    //         this.port.postMessage({timePerStep:value});
+                                    //     }
+                                    // }
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
+                                        constructor(context, options={}){
+                                            options.numberOfInputs = 1;
+                                            options.numberOfOutputs = 1;
+                                            options.channelCount = 1;
+                                            super(context, 'frequencyAmplitudeResponseAnalyser', options);
+                                            const self = this;
+                                    
+                                            this._state = {
+                                                waveform:'sine',
+                                                signalGeneratorGain:1,
+                                                dutyCycle:0.5,
+                                                frequency:{
+                                                    range:{ start:100, end:1000 },
+                                                    stepSize:10,
+                                                    timePerStep:0.005,
+                                                },
+                                            };
+                                    
+                                            this.port.onmessage = function(event){
+                                                Object.entries(event.data).forEach(([key,value]) => {
+                                                    switch(key){
+                                                        case 'onValue':
+                                                            if(self.onValue != undefined){ self.onValue(value); }
+                                                        break;
+                                                        case 'onCompletion':
+                                                            if(self.onCompletion != undefined){ self.onCompletion(value); }
+                                                        break;
+                                                    }
+                                                });
+                                            };
+                                    
+                                            this.start = function(){
+                                                this.port.postMessage('start');
+                                            };
+                                            this.stop = function(){
+                                                this.port.postMessage('stop');
+                                            };
+                                            this.clear = function(){
+                                                this.port.postMessage('clear');
+                                            };
+                                    
+                                            this.onValue = function(){};
+                                            this.onCompletion = function(){};
+                                        }
+                                    
+                                        get waveform(){
+                                            return this._state.waveform;
+                                        }
+                                        set waveform(value){
+                                            this._state.waveform = value;
+                                            this.port.postMessage({waveform:value});
+                                        }
+                                    
+                                        get signalGeneratorGain(){
+                                            return this._state.signalGeneratorGain;
+                                        }
+                                        set signalGeneratorGain(value){
+                                            this._state.signalGeneratorGain = value;
+                                            this.port.postMessage({signalGeneratorGain:value});
+                                        }
+                                    
+                                        get dutyCycle(){
+                                            return this._state.dutyCycle;
+                                        }
+                                        set dutyCycle(value){
+                                            this._state.dutyCycle = value;
+                                            this.port.postMessage({dutyCycle:value});
+                                        }
+                                    
+                                        get range(){
+                                            return this._state.frequency.range;
+                                        }
+                                        set range(value){
+                                            if(value.start == undefined){
+                                                value.start = this._state.frequency.range.start;
+                                            }
+                                            if(value.end == undefined){
+                                                value.end = this._state.frequency.range.end;
+                                            }
+                                    
+                                            this._state.frequency.range = value;
+                                            this.port.postMessage({
+                                                'range.start':this._state.frequency.range.start,
+                                                'range.end':this._state.frequency.range.end,
+                                            });
+                                        }
+                                    
+                                        get stepSize(){ 
+                                            return this._state.frequency.stepSize;
+                                        }
+                                        set stepSize(value){
+                                            this._state.frequency.stepSize = value;
+                                            this.port.postMessage({stepSize:value});
+                                        }
+                                    
+                                        get timePerStep(){ 
+                                            return this._state.frequency.timePerStep;
+                                        }
+                                        set timePerStep(value){
+                                            this._state.frequency.timePerStep = value;
+                                            this.port.postMessage({timePerStep:value});
+                                        }
+                                    }
+                                ,
+                            },
 
                             {
                                 name:'testWorkerNode',
                                 worklet:new Blob([`
                                     class testWorklet extends AudioWorkletProcessor{
                                         static MinimumValue = -10;
+                                    
+                                        #privateValue = 100;
                                     
                                         static get parameterDescriptors(){
                                             return [
@@ -4669,6 +5625,7 @@
                                             if( currentTime - this._lastUpdate >= 1 ){
                                                 console.log('<<< process >>>');
                                                 console.log('currentTime:',currentTime);
+                                                console.log('currentFrame:',currentFrame);
                                                 console.log('calls since last printing:',this._callCount);
                                                 console.log('samples since last printing:',this._callCount*outputs[0][0].length);
                                                 console.log(' - number of inputs:',inputs.length);
@@ -4685,6 +5642,7 @@
                                                 console.log( 'parameters.valueB:',parameters.valueB );
                                     
                                                 // console.log( testWorklet.MinimumValue );
+                                                // console.log( this.#privateValue );
                                     
                                                 this._lastUpdate = currentTime;
                                                 this._callCount = 0;
@@ -5416,6 +6374,318 @@
                                         }
                                         get detune(){
                                             return this.parameters.get('detune');
+                                        }
+                                    }
+                                ,
+                            },
+                            //oscillator with ASR
+                            {
+                                name:'osc_4',
+                                worklet:new Blob([`
+                                    class osc_4 extends AudioWorkletProcessor{
+                                        static twoPI = Math.PI*2;
+                                        static starterFrequency = 440;
+                                        static maxFrequency = 20000;
+                                        static detuneMux = 0.1;
+                                        static detuneBounds = 1/osc_4.detuneMux;
+                                    
+                                        static get parameterDescriptors(){
+                                            return [
+                                                {
+                                                    name: 'frequency',
+                                                    defaultValue: osc_4.starterFrequency,
+                                                    minValue: 0,
+                                                    maxValue: osc_4.maxFrequency,
+                                                    automationRate: 'a-rate',
+                                                },{
+                                                    name: 'gain',
+                                                    defaultValue: 1,
+                                                    minValue: -1,
+                                                    maxValue: 1,
+                                                    automationRate: 'a-rate',
+                                                },{
+                                                    name: 'detune',
+                                                    defaultValue: 0,
+                                                    minValue: -osc_4.detuneBounds,
+                                                    maxValue: osc_4.detuneBounds,
+                                                    automationRate: 'a-rate',
+                                                },{
+                                                    name: 'dutyCycle',
+                                                    defaultValue: 0.5,
+                                                    minValue: 0,
+                                                    maxValue: 1,
+                                                    automationRate: 'a-rate',
+                                                },
+                                            ];
+                                        }
+                                    
+                                        constructor(options){
+                                            super(options);
+                                            const self = this;
+                                            this._wavePosition = 0;
+                                    
+                                            this._state = {
+                                                waveform:'sin',
+                                                gain_useControl:false,
+                                                detune_useControl:false,
+                                                dutyCycle_useControl:false,
+                                            };
+                                            this._envelope = {
+                                                phase:'off', // front - wait - back - off
+                                                requestedPhase:undefined,
+                                    
+                                                gainStep:0,
+                                                previousGain:0,
+                                                currentGain:0,
+                                    
+                                                procedure:{
+                                                    index:0,
+                                                    sample:0,
+                                                    front:[ {destination:1, elapse:0, _elapseSamples:1} ],
+                                                    back:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                },
+                                                defaultProcedurePoint:{
+                                                    front:{destination:1, elapse:0, _elapseSamples:1},
+                                                    back:{destination:0, elapse:0, _elapseSamples:1},
+                                                },
+                                            };
+                                    
+                                            this.port.onmessage = function(event){
+                                                Object.entries(event.data).forEach(([key,value]) => {
+                                                    switch(key){
+                                                        case 'command':
+                                                            switch(value){
+                                                                case 'start':
+                                                                    if(self._envelope.requestedPhase == 'back' || self._envelope.phase == 'back' || self._envelope.phase == 'off'){
+                                                                        self._envelope.requestedPhase = 'front';
+                                                                    }
+                                                                break;
+                                                                case 'stop':
+                                                                    if(self._envelope.requestedPhase == 'front' || self._envelope.phase == 'front' || self._envelope.phase == 'wait'){
+                                                                        self._envelope.requestedPhase = 'back';
+                                                                    }
+                                                                break;
+                                                            }
+                                                        break;
+                                                        case 'waveform': 
+                                                            self._state.waveform = value;
+                                                        break;
+                                                        case 'gain_useControl': 
+                                                            self._state.gain_useControl = value;
+                                                        break;
+                                                        case 'detune_useControl': 
+                                                            self._state.detune_useControl = value;
+                                                        break;
+                                                        case 'dutyCycle_useControl': 
+                                                            self._state.dutyCycle_useControl = value;
+                                                        break;
+                                                        case 'envelope':
+                                                            Object.entries(value).forEach(([phase,points]) => {
+                                                                if( points != undefined && points.length != 0 ){
+                                                                    self._envelope.procedure[phase] = points.map(point => {
+                                                                        return {
+                                                                            destination:point.destination, 
+                                                                            elapse:point.elapse, 
+                                                                            _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
+                                                                        };
+                                                                    });
+                                                                }else{
+                                                                    self._envelope.procedure[phase] = [self._envelope.defaultProcedurePoint[phase]];
+                                                                }
+                                                            });
+                                                        break;
+                                                    }
+                                                });
+                                            };
+                                            this.port.start();
+                                        }
+                                    
+                                        process(inputs, outputs, parameters){
+                                            //envelope calculation
+                                                this.activatePhase();
+                                                if( this._envelope.phase == 'off'){ return true; }
+                                    
+                                            //io
+                                                const output = outputs[0];
+                                                const gainControl = inputs[0];
+                                                const detuneControl = inputs[1];
+                                                const dutyCycleControl = inputs[2];
+                                    
+                                            //oscillation gerneration
+                                                const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                                const detune_useFirstOnly = parameters.detune.length == 1;
+                                                const gain_useFirstOnly = parameters.gain.length == 1;
+                                    
+                                                for(let channel = 0; channel < output.length; channel++){
+                                                    for(let a = 0; a < output[channel].length; a++){
+                                                        if(this._envelope.phase == 'front' || this._envelope.phase == 'back'){
+                                                            if( currentFrame+a - this._envelope.procedure.sample >= this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples ){
+                                                                this._envelope.procedure.index++;
+                                                                this._envelope.procedure.sample = currentFrame+a;
+                                                                if( this._envelope.procedure.index >= this._envelope.procedure[this._envelope.phase].length){
+                                                                    if(this._envelope.phase == 'front'){
+                                                                        this._envelope.phase = 'wait';
+                                                                        this.port.postMessage({phase:'wait'});
+                                                                        this._envelope.gainStep = 0;
+                                                                    }else if(this._envelope.phase == 'back'){
+                                                                        this._envelope.phase = 'off';
+                                                                        this.port.postMessage({phase:'off'});
+                                                                        this._envelope.gainStep = 0;
+                                                                    }
+                                                                }else{
+                                                                    this._envelope.previousGain = this._envelope.currentGain;
+                                                                    this._envelope.gainStep = (this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index].destination - this._envelope.previousGain)/this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples;                    
+                                                                }
+                                                            }
+                                                        }
+                                    
+                                                        this._envelope.currentGain += this._envelope.gainStep;
+                                    
+                                                        const gain = this._envelope.currentGain * (this._state.gain_useControl ? gainControl[channel][a] : (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]));
+                                                        const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                        const detune = this._state.detune_useControl ? detuneControl[channel][a] : (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]);
+                                                        const dutyCycle = this._state.dutyCycle_useControl ? dutyCycleControl[channel][a] : (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]);
+                                    
+                                                        this._wavePosition += (frequency*(detune*osc_4.detuneMux + 1))/sampleRate;
+                                                        const localWavePosition = this._wavePosition % 1;
+                                    
+                                                        switch(this._state.waveform){
+                                                            case 'sin':
+                                                                output[channel][a] = gain*Math.sin( localWavePosition * osc_4.twoPI );
+                                                            break;
+                                                            case 'square':
+                                                                output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                                            break;
+                                                            case 'triangle':
+                                                                if(localWavePosition < dutyCycle/2){
+                                                                    output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                                                }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                                    output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                                                }else{
+                                                                    output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                                                }
+                                                            break;
+                                                            case 'noise': default: 
+                                                                output[channel][a] = gain*(Math.random()*2 - 1);
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                    
+                                            return true;
+                                        }
+                                    
+                                        activatePhase(){
+                                            if( this._envelope.requestedPhase != undefined && this._envelope.requestedPhase != this._envelope.phase ){
+                                                this._envelope.phase = this._envelope.requestedPhase;
+                                                this.port.postMessage({phase:this._envelope.phase});
+                                                this._envelope.requestedPhase = undefined;
+                                                this._envelope.procedure.sample = currentFrame;
+                                                this._envelope.procedure.index = 0;
+                                                this._envelope.previousGain = this._envelope.currentGain;
+                                                this._envelope.gainStep = (this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index].destination - this._envelope.previousGain)/this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples;
+                                                if( this._envelope.phase == 'start' ){ this._wavePosition = 0; }
+                                            }
+                                        }
+                                    }
+                                    registerProcessor('osc_4', osc_4);
+                                `], { type: "text/javascript" }),
+                                class:
+                                    class osc_4 extends AudioWorkletNode{
+                                        constructor(context, options={}){
+                                            options.numberOfInputs = 3;
+                                            options.numberOfOutputs = 1;
+                                            options.channelCount = 1;
+                                            super(context, 'osc_4', options);
+                                            const self = this;
+                                    
+                                            this._state = {
+                                                waveform:'sin',
+                                                gain_useControl:false,
+                                                detune_useControl:false,
+                                                dutyCycle_useControl:false,
+                                            };
+                                            this._envelope = {
+                                                front:[
+                                                    {elapse:0.5,gain:5},
+                                                    {elapse:0.5,gain:1},
+                                                ],
+                                                back:[
+                                                    {elapse:0.5,gain:5},
+                                                    {elapse:0.5,gain:0}
+                                                ],
+                                            };
+                                    
+                                            this.port.onmessage = function(event){
+                                                if(self.onEnvelopeEvent == undefined){ return; }
+                                                self.onEnvelopeEvent(event.data.phase);
+                                            };
+                                    
+                                            this.start = function(){
+                                                this.port.postMessage({command:'start'});
+                                            };
+                                            this.stop = function(){
+                                                this.port.postMessage({command:'stop'});
+                                            };
+                                    
+                                            this.onEnvelopeEvent = function(data){console.log(data);};
+                                        }
+                                    
+                                    
+                                    
+                                    
+                                        get frequency(){
+                                            return this.parameters.get('frequency');
+                                        }
+                                        get gain(){
+                                            return this.parameters.get('gain');
+                                        }
+                                        get detune(){
+                                            return this.parameters.get('detune');
+                                        }
+                                        get dutyCycle(){
+                                            return this.parameters.get('dutyCycle');
+                                        }
+                                    
+                                    
+                                    
+                                    
+                                        get waveform(){
+                                            return this._waveform;
+                                        }
+                                        set waveform(value){
+                                            this._state.waveform = value;
+                                            this.port.postMessage({waveform:value});
+                                        }
+                                        get gain_useControl(){
+                                            return this._state.gain_useControl;
+                                        }
+                                        set gain_useControl(bool){
+                                            this._state.gain_useControl = bool;
+                                            this.port.postMessage({gain_useControl:bool});
+                                        }
+                                        get detune_useControl(){
+                                            return this._state.detune_useControl;
+                                        }
+                                        set detune_useControl(bool){
+                                            this._state.detune_useControl = bool;
+                                            this.port.postMessage({detune_useControl:bool});
+                                        }
+                                        get dutyCycle_useControl(){
+                                            return this._state.dutyCycle_useControl;
+                                        }
+                                        set dutyCycle_useControl(bool){
+                                            this._state.dutyCycle_useControl = bool;
+                                            this.port.postMessage({dutyCycle_useControl:bool});
+                                        }
+                                    
+                                        get envelope(){
+                                            return JSON.parse(JSON.stringify(this._envelope));
+                                        }
+                                        set envelope(newEnvelope){
+                                            this._envelope = newEnvelope;
+                                            this.port.postMessage({envelope:newEnvelope});
                                         }
                                     }
                                 ,

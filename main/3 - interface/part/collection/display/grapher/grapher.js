@@ -44,6 +44,7 @@ this.grapher = function(
             if( a.printingValues != undefined ){backgroundTextStyle_horizontalMarkings.printingValues = a.printingValues;}
             if( a.textPositionOffset != undefined ){backgroundTextStyle_horizontalMarkings.textPositionOffset = a.textPositionOffset;}
             if( a.printText != undefined ){backgroundTextStyle_horizontalMarkings.printText = a.printText;}
+            if( a.mappedPosition != undefined ){backgroundTextStyle_horizontalMarkings.mappedPosition = a.mappedPosition;}
         };
         object.verticalMarkings = function(a){
             if(a==null){return backgroundTextStyle_verticalMarkings;}
@@ -51,6 +52,7 @@ this.grapher = function(
             if( a.printingValues != undefined ){backgroundTextStyle_verticalMarkings.printingValues = a.printingValues;}
             if( a.textPositionOffset != undefined ){backgroundTextStyle_verticalMarkings.textPositionOffset = a.textPositionOffset;}
             if( a.printText != undefined ){backgroundTextStyle_verticalMarkings.printText = a.printText;}
+            if( a.mappedPosition != undefined ){backgroundTextStyle_verticalMarkings.mappedPosition = a.mappedPosition;}
         };
 
     if(canvasBased){
@@ -64,9 +66,11 @@ this.grapher = function(
             function clearBackground(){
                 backingCanvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backingStyle);
                 backingCanvas._.fillRect(0,0,backingCanvas.$(width),backingCanvas.$(height));
+                backingCanvas.requestUpdate();
             }
             function clearForeground(){
                 frontingCanvas._.clearRect(0,0,frontingCanvas.$(width),frontingCanvas.$(height));
+                frontingCanvas.requestUpdate();
             }
             function clearAll(){
                 clearBackground();

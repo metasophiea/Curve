@@ -100,8 +100,7 @@ Acoustic Research
         sample rate
         sample length
         readout meter
-
-    _ Frequency/Amplitude Response Workstation (FARworkstation) (frequency response)
+    Frequency/Amplitude Response Workstation (F/AR Workstation)
         over-control
             clear
             start
@@ -109,6 +108,10 @@ Acoustic Research
         generator
             start frequency
             end frequency
+            waveform
+            dutyCycle
+            gain
+            
             step size
             time per step
         collector
@@ -198,8 +201,8 @@ future unit ideas
 
         wireless transmission device (all connection types)
 
+        voltage controler (with more range than 0 -> 1)
         voltage quantizer
-
         voltage addition / subtraction / multiplication / division
 
         voltage->signal threshold
@@ -226,14 +229,11 @@ future unit ideas
         chorus audio effect unit
         compressor audio effect unit (and/or/as-in the s-wave audio value corrector)
         multi-band distortion box
-        amplitude modulator
-        lag processor (a box that reacts slowly to input changes, rounding things out)
         noise gate
         (some of these could use AudioWorkletProcessor-based custom audio nodes)
 
         tuner (like the one on the phone)
 
-        frequency/magnitude response analyser
         histogram audio visualizer
 
         computation unit

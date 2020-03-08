@@ -40,6 +40,15 @@ this['gain'] = function(name,x,y,angle){
                 {collection:'dynamic', type:'connectionNode_audio', name:'control', data:{ 
                     x:32.5, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
                 }},
+                {collection:'dynamic', type:'connectionNode_signal', name:'mux', data:{ 
+                    x:30, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                }},
+                {collection:'dynamic', type:'connectionNode_signal', name:'offset', data:{ 
+                    x:45, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_gain', data:{ 
+                    x:85, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
                 
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
@@ -105,6 +114,21 @@ this['gain'] = function(name,x,y,angle){
             object.io.audio.input.audioNode = gain.in();
             object.io.audio.output.audioNode = gain.out();
             object.io.audio.control.audioNode = gain.control();
+            object.io.signal.mux.onchange = function(value){
+                if(!value){return;}
+                object.elements.checkbox_image.byTen.set(
+                    !object.elements.checkbox_image.byTen.get()
+                );
+            };
+            object.io.signal.offset.onchange = function(value){
+                if(!value){return;}
+                object.elements.checkbox_image.plusOne.set(
+                    !object.elements.checkbox_image.plusOne.get()
+                );
+            };
+            object.io.voltage.voltage_gain.onchange = function(value){
+                object.elements.dial_continuous_image.gain.set( (value+1)/2 );
+            };
 
     //interface
         object.i = {

@@ -66,13 +66,14 @@ echo "running Terser"
         echo "-> "$name".js"
 
         #push temp file through closure then delete
-            terser "$dir"/../docs/js/$name.min.js > "$dir"/../docs/js/$name.min.tmp.js -c -m
-            mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
+            terser "$dir"/../docs/js/$name.min.js > "$dir"/../docs/js/$name.min.tmp.js --compress --mangle
             if [ $? -ne 0 ]; then
                 echo "";
-                echo "Terser has encountered an error; bailing";
-                exit 1;
+                echo "Terser has encountered an error; re-compressing with far simpler method...";
+                cat "$dir"/../docs/js/$name.min.js | awk 'NF' > "$dir"/../docs/js/$name.min.tmp.js
+                
             fi
+            mv "$dir"/../docs/js/$name.min.tmp.js "$dir"/../docs/js/$name.min.js
     done
 
 #report on how things went

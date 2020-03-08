@@ -7,9 +7,10 @@ _canvas_.curve.go.add( function(){
     // const lp = _canvas_.control.scene.addUnit(10,10,0,'lag_processor','acousticresearch');
     // const g = _canvas_.control.scene.addUnit(10,10,0,'gain','acousticresearch');
     // const sag = _canvas_.control.scene.addUnit(10,10,0,'stable_amplitude_generator','acousticresearch');
-    // const sa = _canvas_.control.scene.addUnit(10,10,0,'stream_adder','acousticresearch');
+    // const sa2 = _canvas_.control.scene.addUnit(10,10,0,'stream_adder','acousticresearch');
     // const fg = _canvas_.control.scene.addUnit(10,10,0,'frequency_generator','acousticresearch');
-    const mam = _canvas_.control.scene.addUnit(10,10,0,'momentary_amplitude_meter','acousticresearch');
+    // const mam = _canvas_.control.scene.addUnit(10,10,0,'momentary_amplitude_meter','acousticresearch');
+    const farw = _canvas_.control.scene.addUnit(10,10,0,'frequency_amplitude_response_workstation','acousticresearch');
     
     
 

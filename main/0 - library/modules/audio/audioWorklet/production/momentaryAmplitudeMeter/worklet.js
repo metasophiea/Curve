@@ -2,6 +2,12 @@ class momentaryAmplitudeMeter extends AudioWorkletProcessor{
     static get parameterDescriptors(){
         return [
             {
+                name: 'active',
+                defaultValue: 1, // 0 - off / 1 - on
+                minValue: 0,
+                maxValue: 1,
+                automationRate: 'k-rate',
+            },{
                 name: 'fullSample',
                 defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame since the last time a value was returned
                 minValue: 0,
@@ -35,8 +41,12 @@ class momentaryAmplitudeMeter extends AudioWorkletProcessor{
         this._lastUpdate = currentTime;
         this._dataArray = [];
         this._readingRequested = false;
+        this._sync = false;
 
         this.port.onmessage = function(event){
+            if(event.data == 'sync'){
+                self._sync = true;
+            }
             if(event.data == 'readingRequest'){
                 self._readingRequested = true;
             }
@@ -50,6 +60,8 @@ class momentaryAmplitudeMeter extends AudioWorkletProcessor{
         const updateDelay = parameters.updateDelay[0];
         const calculationMode = parameters.calculationMode[0];
 
+        if( parameters.active[0] == 0 ){ return true; }
+
         if(fullSample){
             this._dataArray.push(...input[0]);
         }else{
@@ -57,9 +69,11 @@ class momentaryAmplitudeMeter extends AudioWorkletProcessor{
         }
 
         if( 
+            this._sync ||
             (parameters.updateMode[0] == 0 && (currentTime - this._lastUpdate > updateDelay/1000)) ||
             (parameters.updateMode[0] == 1 && this._readingRequested)
         ){
+            this._sync = false;
             this._readingRequested = false;
             this._lastUpdate = currentTime;
 

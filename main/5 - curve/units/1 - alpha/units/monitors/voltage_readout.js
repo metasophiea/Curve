@@ -49,7 +49,9 @@ this.voltage_readout = function(name,x,y,angle){
 
     //wiring
         //io
-            object.io.voltage.in.onchange = function(value){ object.elements.gauge_image.gauge.needle(value); };
+            object.io.voltage.in.onchange = function(value){
+                object.elements.gauge_image.gauge.needle( Math.abs(value) );
+            };
 
     return object;
 };

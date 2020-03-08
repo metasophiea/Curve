@@ -1,6 +1,8 @@
 class testWorklet extends AudioWorkletProcessor{
     static MinimumValue = -10;
 
+    #privateValue = 100;
+
     static get parameterDescriptors(){
         return [
             {
@@ -37,6 +39,7 @@ class testWorklet extends AudioWorkletProcessor{
         if( currentTime - this._lastUpdate >= 1 ){
             console.log('<<< process >>>');
             console.log('currentTime:',currentTime);
+            console.log('currentFrame:',currentFrame);
             console.log('calls since last printing:',this._callCount);
             console.log('samples since last printing:',this._callCount*outputs[0][0].length);
             console.log(' - number of inputs:',inputs.length);
@@ -53,6 +56,7 @@ class testWorklet extends AudioWorkletProcessor{
             console.log( 'parameters.valueB:',parameters.valueB );
 
             // console.log( testWorklet.MinimumValue );
+            // console.log( this.#privateValue );
 
             this._lastUpdate = currentTime;
             this._callCount = 0;

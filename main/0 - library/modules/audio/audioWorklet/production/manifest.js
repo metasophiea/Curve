@@ -8,4 +8,6 @@
 {{include:gain/listing.js}}
 {{include:nothing/listing.js}}
 {{include:oscillator/listing.js}}
+{{include:oscillator2/listing.js}}
 {{include:streamAdder/listing.js}}
+{{include:frequencyAmplitudeResponseAnalyser/listing.js}}

@@ -1,4 +1,50 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-03-08
+  - put together the Acoustic Research's Frequency/Amplitude Response
+    Workstation (called "F/AR Workstation" because it's just a huge name) unit
+
+
+2020-03-07
+  - more oscillator work. I'm pretty happy with it now
+  - oscillator is now even more advanced, with envelopes for the gain, detune
+    and dutyCycle aspects. They each use the graph slightly differently though,
+    so you need to be conscious of that
+  - put together a new synthesizer for the new oscillator (hopefully, it will
+    replace the current one)
+
+
+2020-03-06
+  - more oscillator work (I think I might have cracked it)
+
+
+2020-03-05
+  - more oscillator work
+
+
+2020-03-04
+  - some adjustment to the positions of those voltage connection nodes from
+    yesterday, as I wasn't super happy with where some of them were
+  - began work on a new oscillator that includes an ADSR envelope. It's going
+    well, I'm a little iffy about how the logic is, but it seems to work
+
+
+2020-03-03
+  - created a circuit for frequencyAmplitudeResponseAnalyser audio worklet
+    (originally wrote it using private values, but apparently that's a bit too
+    modern right now. So, I've re-written it in the old fashion way (like
+    "_value") but kept around the old code when the world catches up)
+  - updated all relevant Acoustic Research units to have signal and voltage
+    connection nodes, to adjust their various options
+    
+      
+2020-03-02
+  - added "Reset Cursor" option to the dev menubar dropdown
+  - added 'active' parameter to the momentaryAmplitudeMeter worklet, which can
+    stop all calculations if set to false (0)
+  - new work on the new frequencyResponseMeasure circuit/worklet is going much
+    better
+
+
 2020-03-01
   - finished off the Frequency Generator unit
   - added the momentaryAmplitudeMeter circuit
@@ -227,7 +273,7 @@
   - added the amplitudePeakAttenuator circuit
   - added the amplitudePeakAttenuator unit (though I've discovered that the
     math for the worklet isn't right yet)
-  - modified the on-scree stat readout to have a little less useless
+  - modified the on-screen stat readout to have a little less useless
     information, and a calculation of how many frames per second are
     theoretically possible 
 
@@ -793,7 +839,6 @@
                 curve.min.js 1237kb
                 reduced to 32.13% of original size
       
-
 
 2019-12-25
   CoreV3

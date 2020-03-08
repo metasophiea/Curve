@@ -37,6 +37,12 @@ this['bitcrusher'] = function(name,x,y,angle){
                 {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
                     x:0, y:37.5, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
                 }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_amplitudeResolution', data:{ 
+                    x:30, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_sampleFrequency', data:{ 
+                    x:70, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
                 
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
@@ -74,6 +80,12 @@ this['bitcrusher'] = function(name,x,y,angle){
         //io
             object.io.audio.input.audioNode = bitcrusher.in();
             object.io.audio.output.audioNode = bitcrusher.out();
+            object.io.voltage.voltage_amplitudeResolution.onchange = function(value){
+                object.elements.dial_continuous_image.amplitudeResolution.set(value);
+            };
+            object.io.voltage.voltage_sampleFrequency.onchange = function(value){
+                object.elements.dial_discrete_image.sampleFrequency.set(Math.round(value*7));
+            };
 
     //interface
         object.i = {

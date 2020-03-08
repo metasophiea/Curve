@@ -9,7 +9,7 @@ const grapher = new function(){
         canvas.width = this._width;
         canvas.height = this._height;
         context = canvas.getContext('2d');
-        document.body.append(canvas);
+        document.body.prepend(canvas);
     };
 
     this.clear = function(){

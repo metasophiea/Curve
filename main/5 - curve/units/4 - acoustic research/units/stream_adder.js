@@ -37,6 +37,9 @@ this['stream_adder'] = function(name,x,y,angle){
                 {collection:'dynamic', type:'connectionNode_audio', name:'input_2', data:{ 
                     x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*0.25 - 15/2, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
                 }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_mix', data:{ 
+                    x:30, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
                 {collection:'dynamic', type:'connectionNode_audio', name:'control', data:{ 
                     x:42.5, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
                 }},
@@ -81,6 +84,9 @@ this['stream_adder'] = function(name,x,y,angle){
             object.io.audio.input_1.audioNode = streamAdder.in_1();
             object.io.audio.input_2.audioNode = streamAdder.in_2();
             object.io.audio.control.audioNode = streamAdder.mixControl();
+            object.io.voltage.voltage_mix.onchange = function(value){
+                object.elements.dial_continuous_image.mix.set( (value+1)/2 );
+            };
             object.io.audio.output.audioNode = streamAdder.out();
 
     //interface

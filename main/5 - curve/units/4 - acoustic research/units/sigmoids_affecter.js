@@ -37,6 +37,12 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
                 {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
                     x:0, y:unitStyle.drawingValue.height/2 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
                 }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_gain', data:{ 
+                    x:10, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
+                {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_sharpness', data:{ 
+                    x:50, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                }},
                 
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
@@ -107,6 +113,12 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
         //io
             object.io.audio.input.audioNode = amplitudeExciter.in();
             object.io.audio.output.audioNode = amplitudeExciter.out();
+            object.io.voltage.voltage_gain.onchange = function(value){
+                object.elements.dial_continuous_image.gain.set(value);
+            };
+            object.io.voltage.voltage_sharpness.onchange = function(value){
+                object.elements.dial_continuous_image.sharpness.set(value);
+            };
 
     //interface
         object.i = {
