@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:7} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8} };
                 const library = this;
             
                 this.go = new function(){
@@ -4895,7 +4895,7 @@
                                             const self = this;
                                     
                                             this._state = {
-                                                waveform:'sin',
+                                                waveform:'sine',
                                                 gain_useControl:false,
                                                 detune_useControl:false,
                                                 dutyCycle_useControl:false,
@@ -54194,10 +54194,10 @@
                                         backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_sine_down.png',
                                         backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_sine_down.png'
                                     }},
-                                    {collection:'control', type:'button_image', name:'waveformSelect_pointed', data:{ x:151.5, y:18.5, width:15, height:15, hoverable:false,
-                                        backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_pointed_up.png', 
-                                        backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_pointed_down.png',
-                                        backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_pointed_down.png'
+                                    {collection:'control', type:'button_image', name:'waveformSelect_triangle', data:{ x:151.5, y:18.5, width:15, height:15, hoverable:false,
+                                        backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_triangle_up.png', 
+                                        backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_triangle_down.png',
+                                        backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_triangle_down.png'
                                     }},
                                     {collection:'control', type:'button_image', name:'waveformSelect_square', data:{ x:133.5, y:36.5, width:15, height:15, hoverable:false,
                                         backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_square_up.png', 
@@ -54301,14 +54301,14 @@
                                 object.elements.button_image['waveformSelect_'+state.waveform].glow(true);
                     
                                 oscillator.waveform(
-                                    ['sine','square','pointed','noise'].indexOf(waveform)
+                                    ['sine','square','triangle','noise'].indexOf(waveform)
                                 );
                             }
                     
                         //wiring
                             //hid
                                 object.elements.button_image.waveformSelect_sine.onpress = function(){ selectWaveform('sine'); };
-                                object.elements.button_image.waveformSelect_pointed.onpress = function(){ selectWaveform('pointed'); };
+                                object.elements.button_image.waveformSelect_triangle.onpress = function(){ selectWaveform('triangle'); };
                                 object.elements.button_image.waveformSelect_square.onpress = function(){ selectWaveform('square'); };
                                 object.elements.button_image.waveformSelect_noise.onpress = function(){ selectWaveform('noise'); };
                                 

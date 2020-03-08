@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:7} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8} };
                 const library = this;
             
                 this.go = new function(){
@@ -4895,7 +4895,7 @@
                                             const self = this;
                                     
                                             this._state = {
-                                                waveform:'sin',
+                                                waveform:'sine',
                                                 gain_useControl:false,
                                                 detune_useControl:false,
                                                 dutyCycle_useControl:false,

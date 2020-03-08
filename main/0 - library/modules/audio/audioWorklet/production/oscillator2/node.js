@@ -7,7 +7,7 @@ class oscillator2 extends AudioWorkletNode{
         const self = this;
 
         this._state = {
-            waveform:'sin',
+            waveform:'sine',
             gain_useControl:false,
             detune_useControl:false,
             dutyCycle_useControl:false,

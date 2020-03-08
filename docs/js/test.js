@@ -72,7 +72,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:3} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:7} };
             const library = this;
         
             this.go = new function(){
@@ -27014,7 +27014,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:3} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:7} };
             const interface = this;
         
             const dev = {
@@ -44826,7 +44826,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         } );
 
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:4 } };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8 } };
             this.go = new function(){
                 const functionList = [];
         
@@ -54952,10 +54952,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_sine_down.png',
                                     backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_sine_down.png'
                                 }},
-                                {collection:'control', type:'button_image', name:'waveformSelect_pointed', data:{ x:151.5, y:18.5, width:15, height:15, hoverable:false,
-                                    backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_pointed_up.png', 
-                                    backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_pointed_down.png',
-                                    backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_pointed_down.png'
+                                {collection:'control', type:'button_image', name:'waveformSelect_triangle', data:{ x:151.5, y:18.5, width:15, height:15, hoverable:false,
+                                    backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_triangle_up.png', 
+                                    backingURL__glow:unitStyle.imageStoreURL_commonPrefix+'button_triangle_down.png',
+                                    backingURL__glow_press:unitStyle.imageStoreURL_commonPrefix+'button_triangle_down.png'
                                 }},
                                 {collection:'control', type:'button_image', name:'waveformSelect_square', data:{ x:133.5, y:36.5, width:15, height:15, hoverable:false,
                                     backingURL__up:unitStyle.imageStoreURL_commonPrefix+'button_square_up.png', 
@@ -55059,14 +55059,14 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.button_image['waveformSelect_'+state.waveform].glow(true);
                 
                             oscillator.waveform(
-                                ['sine','square','pointed','noise'].indexOf(waveform)
+                                ['sine','square','triangle','noise'].indexOf(waveform)
                             );
                         }
                 
                     //wiring
                         //hid
                             object.elements.button_image.waveformSelect_sine.onpress = function(){ selectWaveform('sine'); };
-                            object.elements.button_image.waveformSelect_pointed.onpress = function(){ selectWaveform('pointed'); };
+                            object.elements.button_image.waveformSelect_triangle.onpress = function(){ selectWaveform('triangle'); };
                             object.elements.button_image.waveformSelect_square.onpress = function(){ selectWaveform('square'); };
                             object.elements.button_image.waveformSelect_noise.onpress = function(){ selectWaveform('noise'); };
                             
