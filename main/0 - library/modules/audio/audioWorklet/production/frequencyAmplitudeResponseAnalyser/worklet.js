@@ -182,6 +182,7 @@ class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
 
         this.port.onmessage = function(event){
             if(event.data == 'stop'){
+                self.port.postMessage({ onCompletion:self._state.responseData });
                 self._active = false;
                 return;
             }

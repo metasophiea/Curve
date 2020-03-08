@@ -2,6 +2,17 @@
 2020-03-08
   - put together the Acoustic Research's Frequency/Amplitude Response
     Workstation (called "F/AR Workstation" because it's just a huge name) unit
+  - updated grapher display part to handle situations where there's no styling
+    information for a layer
+  - updated the F/AR Workstation to handle multiple graphs more elegantly (6
+    can be displayed simultaneously, though I think I'd like to remove that cap
+    and have older ones simply fade away as new ones are added)
+  - updated the frequencyAmplitudeResponseAnalyser worklet to return the
+    collected data when the stop command is received
+  - updated the F/AR Workstation to have LEDs which show progress, also all
+    controls now freeze when the analyses is running. Also also, previous graphs
+    can be stored on-screen (by not clearing them) and they will fade as new
+    graphs are added
 
 
 2020-03-07

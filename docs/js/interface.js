@@ -5246,6 +5246,7 @@
                                     
                                             this.port.onmessage = function(event){
                                                 if(event.data == 'stop'){
+                                                    self.port.postMessage({ onCompletion:self._state.responseData });
                                                     self._active = false;
                                                     return;
                                                 }
@@ -26570,7 +26571,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:7} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8} };
                 const interface = this;
             
                 const dev = {
@@ -29601,6 +29602,7 @@
                                                     const layer = foregroundElementsGroup[L];
                                 
                                                     //draw path
+                                                        if(foregroundStyles[L] == undefined || foregroundStyles[L].colour == undefined){ console.warn('grapher: attempting to draw on layer with no styling information. Action not performed'); break; }
                                                         frontingCanvas._.strokeStyle = 'rgba('+foregroundStyles[L].colour.r*255+','+foregroundStyles[L].colour.g*255+','+foregroundStyles[L].colour.b*255+','+foregroundStyles[L].colour.a+')';
                                                         frontingCanvas._.lineWidth = frontingCanvas.$(foregroundStyles[L].thickness);
                                                         frontingCanvas._.lineJoin = foregroundStyles[L].lineJoin;

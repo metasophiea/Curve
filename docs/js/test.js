@@ -72,7 +72,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:7} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8} };
             const library = this;
         
             this.go = new function(){
@@ -5212,7 +5212,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         const self = this;
                                 
                                         this._state = {
-                                            waveform:'sin',
+                                            waveform:'sine',
                                             gain_useControl:false,
                                             detune_useControl:false,
                                             dutyCycle_useControl:false,
@@ -5563,6 +5563,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 
                                         this.port.onmessage = function(event){
                                             if(event.data == 'stop'){
+                                                self.port.postMessage({ onCompletion:self._state.responseData });
                                                 self._active = false;
                                                 return;
                                             }
@@ -27014,7 +27015,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:7} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8} };
             const interface = this;
         
             const dev = {
@@ -30119,6 +30120,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 const layer = foregroundElementsGroup[L];
                             
                                                 //draw path
+                                                    if(foregroundStyles[L] == undefined || foregroundStyles[L].colour == undefined){ console.warn('grapher: attempting to draw on layer with no styling information. Action not performed'); break; }
                                                     frontingCanvas._.strokeStyle = 'rgba('+foregroundStyles[L].colour.r*255+','+foregroundStyles[L].colour.g*255+','+foregroundStyles[L].colour.b*255+','+foregroundStyles[L].colour.a+')';
                                                     frontingCanvas._.lineWidth = frontingCanvas.$(foregroundStyles[L].thickness);
                                                     frontingCanvas._.lineJoin = foregroundStyles[L].lineJoin;
@@ -54495,6 +54497,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     },
                 };
                 this['frequency_amplitude_response_workstation'] = function(name,x,y,angle){
+                    const graphMemoryCount = 10;
+                
                     //style data
                         const unitStyle = new function(){
                             //image store location URL
@@ -54515,7 +54519,18 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                 
                             //styling values
-                                this.waveport = { backgroundText_size:10, backing:{r:0.15,g:0.15,b:0.15,a:1} };
+                                this.waveport = { 
+                                    backgroundText_size:10, 
+                                    backing:{r:0.15,g:0.15,b:0.15,a:1},
+                                    foregrounds:(new Array(graphMemoryCount)).fill().map((a,index) => ({
+                                        colour:{r:0,g:_canvas_.library.math.curvePoint.linear(index/(graphMemoryCount-1),0.4,1),b:0,a:1}, 
+                                        thickness:0.5
+                                    }))
+                                };
+                                this.progressLED = {
+                                    glow:{r:0.99,g:0.32,b:0.24,a:1},
+                                    dim:{r:0.47,g:0.02,b:0.13,a:1},
+                                };
                         };
                 
                     //main object creation
@@ -54531,14 +54546,14 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             ],
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_audio', name:'producer', data:{ 
-                                    x:367.5 + 7.5, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                    x:301 + 7.5, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
                                 }},
                                 {collection:'dynamic', type:'connectionNode_audio', name:'consumer', data:{ 
                                     x:110 + 7.5, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
                                 }},
                                 
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
+                                    data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                 },
                 
                                 {collection:'display', type:'grapher', name:'waveport', data:{
@@ -54617,18 +54632,29 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
                                 }},
                 
-                                {collection:'control', type:'button_image', name:'clear', data:{ x:222.5, y:135, width:20, height:20, hoverable:false,
+                                {collection:'control', type:'button_image', name:'clear', data:{ x:222.5, y:130, width:20, height:20, hoverable:false,
                                     backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_clear_up.png', 
                                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_clear_down.png',
                                 }},
-                                {collection:'control', type:'button_image', name:'start', data:{ x:250, y:135, width:20, height:20, hoverable:false,
+                                {collection:'control', type:'button_image', name:'start', data:{ x:250, y:130, width:20, height:20, hoverable:false,
                                     backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_start_up.png', 
                                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_start_down.png',
                                 }},
-                                {collection:'control', type:'button_image', name:'stop', data:{ x:277.5, y:135, width:20, height:20, hoverable:false,
+                                {collection:'control', type:'button_image', name:'stop', data:{ x:277.5, y:130, width:20, height:20, hoverable:false,
                                     backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_stop_up.png', 
                                     backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_stop_down.png',
                                 }},
+                
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_0', data:{ x:225,       y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_1', data:{ x:225+7.5*1, y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_2', data:{ x:225+7.5*2, y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_3', data:{ x:225+7.5*3, y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_4', data:{ x:225+7.5*4, y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_5', data:{ x:225+7.5*5, y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_6', data:{ x:225+7.5*6, y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_7', data:{ x:225+7.5*7, y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_8', data:{ x:225+7.5*8, y:157.5, radius:2.5, style:unitStyle.progressLED }},
+                                {collection:'display', type:'glowbox_circle', name:'progressLED_9', data:{ x:225+7.5*9, y:157.5, radius:2.5, style:unitStyle.progressLED }},
                             ]
                         });
                 
@@ -54642,6 +54668,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             dutyCycle:0.5,
                             timePerStep:0.05,
                             signalGeneratorGain:1,
+                
+                            graphsCollected:[],
                         };
                         frequencyAmplitudeResponseAnalyser = new _canvas_.interface.circuit.frequencyAmplitudeResponseAnalyser(_canvas_.library.audio.context);
                         foolsOutput = new GainNode(_canvas_.library.audio.context); foolsOutput.gain.setValueAtTime(0,0);
@@ -54674,6 +54702,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             frequencyAmplitudeResponseAnalyser.range( parseInt(state.startFrequencyDigits.join('')), parseInt(state.endFrequencyDigits.join('')) );
                             frequencyAmplitudeResponseAnalyser.stepSize( parseInt(state.stepFrequencyDigits.join('')) );
                             updateViewbox();
+                            graphLine();
                         }
                         function selectWaveform(waveform){
                             if(state.waveform == waveform){ return; }
@@ -54702,35 +54731,146 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             object.elements.grapher.waveport.drawBackground();
                         }
                         function clearScreen(){
+                            frequencyAmplitudeResponseAnalyser.clear();
                             object.elements.grapher.waveport.clearAll();
                             updateViewbox();
+                            state.graphsCollected = [];
+                            
+                            for(let a = 0; a < graphMemoryCount; a++){
+                                object.elements.grapher.waveport.drawForeground(undefined,undefined,a);
+                            }
                         }
-                        function graphLine(data){
-                            let Y = [];
-                            let X = [];
+                        function graphLine(){
+                            state.graphsCollected.forEach((data,index) => {
+                                let Y = [];
+                                let X = [];
                 
-                            data.forEach(point => {
-                                Y.push(point.response);
-                                X.push(point.frequency);
+                                data.forEach(point => {
+                                    Y.push(point.response);
+                                    X.push(point.frequency);
+                                });
+                
+                                object.elements.grapher.waveport.drawForeground(Y,X, (graphMemoryCount-1) - (state.graphsCollected.length-1-index));
                             });
-                            object.elements.grapher.waveport.drawForeground(Y,X);
                         }
-                        frequencyAmplitudeResponseAnalyser.onCompletion = function(data){graphLine(data);};
-                        // frequencyAmplitudeResponseAnalyser.onValue = function(data){
-                        //     console.log(data);
-                        // };
+                        frequencyAmplitudeResponseAnalyser.onCompletion = function(data){
+                            state.graphsCollected.push(data);
+                            if(state.graphsCollected.length > graphMemoryCount){
+                                state.graphsCollected.shift();
+                            }
+                            graphLine();
+                            frequencyAmplitudeResponseAnalyser.clear();
+                            thawControls();
+                        };
+                        function LEDprogress(value){
+                            value *= 10;
+                            for(let a = 0; a < value; a++){
+                                object.elements.glowbox_circle['progressLED_'+a].on();
+                            }
+                            for(let a = value; a < 10; a++){
+                                object.elements.glowbox_circle['progressLED_'+a].off();
+                            }
+                        }
+                        frequencyAmplitudeResponseAnalyser.onValue = function(data){
+                            const startFrequency = parseInt(state.startFrequencyDigits.join(''));
+                            const endFrequency = parseInt(state.endFrequencyDigits.join(''));
+                            LEDprogress( Math.round(10*(data.frequency - startFrequency) / (endFrequency - startFrequency))/10 );
+                        };
+                        function freezeControls(){
+                            object.elements.dial_continuous_image.seconds_per_step.interactable(false);
+                            object.elements.dial_continuous_image.duty_cycle.interactable(false);
+                            object.elements.dial_continuous_image.signalGeneratorGain.interactable(false);
+                
+                            object.elements.button_image.waveformSelect_sine.interactable(false);
+                            object.elements.button_image.waveformSelect_square.interactable(false);
+                            object.elements.button_image.waveformSelect_triangle.interactable(false);
+                
+                            object.elements.button_image.startFrequency_10000_up.interactable(false);
+                            object.elements.button_image.startFrequency_1000_up.interactable(false);
+                            object.elements.button_image.startFrequency_100_up.interactable(false);
+                            object.elements.button_image.startFrequency_10_up.interactable(false);
+                            object.elements.button_image.startFrequency_1_up.interactable(false);
+                            object.elements.button_image.startFrequency_10000_down.interactable(false);
+                            object.elements.button_image.startFrequency_1000_down.interactable(false);
+                            object.elements.button_image.startFrequency_100_down.interactable(false);
+                            object.elements.button_image.startFrequency_10_down.interactable(false);
+                            object.elements.button_image.startFrequency_1_down.interactable(false);
+                            object.elements.button_image.endFrequency_10000_up.interactable(false);
+                            object.elements.button_image.endFrequency_1000_up.interactable(false);
+                            object.elements.button_image.endFrequency_100_up.interactable(false);
+                            object.elements.button_image.endFrequency_10_up.interactable(false);
+                            object.elements.button_image.endFrequency_1_up.interactable(false);
+                            object.elements.button_image.endFrequency_10000_down.interactable(false);
+                            object.elements.button_image.endFrequency_1000_down.interactable(false);
+                            object.elements.button_image.endFrequency_100_down.interactable(false);
+                            object.elements.button_image.endFrequency_10_down.interactable(false);
+                            object.elements.button_image.endFrequency_1_down.interactable(false);
+                            object.elements.button_image.stepFrequency_10000_up.interactable(false);
+                            object.elements.button_image.stepFrequency_1000_up.interactable(false);
+                            object.elements.button_image.stepFrequency_100_up.interactable(false);
+                            object.elements.button_image.stepFrequency_10_up.interactable(false);
+                            object.elements.button_image.stepFrequency_1_up.interactable(false);
+                            object.elements.button_image.stepFrequency_10000_down.interactable(false);
+                            object.elements.button_image.stepFrequency_1000_down.interactable(false);
+                            object.elements.button_image.stepFrequency_100_down.interactable(false);
+                            object.elements.button_image.stepFrequency_10_down.interactable(false);
+                            object.elements.button_image.stepFrequency_1_down.interactable(false);
+                        }
+                        function thawControls(){
+                            object.elements.dial_continuous_image.seconds_per_step.interactable(true);
+                            object.elements.dial_continuous_image.duty_cycle.interactable(true);
+                            object.elements.dial_continuous_image.signalGeneratorGain.interactable(true);
+                
+                            object.elements.button_image.waveformSelect_sine.interactable(true);
+                            object.elements.button_image.waveformSelect_square.interactable(true);
+                            object.elements.button_image.waveformSelect_triangle.interactable(true);
+                
+                            object.elements.button_image.startFrequency_10000_up.interactable(true);
+                            object.elements.button_image.startFrequency_1000_up.interactable(true);
+                            object.elements.button_image.startFrequency_100_up.interactable(true);
+                            object.elements.button_image.startFrequency_10_up.interactable(true);
+                            object.elements.button_image.startFrequency_1_up.interactable(true);
+                            object.elements.button_image.startFrequency_10000_down.interactable(true);
+                            object.elements.button_image.startFrequency_1000_down.interactable(true);
+                            object.elements.button_image.startFrequency_100_down.interactable(true);
+                            object.elements.button_image.startFrequency_10_down.interactable(true);
+                            object.elements.button_image.startFrequency_1_down.interactable(true);
+                            object.elements.button_image.endFrequency_10000_up.interactable(true);
+                            object.elements.button_image.endFrequency_1000_up.interactable(true);
+                            object.elements.button_image.endFrequency_100_up.interactable(true);
+                            object.elements.button_image.endFrequency_10_up.interactable(true);
+                            object.elements.button_image.endFrequency_1_up.interactable(true);
+                            object.elements.button_image.endFrequency_10000_down.interactable(true);
+                            object.elements.button_image.endFrequency_1000_down.interactable(true);
+                            object.elements.button_image.endFrequency_100_down.interactable(true);
+                            object.elements.button_image.endFrequency_10_down.interactable(true);
+                            object.elements.button_image.endFrequency_1_down.interactable(true);
+                            object.elements.button_image.stepFrequency_10000_up.interactable(true);
+                            object.elements.button_image.stepFrequency_1000_up.interactable(true);
+                            object.elements.button_image.stepFrequency_100_up.interactable(true);
+                            object.elements.button_image.stepFrequency_10_up.interactable(true);
+                            object.elements.button_image.stepFrequency_1_up.interactable(true);
+                            object.elements.button_image.stepFrequency_10000_down.interactable(true);
+                            object.elements.button_image.stepFrequency_1000_down.interactable(true);
+                            object.elements.button_image.stepFrequency_100_down.interactable(true);
+                            object.elements.button_image.stepFrequency_10_down.interactable(true);
+                            object.elements.button_image.stepFrequency_1_down.interactable(true);
+                        }
                 
                     //wiring
                         //hid
-                            object.elements.button_image.clear.onpress = function(value){
+                            object.elements.button_image.clear.onpress = function(){
                                 frequencyAmplitudeResponseAnalyser.clear();
                                 clearScreen();
                             };
-                            object.elements.button_image.start.onpress = function(value){
+                            object.elements.button_image.start.onpress = function(){
+                                LEDprogress(0);
                                 frequencyAmplitudeResponseAnalyser.start();
+                                freezeControls();
                             };
-                            object.elements.button_image.stop.onpress = function(value){
+                            object.elements.button_image.stop.onpress = function(){
                                 frequencyAmplitudeResponseAnalyser.stop();
+                                thawControls();
                             };
                             object.elements.dial_continuous_image.seconds_per_step.onchange = function(value){
                                 if(value == 0){ value = 0.001; }

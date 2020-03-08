@@ -158,6 +158,7 @@ this.grapher = function(
                         const layer = foregroundElementsGroup[L];
     
                         //draw path
+                            if(foregroundStyles[L] == undefined || foregroundStyles[L].colour == undefined){ console.warn('grapher: attempting to draw on layer with no styling information. Action not performed'); break; }
                             frontingCanvas._.strokeStyle = 'rgba('+foregroundStyles[L].colour.r*255+','+foregroundStyles[L].colour.g*255+','+foregroundStyles[L].colour.b*255+','+foregroundStyles[L].colour.a+')';
                             frontingCanvas._.lineWidth = frontingCanvas.$(foregroundStyles[L].thickness);
                             frontingCanvas._.lineJoin = foregroundStyles[L].lineJoin;
