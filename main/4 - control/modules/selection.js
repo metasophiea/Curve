@@ -14,8 +14,7 @@ this.selectUnit = function(unit,shiftToFront=true){
     //shift object to front of view, (within it's particular pane)
         if(shiftToFront){
             const pane = _canvas_.system.pane.getMiddlegroundPane(unit);
-            pane.remove(unit);
-            pane.append(unit);
+            pane.shift(unit,10000);
         }
 
     //colourize space
@@ -42,8 +41,10 @@ this.selectUnits = function(unitList){
 this.deselectUnit = function(unit){
     dev.log.selection('.deselectUnit(',unit); //#development
 
-    //decolourize space
-        unit.remove( unit.getChildByName('control.selection::shape::selectionGlow') );
+    //decolourize space (if the colour still remains)
+        if(unit.getChildren().length != 0){
+            unit.remove( unit.getChildByName('control.selection::shape::selectionGlow') );
+        }
     
     //remove unit from selectedUnits list, and activate it's "ondeselect" function
         this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);

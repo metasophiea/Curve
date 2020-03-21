@@ -1,10 +1,10 @@
-//replacement for prior synthesizer; this system reuses oscillators
+// replacement for prior synthesizer; this system reuses oscillators
 //  oscillators generated on demand
 //  conservitive use of oscillators
 //  gainWobble provided by internal LFO
 //  detuneWobble not implemented
 
-this.synthesizer = function(
+this.synthesizer_1 = function(
     context,
     waveType='sine', periodicWave={'sin':[0,1,0], 'cos':[0,0,1]}, 
     gain=1, octave=0, detune=0,

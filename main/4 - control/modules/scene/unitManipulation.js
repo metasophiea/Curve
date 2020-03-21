@@ -81,10 +81,11 @@ this.removeUnit = function(unit){
         );
 
     //run the unit's onDelete method
-        unit._ondelete();
         if(unit.ondelete){unit.ondelete();}
     //run disconnect on every connection node of this unit
         unit.disconnectEverything();
+    //run underlying onDelete method
+        unit._ondelete();
     //remove the object from the pane
         _canvas_.system.pane.getMiddlegroundPane(unit).remove(unit);
 };

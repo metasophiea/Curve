@@ -1,5 +1,5 @@
 {
-    name:'oscillator2',
+    name:'oscillator',
     worklet:new Blob([`
         {{include:worklet.js}}
     `], { type: "text/javascript" }),

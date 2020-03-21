@@ -58,7 +58,7 @@ this.documentUnits = function(units,selfContained=false){
     return outputData;  
 };
 this.printUnits = function(units, rectify=true, pane=_canvas_.system.pane.mm, autoselect=true){
-    dev.log.scene('.documentUnits(',units, rectify, pane, autoselect); //#development
+    dev.log.scene('.printUnits(',units, rectify, pane, autoselect); //#development
 
     const printedUnits = [];
 

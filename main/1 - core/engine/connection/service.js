@@ -164,7 +164,7 @@
         dev.count('service-arrangement.getElementsUnderArea'); //#development
         return arrangement.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele));
     };
-    communicationModule.function['arrangement.printTree'] = function(mode){
+    communicationModule.function['arrangement.printTree'] = function(mode,includeTypes){
         dev.log.service('.arrangement.printTree(',mode,includeTypes); //#development
         dev.count('service-arrangement.printTree'); //#development
         arrangement.printTree(mode,includeTypes);

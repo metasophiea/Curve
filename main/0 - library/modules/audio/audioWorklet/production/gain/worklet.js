@@ -35,11 +35,17 @@ class gain extends AudioWorkletProcessor{
             }
         }else{
             //manual
-            const gain_useFirstOnly = parameters.gain.length == 1;
-            for(let channel = 0; channel < input_1.length; channel++){        
-                for(let a = 0; a < input_1[channel].length; a++){
-                    const gain = gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a];
-                    output_1[channel][a] = input_1[channel][a] * gain;
+            if(parameters.gain.length == 1){
+                for(let channel = 0; channel < input_1.length; channel++){        
+                    for(let a = 0; a < input_1[channel].length; a++){
+                        output_1[channel][a] = input_1[channel][a] * parameters.gain[0];
+                    }
+                }
+            }else{
+                for(let channel = 0; channel < input_1.length; channel++){        
+                    for(let a = 0; a < input_1[channel].length; a++){
+                        output_1[channel][a] = input_1[channel][a] * parameters.gain[a];
+                    }
                 }
             }
         }

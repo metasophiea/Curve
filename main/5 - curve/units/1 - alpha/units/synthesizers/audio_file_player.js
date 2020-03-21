@@ -136,7 +136,6 @@ this.audio_file_player = function(name,x,y,angle){
                     );
                     object.elements.readout_sixteenSegmentDisplay.time.print();
                 }else{
-                    console.log( playerCircuit.currentTime() );
                     object.elements.readout_sixteenSegmentDisplay.time.text(
                         _canvas_.library.misc.padString(playerCircuit.currentTime().length,8,' ')
                     );

@@ -1,4 +1,107 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-03-21
+  - after some efforts, I've decided to switch back to the old synthesizer
+    which used the built-in oscillator. I just can't get the custom one to run
+    fast enough, or to not produce garbage collections. I've reinstated the old
+    synthesizer as synthesizer_1, and named the newer one synthesizer_2
+  - modified control.scene.unitManipulation.removeUnit to run the hidden
+    _onDelete method after the connections have been disconnected
+  - core_engine's arrangement.printTree service function didn't have the
+    correct arguments
+  - modified core so that when a group is removed, all its group children also
+    have the remove command run on them, and runs the "onremove" callbacks
+  - updated core's removal method, so that if the element to be removed isn't a
+    direct child of the group, nothing is done
+  - modified core's group element, to have a 'shift' method, which can be used
+    to move a child around in the rendering order (though, it's not quite
+    working during the delayed communication situation)
+    ...sort of fixed it by removing the delayed communication situation code.
+    It seems that the delay code sets up a callback that is called when the
+    newly created element receives its ID from the engine, but the
+    append/prepend method is also doing this, and obviously you can't shift an
+    element in a group without it being part of that group; but creating that
+    callback overwrites the callback created by the append/prepend method,
+    thus stopping the element from ever being included. To fix, one would need
+    to turn the callback into a callback list or something, or created an
+    'insert' method that the append/prepend method uses, which would never
+    be overwritten be the shift method, only have the destination changed.
+      For now, it's pretty much fine. I have plans to rewrite core in webASM
+    anyway, so, we can put it on the docket for then. Plus core isn't going to
+    develop very far from here anyway, so we have space for these poor quality
+    fixes...for now
+  - all this, fixes a long running problem that I thought I had in the bug list,
+    but it seems wasn't there. When units were being removed, they weren't
+    removing their connection nodes correctly. This was because their 
+    'onremove' callbacks weren't being called; only the 'onremove' callback
+    of the master group. Now, these callbacks are called for every element in
+    a group thus activating the connection node's 'onremove' callbacks, thus
+    removing them correctly from the scene
+
+
+2020-03-18
+  - rewrote the 'perform' method of th synthesizer_3 circuit, to hopefully me
+    more reliable. There's still some note dropping though
+  - updated Alpha's launchpad unit, to better handle the sending of signals
+    (sending slightly less now. Less needless ones)
+  - updated the oscillator worklet to have envelope reporting as an option,
+    instead of on by default.. the 'process' itself, might be a little heavy
+    on the poor audio thread though
+
+
+2020-03-17
+  - modified the custom oscillator to take a velocity value when activating
+    the start command
+  - modified the synthesizer_3 circuit to send velocity data to the oscillators
+  - finished jiggering around with Alpha's Basic Synthesizer, so that the new
+    synthesizer circuit fits into it nicely. Changed the range of the two period
+    dials, and their format too. Now, one can select how long the period is,
+    between 0.001 and 2 seconds.
+
+  synthesizer_3 circuit is better, but still a little weird. Sometimes on my
+  laptop it skips notes and I can't tell why.. also, the internal LFO and
+  external control system needs to be looked at, considering we had to fix up
+  some of the dutyCycle stuff in the custom oscillator along the way 
+
+
+2020-03-11
+  - cleaning (removing commented out code, and renaming items like "thing_3" to
+    "thing", if there's no other "thing_n" items around)
+  - began expanding the custom oscillator to have more wave creation modes.
+    Currently working on additive synthesis and phase modulation, which is
+    going rather well
+  - modified the oscillator and synthesizer circuits accordingly
+  - updated the basicSynthesizer unit to have access to the additive synthesis
+    features of the synthesizer/oscillator
+  - somehow messed up the synthesizer's ability to play many notes quickly
+    -thumbs up-
+
+
+2020-03-10
+  - wrote a license, as I'm a cool person now
+  - trashed the "martinez.js" thirdparty code, as it wasn't being used
+  - updated the thirdparty code "earcut" and "opentype" to whatever the latest
+    version was (the other two haven't been updated in years) They seems
+    stable.. we'll find out I guess. I've kept the old versions around anyway
+  - replaced the internals of the basicSynthesizer unit, to use the newer
+    synthesizer (I'll probably need to redo the unit a little, as I've changed
+    the values of dials slightly)
+  - commented out the old synthesizer and oscillator circuits
+  - renamed those new synthesizer and oscillator circuits to remove the
+    numbering (making them, the default essentially)
+
+
+2020-03-09
+  - updated synthesizer_3 to include a master gain
+  - updated the oscillator2 worklet to output all phases as they change
+  - updated synthesizer_3 to work with this new output (might need a little
+    testing)
+  - created the oscillator2 circuit, which houses the oscillator2 worklet
+  - changed how the oscillator2 worklet calculates the dutyCycle in an attempt
+    to balance out the different control inputs
+  - made a start at updating the Frequency Generator to use the oscillator2
+    circuit
+  
+
 2020-03-08
   - put together the Acoustic Research's Frequency/Amplitude Response
     Workstation (called "F/AR Workstation" because it's just a huge name) unit

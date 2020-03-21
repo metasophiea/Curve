@@ -155,16 +155,19 @@ this.group = function(_id,_name){
             activateShouldRenderFrame();
             return true;
         };
-        this.remove = function(newElement){
-            dev.log.elementLibrary[type]('['+self.getAddress()+'].remove(',newElement); //#development
-            if(newElement == undefined){return;}
+        this.remove = function(elementToRemove){
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].remove(',elementToRemove); //#development
+            if(elementToRemove == undefined){return;}
+            if(!children.includes(elementToRemove)){return;}
 
-            const index = children.indexOf(newElement);
+            if(elementToRemove.getType() == 'group'){ elementToRemove.clear(); }
+            
+            const index = children.indexOf(elementToRemove);
             if(index != -1){ children.splice(index,1); }
-            augmentExtremities_remove(newElement);
+            augmentExtremities_remove(elementToRemove);
 
-            newElement.parent = undefined;
-            delete childRegistry[newElement.name];
+            elementToRemove.parent = undefined;
+            delete childRegistry[elementToRemove.name];
             activateShouldRenderFrame();
         };
         this.clear = function(){
@@ -173,6 +176,16 @@ this.group = function(_id,_name){
             childRegistry = {};
             activateShouldRenderFrame();
             return true;
+        };
+        this.shift = function(elementToShift,newPosition){
+            dev.log.elementLibrary[type]('['+self.getAddress()+'].shift(',elementToShift,newPosition); //#development
+            if(elementToShift == undefined){return;}
+            if(!children.includes(elementToShift)){return;}
+
+            children.splice(children.indexOf(elementToShift), 1);
+            children.splice(newPosition,0,elementToShift);
+
+            activateShouldRenderFrame();
         };
         this.getElementsUnderPoint = function(x,y){
             dev.log.elementLibrary[type]('['+self.getAddress()+'].getElementsUnderPoint(',x,y); //#development
@@ -562,6 +575,7 @@ this.group = function(_id,_name){
             this.prepend = function(elementId){ return self.prepend(element.getElementFromId(elementId)); };
             this.remove = function(elementId){ return self.remove(element.getElementFromId(elementId)); };
             this.clear = self.clear;
+            this.shift = function(elementId,newPosition){ return self.shift(element.getElementFromId(elementId),newPosition); };
             this.getElementsUnderPoint = function(x,y){ return self.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele)); };
             this.getElementsUnderArea = function(points){ return self.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele)); };
             this.getTree = self.getTree;

@@ -122,8 +122,14 @@ this.launchpad = function(name,x,y,angle){
                 object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(true);
                 if( !object.elements.connectionNode_signal['output_'+y].read() && !state.pages[state.currentPage][y][state.currentColumn] ){ continue; }
 
-                object.elements.connectionNode_signal['output_'+y].set(false);
-                if( state.pages[state.currentPage][y][state.currentColumn] ){ object.elements.connectionNode_signal['output_'+y].set(true); }
+                if( state.pages[state.currentPage][y][state.currentColumn] ){
+                    if( object.elements.connectionNode_signal['output_'+y].read() ){
+                        object.elements.connectionNode_signal['output_'+y].set(false);
+                    }
+                    object.elements.connectionNode_signal['output_'+y].set(true);
+                }else{
+                    object.elements.connectionNode_signal['output_'+y].set(false);
+                }
             }
         }
         function nextPage(){

@@ -19,7 +19,8 @@
 // {{include:16.js}} //arrangement test
 // {{include:17.js}} //repeated image request test
 // {{include:18.js}} //lots of different images 
-{{include:19.js}} //stress test
+// {{include:19.js}} //stress test
+{{include:20.js}} //deep removal / shifting test
 
 
 // {{include:a.js}} //custom shape (quite broken)

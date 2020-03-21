@@ -518,25 +518,11 @@ this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
     holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
     holes.pop();
 
-    return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+    return _thirdparty.earcut2(regions.flat().map(item => [item.x,item.y]).flat(),holes);
 };
 this.unionPolygons = function(polygon1,polygon2){
     dev.log.math('.unionPolygons(',polygon1,polygon2); //#development
     dev.count('.math.unionPolygons'); //#development
-
-    //martinez (not working)
-    // for(let a = 0; a < polygon1.length; a++){
-    //     polygon1[a].push( polygon1[a][0] );
-    // }
-    // for(let a = 0; a < polygon2.length; a++){
-    //     polygon2[a].push( polygon2[a][0] );
-    // }
-
-    // const ans = _thirdparty.martinez.union(
-    //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
-    //     polygon2.map(region => region.map(item => [item.x,item.y])  )
-    // );
-    // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
 
     //PolyBool
     return _thirdparty.PolyBool.union(

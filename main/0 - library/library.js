@@ -1,5 +1,5 @@
 _canvas_.library = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:18} };
     const library = this;
 
     this.go = new function(){

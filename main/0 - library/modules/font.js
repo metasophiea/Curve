@@ -9,7 +9,7 @@ this.decodeFont = function(fontFileData){
     dev.log.font('.decodeFont(',fontFileData); //#development
     dev.count('.font.decodeFont'); //#development
 
-    return _thirdparty.opentype.parse(fontFileData);
+    return _thirdparty.opentype2.parse(fontFileData);
 };
 this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
     dev.log.font('.getAllAvailableGlyphDrawingPaths(',font,reducedGlyphSet); //#development

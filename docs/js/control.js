@@ -20,7 +20,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:18} };
                 const library = this;
             
                 this.go = new function(){
@@ -521,23 +521,9 @@
                         holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
                         holes.pop();
                     
-                        return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+                        return _thirdparty.earcut2(regions.flat().map(item => [item.x,item.y]).flat(),holes);
                     };
                     this.unionPolygons = function(polygon1,polygon2){
-                    
-                        //martinez (not working)
-                        // for(let a = 0; a < polygon1.length; a++){
-                        //     polygon1[a].push( polygon1[a][0] );
-                        // }
-                        // for(let a = 0; a < polygon2.length; a++){
-                        //     polygon2[a].push( polygon2[a][0] );
-                        // }
-                    
-                        // const ans = _thirdparty.martinez.union(
-                        //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
-                        //     polygon2.map(region => region.map(item => [item.x,item.y])  )
-                        // );
-                        // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
                     
                         //PolyBool
                         return _thirdparty.PolyBool.union(
@@ -1757,7 +1743,7 @@
                     };
                     this.decodeFont = function(fontFileData){
                     
-                        return _thirdparty.opentype.parse(fontFileData);
+                        return _thirdparty.opentype2.parse(fontFileData);
                     };
                     this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
                     
@@ -4186,11 +4172,17 @@
                                                 }
                                             }else{
                                                 //manual
-                                                const gain_useFirstOnly = parameters.gain.length == 1;
-                                                for(let channel = 0; channel < input_1.length; channel++){        
-                                                    for(let a = 0; a < input_1[channel].length; a++){
-                                                        const gain = gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a];
-                                                        output_1[channel][a] = input_1[channel][a] * gain;
+                                                if(parameters.gain.length == 1){
+                                                    for(let channel = 0; channel < input_1.length; channel++){        
+                                                        for(let a = 0; a < input_1[channel].length; a++){
+                                                            output_1[channel][a] = input_1[channel][a] * parameters.gain[0];
+                                                        }
+                                                    }
+                                                }else{
+                                                    for(let channel = 0; channel < input_1.length; channel++){        
+                                                        for(let a = 0; a < input_1[channel].length; a++){
+                                                            output_1[channel][a] = input_1[channel][a] * parameters.gain[a];
+                                                        }
                                                     }
                                                 }
                                             }
@@ -4261,129 +4253,8 @@
                             {
                                 name:'oscillator',
                                 worklet:new Blob([`
-                                    // class oscillator extends AudioWorkletProcessor{
-                                    //     static twoPI = Math.PI*2;
-                                    //     static starterFrequency = 440;
-                                    
-                                    //     static get parameterDescriptors(){
-                                    //         return [
-                                    //             {
-                                    //                 name: 'mode',
-                                    //                 defaultValue: 0, // 0 - sine / 1 - square / 2 - triangle/sawtooth/ramp (use duty cycle)
-                                    //                 minValue: 0,
-                                    //                 maxValue: 3,
-                                    //                 automationRate: 'a-rate',
-                                    //             },{
-                                    //                 name: 'frequency',
-                                    //                 defaultValue: oscillator.starterFrequency,
-                                    //                 minValue: 0,
-                                    //                 maxValue: 20000,
-                                    //                 automationRate: 'a-rate',
-                                    //             },{
-                                    //                 name: 'dutyCycle',
-                                    //                 defaultValue: 0.5,
-                                    //                 minValue: 0,
-                                    //                 maxValue: 1,
-                                    //                 automationRate: 'a-rate',
-                                    //             }
-                                    //         ];
-                                    //     }
-                                    
-                                    //     constructor(options){
-                                    //         super(options);
-                                    //         this._wavePosition = 0;
-                                    //         this._waveStep = oscillator.starterFrequency/44100;
-                                    //     }
-                                    
-                                    //     process(inputs, outputs, parameters){
-                                    //         const output = outputs[0];
-                                    
-                                    //         const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                    //         const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
-                                    
-                                    //         switch(parameters.mode[0]){
-                                    //             case 0:
-                                    //                 for(let channel = 0; channel < output.length; channel++){
-                                    //                     for(let a = 0; a < output[channel].length; a++){
-                                    //                         if( !frequency_useFirstOnly ){ this._waveStep = parameters.frequency[a]/sampleRate; }
-                                    //                         this._wavePosition += this._waveStep;
-                                    
-                                    //                         const waveProgress = this._wavePosition - Math.trunc(this._wavePosition);
-                                    //                         output[channel][a] = Math.sin( waveProgress * oscillator.twoPI );
-                                    //                     }
-                                    //                 }
-                                    //             break;
-                                    //             case 1:
-                                    //                 for(let channel = 0; channel < output.length; channel++){
-                                    //                     for(let a = 0; a < output[channel].length; a++){
-                                    //                         if( !frequency_useFirstOnly ){ this._waveStep = parameters.frequency[a]/sampleRate; }
-                                    //                         this._wavePosition += this._waveStep;
-                                    
-                                    //                         const waveProgress = this._wavePosition - Math.trunc(this._wavePosition);
-                                    //                         const dutyCycle = dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a];
-                                    
-                                    //                         output[channel][a] = waveProgress < dutyCycle ? 1 : -1;
-                                    //                     }
-                                    //                 }
-                                    //             break;
-                                    //             case 2:
-                                    //                 for(let channel = 0; channel < output.length; channel++){
-                                    //                     for(let a = 0; a < output[channel].length; a++){
-                                    //                         if( !frequency_useFirstOnly ){ this._waveStep = parameters.frequency[a]/sampleRate; }
-                                    //                         this._wavePosition += this._waveStep;
-                                    
-                                    //                         const waveProgress = this._wavePosition - Math.trunc(this._wavePosition);
-                                    //                         const dutyCycle = dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a];
-                                    
-                                    //                         if(waveProgress < dutyCycle/2){
-                                    //                             output[channel][a] = 2*waveProgress / dutyCycle;
-                                    //                         }else if(waveProgress >= 1 - dutyCycle/2){
-                                    //                             output[channel][a] = (2*waveProgress - 2) / dutyCycle;
-                                    //                         }else{
-                                    //                             output[channel][a] = (2*waveProgress - 1) / (dutyCycle - 1);
-                                    //                         }
-                                    //                     }
-                                    //                 }
-                                    //             break;
-                                    //         }
-                                    
-                                    //         return true;
-                                    //     }
-                                    // }
-                                    // registerProcessor('oscillator', oscillator);
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
                                     class oscillator extends AudioWorkletProcessor{
+                                        static halfPI = Math.PI/2;
                                         static twoPI = Math.PI*2;
                                         static starterFrequency = 440;
                                         static maxFrequency = 20000;
@@ -4393,12 +4264,6 @@
                                         static get parameterDescriptors(){
                                             return [
                                                 {
-                                                    name: 'waveform',
-                                                    defaultValue: 0, // 0 - sine / 1 - square / 2 - triangle / 3 - noise
-                                                    minValue: 0,
-                                                    maxValue: 3,
-                                                    automationRate: 'k-rate',
-                                                },{
                                                     name: 'frequency',
                                                     defaultValue: oscillator.starterFrequency,
                                                     minValue: 0,
@@ -4422,202 +4287,6 @@
                                                     minValue: 0,
                                                     maxValue: 1,
                                                     automationRate: 'a-rate',
-                                                },{
-                                                    name: 'gain_mode',
-                                                    defaultValue: 0, // 0 - manual / 1 - automatic
-                                                    minValue: 0,
-                                                    maxValue: 1,
-                                                    automationRate: 'k-rate',
-                                                },{
-                                                    name: 'detune_mode',
-                                                    defaultValue: 0, // 0 - manual / 1 - automatic
-                                                    minValue: 0,
-                                                    maxValue: 1,
-                                                    automationRate: 'k-rate',
-                                                },{
-                                                    name: 'dutyCycle_mode',
-                                                    defaultValue: 0, // 0 - manual / 1 - automatic
-                                                    minValue: 0,
-                                                    maxValue: 1,
-                                                    automationRate: 'k-rate',
-                                                },
-                                            ];
-                                        }
-                                    
-                                        constructor(options){
-                                            super(options);
-                                            this._wavePosition = 0;
-                                        }
-                                    
-                                        process(inputs, outputs, parameters){
-                                            const output = outputs[0];
-                                            const gainControl = inputs[0];
-                                            const detuneControl = inputs[1];
-                                            const dutyCycleControl = inputs[2];
-                                    
-                                            const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                            const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
-                                            const detune_useFirstOnly = parameters.detune.length == 1;
-                                            const gain_useFirstOnly = parameters.gain.length == 1;
-                                    
-                                            for(let channel = 0; channel < output.length; channel++){
-                                                for(let a = 0; a < output[channel].length; a++){
-                                                    const gain = parameters.gain_mode[0] == 0 ? (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]) : gainControl[channel][a];
-                                                    const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                    const detune = parameters.detune_mode[0] == 0 ? (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]) : detuneControl[channel][a];
-                                                    const dutyCycle = parameters.dutyCycle_mode[0] == 0 ? (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]) : dutyCycleControl[channel][a];
-                                    
-                                                    this._wavePosition += (frequency*(detune*oscillator.detuneMux + 1))/sampleRate;
-                                                    const localWavePosition = this._wavePosition % 1;
-                                    
-                                                    switch(parameters.waveform[0]){
-                                                        case 0: //sin
-                                                            output[channel][a] = gain*Math.sin( localWavePosition * oscillator.twoPI );
-                                                        break;
-                                                        case 1: //square
-                                                            output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
-                                                        break;
-                                                        case 2: //triangle
-                                                            if(localWavePosition < dutyCycle/2){
-                                                                output[channel][a] = gain*(2*localWavePosition / dutyCycle);
-                                                            }else if(localWavePosition >= 1 - dutyCycle/2){
-                                                                output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
-                                                            }else{
-                                                                output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
-                                                            }
-                                                        break;
-                                                        case 3: //noise
-                                                            output[channel][a] = gain*(Math.random()*2 - 1);
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                    
-                                            return true;
-                                        }
-                                    }
-                                    registerProcessor('oscillator', oscillator);
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    /*
-                                    
-                                    // Phase Modulation
-                                    let x = 0;
-                                    let freq = 1;
-                                    let mux = [
-                                        {pha:1,amp:1},
-                                        {pha:1,amp:1},
-                                        {pha:1,amp:1},
-                                        {pha:1,amp:1},
-                                    ];
-                                    let accumulator = 0;
-                                    mux.forEach(current => {
-                                        accumulator = Math.sin(x*freq*current.pha + (Math.PI/2)*current.amp*accumulator);
-                                    } );
-                                    
-                                    */
-                                `], { type: "text/javascript" }),
-                                class:
-                                    class oscillator extends AudioWorkletNode{
-                                        constructor(context, options={}){
-                                            options.numberOfInputs = 3;
-                                            options.numberOfOutputs = 1;
-                                            options.channelCount = 1;
-                                            super(context, 'oscillator', options);
-                                    
-                                            this._waveform = 0;
-                                            this._gain_mode = 0;
-                                            this._detune_mode = 0;
-                                            this._dutyCycle_mode = 0;
-                                        }
-                                    
-                                    
-                                        get waveform(){
-                                            return this._waveform;
-                                        }
-                                        set waveform(value){
-                                            this._waveform = value;
-                                            this.parameters.get('waveform').setValueAtTime(this._waveform,0);
-                                        }
-                                        get gain_mode(){
-                                            return this._gain_mode;
-                                        }
-                                        set gain_mode(value){
-                                            this._gain_mode = value;
-                                            this.parameters.get('gain_mode').setValueAtTime(this._gain_mode,0);
-                                        }
-                                        get detune_mode(){
-                                            return this._detune_mode;
-                                        }
-                                        set detune_mode(value){
-                                            this._detune_mode = value;
-                                            this.parameters.get('detune_mode').setValueAtTime(this._detune_mode,0);
-                                        }
-                                    
-                                        get dutyCycle_mode(){
-                                            return this._dutyCycle_mode;
-                                        }
-                                        set dutyCycle_mode(value){
-                                            this._dutyCycle_mode = value;
-                                            this.parameters.get('dutyCycle_mode').setValueAtTime(this._dutyCycle_mode,0);
-                                        }
-                                        get frequency(){
-                                            return this.parameters.get('frequency');
-                                        }
-                                        get gain(){
-                                            return this.parameters.get('gain');
-                                        }
-                                        get detune(){
-                                            return this.parameters.get('detune');
-                                        }
-                                        get dutyCycle(){
-                                            return this.parameters.get('dutyCycle');
-                                        }
-                                    }
-                                ,
-                            },
-                            {
-                                name:'oscillator2',
-                                worklet:new Blob([`
-                                    class oscillator2 extends AudioWorkletProcessor{
-                                        static twoPI = Math.PI*2;
-                                        static starterFrequency = 440;
-                                        static maxFrequency = 20000;
-                                        static detuneMux = 0.1;
-                                        static detuneBounds = 1/oscillator2.detuneMux;
-                                    
-                                        static get parameterDescriptors(){
-                                            return [
-                                                {
-                                                    name: 'frequency',
-                                                    defaultValue: oscillator2.starterFrequency,
-                                                    minValue: 0,
-                                                    maxValue: oscillator2.maxFrequency,
-                                                    automationRate: 'a-rate',
-                                                },{
-                                                    name: 'gain',
-                                                    defaultValue: 1,
-                                                    minValue: -1,
-                                                    maxValue: 1,
-                                                    automationRate: 'a-rate',
-                                                },{
-                                                    name: 'detune',
-                                                    defaultValue: 0,
-                                                    minValue: -oscillator2.detuneBounds,
-                                                    maxValue: oscillator2.detuneBounds,
-                                                    automationRate: 'a-rate',
-                                                },{
-                                                    name: 'dutyCycle',
-                                                    defaultValue: 0.5,
-                                                    minValue: 0,
-                                                    maxValue: 1,
-                                                    automationRate: 'a-rate',
                                                 },
                                             ];
                                         }
@@ -4626,15 +4295,19 @@
                                             super(options);
                                             const self = this;
                                             this._wavePosition = 0;
+                                            this._waveComplexityLength = 1;
                                     
                                             this._state = {
                                                 waveform:'sine',
                                                 gain_useControl:false,
                                                 detune_useControl:false,
                                                 dutyCycle_useControl:false,
+                                                waveformGeneratorFunction:oscillator.waveFunction['sine'],
                                             };
                                             this._envelope = {
                                                 gain:{
+                                                    reporting:false,
+                                                    velocity:1,
                                                     phase:'off', // front - wait - back - off
                                                     requestedPhase:undefined,
                                     
@@ -4654,6 +4327,8 @@
                                                     },
                                                 },
                                                 detune:{
+                                                    reporting:false,
+                                                    velocity:1,
                                                     phase:'off', // front - wait - back - off
                                                     requestedPhase:undefined,
                                     
@@ -4673,6 +4348,8 @@
                                                     },
                                                 },
                                                 dutyCycle:{
+                                                    reporting:false,
+                                                    velocity:1,
                                                     phase:'off', // front - wait - back - off
                                                     requestedPhase:undefined,
                                     
@@ -4683,39 +4360,49 @@
                                                     procedure:{
                                                         index:0,
                                                         sample:0,
-                                                        front:[ {destination:0.5, elapse:0, _elapseSamples:1} ],
-                                                        back:[ {destination:0.5, elapse:0, _elapseSamples:1} ],
+                                                        front:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                        back:[ {destination:0, elapse:0, _elapseSamples:1} ],
                                                     },
                                                     defaultProcedurePoint:{
-                                                        front:{destination:0.5, elapse:0, _elapseSamples:1},
-                                                        back:{destination:0.5, elapse:0, _elapseSamples:1},
+                                                        front:{destination:0, elapse:0, _elapseSamples:1},
+                                                        back:{destination:0, elapse:0, _elapseSamples:1},
                                                     },
                                                 },
+                                            };
+                                            this._waveSettings = {
+                                                additiveSynthesis:{
+                                                    sin:[1],
+                                                    cos:[]
+                                                },
+                                                phaseModulation:[
+                                                    {mux:2,power:1},
+                                                    {mux:3,power:1},
+                                                ],
                                             };
                                     
                                             this.port.onmessage = function(event){
                                                 Object.entries(event.data).forEach(([key,value]) => {
                                                     switch(key){
-                                                        case 'command':
-                                                            switch(value){
-                                                                case 'start':
-                                                                    Object.keys(self._envelope).forEach(aspect => {
-                                                                        if(self._envelope[aspect].requestedPhase == 'back' || self._envelope[aspect].phase == 'back' || self._envelope[aspect].phase == 'off'){
-                                                                            self._envelope[aspect].requestedPhase = 'front';
-                                                                        }
-                                                                    });
-                                                                break;
-                                                                case 'stop':
-                                                                    Object.keys(self._envelope).forEach(aspect => {
-                                                                        if(self._envelope[aspect].requestedPhase == 'front' || self._envelope[aspect].phase == 'front' || self._envelope[aspect].phase == 'wait'){
-                                                                            self._envelope[aspect].requestedPhase = 'back';
-                                                                        }
-                                                                    });
-                                                                break;
+                                                        case 'start':
+                                                            if(value != undefined){
+                                                                self._envelope.gain.velocity = value;
                                                             }
+                                                            Object.keys(self._envelope).forEach(aspect => {
+                                                                if(self._envelope[aspect].requestedPhase == 'back' || self._envelope[aspect].phase == 'back' || self._envelope[aspect].phase == 'off'){
+                                                                    self._envelope[aspect].requestedPhase = 'front';
+                                                                }
+                                                            });
+                                                        break;
+                                                        case 'stop':
+                                                            Object.keys(self._envelope).forEach(aspect => {
+                                                                if(self._envelope[aspect].requestedPhase == 'front' || self._envelope[aspect].phase == 'front' || self._envelope[aspect].phase == 'wait'){
+                                                                    self._envelope[aspect].requestedPhase = 'back';
+                                                                }
+                                                            });
                                                         break;
                                                         case 'waveform': 
                                                             self._state.waveform = value;
+                                                            self._state.waveformGeneratorFunction = oscillator.waveFunction[value];
                                                         break;
                                                         case 'gain_useControl': 
                                                             self._state.gain_useControl = value;
@@ -4771,6 +4458,24 @@
                                                                 }
                                                             });
                                                         break;
+                                                        case 'gain_reporting': 
+                                                            self._envelope.gain.reporting = value;
+                                                        break;
+                                                        case 'detune_reporting': 
+                                                            self._envelope.detune.reporting = value;
+                                                        break;
+                                                        case 'dutyCycle_reporting': 
+                                                            self._envelope.dutyCycle.reporting = value;
+                                                        break;
+                                                        case 'additiveSynthesis_sin':
+                                                            self._waveSettings.additiveSynthesis.sin = value;
+                                                        break;
+                                                        case 'additiveSynthesis_cos':
+                                                            self._waveSettings.additiveSynthesis.cos = value;
+                                                        break;
+                                                        case 'phaseModulation_settings':
+                                                            self._waveSettings.phaseModulation = value;
+                                                        break;
                                                     }
                                                 });
                                             };
@@ -4794,104 +4499,203 @@
                                                 const detune_useFirstOnly = parameters.detune.length == 1;
                                                 const gain_useFirstOnly = parameters.gain.length == 1;
                                     
-                                                for(let channel = 0; channel < output.length; channel++){
-                                                    for(let a = 0; a < output[channel].length; a++){
-                                                        //envelope calculation
-                                                            Object.keys(this._envelope).forEach(aspect => {
-                                                                if(this._envelope[aspect].phase == 'front' || this._envelope[aspect].phase == 'back'){
-                                                                    if( currentFrame+a - this._envelope[aspect].procedure.sample >= this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index]._elapseSamples ){
-                                                                        this._envelope[aspect].procedure.index++;
-                                                                        this._envelope[aspect].procedure.sample = currentFrame+a;
-                                                                        if( this._envelope[aspect].procedure.index >= this._envelope[aspect].procedure[this._envelope[aspect].phase].length){
-                                                                            if(this._envelope[aspect].phase == 'front'){
-                                                                                this._envelope[aspect].phase = 'wait';
-                                                                                this.reportPhase(aspect);
-                                                                                this._envelope[aspect].step = 0;
-                                                                            }else if(this._envelope[aspect].phase == 'back'){
-                                                                                this._envelope[aspect].phase = 'off';
-                                                                                this.reportPhase(aspect);
-                                                                                this._envelope[aspect].step = 0;
-                                                                            }
-                                                                        }else{
-                                                                            this._envelope[aspect].previous = this._envelope[aspect].current;
-                                                                            this._envelope[aspect].step = (this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index].destination - this._envelope[aspect].previous)/this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index]._elapseSamples;                    
+                                            for(let channel = 0; channel < output.length; channel++){
+                                                for(let a = 0; a < output[channel].length; a++){
+                                                    //envelope calculation
+                                                        //gain
+                                                            if(this._envelope.gain.phase == 'front' || this._envelope.gain.phase == 'back'){
+                                                                const procedure_phase = this._envelope.gain.procedure[this._envelope.gain.phase];
+                                                                if( currentFrame+a - this._envelope.gain.procedure.sample >= procedure_phase[this._envelope.gain.procedure.index]._elapseSamples ){
+                                                                    this._envelope.gain.procedure.index++;
+                                                                    this._envelope.gain.procedure.sample = currentFrame+a;
+                                                                    if( this._envelope.gain.procedure.index >= procedure_phase.length ){
+                                                                        if(this._envelope.gain.phase == 'front'){
+                                                                            this._envelope.gain.phase = 'wait';
+                                                                            this.reportPhase_gain();
+                                                                            this._envelope.gain.step = 0;
+                                                                        }else if(this._envelope.gain.phase == 'back'){
+                                                                            this._envelope.gain.phase = 'off';
+                                                                            this.reportPhase_gain();
+                                                                            this._envelope.gain.step = 0;
                                                                         }
+                                                                    }else{
+                                                                        this._envelope.gain.previous = this._envelope.gain.current;
+                                                                        // (velocity*destination - previousGain) / elapseSamples
+                                                                        this._envelope.gain.step = (this._envelope.gain.velocity*procedure_phase[this._envelope.gain.procedure.index].destination - this._envelope.gain.previous)/procedure_phase[this._envelope.gain.procedure.index]._elapseSamples;                    
                                                                     }
                                                                 }
-                                                                this._envelope[aspect].current += this._envelope[aspect].step;
-                                                            });
-                                    
-                                                        //aspect calculation
-                                                            const gain = this._envelope.gain.current * (this._state.gain_useControl ? gainControl[channel][a] : (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]));
-                                                            const detune = this._envelope.detune.current + (this._state.detune_useControl ? detuneControl[channel][a] : (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]));
-                                                            const dutyCycle = this._envelope.dutyCycle.current + (this._state.dutyCycle_useControl ? dutyCycleControl[channel][a] : (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]));
-                                    
-                                                        //wave calculation
-                                                            const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                            this._wavePosition += (frequency*(detune*oscillator2.detuneMux + 1))/sampleRate;
-                                                            const localWavePosition = this._wavePosition % 1;
-                                    
-                                                            switch(this._state.waveform){
-                                                                case 'sine':
-                                                                    output[channel][a] = gain*Math.sin( localWavePosition * oscillator2.twoPI );
-                                                                break;
-                                                                case 'square':
-                                                                    output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
-                                                                break;
-                                                                case 'triangle':
-                                                                    if(localWavePosition < dutyCycle/2){
-                                                                        output[channel][a] = gain*(2*localWavePosition / dutyCycle);
-                                                                    }else if(localWavePosition >= 1 - dutyCycle/2){
-                                                                        output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
-                                                                    }else{
-                                                                        output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
-                                                                    }
-                                                                break;
-                                                                case 'noise': default: 
-                                                                    output[channel][a] = gain*(Math.random()*2 - 1);
-                                                                break;
                                                             }
-                                                    }
+                                                            this._envelope.gain.current += this._envelope.gain.step;
+                                                        //detune
+                                                            if(this._envelope.detune.phase == 'front' || this._envelope.detune.phase == 'back'){
+                                                                const procedure_phase = this._envelope.detune.procedure[this._envelope.detune.phase];
+                                                                if( currentFrame+a - this._envelope.detune.procedure.sample >= procedure_phase[this._envelope.detune.procedure.index]._elapseSamples ){
+                                                                    this._envelope.detune.procedure.index++;
+                                                                    this._envelope.detune.procedure.sample = currentFrame+a;
+                                                                    if( this._envelope.detune.procedure.index >= procedure_phase.length ){
+                                                                        if(this._envelope.detune.phase == 'front'){
+                                                                            this._envelope.detune.phase = 'wait';
+                                                                            this.reportPhase_detune();
+                                                                            this._envelope.detune.step = 0;
+                                                                        }else if(this._envelope.detune.phase == 'back'){
+                                                                            this._envelope.detune.phase = 'off';
+                                                                            this.reportPhase_detune();
+                                                                            this._envelope.detune.step = 0;
+                                                                        }
+                                                                    }else{
+                                                                        this._envelope.detune.previous = this._envelope.detune.current;
+                                                                        // (velocity*destination - previousGain) / elapseSamples
+                                                                        this._envelope.detune.step = (this._envelope.detune.velocity*procedure_phase[this._envelope.detune.procedure.index].destination - this._envelope.detune.previous)/procedure_phase[this._envelope.detune.procedure.index]._elapseSamples;                    
+                                                                    }
+                                                                }
+                                                            }
+                                                            this._envelope.detune.current += this._envelope.detune.step;
+                                                        //dutyCycle
+                                                            if(this._envelope.dutyCycle.phase == 'front' || this._envelope.dutyCycle.phase == 'back'){
+                                                                const procedure_phase = this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase];
+                                                                if( currentFrame+a - this._envelope.dutyCycle.procedure.sample >= procedure_phase[this._envelope.dutyCycle.procedure.index]._elapseSamples ){
+                                                                    this._envelope.dutyCycle.procedure.index++;
+                                                                    this._envelope.dutyCycle.procedure.sample = currentFrame+a;
+                                                                    if( this._envelope.dutyCycle.procedure.index >= procedure_phase.length ){
+                                                                        if(this._envelope.dutyCycle.phase == 'front'){
+                                                                            this._envelope.dutyCycle.phase = 'wait';
+                                                                            this.reportPhase_dutyCycle();
+                                                                            this._envelope.dutyCycle.step = 0;
+                                                                        }else if(this._envelope.dutyCycle.phase == 'back'){
+                                                                            this._envelope.dutyCycle.phase = 'off';
+                                                                            this.reportPhase_dutyCycle();
+                                                                            this._envelope.dutyCycle.step = 0;
+                                                                        }
+                                                                    }else{
+                                                                        this._envelope.dutyCycle.previous = this._envelope.dutyCycle.current;
+                                                                        // (velocity*destination - previousGain) / elapseSamples
+                                                                        this._envelope.dutyCycle.step = (this._envelope.dutyCycle.velocity*procedure_phase[this._envelope.dutyCycle.procedure.index].destination - this._envelope.dutyCycle.previous)/procedure_phase[this._envelope.dutyCycle.procedure.index]._elapseSamples;                    
+                                                                    }
+                                                                }
+                                                            }
+                                                            this._envelope.dutyCycle.current += this._envelope.dutyCycle.step;
+                                    
+                                                    //aspect calculation
+                                                        const gain = this._envelope.gain.current * (this._state.gain_useControl ? gainControl[channel][a] : (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]));
+                                                        const detune = this._envelope.detune.current + (this._state.detune_useControl ? detuneControl[channel][a] : (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]));
+                                                        const dutyCycle = this._envelope.dutyCycle.current + (this._state.dutyCycle_useControl ? dutyCycleControl[channel][a] : (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]));
+                                    
+                                                    //wave calculation
+                                                        const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                        this._wavePosition += (frequency*(detune*oscillator.detuneMux + 1))/sampleRate;
+                                                        const localWavePosition = this._wavePosition - (Math.trunc(this._wavePosition) - (this._waveComplexityLength - 1));
+                                                        output[channel][a] = gain*this._state.waveformGeneratorFunction(localWavePosition,dutyCycle,this._waveSettings);
                                                 }
+                                            }
                                     
                                             return true;
                                         }
                                     
                                         activatePhase(){
-                                            Object.keys(this._envelope).forEach(aspect => {
-                                                if( this._envelope[aspect].requestedPhase != undefined && this._envelope[aspect].requestedPhase != this._envelope[aspect].phase ){
-                                                    this._envelope[aspect].phase = this._envelope[aspect].requestedPhase;
-                                                    this.reportPhase(aspect);
-                                                    this._envelope[aspect].requestedPhase = undefined;
-                                                    this._envelope[aspect].procedure.sample = currentFrame;
-                                                    this._envelope[aspect].procedure.index = 0;
-                                                    this._envelope[aspect].previous = this._envelope[aspect].current;
-                                                    this._envelope[aspect].step = (this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index].destination - this._envelope[aspect].previous)/this._envelope[aspect].procedure[this._envelope[aspect].phase][this._envelope[aspect].procedure.index]._elapseSamples;
-                                                    if( aspect == 'gain' && this._envelope.gain.phase == 'start' ){ this._wavePosition = 0; }
+                                            //gain
+                                                if( this._envelope.gain.requestedPhase != undefined && this._envelope.gain.requestedPhase != this._envelope.gain.phase ){
+                                                    this._envelope.gain.phase = this._envelope.gain.requestedPhase;
+                                                    this.reportPhase_gain();
+                                                    this._envelope.gain.requestedPhase = undefined;
+                                                    this._envelope.gain.procedure.sample = currentFrame;
+                                                    this._envelope.gain.procedure.index = 0;
+                                                    this._envelope.gain.previous = this._envelope.gain.current;
+                                                    // (velocity*destination - previousGain) / elapseSamples
+                                                    this._envelope.gain.step = (this._envelope.gain.velocity*this._envelope.gain.procedure[this._envelope.gain.phase][this._envelope.gain.procedure.index].destination - this._envelope.gain.previous)/this._envelope.gain.procedure[this._envelope.gain.phase][this._envelope.gain.procedure.index]._elapseSamples;
+                                                    if( this._envelope.gain.phase == 'start' ){ this._wavePosition = 0; }
                                                 }
-                                            });
+                                            //detune
+                                                if( this._envelope.detune.requestedPhase != undefined && this._envelope.detune.requestedPhase != this._envelope.detune.phase ){
+                                                    this._envelope.detune.phase = this._envelope.detune.requestedPhase;
+                                                    this.reportPhase_detune();
+                                                    this._envelope.detune.requestedPhase = undefined;
+                                                    this._envelope.detune.procedure.sample = currentFrame;
+                                                    this._envelope.detune.procedure.index = 0;
+                                                    this._envelope.detune.previous = this._envelope.detune.current;
+                                                    // (velocity*destination - previousGain) / elapseSamples
+                                                    this._envelope.detune.step = (this._envelope.detune.velocity*this._envelope.detune.procedure[this._envelope.detune.phase][this._envelope.detune.procedure.index].destination - this._envelope.detune.previous)/this._envelope.detune.procedure[this._envelope.detune.phase][this._envelope.detune.procedure.index]._elapseSamples;
+                                                }
+                                            //dutyCycle
+                                                if( this._envelope.dutyCycle.requestedPhase != undefined && this._envelope.dutyCycle.requestedPhase != this._envelope.dutyCycle.phase ){
+                                                    this._envelope.dutyCycle.phase = this._envelope.dutyCycle.requestedPhase;
+                                                    this.reportPhase_dutyCycle();
+                                                    this._envelope.dutyCycle.requestedPhase = undefined;
+                                                    this._envelope.dutyCycle.procedure.sample = currentFrame;
+                                                    this._envelope.dutyCycle.procedure.index = 0;
+                                                    this._envelope.dutyCycle.previous = this._envelope.dutyCycle.current;
+                                                    // (velocity*destination - previousGain) / elapseSamples
+                                                    this._envelope.dutyCycle.step = (this._envelope.dutyCycle.velocity*this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase][this._envelope.dutyCycle.procedure.index].destination - this._envelope.dutyCycle.previous)/this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase][this._envelope.dutyCycle.procedure.index]._elapseSamples;
+                                                }
                                         }
                                     
-                                        reportPhase(aspect){
+                                        reportPhase_gain(){
                                             const self = this;
-                                            this.port.postMessage(
-                                                (() => {
-                                                    const tmp = {};
-                                                    tmp[aspect+'_phase'] = self._envelope[aspect].phase;
-                                                    return tmp;
-                                                })()
-                                            );
-                                        }
+                                            if( !self._envelope.gain.reporting ){return;}
+                                            this.port.postMessage( {gain:self._envelope.gain.phase} );
+                                        };
+                                        reportPhase_detune(){
+                                            const self = this;
+                                            if( !self._envelope.detune.reporting ){return;}
+                                            this.port.postMessage( {detune:self._envelope.detune.phase} );
+                                        };
+                                        reportPhase_dutyCycle(){
+                                            const self = this;
+                                            if( !self._envelope.dutyCycle.reporting ){return;}
+                                            this.port.postMessage( {dutyCycle:self._envelope.dutyCycle.phase} );
+                                        };
+                                    
+                                        static waveFunction = {
+                                            sine:function(localWavePosition,dutyCycle,waveSettings){
+                                                return Math.sin( localWavePosition * oscillator.twoPI );
+                                            },
+                                            square:function(localWavePosition,dutyCycle,waveSettings){
+                                                return localWavePosition < dutyCycle ? 1 : -1;
+                                            },
+                                            triangle:function(localWavePosition,dutyCycle,waveSettings){
+                                                if(localWavePosition < dutyCycle/2){
+                                                    return 2*localWavePosition / dutyCycle;
+                                                }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                    return (2*localWavePosition - 2) / dutyCycle;
+                                                }else{
+                                                    return (2*localWavePosition - 1) / (dutyCycle - 1);
+                                                }
+                                            },
+                                            noise:function(localWavePosition,dutyCycle,waveSettings){
+                                                return Math.random()*2 - 1;
+                                            },
+                                            additiveSynthesis:function(localWavePosition,dutyCycle,waveSettings){
+                                                let output = 0;
+                                                waveSettings.additiveSynthesis.sin.forEach((value,index) => {
+                                                    output += value*Math.sin( (index+1)*oscillator.twoPI*localWavePosition );
+                                                });
+                                                waveSettings.additiveSynthesis.cos.forEach((value,index) => {
+                                                    output += value*Math.sin( (index+1)*oscillator.twoPI*localWavePosition );
+                                                });
+                                                return output;
+                                            },
+                                            phaseModulation:function(localWavePosition,dutyCycle,waveSettings){
+                                                const modulationSettings = waveSettings.phaseModulation;
+                                    
+                                                let output = 0;
+                                                for(let a = 0; a < modulationSettings.length; a++){
+                                                    output = modulationSettings[a].power*Math.sin(
+                                                        modulationSettings[a].mux*oscillator.twoPI*localWavePosition + oscillator.halfPI*output
+                                                    );
+                                                }
+                                    
+                                                return output;
+                                            },
+                                        };
                                     }
-                                    registerProcessor('oscillator2', oscillator2);
+                                    registerProcessor('oscillator', oscillator);
                                 `], { type: "text/javascript" }),
                                 class:
-                                    class oscillator2 extends AudioWorkletNode{
+                                    class oscillator extends AudioWorkletNode{
                                         constructor(context, options={}){
                                             options.numberOfInputs = 3;
                                             options.numberOfOutputs = 1;
                                             options.channelCount = 1;
-                                            super(context, 'oscillator2', options);
+                                            super(context, 'oscillator', options);
                                             const self = this;
                                     
                                             this._state = {
@@ -4900,21 +4704,45 @@
                                                 detune_useControl:false,
                                                 dutyCycle_useControl:false,
                                             };
-                                            this._gainEnvelope = {
+                                            this._gain_envelope = {
                                                 front:[ {destination:1, elapse:0} ],
                                                 back:[ {destination:0, elapse:0} ],
                                             };
+                                            this._detune_envelope = {
+                                                reporting:false,
+                                                front:[ {destination:0, elapse:0} ],
+                                                back:[ {destination:0, elapse:0} ],
+                                            };
+                                            this._dutyCycle_envelope = {
+                                                reporting:false,
+                                                front:[ {destination:0.5, elapse:0} ],
+                                                back:[ {destination:0.5, elapse:0} ],
+                                            };
+                                            this._reporting = {
+                                                gain:false,
+                                                detune:false,
+                                                dutyCycle:false,
+                                            };
+                                            this._additiveSynthesisSettings = {
+                                                sin:[1],
+                                                cos:[]
+                                            };
+                                            this._phaseModulation_settings = [
+                                                {mux:2,power:1},
+                                                {mux:3,power:1},
+                                            ];
                                     
                                             this.port.onmessage = function(event){
                                                 if(self.onEnvelopeEvent == undefined){ return; }
-                                                self.onEnvelopeEvent(event.data.gain_phase);
+                                                const event_deconstructed = Object.entries(event.data)[0];
+                                                self.onEnvelopeEvent({aspect:event_deconstructed[0], phase:event_deconstructed[1]});
                                             };
                                     
-                                            this.start = function(){
-                                                this.port.postMessage({command:'start'});
+                                            this.start = function(velocity=1){
+                                                this.port.postMessage({start:velocity});
                                             };
                                             this.stop = function(){
-                                                this.port.postMessage({command:'stop'});
+                                                this.port.postMessage({stop:undefined});
                                             };
                                     
                                             this.onEnvelopeEvent = function(){};
@@ -4936,9 +4764,9 @@
                                     
                                     
                                         get waveform(){
-                                            return this._waveform;
+                                            return this._state.waveform;
                                         }
-                                        set waveform(value){
+                                        set waveform(value){ // sine / square / triangle / noise / additiveSynthesis / phaseModulation
                                             this._state.waveform = value;
                                             this.port.postMessage({waveform:value});
                                         }
@@ -4966,25 +4794,70 @@
                                     
                                         
                                         get gain_envelope(){
-                                            return JSON.parse(JSON.stringify(this.gain_envelope));
+                                            return JSON.parse(JSON.stringify(this._gain_envelope));
                                         }
                                         set gain_envelope(newEnvelope){
-                                            this._gainEnvelope = newEnvelope;
+                                            this._gain_envelope = newEnvelope;
                                             this.port.postMessage({gain_envelope:newEnvelope});
                                         }
                                         get detune_envelope(){
-                                            return JSON.parse(JSON.stringify(this.detune_envelope));
+                                            return JSON.parse(JSON.stringify(this._detune_envelope));
                                         }
                                         set detune_envelope(newEnvelope){
-                                            this._detuneEnvelope = newEnvelope;
+                                            this._detune_envelope = newEnvelope;
                                             this.port.postMessage({detune_envelope:newEnvelope});
                                         }
                                         get dutyCycle_envelope(){
-                                            return JSON.parse(JSON.stringify(this.dutyCycle_envelope));
+                                            return JSON.parse(JSON.stringify(this._dutyCycle_envelope));
                                         }
                                         set dutyCycle_envelope(newEnvelope){
-                                            this._dutyCycleEnvelope = newEnvelope;
+                                            this._dutyCycle_envelope = newEnvelope;
                                             this.port.postMessage({dutyCycle_envelope:newEnvelope});
+                                        }
+                                    
+                                        get gain_envelope_reporting(){
+                                            return this._reporting.gain;
+                                        }
+                                        set gain_envelope_reporting(bool){
+                                            this._reporting.gain = bool;
+                                            this.port.postMessage({gain_reporting:bool});
+                                        }
+                                        get detune_envelope_reporting(){
+                                            return this._reporting.detune;
+                                        }
+                                        set detune_envelope_reporting(bool){
+                                            this._reporting.detune = bool;
+                                            this.port.postMessage({detune_reporting:bool});
+                                        }
+                                        get dutyCycle_envelope_reporting(){
+                                            return this._reporting.dutyCycle;
+                                        }
+                                        set dutyCycle_envelope_reporting(bool){
+                                            this._reporting.dutyCycle = bool;
+                                            this.port.postMessage({dutyCycle_reporting:bool});
+                                        }
+                                    
+                                        get additiveSynthesis_sin(){
+                                            return JSON.parse(JSON.stringify(this._additiveSynthesisSettings.sin));
+                                        }
+                                        set additiveSynthesis_sin(value){
+                                            this._additiveSynthesisSettings.sin = value;
+                                            this.port.postMessage({additiveSynthesis_sin:value});
+                                        }
+                                        get additiveSynthesis_cos(){
+                                            return JSON.parse(JSON.stringify(this._additiveSynthesisSettings.cos));
+                                        }
+                                        set additiveSynthesis_cos(value){
+                                            this._additiveSynthesisSettings.cos = value;
+                                            this.port.postMessage({additiveSynthesis_cos:value});
+                                        }
+                                    
+                                        get phaseModulation_settings(){
+                                            return JSON.parse(JSON.stringify(this._phaseModulation_settings));
+                                        }
+                                        set phaseModulation_settings(value){
+                                            this._phaseModulation_settings = value;
+                                            this.port.postMessage({_phaseModulation_settings:value});
                                         }
                                     }
                                 ,
@@ -6734,1723 +6607,6 @@
                 };
                 const _thirdparty = new function(){
                     const thirdparty = this;
-                    /**
-                     * martinez v0.5.0
-                     * Martinez polygon clipping algorithm, does boolean operation on polygons (multipolygons, polygons with holes etc): intersection, union, difference, xor
-                     *
-                     * author Alex Milevski <info@w8r.name>
-                     * license MIT
-                     */
-                    
-                    (function (global, factory) {
-                        typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-                        typeof define === 'function' && define.amd ? define(['exports'], factory) :
-                        (factory((global.martinez = {})));
-                      }(this, (function (exports) { 'use strict';
-                      
-                        function DEFAULT_COMPARE (a, b) { return a > b ? 1 : a < b ? -1 : 0; }
-                      
-                        var SplayTree = function SplayTree(compare, noDuplicates) {
-                          if ( compare === void 0 ) compare = DEFAULT_COMPARE;
-                          if ( noDuplicates === void 0 ) noDuplicates = false;
-                      
-                          this._compare = compare;
-                          this._root = null;
-                          this._size = 0;
-                          this._noDuplicates = !!noDuplicates;
-                        };
-                      
-                        var prototypeAccessors = { size: { configurable: true } };
-                      
-                      
-                        SplayTree.prototype.rotateLeft = function rotateLeft (x) {
-                          var y = x.right;
-                          if (y) {
-                            x.right = y.left;
-                            if (y.left) { y.left.parent = x; }
-                            y.parent = x.parent;
-                          }
-                      
-                          if (!x.parent)              { this._root = y; }
-                          else if (x === x.parent.left) { x.parent.left = y; }
-                          else                        { x.parent.right = y; }
-                          if (y) { y.left = x; }
-                          x.parent = y;
-                        };
-                      
-                      
-                        SplayTree.prototype.rotateRight = function rotateRight (x) {
-                          var y = x.left;
-                          if (y) {
-                            x.left = y.right;
-                            if (y.right) { y.right.parent = x; }
-                            y.parent = x.parent;
-                          }
-                      
-                          if (!x.parent)             { this._root = y; }
-                          else if(x === x.parent.left) { x.parent.left = y; }
-                          else                       { x.parent.right = y; }
-                          if (y) { y.right = x; }
-                          x.parent = y;
-                        };
-                      
-                      
-                        SplayTree.prototype._splay = function _splay (x) {
-                            var this$1 = this;
-                      
-                          while (x.parent) {
-                            var p = x.parent;
-                            if (!p.parent) {
-                              if (p.left === x) { this$1.rotateRight(p); }
-                              else            { this$1.rotateLeft(p); }
-                            } else if (p.left === x && p.parent.left === p) {
-                              this$1.rotateRight(p.parent);
-                              this$1.rotateRight(p);
-                            } else if (p.right === x && p.parent.right === p) {
-                              this$1.rotateLeft(p.parent);
-                              this$1.rotateLeft(p);
-                            } else if (p.left === x && p.parent.right === p) {
-                              this$1.rotateRight(p);
-                              this$1.rotateLeft(p);
-                            } else {
-                              this$1.rotateLeft(p);
-                              this$1.rotateRight(p);
-                            }
-                          }
-                        };
-                      
-                      
-                        SplayTree.prototype.splay = function splay (x) {
-                            var this$1 = this;
-                      
-                          var p, gp, ggp, l, r;
-                      
-                          while (x.parent) {
-                            p = x.parent;
-                            gp = p.parent;
-                      
-                            if (gp && gp.parent) {
-                              ggp = gp.parent;
-                              if (ggp.left === gp) { ggp.left= x; }
-                              else               { ggp.right = x; }
-                              x.parent = ggp;
-                            } else {
-                              x.parent = null;
-                              this$1._root = x;
-                            }
-                      
-                            l = x.left; r = x.right;
-                      
-                            if (x === p.left) { // left
-                              if (gp) {
-                                if (gp.left === p) {
-                                  /* zig-zig */
-                                  if (p.right) {
-                                    gp.left = p.right;
-                                    gp.left.parent = gp;
-                                  } else { gp.left = null; }
-                      
-                                  p.right = gp;
-                                  gp.parent = p;
-                                } else {
-                                  /* zig-zag */
-                                  if (l) {
-                                    gp.right = l;
-                                    l.parent = gp;
-                                  } else { gp.right = null; }
-                      
-                                  x.left  = gp;
-                                  gp.parent = x;
-                                }
-                              }
-                              if (r) {
-                                p.left = r;
-                                r.parent = p;
-                              } else { p.left = null; }
-                      
-                              x.right= p;
-                              p.parent = x;
-                            } else { // right
-                              if (gp) {
-                                if (gp.right === p) {
-                                  /* zig-zig */
-                                  if (p.left) {
-                                    gp.right = p.left;
-                                    gp.right.parent = gp;
-                                  } else { gp.right = null; }
-                      
-                                  p.left = gp;
-                                  gp.parent = p;
-                                } else {
-                                  /* zig-zag */
-                                  if (r) {
-                                    gp.left = r;
-                                    r.parent = gp;
-                                  } else { gp.left = null; }
-                      
-                                  x.right = gp;
-                                  gp.parent = x;
-                                }
-                              }
-                              if (l) {
-                                p.right = l;
-                                l.parent = p;
-                              } else { p.right = null; }
-                      
-                              x.left = p;
-                              p.parent = x;
-                            }
-                          }
-                        };
-                      
-                      
-                        SplayTree.prototype.replace = function replace (u, v) {
-                          if (!u.parent) { this._root = v; }
-                          else if (u === u.parent.left) { u.parent.left = v; }
-                          else { u.parent.right = v; }
-                          if (v) { v.parent = u.parent; }
-                        };
-                      
-                      
-                        SplayTree.prototype.minNode = function minNode (u) {
-                            if ( u === void 0 ) u = this._root;
-                      
-                          if (u) { while (u.left) { u = u.left; } }
-                          return u;
-                        };
-                      
-                      
-                        SplayTree.prototype.maxNode = function maxNode (u) {
-                            if ( u === void 0 ) u = this._root;
-                      
-                          if (u) { while (u.right) { u = u.right; } }
-                          return u;
-                        };
-                      
-                      
-                        SplayTree.prototype.insert = function insert (key, data) {
-                          var z = this._root;
-                          var p = null;
-                          var comp = this._compare;
-                          var cmp;
-                      
-                          if (this._noDuplicates) {
-                            while (z) {
-                              p = z;
-                              cmp = comp(z.key, key);
-                              if (cmp === 0) { return; }
-                              else if (comp(z.key, key) < 0) { z = z.right; }
-                              else { z = z.left; }
-                            }
-                          } else {
-                            while (z) {
-                              p = z;
-                              if (comp(z.key, key) < 0) { z = z.right; }
-                              else { z = z.left; }
-                            }
-                          }
-                      
-                          z = { key: key, data: data, left: null, right: null, parent: p };
-                      
-                          if (!p)                        { this._root = z; }
-                          else if (comp(p.key, z.key) < 0) { p.right = z; }
-                          else                           { p.left= z; }
-                      
-                          this.splay(z);
-                          this._size++;
-                          return z;
-                        };
-                      
-                      
-                        SplayTree.prototype.find = function find (key) {
-                          var z  = this._root;
-                          var comp = this._compare;
-                          while (z) {
-                            var cmp = comp(z.key, key);
-                            if    (cmp < 0) { z = z.right; }
-                            else if (cmp > 0) { z = z.left; }
-                            else            { return z; }
-                          }
-                          return null;
-                        };
-                      
-                        /**
-                         * Whether the tree contains a node with the given key
-                         * @param{Key} key
-                         * @return {boolean} true/false
-                         */
-                        SplayTree.prototype.contains = function contains (key) {
-                          var node     = this._root;
-                          var comparator = this._compare;
-                          while (node){
-                            var cmp = comparator(key, node.key);
-                            if    (cmp === 0) { return true; }
-                            else if (cmp < 0) { node = node.left; }
-                            else              { node = node.right; }
-                          }
-                      
-                          return false;
-                        };
-                      
-                      
-                        SplayTree.prototype.remove = function remove (key) {
-                          var z = this.find(key);
-                      
-                          if (!z) { return false; }
-                      
-                          this.splay(z);
-                      
-                          if (!z.left) { this.replace(z, z.right); }
-                          else if (!z.right) { this.replace(z, z.left); }
-                          else {
-                            var y = this.minNode(z.right);
-                            if (y.parent !== z) {
-                              this.replace(y, y.right);
-                              y.right = z.right;
-                              y.right.parent = y;
-                            }
-                            this.replace(z, y);
-                            y.left = z.left;
-                            y.left.parent = y;
-                          }
-                      
-                          this._size--;
-                          return true;
-                        };
-                      
-                      
-                        SplayTree.prototype.removeNode = function removeNode (z) {
-                          if (!z) { return false; }
-                      
-                          this.splay(z);
-                      
-                          if (!z.left) { this.replace(z, z.right); }
-                          else if (!z.right) { this.replace(z, z.left); }
-                          else {
-                            var y = this.minNode(z.right);
-                            if (y.parent !== z) {
-                              this.replace(y, y.right);
-                              y.right = z.right;
-                              y.right.parent = y;
-                            }
-                            this.replace(z, y);
-                            y.left = z.left;
-                            y.left.parent = y;
-                          }
-                      
-                          this._size--;
-                          return true;
-                        };
-                      
-                      
-                        SplayTree.prototype.erase = function erase (key) {
-                          var z = this.find(key);
-                          if (!z) { return; }
-                      
-                          this.splay(z);
-                      
-                          var s = z.left;
-                          var t = z.right;
-                      
-                          var sMax = null;
-                          if (s) {
-                            s.parent = null;
-                            sMax = this.maxNode(s);
-                            this.splay(sMax);
-                            this._root = sMax;
-                          }
-                          if (t) {
-                            if (s) { sMax.right = t; }
-                            else { this._root = t; }
-                            t.parent = sMax;
-                          }
-                      
-                          this._size--;
-                        };
-                      
-                        /**
-                         * Removes and returns the node with smallest key
-                         * @return {?Node}
-                         */
-                        SplayTree.prototype.pop = function pop () {
-                          var node = this._root, returnValue = null;
-                          if (node) {
-                            while (node.left) { node = node.left; }
-                            returnValue = { key: node.key, data: node.data };
-                            this.remove(node.key);
-                          }
-                          return returnValue;
-                        };
-                      
-                      
-                        /* eslint-disable class-methods-use-this */
-                      
-                        /**
-                         * Successor node
-                         * @param{Node} node
-                         * @return {?Node}
-                         */
-                        SplayTree.prototype.next = function next (node) {
-                          var successor = node;
-                          if (successor) {
-                            if (successor.right) {
-                              successor = successor.right;
-                              while (successor && successor.left) { successor = successor.left; }
-                            } else {
-                              successor = node.parent;
-                              while (successor && successor.right === node) {
-                                node = successor; successor = successor.parent;
-                              }
-                            }
-                          }
-                          return successor;
-                        };
-                      
-                      
-                        /**
-                         * Predecessor node
-                         * @param{Node} node
-                         * @return {?Node}
-                         */
-                        SplayTree.prototype.prev = function prev (node) {
-                          var predecessor = node;
-                          if (predecessor) {
-                            if (predecessor.left) {
-                              predecessor = predecessor.left;
-                              while (predecessor && predecessor.right) { predecessor = predecessor.right; }
-                            } else {
-                              predecessor = node.parent;
-                              while (predecessor && predecessor.left === node) {
-                                node = predecessor;
-                                predecessor = predecessor.parent;
-                              }
-                            }
-                          }
-                          return predecessor;
-                        };
-                        /* eslint-enable class-methods-use-this */
-                      
-                      
-                        /**
-                         * @param{forEachCallback} callback
-                         * @return {SplayTree}
-                         */
-                        SplayTree.prototype.forEach = function forEach (callback) {
-                          var current = this._root;
-                          var s = [], done = false, i = 0;
-                      
-                          while (!done) {
-                            // Reach the left most Node of the current Node
-                            if (current) {
-                              // Place pointer to a tree node on the stack
-                              // before traversing the node's left subtree
-                              s.push(current);
-                              current = current.left;
-                            } else {
-                              // BackTrack from the empty subtree and visit the Node
-                              // at the top of the stack; however, if the stack is
-                              // empty you are done
-                              if (s.length > 0) {
-                                current = s.pop();
-                                callback(current, i++);
-                      
-                                // We have visited the node and its left
-                                // subtree. Now, it's right subtree's turn
-                                current = current.right;
-                              } else { done = true; }
-                            }
-                          }
-                          return this;
-                        };
-                      
-                      
-                        /**
-                         * Walk key range from `low` to `high`. Stops if `fn` returns a value.
-                         * @param{Key}    low
-                         * @param{Key}    high
-                         * @param{Function} fn
-                         * @param{*?}     ctx
-                         * @return {SplayTree}
-                         */
-                        SplayTree.prototype.range = function range (low, high, fn, ctx) {
-                            var this$1 = this;
-                      
-                          var Q = [];
-                          var compare = this._compare;
-                          var node = this._root, cmp;
-                      
-                          while (Q.length !== 0 || node) {
-                            if (node) {
-                              Q.push(node);
-                              node = node.left;
-                            } else {
-                              node = Q.pop();
-                              cmp = compare(node.key, high);
-                              if (cmp > 0) {
-                                break;
-                              } else if (compare(node.key, low) >= 0) {
-                                if (fn.call(ctx, node)) { return this$1; } // stop if smth is returned
-                              }
-                              node = node.right;
-                            }
-                          }
-                          return this;
-                        };
-                      
-                        /**
-                         * Returns all keys in order
-                         * @return {Array<Key>}
-                         */
-                        SplayTree.prototype.keys = function keys () {
-                          var current = this._root;
-                          var s = [], r = [], done = false;
-                      
-                          while (!done) {
-                            if (current) {
-                              s.push(current);
-                              current = current.left;
-                            } else {
-                              if (s.length > 0) {
-                                current = s.pop();
-                                r.push(current.key);
-                                current = current.right;
-                              } else { done = true; }
-                            }
-                          }
-                          return r;
-                        };
-                      
-                      
-                        /**
-                         * Returns `data` fields of all nodes in order.
-                         * @return {Array<Value>}
-                         */
-                        SplayTree.prototype.values = function values () {
-                          var current = this._root;
-                          var s = [], r = [], done = false;
-                      
-                          while (!done) {
-                            if (current) {
-                              s.push(current);
-                              current = current.left;
-                            } else {
-                              if (s.length > 0) {
-                                current = s.pop();
-                                r.push(current.data);
-                                current = current.right;
-                              } else { done = true; }
-                            }
-                          }
-                          return r;
-                        };
-                      
-                      
-                        /**
-                         * Returns node at given index
-                         * @param{number} index
-                         * @return {?Node}
-                         */
-                        SplayTree.prototype.at = function at (index) {
-                          // removed after a consideration, more misleading than useful
-                          // index = index % this.size;
-                          // if (index < 0) index = this.size - index;
-                      
-                          var current = this._root;
-                          var s = [], done = false, i = 0;
-                      
-                          while (!done) {
-                            if (current) {
-                              s.push(current);
-                              current = current.left;
-                            } else {
-                              if (s.length > 0) {
-                                current = s.pop();
-                                if (i === index) { return current; }
-                                i++;
-                                current = current.right;
-                              } else { done = true; }
-                            }
-                          }
-                          return null;
-                        };
-                      
-                        /**
-                         * Bulk-load items. Both array have to be same size
-                         * @param{Array<Key>}  keys
-                         * @param{Array<Value>}[values]
-                         * @param{Boolean}     [presort=false] Pre-sort keys and values, using
-                         *                                       tree's comparator. Sorting is done
-                         *                                       in-place
-                         * @return {AVLTree}
-                         */
-                        SplayTree.prototype.load = function load (keys, values, presort) {
-                            if ( keys === void 0 ) keys = [];
-                            if ( values === void 0 ) values = [];
-                            if ( presort === void 0 ) presort = false;
-                      
-                          if (this._size !== 0) { throw new Error('bulk-load: tree is not empty'); }
-                          var size = keys.length;
-                          if (presort) { sort(keys, values, 0, size - 1, this._compare); }
-                          this._root = loadRecursive(null, keys, values, 0, size);
-                          this._size = size;
-                          return this;
-                        };
-                      
-                      
-                        SplayTree.prototype.min = function min () {
-                          var node = this.minNode(this._root);
-                          if (node) { return node.key; }
-                          else    { return null; }
-                        };
-                      
-                      
-                        SplayTree.prototype.max = function max () {
-                          var node = this.maxNode(this._root);
-                          if (node) { return node.key; }
-                          else    { return null; }
-                        };
-                      
-                        SplayTree.prototype.isEmpty = function isEmpty () { return this._root === null; };
-                        prototypeAccessors.size.get = function () { return this._size; };
-                      
-                      
-                        /**
-                         * Create a tree and load it with items
-                         * @param{Array<Key>}        keys
-                         * @param{Array<Value>?}      [values]
-                      
-                         * @param{Function?}          [comparator]
-                         * @param{Boolean?}           [presort=false] Pre-sort keys and values, using
-                         *                                             tree's comparator. Sorting is done
-                         *                                             in-place
-                         * @param{Boolean?}           [noDuplicates=false] Allow duplicates
-                         * @return {SplayTree}
-                         */
-                        SplayTree.createTree = function createTree (keys, values, comparator, presort, noDuplicates) {
-                          return new SplayTree(comparator, noDuplicates).load(keys, values, presort);
-                        };
-                      
-                        Object.defineProperties( SplayTree.prototype, prototypeAccessors );
-                      
-                      
-                        function loadRecursive (parent, keys, values, start, end) {
-                          var size = end - start;
-                          if (size > 0) {
-                            var middle = start + Math.floor(size / 2);
-                            var key    = keys[middle];
-                            var data   = values[middle];
-                            var node   = { key: key, data: data, parent: parent };
-                            node.left    = loadRecursive(node, keys, values, start, middle);
-                            node.right   = loadRecursive(node, keys, values, middle + 1, end);
-                            return node;
-                          }
-                          return null;
-                        }
-                      
-                      
-                        function sort(keys, values, left, right, compare) {
-                          if (left >= right) { return; }
-                      
-                          var pivot = keys[(left + right) >> 1];
-                          var i = left - 1;
-                          var j = right + 1;
-                      
-                          while (true) {
-                            do { i++; } while (compare(keys[i], pivot) < 0);
-                            do { j--; } while (compare(keys[j], pivot) > 0);
-                            if (i >= j) { break; }
-                      
-                            var tmp = keys[i];
-                            keys[i] = keys[j];
-                            keys[j] = tmp;
-                      
-                            tmp = values[i];
-                            values[i] = values[j];
-                            values[j] = tmp;
-                          }
-                      
-                          sort(keys, values,  left,     j, compare);
-                          sort(keys, values, j + 1, right, compare);
-                        }
-                      
-                        var NORMAL               = 0;
-                        var NON_CONTRIBUTING     = 1;
-                        var SAME_TRANSITION      = 2;
-                        var DIFFERENT_TRANSITION = 3;
-                      
-                        var INTERSECTION = 0;
-                        var UNION        = 1;
-                        var DIFFERENCE   = 2;
-                        var XOR          = 3;
-                      
-                        /**
-                         * @param  {SweepEvent} event
-                         * @param  {SweepEvent} prev
-                         * @param  {Operation} operation
-                         */
-                        function computeFields (event, prev, operation) {
-                          // compute inOut and otherInOut fields
-                          if (prev === null) {
-                            event.inOut      = false;
-                            event.otherInOut = true;
-                      
-                          // previous line segment in sweepline belongs to the same polygon
-                          } else {
-                            if (event.isSubject === prev.isSubject) {
-                              event.inOut      = !prev.inOut;
-                              event.otherInOut = prev.otherInOut;
-                      
-                            // previous line segment in sweepline belongs to the clipping polygon
-                            } else {
-                              event.inOut      = !prev.otherInOut;
-                              event.otherInOut = prev.isVertical() ? !prev.inOut : prev.inOut;
-                            }
-                      
-                            // compute prevInResult field
-                            if (prev) {
-                              event.prevInResult = (!inResult(prev, operation) || prev.isVertical())
-                                ? prev.prevInResult : prev;
-                            }
-                          }
-                      
-                          // check if the line segment belongs to the Boolean operation
-                          event.inResult = inResult(event, operation);
-                        }
-                      
-                      
-                        /* eslint-disable indent */
-                        function inResult(event, operation) {
-                          switch (event.type) {
-                            case NORMAL:
-                              switch (operation) {
-                                case INTERSECTION:
-                                  return !event.otherInOut;
-                                case UNION:
-                                  return event.otherInOut;
-                                case DIFFERENCE:
-                                  // return (event.isSubject && !event.otherInOut) ||
-                                  //         (!event.isSubject && event.otherInOut);
-                                  return (event.isSubject && event.otherInOut) ||
-                                          (!event.isSubject && !event.otherInOut);
-                                case XOR:
-                                  return true;
-                              }
-                              break;
-                            case SAME_TRANSITION:
-                              return operation === INTERSECTION || operation === UNION;
-                            case DIFFERENT_TRANSITION:
-                              return operation === DIFFERENCE;
-                            case NON_CONTRIBUTING:
-                              return false;
-                          }
-                          return false;
-                        }
-                        /* eslint-enable indent */
-                      
-                        var SweepEvent = function SweepEvent (point, left, otherEvent, isSubject, edgeType) {
-                      
-                          /**
-                           * Is left endpoint?
-                           * @type {Boolean}
-                           */
-                          this.left = left;
-                      
-                          /**
-                           * @type {Array.<Number>}
-                           */
-                          this.point = point;
-                      
-                          /**
-                           * Other edge reference
-                           * @type {SweepEvent}
-                           */
-                          this.otherEvent = otherEvent;
-                      
-                          /**
-                           * Belongs to source or clipping polygon
-                           * @type {Boolean}
-                           */
-                          this.isSubject = isSubject;
-                      
-                          /**
-                           * Edge contribution type
-                           * @type {Number}
-                           */
-                          this.type = edgeType || NORMAL;
-                      
-                      
-                          /**
-                           * In-out transition for the sweepline crossing polygon
-                           * @type {Boolean}
-                           */
-                          this.inOut = false;
-                      
-                      
-                          /**
-                           * @type {Boolean}
-                           */
-                          this.otherInOut = false;
-                      
-                          /**
-                           * Previous event in result?
-                           * @type {SweepEvent}
-                           */
-                          this.prevInResult = null;
-                      
-                          /**
-                           * Does event belong to result?
-                           * @type {Boolean}
-                           */
-                          this.inResult = false;
-                      
-                      
-                          // connection step
-                      
-                          /**
-                           * @type {Boolean}
-                           */
-                          this.resultInOut = false;
-                      
-                          this.isExteriorRing = true;
-                        };
-                      
-                      
-                        /**
-                         * @param{Array.<Number>}p
-                         * @return {Boolean}
-                         */
-                        SweepEvent.prototype.isBelow = function isBelow (p) {
-                          var p0 = this.point, p1 = this.otherEvent.point;
-                          return this.left
-                            ? (p0[0] - p[0]) * (p1[1] - p[1]) - (p1[0] - p[0]) * (p0[1] - p[1]) > 0
-                            // signedArea(this.point, this.otherEvent.point, p) > 0 :
-                            : (p1[0] - p[0]) * (p0[1] - p[1]) - (p0[0] - p[0]) * (p1[1] - p[1]) > 0;
-                            //signedArea(this.otherEvent.point, this.point, p) > 0;
-                        };
-                      
-                      
-                        /**
-                         * @param{Array.<Number>}p
-                         * @return {Boolean}
-                         */
-                        SweepEvent.prototype.isAbove = function isAbove (p) {
-                          return !this.isBelow(p);
-                        };
-                      
-                      
-                        /**
-                         * @return {Boolean}
-                         */
-                        SweepEvent.prototype.isVertical = function isVertical () {
-                          return this.point[0] === this.otherEvent.point[0];
-                        };
-                      
-                      
-                        SweepEvent.prototype.clone = function clone () {
-                          var copy = new SweepEvent(
-                            this.point, this.left, this.otherEvent, this.isSubject, this.type);
-                      
-                          copy.inResult     = this.inResult;
-                          copy.prevInResult = this.prevInResult;
-                          copy.isExteriorRing = this.isExteriorRing;
-                          copy.inOut        = this.inOut;
-                          copy.otherInOut   = this.otherInOut;
-                      
-                          return copy;
-                        };
-                      
-                        function equals(p1, p2) {
-                          if (p1[0] === p2[0]) {
-                            if (p1[1] === p2[1]) {
-                              return true;
-                            } else {
-                              return false;
-                            }
-                          }
-                          return false;
-                        }
-                      
-                        // const EPSILON = 1e-9;
-                        // const abs = Math.abs;
-                        // TODO https://github.com/w8r/martinez/issues/6#issuecomment-262847164
-                        // Precision problem.
-                        //
-                        // module.exports = function equals(p1, p2) {
-                        //   return abs(p1[0] - p2[0]) <= EPSILON && abs(p1[1] - p2[1]) <= EPSILON;
-                        // };
-                      
-                        /**
-                         * Signed area of the triangle (p0, p1, p2)
-                         * @param  {Array.<Number>} p0
-                         * @param  {Array.<Number>} p1
-                         * @param  {Array.<Number>} p2
-                         * @return {Number}
-                         */
-                        function signedArea(p0, p1, p2) {
-                          return (p0[0] - p2[0]) * (p1[1] - p2[1]) - (p1[0] - p2[0]) * (p0[1] - p2[1]);
-                        }
-                      
-                        /**
-                         * @param  {SweepEvent} e1
-                         * @param  {SweepEvent} e2
-                         * @return {Number}
-                         */
-                        function compareEvents(e1, e2) {
-                          var p1 = e1.point;
-                          var p2 = e2.point;
-                      
-                          // Different x-coordinate
-                          if (p1[0] > p2[0]) { return 1; }
-                          if (p1[0] < p2[0]) { return -1; }
-                      
-                          // Different points, but same x-coordinate
-                          // Event with lower y-coordinate is processed first
-                          if (p1[1] !== p2[1]) { return p1[1] > p2[1] ? 1 : -1; }
-                      
-                          return specialCases(e1, e2, p1, p2);
-                        }
-                      
-                      
-                        /* eslint-disable no-unused-vars */
-                        function specialCases(e1, e2, p1, p2) {
-                          // Same coordinates, but one is a left endpoint and the other is
-                          // a right endpoint. The right endpoint is processed first
-                          if (e1.left !== e2.left)
-                            { return e1.left ? 1 : -1; }
-                      
-                          // const p2 = e1.otherEvent.point, p3 = e2.otherEvent.point;
-                          // const sa = (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
-                          // Same coordinates, both events
-                          // are left endpoints or right endpoints.
-                          // not collinear
-                          if (signedArea(p1, e1.otherEvent.point, e2.otherEvent.point) !== 0) {
-                            // the event associate to the bottom segment is processed first
-                            return (!e1.isBelow(e2.otherEvent.point)) ? 1 : -1;
-                          }
-                      
-                          return (!e1.isSubject && e2.isSubject) ? 1 : -1;
-                        }
-                        /* eslint-enable no-unused-vars */
-                      
-                        /**
-                         * @param  {SweepEvent} se
-                         * @param  {Array.<Number>} p
-                         * @param  {Queue} queue
-                         * @return {Queue}
-                         */
-                        function divideSegment(se, p, queue)  {
-                          var r = new SweepEvent(p, false, se,            se.isSubject);
-                          var l = new SweepEvent(p, true,  se.otherEvent, se.isSubject);
-                      
-                          /* eslint-disable no-console */
-                          if (equals(se.point, se.otherEvent.point)) {
-                      
-                            console.warn('what is that, a collapsed segment?', se);
-                          }
-                          /* eslint-enable no-console */
-                      
-                          r.contourId = l.contourId = se.contourId;
-                      
-                          // avoid a rounding error. The left event would be processed after the right event
-                          if (compareEvents(l, se.otherEvent) > 0) {
-                            se.otherEvent.left = true;
-                            l.left = false;
-                          }
-                      
-                          // avoid a rounding error. The left event would be processed after the right event
-                          // if (compareEvents(se, r) > 0) {}
-                      
-                          se.otherEvent.otherEvent = l;
-                          se.otherEvent = r;
-                      
-                          queue.push(l);
-                          queue.push(r);
-                      
-                          return queue;
-                        }
-                      
-                        //const EPS = 1e-9;
-                      
-                        /**
-                         * Finds the magnitude of the cross product of two vectors (if we pretend
-                         * they're in three dimensions)
-                         *
-                         * @param {Object} a First vector
-                         * @param {Object} b Second vector
-                         * @private
-                         * @returns {Number} The magnitude of the cross product
-                         */
-                        function crossProduct(a, b) {
-                          return (a[0] * b[1]) - (a[1] * b[0]);
-                        }
-                      
-                        /**
-                         * Finds the dot product of two vectors.
-                         *
-                         * @param {Object} a First vector
-                         * @param {Object} b Second vector
-                         * @private
-                         * @returns {Number} The dot product
-                         */
-                        function dotProduct(a, b) {
-                          return (a[0] * b[0]) + (a[1] * b[1]);
-                        }
-                      
-                        /**
-                         * Finds the intersection (if any) between two line segments a and b, given the
-                         * line segments' end points a1, a2 and b1, b2.
-                         *
-                         * This algorithm is based on Schneider and Eberly.
-                         * http://www.cimec.org.ar/~ncalvo/Schneider_Eberly.pdf
-                         * Page 244.
-                         *
-                         * @param {Array.<Number>} a1 point of first line
-                         * @param {Array.<Number>} a2 point of first line
-                         * @param {Array.<Number>} b1 point of second line
-                         * @param {Array.<Number>} b2 point of second line
-                         * @param {Boolean=}       noEndpointTouch whether to skip single touchpoints
-                         *                                         (meaning connected segments) as
-                         *                                         intersections
-                         * @returns {Array.<Array.<Number>>|Null} If the lines intersect, the point of
-                         * intersection. If they overlap, the two end points of the overlapping segment.
-                         * Otherwise, null.
-                         */
-                        function intersection (a1, a2, b1, b2, noEndpointTouch) {
-                          // The algorithm expects our lines in the form P + sd, where P is a point,
-                          // s is on the interval [0, 1], and d is a vector.
-                          // We are passed two points. P can be the first point of each pair. The
-                          // vector, then, could be thought of as the distance (in x and y components)
-                          // from the first point to the second point.
-                          // So first, let's make our vectors:
-                          var va = [a2[0] - a1[0], a2[1] - a1[1]];
-                          var vb = [b2[0] - b1[0], b2[1] - b1[1]];
-                          // We also define a function to convert back to regular point form:
-                      
-                          /* eslint-disable arrow-body-style */
-                      
-                          function toPoint(p, s, d) {
-                            return [
-                              p[0] + s * d[0],
-                              p[1] + s * d[1]
-                            ];
-                          }
-                      
-                          /* eslint-enable arrow-body-style */
-                      
-                          // The rest is pretty much a straight port of the algorithm.
-                          var e = [b1[0] - a1[0], b1[1] - a1[1]];
-                          var kross    = crossProduct(va, vb);
-                          var sqrKross = kross * kross;
-                          var sqrLenA  = dotProduct(va, va);
-                          //const sqrLenB  = dotProduct(vb, vb);
-                      
-                          // Check for line intersection. This works because of the properties of the
-                          // cross product -- specifically, two vectors are parallel if and only if the
-                          // cross product is the 0 vector. The full calculation involves relative error
-                          // to account for possible very small line segments. See Schneider & Eberly
-                          // for details.
-                          if (sqrKross > 0/* EPS * sqrLenB * sqLenA */) {
-                            // If they're not parallel, then (because these are line segments) they
-                            // still might not actually intersect. This code checks that the
-                            // intersection point of the lines is actually on both line segments.
-                            var s = crossProduct(e, vb) / kross;
-                            if (s < 0 || s > 1) {
-                              // not on line segment a
-                              return null;
-                            }
-                            var t = crossProduct(e, va) / kross;
-                            if (t < 0 || t > 1) {
-                              // not on line segment b
-                              return null;
-                            }
-                            if (s === 0 || s === 1) {
-                              // on an endpoint of line segment a
-                              return noEndpointTouch ? null : [toPoint(a1, s, va)];
-                            }
-                            if (t === 0 || t === 1) {
-                              // on an endpoint of line segment b
-                              return noEndpointTouch ? null : [toPoint(b1, t, vb)];
-                            }
-                            return [toPoint(a1, s, va)];
-                          }
-                      
-                          // If we've reached this point, then the lines are either parallel or the
-                          // same, but the segments could overlap partially or fully, or not at all.
-                          // So we need to find the overlap, if any. To do that, we can use e, which is
-                          // the (vector) difference between the two initial points. If this is parallel
-                          // with the line itself, then the two lines are the same line, and there will
-                          // be overlap.
-                          //const sqrLenE = dotProduct(e, e);
-                          kross = crossProduct(e, va);
-                          sqrKross = kross * kross;
-                      
-                          if (sqrKross > 0 /* EPS * sqLenB * sqLenE */) {
-                          // Lines are just parallel, not the same. No overlap.
-                            return null;
-                          }
-                      
-                          var sa = dotProduct(va, e) / sqrLenA;
-                          var sb = sa + dotProduct(va, vb) / sqrLenA;
-                          var smin = Math.min(sa, sb);
-                          var smax = Math.max(sa, sb);
-                      
-                          // this is, essentially, the FindIntersection acting on floats from
-                          // Schneider & Eberly, just inlined into this function.
-                          if (smin <= 1 && smax >= 0) {
-                      
-                            // overlap on an end point
-                            if (smin === 1) {
-                              return noEndpointTouch ? null : [toPoint(a1, smin > 0 ? smin : 0, va)];
-                            }
-                      
-                            if (smax === 0) {
-                              return noEndpointTouch ? null : [toPoint(a1, smax < 1 ? smax : 1, va)];
-                            }
-                      
-                            if (noEndpointTouch && smin === 0 && smax === 1) { return null; }
-                      
-                            // There's overlap on a segment -- two points of intersection. Return both.
-                            return [
-                              toPoint(a1, smin > 0 ? smin : 0, va),
-                              toPoint(a1, smax < 1 ? smax : 1, va)
-                            ];
-                          }
-                      
-                          return null;
-                        }
-                      
-                        /**
-                         * @param  {SweepEvent} se1
-                         * @param  {SweepEvent} se2
-                         * @param  {Queue}      queue
-                         * @return {Number}
-                         */
-                        function possibleIntersection (se1, se2, queue) {
-                          // that disallows self-intersecting polygons,
-                          // did cost us half a day, so I'll leave it
-                          // out of respect
-                          // if (se1.isSubject === se2.isSubject) return;
-                          var inter = intersection(
-                            se1.point, se1.otherEvent.point,
-                            se2.point, se2.otherEvent.point
-                          );
-                      
-                          var nintersections = inter ? inter.length : 0;
-                          if (nintersections === 0) { return 0; } // no intersection
-                      
-                          // the line segments intersect at an endpoint of both line segments
-                          if ((nintersections === 1) &&
-                              (equals(se1.point, se2.point) ||
-                               equals(se1.otherEvent.point, se2.otherEvent.point))) {
-                            return 0;
-                          }
-                      
-                          if (nintersections === 2 && se1.isSubject === se2.isSubject) {
-                            // if(se1.contourId === se2.contourId){
-                            // console.warn('Edges of the same polygon overlap',
-                            //   se1.point, se1.otherEvent.point, se2.point, se2.otherEvent.point);
-                            // }
-                            //throw new Error('Edges of the same polygon overlap');
-                            return 0;
-                          }
-                      
-                          // The line segments associated to se1 and se2 intersect
-                          if (nintersections === 1) {
-                      
-                            // if the intersection point is not an endpoint of se1
-                            if (!equals(se1.point, inter[0]) && !equals(se1.otherEvent.point, inter[0])) {
-                              divideSegment(se1, inter[0], queue);
-                            }
-                      
-                            // if the intersection point is not an endpoint of se2
-                            if (!equals(se2.point, inter[0]) && !equals(se2.otherEvent.point, inter[0])) {
-                              divideSegment(se2, inter[0], queue);
-                            }
-                            return 1;
-                          }
-                      
-                          // The line segments associated to se1 and se2 overlap
-                          var events        = [];
-                          var leftCoincide  = false;
-                          var rightCoincide = false;
-                      
-                          if (equals(se1.point, se2.point)) {
-                            leftCoincide = true; // linked
-                          } else if (compareEvents(se1, se2) === 1) {
-                            events.push(se2, se1);
-                          } else {
-                            events.push(se1, se2);
-                          }
-                      
-                          if (equals(se1.otherEvent.point, se2.otherEvent.point)) {
-                            rightCoincide = true;
-                          } else if (compareEvents(se1.otherEvent, se2.otherEvent) === 1) {
-                            events.push(se2.otherEvent, se1.otherEvent);
-                          } else {
-                            events.push(se1.otherEvent, se2.otherEvent);
-                          }
-                      
-                          if ((leftCoincide && rightCoincide) || leftCoincide) {
-                            // both line segments are equal or share the left endpoint
-                            se2.type = NON_CONTRIBUTING;
-                            se1.type = (se2.inOut === se1.inOut)
-                              ? SAME_TRANSITION : DIFFERENT_TRANSITION;
-                      
-                            if (leftCoincide && !rightCoincide) {
-                              // honestly no idea, but changing events selection from [2, 1]
-                              // to [0, 1] fixes the overlapping self-intersecting polygons issue
-                              divideSegment(events[1].otherEvent, events[0].point, queue);
-                            }
-                            return 2;
-                          }
-                      
-                          // the line segments share the right endpoint
-                          if (rightCoincide) {
-                            divideSegment(events[0], events[1].point, queue);
-                            return 3;
-                          }
-                      
-                          // no line segment includes totally the other one
-                          if (events[0] !== events[3].otherEvent) {
-                            divideSegment(events[0], events[1].point, queue);
-                            divideSegment(events[1], events[2].point, queue);
-                            return 3;
-                          }
-                      
-                          // one line segment includes the other one
-                          divideSegment(events[0], events[1].point, queue);
-                          divideSegment(events[3].otherEvent, events[2].point, queue);
-                      
-                          return 3;
-                        }
-                      
-                        /**
-                         * @param  {SweepEvent} le1
-                         * @param  {SweepEvent} le2
-                         * @return {Number}
-                         */
-                        function compareSegments(le1, le2) {
-                          if (le1 === le2) { return 0; }
-                      
-                          // Segments are not collinear
-                          if (signedArea(le1.point, le1.otherEvent.point, le2.point) !== 0 ||
-                            signedArea(le1.point, le1.otherEvent.point, le2.otherEvent.point) !== 0) {
-                      
-                            // If they share their left endpoint use the right endpoint to sort
-                            if (equals(le1.point, le2.point)) { return le1.isBelow(le2.otherEvent.point) ? -1 : 1; }
-                      
-                            // Different left endpoint: use the left endpoint to sort
-                            if (le1.point[0] === le2.point[0]) { return le1.point[1] < le2.point[1] ? -1 : 1; }
-                      
-                            // has the line segment associated to e1 been inserted
-                            // into S after the line segment associated to e2 ?
-                            if (compareEvents(le1, le2) === 1) { return le2.isAbove(le1.point) ? -1 : 1; }
-                      
-                            // The line segment associated to e2 has been inserted
-                            // into S after the line segment associated to e1
-                            return le1.isBelow(le2.point) ? -1 : 1;
-                          }
-                      
-                          if (le1.isSubject === le2.isSubject) { // same polygon
-                            var p1 = le1.point, p2 = le2.point;
-                            if (p1[0] === p2[0] && p1[1] === p2[1]/*equals(le1.point, le2.point)*/) {
-                              p1 = le1.otherEvent.point; p2 = le2.otherEvent.point;
-                              if (p1[0] === p2[0] && p1[1] === p2[1]) { return 0; }
-                              else { return le1.contourId > le2.contourId ? 1 : -1; }
-                            }
-                          } else { // Segments are collinear, but belong to separate polygons
-                            return le1.isSubject ? -1 : 1;
-                          }
-                      
-                          return compareEvents(le1, le2) === 1 ? 1 : -1;
-                        }
-                      
-                        function subdivide(eventQueue, subject, clipping, sbbox, cbbox, operation) {
-                          var sweepLine = new SplayTree(compareSegments);
-                          var sortedEvents = [];
-                      
-                          var rightbound = Math.min(sbbox[2], cbbox[2]);
-                      
-                          var prev, next, begin;
-                      
-                          while (eventQueue.length !== 0) {
-                            var event = eventQueue.pop();
-                            sortedEvents.push(event);
-                      
-                            // optimization by bboxes for intersection and difference goes here
-                            if ((operation === INTERSECTION && event.point[0] > rightbound) ||
-                                (operation === DIFFERENCE   && event.point[0] > sbbox[2])) {
-                              break;
-                            }
-                      
-                            if (event.left) {
-                              next  = prev = sweepLine.insert(event);
-                              begin = sweepLine.minNode();
-                      
-                              if (prev !== begin) { prev = sweepLine.prev(prev); }
-                              else                { prev = null; }
-                      
-                              next = sweepLine.next(next);
-                      
-                              var prevEvent = prev ? prev.key : null;
-                              var prevprevEvent = (void 0);
-                              computeFields(event, prevEvent, operation);
-                              if (next) {
-                                if (possibleIntersection(event, next.key, eventQueue) === 2) {
-                                  computeFields(event, prevEvent, operation);
-                                  computeFields(event, next.key, operation);
-                                }
-                              }
-                      
-                              if (prev) {
-                                if (possibleIntersection(prev.key, event, eventQueue) === 2) {
-                                  var prevprev = prev;
-                                  if (prevprev !== begin) { prevprev = sweepLine.prev(prevprev); }
-                                  else                    { prevprev = null; }
-                      
-                                  prevprevEvent = prevprev ? prevprev.key : null;
-                                  computeFields(prevEvent, prevprevEvent, operation);
-                                  computeFields(event,     prevEvent,     operation);
-                                }
-                              }
-                            } else {
-                              event = event.otherEvent;
-                              next = prev = sweepLine.find(event);
-                      
-                              if (prev && next) {
-                      
-                                if (prev !== begin) { prev = sweepLine.prev(prev); }
-                                else                { prev = null; }
-                      
-                                next = sweepLine.next(next);
-                                sweepLine.remove(event);
-                      
-                                if (next && prev) {
-                                  possibleIntersection(prev.key, next.key, eventQueue);
-                                }
-                              }
-                            }
-                          }
-                          return sortedEvents;
-                        }
-                      
-                        /**
-                         * @param  {Array.<SweepEvent>} sortedEvents
-                         * @return {Array.<SweepEvent>}
-                         */
-                        function orderEvents(sortedEvents) {
-                          var event, i, len, tmp;
-                          var resultEvents = [];
-                          for (i = 0, len = sortedEvents.length; i < len; i++) {
-                            event = sortedEvents[i];
-                            if ((event.left && event.inResult) ||
-                              (!event.left && event.otherEvent.inResult)) {
-                              resultEvents.push(event);
-                            }
-                          }
-                          // Due to overlapping edges the resultEvents array can be not wholly sorted
-                          var sorted = false;
-                          while (!sorted) {
-                            sorted = true;
-                            for (i = 0, len = resultEvents.length; i < len; i++) {
-                              if ((i + 1) < len &&
-                                compareEvents(resultEvents[i], resultEvents[i + 1]) === 1) {
-                                tmp = resultEvents[i];
-                                resultEvents[i] = resultEvents[i + 1];
-                                resultEvents[i + 1] = tmp;
-                                sorted = false;
-                              }
-                            }
-                          }
-                      
-                      
-                          for (i = 0, len = resultEvents.length; i < len; i++) {
-                            event = resultEvents[i];
-                            event.pos = i;
-                          }
-                      
-                          // imagine, the right event is found in the beginning of the queue,
-                          // when his left counterpart is not marked yet
-                          for (i = 0, len = resultEvents.length; i < len; i++) {
-                            event = resultEvents[i];
-                            if (!event.left) {
-                              tmp = event.pos;
-                              event.pos = event.otherEvent.pos;
-                              event.otherEvent.pos = tmp;
-                            }
-                          }
-                      
-                          return resultEvents;
-                        }
-                      
-                      
-                        /**
-                         * @param  {Number} pos
-                         * @param  {Array.<SweepEvent>} resultEvents
-                         * @param  {Object>}    processed
-                         * @return {Number}
-                         */
-                        function nextPos(pos, resultEvents, processed, origIndex) {
-                          var p, p1;
-                          var newPos = pos + 1;
-                          var length = resultEvents.length;
-                      
-                          p  = resultEvents[pos].point;
-                      
-                          if (newPos < length)
-                            { p1 = resultEvents[newPos].point; }
-                      
-                      
-                          // while in range and not the current one by value
-                          while (newPos < length && p1[0] === p[0] && p1[1] === p[1]) {
-                            if (!processed[newPos]) {
-                              return newPos;
-                            } else   {
-                              newPos++;
-                            }
-                            p1 = resultEvents[newPos].point;
-                          }
-                      
-                          newPos = pos - 1;
-                      
-                          while (processed[newPos] && newPos >= origIndex) {
-                            newPos--;
-                          }
-                          return newPos;
-                        }
-                      
-                      
-                        /**
-                         * @param  {Array.<SweepEvent>} sortedEvents
-                         * @return {Array.<*>} polygons
-                         */
-                        function connectEdges(sortedEvents, operation) {
-                          var i, len;
-                          var resultEvents = orderEvents(sortedEvents);
-                      
-                          // "false"-filled array
-                          var processed = {};
-                          var result = [];
-                          var event;
-                      
-                          for (i = 0, len = resultEvents.length; i < len; i++) {
-                            if (processed[i]) { continue; }
-                            var contour = [[]];
-                      
-                            if (!resultEvents[i].isExteriorRing) {
-                              if (operation === DIFFERENCE && !resultEvents[i].isSubject && result.length === 0) {
-                                result.push(contour);
-                              } else if (result.length === 0) {
-                                result.push([[contour]]);
-                              } else {
-                                result[result.length - 1].push(contour[0]);
-                              }
-                            } else if (operation === DIFFERENCE && !resultEvents[i].isSubject && result.length > 1) {
-                              result[result.length - 1].push(contour[0]);
-                            } else {
-                              result.push(contour);
-                            }
-                      
-                            var ringId = result.length - 1;
-                            var pos = i;
-                      
-                            var initial = resultEvents[i].point;
-                            contour[0].push(initial);
-                      
-                            while (pos >= i) {
-                              event = resultEvents[pos];
-                              processed[pos] = true;
-                      
-                              if (event.left) {
-                                event.resultInOut = false;
-                                event.contourId   = ringId;
-                              } else {
-                                event.otherEvent.resultInOut = true;
-                                event.otherEvent.contourId   = ringId;
-                              }
-                      
-                              pos = event.pos;
-                              processed[pos] = true;
-                              contour[0].push(resultEvents[pos].point);
-                              pos = nextPos(pos, resultEvents, processed, i);
-                            }
-                      
-                            pos = pos === -1 ? i : pos;
-                      
-                            event = resultEvents[pos];
-                            processed[pos] = processed[event.pos] = true;
-                            event.otherEvent.resultInOut = true;
-                            event.otherEvent.contourId   = ringId;
-                          }
-                      
-                          // Handle if the result is a polygon (eg not multipoly)
-                          // Commented it again, let's see what do we mean by that
-                          // if (result.length === 1) result = result[0];
-                          return result;
-                        }
-                      
-                        var tinyqueue = TinyQueue;
-                        var default_1 = TinyQueue;
-                      
-                        function TinyQueue(data, compare) {
-                            var this$1 = this;
-                      
-                            if (!(this instanceof TinyQueue)) { return new TinyQueue(data, compare); }
-                      
-                            this.data = data || [];
-                            this.length = this.data.length;
-                            this.compare = compare || defaultCompare;
-                      
-                            if (this.length > 0) {
-                                for (var i = (this.length >> 1) - 1; i >= 0; i--) { this$1._down(i); }
-                            }
-                        }
-                      
-                        function defaultCompare(a, b) {
-                            return a < b ? -1 : a > b ? 1 : 0;
-                        }
-                      
-                        TinyQueue.prototype = {
-                      
-                            push: function (item) {
-                                this.data.push(item);
-                                this.length++;
-                                this._up(this.length - 1);
-                            },
-                      
-                            pop: function () {
-                                if (this.length === 0) { return undefined; }
-                      
-                                var top = this.data[0];
-                                this.length--;
-                      
-                                if (this.length > 0) {
-                                    this.data[0] = this.data[this.length];
-                                    this._down(0);
-                                }
-                                this.data.pop();
-                      
-                                return top;
-                            },
-                      
-                            peek: function () {
-                                return this.data[0];
-                            },
-                      
-                            _up: function (pos) {
-                                var data = this.data;
-                                var compare = this.compare;
-                                var item = data[pos];
-                      
-                                while (pos > 0) {
-                                    var parent = (pos - 1) >> 1;
-                                    var current = data[parent];
-                                    if (compare(item, current) >= 0) { break; }
-                                    data[pos] = current;
-                                    pos = parent;
-                                }
-                      
-                                data[pos] = item;
-                            },
-                      
-                            _down: function (pos) {
-                                var this$1 = this;
-                      
-                                var data = this.data;
-                                var compare = this.compare;
-                                var halfLength = this.length >> 1;
-                                var item = data[pos];
-                      
-                                while (pos < halfLength) {
-                                    var left = (pos << 1) + 1;
-                                    var right = left + 1;
-                                    var best = data[left];
-                      
-                                    if (right < this$1.length && compare(data[right], best) < 0) {
-                                        left = right;
-                                        best = data[right];
-                                    }
-                                    if (compare(best, item) >= 0) { break; }
-                      
-                                    data[pos] = best;
-                                    pos = left;
-                                }
-                      
-                                data[pos] = item;
-                            }
-                        };
-                        tinyqueue.default = default_1;
-                      
-                        var max = Math.max;
-                        var min = Math.min;
-                      
-                        var contourId = 0;
-                      
-                      
-                        function processPolygon(contourOrHole, isSubject, depth, Q, bbox, isExteriorRing) {
-                          var i, len, s1, s2, e1, e2;
-                          for (i = 0, len = contourOrHole.length - 1; i < len; i++) {
-                            s1 = contourOrHole[i];
-                            s2 = contourOrHole[i + 1];
-                            e1 = new SweepEvent(s1, false, undefined, isSubject);
-                            e2 = new SweepEvent(s2, false, e1,        isSubject);
-                            e1.otherEvent = e2;
-                      
-                            if (s1[0] === s2[0] && s1[1] === s2[1]) {
-                              continue; // skip collapsed edges, or it breaks
-                            }
-                      
-                            e1.contourId = e2.contourId = depth;
-                            if (!isExteriorRing) {
-                              e1.isExteriorRing = false;
-                              e2.isExteriorRing = false;
-                            }
-                            if (compareEvents(e1, e2) > 0) {
-                              e2.left = true;
-                            } else {
-                              e1.left = true;
-                            }
-                      
-                            var x = s1[0], y = s1[1];
-                            bbox[0] = min(bbox[0], x);
-                            bbox[1] = min(bbox[1], y);
-                            bbox[2] = max(bbox[2], x);
-                            bbox[3] = max(bbox[3], y);
-                      
-                            // Pushing it so the queue is sorted from left to right,
-                            // with object on the left having the highest priority.
-                            Q.push(e1);
-                            Q.push(e2);
-                          }
-                        }
-                      
-                      
-                        function fillQueue(subject, clipping, sbbox, cbbox, operation) {
-                          var eventQueue = new tinyqueue(null, compareEvents);
-                          var polygonSet, isExteriorRing, i, ii, j, jj; //, k, kk;
-                      
-                          for (i = 0, ii = subject.length; i < ii; i++) {
-                            polygonSet = subject[i];
-                            for (j = 0, jj = polygonSet.length; j < jj; j++) {
-                              isExteriorRing = j === 0;
-                              if (isExteriorRing) { contourId++; }
-                              processPolygon(polygonSet[j], true, contourId, eventQueue, sbbox, isExteriorRing);
-                            }
-                          }
-                      
-                          for (i = 0, ii = clipping.length; i < ii; i++) {
-                            polygonSet = clipping[i];
-                            for (j = 0, jj = polygonSet.length; j < jj; j++) {
-                              isExteriorRing = j === 0;
-                              if (operation === DIFFERENCE) { isExteriorRing = false; }
-                              if (isExteriorRing) { contourId++; }
-                              processPolygon(polygonSet[j], false, contourId, eventQueue, cbbox, isExteriorRing);
-                            }
-                          }
-                      
-                          return eventQueue;
-                        }
-                      
-                        var EMPTY = [];
-                      
-                      
-                        function trivialOperation(subject, clipping, operation) {
-                          var result = null;
-                          if (subject.length * clipping.length === 0) {
-                            if        (operation === INTERSECTION) {
-                              result = EMPTY;
-                            } else if (operation === DIFFERENCE) {
-                              result = subject;
-                            } else if (operation === UNION ||
-                                       operation === XOR) {
-                              result = (subject.length === 0) ? clipping : subject;
-                            }
-                          }
-                          return result;
-                        }
-                      
-                      
-                        function compareBBoxes(subject, clipping, sbbox, cbbox, operation) {
-                          var result = null;
-                          if (sbbox[0] > cbbox[2] ||
-                              cbbox[0] > sbbox[2] ||
-                              sbbox[1] > cbbox[3] ||
-                              cbbox[1] > sbbox[3]) {
-                            if        (operation === INTERSECTION) {
-                              result = EMPTY;
-                            } else if (operation === DIFFERENCE) {
-                              result = subject;
-                            } else if (operation === UNION ||
-                                       operation === XOR) {
-                              result = subject.concat(clipping);
-                            }
-                          }
-                          return result;
-                        }
-                      
-                      
-                        function boolean(subject, clipping, operation) {
-                          if (typeof subject[0][0][0] === 'number') {
-                            subject = [subject];
-                          }
-                          if (typeof clipping[0][0][0] === 'number') {
-                            clipping = [clipping];
-                          }
-                          var trivial = trivialOperation(subject, clipping, operation);
-                          if (trivial) {
-                            return trivial === EMPTY ? null : trivial;
-                          }
-                          var sbbox = [Infinity, Infinity, -Infinity, -Infinity];
-                          var cbbox = [Infinity, Infinity, -Infinity, -Infinity];
-                      
-                          //console.time('fill queue');
-                          var eventQueue = fillQueue(subject, clipping, sbbox, cbbox, operation);
-                          //console.timeEnd('fill queue');
-                      
-                          trivial = compareBBoxes(subject, clipping, sbbox, cbbox, operation);
-                          if (trivial) {
-                            return trivial === EMPTY ? null : trivial;
-                          }
-                          //console.time('subdivide edges');
-                          var sortedEvents = subdivide(eventQueue, subject, clipping, sbbox, cbbox, operation);
-                          //console.timeEnd('subdivide edges');
-                      
-                          //console.time('connect vertices');
-                          var result = connectEdges(sortedEvents, operation);
-                          //console.timeEnd('connect vertices');
-                          return result;
-                        }
-                      
-                        function union (subject, clipping) {
-                          return boolean(subject, clipping, UNION);
-                        }
-                      
-                        function diff (subject, clipping) {
-                          return boolean(subject, clipping, DIFFERENCE);
-                        }
-                      
-                        function xor (subject, clipping){
-                          return boolean(subject, clipping, XOR);
-                        }
-                      
-                        function intersection$1 (subject, clipping) {
-                          return boolean(subject, clipping, INTERSECTION);
-                        }
-                      
-                        /**
-                         * @enum {Number}
-                         */
-                        var operations = { UNION: UNION, DIFFERENCE: DIFFERENCE, INTERSECTION: INTERSECTION, XOR: XOR };
-                      
-                        exports.union = union;
-                        exports.diff = diff;
-                        exports.xor = xor;
-                        exports.intersection = intersection$1;
-                        exports.operations = operations;
-                      
-                        Object.defineProperty(exports, '__esModule', { value: true });
-                      
-                      })));
                     this.lzString = (function(){
                         // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
                         // This work is free. You can redistribute it and/or modify it
@@ -8876,14 +7032,14 @@
                     (function (global, factory) {
                     	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
                     	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-                        (factory((global.opentype = {})));
+                        (factory((global.opentype2 = {})));
                     }(this, (function (exports) { 'use strict';
-                        // https://github.com/opentypejs/opentype.js/blob/master/dist/opentype.js
+                        // https://github.com/opentypejs/opentype.js/blob/master/dist/opentype.js (10/03/2020)
                     
-                        // https://opentype.js.org v0.11.0 | (c) Frederik De Bleser and other contributors | MIT License | 
+                        //https://opentype.js.org v1.1.0 | (c) Frederik De Bleser and other contributors | MIT License | 
                         // Uses tiny-inflate by Devon Govett and string.prototype.codepointat polyfill by Mathias Bynens
                     
-                    	/* https://mths.be/codepointat v0.2.0 by @mathias */
+                        /* https://mths.be/codepointat v0.2.0 by @mathias */
                     	if (!String.prototype.codePointAt) {
                     		(function() {
                     			var defineProperty = (function() {
@@ -12145,11 +10301,7 @@
                     	    return this.names[gid];
                     	};
                     
-                    	/**
-                    	 * @alias opentype.addGlyphNames
-                    	 * @param {opentype.Font}
-                    	 */
-                    	function addGlyphNames(font) {
+                    	function addGlyphNamesAll(font) {
                     	    var glyph;
                     	    var glyphIndexMap = font.tables.cmap.glyphIndexMap;
                     	    var charCodes = Object.keys(glyphIndexMap);
@@ -12172,6 +10324,38 @@
                     	        } else if (font.glyphNames.names) {
                     	            glyph.name = font.glyphNames.glyphIndexToName(i$1);
                     	        }
+                    	    }
+                    	}
+                    
+                    	function addGlyphNamesToUnicodeMap(font) {
+                    	    font._IndexToUnicodeMap = {};
+                    
+                    	    var glyphIndexMap = font.tables.cmap.glyphIndexMap;
+                    	    var charCodes = Object.keys(glyphIndexMap);
+                    
+                    	    for (var i = 0; i < charCodes.length; i += 1) {
+                    	        var c = charCodes[i];
+                    	        var glyphIndex = glyphIndexMap[c];
+                    	        if (font._IndexToUnicodeMap[glyphIndex] === undefined) {
+                    	            font._IndexToUnicodeMap[glyphIndex] = {
+                    	                unicodes: [parseInt(c)]
+                    	            };
+                    	        } else {
+                    	            font._IndexToUnicodeMap[glyphIndex].unicodes.push(parseInt(c));
+                    	        }
+                    	    }
+                    	}
+                    
+                    	/**
+                    	 * @alias opentype.addGlyphNames
+                    	 * @param {opentype.Font}
+                    	 * @param {Object}
+                    	 */
+                    	function addGlyphNames(font, opt) {
+                    	    if (opt.lowMemory) {
+                    	        addGlyphNamesToUnicodeMap(font);
+                    	    } else {
+                    	        addGlyphNamesAll(font);
                     	    }
                     	}
                     
@@ -12332,7 +10516,7 @@
                     	        xScale = yScale = 1;
                     	    } else {
                     	        commands = this.path.commands;
-                    	        var scale = 1 / this.path.unitsPerEm * fontSize;
+                    	        var scale = 1 / (this.path.unitsPerEm || 1000) * fontSize;
                     	        if (xScale === undefined) { xScale = scale; }
                     	        if (yScale === undefined) { yScale = scale; }
                     	    }
@@ -12553,7 +10737,7 @@
                     	    Object.defineProperty(glyph, externalName, {
                     	        get: function() {
                     	            // Request the path property to make sure the path is loaded.
-                    	            // glyph.path; // jshint ignore:line
+                    	            glyph.path; // jshint ignore:line
                     	            return glyph[internalName];
                     	        },
                     	        set: function(newValue) {
@@ -12580,7 +10764,9 @@
                     	    this.glyphs = {};
                     	    if (Array.isArray(glyphs)) {
                     	        for (var i = 0; i < glyphs.length; i++) {
-                    	            this$1.glyphs[i] = glyphs[i];
+                    	            var glyph = glyphs[i];
+                    	            glyph.path.unitsPerEm = font.unitsPerEm;
+                    	            this$1.glyphs[i] = glyph;
                     	        }
                     	    }
                     
@@ -12592,8 +10778,37 @@
                     	 * @return {opentype.Glyph}
                     	 */
                     	GlyphSet.prototype.get = function(index) {
-                    	    if (typeof this.glyphs[index] === 'function') {
-                    	        this.glyphs[index] = this.glyphs[index]();
+                    	    // this.glyphs[index] is 'undefined' when low memory mode is on. glyph is pushed on request only.
+                    	    if (this.glyphs[index] === undefined) {
+                    	        this.font._push(index);
+                    	        if (typeof this.glyphs[index] === 'function') {
+                    	            this.glyphs[index] = this.glyphs[index]();
+                    	        }
+                    
+                    	        var glyph = this.glyphs[index];
+                    	        var unicodeObj = this.font._IndexToUnicodeMap[index];
+                    
+                    	        if (unicodeObj) {
+                    	            for (var j = 0; j < unicodeObj.unicodes.length; j++)
+                    	                { glyph.addUnicode(unicodeObj.unicodes[j]); }
+                    	        }
+                    
+                    	        if (this.font.cffEncoding) {
+                    	            if (this.font.isCIDFont) {
+                    	                glyph.name = 'gid' + index;
+                    	            } else {
+                    	                glyph.name = this.font.cffEncoding.charset[index];
+                    	            }
+                    	        } else if (this.font.glyphNames.names) {
+                    	            glyph.name = this.font.glyphNames.glyphIndexToName(index);
+                    	        }
+                    
+                    	        this.glyphs[index].advanceWidth = this.font._hmtxTableData[index].advanceWidth;
+                    	        this.glyphs[index].leftSideBearing = this.font._hmtxTableData[index].leftSideBearing;
+                    	    } else {
+                    	        if (typeof this.glyphs[index] === 'function') {
+                    	            this.glyphs[index] = this.glyphs[index]();
+                    	        }
                     	    }
                     
                     	    return this.glyphs[index];
@@ -12745,6 +10960,43 @@
                     	    }
                     
                     	    return {objects: objects, startOffset: start, endOffset: endOffset};
+                    	}
+                    
+                    	function parseCFFIndexLowMemory(data, start) {
+                    	    var offsets = [];
+                    	    var count = parse.getCard16(data, start);
+                    	    var objectOffset;
+                    	    var endOffset;
+                    	    if (count !== 0) {
+                    	        var offsetSize = parse.getByte(data, start + 2);
+                    	        objectOffset = start + ((count + 1) * offsetSize) + 2;
+                    	        var pos = start + 3;
+                    	        for (var i = 0; i < count + 1; i += 1) {
+                    	            offsets.push(parse.getOffset(data, pos, offsetSize));
+                    	            pos += offsetSize;
+                    	        }
+                    
+                    	        // The total size of the index array is 4 header bytes + the value of the last offset.
+                    	        endOffset = objectOffset + offsets[count];
+                    	    } else {
+                    	        endOffset = start + 2;
+                    	    }
+                    
+                    	    return {offsets: offsets, startOffset: start, endOffset: endOffset};
+                    	}
+                    	function getCffIndexObject(i, offsets, data, start, conversionFn) {
+                    	    var count = parse.getCard16(data, start);
+                    	    var objectOffset = 0;
+                    	    if (count !== 0) {
+                    	        var offsetSize = parse.getByte(data, start + 2);
+                    	        objectOffset = start + ((count + 1) * offsetSize) + 2;
+                    	    }
+                    
+                    	    var value = parse.getBytes(data, objectOffset + offsets[i], objectOffset + offsets[i + 1]);
+                    	    if (conversionFn) {
+                    	        value = conversionFn(value);
+                    	    }
+                    	    return value;
                     	}
                     
                     	// Parse a `CFF` DICT real value.
@@ -13165,7 +11417,7 @@
                     	        haveWidth = true;
                     	    }
                     
-                    	    function parse$$1(code) {
+                    	    function parse(code) {
                     	        var b1;
                     	        var b2;
                     	        var b3;
@@ -13249,7 +11501,7 @@
                     	                    codeIndex = stack.pop() + subrsBias;
                     	                    subrCode = subrs[codeIndex];
                     	                    if (subrCode) {
-                    	                        parse$$1(subrCode);
+                    	                        parse(subrCode);
                     	                    }
                     
                     	                    break;
@@ -13449,7 +11701,7 @@
                     	                    codeIndex = stack.pop() + font.gsubrsBias;
                     	                    subrCode = font.gsubrs[codeIndex];
                     	                    if (subrCode) {
-                    	                        parse$$1(subrCode);
+                    	                        parse(subrCode);
                     	                    }
                     
                     	                    break;
@@ -13524,7 +11776,7 @@
                     	        }
                     	    }
                     
-                    	    parse$$1(code);
+                    	    parse(code);
                     
                     	    glyph.advanceWidth = width;
                     	    return p;
@@ -13576,7 +11828,7 @@
                     	}
                     
                     	// Parse the `CFF` table, which contains the glyph outlines in PostScript format.
-                    	function parseCFFTable(data, start, font) {
+                    	function parseCFFTable(data, start, font, opt) {
                     	    font.tables.cff = {};
                     	    var header = parseCFFHeader(data, start);
                     	    var nameIndex = parseCFFIndex(data, header.endOffset, parse.bytesToString);
@@ -13633,8 +11885,14 @@
                     	    }
                     
                     	    // Offsets in the top dict are relative to the beginning of the CFF data, so add the CFF start offset.
-                    	    var charStringsIndex = parseCFFIndex(data, start + topDict.charStrings);
-                    	    font.nGlyphs = charStringsIndex.objects.length;
+                    	    var charStringsIndex;
+                    	    if (opt.lowMemory) {
+                    	        charStringsIndex = parseCFFIndexLowMemory(data, start + topDict.charStrings);
+                    	        font.nGlyphs = charStringsIndex.offsets.length;
+                    	    } else {
+                    	        charStringsIndex = parseCFFIndex(data, start + topDict.charStrings);
+                    	        font.nGlyphs = charStringsIndex.objects.length;
+                    	    }
                     
                     	    var charset = parseCFFCharset(data, start + topDict.charset, font.nGlyphs, stringIndex.objects);
                     	    if (topDict.encoding === 0) {
@@ -13651,9 +11909,16 @@
                     	    font.encoding = font.encoding || font.cffEncoding;
                     
                     	    font.glyphs = new glyphset.GlyphSet(font);
-                    	    for (var i = 0; i < font.nGlyphs; i += 1) {
-                    	        var charString = charStringsIndex.objects[i];
-                    	        font.glyphs.push(i, glyphset.cffGlyphLoader(font, i, parseCFFCharstring, charString));
+                    	    if (opt.lowMemory) {
+                    	        font._push = function(i) {
+                    	            var charString = getCffIndexObject(i, charStringsIndex.offsets, data, start + topDict.charStrings);
+                    	            font.glyphs.push(i, glyphset.cffGlyphLoader(font, i, parseCFFCharstring, charString));
+                    	        };
+                    	    } else {
+                    	        for (var i = 0; i < font.nGlyphs; i += 1) {
+                    	            var charString = charStringsIndex.objects[i];
+                    	            font.glyphs.push(i, glyphset.cffGlyphLoader(font, i, parseCFFCharstring, charString));
+                    	        }
                     	    }
                     	}
                     
@@ -14041,9 +12306,7 @@
                     
                     	// The `hmtx` table contains the horizontal metrics for all glyphs.
                     
-                    	// Parse the `hmtx` table, which contains the horizontal metrics for all glyphs.
-                    	// This function augments the glyph array, adding the advanceWidth and leftSideBearing to each glyph.
-                    	function parseHmtxTable(data, start, numMetrics, numGlyphs, glyphs) {
+                    	function parseHmtxTableAll(data, start, numMetrics, numGlyphs, glyphs) {
                     	    var advanceWidth;
                     	    var leftSideBearing;
                     	    var p = new parse.Parser(data, start);
@@ -14058,6 +12321,35 @@
                     	        glyph.advanceWidth = advanceWidth;
                     	        glyph.leftSideBearing = leftSideBearing;
                     	    }
+                    	}
+                    
+                    	function parseHmtxTableOnLowMemory(font, data, start, numMetrics, numGlyphs) {
+                    	    font._hmtxTableData = {};
+                    
+                    	    var advanceWidth;
+                    	    var leftSideBearing;
+                    	    var p = new parse.Parser(data, start);
+                    	    for (var i = 0; i < numGlyphs; i += 1) {
+                    	        // If the font is monospaced, only one entry is needed. This last entry applies to all subsequent glyphs.
+                    	        if (i < numMetrics) {
+                    	            advanceWidth = p.parseUShort();
+                    	            leftSideBearing = p.parseShort();
+                    	        }
+                    
+                    	        font._hmtxTableData[i] = {
+                    	            advanceWidth: advanceWidth,
+                    	            leftSideBearing: leftSideBearing
+                    	        };
+                    	    }
+                    	}
+                    
+                    	// Parse the `hmtx` table, which contains the horizontal metrics for all glyphs.
+                    	// This function augments the glyph array, adding the advanceWidth and leftSideBearing to each glyph.
+                    	function parseHmtxTable(font, data, start, numMetrics, numGlyphs, glyphs, opt) {
+                    	    if (opt.lowMemory)
+                    	        { parseHmtxTableOnLowMemory(font, data, start, numMetrics, numGlyphs); }
+                    	    else
+                    	        { parseHmtxTableAll(data, start, numMetrics, numGlyphs, glyphs); }
                     	}
                     
                     	function makeHmtxTable(glyphs) {
@@ -14859,7 +13151,7 @@
                     
                     	    loop:
                     	    for (var pos = 0; pos < limit; pos++) {
-                    	        // for (; pos < limit; pos++) {
+                    	        for (; pos < limit; pos++) {
                     	            for (var k = 0; k < needleLength; k++) {
                     	                if (haystack[pos + k] !== needle[k]) {
                     	                    continue loop;
@@ -14867,7 +13159,7 @@
                     	            }
                     
                     	            return pos;
-                    	        // }
+                    	        }
                     	    }
                     
                     	    return -1;
@@ -15523,7 +13815,7 @@
                     	            {name: 'coverage', type: 'TABLE', value: new table.Coverage(subtable.coverage)}
                     	        ].concat(table.ushortList('substitute', subtable.substitute)));
                     	    }
-                    	    // check.fail('Lookup type 1 substFormat must be 1 or 2.');
+                    	    check.fail('Lookup type 1 substFormat must be 1 or 2.');
                     	};
                     
                     	subtableMakers[3] = function makeLookup3(subtable) {
@@ -16981,8 +15273,7 @@
                     	    return getPath(glyph.points);
                     	}
                     
-                    	// Parse all the glyphs according to the offsets from the `loca` table.
-                    	function parseGlyfTable(data, start, loca, font) {
+                    	function parseGlyfTableAll(data, start, loca, font) {
                     	    var glyphs = new glyphset.GlyphSet(font);
                     
                     	    // The last element of the loca table is invalid.
@@ -16999,7 +15290,31 @@
                     	    return glyphs;
                     	}
                     
-                    	var glyf = { getPath: getPath, parse: parseGlyfTable };
+                    	function parseGlyfTableOnLowMemory(data, start, loca, font) {
+                    	    var glyphs = new glyphset.GlyphSet(font);
+                    
+                    	    font._push = function(i) {
+                    	        var offset = loca[i];
+                    	        var nextOffset = loca[i + 1];
+                    	        if (offset !== nextOffset) {
+                    	            glyphs.push(i, glyphset.ttfGlyphLoader(font, i, parseGlyph, data, start + offset, buildPath));
+                    	        } else {
+                    	            glyphs.push(i, glyphset.glyphLoader(font, i));
+                    	        }
+                    	    };
+                    
+                    	    return glyphs;
+                    	}
+                    
+                    	// Parse all the glyphs according to the offsets from the `loca` table.
+                    	function parseGlyfTable(data, start, loca, font, opt) {
+                    	    if (opt.lowMemory)
+                    	        { return parseGlyfTableOnLowMemory(data, start, loca, font); }
+                    	    else
+                    	        { return parseGlyfTableAll(data, start, loca, font); }
+                    	}
+                    
+                    	var glyf = { getPath: getPath, parse: parseGlyfTable};
                     
                     	/* A TrueType font hinting interpreter.
                     	*
@@ -18976,7 +17291,7 @@
                     	    if (!test) {
                     	        skip(state, true);
                     
-                    	        if (exports.DEBUG) { console.log(state.step, 'EIF[]'); }
+                    	        if (exports.DEBUG) { console.log(state.step,  'EIF[]'); }
                     	    }
                     	}
                     
@@ -20099,6 +18414,13 @@
                     	}
                     
                     	/**
+                    	 * @typedef ContextParams
+                    	 * @type Object
+                    	 * @property {array} context context items
+                    	 * @property {number} currentIndex current item index
+                    	 */
+                    
+                    	/**
                     	 * Create a context params
                     	 * @param {array} context a list of items
                     	 * @param {number} currentIndex current item index
@@ -20612,12 +18934,504 @@
                     	}
                     
                     	/**
+                    	 * Check if a char is Latin
+                    	 * @param {string} c a single char
+                    	 */
+                    	function isLatinChar(c) {
+                    	    return /[A-z]/.test(c);
+                    	}
+                    
+                    	/**
                     	 * Check if a char is whitespace char
                     	 * @param {string} c a single char
                     	 */
                     	function isWhiteSpace(c) {
                     	    return /\s/.test(c);
                     	}
+                    
+                    	/**
+                    	 * Query a feature by some of it's properties to lookup a glyph substitution.
+                    	 */
+                    
+                    	/**
+                    	 * Create feature query instance
+                    	 * @param {Font} font opentype font instance
+                    	 */
+                    	function FeatureQuery(font) {
+                    	    this.font = font;
+                    	    this.features = {};
+                    	}
+                    
+                    	/**
+                    	 * @typedef SubstitutionAction
+                    	 * @type Object
+                    	 * @property {number} id substitution type
+                    	 * @property {string} tag feature tag
+                    	 * @property {any} substitution substitution value(s)
+                    	 */
+                    
+                    	/**
+                    	 * Create a substitution action instance
+                    	 * @param {SubstitutionAction} action
+                    	 */
+                    	function SubstitutionAction(action) {
+                    	    this.id = action.id;
+                    	    this.tag = action.tag;
+                    	    this.substitution = action.substitution;
+                    	}
+                    
+                    	/**
+                    	 * Lookup a coverage table
+                    	 * @param {number} glyphIndex glyph index
+                    	 * @param {CoverageTable} coverage coverage table
+                    	 */
+                    	function lookupCoverage(glyphIndex, coverage) {
+                    	    if (!glyphIndex) { return -1; }
+                    	    switch (coverage.format) {
+                    	        case 1:
+                    	            return coverage.glyphs.indexOf(glyphIndex);
+                    
+                    	        case 2:
+                    	            var ranges = coverage.ranges;
+                    	            for (var i = 0; i < ranges.length; i++) {
+                    	                var range = ranges[i];
+                    	                if (glyphIndex >= range.start && glyphIndex <= range.end) {
+                    	                    var offset = glyphIndex - range.start;
+                    	                    return range.index + offset;
+                    	                }
+                    	            }
+                    	            break;
+                    	        default:
+                    	            return -1; // not found
+                    	    }
+                    	    return -1;
+                    	}
+                    
+                    	/**
+                    	 * Handle a single substitution - format 1
+                    	 * @param {ContextParams} contextParams context params to lookup
+                    	 */
+                    	function singleSubstitutionFormat1(glyphIndex, subtable) {
+                    	    var substituteIndex = lookupCoverage(glyphIndex, subtable.coverage);
+                    	    if (substituteIndex === -1) { return null; }
+                    	    return glyphIndex + subtable.deltaGlyphId;
+                    	}
+                    
+                    	/**
+                    	 * Handle a single substitution - format 2
+                    	 * @param {ContextParams} contextParams context params to lookup
+                    	 */
+                    	function singleSubstitutionFormat2(glyphIndex, subtable) {
+                    	    var substituteIndex = lookupCoverage(glyphIndex, subtable.coverage);
+                    	    if (substituteIndex === -1) { return null; }
+                    	    return subtable.substitute[substituteIndex];
+                    	}
+                    
+                    	/**
+                    	 * Lookup a list of coverage tables
+                    	 * @param {any} coverageList a list of coverage tables
+                    	 * @param {ContextParams} contextParams context params to lookup
+                    	 */
+                    	function lookupCoverageList(coverageList, contextParams) {
+                    	    var lookupList = [];
+                    	    for (var i = 0; i < coverageList.length; i++) {
+                    	        var coverage = coverageList[i];
+                    	        var glyphIndex = contextParams.current;
+                    	        glyphIndex = Array.isArray(glyphIndex) ? glyphIndex[0] : glyphIndex;
+                    	        var lookupIndex = lookupCoverage(glyphIndex, coverage);
+                    	        if (lookupIndex !== -1) {
+                    	            lookupList.push(lookupIndex);
+                    	        }
+                    	    }
+                    	    if (lookupList.length !== coverageList.length) { return -1; }
+                    	    return lookupList;
+                    	}
+                    
+                    	/**
+                    	 * Handle chaining context substitution - format 3
+                    	 * @param {ContextParams} contextParams context params to lookup
+                    	 */
+                    	function chainingSubstitutionFormat3(contextParams, subtable) {
+                    	    var this$1 = this;
+                    
+                    	    var lookupsCount = (
+                    	        subtable.inputCoverage.length +
+                    	        subtable.lookaheadCoverage.length +
+                    	        subtable.backtrackCoverage.length
+                    	    );
+                    	    if (contextParams.context.length < lookupsCount) { return []; }
+                    	    // INPUT LOOKUP //
+                    	    var inputLookups = lookupCoverageList(
+                    	        subtable.inputCoverage, contextParams
+                    	    );
+                    	    if (inputLookups === -1) { return []; }
+                    	    // LOOKAHEAD LOOKUP //
+                    	    var lookaheadOffset = subtable.inputCoverage.length - 1;
+                    	    if (contextParams.lookahead.length < subtable.lookaheadCoverage.length) { return []; }
+                    	    var lookaheadContext = contextParams.lookahead.slice(lookaheadOffset);
+                    	    while (lookaheadContext.length && isTashkeelArabicChar(lookaheadContext[0].char)) {
+                    	        lookaheadContext.shift();
+                    	    }
+                    	    var lookaheadParams = new ContextParams(lookaheadContext, 0);
+                    	    var lookaheadLookups = lookupCoverageList(
+                    	        subtable.lookaheadCoverage, lookaheadParams
+                    	    );
+                    	    // BACKTRACK LOOKUP //
+                    	    var backtrackContext = [].concat(contextParams.backtrack);
+                    	    backtrackContext.reverse();
+                    	    while (backtrackContext.length && isTashkeelArabicChar(backtrackContext[0].char)) {
+                    	        backtrackContext.shift();
+                    	    }
+                    	    if (backtrackContext.length < subtable.backtrackCoverage.length) { return []; }
+                    	    var backtrackParams = new ContextParams(backtrackContext, 0);
+                    	    var backtrackLookups = lookupCoverageList(
+                    	        subtable.backtrackCoverage, backtrackParams
+                    	    );
+                    	    var contextRulesMatch = (
+                    	        inputLookups.length === subtable.inputCoverage.length &&
+                    	        lookaheadLookups.length === subtable.lookaheadCoverage.length &&
+                    	        backtrackLookups.length === subtable.backtrackCoverage.length
+                    	    );
+                    	    var substitutions = [];
+                    	    if (contextRulesMatch) {
+                    	        for (var i = 0; i < subtable.lookupRecords.length; i++) {
+                    	            var lookupRecord = subtable.lookupRecords[i];
+                    	            var lookupListIndex = lookupRecord.lookupListIndex;
+                    	            var lookupTable = this$1.getLookupByIndex(lookupListIndex);
+                    	            for (var s = 0; s < lookupTable.subtables.length; s++) {
+                    	                var subtable$1 = lookupTable.subtables[s];
+                    	                var lookup = this$1.getLookupMethod(lookupTable, subtable$1);
+                    	                var substitutionType = this$1.getSubstitutionType(lookupTable, subtable$1);
+                    	                if (substitutionType === '12') {
+                    	                    for (var n = 0; n < inputLookups.length; n++) {
+                    	                        var glyphIndex = contextParams.get(n);
+                    	                        var substitution = lookup(glyphIndex);
+                    	                        if (substitution) { substitutions.push(substitution); }
+                    	                    }
+                    	                }
+                    	            }
+                    	        }
+                    	    }
+                    	    return substitutions;
+                    	}
+                    
+                    	/**
+                    	 * Handle ligature substitution - format 1
+                    	 * @param {ContextParams} contextParams context params to lookup
+                    	 */
+                    	function ligatureSubstitutionFormat1(contextParams, subtable) {
+                    	    // COVERAGE LOOKUP //
+                    	    var glyphIndex = contextParams.current;
+                    	    var ligSetIndex = lookupCoverage(glyphIndex, subtable.coverage);
+                    	    if (ligSetIndex === -1) { return null; }
+                    	    // COMPONENTS LOOKUP
+                    	    // (!) note, components are ordered in the written direction.
+                    	    var ligature;
+                    	    var ligatureSet = subtable.ligatureSets[ligSetIndex];
+                    	    for (var s = 0; s < ligatureSet.length; s++) {
+                    	        ligature = ligatureSet[s];
+                    	        for (var l = 0; l < ligature.components.length; l++) {
+                    	            var lookaheadItem = contextParams.lookahead[l];
+                    	            var component = ligature.components[l];
+                    	            if (lookaheadItem !== component) { break; }
+                    	            if (l === ligature.components.length - 1) { return ligature; }
+                    	        }
+                    	    }
+                    	    return null;
+                    	}
+                    
+                    	/**
+                    	 * Handle decomposition substitution - format 1
+                    	 * @param {number} glyphIndex glyph index
+                    	 * @param {any} subtable subtable
+                    	 */
+                    	function decompositionSubstitutionFormat1(glyphIndex, subtable) {
+                    	    var substituteIndex = lookupCoverage(glyphIndex, subtable.coverage);
+                    	    if (substituteIndex === -1) { return null; }
+                    	    return subtable.sequences[substituteIndex];
+                    	}
+                    
+                    	/**
+                    	 * Get default script features indexes
+                    	 */
+                    	FeatureQuery.prototype.getDefaultScriptFeaturesIndexes = function () {
+                    	    var scripts = this.font.tables.gsub.scripts;
+                    	    for (var s = 0; s < scripts.length; s++) {
+                    	        var script = scripts[s];
+                    	        if (script.tag === 'DFLT') { return (
+                    	            script.script.defaultLangSys.featureIndexes
+                    	        ); }
+                    	    }
+                    	    return [];
+                    	};
+                    
+                    	/**
+                    	 * Get feature indexes of a specific script
+                    	 * @param {string} scriptTag script tag
+                    	 */
+                    	FeatureQuery.prototype.getScriptFeaturesIndexes = function(scriptTag) {
+                    	    var tables = this.font.tables;
+                    	    if (!tables.gsub) { return []; }
+                    	    if (!scriptTag) { return this.getDefaultScriptFeaturesIndexes(); }
+                    	    var scripts = this.font.tables.gsub.scripts;
+                    	    for (var i = 0; i < scripts.length; i++) {
+                    	        var script = scripts[i];
+                    	        if (script.tag === scriptTag && script.script.defaultLangSys) {
+                    	            return script.script.defaultLangSys.featureIndexes;
+                    	        } else {
+                    	            var langSysRecords = script.langSysRecords;
+                    	            if (!!langSysRecords) {
+                    	                for (var j = 0; j < langSysRecords.length; j++) {
+                    	                    var langSysRecord = langSysRecords[j];
+                    	                    if (langSysRecord.tag === scriptTag) {
+                    	                        var langSys = langSysRecord.langSys;
+                    	                        return langSys.featureIndexes;
+                    	                    }
+                    	                }
+                    	            }
+                    	        }
+                    	    }
+                    	    return this.getDefaultScriptFeaturesIndexes();
+                    	};
+                    
+                    	/**
+                    	 * Map a feature tag to a gsub feature
+                    	 * @param {any} features gsub features
+                    	 * @param {string} scriptTag script tag
+                    	 */
+                    	FeatureQuery.prototype.mapTagsToFeatures = function (features, scriptTag) {
+                    	    var tags = {};
+                    	    for (var i = 0; i < features.length; i++) {
+                    	        var tag = features[i].tag;
+                    	        var feature = features[i].feature;
+                    	        tags[tag] = feature;
+                    	    }
+                    	    this.features[scriptTag].tags = tags;
+                    	};
+                    
+                    	/**
+                    	 * Get features of a specific script
+                    	 * @param {string} scriptTag script tag
+                    	 */
+                    	FeatureQuery.prototype.getScriptFeatures = function (scriptTag) {
+                    	    var features = this.features[scriptTag];
+                    	    if (this.features.hasOwnProperty(scriptTag)) { return features; }
+                    	    var featuresIndexes = this.getScriptFeaturesIndexes(scriptTag);
+                    	    if (!featuresIndexes) { return null; }
+                    	    var gsub = this.font.tables.gsub;
+                    	    features = featuresIndexes.map(function (index) { return gsub.features[index]; });
+                    	    this.features[scriptTag] = features;
+                    	    this.mapTagsToFeatures(features, scriptTag);
+                    	    return features;
+                    	};
+                    
+                    	/**
+                    	 * Get substitution type
+                    	 * @param {any} lookupTable lookup table
+                    	 * @param {any} subtable subtable
+                    	 */
+                    	FeatureQuery.prototype.getSubstitutionType = function(lookupTable, subtable) {
+                    	    var lookupType = lookupTable.lookupType.toString();
+                    	    var substFormat = subtable.substFormat.toString();
+                    	    return lookupType + substFormat;
+                    	};
+                    
+                    	/**
+                    	 * Get lookup method
+                    	 * @param {any} lookupTable lookup table
+                    	 * @param {any} subtable subtable
+                    	 */
+                    	FeatureQuery.prototype.getLookupMethod = function(lookupTable, subtable) {
+                    	    var this$1 = this;
+                    
+                    	    var substitutionType = this.getSubstitutionType(lookupTable, subtable);
+                    	    switch (substitutionType) {
+                    	        case '11':
+                    	            return function (glyphIndex) { return singleSubstitutionFormat1.apply(
+                    	                this$1, [glyphIndex, subtable]
+                    	            ); };
+                    	        case '12':
+                    	            return function (glyphIndex) { return singleSubstitutionFormat2.apply(
+                    	                this$1, [glyphIndex, subtable]
+                    	            ); };
+                    	        case '63':
+                    	            return function (contextParams) { return chainingSubstitutionFormat3.apply(
+                    	                this$1, [contextParams, subtable]
+                    	            ); };
+                    	        case '41':
+                    	            return function (contextParams) { return ligatureSubstitutionFormat1.apply(
+                    	                this$1, [contextParams, subtable]
+                    	            ); };
+                    	        case '21':
+                    	            return function (glyphIndex) { return decompositionSubstitutionFormat1.apply(
+                    	                this$1, [glyphIndex, subtable]
+                    	            ); };
+                    	        default:
+                    	            throw new Error(
+                    	                "lookupType: " + (lookupTable.lookupType) + " - " +
+                    	                "substFormat: " + (subtable.substFormat) + " " +
+                    	                "is not yet supported"
+                    	            );
+                    	    }
+                    	};
+                    
+                    	/**
+                    	 * [ LOOKUP TYPES ]
+                    	 * -------------------------------
+                    	 * Single                        1;
+                    	 * Multiple                      2;
+                    	 * Alternate                     3;
+                    	 * Ligature                      4;
+                    	 * Context                       5;
+                    	 * ChainingContext               6;
+                    	 * ExtensionSubstitution         7;
+                    	 * ReverseChainingContext        8;
+                    	 * -------------------------------
+                    	 *
+                    	 */
+                    
+                    	/**
+                    	 * @typedef FQuery
+                    	 * @type Object
+                    	 * @param {string} tag feature tag
+                    	 * @param {string} script feature script
+                    	 * @param {ContextParams} contextParams context params
+                    	 */
+                    
+                    	/**
+                    	 * Lookup a feature using a query parameters
+                    	 * @param {FQuery} query feature query
+                    	 */
+                    	FeatureQuery.prototype.lookupFeature = function (query) {
+                    	    var this$1 = this;
+                    
+                    	    var contextParams = query.contextParams;
+                    	    var currentIndex = contextParams.index;
+                    	    var feature = this.getFeature({
+                    	        tag: query.tag, script: query.script
+                    	    });
+                    	    if (!feature) { return new Error(
+                    	        "font '" + (this.font.names.fullName.en) + "' " +
+                    	        "doesn't support feature '" + (query.tag) + "' " +
+                    	        "for script '" + (query.script) + "'."
+                    	    ); }
+                    	    var lookups = this.getFeatureLookups(feature);
+                    	    var substitutions = [].concat(contextParams.context);
+                    	    for (var l = 0; l < lookups.length; l++) {
+                    	        var lookupTable = lookups[l];
+                    	        var subtables = this$1.getLookupSubtables(lookupTable);
+                    	        for (var s = 0; s < subtables.length; s++) {
+                    	            var subtable = subtables[s];
+                    	            var substType = this$1.getSubstitutionType(lookupTable, subtable);
+                    	            var lookup = this$1.getLookupMethod(lookupTable, subtable);
+                    	            var substitution = (void 0);
+                    	            switch (substType) {
+                    	                case '11':
+                    	                    substitution = lookup(contextParams.current);
+                    	                    if (substitution) {
+                    	                        substitutions.splice(currentIndex, 1, new SubstitutionAction({
+                    	                            id: 11, tag: query.tag, substitution: substitution
+                    	                        }));
+                    	                    }
+                    	                    break;
+                    	                case '12':
+                    	                    substitution = lookup(contextParams.current);
+                    	                    if (substitution) {
+                    	                        substitutions.splice(currentIndex, 1, new SubstitutionAction({
+                    	                            id: 12, tag: query.tag, substitution: substitution
+                    	                        }));
+                    	                    }
+                    	                    break;
+                    	                case '63':
+                    	                    substitution = lookup(contextParams);
+                    	                    if (Array.isArray(substitution) && substitution.length) {
+                    	                        substitutions.splice(currentIndex, 1, new SubstitutionAction({
+                    	                            id: 63, tag: query.tag, substitution: substitution
+                    	                        }));
+                    	                    }
+                    	                    break;
+                    	                case '41':
+                    	                    substitution = lookup(contextParams);
+                    	                    if (substitution) {
+                    	                        substitutions.splice(currentIndex, 1, new SubstitutionAction({
+                    	                            id: 41, tag: query.tag, substitution: substitution
+                    	                        }));
+                    	                    }
+                    	                    break;
+                    	                case '21':
+                    	                    substitution = lookup(contextParams.current);
+                    	                    if (substitution) {
+                    	                        substitutions.splice(currentIndex, 1, new SubstitutionAction({
+                    	                            id: 21, tag: query.tag, substitution: substitution
+                    	                        }));
+                    	                    }
+                    	                    break;
+                    	            }
+                    	            contextParams = new ContextParams(substitutions, currentIndex);
+                    	            if (Array.isArray(substitution) && !substitution.length) { continue; }
+                    	            substitution = null;
+                    	        }
+                    	    }
+                    	    return substitutions.length ? substitutions : null;
+                    	};
+                    
+                    	/**
+                    	 * Checks if a font supports a specific features
+                    	 * @param {FQuery} query feature query object
+                    	 */
+                    	FeatureQuery.prototype.supports = function (query) {
+                    	    if (!query.script) { return false; }
+                    	    this.getScriptFeatures(query.script);
+                    	    var supportedScript = this.features.hasOwnProperty(query.script);
+                    	    if (!query.tag) { return supportedScript; }
+                    	    var supportedFeature = (
+                    	        this.features[query.script].some(function (feature) { return feature.tag === query.tag; })
+                    	    );
+                    	    return supportedScript && supportedFeature;
+                    	};
+                    
+                    	/**
+                    	 * Get lookup table subtables
+                    	 * @param {any} lookupTable lookup table
+                    	 */
+                    	FeatureQuery.prototype.getLookupSubtables = function (lookupTable) {
+                    	    return lookupTable.subtables || null;
+                    	};
+                    
+                    	/**
+                    	 * Get lookup table by index
+                    	 * @param {number} index lookup table index
+                    	 */
+                    	FeatureQuery.prototype.getLookupByIndex = function (index) {
+                    	    var lookups = this.font.tables.gsub.lookups;
+                    	    return lookups[index] || null;
+                    	};
+                    
+                    	/**
+                    	 * Get lookup tables for a feature
+                    	 * @param {string} feature
+                    	 */
+                    	FeatureQuery.prototype.getFeatureLookups = function (feature) {
+                    	    // TODO: memoize
+                    	    return feature.lookupListIndexes.map(this.getLookupByIndex.bind(this));
+                    	};
+                    
+                    	/**
+                    	 * Query a feature by it's properties
+                    	 * @param {any} query an object that describes the properties of a query
+                    	 */
+                    	FeatureQuery.prototype.getFeature = function getFeature(query) {
+                    	    if (!this.font) { return { FAIL: "No font was found"}; }
+                    	    if (!this.features.hasOwnProperty(query.script)) {
+                    	        this.getScriptFeatures(query.script);
+                    	    }
+                    	    var scriptFeatures = this.features[query.script];
+                    	    if (!scriptFeatures) { return (
+                    	        { FAIL: ("No feature for script " + (query.script))}
+                    	    ); }
+                    	    if (!scriptFeatures.tags[query.tag]) { return null; }
+                    	    return this.features[query.script].tags[query.tag];
+                    	};
                     
                     	/**
                     	 * Arabic word context checkers
@@ -20643,7 +19457,11 @@
                     	        (!isArabicChar(nextChar))
                     	    );
                     	}
-                    	var arabicWordCheck = { arabicWordStartCheck: arabicWordStartCheck, arabicWordEndCheck: arabicWordEndCheck };
+                    
+                    	var arabicWordCheck = {
+                    	    startCheck: arabicWordStartCheck,
+                    	    endCheck: arabicWordEndCheck
+                    	};
                     
                     	/**
                     	 * Arabic sentence context checkers
@@ -20681,11 +19499,87 @@
                     	            return false;
                     	    }
                     	}
-                    	var arabicSentenceCheck = { arabicSentenceStartCheck: arabicSentenceStartCheck, arabicSentenceEndCheck: arabicSentenceEndCheck };
+                    
+                    	var arabicSentenceCheck = {
+                    	    startCheck: arabicSentenceStartCheck,
+                    	    endCheck: arabicSentenceEndCheck
+                    	};
+                    
+                    	/**
+                    	 * Apply single substitution format 1
+                    	 * @param {Array} substitutions substitutions
+                    	 * @param {any} tokens a list of tokens
+                    	 * @param {number} index token index
+                    	 */
+                    	function singleSubstitutionFormat1$1(action, tokens, index) {
+                    	    tokens[index].setState(action.tag, action.substitution);
+                    	}
+                    
+                    	/**
+                    	 * Apply single substitution format 2
+                    	 * @param {Array} substitutions substitutions
+                    	 * @param {any} tokens a list of tokens
+                    	 * @param {number} index token index
+                    	 */
+                    	function singleSubstitutionFormat2$1(action, tokens, index) {
+                    	    tokens[index].setState(action.tag, action.substitution);
+                    	}
+                    
+                    	/**
+                    	 * Apply chaining context substitution format 3
+                    	 * @param {Array} substitutions substitutions
+                    	 * @param {any} tokens a list of tokens
+                    	 * @param {number} index token index
+                    	 */
+                    	function chainingSubstitutionFormat3$1(action, tokens, index) {
+                    	    action.substitution.forEach(function (subst, offset) {
+                    	        var token = tokens[index + offset];
+                    	        token.setState(action.tag, subst);
+                    	    });
+                    	}
+                    
+                    	/**
+                    	 * Apply ligature substitution format 1
+                    	 * @param {Array} substitutions substitutions
+                    	 * @param {any} tokens a list of tokens
+                    	 * @param {number} index token index
+                    	 */
+                    	function ligatureSubstitutionFormat1$1(action, tokens, index) {
+                    	    var token = tokens[index];
+                    	    token.setState(action.tag, action.substitution.ligGlyph);
+                    	    var compsCount = action.substitution.components.length;
+                    	    for (var i = 0; i < compsCount; i++) {
+                    	        token = tokens[index + i + 1];
+                    	        token.setState('deleted', true);
+                    	    }
+                    	}
+                    
+                    	/**
+                    	 * Supported substitutions
+                    	 */
+                    	var SUBSTITUTIONS = {
+                    	    11: singleSubstitutionFormat1$1,
+                    	    12: singleSubstitutionFormat2$1,
+                    	    63: chainingSubstitutionFormat3$1,
+                    	    41: ligatureSubstitutionFormat1$1
+                    	};
+                    
+                    	/**
+                    	 * Apply substitutions to a list of tokens
+                    	 * @param {Array} substitutions substitutions
+                    	 * @param {any} tokens a list of tokens
+                    	 * @param {number} index token index
+                    	 */
+                    	function applySubstitution(action, tokens, index) {
+                    	    if (action instanceof SubstitutionAction) {
+                    	        SUBSTITUTIONS[action.id](action, tokens, index);
+                    	    }
+                    	}
                     
                     	/**
                     	 * Apply Arabic presentation forms to a range of tokens
                     	 */
+                    
                     	/**
                     	 * Check if a char can be connected to it's preceding char
                     	 * @param {ContextParams} charContextParams context params of a char
@@ -20721,44 +19615,42 @@
                     	 * @param {ContextRange} range a range of tokens
                     	 */
                     	function arabicPresentationForms(range) {
-                    	    var features = this.features.arab;
-                    	    var rangeTokens = this.tokenizer.getRangeTokens(range);
-                    	    if (rangeTokens.length === 1) { return; }
-                    	    var getSubstitutionIndex = function (substitution) { return (
-                    	        substitution.length === 1 &&
-                    	        substitution[0].id === 12 &&
-                    	        substitution[0].substitution
-                    	    ); };
-                    	    var applyForm = function (tag, token, params) {
-                    	        if (!features.hasOwnProperty(tag)) { return; }
-                    	        var substitution = features[tag].lookup(params) || null;
-                    	        var substIndex = getSubstitutionIndex(substitution)[0];
-                    	        if (substIndex >= 0) {
-                    	            return token.setState(tag, substIndex);
-                    	        }
-                    	    };
-                    	    var tokensParams = new ContextParams(rangeTokens, 0);
-                    	    var charContextParams = new ContextParams(rangeTokens.map(function (t){ return t.char; }), 0);
-                    	    rangeTokens.forEach(function (token, i) {
+                    	    var this$1 = this;
+                    
+                    	    var script = 'arab';
+                    	    var tags = this.featuresTags[script];
+                    	    var tokens = this.tokenizer.getRangeTokens(range);
+                    	    if (tokens.length === 1) { return; }
+                    	    var contextParams = new ContextParams(
+                    	        tokens.map(function (token) { return token.getState('glyphIndex'); }
+                    	    ), 0);
+                    	    var charContextParams = new ContextParams(
+                    	        tokens.map(function (token) { return token.char; }
+                    	    ), 0);
+                    	    tokens.forEach(function (token, index) {
                     	        if (isTashkeelArabicChar(token.char)) { return; }
-                    	        tokensParams.setCurrentIndex(i);
-                    	        charContextParams.setCurrentIndex(i);
+                    	        contextParams.setCurrentIndex(index);
+                    	        charContextParams.setCurrentIndex(index);
                     	        var CONNECT = 0; // 2 bits 00 (10: can connect next) (01: can connect prev)
                     	        if (willConnectPrev(charContextParams)) { CONNECT |= 1; }
                     	        if (willConnectNext(charContextParams)) { CONNECT |= 2; }
+                    	        var tag;
                     	        switch (CONNECT) {
-                    	            case 0: // isolated * original form
-                    	                return;
-                    	            case 1: // fina
-                    	                applyForm('fina', token, tokensParams);
-                    	                break;
-                    	            case 2: // init
-                    	                applyForm('init', token, tokensParams);
-                    	                break;
-                    	            case 3: // medi
-                    	                applyForm('medi', token, tokensParams);
-                    	                break;
+                    	            case 1: (tag = 'fina'); break;
+                    	            case 2: (tag = 'init'); break;
+                    	            case 3: (tag = 'medi'); break;
                     	        }
+                    	        if (tags.indexOf(tag) === -1) { return; }
+                    	        var substitutions = this$1.query.lookupFeature({
+                    	            tag: tag, script: script, contextParams: contextParams
+                    	        });
+                    	        if (substitutions instanceof Error) { return console.info(substitutions.message); }
+                    	        substitutions.forEach(function (action, index) {
+                    	            if (action instanceof SubstitutionAction) {
+                    	                applySubstitution(action, tokens, index);
+                    	                contextParams.context[index] = action.substitution;
+                    	            }
+                    	        });
                     	    });
                     	}
                     
@@ -20767,46 +19659,105 @@
                     	 */
                     
                     	/**
+                    	 * Update context params
+                    	 * @param {any} tokens a list of tokens
+                    	 * @param {number} index current item index
+                    	 */
+                    	function getContextParams(tokens, index) {
+                    	    var context = tokens.map(function (token) { return token.activeState.value; });
+                    	    return new ContextParams(context, index || 0);
+                    	}
+                    
+                    	/**
                     	 * Apply Arabic required ligatures to a context range
                     	 * @param {ContextRange} range a range of tokens
                     	 */
                     	function arabicRequiredLigatures(range) {
-                    	    var features = this.features.arab;
-                    	    if (!features.hasOwnProperty('rlig')) { return; }
+                    	    var this$1 = this;
+                    
+                    	    var script = 'arab';
                     	    var tokens = this.tokenizer.getRangeTokens(range);
-                    	    for (var i = 0; i < tokens.length; i++) {
-                    	        var lookupParams = new ContextParams(tokens, i);
-                    	        var substitution = features.rlig.lookup(lookupParams) || null;
-                    	        var chainingContext = (
-                    	            substitution.length === 1 &&
-                    	            substitution[0].id === 63 &&
-                    	            substitution[0].substitution
-                    	        );
-                    	        var ligature = (
-                    	            substitution.length === 1 &&
-                    	            substitution[0].id === 41 &&
-                    	            substitution[0].substitution[0]
-                    	        );
-                    	        var token = tokens[i];
-                    	        if (!!ligature) {
-                    	            token.setState('rlig', [ligature.ligGlyph]);
-                    	            for (var c = 0; c < ligature.components.length; c++) {
-                    	                var component = ligature.components[c];
-                    	                var lookaheadToken = lookupParams.get(c + 1);
-                    	                if (lookaheadToken.activeState.value === component) {
-                    	                    lookaheadToken.state.deleted = true;
-                    	                }
-                    	            }
-                    	        } else if (chainingContext) {
-                    	            var substIndex = (
-                    	                chainingContext &&
-                    	                chainingContext.length === 1 &&
-                    	                chainingContext[0].id === 12 &&
-                    	                chainingContext[0].substitution
+                    	    var contextParams = getContextParams(tokens);
+                    	    contextParams.context.forEach(function (glyphIndex, index) {
+                    	        contextParams.setCurrentIndex(index);
+                    	        var substitutions = this$1.query.lookupFeature({
+                    	            tag: 'rlig', script: script, contextParams: contextParams
+                    	        });
+                    	        if (substitutions.length) {
+                    	            substitutions.forEach(
+                    	                function (action) { return applySubstitution(action, tokens, index); }
                     	            );
-                    	            if (!!substIndex && substIndex >= 0) { token.setState('rlig', substIndex); }
+                    	            contextParams = getContextParams(tokens);
                     	        }
-                    	    }
+                    	    });
+                    	}
+                    
+                    	/**
+                    	 * Latin word context checkers
+                    	 */
+                    
+                    	function latinWordStartCheck(contextParams) {
+                    	    var char = contextParams.current;
+                    	    var prevChar = contextParams.get(-1);
+                    	    return (
+                    	        // ? latin first char
+                    	        (prevChar === null && isLatinChar(char)) ||
+                    	        // ? latin char preceded with a non latin char
+                    	        (!isLatinChar(prevChar) && isLatinChar(char))
+                    	    );
+                    	}
+                    
+                    	function latinWordEndCheck(contextParams) {
+                    	    var nextChar = contextParams.get(1);
+                    	    return (
+                    	        // ? last latin char
+                    	        (nextChar === null) ||
+                    	        // ? next char is not latin
+                    	        (!isLatinChar(nextChar))
+                    	    );
+                    	}
+                    
+                    	var latinWordCheck = {
+                    	    startCheck: latinWordStartCheck,
+                    	    endCheck: latinWordEndCheck
+                    	};
+                    
+                    	/**
+                    	 * Apply Latin ligature feature to a range of tokens
+                    	 */
+                    
+                    	/**
+                    	 * Update context params
+                    	 * @param {any} tokens a list of tokens
+                    	 * @param {number} index current item index
+                    	 */
+                    	function getContextParams$1(tokens, index) {
+                    	    var context = tokens.map(function (token) { return token.activeState.value; });
+                    	    return new ContextParams(context, index || 0);
+                    	}
+                    
+                    	/**
+                    	 * Apply Arabic required ligatures to a context range
+                    	 * @param {ContextRange} range a range of tokens
+                    	 */
+                    	function latinLigature(range) {
+                    	    var this$1 = this;
+                    
+                    	    var script = 'latn';
+                    	    var tokens = this.tokenizer.getRangeTokens(range);
+                    	    var contextParams = getContextParams$1(tokens);
+                    	    contextParams.context.forEach(function (glyphIndex, index) {
+                    	        contextParams.setCurrentIndex(index);
+                    	        var substitutions = this$1.query.lookupFeature({
+                    	            tag: 'liga', script: script, contextParams: contextParams
+                    	        });
+                    	        if (substitutions.length) {
+                    	            substitutions.forEach(
+                    	                function (action) { return applySubstitution(action, tokens, index); }
+                    	            );
+                    	            contextParams = getContextParams$1(tokens);
+                    	        }
+                    	    });
                     	}
                     
                     	/**
@@ -20821,7 +19772,7 @@
                     	function Bidi(baseDir) {
                     	    this.baseDir = baseDir || 'ltr';
                     	    this.tokenizer = new Tokenizer();
-                    	    this.features = [];
+                    	    this.featuresTags = {};
                     	}
                     
                     	/**
@@ -20838,6 +19789,7 @@
                     	 * arabic sentence check for adjusting arabic layout
                     	 */
                     	Bidi.prototype.contextChecks = ({
+                    	    latinWordCheck: latinWordCheck,
                     	    arabicWordCheck: arabicWordCheck,
                     	    arabicSentenceCheck: arabicSentenceCheck
                     	});
@@ -20845,24 +19797,10 @@
                     	/**
                     	 * Register arabic word check
                     	 */
-                    	function registerArabicWordCheck() {
-                    	    var checks = this.contextChecks.arabicWordCheck;
+                    	function registerContextChecker(checkId) {
+                    	    var check = this.contextChecks[(checkId + "Check")];
                     	    return this.tokenizer.registerContextChecker(
-                    	        'arabicWord',
-                    	        checks.arabicWordStartCheck,
-                    	        checks.arabicWordEndCheck
-                    	    );
-                    	}
-                    
-                    	/**
-                    	 * Register arabic sentence check
-                    	 */
-                    	function registerArabicSentenceCheck() {
-                    	    var checks = this.contextChecks.arabicSentenceCheck;
-                    	    return this.tokenizer.registerContextChecker(
-                    	        'arabicSentence',
-                    	        checks.arabicSentenceStartCheck,
-                    	        checks.arabicSentenceEndCheck
+                    	        checkId, check.startCheck, check.endCheck
                     	    );
                     	}
                     
@@ -20871,8 +19809,9 @@
                     	 * tokenize text input
                     	 */
                     	function tokenizeText() {
-                    	    registerArabicWordCheck.call(this);
-                    	    registerArabicSentenceCheck.call(this);
+                    	    registerContextChecker.call(this, 'latinWord');
+                    	    registerContextChecker.call(this, 'arabicWord');
+                    	    registerContextChecker.call(this, 'arabicSentence');
                     	    return this.tokenizer.tokenize(this.text);
                     	}
                     
@@ -20895,39 +19834,41 @@
                     	}
                     
                     	/**
-                    	 * Subscribe arabic presentation form features
-                    	 * @param {feature} feature a feature to apply
+                    	 * Register supported features tags
+                    	 * @param {script} script script tag
+                    	 * @param {Array} tags features tags list
                     	 */
-                    	Bidi.prototype.subscribeArabicForms = function(feature) {
+                    	Bidi.prototype.registerFeatures = function (script, tags) {
                     	    var this$1 = this;
                     
-                    	    this.tokenizer.events.contextEnd.subscribe(
-                    	        function (contextName, range) {
-                    	            if (contextName === 'arabicWord') {
-                    	                return arabicPresentationForms.call(
-                    	                    this$1.tokenizer, range, feature
-                    	                );
-                    	            }
-                    	        }
+                    	    var supportedTags = tags.filter(
+                    	        function (tag) { return this$1.query.supports({script: script, tag: tag}); }
                     	    );
+                    	    if (!this.featuresTags.hasOwnProperty(script)) {
+                    	        this.featuresTags[script] = supportedTags;
+                    	    } else {
+                    	        this.featuresTags[script] =
+                    	        this.featuresTags[script].concat(supportedTags);
+                    	    }
                     	};
                     
                     	/**
-                    	 * Apply Gsub features
-                    	 * @param {feature} features a list of features
+                    	 * Apply GSUB features
+                    	 * @param {Array} tagsList a list of features tags
+                    	 * @param {string} script a script tag
+                    	 * @param {Font} font opentype font instance
                     	 */
-                    	Bidi.prototype.applyFeatures = function (features) {
+                    	Bidi.prototype.applyFeatures = function (font, features) {
                     	    var this$1 = this;
                     
-                    	    for (var i = 0; i < features.length; i++) {
-                    	        var feature = features[i];
-                    	        if (feature) {
-                    	            var script = feature.script;
-                    	            if (!this$1.features[script]) {
-                    	                this$1.features[script] = {};
-                    	            }
-                    	            this$1.features[script][feature.tag] = feature;
-                    	        }
+                    	    if (!font) { throw new Error(
+                    	        'No valid font was provided to apply features'
+                    	    ); }
+                    	    if (!this.query) { this.query = new FeatureQuery(font); }
+                    	    for (var f = 0; f < features.length; f++) {
+                    	        var feature = features[f];
+                    	        if (!this$1.query.supports({script: feature.script})) { continue; }
+                    	        this$1.registerFeatures(feature.script, feature.tags);
                     	    }
                     	};
                     
@@ -20959,7 +19900,8 @@
                     	function applyArabicPresentationForms() {
                     	    var this$1 = this;
                     
-                    	    if (!this.features.hasOwnProperty('arab')) { return; }
+                    	    var script = 'arab';
+                    	    if (!this.featuresTags.hasOwnProperty(script)) { return; }
                     	    checkGlyphIndexStatus.call(this);
                     	    var ranges = this.tokenizer.getContextRanges('arabicWord');
                     	    ranges.forEach(function (range) {
@@ -20973,14 +19915,57 @@
                     	function applyArabicRequireLigatures() {
                     	    var this$1 = this;
                     
-                    	    if (!this.features.hasOwnProperty('arab')) { return; }
-                    	    if (!this.features.arab.hasOwnProperty('rlig')) { return; }
+                    	    var script = 'arab';
+                    	    if (!this.featuresTags.hasOwnProperty(script)) { return; }
+                    	    var tags = this.featuresTags[script];
+                    	    if (tags.indexOf('rlig') === -1) { return; }
                     	    checkGlyphIndexStatus.call(this);
                     	    var ranges = this.tokenizer.getContextRanges('arabicWord');
                     	    ranges.forEach(function (range) {
                     	        arabicRequiredLigatures.call(this$1, range);
                     	    });
                     	}
+                    
+                    	/**
+                    	 * Apply required arabic ligatures
+                    	 */
+                    	function applyLatinLigatures() {
+                    	    var this$1 = this;
+                    
+                    	    var script = 'latn';
+                    	    if (!this.featuresTags.hasOwnProperty(script)) { return; }
+                    	    var tags = this.featuresTags[script];
+                    	    if (tags.indexOf('liga') === -1) { return; }
+                    	    checkGlyphIndexStatus.call(this);
+                    	    var ranges = this.tokenizer.getContextRanges('latinWord');
+                    	    ranges.forEach(function (range) {
+                    	        latinLigature.call(this$1, range);
+                    	    });
+                    	}
+                    
+                    	/**
+                    	 * Check if a context is registered
+                    	 * @param {string} contextId context id
+                    	 */
+                    	Bidi.prototype.checkContextReady = function (contextId) {
+                    	    return !!this.tokenizer.getContext(contextId);
+                    	};
+                    
+                    	/**
+                    	 * Apply features to registered contexts
+                    	 */
+                    	Bidi.prototype.applyFeaturesToContexts = function () {
+                    	    if (this.checkContextReady('arabicWord')) {
+                    	        applyArabicPresentationForms.call(this);
+                    	        applyArabicRequireLigatures.call(this);
+                    	    }
+                    	    if (this.checkContextReady('latinWord')) {
+                    	        applyLatinLigatures.call(this);
+                    	    }
+                    	    if (this.checkContextReady('arabicSentence')) {
+                    	        reverseArabicSentences.call(this);
+                    	    }
+                    	};
                     
                     	/**
                     	 * process text input
@@ -20990,9 +19975,7 @@
                     	    if (!this.text || this.text !== text) {
                     	        this.setText(text);
                     	        tokenizeText.call(this);
-                    	        applyArabicPresentationForms.call(this);
-                    	        applyArabicRequireLigatures.call(this);
-                    	        reverseArabicSentences.call(this);
+                    	        this.applyFeaturesToContexts();
                     	    }
                     	};
                     
@@ -21022,425 +20005,6 @@
                     	        indexes.push(Array.isArray(index) ? index[0] : index);
                     	    }
                     	    return indexes;
-                    	};
-                    
-                    	/**
-                    	 * Query a feature by some of it's properties to lookup a glyph substitution.
-                    	 */
-                    
-                    	// DEFAULT TEXT BASE DIRECTION
-                    	var BASE_DIR = 'ltr';
-                    
-                    	/**
-                    	 * Create feature query instance
-                    	 * @param {Font} font opentype font instance
-                    	 * @param {string} baseDir text base direction
-                    	 */
-                    	function FeatureQuery(font, baseDir) {
-                    	    this.font = font;
-                    	    this.features = {};
-                    	    BASE_DIR = !!baseDir ? baseDir : BASE_DIR;
-                    	}
-                    
-                    	/**
-                    	 * Create a new feature lookup
-                    	 * @param {string} tag feature tag
-                    	 * @param {feature} feature reference to feature at gsub table
-                    	 * @param {FeatureLookups} feature lookups associated with this feature
-                    	 * @param {string} script gsub script tag
-                    	 */
-                    	function Feature(tag, feature, featureLookups, script) {
-                    	    this.tag = tag;
-                    	    this.featureRef = feature;
-                    	    this.lookups = featureLookups.lookups;
-                    	    this.script = script;
-                    	}
-                    
-                    	/**
-                    	 * Create a coverage table lookup
-                    	 * @param {any} coverageTable gsub coverage table
-                    	 */
-                    	function Coverage$1(coverageTable) {
-                    	    this.table = coverageTable;
-                    	}
-                    
-                    	/**
-                    	 * Create a ligature set lookup
-                    	 * @param {any} ligatureSets gsub ligature set
-                    	 */
-                    	function LigatureSets(ligatureSets) {
-                    	    this.ligatureSets = ligatureSets;
-                    	}
-                    
-                    	/**
-                    	 * Lookup a glyph ligature
-                    	 * @param {ContextParams} contextParams context params to lookup
-                    	 * @param {number} ligSetIndex ligature set index at ligature sets
-                    	 */
-                    	LigatureSets.prototype.lookup = function (contextParams, ligSetIndex) {
-                    	    var ligatureSet = this.ligatureSets[ligSetIndex];
-                    	    var matchComponents = function (components, indexes) {
-                    	        if (components.length > indexes.length) { return null; }
-                    	        for (var c = 0; c < components.length; c++) {
-                    	            var component = components[c];
-                    	            var index = indexes[c];
-                    	            if (component !== index) { return false; }
-                    	        }
-                    	        return true;
-                    	    };
-                    	    for (var s = 0; s < ligatureSet.length; s++) {
-                    	        var ligSetItem = ligatureSet[s];
-                    	        var lookaheadIndexes = contextParams.lookahead.map(
-                    	            function (token) { return token.activeState.value; }
-                    	        );
-                    	        if (BASE_DIR === 'rtl') { lookaheadIndexes.reverse(); }
-                    	        var componentsMatch = matchComponents(
-                    	            ligSetItem.components, lookaheadIndexes
-                    	        );
-                    	        if (componentsMatch) { return ligSetItem; }
-                    	    }
-                    	    return null;
-                    	};
-                    
-                    	/**
-                    	 * Create a feature substitution
-                    	 * @param {any} lookups a reference to gsub lookups
-                    	 * @param {Lookuptable} lookupTable a feature lookup table
-                    	 * @param {any} subtable substitution table
-                    	 */
-                    	function Substitution$1(lookups, lookupTable, subtable) {
-                    	    this.lookups = lookups;
-                    	    this.subtable = subtable;
-                    	    this.lookupTable = lookupTable;
-                    	    if (subtable.hasOwnProperty('coverage')) {
-                    	        this.coverage = new Coverage$1(
-                    	            subtable.coverage
-                    	        );
-                    	    }
-                    	    if (subtable.hasOwnProperty('inputCoverage')) {
-                    	        this.inputCoverage = subtable.inputCoverage.map(
-                    	            function (table) { return new Coverage$1(table); }
-                    	        );
-                    	    }
-                    	    if (subtable.hasOwnProperty('backtrackCoverage')) {
-                    	        this.backtrackCoverage = subtable.backtrackCoverage.map(
-                    	            function (table) { return new Coverage$1(table); }
-                    	        );
-                    	    }
-                    	    if (subtable.hasOwnProperty('lookaheadCoverage')) {
-                    	        this.lookaheadCoverage = subtable.lookaheadCoverage.map(
-                    	            function (table) { return new Coverage$1(table); }
-                    	        );
-                    	    }
-                    	    if (subtable.hasOwnProperty('ligatureSets')) {
-                    	        this.ligatureSets = new LigatureSets(subtable.ligatureSets);
-                    	    }
-                    	}
-                    
-                    	/**
-                    	 * Create a lookup table lookup
-                    	 * @param {number} index table index at gsub lookups
-                    	 * @param {any} lookups a reference to gsub lookups
-                    	 */
-                    	function LookupTable(index, lookups) {
-                    	    this.index = index;
-                    	    this.subtables = lookups[index].subtables.map(
-                    	        function (subtable) { return new Substitution$1(
-                    	            lookups, lookups[index], subtable
-                    	        ); }
-                    	    );
-                    	}
-                    
-                    	function FeatureLookups(lookups, lookupListIndexes) {
-                    	    this.lookups = lookupListIndexes.map(
-                    	        function (index) { return new LookupTable(index, lookups); }
-                    	    );
-                    	}
-                    
-                    	/**
-                    	 * Lookup a lookup table subtables
-                    	 * @param {ContextParams} contextParams context params to lookup
-                    	 */
-                    	LookupTable.prototype.lookup = function (contextParams) {
-                    	    var this$1 = this;
-                    
-                    	    var substitutions = [];
-                    	    for (var i = 0; i < this.subtables.length; i++) {
-                    	        var subsTable = this$1.subtables[i];
-                    	        var substitution = subsTable.lookup(contextParams);
-                    	        if (substitution !== null || substitution.length) {
-                    	            substitutions = substitutions.concat(substitution);
-                    	        }
-                    	    }
-                    	    return substitutions;
-                    	};
-                    
-                    	/**
-                    	 * Handle a single substitution - format 2
-                    	 * @param {ContextParams} contextParams context params to lookup
-                    	 */
-                    	function singleSubstitutionFormat2(contextParams) {
-                    	    var glyphIndex = contextParams.current.activeState.value;
-                    	    glyphIndex = Array.isArray(glyphIndex) ? glyphIndex[0] : glyphIndex;
-                    	    var substituteIndex = this.coverage.lookup(glyphIndex);
-                    	    if (substituteIndex === -1) { return []; }
-                    	    return [this.subtable.substitute[substituteIndex]];
-                    	}
-                    
-                    	/**
-                    	 * Lookup a list of coverage tables
-                    	 * @param {any} coverageList a list of coverage tables
-                    	 * @param {any} contextParams context params to lookup
-                    	 */
-                    	function lookupCoverageList(coverageList, contextParams) {
-                    	    var lookupList = [];
-                    	    for (var i = 0; i < coverageList.length; i++) {
-                    	        var coverage = coverageList[i];
-                    	        var glyphIndex = contextParams.current.activeState.value;
-                    	        glyphIndex = Array.isArray(glyphIndex) ? glyphIndex[0] : glyphIndex;
-                    	        var lookupIndex = coverage.lookup(glyphIndex);
-                    	        if (lookupIndex !== -1) {
-                    	            lookupList.push(lookupIndex);
-                    	        }
-                    	    }
-                    	    if (lookupList.length !== coverageList.length) { return -1; }
-                    	    return lookupList;
-                    	}
-                    
-                    	/**
-                    	 * Handle chaining context substitution - format 3
-                    	 * @param {any} contextParams context params to lookup
-                    	 */
-                    	function chainingSubstitutionFormat3(contextParams) {
-                    	    var this$1 = this;
-                    
-                    	    var lookupsCount = (
-                    	        this.inputCoverage.length +
-                    	        this.lookaheadCoverage.length +
-                    	        this.backtrackCoverage.length
-                    	    );
-                    	    if (contextParams.context.length < lookupsCount) { return []; }
-                    	    // INPUT LOOKUP //
-                    	    var inputLookups = lookupCoverageList(
-                    	        this.inputCoverage, contextParams
-                    	    );
-                    	    if (inputLookups === -1) { return []; }
-                    	    // LOOKAHEAD LOOKUP //
-                    	    var lookaheadOffset = this.inputCoverage.length - 1;
-                    	    if (contextParams.lookahead.length < this.lookaheadCoverage.length) { return []; }
-                    	    var lookaheadContext = contextParams.lookahead.slice(lookaheadOffset);
-                    	    while (lookaheadContext.length && isTashkeelArabicChar(lookaheadContext[0].char)) {
-                    	        lookaheadContext.shift();
-                    	    }
-                    	    var lookaheadParams = new ContextParams(lookaheadContext, 0);
-                    	    var lookaheadLookups = lookupCoverageList(
-                    	        this.lookaheadCoverage, lookaheadParams
-                    	    );
-                    	    // BACKTRACK LOOKUP //
-                    	    var backtrackContext = [].concat(contextParams.backtrack);
-                    	    backtrackContext.reverse();
-                    	    while (backtrackContext.length && isTashkeelArabicChar(backtrackContext[0].char)) {
-                    	        backtrackContext.shift();
-                    	    }
-                    	    if (backtrackContext.length < this.backtrackCoverage.length) { return []; }
-                    	    var backtrackParams = new ContextParams(backtrackContext, 0);
-                    	    var backtrackLookups = lookupCoverageList(
-                    	        this.backtrackCoverage, backtrackParams
-                    	    );
-                    	    var contextRulesMatch = (
-                    	        inputLookups.length === this.inputCoverage.length &&
-                    	        lookaheadLookups.length === this.lookaheadCoverage.length &&
-                    	        backtrackLookups.length === this.backtrackCoverage.length
-                    	    );
-                    	    var substitutions = [];
-                    	    if (contextRulesMatch) {
-                    	        var lookupRecords = this.subtable.lookupRecords;
-                    	        for (var i = 0; i < lookupRecords.length; i++) {
-                    	            var lookupRecord = lookupRecords[i];
-                    	            for (var j = 0; j < inputLookups.length; j++) {
-                    	                var inputContext = new ContextParams([contextParams.get(j)], 0);
-                    	                var lookupIndex = lookupRecord.lookupListIndex;
-                    	                var lookupTable = new LookupTable(lookupIndex, this$1.lookups);
-                    	                var lookup = lookupTable.lookup(inputContext);
-                    	                substitutions = substitutions.concat(lookup);
-                    	            }
-                    	        }
-                    	    }
-                    	    return substitutions;
-                    	}
-                    
-                    	/**
-                    	 * Handle ligature substitution - format 1
-                    	 * @param {any} contextParams context params to lookup
-                    	 */
-                    	function ligatureSubstitutionFormat1(contextParams) {
-                    	    // COVERAGE LOOKUP //
-                    	    var glyphIndex = contextParams.current.activeState.value;
-                    	    var ligSetIndex = this.coverage.lookup(glyphIndex);
-                    	    if (ligSetIndex === -1) { return []; }
-                    	    // COMPONENTS LOOKUP * note that components is logically ordered
-                    	    var ligGlyphs = this.ligatureSets.lookup(contextParams, ligSetIndex);
-                    	    return ligGlyphs ? [ligGlyphs] : [];
-                    	}
-                    
-                    	/**
-                    	 * [ LOOKUP TYPES ]
-                    	 * -------------------------------
-                    	 * Single                        1;
-                    	 * Multiple                      2;
-                    	 * Alternate                     3;
-                    	 * Ligature                      4;
-                    	 * Context                       5;
-                    	 * ChainingContext               6;
-                    	 * ExtensionSubstitution         7;
-                    	 * ReverseChainingContext        8;
-                    	 * -------------------------------
-                    	 * @param {any} contextParams context params to lookup
-                    	 */
-                    	Substitution$1.prototype.lookup = function (contextParams) {
-                    	    var substitutions = [];
-                    	    var lookupType = this.lookupTable.lookupType;
-                    	    var substFormat = this.subtable.substFormat;
-                    	    if (lookupType === 1 && substFormat === 2) {
-                    	        var substitution = singleSubstitutionFormat2.call(this, contextParams);
-                    	        if (substitution.length > 0) {
-                    	            substitutions.push({ id: 12, substitution: substitution });
-                    	        }
-                    	    }
-                    	    if (lookupType === 6 && substFormat === 3) {
-                    	        var substitution$1 = chainingSubstitutionFormat3.call(this, contextParams);
-                    	        if (substitution$1.length > 0) {
-                    	            substitutions.push({ id: 63, substitution: substitution$1 });
-                    	        }
-                    	    }
-                    	    if (lookupType === 4 && substFormat === 1) {
-                    	        var substitution$2 = ligatureSubstitutionFormat1.call(this, contextParams);
-                    	        if (substitution$2.length > 0) {
-                    	            substitutions.push({ id: 41, substitution: substitution$2 });
-                    	        }
-                    	    }
-                    	    return substitutions;
-                    	};
-                    
-                    	/**
-                    	 * Lookup a coverage table
-                    	 * @param {number} glyphIndex to lookup
-                    	 */
-                    	Coverage$1.prototype.lookup = function (glyphIndex) {
-                    	    if (!glyphIndex) { return -1; }
-                    	    switch (this.table.format) {
-                    	        case 1:
-                    	            return this.table.glyphs.indexOf(glyphIndex);
-                    
-                    	        case 2:
-                    	            var ranges = this.table.ranges;
-                    	            for (var i = 0; i < ranges.length; i++) {
-                    	                var range = ranges[i];
-                    	                if (glyphIndex >= range.start && glyphIndex <= range.end) {
-                    	                    var offset = glyphIndex - range.start;
-                    	                    return range.index + offset;
-                    	                }
-                    	            }
-                    	            break;
-                    	        default:
-                    	            return -1; // not found
-                    	    }
-                    	    return -1;
-                    	};
-                    
-                    	/**
-                    	 * Lookup a feature for a substitution or more
-                    	 * @param {any} contextParams context params to lookup
-                    	 */
-                    	Feature.prototype.lookup = function(contextParams) {
-                    	    var this$1 = this;
-                    
-                    	    var lookups = [];
-                    	    for (var i = 0; i < this.lookups.length; i++) {
-                    	        var lookupTable = this$1.lookups[i];
-                    	        var lookup = lookupTable.lookup(contextParams);
-                    	        if (lookup !== null || lookup.length) {
-                    	            lookups = lookups.concat(lookup);
-                    	        }
-                    	    }
-                    	    return lookups;
-                    	};
-                    
-                    	/**
-                    	 * Get feature indexes of a specific script
-                    	 * @param {string} scriptTag script tag
-                    	 */
-                    	FeatureQuery.prototype.getScriptFeaturesIndexes = function(scriptTag) {
-                    	    if (!scriptTag) { return []; }
-                    	    var tables = this.font.tables;
-                    	    if (!tables.gsub) { return []; }
-                    	    var scripts = this.font.tables.gsub.scripts;
-                    	    for (var i = 0; i < scripts.length; i++) {
-                    	        var script = scripts[i];
-                    	        if (script.tag === scriptTag) {
-                    	            var defaultLangSys = script.script.defaultLangSys;
-                    	            return defaultLangSys.featureIndexes;
-                    	        } else {
-                    	            var langSysRecords = script.langSysRecords;
-                    	            if (!!langSysRecords) {
-                    	                for (var j = 0; j < langSysRecords.length; j++) {
-                    	                    var langSysRecord = langSysRecords[j];
-                    	                    if (langSysRecord.tag === scriptTag) {
-                    	                        var langSys = langSysRecord.langSys;
-                    	                        return langSys.featureIndexes;
-                    	                    }
-                    	                }
-                    	            }
-                    	        }
-                    	    }
-                    	    return [];
-                    	};
-                    
-                    	/**
-                    	 * Map a feature tag to a gsub feature
-                    	 * @param {any} features gsub features
-                    	 * @param {*} scriptTag script tag
-                    	 */
-                    	FeatureQuery.prototype.mapTagsToFeatures = function (features, scriptTag) {
-                    	    var this$1 = this;
-                    
-                    	    var tags = {};
-                    	    for (var i = 0; i < features.length; i++) {
-                    	        var feature = features[i].feature;
-                    	        var tag = features[i].tag;
-                    	        var lookups = this$1.font.tables.gsub.lookups;
-                    	        var featureLookups = new FeatureLookups(lookups, feature.lookupListIndexes);
-                    	        tags[tag] = new Feature(tag, feature, featureLookups, scriptTag);
-                    	    }
-                    	    this.features[scriptTag].tags = tags;
-                    	};
-                    
-                    	/**
-                    	 * Get features of a specific script
-                    	 * @param {string} scriptTag script tag
-                    	 */
-                    	FeatureQuery.prototype.getScriptFeatures = function (scriptTag) {
-                    	    var features = this.features[scriptTag];
-                    	    if (this.features.hasOwnProperty(scriptTag)) { return features; }
-                    	    var featuresIndexes = this.getScriptFeaturesIndexes(scriptTag);
-                    	    if (!featuresIndexes) { return null; }
-                    	    var gsub = this.font.tables.gsub;
-                    	    features = featuresIndexes.map(function (index) { return gsub.features[index]; });
-                    	    this.features[scriptTag] = features;
-                    	    this.mapTagsToFeatures(features, scriptTag);
-                    	    return features;
-                    	};
-                    
-                    	/**
-                    	 * Query a feature by it's properties
-                    	 * @param {any} query an object that describes the properties of a query
-                    	 */
-                    	FeatureQuery.prototype.getFeature = function (query) {
-                    	    if (!this.font) { return { FAIL: "No font was found"}; }
-                    	    if (!this.features.hasOwnProperty(query.script)) {
-                    	        this.getScriptFeatures(query.script);
-                    	    }
-                    	    return this.features[query.script].tags[query.tag] || null;
                     	};
                     
                     	// The Font object
@@ -21529,6 +20093,10 @@
                     	    this.substitution = new Substitution(this);
                     	    this.tables = this.tables || {};
                     
+                    	    // needed for low memory mode only.
+                    	    this._push = null;
+                    	    this._hmtxTableData = {};
+                    
                     	    Object.defineProperty(this, 'hinting', {
                     	        get: function() {
                     	            if (this._hinting) { return this._hinting; }
@@ -21578,6 +20146,24 @@
                     	};
                     
                     	/**
+                    	 * Update features
+                    	 * @param {any} options features options
+                    	 */
+                    	Font.prototype.updateFeatures = function (options) {
+                    	    // TODO: update all features options not only 'latn'.
+                    	    return this.defaultRenderOptions.features.map(function (feature) {
+                    	        if (feature.script === 'latn') {
+                    	            return {
+                    	                script: 'latn',
+                    	                tags: feature.tags.filter(function (tag) { return options[tag]; })
+                    	            };
+                    	        } else {
+                    	            return feature;
+                    	        }
+                    	    });
+                    	};
+                    
+                    	/**
                     	 * Convert the given text to a list of Glyph objects.
                     	 * Note that there is no strict one-to-one mapping between characters and
                     	 * glyphs, so the list of returned glyphs can be larger or smaller than the
@@ -21589,7 +20175,6 @@
                     	Font.prototype.stringToGlyphs = function(s, options) {
                     	    var this$1 = this;
                     
-                    	    options = options || this.defaultRenderOptions;
                     
                     	    var bidi = new Bidi();
                     
@@ -21597,45 +20182,22 @@
                     	    var charToGlyphIndexMod = function (token) { return this$1.charToGlyphIndex(token.char); };
                     	    bidi.registerModifier('glyphIndex', null, charToGlyphIndexMod);
                     
-                    	    var arabFeatureQuery = new FeatureQuery(this);
-                    	    var arabFeatures = ['init', 'medi', 'fina', 'rlig'];
-                    	    bidi.applyFeatures(
-                    	        arabFeatures.map(function (tag) {
-                    	            var query = { tag: tag, script: 'arab' };
-                    	            var feature = arabFeatureQuery.getFeature(query);
-                    	            if (!!feature) { return feature; }
-                    	        })
-                    	    );
+                    	    // roll-back to default features
+                    	    var features = options ?
+                    	    this.updateFeatures(options.features) :
+                    	    this.defaultRenderOptions.features;
+                    
+                    	    bidi.applyFeatures(this, features);
+                    
                     	    var indexes = bidi.getTextGlyphs(s);
                     
                     	    var length = indexes.length;
                     
-                    	    // Apply substitutions on glyph indexes
-                    	    if (options.features) {
-                    	        var script = options.script || this.substitution.getDefaultScriptName();
-                    	        var manyToOne = [];
-                    	        if (options.features.liga) { manyToOne = manyToOne.concat(this.substitution.getFeature('liga', script, options.language)); }
-                    	        if (options.features.rlig) { manyToOne = manyToOne.concat(this.substitution.getFeature('rlig', script, options.language)); }
-                    	        for (var i = 0; i < length; i += 1) {
-                    	            for (var j = 0; j < manyToOne.length; j++) {
-                    	                var ligature = manyToOne[j];
-                    	                var components = ligature.sub;
-                    	                var compCount = components.length;
-                    	                var k = 0;
-                    	                while (k < compCount && components[k] === indexes[i + k]) { k++; }
-                    	                if (k === compCount) {
-                    	                    indexes.splice(i, compCount, ligature.by);
-                    	                    length = length - compCount + 1;
-                    	                }
-                    	            }
-                    	        }
-                    	    }
-                    
                     	    // convert glyph indexes to glyph objects
                     	    var glyphs = new Array(length);
                     	    var notdef = this.glyphs.get(0);
-                    	    for (var i$1 = 0; i$1 < length; i$1 += 1) {
-                    	        glyphs[i$1] = this$1.glyphs.get(indexes[i$1]) || notdef;
+                    	    for (var i = 0; i < length; i += 1) {
+                    	        glyphs[i] = this$1.glyphs.get(indexes[i]) || notdef;
                     	    }
                     	    return glyphs;
                     	};
@@ -21690,7 +20252,7 @@
                     	    leftGlyph = leftGlyph.index || leftGlyph;
                     	    rightGlyph = rightGlyph.index || rightGlyph;
                     	    var gposKerning = this.position.defaultKerningTables;
-                    	    if (gposKerning) { 
+                    	    if (gposKerning) {
                     	        return this.position.getKerningValue(gposKerning, leftGlyph, rightGlyph);
                     	    }
                     	    // "kern" table
@@ -21710,10 +20272,14 @@
                     	 */
                     	Font.prototype.defaultRenderOptions = {
                     	    kerning: true,
-                    	    features: {
-                    	        liga: true,
-                    	        rlig: true
-                    	    }
+                    	    features: [
+                    	        /**
+                    	         * these 4 features are required to render Arabic text properly
+                    	         * and shouldn't be turned off when rendering arabic text.
+                    	         */
+                    	        { script: 'arab', tags: ['init', 'medi', 'fina', 'rlig'] },
+                    	        { script: 'latn', tags: ['liga', 'rlig'] }
+                    	    ]
                     	};
                     
                     	/**
@@ -21732,7 +20298,7 @@
                     	    x = x !== undefined ? x : 0;
                     	    y = y !== undefined ? y : 0;
                     	    fontSize = fontSize !== undefined ? fontSize : 72;
-                    	    options = options || this.defaultRenderOptions;
+                    	    options = Object.assign({}, this.defaultRenderOptions, options);
                     	    var fontScale = 1 / this.unitsPerEm * fontSize;
                     	    var glyphs = this.stringToGlyphs(text, options);
                     	    var kerningLookups;
@@ -21890,8 +20456,7 @@
                     
                     	    function assertNamePresent(name) {
                     	        var englishName = _this.getEnglishName(name);
-                    	        assert(englishName && englishName.trim().length > 0,
-                    	               'No English ' + name + ' specified.');
+                    	        assert(englishName && englishName.trim().length > 0);
                     	    }
                     
                     	    // Identification information
@@ -21902,7 +20467,7 @@
                     	    assertNamePresent('version');
                     
                     	    // Dimension information
-                    	    assert(this.unitsPerEm > 0, 'No unitsPerEm specified.');
+                    	    assert(this.unitsPerEm > 0);
                     	};
                     
                     	/**
@@ -22496,9 +21061,12 @@
                     	 * Parse the OpenType file data (as an ArrayBuffer) and return a Font object.
                     	 * Throws an error if the font could not be parsed.
                     	 * @param  {ArrayBuffer}
+                    	 * @param  {Object} opt - options for parsing
                     	 * @return {opentype.Font}
                     	 */
-                    	function parseBuffer(buffer) {
+                    	function parseBuffer(buffer, opt) {
+                    	    opt = (opt === undefined || opt === null) ?  {} : opt;
+                    
                     	    var indexToLocFormat;
                     	    var ltagTable;
                     
@@ -22646,17 +21214,17 @@
                     	        var locaTable = uncompressTable(data, locaTableEntry);
                     	        var locaOffsets = loca.parse(locaTable.data, locaTable.offset, font.numGlyphs, shortVersion);
                     	        var glyfTable = uncompressTable(data, glyfTableEntry);
-                    	        font.glyphs = glyf.parse(glyfTable.data, glyfTable.offset, locaOffsets, font);
+                    	        font.glyphs = glyf.parse(glyfTable.data, glyfTable.offset, locaOffsets, font, opt);
                     	    } else if (cffTableEntry) {
                     	        var cffTable = uncompressTable(data, cffTableEntry);
-                    	        cff.parse(cffTable.data, cffTable.offset, font);
+                    	        cff.parse(cffTable.data, cffTable.offset, font, opt);
                     	    } else {
                     	        throw new Error('Font doesn\'t contain TrueType or CFF outlines.');
                     	    }
                     
                     	    var hmtxTable = uncompressTable(data, hmtxTableEntry);
-                    	    hmtx.parse(hmtxTable.data, hmtxTable.offset, font.numberOfHMetrics, font.numGlyphs, font.glyphs);
-                    	    addGlyphNames(font);
+                    	    hmtx.parse(font, hmtxTable.data, hmtxTable.offset, font.numberOfHMetrics, font.numGlyphs, font.glyphs, opt);
+                    	    addGlyphNames(font, opt);
                     
                     	    if (kernTableEntry) {
                     	        var kernTable = uncompressTable(data, kernTableEntry);
@@ -22700,20 +21268,27 @@
                     	 * @param  {string} url - The URL of the font to load.
                     	 * @param  {Function} callback - The callback.
                     	 */
-                    	function load(url, callback) {
-                    	    var isNode$$1 = typeof window === 'undefined';
-                    	    var loadFn = isNode$$1 ? loadFromFile : loadFromUrl;
-                    	    loadFn(url, function(err, arrayBuffer) {
-                    	        if (err) {
-                    	            return callback(err);
-                    	        }
-                    	        var font;
-                    	        try {
-                    	            font = parseBuffer(arrayBuffer);
-                    	        } catch (e) {
-                    	            return callback(e, null);
-                    	        }
-                    	        return callback(null, font);
+                    	function load(url, callback, opt) {
+                    	    var isNode = typeof window === 'undefined';
+                    	    var loadFn = isNode ? loadFromFile : loadFromUrl;
+                    
+                    	    return new Promise(function (resolve) {
+                    	        loadFn(url, function(err, arrayBuffer) {
+                    	            if (err) {
+                    	                return callback(err);
+                    	            }
+                    	            var font;
+                    	            try {
+                    	                font = parseBuffer(arrayBuffer, opt);
+                    	            } catch (e) {
+                    	                return callback(e, null);
+                    	            }
+                    	            if (callback) {
+                    	                return callback(null, font);
+                    	            } else {
+                    	                resolve(font);
+                    	            }
+                    	        });
                     	    });
                     	}
                     
@@ -22722,22 +21297,23 @@
                     	 * When done, returns the font object or throws an error.
                     	 * @alias opentype.loadSync
                     	 * @param  {string} url - The URL of the font to load.
+                    	 * @param  {Object} opt - opt.lowMemory
                     	 * @return {opentype.Font}
                     	 */
-                    	function loadSync(url) {
+                    	function loadSync(url, opt) {
                     	    var fs = require('fs');
                     	    var buffer = fs.readFileSync(url);
-                    	    return parseBuffer(nodeBufferToArrayBuffer(buffer));
+                    	    return parseBuffer(nodeBufferToArrayBuffer(buffer), opt);
                     	}
                     
+                    	exports.BoundingBox = BoundingBox;
                     	exports.Font = Font;
                     	exports.Glyph = Glyph;
                     	exports.Path = Path;
-                    	exports.BoundingBox = BoundingBox;
                     	exports._parse = parse;
-                    	exports.parse = parseBuffer;
                     	exports.load = load;
                     	exports.loadSync = loadSync;
+                    	exports.parse = parseBuffer;
                     
                     	Object.defineProperty(exports, '__esModule', { value: true });
                     
@@ -23231,6 +21807,751 @@
                                 (equals(p1, q2) && equals(p2, q1))) return true;
                             return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
                                 area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+                        }
+                    
+                        // check if a polygon diagonal intersects any polygon segments
+                        function intersectsPolygon(a, b) {
+                            var p = a;
+                            do {
+                                if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                                        intersects(p, p.next, a, b)) return true;
+                                p = p.next;
+                            } while (p !== a);
+                    
+                            return false;
+                        }
+                    
+                        // check if a polygon diagonal is locally inside the polygon
+                        function locallyInside(a, b) {
+                            return area(a.prev, a, a.next) < 0 ?
+                                area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+                                area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+                        }
+                    
+                        // check if the middle point of a polygon diagonal is inside the polygon
+                        function middleInside(a, b) {
+                            var p = a,
+                                inside = false,
+                                px = (a.x + b.x) / 2,
+                                py = (a.y + b.y) / 2;
+                            do {
+                                if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
+                                        (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+                                    inside = !inside;
+                                p = p.next;
+                            } while (p !== a);
+                    
+                            return inside;
+                        }
+                    
+                        // link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+                        // if one belongs to the outer ring and another to a hole, it merges it into a single ring
+                        function splitPolygon(a, b) {
+                            var a2 = new Node(a.i, a.x, a.y),
+                                b2 = new Node(b.i, b.x, b.y),
+                                an = a.next,
+                                bp = b.prev;
+                    
+                            a.next = b;
+                            b.prev = a;
+                    
+                            a2.next = an;
+                            an.prev = a2;
+                    
+                            b2.next = a2;
+                            a2.prev = b2;
+                    
+                            bp.next = b2;
+                            b2.prev = bp;
+                    
+                            return b2;
+                        }
+                    
+                        // create a node and optionally link it with previous one (in a circular doubly linked list)
+                        function insertNode(i, x, y, last) {
+                            var p = new Node(i, x, y);
+                    
+                            if (!last) {
+                                p.prev = p;
+                                p.next = p;
+                    
+                            } else {
+                                p.next = last.next;
+                                p.prev = last;
+                                last.next.prev = p;
+                                last.next = p;
+                            }
+                            return p;
+                        }
+                    
+                        function removeNode(p) {
+                            p.next.prev = p.prev;
+                            p.prev.next = p.next;
+                    
+                            if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+                            if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+                        }
+                    
+                        function Node(i, x, y) {
+                            // vertex index in coordinates array
+                            this.i = i;
+                    
+                            // vertex coordinates
+                            this.x = x;
+                            this.y = y;
+                    
+                            // previous and next vertex nodes in a polygon ring
+                            this.prev = null;
+                            this.next = null;
+                    
+                            // z-order curve value
+                            this.z = null;
+                    
+                            // previous and next nodes in z-order
+                            this.prevZ = null;
+                            this.nextZ = null;
+                    
+                            // indicates whether this is a steiner point
+                            this.steiner = false;
+                        }
+                    
+                        // // return a percentage difference between the polygon area and its triangulation area;
+                        // // used to verify correctness of triangulation
+                        // earcut.deviation = function (data, holeIndices, dim, triangles) {
+                        //     var hasHoles = holeIndices && holeIndices.length;
+                        //     var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+                    
+                        //     var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+                        //     if (hasHoles) {
+                        //         for (var i = 0, len = holeIndices.length; i < len; i++) {
+                        //             var start = holeIndices[i] * dim;
+                        //             var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+                        //             polygonArea -= Math.abs(signedArea(data, start, end, dim));
+                        //         }
+                        //     }
+                    
+                        //     var trianglesArea = 0;
+                        //     for (i = 0; i < triangles.length; i += 3) {
+                        //         var a = triangles[i] * dim;
+                        //         var b = triangles[i + 1] * dim;
+                        //         var c = triangles[i + 2] * dim;
+                        //         trianglesArea += Math.abs(
+                        //             (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
+                        //             (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
+                        //     }
+                    
+                        //     return polygonArea === 0 && trianglesArea === 0 ? 0 :
+                        //         Math.abs((trianglesArea - polygonArea) / polygonArea);
+                        // };
+                    
+                        function signedArea(data, start, end, dim) {
+                            var sum = 0;
+                            for (var i = start, j = end - dim; i < end; i += dim) {
+                                sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+                                j = i;
+                            }
+                            return sum;
+                        }
+                    
+                        // // turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+                        // earcut.flatten = function (data) {
+                        //     var dim = data[0][0].length,
+                        //         result = {vertices: [], holes: [], dimensions: dim},
+                        //         holeIndex = 0;
+                    
+                        //     for (var i = 0; i < data.length; i++) {
+                        //         for (var j = 0; j < data[i].length; j++) {
+                        //             for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+                        //         }
+                        //         if (i > 0) {
+                        //             holeIndex += data[i - 1].length;
+                        //             result.holes.push(holeIndex);
+                        //         }
+                        //     }
+                        //     return result;
+                        // };
+                    };
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    this.earcut2 = function(points,holeIndices){
+                    	//https://github.com/mapbox/earcut (10/03/2020)
+                    
+                        var outputPoints = [];
+                        earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
+                        return outputPoints;
+                    
+                        function earcut(data, holeIndices, dim) {
+                    
+                            dim = dim || 2;
+                    
+                            var hasHoles = holeIndices && holeIndices.length,
+                                outerLen = hasHoles ? holeIndices[0] * dim : data.length,
+                                outerNode = linkedList(data, 0, outerLen, dim, true),
+                                triangles = [];
+                    
+                            if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+                    
+                            var minX, minY, maxX, maxY, x, y, invSize;
+                    
+                            if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+                    
+                            // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+                            if (data.length > 80 * dim) {
+                                minX = maxX = data[0];
+                                minY = maxY = data[1];
+                    
+                                for (var i = dim; i < outerLen; i += dim) {
+                                    x = data[i];
+                                    y = data[i + 1];
+                                    if (x < minX) minX = x;
+                                    if (y < minY) minY = y;
+                                    if (x > maxX) maxX = x;
+                                    if (y > maxY) maxY = y;
+                                }
+                    
+                                // minX, minY and invSize are later used to transform coords into integers for z-order calculation
+                                invSize = Math.max(maxX - minX, maxY - minY);
+                                invSize = invSize !== 0 ? 1 / invSize : 0;
+                            }
+                    
+                            earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
+                    
+                            return triangles;
+                        }
+                    
+                        // create a circular doubly linked list from polygon points in the specified winding order
+                        function linkedList(data, start, end, dim, clockwise) {
+                            var i, last;
+                    
+                            if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+                                for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+                            } else {
+                                for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+                            }
+                    
+                            if (last && equals(last, last.next)) {
+                                removeNode(last);
+                                last = last.next;
+                            }
+                    
+                            return last;
+                        }
+                    
+                        // eliminate colinear or duplicate points
+                        function filterPoints(start, end) {
+                            if (!start) return start;
+                            if (!end) end = start;
+                    
+                            var p = start,
+                                again;
+                            do {
+                                again = false;
+                    
+                                if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+                                    removeNode(p);
+                                    p = end = p.prev;
+                                    if (p === p.next) break;
+                                    again = true;
+                    
+                                } else {
+                                    p = p.next;
+                                }
+                            } while (again || p !== end);
+                    
+                            return end;
+                        }
+                    
+                        // main ear slicing loop which triangulates a polygon (given as a linked list)
+                        function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
+                            if (!ear) return;
+                    
+                            // interlink polygon nodes in z-order
+                            if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+                    
+                            var stop = ear,
+                                prev, next;
+                    
+                            // iterate through ears, slicing them one by one
+                            while (ear.prev !== ear.next) {
+                                prev = ear.prev;
+                                next = ear.next;
+                    
+                                if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+                                    // cut off the triangle
+                                    triangles.push(prev.i / dim);
+                                    triangles.push(ear.i / dim);
+                                    triangles.push(next.i / dim);
+                    
+                                    removeNode(ear);
+                    
+                                    // skipping the next vertex leads to less sliver triangles
+                                    ear = next.next;
+                                    stop = next.next;
+                    
+                                    continue;
+                                }
+                    
+                                ear = next;
+                    
+                                // if we looped through the whole remaining polygon and can't find any more ears
+                                if (ear === stop) {
+                                    // try filtering points and slicing again
+                                    if (!pass) {
+                                        earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+                    
+                                    // if this didn't work, try curing all small self-intersections locally
+                                    } else if (pass === 1) {
+                                        ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
+                                        earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+                    
+                                    // as a last resort, try splitting the remaining polygon into two
+                                    } else if (pass === 2) {
+                                        splitEarcut(ear, triangles, dim, minX, minY, invSize);
+                                    }
+                    
+                                    break;
+                                }
+                            }
+                        }
+                    
+                        // check whether a polygon node forms a valid ear with adjacent nodes
+                        function isEar(ear) {
+                            var a = ear.prev,
+                                b = ear,
+                                c = ear.next;
+                    
+                            if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+                    
+                            // now make sure we don't have other points inside the potential ear
+                            var p = ear.next.next;
+                    
+                            while (p !== ear.prev) {
+                                if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                    area(p.prev, p, p.next) >= 0) return false;
+                                p = p.next;
+                            }
+                    
+                            return true;
+                        }
+                    
+                        function isEarHashed(ear, minX, minY, invSize) {
+                            var a = ear.prev,
+                                b = ear,
+                                c = ear.next;
+                    
+                            if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+                    
+                            // triangle bbox; min & max are calculated like this for speed
+                            var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
+                                minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
+                                maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
+                                maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
+                    
+                            // z-order range for the current triangle bbox;
+                            var minZ = zOrder(minTX, minTY, minX, minY, invSize),
+                                maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
+                    
+                            var p = ear.prevZ,
+                                n = ear.nextZ;
+                    
+                            // look for points inside the triangle in both directions
+                            while (p && p.z >= minZ && n && n.z <= maxZ) {
+                                if (p !== ear.prev && p !== ear.next &&
+                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                    area(p.prev, p, p.next) >= 0) return false;
+                                p = p.prevZ;
+                    
+                                if (n !== ear.prev && n !== ear.next &&
+                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+                                    area(n.prev, n, n.next) >= 0) return false;
+                                n = n.nextZ;
+                            }
+                    
+                            // look for remaining points in decreasing z-order
+                            while (p && p.z >= minZ) {
+                                if (p !== ear.prev && p !== ear.next &&
+                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                    area(p.prev, p, p.next) >= 0) return false;
+                                p = p.prevZ;
+                            }
+                    
+                            // look for remaining points in increasing z-order
+                            while (n && n.z <= maxZ) {
+                                if (n !== ear.prev && n !== ear.next &&
+                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+                                    area(n.prev, n, n.next) >= 0) return false;
+                                n = n.nextZ;
+                            }
+                    
+                            return true;
+                        }
+                    
+                        // go through all polygon nodes and cure small local self-intersections
+                        function cureLocalIntersections(start, triangles, dim) {
+                            var p = start;
+                            do {
+                                var a = p.prev,
+                                    b = p.next.next;
+                    
+                                if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+                    
+                                    triangles.push(a.i / dim);
+                                    triangles.push(p.i / dim);
+                                    triangles.push(b.i / dim);
+                    
+                                    // remove two nodes involved
+                                    removeNode(p);
+                                    removeNode(p.next);
+                    
+                                    p = start = b;
+                                }
+                                p = p.next;
+                            } while (p !== start);
+                    
+                            return filterPoints(p);
+                        }
+                    
+                        // try splitting polygon into two and triangulate them independently
+                        function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+                            // look for a valid diagonal that divides the polygon into two
+                            var a = start;
+                            do {
+                                var b = a.next.next;
+                                while (b !== a.prev) {
+                                    if (a.i !== b.i && isValidDiagonal(a, b)) {
+                                        // split the polygon in two by the diagonal
+                                        var c = splitPolygon(a, b);
+                    
+                                        // filter colinear points around the cuts
+                                        a = filterPoints(a, a.next);
+                                        c = filterPoints(c, c.next);
+                    
+                                        // run earcut on each half
+                                        earcutLinked(a, triangles, dim, minX, minY, invSize);
+                                        earcutLinked(c, triangles, dim, minX, minY, invSize);
+                                        return;
+                                    }
+                                    b = b.next;
+                                }
+                                a = a.next;
+                            } while (a !== start);
+                        }
+                    
+                        // link every hole into the outer loop, producing a single-ring polygon without holes
+                        function eliminateHoles(data, holeIndices, outerNode, dim) {
+                            var queue = [],
+                                i, len, start, end, list;
+                    
+                            for (i = 0, len = holeIndices.length; i < len; i++) {
+                                start = holeIndices[i] * dim;
+                                end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+                                list = linkedList(data, start, end, dim, false);
+                                if (list === list.next) list.steiner = true;
+                                queue.push(getLeftmost(list));
+                            }
+                    
+                            queue.sort(compareX);
+                    
+                            // process holes from left to right
+                            for (i = 0; i < queue.length; i++) {
+                                eliminateHole(queue[i], outerNode);
+                                outerNode = filterPoints(outerNode, outerNode.next);
+                            }
+                    
+                            return outerNode;
+                        }
+                    
+                        function compareX(a, b) {
+                            return a.x - b.x;
+                        }
+                    
+                        // find a bridge between vertices that connects hole with an outer ring and and link it
+                        function eliminateHole(hole, outerNode) {
+                            outerNode = findHoleBridge(hole, outerNode);
+                            if (outerNode) {
+                                var b = splitPolygon(outerNode, hole);
+                    
+                                // filter collinear points around the cuts
+                                filterPoints(outerNode, outerNode.next);
+                                filterPoints(b, b.next);
+                            }
+                        }
+                    
+                        // David Eberly's algorithm for finding a bridge between hole and outer polygon
+                        function findHoleBridge(hole, outerNode) {
+                            var p = outerNode,
+                                hx = hole.x,
+                                hy = hole.y,
+                                qx = -Infinity,
+                                m;
+                    
+                            // find a segment intersected by a ray from the hole's leftmost point to the left;
+                            // segment's endpoint with lesser x will be potential connection point
+                            do {
+                                if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+                                    var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+                                    if (x <= hx && x > qx) {
+                                        qx = x;
+                                        if (x === hx) {
+                                            if (hy === p.y) return p;
+                                            if (hy === p.next.y) return p.next;
+                                        }
+                                        m = p.x < p.next.x ? p : p.next;
+                                    }
+                                }
+                                p = p.next;
+                            } while (p !== outerNode);
+                    
+                            if (!m) return null;
+                    
+                            if (hx === qx) return m; // hole touches outer segment; pick leftmost endpoint
+                    
+                            // look for points inside the triangle of hole point, segment intersection and endpoint;
+                            // if there are no points found, we have a valid connection;
+                            // otherwise choose the point of the minimum angle with the ray as connection point
+                    
+                            var stop = m,
+                                mx = m.x,
+                                my = m.y,
+                                tanMin = Infinity,
+                                tan;
+                    
+                            p = m;
+                    
+                            do {
+                                if (hx >= p.x && p.x >= mx && hx !== p.x &&
+                                        pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+                    
+                                    tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+                    
+                                    if (locallyInside(p, hole) &&
+                                        (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
+                                        m = p;
+                                        tanMin = tan;
+                                    }
+                                }
+                    
+                                p = p.next;
+                            } while (p !== stop);
+                    
+                            return m;
+                        }
+                    
+                        // whether sector in vertex m contains sector in vertex p in the same coordinates
+                        function sectorContainsSector(m, p) {
+                            return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
+                        }
+                    
+                        // interlink polygon nodes in z-order
+                        function indexCurve(start, minX, minY, invSize) {
+                            var p = start;
+                            do {
+                                if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+                                p.prevZ = p.prev;
+                                p.nextZ = p.next;
+                                p = p.next;
+                            } while (p !== start);
+                    
+                            p.prevZ.nextZ = null;
+                            p.prevZ = null;
+                    
+                            sortLinked(p);
+                        }
+                    
+                        // Simon Tatham's linked list merge sort algorithm
+                        // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+                        function sortLinked(list) {
+                            var i, p, q, e, tail, numMerges, pSize, qSize,
+                                inSize = 1;
+                    
+                            do {
+                                p = list;
+                                list = null;
+                                tail = null;
+                                numMerges = 0;
+                    
+                                while (p) {
+                                    numMerges++;
+                                    q = p;
+                                    pSize = 0;
+                                    for (i = 0; i < inSize; i++) {
+                                        pSize++;
+                                        q = q.nextZ;
+                                        if (!q) break;
+                                    }
+                                    qSize = inSize;
+                    
+                                    while (pSize > 0 || (qSize > 0 && q)) {
+                    
+                                        if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
+                                            e = p;
+                                            p = p.nextZ;
+                                            pSize--;
+                                        } else {
+                                            e = q;
+                                            q = q.nextZ;
+                                            qSize--;
+                                        }
+                    
+                                        if (tail) tail.nextZ = e;
+                                        else list = e;
+                    
+                                        e.prevZ = tail;
+                                        tail = e;
+                                    }
+                    
+                                    p = q;
+                                }
+                    
+                                tail.nextZ = null;
+                                inSize *= 2;
+                    
+                            } while (numMerges > 1);
+                    
+                            return list;
+                        }
+                    
+                        // z-order of a point given coords and inverse of the longer side of data bbox
+                        function zOrder(x, y, minX, minY, invSize) {
+                            // coords are transformed into non-negative 15-bit integer range
+                            x = 32767 * (x - minX) * invSize;
+                            y = 32767 * (y - minY) * invSize;
+                    
+                            x = (x | (x << 8)) & 0x00FF00FF;
+                            x = (x | (x << 4)) & 0x0F0F0F0F;
+                            x = (x | (x << 2)) & 0x33333333;
+                            x = (x | (x << 1)) & 0x55555555;
+                    
+                            y = (y | (y << 8)) & 0x00FF00FF;
+                            y = (y | (y << 4)) & 0x0F0F0F0F;
+                            y = (y | (y << 2)) & 0x33333333;
+                            y = (y | (y << 1)) & 0x55555555;
+                    
+                            return x | (y << 1);
+                        }
+                    
+                        // find the leftmost node of a polygon ring
+                        function getLeftmost(start) {
+                            var p = start,
+                                leftmost = start;
+                            do {
+                                if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
+                                p = p.next;
+                            } while (p !== start);
+                    
+                            return leftmost;
+                        }
+                    
+                        // check if a point lies within a convex triangle
+                        function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+                            return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
+                                (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
+                                (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
+                        }
+                    
+                        // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+                        function isValidDiagonal(a, b) {
+                            return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+                                (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+                                    (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+                                    equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
+                        }
+                    
+                        // signed area of a triangle
+                        function area(p, q, r) {
+                            return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+                        }
+                    
+                        // check if two points are equal
+                        function equals(p1, p2) {
+                            return p1.x === p2.x && p1.y === p2.y;
+                        }
+                    
+                        // check if two segments intersect
+                        function intersects(p1, q1, p2, q2) {
+                            var o1 = sign(area(p1, q1, p2));
+                            var o2 = sign(area(p1, q1, q2));
+                            var o3 = sign(area(p2, q2, p1));
+                            var o4 = sign(area(p2, q2, q1));
+                    
+                            if (o1 !== o2 && o3 !== o4) return true; // general case
+                    
+                            if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
+                            if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
+                            if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
+                            if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
+                    
+                            return false;
+                        }
+                    
+                        // for collinear points p, q, r, check if point q lies on segment pr
+                        function onSegment(p, q, r) {
+                            return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+                        }
+                    
+                        function sign(num) {
+                            return num > 0 ? 1 : num < 0 ? -1 : 0;
                         }
                     
                         // check if a polygon diagonal intersects any polygon segments
@@ -25022,7 +24343,7 @@
             };
 
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:2,d:8} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:21} };
                 const core_engine = new Worker("/js/core_engine.js");
                 const self = this;
                 
@@ -25361,50 +24682,67 @@
                         this.prepend = function(newElement){
                     
                             if( !isValidElement(newElement) ){ return false; }
-                            newElement.parent = this;
-                            children.unshift(newElement);
-                            childRegistry[newElement.getName()] = newElement;
-                            if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
                     
-                            if(clearingLock){ return; }
+                            //add element
+                                newElement.parent = this;
+                                children.unshift(newElement);
+                                childRegistry[newElement.getName()] = newElement;
                     
-                            if(newElement.getId() == -1){
-                                newElement.__idReceived = function(){
-                                    if(children.indexOf(newElement) != -1 && self.getId() != -1){ 
+                            //perform addition callback
+                                if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
+                    
+                            //communicate with engine for removal
+                                if(clearingLock){ return; }
+                    
+                                if(newElement.getId() == -1){
+                                    newElement.__idReceived = function(){
+                                        if(children.indexOf(newElement) != -1 && self.getId() != -1){ 
+                                            _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
+                                        }else{
+                                        }
+                                    };
+                                }else{
+                                    if(self.getId() != -1){
                                         _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
                                     }else{
                                     }
-                                };
-                            }else{
-                                if(self.getId() != -1){
-                                    _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
-                                }else{
                                 }
-                            }
                         };
                         this.remove = function(elementToRemove){
-                            children.splice(children.indexOf(elementToRemove), 1);
-                            delete childRegistry[elementToRemove.getName()];
-                            elementToRemove.parent = undefined;
-                            if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
                     
-                            if(clearingLock){ return; }
+                            //ensure that removing elements is actually a child of this group
+                                if( !children.includes(elementToRemove) ){ return; }
                     
-                            if(elementToRemove.getId() == -1){
-                                elementToRemove.__idReceived = function(){
-                                    if(children.indexOf(elementToRemove) == -1 && self.getId() != -1){ 
+                            //clear out children of removing element (if it is a group)
+                                if(elementToRemove.getType() == 'group'){ elementToRemove.clear(); }
+                            
+                            //perform removal callback
+                                if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
+                    
+                            //remove element
+                                children.splice(children.indexOf(elementToRemove), 1);
+                                delete childRegistry[elementToRemove.getName()];
+                                elementToRemove.parent = undefined;
+                    
+                            //communicate with engine for removal
+                                if(clearingLock){ return; }
+                    
+                                if(elementToRemove.getId() == -1){
+                                    elementToRemove.__idReceived = function(){
+                                        if(children.indexOf(elementToRemove) == -1 && self.getId() != -1){ 
+                                            _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                                        }else{
+                                        }
+                                    };
+                                }else{
+                                    if(self.getId() != -1){
                                         _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
                                     }else{
                                     }
-                                };
-                            }else{
-                                if(self.getId() != -1){
-                                    _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
-                                }else{
                                 }
-                            }
                         };
                         this.clear = function(){
+                            children.forEach(child => {if(child.getCallback('onremove')){child.getCallback('onremove')();}});
                             children = [];
                             childRegistry = {};
                             if(self.getId() != -1){ 
@@ -25412,6 +24750,35 @@
                                 communicationModule.run('element.executeMethod',[self.getId(),'clear',[]],unlockClearingLock);
                             }else{
                             }
+                        };
+                        this.shift = function(elementToShift,newPosition){
+                    
+                            //ensure that removing elements is actually a child of this group
+                                if( !children.includes(elementToShift) ){ return; }
+                    
+                            //shift element
+                                children.splice(children.indexOf(elementToShift), 1);
+                                children.splice(newPosition,0,elementToShift);
+                    
+                            //perform removal callback
+                                if(elementToShift.getCallback('onshift')){elementToShift.getCallback('onshift')(children.indexOf(elementToShift));}
+                    
+                            //communicate with engine for shifting
+                                if(clearingLock){ return; }
+                    
+                                if(elementToShift.getId() == -1){
+                                    // elementToShift.__idReceived = function(){
+                                    //     if(children.indexOf(elementToShift) != -1 && self.getId() != -1){ 
+                                    //         _canvas_.core.element.__executeMethod(self.getId(),'shift', [elementToShift.getId(),newPosition]);
+                                    //     }else{
+                                    //     }
+                                    // };
+                                }else{
+                                    if(self.getId() != -1){
+                                        _canvas_.core.element.__executeMethod(self.getId(),'shift', [elementToShift.getId(),newPosition]);
+                                    }else{
+                                    }
+                                }
                         };
                         this.getElementsUnderPoint = function(x,y){
                             if(self.getId() != -1){
@@ -26571,7 +25938,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:8} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:21} };
                 const interface = this;
             
                 const dev = {
@@ -26737,9 +26104,10 @@
                     //  detuneWobble provided by internal LFO, or external input
                     //  dutyCycleWobble provided by internal LFO, or external input
                     
-                    this.synthesizer_3 = function(
+                    this.synthesizer_2 = function(
                         context,
                         waveType='sine',
+                        masterGain=1,
                         gain={
                             envelope:{
                                 front:[ {destination:1, elapse:0} ],
@@ -26747,28 +26115,36 @@
                             },
                             mode:'manual',
                             manual:{value:1},
-                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:1},
+                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
                         },
                         octave=0,
                         detune={
                             envelope:{
-                                front:[ {destination:1, elapse:0} ],
+                                front:[ {destination:0, elapse:0} ],
                                 back:[ {destination:0, elapse:0} ],
                             },
                             mode:'manual',
                             manual:{value:0},
-                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:1},
+                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
                         },
                         dutyCycle={
                             envelope:{
-                                front:[ {destination:1, elapse:0} ],
+                                front:[ {destination:0, elapse:0} ],
                                 back:[ {destination:0, elapse:0} ],
                             },
                             mode:'manual',
                             manual:{value:0.5},
-                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:1},
+                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
                         },
-                    ){    
+                        additiveSynthesis={
+                            sin:[1],
+                            cos:[]
+                        },
+                        phaseModulation=[
+                            {mux:2,power:1},
+                            {mux:3,power:1},
+                        ],
+                    ){
                         //flow
                             const flow = {
                                 controlIn:{
@@ -26779,14 +26155,14 @@
                     
                                 LFO:{
                                     gain:{
-                                        oscillator: new _canvas_.library.audio.audioWorklet.oscillator2(context),
+                                        oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
                                         amplitudeModifier: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
                                     },
                                     detune:{
-                                        oscillator: new _canvas_.library.audio.audioWorklet.oscillator2(context),
+                                        oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
                                     },
                                     dutyCycle:{
-                                        oscillator: new _canvas_.library.audio.audioWorklet.oscillator2(context),
+                                        oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
                                         amplitudeModifier: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
                                     },
                                 },
@@ -26798,25 +26174,25 @@
                                 },
                     
                                 oscillators: [],
-                                aggregator: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                aggregator: new _canvas_.library.audio.audioWorklet.gain(context),
                             };
                     
-                            flow.LFO.gain.oscillator.frequency.setTargetAtTime(1/gain.internalLFO.period, context.currentTime, 0);
-                            flow.LFO.gain.oscillator.gain.setTargetAtTime(gain.internalLFO.depth, context.currentTime, 0);
+                            flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);
+                            flow.LFO.gain.oscillator.gain.setValueAtTime(gain.internalLFO.depth, 0);
                             flow.LFO.gain.oscillator.connect(flow.LFO.gain.amplitudeModifier);
-                            flow.LFO.gain.amplitudeModifier.divisor.setTargetAtTime(2, context.currentTime, 0);
-                            flow.LFO.gain.amplitudeModifier.offset.setTargetAtTime(1 - gain.internalLFO.depth/2, context.currentTime, 0);
+                            flow.LFO.gain.amplitudeModifier.divisor.setValueAtTime(2, 0);
+                            flow.LFO.gain.amplitudeModifier.offset.setValueAtTime(1 - gain.internalLFO.depth/2, 0);
                             flow.LFO.gain.amplitudeModifier.connect(flow.controlMix.gain,undefined,0);
                     
-                            flow.LFO.detune.oscillator.frequency.setTargetAtTime(1/detune.internalLFO.period, context.currentTime, 0);
-                            flow.LFO.detune.oscillator.gain.setTargetAtTime(detune.internalLFO.depth, context.currentTime, 0);
+                            flow.LFO.detune.oscillator.frequency.setValueAtTime(1/detune.internalLFO.period, 0);
+                            flow.LFO.detune.oscillator.gain.setValueAtTime(detune.internalLFO.depth, 0);
                             flow.LFO.detune.oscillator.connect(flow.controlMix.detune,undefined,0);
                     
-                            flow.LFO.dutyCycle.oscillator.frequency.setTargetAtTime(1/dutyCycle.internalLFO.period, context.currentTime, 0);
-                            flow.LFO.dutyCycle.oscillator.gain.setTargetAtTime(dutyCycle.internalLFO.depth, context.currentTime, 0);
+                            flow.LFO.dutyCycle.oscillator.frequency.setValueAtTime(1/dutyCycle.internalLFO.period, 0);
+                            flow.LFO.dutyCycle.oscillator.gain.setValueAtTime(dutyCycle.internalLFO.depth, 0);
                             flow.LFO.dutyCycle.oscillator.connect(flow.LFO.dutyCycle.amplitudeModifier);
-                            flow.LFO.dutyCycle.amplitudeModifier.divisor.setTargetAtTime(2, context.currentTime, 0);
-                            flow.LFO.dutyCycle.amplitudeModifier.offset.setTargetAtTime(0.5, context.currentTime, 0);
+                            flow.LFO.dutyCycle.amplitudeModifier.divisor.setValueAtTime(2, 0);
+                            flow.LFO.dutyCycle.amplitudeModifier.offset.setValueAtTime(0.5, 0);
                             flow.LFO.dutyCycle.amplitudeModifier.connect(flow.controlMix.dutyCycle,undefined,0);
                     
                             flow.controlIn.gain.connect(flow.controlMix.gain,undefined,1);
@@ -26841,76 +26217,92 @@
                     
                         //controls
                             this._dump = function(){
+                                console.log('waveType:', JSON.parse(JSON.stringify(waveType)));
+                                console.log('gain:', JSON.parse(JSON.stringify(gain)));
+                                console.log('octave:', JSON.parse(JSON.stringify(octave)));
+                                console.log('detune:', JSON.parse(JSON.stringify(detune)));
+                                console.log('dutyCycle:', JSON.parse(JSON.stringify(dutyCycle)));
+                    
                                 console.log('flow',flow);
-                                console.log('waveType', waveType);
-                                console.log('gain', gain);
-                                console.log('octave', octave);
-                                console.log('detune', detune);
-                                console.log('dutyCycle', dutyCycle);
                             };
                     
                             this.perform = function(note){
                                 //find the oscillator for this note (if there is one)
-                                    const oscillator = flow.oscillators.filter(oscillator => oscillator.noteNumber == note.num )[0];
+                                    const oscillator = flow.oscillators.filter(oscillator => oscillator.noteNumber == note.num && oscillator.velocity != 0 )[0];
                     
-                                    if( oscillator != undefined && note.velocity == 0 ){ 
-                                    //tone stopping
-                                        oscillator.stop();
-                                    }else if( oscillator != undefined ){
-                                    //tone velocity adjustment
-                                        _canvas_.library.audio.changeAudioParam(context, oscillator.gain.gain, note.velocity, 0, 'instant');
-                                    }else if( oscillator == undefined && note.velocity == 0 ){ 
-                                    //don't do anything
-                                    }else{
-                                    //fresh tone
+                                if( oscillator != undefined && note.velocity == 0 ){
+                                    //note stopping
+                                    oscillator.stop();
+                                    oscillator.velocity = 0;
+                                }else if( oscillator != undefined && oscillator.velocity != 0 ){
+                                    //note velocity adjustment
+                                    oscillator.start(note.velocity);
+                                    oscillator.velocity = note.velocity;
+                                }else if( oscillator == undefined && note.velocity == 0 ){ 
+                                    //don't do anything (you're trying to stop a note that isn't sounding)
+                                }else{
+                                    //fresh note
+                    
+                                    //get free oscillator, or generate new one
+                                        let oscillatorToUse = undefined;
+                    
                                         //get free oscillators
                                             const freeOscillators = flow.oscillators.filter(oscillator => oscillator.noteNumber == undefined);
-                                            
-                                        //maintain oscillator pool
-                                            if( freeOscillators.length < 1 ){
-                                                const tmpOSC = new _canvas_.library.audio.audioWorklet.oscillator2(context);
-                                                tmpOSC.connect(flow.aggregator);
-                                                tmpOSC.waveform = waveType;
+                                        //generate new oscillator if necessary
+                                            if(freeOscillators.length > 0){
+                                                oscillatorToUse = freeOscillators[0];
+                                            }else{
+                                                oscillatorToUse = new _canvas_.library.audio.audioWorklet.oscillator(context);
+                                                oscillatorToUse.connect(flow.aggregator);
+                                                oscillatorToUse.waveform = waveType;
+                                                oscillatorToUse.gain_envelope_reporting = true;
                     
-                                                tmpOSC.gain_envelope = gain.envelope;
-                                                tmpOSC.detune_envelope = detune.envelope;
-                                                tmpOSC.dutyCycle_envelope = dutyCycle.envelope;
+                                                oscillatorToUse.gain_envelope = gain.envelope;
+                                                oscillatorToUse.detune_envelope = detune.envelope;
+                                                oscillatorToUse.dutyCycle_envelope = dutyCycle.envelope;
                     
-                                                tmpOSC.detune.setTargetAtTime(detune.manual.value, context.currentTime, 0);
-                                                tmpOSC.dutyCycle.setTargetAtTime(dutyCycle.manual.value, context.currentTime, 0);
+                                                oscillatorToUse.detune.setValueAtTime(detune.manual.value, 0);
+                                                oscillatorToUse.dutyCycle.setValueAtTime(dutyCycle.manual.value, 0);
                     
-                                                tmpOSC.gain_useControl = gain.mode != 'manual';
-                                                tmpOSC.detune_useControl = detune.mode != 'manual';
-                                                tmpOSC.dutyCycle_useControl = dutyCycle.mode != 'manual';
+                                                oscillatorToUse.gain_useControl = gain.mode != 'manual';
+                                                oscillatorToUse.detune_useControl = detune.mode != 'manual';
+                                                oscillatorToUse.dutyCycle_useControl = dutyCycle.mode != 'manual';
                     
-                                                flow.controlMix.gain.connect(tmpOSC,undefined,0);
-                                                flow.controlMix.detune.connect(tmpOSC,undefined,1);
-                                                flow.controlMix.dutyCycle.connect(tmpOSC,undefined,2);
+                                                flow.controlMix.gain.connect(oscillatorToUse,undefined,0);
+                                                flow.controlMix.detune.connect(oscillatorToUse,undefined,1);
+                                                flow.controlMix.dutyCycle.connect(oscillatorToUse,undefined,2);
                     
-                                                flow.oscillators.push(tmpOSC);
+                                                oscillatorToUse.additiveSynthesis_sin = additiveSynthesis.sin;
+                                                oscillatorToUse.additiveSynthesis_cos = additiveSynthesis.cos;
+                                                oscillatorToUse.phaseModulation_settings = phaseModulation.sin;
+                    
+                                                flow.oscillators.push(oscillatorToUse);
                                             }
                     
-                                        //select oscillator
-                                            const freshOscillator = freeOscillators.length == 0;
-                                            const oscillatorToUse = freshOscillator ? flow.oscillators[flow.oscillators.length-1] : freeOscillators[0];
-                    
-                                        //activate oscillator
-                                            oscillatorToUse.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(note.num+12*octave), context.currentTime, 0);
-                                            oscillatorToUse.noteNumber = note.num;
-                                            oscillatorToUse.onEnvelopeEvent = function(event){
-                                                if(event == 'off'){
-                                                    oscillatorToUse.noteNumber = undefined;
-                                                }
-                                            };
-                                            oscillatorToUse.start();
-                                    }
+                                    //activate oscillator
+                                        oscillatorToUse.frequency.setValueAtTime(_canvas_.library.audio.num2freq(note.num+12*octave),0);
+                                        oscillatorToUse.noteNumber = note.num;
+                                        oscillatorToUse.velocity = note.velocity;
+                                        oscillatorToUse.onEnvelopeEvent = function(event){
+                                            if(event.aspect == 'gain' && event.phase == 'off'){
+                                                oscillatorToUse.noteNumber = undefined;
+                                            }
+                                        };
+                                        oscillatorToUse.start(note.velocity);
+                                }
                             };
+                    
                             this.panic = function(){
-                                flow.oscillators.map(a => a.noteNumber).forEach(a => {
+                                flow.oscillators.map(a => a.noteNumber).filter(a => a != undefined).forEach(a => {
                                     this.perform({num:a,velocity:0});
                                 });
                             };
                     
+                            this.masterGain = function(value){
+                                if(value == undefined){return masterGain;}
+                                masterGain = value;
+                                flow.aggregator.gain.setValueAtTime(value, 0);
+                            };
                             this.waveform = function(type){
                                 if(type == undefined){return waveType;}
                                 waveType = type;
@@ -26924,27 +26316,27 @@
                                 octave = target;
                                 flow.oscillators.forEach(oscillator => {
                                     if(oscillator.noteNumber == undefined){return;}
-                                    oscillator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(oscillator.noteNumber+12*octave), context.currentTime, 0);
+                                    oscillator.frequency.setValueAtTime(_canvas_.library.audio.num2freq(oscillator.noteNumber+12*octave), 0);
                                 });
                             };
                             this.detune = function(target){
                                 if(target == null){return detune;}
                                 detune = target;
                                 flow.oscillators.forEach(oscillator => {
-                                    oscillator.detune.setTargetAtTime(target, context.currentTime, 0);
+                                    oscillator.detune.setValueAtTime(target, 0);
                                 });
                             };
                             this.dutyCycle = function(target){
                                 if(target == null){return detune;}
                                 dutyCycle = target;
                                 flow.oscillators.forEach(oscillator => {
-                                    oscillator.dutyCycle.setTargetAtTime(target, context.currentTime, 0);
+                                    oscillator.dutyCycle.setValueAtTime(target, 0);
                                 });
                             };
                     
                             this.gain = new function(){
                                 this.envelope = function(newEnvelope){
-                                    if(newEnvelope == null){return envelope;}
+                                    if(newEnvelope == null){return gain.envelope;}
                                     gain.envelope = newEnvelope;
                                     flow.oscillators.forEach(oscillator => {
                                         oscillator.gain_envelope = gain.envelope;
@@ -26967,9 +26359,7 @@
                                                 oscillator.gain_useControl = true;
                                             });
                     
-                                            flow.controlMix.gain.mix.setTargetAtTime(0, context.currentTime, 0);
-                                            flow.controlMix.detune.mix.setTargetAtTime(0, context.currentTime, 0);
-                                            flow.controlMix.dutyCycle.mix.setTargetAtTime(0, context.currentTime, 0);
+                                            flow.controlMix.gain.mix.setValueAtTime(0, 0);
                                         break;
                                         case 'external':
                                             flow.LFO.gain.oscillator.stop();
@@ -26977,18 +26367,18 @@
                                                 oscillator.gain_useControl = true;
                                             });
                     
-                                            flow.controlMix.gain.mix.setTargetAtTime(1, context.currentTime, 0);
-                                            flow.controlMix.detune.mix.setTargetAtTime(1, context.currentTime, 0);
-                                            flow.controlMix.dutyCycle.mix.setTargetAtTime(1, context.currentTime, 0);
+                                            flow.controlMix.gain.mix.setValueAtTime(1, 0);
                                         break;
                                     }
                                 };
-                                this.value = function(value){
-                                    if(value == null){ return gain.manual.value; }
-                                    gain.manual.value = value;
-                                    flow.oscillators.forEach(oscillator => {
-                                        oscillator.gain.setTargetAtTime(gain.manual.value, context.currentTime, 0);
-                                    });    
+                                this.manual = new function(){
+                                    this.value = function(value){
+                                        if(value == null){ return gain.manual.value; }
+                                        gain.manual.value = value;
+                                        flow.oscillators.forEach(oscillator => {
+                                            oscillator.gain.setValueAtTime(gain.manual.value, 0);
+                                        });    
+                                    };
                                 };
                                 this.internalLFO = new function(){
                                     this.depth = function(value){
@@ -26996,21 +26386,21 @@
                                         if(value < 0){ value = 0; }
                                         else if(value > 1){ value = 1; }
                                         gain.internalLFO.depth = value;
-                                        flow.LFO.gain.oscillator.gain.setTargetAtTime(gain.internalLFO.depth, context.currentTime, 0);
-                                        flow.LFO.gain.amplitudeModifier.offset.setTargetAtTime(1 - gain.internalLFO.depth/2, context.currentTime, 0);
+                                        flow.LFO.gain.oscillator.gain.setValueAtTime(gain.internalLFO.depth, 0);
+                                        flow.LFO.gain.amplitudeModifier.offset.setValueAtTime(1 - gain.internalLFO.depth/2, 0);
                                     };
                                     this.period = function(value){
                                         if(value == null){ return gain.internalLFO.period; }
                                         if(value < gain.internalLFO.periodMin){ value = gain.internalLFO.periodMin; }
                                         else if(value > gain.internalLFO.periodMax){ value = gain.internalLFO.periodMax; }
                                         gain.internalLFO.period = value;
-                                        flow.LFO.gain.oscillator.frequency.setTargetAtTime(1/gain.internalLFO.period, context.currentTime, 0);
+                                        flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);
                                     };
                                 };
                             };
                             this.detune = new function(){
                                 this.envelope = function(newEnvelope){
-                                    if(newEnvelope == null){return envelope;}
+                                    if(newEnvelope == null){return detune.envelope;}
                                     detune.envelope = newEnvelope;
                                     flow.oscillators.forEach(oscillator => {
                                         oscillator.detune_envelope = detune.envelope;
@@ -27031,22 +26421,26 @@
                                             flow.LFO.detune.oscillator.start();
                                             flow.oscillators.forEach(oscillator => {
                                                 oscillator.detune_useControl = true;
-                                            });    
+                                            });
+                                            flow.controlMix.detune.mix.setValueAtTime(0, 0);
                                         break;
                                         case 'external':
                                             flow.LFO.detune.oscillator.stop();
                                             flow.oscillators.forEach(oscillator => {
                                                 oscillator.detune_useControl = true;
-                                            });    
+                                            });
+                                            flow.controlMix.detune.mix.setValueAtTime(1, 0);
                                         break;
                                     }
                                 };
-                                this.value = function(value){
-                                    if(value == null){ return detune.manual.value; }
-                                    detune.manual.value = value;
-                                    flow.oscillators.forEach(oscillator => {
-                                        oscillator.detune.setTargetAtTime(detune.manual.value, context.currentTime, 0);
-                                    });    
+                                this.manual = new function(){
+                                    this.value = function(value){
+                                        if(value == null){ return detune.manual.value; }
+                                        detune.manual.value = value;
+                                        flow.oscillators.forEach(oscillator => {
+                                            oscillator.detune.setValueAtTime(detune.manual.value, 0);
+                                        });    
+                                    };
                                 };
                                 this.internalLFO = new function(){
                                     this.depth = function(value){
@@ -27054,20 +26448,20 @@
                                         if(value < 0){ value = 0; }
                                         else if(value > 1){ value = 1; }
                                         detune.internalLFO.depth = value;
-                                        flow.LFO.detune.oscillator.gain.setTargetAtTime(detune.internalLFO.depth, context.currentTime, 0);
+                                        flow.LFO.detune.oscillator.gain.setValueAtTime(detune.internalLFO.depth, 0);
                                     };
                                     this.period = function(value){
                                         if(value == null){ return detune.internalLFO.period; }
                                         if(value < detune.internalLFO.periodMin){ value = detune.internalLFO.periodMin; }
                                         else if(value > detune.internalLFO.periodMax){ value = detune.internalLFO.periodMax; }
                                         detune.internalLFO.period = value;
-                                        flow.LFO.detune.oscillator.frequency.setTargetAtTime(1/detune.internalLFO.period, context.currentTime, 0);
+                                        flow.LFO.detune.oscillator.frequency.setValueAtTime(1/detune.internalLFO.period, 0);
                                     };
                                 };
                             };
                             this.dutyCycle = new function(){
                                 this.envelope = function(newEnvelope){
-                                    if(newEnvelope == null){return envelope;}
+                                    if(newEnvelope == null){return dutyCycle.envelope;}
                                     dutyCycle.envelope = newEnvelope;
                                     flow.oscillators.forEach(oscillator => {
                                         oscillator.dutyCycle_envelope = dutyCycle.envelope;
@@ -27088,22 +26482,26 @@
                                             flow.LFO.gain.oscillator.start();
                                             flow.oscillators.forEach(oscillator => {
                                                 oscillator.dutyCycle_useControl = true;
-                                            });    
+                                            });
+                                            flow.controlMix.dutyCycle.mix.setValueAtTime(0, 0);
                                         break;
                                         case 'external':
                                             flow.LFO.gain.oscillator.stop();
                                             flow.oscillators.forEach(oscillator => {
                                                 oscillator.dutyCycle_useControl = true;
-                                            });    
+                                            });
+                                            flow.controlMix.dutyCycle.mix.setValueAtTime(1, 0);
                                         break;
                                     }
                                 };
-                                this.value = function(value){
-                                    if(value == null){ return dutyCycle.manual.value; }
-                                    dutyCycle.manual.value = value;
-                                    flow.oscillators.forEach(oscillator => {
-                                        oscillator.dutyCycle.setTargetAtTime(dutyCycle.manual.value, context.currentTime, 0);
-                                    });    
+                                this.manual = new function(){
+                                    this.value = function(value){
+                                        if(value == null){ return dutyCycle.manual.value; }
+                                        dutyCycle.manual.value = value;
+                                        flow.oscillators.forEach(oscillator => {
+                                            oscillator.dutyCycle.setValueAtTime(dutyCycle.manual.value, 0);
+                                        });    
+                                    };
                                 };
                                 this.internalLFO = new function(){
                                     this.depth = function(value){
@@ -27111,8 +26509,8 @@
                                         if(value < 0){ value = 0; }
                                         else if(value > 1){ value = 1; }
                                         dutyCycle.internalLFO.depth = value;
-                                        flow.LFO.dutyCycle.oscillator.gain.setTargetAtTime(dutyCycle.internalLFO.depth, context.currentTime, 0);
-                                        flow.LFO.dutyCycle.amplitudeModifier.offset.setTargetAtTime(1 - dutyCycle.internalLFO.depth/2, context.currentTime, 0);
+                                        flow.LFO.dutyCycle.oscillator.gain.setValueAtTime(dutyCycle.internalLFO.depth, 0);
+                                        flow.LFO.dutyCycle.amplitudeModifier.offset.setValueAtTime(1 - dutyCycle.internalLFO.depth/2, 0);
                                     };
                                     this.period = function(value){
                                         if(value == null){ return dutyCycle.internalLFO.period; }
@@ -27123,14 +26521,38 @@
                                     };
                                 };
                             };
+                    
+                            this.additiveSynthesis = new function(){
+                                this.sin = function(value){
+                                    if(value == undefined){ return additiveSynthesis.sin; }
+                                    additiveSynthesis.sin = value;
+                                    flow.oscillators.forEach(oscillator => {
+                                        oscillator.additiveSynthesis_sin = value;
+                                    });
+                                };
+                                this.cos = function(value){
+                                    if(value == undefined){ return additiveSynthesis.cos; }
+                                    additiveSynthesis.cos = value;
+                                    flow.oscillators.forEach(oscillator => {
+                                        oscillator.additiveSynthesis_cos = value;
+                                    });
+                                };
+                            };
+                            this.phaseModulation = function(value){
+                                if(value == undefined){ return phaseModulation; }
+                                phaseModulation = value;
+                                flow.oscillators.forEach(oscillator => {
+                                    oscillator.phaseModulation_settings = phaseModulation;
+                                });
+                            };
                     };
-                    //replacement for prior synthesizer; this system reuses oscillators
+                    // replacement for prior synthesizer; this system reuses oscillators
                     //  oscillators generated on demand
                     //  conservitive use of oscillators
                     //  gainWobble provided by internal LFO
                     //  detuneWobble not implemented
                     
-                    this.synthesizer = function(
+                    this.synthesizer_1 = function(
                         context,
                         waveType='sine', periodicWave={'sin':[0,1,0], 'cos':[0,0,1]}, 
                         gain=1, octave=0, detune=0,
@@ -28076,6 +27498,8 @@
                     this.oscillator = function(
                         context
                     ){
+                        const self = this;
+                    
                         //flow
                             //flow chain
                                 const flow = {
@@ -28104,12 +27528,11 @@
                                     dutyCycle: 0.5,
                                     node: new _canvas_.library.audio.audioWorklet.oscillator(context),
                                 };
-                                
                     
                             flow.gainControl.node.connect(flow.oscillator.node, undefined, 0);
                             flow.detuneControl.node.connect(flow.oscillator.node, undefined, 1);
                             flow.dutyCycleControl.node.connect(flow.oscillator.node, undefined, 2);
-                    
+                        
                         //input/output
                             this.out = function(){return flow.oscillator.node;}
                             this.gainControl = function(){return flow.gainControl.node;}
@@ -28117,42 +27540,89 @@
                             this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
                     
                         //controls
-                            this.waveform = function(value){ // 0 - sine / 1 - square / 2 - triangle / 3 - noise
-                                if(value == undefined){ return flow.oscillator.node.waveform; }
-                                flow.oscillator.node.waveform = value;
+                            //performace
+                                this.start = function(){
+                                    flow.oscillator.node.start();
+                                };
+                                this.stop = function(){
+                                    flow.oscillator.node.stop();
+                                };
+                    
+                            //generic controls
+                                this.waveform = function(value){ // sine / square / triangle / noise / additiveSynthesis / phaseModulation
+                                    if(value == undefined){ return flow.oscillator.node.waveform; }
+                                    flow.oscillator.node.waveform = value;
+                                };
+                                this.frequency = function(value){
+                                    if(value == undefined){ return flow.oscillator.frequency; }
+                                    flow.oscillator.frequency = value;
+                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.frequency, value, 0.01, 'instant', true);
+                                };
+                                this.gain = function(value){
+                                    if(value == undefined){ return flow.oscillator.gain; }
+                                    flow.oscillator.gain = value;
+                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.gain, value, 0.01, 'instant', true);
+                                };
+                                this.detune = function(value){
+                                    if(value == undefined){ return flow.oscillator.detune; }
+                                    flow.oscillator.detune = value;
+                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.detune, value, 0.01, 'instant', true);
+                                };
+                                this.dutyCycle = function(value){
+                                    if(value == undefined){ return flow.oscillator.dutyCycle; }
+                                    flow.oscillator.dutyCycle = value;
+                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.dutyCycle, value, 0.01, 'instant', true);
+                                };
+                                 
+                            //control select
+                                this.gain_useControl = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.gain_useControl; }
+                                    flow.oscillator.node.gain_useControl = value;
+                                };
+                                this.detune_useControl = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.detune_useControl; }
+                                    flow.oscillator.node.detune_useControl = value;
+                                };
+                                this.dutyCycle_useControl = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.dutyCycle_useControl; }
+                                    flow.oscillator.node.dutyCycle_useControl = value;
+                                }
+                    
+                            //envelope
+                                this.gain_envelope = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.gain_envelope; }
+                                    flow.oscillator.node.gain_envelope = value;
+                                };
+                                this.detune_envelope = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.detune_envelope; }
+                                    flow.oscillator.node.detune_envelope = value;
+                                };
+                                this.dutyCycle_envelope = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.dutyCycle_envelope; }
+                                    flow.oscillator.node.dutyCycle_envelope = value;
+                                }
+                    
+                            //additional miscellaneous waveform controls
+                                this,additiveSynthesis_sin = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.additiveSynthesis_sin; }
+                                    flow.oscillator.node.additiveSynthesis_sin = value;
+                                };
+                                this,additiveSynthesis_cos = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.additiveSynthesis_cos; }
+                                    flow.oscillator.node.additiveSynthesis_cos = value;
+                                };
+                    
+                                this.phaseModulation_settings = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.phaseModulation_settings; }
+                                    flow.oscillator.node.phaseModulation_settings = value;
+                                };
+                    
+                        //callbacks
+                            flow.oscillator.node.onEnvelopeEvent = function(data){
+                                if(self.onEnvelopeEvent == undefined){ return; }
+                                self.onEnvelopeEvent(data);
                             };
-                            this.frequency = function(value){
-                                if(value == undefined){ return flow.oscillator.frequency; }
-                                flow.oscillator.frequency = value;
-                                _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.frequency, value, 0.01, 'instant', true);
-                            };
-                            this.gain = function(value){
-                                if(value == undefined){ return flow.oscillator.gain; }
-                                flow.oscillator.gain = value;
-                                _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.gain, value, 0.01, 'instant', true);
-                            };
-                            this.detune = function(value){
-                                if(value == undefined){ return flow.oscillator.detune; }
-                                flow.oscillator.detune = value;
-                                _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.detune, value, 0.01, 'instant', true);
-                            };
-                            this.dutyCycle = function(value){
-                                if(value == undefined){ return flow.oscillator.dutyCycle; }
-                                flow.oscillator.dutyCycle = value;
-                                _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.dutyCycle, value, 0.01, 'instant', true);
-                            };          
-                            this.gainMode = function(value){
-                                if(value == undefined){ return flow.oscillator.node.gain_mode; }
-                                flow.oscillator.node.gain_mode = value;
-                            };
-                            this.detuneMode = function(value){
-                                if(value == undefined){ return flow.oscillator.node.detune_mode; }
-                                flow.oscillator.node.detune_mode = value;
-                            };
-                            this.dutyCycleMode = function(value){
-                                if(value == undefined){ return flow.oscillator.node.dutyCycle_mode; }
-                                flow.oscillator.node.dutyCycle_mode = value;
-                            }
+                            this.onEnvelopeEvent = function(){};
                     };
                     this.recorder = function(context){
                     
@@ -42066,7 +41536,7 @@
             } );
                 
             _canvas_.control = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:1,d:14} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:21} };
                 const control = this;
             
                 const dev = {
@@ -42983,10 +42453,11 @@
                             );
                     
                         //run the unit's onDelete method
-                            unit._ondelete();
                             if(unit.ondelete){unit.ondelete();}
                         //run disconnect on every connection node of this unit
                             unit.disconnectEverything();
+                        //run underlying onDelete method
+                            unit._ondelete();
                         //remove the object from the pane
                             _canvas_.system.pane.getMiddlegroundPane(unit).remove(unit);
                     };
@@ -43245,8 +42716,7 @@
                         //shift object to front of view, (within it's particular pane)
                             if(shiftToFront){
                                 const pane = _canvas_.system.pane.getMiddlegroundPane(unit);
-                                pane.remove(unit);
-                                pane.append(unit);
+                                pane.shift(unit,10000);
                             }
                     
                         //colourize space
@@ -43271,8 +42741,10 @@
                     };
                     this.deselectUnit = function(unit){
                     
-                        //decolourize space
-                            unit.remove( unit.getChildByName('control.selection::shape::selectionGlow') );
+                        //decolourize space (if the colour still remains)
+                            if(unit.getChildren().length != 0){
+                                unit.remove( unit.getChildByName('control.selection::shape::selectionGlow') );
+                            }
                         
                         //remove unit from selectedUnits list, and activate it's "ondeselect" function
                             this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);
