@@ -2,6 +2,12 @@ Chrome Bugs
     Garbage collection causes other threads to stop (causing the audio thread to glitch)
         https://bugs.chromium.org/p/chromium/issues/detail?id=836306
 
+Rust
+    Learning Book
+        https://doc.rust-lang.org/book/
+    Alternate Book?
+        https://doc.rust-lang.org/1.8.0/book/
+
 webASM
     Emscripten Documentation
         https://emscripten.org/docs/
@@ -26,6 +32,9 @@ webASM
 
     Building a Wavetable Synthesizer From Scratch with Rust, WebAssembly, and WebAudio
         https://cprimozic.net/blog/buliding-a-wavetable-synthesizer-with-rust-wasm-and-webaudio/#conclusion
+
+    Examples of using wasm-bindgen, js-sys, and web-sys
+        https://rustwasm.github.io/docs/wasm-bindgen/examples/index.html
 
 webWorkers
     Web Workers Overview

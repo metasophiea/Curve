@@ -1,9 +1,0 @@
-error[E0554]: `#![feature]` may not be used on the stable release channel
- --> /catapult/curve/workshop/webAssembly/4/without-a-bundler/target/release/build/anyhow-39c769fa9690fff7/out/probe.rs:2:5
-  |
-2 |     #![feature(backtrace)]
-  |     ^^^^^^^^^^^^^^^^^^^^^^
-
-error: aborting due to previous error
-
-For more information about this error, try `rustc --explain E0554`.

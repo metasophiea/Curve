@@ -179,6 +179,5 @@
 - networking cable for all units which uses the interface, to allow units to be computer controlled (whenever the computer unit gets made)
 - some kind of blurring for when elements are far from the camera enough to cause them to look weird
 - have dial control be like actual dials instead of like sliders
-- advanced rendering, where only the sections of the viewport that are different to the last frame, are actually rendered
 - sync canvas update sends, to maximize the render efficiency
 - need to put together more advanced voltage control units, because all we have right now is a 0 -> 1 dial, and that doesn't cover enough

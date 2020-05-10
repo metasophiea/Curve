@@ -1,4 +1,10 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-05-10
+  - fixed some spelling mistakes, added words to the readme to say that I was
+    learning Rust and removed lots of redundant code from the workshop section.
+    Also emptied the trash
+
+
 2020-03-21
   - after some efforts, I've decided to switch back to the old synthesizer
     which used the built-in oscillator. I just can't get the custom one to run
@@ -22,7 +28,7 @@
     element in a group without it being part of that group; but creating that
     callback overwrites the callback created by the append/prepend method,
     thus stopping the element from ever being included. To fix, one would need
-    to turn the callback into a callback list or something, or created an
+    to turn the callback into a callback list or something, or create an
     'insert' method that the append/prepend method uses, which would never
     be overwritten be the shift method, only have the destination changed.
       For now, it's pretty much fine. I have plans to rewrite core in webASM
@@ -36,10 +42,12 @@
     of the master group. Now, these callbacks are called for every element in
     a group thus activating the connection node's 'onremove' callbacks, thus
     removing them correctly from the scene
+  - removed some of the old workshop folders (they've safely stored away on
+    my desktop)
 
 
 2020-03-18
-  - rewrote the 'perform' method of th synthesizer_3 circuit, to hopefully me
+  - rewrote the 'perform' method of the synthesizer_3 circuit, to hopefully be
     more reliable. There's still some note dropping though
   - updated Alpha's launchpad unit, to better handle the sending of signals
     (sending slightly less now. Less needless ones)

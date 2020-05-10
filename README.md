@@ -45,8 +45,9 @@ Recently (28/12/2019) I finished the second rewrite of the rendering engine. Thi
 This newer version does come with a number of changes that makes it noticeably different to the version which came before - aside from the webWorker aspect of course - including lots more logging, an update to the compilation scripts, a removal of some older code which was used by 'legacy' components, and a number of other smaller changes. All great stuff.
 
 ## Future
-Perhaps a webASM backend for Core? Due to the system now using a webWorker for the rendering; a clear division has been formed between the main program and the webWorker. As communication between the two is only possible by string (or a handful of specific data types) it seems reasonable to me that one could re-write the webWorker in pure webASM and not affect the rest of the system at all, while garnering a serious preformance boost.
-For now though, I think I'll just keep to working on Curve itself.
+Perhaps a webASM backend for Core? Due to the system now using a webWorker for the rendering; a clear division has been formed between the main program and the webWorker. As communication between the two is only possible by string (or a handful of specific data types) it seems reasonable to me that one could re-write the webWorker in pure webASM and not affect the rest of the system at all, while garnering a serious performance boost.
+In this same idea, rewriting the custom oscillator with webASM might allow it to perform fast enough to be useful, plus who knows what other benefits webASM might bring. So, I've started learning Rust. it's early days and slow to progress, but we're getting there. For now, this project will be a little quiet.
+
 
 ## Interesting Links
 - [Dev Mode](https://curve.metasophiea.com?dev)

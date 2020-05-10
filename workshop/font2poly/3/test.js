@@ -1,1 +1,0 @@
-library.misc.openFile(a => console.log(library.misc.font.getTrianglesFromGlyphPath(library.misc.font.getAllAvailableGlyphDrawingPaths(a)['A'])),'readAsArrayBuffer');
