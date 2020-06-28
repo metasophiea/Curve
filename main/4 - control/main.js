@@ -4,13 +4,6 @@ _canvas_.control = new function(){
 
     {{include:dev.js}}
 
-    this.go = new function(){
-        const functionList = [];
-
-        this.add = function(newFunction){ functionList.push(newFunction); };
-        this.__activate = function(){ functionList.forEach(f => f()); };
-    };
-
     const interactionState = {};
     {{include:modules/interaction.js}}
 
@@ -96,7 +89,7 @@ if( new URL(window.location.href).searchParams.get("dev") != null ){
 
 window.onresize = _canvas_.control.viewport.refresh; 
 
-_canvas_.interface.go.add( function(){
-    _canvas_.layers.registerLayerLoaded('control',_canvas_.control);
-    _canvas_.control.go.__activate();
+_canvas_.layers.registerLayer("control", _canvas_.control);
+_canvas_.layers.registerFunctionForLayer("interface", function(){
+    _canvas_.layers.declareLayerAsLoaded("control");
 } );

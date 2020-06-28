@@ -1,6 +1,6 @@
 var units = {};
 
-_canvas_.interface.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("interface", function(){
 
     _canvas_.core.render.active(true);
     // _canvas_.core.render.activeLimitToFrameRate(true);

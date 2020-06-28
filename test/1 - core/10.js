@@ -1,4 +1,4 @@
-_canvas_.core.go.add( function(){ 
+_canvas_.layers.registerFunctionForLayer("core", function(){
     var gap = 50;
     _canvas_.library.font.getLoadableFonts().forEach((name,index) => {
         

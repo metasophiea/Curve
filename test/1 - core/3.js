@@ -1,4 +1,4 @@
-_canvas_.core.go.add( function(){ 
+_canvas_.layers.registerFunctionForLayer("core", function(){
     let rectangleCount = 16;
     let canvasSize = {width:0,height:0};
 

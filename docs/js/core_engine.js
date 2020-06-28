@@ -502,6 +502,34 @@ const library = new function(){
                 {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
             ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
         }
+        
+        
+        
+        
+        
+        
+        this.aVeryDifficultCalculation = function(a, b, c, d, e, f){
+        
+            a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
+            b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
+            c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
+            d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
+            e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
+            f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
+        
+            return { a:a, b:b, c:c, d:d, e:e, f:f };
+        };
+        this.anotherVeryDifficultCalculation = function(a, b, c, d, e, f){
+        
+            a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
+            b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
+            c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
+            d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
+            e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
+            f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
+        
+            return f;
+        };
         this.detectIntersect = new function(){
             this.boundingBoxes = function(box_a, box_b){
         
@@ -19160,14 +19188,12 @@ const library = new function(){
             // };
         };
         (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-        	/*
-        	 * @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
-        	 * @license MIT
-        	 * @preserve Project Home: https://github.com/voidqk/polybooljs
-        	 */
+        
+        	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+        	// @license MIT
+        	// @preserve Project Home: https://github.com/voidqk/polybooljs
         	
             // Modified by Metasophiea <metasophiea@gmail.com>
-        
         
         	var BuildLog = require('./lib/build-log');
         	var Epsilon = require('./lib/epsilon');
@@ -24159,8 +24185,14 @@ const element = new function(){
             
                     //image data
                         const state = {
-                            url:'',
-                            defaultURL:'/images/noimageimage.png'
+                            url:undefined,
+                            defaultURL:'/images/noimageimage.png',
+                        };
+                        elementLibrary.image.webglDataStore[undefined] = {
+                            bitmap: undefined,
+                            textureData: undefined,
+                            isLoaded: false,
+                            isProcessed: false,
                         };
                         function loadImage(url,forceUpdate=false){
                             
@@ -24214,7 +24246,10 @@ const element = new function(){
                                 forceUpdate
                             );
                         }
-                        setTimeout(()=>{ if(state.url == ''){ loadImage(state.defaultURL); } },1000);
+                        setTimeout(()=>{ if(state.url == undefined){ 
+                            state.url = state.defaultURL;
+                            loadImage(state.defaultURL);
+                        } },1000);
             
                         this.url = function(a,forceUpdate=false){
             

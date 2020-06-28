@@ -1,7 +1,7 @@
 let dynamicGroup;
 function rc(){return {r:Math.random(),g:Math.random(),b:Math.random(),a:1};}
 
-_canvas_.core.go.add( function(){ 
+_canvas_.layers.registerFunctionForLayer("core", function(){
 
     dynamicGroup = _canvas_.core.element.create('group','dynamicGroup');
     dynamicGroup.unifiedAttribute({ heedCamera:true });

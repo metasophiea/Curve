@@ -1,4 +1,4 @@
-_canvas_.core.go.add( function(){ 
+_canvas_.layers.registerFunctionForLayer("core", function(){
 
     let characterString_1 = _canvas_.core.element.create('characterString','test_characterString_1');
         characterString_1.unifiedAttribute({

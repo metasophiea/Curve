@@ -1,6 +1,6 @@
 var elements = {};
 
-_canvas_.core.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("core", function(){
 
     elements.image_1 = _canvas_.core.element.create('image','test_image_1');
     elements.image_1.unifiedAttribute({ 

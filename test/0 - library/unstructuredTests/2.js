@@ -1,4 +1,4 @@
-_canvas_.library.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("library", function(){
     
     //testing apparatus
         const osc = new OscillatorNode(_canvas_.library.audio.context);

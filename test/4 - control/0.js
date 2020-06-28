@@ -1,4 +1,4 @@
-_canvas_.control.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("control", function(){
     _canvas_.core.render.active(true);
     _canvas_.core.render.activeLimitToFrameRate(true);
     _canvas_.core.render.frameRateLimit(10);

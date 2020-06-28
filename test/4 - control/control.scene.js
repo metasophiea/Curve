@@ -1,4 +1,4 @@
-_canvas_.control.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("control", function(){
 
     _canvas_.control.viewport.activeRender(true);
     console.log('%cTesting - control.scene', 'font-size:15px; font-weight:bold;');

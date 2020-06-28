@@ -1,4 +1,4 @@
-_canvas_.control.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("control", function(){
     _canvas_.control.gui.elements.menubar.dropdowns = [
         {
             text:'file',

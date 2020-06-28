@@ -1,4 +1,4 @@
-_canvas_.control.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("control", function(){
     //a design object for the menubar options and their respective dropdown menu items
         _canvas_.control.gui.elements.menubar.dropdowns = [];
 
@@ -237,7 +237,8 @@ _canvas_.control.go.add( function(){
                         _canvas_.layers.getVersionInformation().map(item => {
                             if(item.name[0] == '_'){ item.name = item.name.substr(1); }
                             return {
-                                name:item.name,date:item.data.lastDateModified.y+'/'+_canvas_.library.misc.padString(item.data.lastDateModified.m,2,'0')+'/'+_canvas_.library.misc.padString(item.data.lastDateModified.d,2,'0')
+                                name:item.name,
+                                date:item.data.lastDateModified.y+'/'+_canvas_.library.misc.padString(item.data.lastDateModified.m,2,'0')+'/'+_canvas_.library.misc.padString(item.data.lastDateModified.d,2,'0')
                             }
                         } ).map( item => ({type:'text', text_left:item.name, text_centre:'-', text_right:item.date})
                         ).reverse()

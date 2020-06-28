@@ -1,4 +1,4 @@
-_canvas_.system.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("system", function(){
 
     let rectangle_1 = _canvas_.core.element.create('rectangle','test_rectangle_1');
     rectangle_1.unifiedAttribute({ 

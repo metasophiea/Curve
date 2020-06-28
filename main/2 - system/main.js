@@ -1,13 +1,6 @@
 _canvas_.system = new function(){
     this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
     this.mouseReady = false;
-
-    this.go = new function(){
-        const functionList = [];
-
-        this.add = function(newFunction){ functionList.push(newFunction); };
-        this.__activate = function(){ functionList.forEach(f => f()); };
-    };
 };
 _canvas_.system.mouse = new function(){
     {{include:mouse.js}}
@@ -15,6 +8,8 @@ _canvas_.system.mouse = new function(){
 _canvas_.system.keyboard = new function(){
     {{include:keyboard.js}}
 };
+
+_canvas_.layers.registerLayer("system", _canvas_.system);
 
 {{include:paneSetup.js}}
 
@@ -30,7 +25,6 @@ const checkingInterval = setInterval(() => {
         _canvas_.system.mouse.original != undefined
     ){
         clearInterval(checkingInterval);
-        _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
-        _canvas_.system.go.__activate();
+        _canvas_.layers.declareLayerAsLoaded("system");
     }
 }, 100);

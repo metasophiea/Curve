@@ -1,4 +1,4 @@
-_canvas_.interface.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("interface", function(){
 
     var design = {
         name: 'name of unit (unique to collection)',

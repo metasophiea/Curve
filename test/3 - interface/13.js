@@ -1,4 +1,4 @@
-_canvas_.interface.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("interface", function(){
 
     // osc_1 = new _canvas_.interface.circuit.oscillator(_canvas_.library.audio.context);
     // gain_1 = new GainNode(_canvas_.library.audio.context);

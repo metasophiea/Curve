@@ -1,16 +1,9 @@
 _canvas_.library = new function(){
     this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:18} };
     const library = this;
-
-    this.go = new function(){
-        const functionList = [];
-
-        this.add = function(newFunction){ functionList.push(newFunction); };
-        this.__activate = function(){ functionList.forEach(f => f()); };
-    };
     
     {{include:dev.js}}
-    
+
     this.math = new function(){
         {{include:modules/math/main.js}}
     };
@@ -35,7 +28,7 @@ _canvas_.library = new function(){
     };
 };
 
+_canvas_.layers.registerLayer("library", _canvas_.library);
 _canvas_.library.audio.nowReady = function(){
-    _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
-    _canvas_.library.go.__activate();
+    _canvas_.layers.declareLayerAsLoaded("library");
 };

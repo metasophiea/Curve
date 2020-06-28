@@ -23,13 +23,13 @@ function printResults(functionName,time,cycles,limitedTo=-1){
             ' ',
             'r'
         ),
-        '- average cycle time:'+ cycleTime_formatted +' seconds'
+        '- average cycle time:'+ cycleTime_formatted +''
     );
     if(limitedTo > -1 && cycles > limitedTo){
         const cycleTime = _canvas_.library.math.seconds2time( (time/1000)*(cycles/limitedTo) ); 
         const cycleTime_formatted =cycleTime.h+'h '+cycleTime.m+'m '+cycleTime.s+'s '+cycleTime.ms+'ms '+cycleTime.µs+'µs '+cycleTime.ns+'ns '+cycleTime.ps+'ps '+cycleTime.fs+'fs';
 
-        console.log( (new Array(60).fill(' ').join(''))+' (projected time to perform '+cycles+' cycles: '+ cycleTime_formatted +' seconds)' );
+        console.log( (new Array(60).fill(' ').join(''))+' (projected time to perform '+cycles+' cycles: '+ cycleTime_formatted +')' );
     }
 }
 
@@ -393,28 +393,28 @@ printResults('library.math.polygonsToVisibilityGraph',results,loopCount,limit);
 
 
 
-var results = timeTest(
-    _canvas_.library.misc.removeTheseElementsFromThatArray,
-    loopCount,
-    function(){
-        var arr = (new Array(1024).fill().map( () => Math.random() ));
+// var results = timeTest(
+//     _canvas_.library.misc.removeTheseElementsFromThatArray,
+//     loopCount,
+//     function(){
+//         var arr = (new Array(1024).fill().map( () => Math.random() ));
 
-        var index = Math.floor(Math.random()*1024);
-        var length = Math.floor(Math.random()*(1024-index));
-        var seq = arr.slice(index,length);
+//         var index = Math.floor(Math.random()*1024);
+//         var length = Math.floor(Math.random()*(1024-index));
+//         var seq = arr.slice(index,length);
 
-        return [seq,arr];
-    }
-);
-printResults('library.misc.removeTheseElementsFromThatArray',results,loopCount);
+//         return [seq,arr];
+//     }
+// );
+// printResults('library.misc.removeTheseElementsFromThatArray',results,loopCount);
 
-var limit = 500;
-var results = timeTest(
-    _canvas_.library.misc.getDifferenceOfArrays,
-    loopCount > limit ? limit : loopCount,
-    function(){ return [(new Array(1024).fill().map( () => Math.random())),(new Array(1024).fill().map( () => Math.random()))]; }
-);
-printResults('library.misc.getDifferenceOfArrays',results,loopCount,limit);
+// var limit = 5;
+// var results = timeTest(
+//     _canvas_.library.misc.getDifferenceOfArrays,
+//     loopCount > limit ? limit : loopCount,
+//     function(){ return [(new Array(1024).fill().map( () => Math.random())),(new Array(1024).fill().map( () => Math.random()))]; }
+// );
+// printResults('library.misc.getDifferenceOfArrays',results,loopCount,limit);
 
 
 

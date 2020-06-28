@@ -1,4 +1,4 @@
-_canvas_.library.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("library", function(){
 
     osc_1 = new _canvas_.library.audio.audioWorklet.oscillator(_canvas_.library.audio.context);
     gain_1 = new _canvas_.library.audio.audioWorklet.gain(_canvas_.library.audio.context);

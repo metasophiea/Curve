@@ -1,4 +1,4 @@
-_canvas_.curve.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("curve", function(){
     _canvas_.control.viewport.scale(2);
     _canvas_.control.viewport.position(530,170);
 

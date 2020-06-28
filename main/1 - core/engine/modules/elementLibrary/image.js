@@ -528,8 +528,14 @@ this.image = function(_id,_name){
 
         //image data
             const state = {
-                url:'',
-                defaultURL:'/images/noimageimage.png'
+                url:undefined,
+                defaultURL:'/images/noimageimage.png',
+            };
+            elementLibrary.image.webglDataStore[undefined] = {
+                bitmap: undefined,
+                textureData: undefined,
+                isLoaded: false,
+                isProcessed: false,
             };
             function loadImage(url,forceUpdate=false){
                 dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url,forceUpdate); //#development
@@ -585,7 +591,10 @@ this.image = function(_id,_name){
                     forceUpdate
                 );
             }
-            setTimeout(()=>{ if(state.url == ''){ loadImage(state.defaultURL); } },1000);
+            setTimeout(()=>{ if(state.url == undefined){ 
+                state.url = state.defaultURL;
+                loadImage(state.defaultURL);
+            } },1000);
 
             this.url = function(a,forceUpdate=false){
                 dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a,forceUpdate); //#development

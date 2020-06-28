@@ -1,7 +1,7 @@
 //add main panes to arrangement
 _canvas_.system.pane = {};
 
-_canvas_.core.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("core", function(){
     //background
         _canvas_.system.pane.background = _canvas_.core.element.create('group','background');
         _canvas_.system.pane.background.ignored(true);

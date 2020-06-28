@@ -1,4 +1,4 @@
-_canvas_.interface.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("interface", function(){
     let player_1 = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
     player_1.load('url',function(){},'https://metasophiea.com/apps/partyCalculator/tracks/1-bassSynth_08.wav');
     player_1.out_left().connect(_canvas_.library.audio.destination);

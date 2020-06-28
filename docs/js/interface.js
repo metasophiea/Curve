@@ -5,30 +5,63 @@
         if( __canvasElements[__canvasElements_count].hasAttribute(__canvasPrefix) ){
             const _canvas_ = __canvasElements[__canvasElements_count];
             _canvas_.layers = new function(){
-                const layerRegistry = {};
+                const layerRegistry = [];
             
-                this.registerLayerLoaded = function(layerName, layer){
-                    if(layerRegistry[layerName] == undefined){ layerRegistry[layerName] = {}; }
-                    layerRegistry[layerName].isLoaded = true;
-                    layerRegistry[layerName].versionInformation = layer.versionInformation;
+                function getLayerIndexByName(layerName){
+                    for(let a = 0; a < layerRegistry.length; a++){
+                        if(layerRegistry[a].name == layerName){
+                            return a;
+                        }
+                    }
+                    return -1;
+                }
+            
+                this.getVersionInformation = function(){
+                    return Object.keys(layerRegistry).map(key => { return {name:layerRegistry[key].name, data:layerRegistry[key].versionInformation} });
+                };
+            
+                this.registerLayer = function(layerName, layer){
+                    if( getLayerIndexByName(layerName) != -1){
+                        console.error('_canvas_.layers.registerLayer('+layerName+','+layer+') : duplicate layer name detected ');
+                        return;
+                    }
+            
+                    layerRegistry.push({
+                        name: layerName,
+                        isLoaded: false,
+                        versionInformation: layer.versionInformation,
+                        functionList:[],
+                    });
+            
+                    if(this.onLayerRegistered){this.onLayerRegistered(layerName,layerRegistry);}
+                };
+                this.onLayerRegistered = function(layerName,layerRegistry){};
+            
+                this.declareLayerAsLoaded = function(layerName){
+                    let index = getLayerIndexByName(layerName);
+                    if( index == -1){
+                        console.error('_canvas_.layers.declareLayerAsLoaded('+layerName+') : unknown layer name ');
+                        return;
+                    }
+            
+                    layerRegistry[index].isLoaded = true;
                     if(this.onLayerLoad){this.onLayerLoad(layerName,layerRegistry);}
+                    layerRegistry[index].functionList.forEach(func => { func(); });
                 };
                 this.onLayerLoad = function(layerName,layerRegistry){};
             
-                this.getVersionInformation = function(){
-                    return Object.keys(layerRegistry).map(key => { return {name:key, data:layerRegistry[key].versionInformation} });
+                this.registerFunctionForLayer = function(layerName, func){
+                    let index = getLayerIndexByName(layerName);
+                    if( index == -1){
+                        console.error('_canvas_.layers.registerFunctionForLayer('+layerName+') : unknown layer name ');
+                        return;
+                    }
+                    layerRegistry[index].functionList.push(func);
                 };
             };
             _canvas_.library = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:18} };
                 const library = this;
-            
-                this.go = new function(){
-                    const functionList = [];
-            
-                    this.add = function(newFunction){ functionList.push(newFunction); };
-                    this.__activate = function(){ functionList.forEach(f => f()); };
-                };
                 
                 const dev = {
                     prefix:'library',
@@ -67,7 +100,7 @@
                     },
                     countResults:function(){return countMemory;},
                 };
-                
+            
                 this.math = new function(){
                     this.averageArray = function(array){
                     
@@ -531,6 +564,34 @@
                             {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
                         ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
                     }
+                    
+                    
+                    
+                    
+                    
+                    
+                    this.aVeryDifficultCalculation = function(a, b, c, d, e, f){
+                    
+                        a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
+                        b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
+                        c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
+                        d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
+                        e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
+                        f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
+                    
+                        return { a:a, b:b, c:c, d:d, e:e, f:f };
+                    };
+                    this.anotherVeryDifficultCalculation = function(a, b, c, d, e, f){
+                    
+                        a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
+                        b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
+                        c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
+                        d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
+                        e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
+                        f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
+                    
+                        return f;
+                    };
                     this.detectIntersect = new function(){
                         this.boundingBoxes = function(box_a, box_b){
                     
@@ -22717,14 +22778,12 @@
                         // };
                     };
                     (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-                    	/*
-                    	 * @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
-                    	 * @license MIT
-                    	 * @preserve Project Home: https://github.com/voidqk/polybooljs
-                    	 */
+                    
+                    	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+                    	// @license MIT
+                    	// @preserve Project Home: https://github.com/voidqk/polybooljs
                     	
                         // Modified by Metasophiea <metasophiea@gmail.com>
-                    
                     
                     	var BuildLog = require('./lib/build-log');
                     	var Epsilon = require('./lib/epsilon');
@@ -24337,13 +24396,13 @@
                 };
             };
             
+            _canvas_.layers.registerLayer("library", _canvas_.library);
             _canvas_.library.audio.nowReady = function(){
-                _canvas_.layers.registerLayerLoaded('library',_canvas_.library);
-                _canvas_.library.go.__activate();
+                _canvas_.layers.declareLayerAsLoaded("library");
             };
 
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:21} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:6,d:25} };
                 const core_engine = new Worker("/js/core_engine.js");
                 const self = this;
                 
@@ -24987,7 +25046,7 @@
                             anchor: {x:0,y:0},
                             width: 10,
                             height: 10,
-                            url:'',
+                            url:undefined,
                             bitmap: undefined,
                         }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
                     };
@@ -25116,13 +25175,6 @@
                         }
                     };
 
-                };
-                
-                this.go = new function(){
-                    const functionList = [];
-                
-                    this.add = function(newFunction){ functionList.push(newFunction); };
-                    this.__activate = function(){ functionList.forEach(f => f()); };
                 };
                 
                 this.meta = new function(){
@@ -25678,8 +25730,7 @@
                 };
 
                 communicationModule.function.go = function(){
-                    _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
-                    self.go.__activate();
+                    _canvas_.layers.declareLayerAsLoaded("core");
                 };
                 communicationModule.function.printToScreen = function(imageData){
                     _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
@@ -25735,16 +25786,11 @@
                 };
 
             };
+            
+            _canvas_.layers.registerLayer("core", _canvas_.core);
             _canvas_.system = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
                 this.mouseReady = false;
-            
-                this.go = new function(){
-                    const functionList = [];
-            
-                    this.add = function(newFunction){ functionList.push(newFunction); };
-                    this.__activate = function(){ functionList.forEach(f => f()); };
-                };
             };
             _canvas_.system.mouse = new function(){
                 //setup
@@ -25762,7 +25808,7 @@
                     this.functionList.ondblclick = [];
                 
                 //save the listener functions of the canvas
-                    _canvas_.core.go.add( function(){
+                    _canvas_.layers.registerFunctionForLayer("core", function(){
                         _canvas_.system.mouse.original = {
                             onmousemove: _canvas_.onmousemove,
                             onmouseleave: _canvas_.onmouseleave,
@@ -25875,10 +25921,12 @@
                     };
             };
             
+            _canvas_.layers.registerLayer("system", _canvas_.system);
+            
             //add main panes to arrangement
             _canvas_.system.pane = {};
             
-            _canvas_.core.go.add( function(){
+            _canvas_.layers.registerFunctionForLayer("core", function(){
                 //background
                     _canvas_.system.pane.background = _canvas_.core.element.create('group','background');
                     _canvas_.system.pane.background.ignored(true);
@@ -25933,8 +25981,7 @@
                     _canvas_.system.mouse.original != undefined
                 ){
                     clearInterval(checkingInterval);
-                    _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
-                    _canvas_.system.go.__activate();
+                    _canvas_.layers.declareLayerAsLoaded("system");
                 }
             }, 100);
             _canvas_.interface = new function(){
@@ -25960,13 +26007,6 @@
                         console.log('%c'+dev.prefix+'.'+dev.channels[channel].prefix+(new Array(...arguments).join(' ')), dev.channels[channel].fontStyle );
                     }
                 });
-            
-                this.go = new function(){
-                    const functionList = [];
-            
-                    this.add = function(newFunction){ functionList.push(newFunction); };
-                    this.__activate = function(){ functionList.forEach(f => f()); };
-                };
             
                 this.circuit = new function(){
                     this.rapidAmplitudeModulator = function(
@@ -41530,10 +41570,11 @@
                 };
             };
             
-            _canvas_.system.go.add( function(){
-                _canvas_.layers.registerLayerLoaded('interface',_canvas_.interface);
-                _canvas_.interface.go.__activate();
-            } );
+            
+            _canvas_.layers.registerLayer("interface", _canvas_.interface);
+            _canvas_.layers.registerFunctionForLayer("system", function(){
+                _canvas_.layers.declareLayerAsLoaded("interface");
+            });
                 
         }
     }

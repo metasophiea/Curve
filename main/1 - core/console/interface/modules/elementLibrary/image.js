@@ -8,7 +8,7 @@ this.image = function(_name){
         anchor: {x:0,y:0},
         width: 10,
         height: 10,
-        url:'',
+        url:undefined,
         bitmap: undefined,
     }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
 };

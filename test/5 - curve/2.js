@@ -1,4 +1,4 @@
-_canvas_.curve.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("curve", function(){
     _canvas_.control.scene.addUnit(10,10,0,'button_panel_1','curvetech');
     _canvas_.control.scene.addUnit(35,10,0,'button_panel_2','curvetech');
     _canvas_.control.scene.addUnit(70,10,0,'button_panel_4','curvetech');

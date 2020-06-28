@@ -1,6 +1,6 @@
 //// removal
 
-// _canvas_.core.go.add( function(){ 
+// _canvas_.layers.registerFunctionForLayer("core", function(){
 
 //     group_1 = _canvas_.core.element.create('group','group_1');
 //     group_1.unifiedAttribute({ x:100, y:100 });
@@ -62,7 +62,7 @@
 
 //// shifting
 
-_canvas_.core.go.add( function(){ 
+_canvas_.layers.registerFunctionForLayer("core", function(){
 
     group_1 = _canvas_.core.element.create('group','group_1');
     group_1.unifiedAttribute({ x:100, y:100 });

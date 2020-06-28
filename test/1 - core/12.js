@@ -3,7 +3,7 @@ if(fontName == undefined){fontName = 'Roboto-Regular';}
 var customText = new URL(window.location.href).searchParams.get("text");
 if(customText == undefined){customText = 'How are you today?';}
 
-_canvas_.core.go.add( function(){ 
+_canvas_.layers.registerFunctionForLayer("core", function(){
 
     let rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
     rectangle_1.unifiedAttribute({ 

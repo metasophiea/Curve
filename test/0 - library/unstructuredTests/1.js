@@ -1,5 +1,5 @@
 // //testWorklet
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     const osc = new OscillatorNode(_canvas_.library.audio.context);
 //     const testWorklet = new _canvas_.library.audio.audioWorklet.testWorklet(_canvas_.library.audio.context)
     
@@ -24,7 +24,7 @@
 
 
 // //amplitudeModifier
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     const osc = new OscillatorNode(_canvas_.library.audio.context);
 //     const AM = new _canvas_.library.audio.audioWorklet.amplitudeModifier(_canvas_.library.audio.context);
 
@@ -46,7 +46,7 @@
 
 
 // //bitcrusher
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     const osc = new OscillatorNode(_canvas_.library.audio.context);
 //     const BC = new _canvas_.library.audio.audioWorklet.bitcrusher(_canvas_.library.audio.context);
 
@@ -64,30 +64,30 @@
 
 
 
-//momentaryAmplitudeMeter
-_canvas_.library.go.add( function(){
-    const osc = new OscillatorNode(_canvas_.library.audio.context);
-    const gain = new GainNode(_canvas_.library.audio.context);
-    const MAM = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(_canvas_.library.audio.context);
+// //momentaryAmplitudeMeter
+// _canvas_.layers.registerFunctionForLayer("library", function(){
+//     const osc = new OscillatorNode(_canvas_.library.audio.context);
+//     const gain = new GainNode(_canvas_.library.audio.context);
+//     const MAM = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(_canvas_.library.audio.context);
     
-    osc.connect(gain).connect(MAM);
+//     osc.connect(gain).connect(MAM);
 
-    MAM.reading = function(data){
-        console.log(data);
-    };
-    MAM.updateMode = 1;
-    setTimeout( function(){ MAM.requestReading(); }, 500 );
+//     MAM.reading = function(data){
+//         console.log(data);
+//     };
+//     MAM.updateMode = 1;
+//     setTimeout( function(){ MAM.requestReading(); }, 500 );
 
-    osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
-    osc.start();
-    gain.gain.linearRampToValueAtTime(0, _canvas_.library.audio.context.currentTime+10);
-});
+//     osc.frequency.setTargetAtTime(440, _canvas_.library.audio.context.currentTime, 0);
+//     osc.start();
+//     gain.gain.linearRampToValueAtTime(0, _canvas_.library.audio.context.currentTime+10);
+// });
 
 
 
 
 // //amplitudeControlledModulator
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
 //     const osc_2 = new OscillatorNode(_canvas_.library.audio.context);
 //     const gain_1 = new GainNode(_canvas_.library.audio.context);
@@ -114,7 +114,7 @@ _canvas_.library.go.add( function(){
 
 
 // //whiteNoiseGenerator
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     const WNG = new _canvas_.library.audio.audioWorklet.whiteNoiseGenerator(_canvas_.library.audio.context);
 //     WNG.connect(_canvas_.library.audio.context.destination);
 // });
@@ -123,7 +123,7 @@ _canvas_.library.go.add( function(){
 
 
 // //squareWaveGenerator
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     grap = grapher;
 
 //     const SWG = new _canvas_.library.audio.audioWorklet.squareWaveGenerator(_canvas_.library.audio.context);
@@ -159,7 +159,7 @@ _canvas_.library.go.add( function(){
 
 
 // //oscillator
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     grap = grapher;
 
 //     O_1 = new _canvas_.library.audio.audioWorklet.oscillator(_canvas_.library.audio.context); 
@@ -191,7 +191,7 @@ _canvas_.library.go.add( function(){
 
 
 // // oscillatorWithMultiLevelPhaseModulation
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     O_1 = new _canvas_.library.audio.audioWorklet.oscillatorWithMultiLevelPhaseModulation(_canvas_.library.audio.context); 
 //     const gain_1 = new GainNode(_canvas_.library.audio.context);
 //     O_1.connect(gain_1);
@@ -204,7 +204,7 @@ _canvas_.library.go.add( function(){
 
 
 // //lagProcessor
-// _canvas_.library.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("library", function(){
 //     const osc_1 = new OscillatorNode(_canvas_.library.audio.context);
 //     const gain_1 = new GainNode(_canvas_.library.audio.context);
 //     const lag_1 = new _canvas_.library.audio.audioWorklet.lagProcessor(_canvas_.library.audio.context);

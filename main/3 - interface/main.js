@@ -22,13 +22,6 @@ _canvas_.interface = new function(){
         }
     });
 
-    this.go = new function(){
-        const functionList = [];
-
-        this.add = function(newFunction){ functionList.push(newFunction); };
-        this.__activate = function(){ functionList.forEach(f => f()); };
-    };
-
     this.circuit = new function(){
         {{include:circuit}}
     };
@@ -40,8 +33,9 @@ _canvas_.interface = new function(){
     };
 };
 
-_canvas_.system.go.add( function(){
-    _canvas_.layers.registerLayerLoaded('interface',_canvas_.interface);
-    _canvas_.interface.go.__activate();
-} );
+
+_canvas_.layers.registerLayer("interface", _canvas_.interface);
+_canvas_.layers.registerFunctionForLayer("system", function(){
+    _canvas_.layers.declareLayerAsLoaded("interface");
+});
     

@@ -1,6 +1,7 @@
 _canvas_.core.render.active(true);
 
-_canvas_.interface.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("interface", function(){
+    
     console.log('%c- connectionNode : Generic', 'font-weight: bold;');
     var cn_reg_0 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode', 'test_connectionNode1', { x:10, y:10 } );
     var cn_reg_1 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode', 'test_connectionNode2', { x:110,  y:10 } );

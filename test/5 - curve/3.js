@@ -1,4 +1,4 @@
-_canvas_.curve.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("curve", function(){
     _canvas_.core.render.frameRateLimit(10);
 
     const dsds = _canvas_.control.scene.addUnit(10,100,0,'dsds-8^3','harbinger');

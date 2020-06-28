@@ -1,4 +1,4 @@
-_canvas_.system.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("system", function(){
     _canvas_.system.keyboard.functionList.onkeydown.push(
         {
             requiredKeys:[],

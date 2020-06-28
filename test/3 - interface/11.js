@@ -1,4 +1,4 @@
-_canvas_.interface.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("interface", function(){
 
     // synth_1 = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
     // synth_1.out().connect(_canvas_.library.audio.destination);
@@ -56,7 +56,7 @@ _canvas_.interface.go.add( function(){
 
 
 
-// _canvas_.interface.go.add( function(){
+// _canvas_.layers.registerFunctionForLayer("interface", function(){
 //     oscillator_1 = new _canvas_.interface.circuit.oscillator(_canvas_.library.audio.context);
 //     gain_1 = new GainNode(_canvas_.library.audio.context);
 //     oscillator_1.out().connect(gain_1);

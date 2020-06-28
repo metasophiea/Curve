@@ -13,7 +13,7 @@
     this.functionList.ondblclick = [];
 
 //save the listener functions of the canvas
-    _canvas_.core.go.add( function(){
+    _canvas_.layers.registerFunctionForLayer("core", function(){
         _canvas_.system.mouse.original = {
             onmousemove: _canvas_.onmousemove,
             onmouseleave: _canvas_.onmouseleave,

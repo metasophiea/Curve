@@ -1,6 +1,6 @@
 var elements = {};
 
-_canvas_.core.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("core", function(){
     
     //rectangle
         elements.rectangle_1 = _canvas_.core.element.create('rectangle','test_rectangle_1');

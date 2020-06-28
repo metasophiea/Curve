@@ -1,4 +1,36 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-06-25
+  - perhaps something changed in chrome, but the tests weren't working anymore,
+    as when one of them attempted to create a canvas (for graphing, like the
+    library tests do) this would expand the number of canvases in the document,
+    causing the global code allocation loop to run again on this new canvas,
+    which would create a new canvas which would expand the number of canvases
+    in the document, etc.
+      It's fixed in the test.js file, but not the others. Something to watch
+    out for. test.js now collects all the canvas elememts, but then filters by
+    which have the "__canvasPrefix" as an attribute
+  - misc test loadFileFromURL returned fail..I think jst because the test was
+    wrong however. There had been some changes to the loadFileFromURL
+    function's arguments which weren't reflected in the test
+  - odd situation in the engine image element, where if you set the url to ""
+    from the start; the element would be fine with this, until the data had to
+    be called during render, which wouldn't be fine. Fixed it by setting the
+    initial value of the url to "undefined" and also telling the hidden timeout
+    thing to set the url to the defaultURL but I'm still interested in what was
+    causing the url to be set to "". I think initially, the console just sends
+    over all the information. It doesn't care if its defaults are the same as
+    the counterpart's
+  - updated the layer controller so that its more in charge of layering, and
+    responsible for calling the functions of layers when lower layers have
+    completed loading, taking this responsibility from the layers themselves
+      This is the one sort of update that doesn't bump any version number, as
+    this is a very low-level, basic, functional, managerial, funky sort of 
+    part. Probably. Though it does require lines to be re-written in lots of
+    places so that they use the new system of starting, instead of their 
+    internal ones.. also had to remove that internal start-up code from all
+    the layers.. just call me a bad programmer and move on
+
+
 2020-05-10
   - fixed some spelling mistakes, added words to the readme to say that I was
     learning Rust and removed lots of redundant code from the workshop section.

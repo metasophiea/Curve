@@ -119,4 +119,3 @@ grapher.clear();
             grapher.drawLine( data.paths[a][b], data.paths[a][b+1], colour );
         }
     }
-

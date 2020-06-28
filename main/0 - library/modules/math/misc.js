@@ -530,3 +530,31 @@ this.unionPolygons = function(polygon1,polygon2){
         {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
     ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
 }
+
+
+
+
+
+
+this.aVeryDifficultCalculation = function(a, b, c, d, e, f){
+
+    a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
+    b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
+    c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
+    d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
+    e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
+    f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
+
+    return { a:a, b:b, c:c, d:d, e:e, f:f };
+};
+this.anotherVeryDifficultCalculation = function(a, b, c, d, e, f){
+
+    a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
+    b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
+    c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
+    d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
+    e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
+    f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
+
+    return f;
+};

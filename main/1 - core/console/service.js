@@ -1,7 +1,6 @@
 communicationModule.function.go = function(){
     dev.log.service('.go()'); //#development
-    _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
-    self.go.__activate();
+    _canvas_.layers.declareLayerAsLoaded("core");
 };
 communicationModule.function.printToScreen = function(imageData){
     dev.log.service('.printToScreen(',imageData); //#development

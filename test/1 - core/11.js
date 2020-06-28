@@ -5,7 +5,7 @@ if(customText == undefined){customText = 'CORE';}
 
 function rc(){return {r:Math.random(),g:Math.random(),b:Math.random(),a:1};}
 
-_canvas_.core.go.add( function(){ 
+_canvas_.layers.registerFunctionForLayer("core", function(){
 
     let rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
     rectangle_1.unifiedAttribute({ x:10, y:10, width:50, height:50, colour:rc() });

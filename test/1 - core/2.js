@@ -1,6 +1,6 @@
 const randomRectangleCount = 1000;
 
-_canvas_.core.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("core", function(){
 
     _canvas_.core.render.getCanvasSize().then(canvasSize => {
         for(let a = 0; a < randomRectangleCount; a++){

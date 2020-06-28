@@ -1,4 +1,4 @@
-_canvas_.interface.go.add( function(){
+_canvas_.layers.registerFunctionForLayer("interface", function(){
 
     frequencyResponseMeasure_1 = new _canvas_.interface.circuit.frequencyAmplitudeResponseAnalyser(_canvas_.library.audio.context);
     frequencyResponseMeasure_1.range(20,5000);
