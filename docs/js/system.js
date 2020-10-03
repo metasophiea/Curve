@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:3,d:18} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:29} };
                 const library = this;
                 
                 const dev = {
@@ -622,7 +622,7 @@
                         holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
                         holes.pop();
                     
-                        return _thirdparty.earcut2(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+                        return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
                     };
                     this.unionPolygons = function(polygon1,polygon2){
                         dev.log.math('.unionPolygons(',polygon1,polygon2); //#development
@@ -634,34 +634,6 @@
                             {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
                         ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
                     }
-                    
-                    
-                    
-                    
-                    
-                    
-                    this.aVeryDifficultCalculation = function(a, b, c, d, e, f){
-                    
-                        a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
-                        b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
-                        c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
-                        d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
-                        e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
-                        f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
-                    
-                        return { a:a, b:b, c:c, d:d, e:e, f:f };
-                    };
-                    this.anotherVeryDifficultCalculation = function(a, b, c, d, e, f){
-                    
-                        a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
-                        b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
-                        c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
-                        d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
-                        e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
-                        f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
-                    
-                        return f;
-                    };
                     this.detectIntersect = new function(){
                         this.boundingBoxes = function(box_a, box_b){
                             dev.log.math('.detectIntersect.boundingBoxes(',box_a,box_b); //#development
@@ -1083,8 +1055,8 @@
                             return results;
                         };
                     };
-                    this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
-                        dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
+                    this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4,returnTriangles=true){
+                        dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit,returnTriangles);
                         dev.count('.math.pathExtrapolation'); //#development
                     
                         function loopThisPath(path){
@@ -1343,9 +1315,14 @@
                             if(capType == 'round'){ polygons = polygons.concat(roundCaps(jointData,thickness,detail)); }
                     
                         //union all polygons, convert to triangles and return
-                            return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
+                            if(returnTriangles){
+                                return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
+                            } else {
+                                let tmp = polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon));
+                                tmp = tmp.map( points => points.map(point => [point.x,point.y]).flat() );
+                                return tmp;
+                            }
                     };
-
                     this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},returnPathData=false){
                         dev.log.math('.fitPolyIn(',freshPoly,environmentPolys,snapping);
                         dev.count('.math.fitPolyIn'); //#development
@@ -1649,7 +1626,6 @@
                     
                         return route;
                     };
-
                 };
                 this.glsl = new function(){
                     this.geometry = `
@@ -2201,7 +2177,7 @@
                     //create locations in the vector library for these fonts
                     fontFileNames.forEach(name => {
                         const fontName = name.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]; //produce font name from file name
-                        vectorLibrary[fontName] = { fileName:name, loadAttempted:false, isLoaded:false };
+                        vectorLibrary[fontName] = { fileName:name, loadAttempted:false, loadComplete:false, loadWasSuccess:undefined };
                     });
                     vectorLibrary.defaultThick = {
                         loadAttempted:true,
@@ -3202,9 +3178,12 @@
                         dev.count('.font.getLoadedFonts'); //#development
                     
                         const defaultFontNames = ['defaultThick','defaultThin'];
-                        const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
+                        const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].loadWasSuccess);
                         return defaultFontNames.concat(loadedFontNames);
                     };
+                    
+                    
+                    
                     
                     this.isApprovedFont = function(fontName){
                         dev.log.font('.isApprovedFont(',fontName); //#development
@@ -3212,21 +3191,7 @@
                     
                         return vectorLibrary[fontName] != undefined;
                     };
-                    this.isFontLoaded = function(fontName){
-                        dev.log.font('.isFontLoaded(',fontName); //#development
-                        dev.count('.font.isFontLoaded'); //#development
-                    
-                        if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
-                        return vectorLibrary[fontName].isLoaded;
-                    }
-                    this.fontLoadAttempted = function(fontName){
-                        dev.log.font('.fontLoadAttempted(',fontName); //#development
-                        dev.count('.font.fontLoadAttempted'); //#development
-                    
-                        if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
-                        return vectorLibrary[fontName].loadAttempted;
-                    }
-                    this.loadFont = function(fontName,onLoaded=()=>{}){
+                    this.loadFont = function(fontName,force,onLoaded=()=>{}){
                         dev.log.font('.loadFont(',fontName,onLoaded); //#development
                         dev.count('.font.loadFont'); //#development
                     
@@ -3239,11 +3204,12 @@
                             }
                     
                         //if font is already loaded, bail
-                            if( this.isFontLoaded(fontName) ){return;}
+                            if( !force && vectorLibrary[fontName].loadComplete ){return;}
                     
                         //set up library entry
                             vectorLibrary[fontName].loadAttempted = true;
-                            vectorLibrary[fontName].isLoaded = false;
+                            vectorLibrary[fontName].loadComplete = false;
+                            vectorLibrary[fontName].loadWasSuccess = undefined;
                             vectorLibrary[fontName]['default'] = {vector:[0,0, 1,0, 0,-1, 1,0, 0,-1, 1,-1]};
                     
                         //load file
@@ -3253,16 +3219,71 @@
                                 fontData => {
                                     const vectors = library.font.extractGlyphs(fontData.response,reducedGlyphSet);
                                     Object.keys(vectors).forEach(glyphName => vectorLibrary[fontName][glyphName] = vectors[glyphName] );
-                                    vectorLibrary[fontName].isLoaded = true;
-                                    onLoaded(true);
+                                    vectorLibrary[fontName].loadComplete = true;
+                                    vectorLibrary[fontName].loadWasSuccess = true;
+                                    onLoaded({fontName:fontName, loadWasSuccess:true});
                                 },
-                                () => { onLoaded(false); },
+                                () => {
+                                    vectorLibrary[fontName].loadComplete = true;
+                                    vectorLibrary[fontName].loadWasSuccess = false;
+                                    onLoaded({fontName:fontName, loadWasSuccess:false});
+                                },
                                 'arraybuffer',
                             );
                     };
-                    this.getVector = function(fontName,character){
-                        return vectorLibrary[fontName][character];
+                    
+                    
+                    this.isValidCharacter = function(fontName, character){
+                        return vectorLibrary[fontName][character] != undefined;
+                    };
+                    
+                    this.getDefaultVector = function(fontName){
+                        return vectorLibrary[fontName].default.vector;
+                    };
+                    this.getVector = function(fontName, character){
+                        return vectorLibrary[fontName][character].vector;
+                    };
+                    this.getRatio = function(fontName, character){
+                        return vectorLibrary[fontName][character].ratio;
                     }
+                    this.getOffset = function(fontName, character){
+                        return vectorLibrary[fontName][character].offset;
+                    }
+                    this.getEncroach = function(fontName, character, otherCharacter){
+                        return vectorLibrary[fontName][character].encroach[otherCharacter];
+                    }
+                    this.getMiscDefaultData = function(fontName){
+                        return {
+                            ascender: vectorLibrary[fontName].default.ascender,
+                            descender: vectorLibrary[fontName].default.descender,
+                            leftSideBearing: vectorLibrary[fontName].default.leftSideBearing,
+                            advanceWidth: vectorLibrary[fontName].default.advanceWidth,
+                            xMax: vectorLibrary[fontName].default.xMax,
+                            yMax: vectorLibrary[fontName].default.yMax,
+                            xMin: vectorLibrary[fontName].default.xMin,
+                            yMin: vectorLibrary[fontName].default.yMin,
+                            top: vectorLibrary[fontName].default.top,
+                            left: vectorLibrary[fontName].default.left,
+                            bottom: vectorLibrary[fontName].default.bottom,
+                            right: vectorLibrary[fontName].default.right,
+                        };
+                    };
+                    this.getMiscData = function(fontName, character){
+                        return {
+                            ascender: vectorLibrary[fontName][character].ascender,
+                            descender: vectorLibrary[fontName][character].descender,
+                            leftSideBearing: vectorLibrary[fontName][character].leftSideBearing,
+                            advanceWidth: vectorLibrary[fontName][character].advanceWidth,
+                            xMax: vectorLibrary[fontName][character].xMax,
+                            yMax: vectorLibrary[fontName][character].yMax,
+                            xMin: vectorLibrary[fontName][character].xMin,
+                            yMin: vectorLibrary[fontName][character].yMin,
+                            top: vectorLibrary[fontName][character].top,
+                            left: vectorLibrary[fontName][character].left,
+                            bottom: vectorLibrary[fontName][character].bottom,
+                            right: vectorLibrary[fontName][character].right,
+                        };
+                    };
                 };
                 this.misc = new function(){
                     this.padString = function(string,length,padding=' ',paddingSide='l'){
@@ -5780,7 +5801,6 @@
                                     }
                                 ,
                             },
-
                             {
                                 name:'testWorkerNode',
                                 worklet:new Blob([`
@@ -6083,7 +6103,6 @@
                                     
                                     // 441.6hz = a complete waveform takes 100 samples
                                     // 437.2277227722772hz = a complete waveform takes 101 samples
-
                                 `], { type: "text/javascript" }),
                                 class:
                                     class testWorkerNode extends AudioWorkletNode{
@@ -6890,8 +6909,6 @@
                                     }
                                 ,
                             },
-
-
                         ];
                             
                         worklets.forEach(worklet => {
@@ -6935,1622 +6952,6 @@
                 };
                 const _thirdparty = new function(){
                     const thirdparty = this;
-                    (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-                    
-                    	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
-                    	// @license MIT
-                    	// @preserve Project Home: https://github.com/voidqk/polybooljs
-                    	
-                        // Modified by Metasophiea <metasophiea@gmail.com>
-                    
-                    	var BuildLog = require('./lib/build-log');
-                    	var Epsilon = require('./lib/epsilon');
-                    	var Intersecter = require('./lib/intersecter');
-                    	var SegmentChainer = require('./lib/segment-chainer');
-                    	var SegmentSelector = require('./lib/segment-selector');
-                    	var GeoJSON = require('./lib/geojson');
-                    	
-                    	var buildLog = false;
-                    	var epsilon = Epsilon();
-                    	
-                    	var PolyBool;
-                    	PolyBool = {
-                    		// getter/setter for buildLog
-                    		buildLog: function(bl){
-                    			if (bl === true)
-                    				buildLog = BuildLog();
-                    			else if (bl === false)
-                    				buildLog = false;
-                    			return buildLog === false ? false : buildLog.list;
-                    		},
-                    		// getter/setter for epsilon
-                    		epsilon: function(v){
-                    			return epsilon.epsilon(v);
-                    		},
-                    	
-                    		// core API
-                    		segments: function(poly){
-                    			var i = Intersecter(true, epsilon, buildLog);
-                    			poly.regions.forEach(i.addRegion);
-                    			return {
-                    				segments: i.calculate(poly.inverted),
-                    				inverted: poly.inverted
-                    			};
-                    		},
-                    		combine: function(segments1, segments2){
-                    			var i3 = Intersecter(false, epsilon, buildLog);
-                    			return {
-                    				combined: i3.calculate(
-                    					segments1.segments, segments1.inverted,
-                    					segments2.segments, segments2.inverted
-                    				),
-                    				inverted1: segments1.inverted,
-                    				inverted2: segments2.inverted
-                    			};
-                    		},
-                    		selectUnion: function(combined){
-                    			return {
-                    				segments: SegmentSelector.union(combined.combined, buildLog),
-                    				inverted: combined.inverted1 || combined.inverted2
-                    			}
-                    		},
-                    		selectIntersect: function(combined){
-                    			return {
-                    				segments: SegmentSelector.intersect(combined.combined, buildLog),
-                    				inverted: combined.inverted1 && combined.inverted2
-                    			}
-                    		},
-                    		selectDifference: function(combined){
-                    			return {
-                    				segments: SegmentSelector.difference(combined.combined, buildLog),
-                    				inverted: combined.inverted1 && !combined.inverted2
-                    			}
-                    		},
-                    		selectDifferenceRev: function(combined){
-                    			return {
-                    				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
-                    				inverted: !combined.inverted1 && combined.inverted2
-                    			}
-                    		},
-                    		selectXor: function(combined){
-                    			return {
-                    				segments: SegmentSelector.xor(combined.combined, buildLog),
-                    				inverted: combined.inverted1 !== combined.inverted2
-                    			}
-                    		},
-                    		polygon: function(segments){
-                    			return {
-                    				regions: SegmentChainer(segments.segments, epsilon, buildLog),
-                    				inverted: segments.inverted
-                    			};
-                    		},
-                    	
-                    		// GeoJSON converters
-                    		polygonFromGeoJSON: function(geojson){
-                    			return GeoJSON.toPolygon(PolyBool, geojson);
-                    		},
-                    		polygonToGeoJSON: function(poly){
-                    			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
-                    		},
-                    	
-                    		// helper functions for common operations
-                    		union: function(poly1, poly2){
-                    			return operate(poly1, poly2, PolyBool.selectUnion);
-                    		},
-                    		intersect: function(poly1, poly2){
-                    			return operate(poly1, poly2, PolyBool.selectIntersect);
-                    		},
-                    		difference: function(poly1, poly2){
-                    			return operate(poly1, poly2, PolyBool.selectDifference);
-                    		},
-                    		differenceRev: function(poly1, poly2){
-                    			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
-                    		},
-                    		xor: function(poly1, poly2){
-                    			return operate(poly1, poly2, PolyBool.selectXor);
-                    		}
-                    	};
-                    
-                    	thirdparty.PolyBool = PolyBool;
-                    	
-                    	function operate(poly1, poly2, selector){
-                    		var seg1 = PolyBool.segments(poly1);
-                    		var seg2 = PolyBool.segments(poly2);
-                    		var comb = PolyBool.combine(seg1, seg2);
-                    		var seg3 = selector(comb);
-                    		return PolyBool.polygon(seg3);
-                    	}
-                    		
-                    	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
-                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                    	// MIT License
-                    	// Project Home: https://github.com/voidqk/polybooljs
-                    	
-                    	//
-                    	// used strictly for logging the processing of the algorithm... only useful if you intend on
-                    	// looking under the covers (for pretty UI's or debugging)
-                    	//
-                    	
-                    	function BuildLog(){
-                    		var my;
-                    		var nextSegmentId = 0;
-                    		var curVert = false;
-                    	
-                    		function push(type, data){
-                    			my.list.push({
-                    				type: type,
-                    				data: data ? JSON.parse(JSON.stringify(data)) : void 0
-                    			});
-                    			return my;
-                    		}
-                    	
-                    		my = {
-                    			list: [],
-                    			segmentId: function(){
-                    				return nextSegmentId++;
-                    			},
-                    			checkIntersection: function(seg1, seg2){
-                    				return push('check', { seg1: seg1, seg2: seg2 });
-                    			},
-                    			segmentChop: function(seg, end){
-                    				push('div_seg', { seg: seg, pt: end });
-                    				return push('chop', { seg: seg, pt: end });
-                    			},
-                    			statusRemove: function(seg){
-                    				return push('pop_seg', { seg: seg });
-                    			},
-                    			segmentUpdate: function(seg){
-                    				return push('seg_update', { seg: seg });
-                    			},
-                    			segmentNew: function(seg, primary){
-                    				return push('new_seg', { seg: seg, primary: primary });
-                    			},
-                    			segmentRemove: function(seg){
-                    				return push('rem_seg', { seg: seg });
-                    			},
-                    			tempStatus: function(seg, above, below){
-                    				return push('temp_status', { seg: seg, above: above, below: below });
-                    			},
-                    			rewind: function(seg){
-                    				return push('rewind', { seg: seg });
-                    			},
-                    			status: function(seg, above, below){
-                    				return push('status', { seg: seg, above: above, below: below });
-                    			},
-                    			vert: function(x){
-                    				if (x === curVert)
-                    					return my;
-                    				curVert = x;
-                    				return push('vert', { x: x });
-                    			},
-                    			log: function(data){
-                    				if (typeof data !== 'string')
-                    					data = JSON.stringify(data, false, '  ');
-                    				return push('log', { txt: data });
-                    			},
-                    			reset: function(){
-                    				return push('reset');
-                    			},
-                    			selected: function(segs){
-                    				return push('selected', { segs: segs });
-                    			},
-                    			chainStart: function(seg){
-                    				return push('chain_start', { seg: seg });
-                    			},
-                    			chainRemoveHead: function(index, pt){
-                    				return push('chain_rem_head', { index: index, pt: pt });
-                    			},
-                    			chainRemoveTail: function(index, pt){
-                    				return push('chain_rem_tail', { index: index, pt: pt });
-                    			},
-                    			chainNew: function(pt1, pt2){
-                    				return push('chain_new', { pt1: pt1, pt2: pt2 });
-                    			},
-                    			chainMatch: function(index){
-                    				return push('chain_match', { index: index });
-                    			},
-                    			chainClose: function(index){
-                    				return push('chain_close', { index: index });
-                    			},
-                    			chainAddHead: function(index, pt){
-                    				return push('chain_add_head', { index: index, pt: pt });
-                    			},
-                    			chainAddTail: function(index, pt){
-                    				return push('chain_add_tail', { index: index, pt: pt, });
-                    			},
-                    			chainConnect: function(index1, index2){
-                    				return push('chain_con', { index1: index1, index2: index2 });
-                    			},
-                    			chainReverse: function(index){
-                    				return push('chain_rev', { index: index });
-                    			},
-                    			chainJoin: function(index1, index2){
-                    				return push('chain_join', { index1: index1, index2: index2 });
-                    			},
-                    			done: function(){
-                    				return push('done');
-                    			}
-                    		};
-                    		return my;
-                    	}
-                    	
-                    	module.exports = BuildLog;
-                    	
-                    	},{}],3:[function(require,module,exports){
-                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                    	// MIT License
-                    	// Project Home: https://github.com/voidqk/polybooljs
-                    	
-                    	//
-                    	// provides the raw computation functions that takes epsilon into account
-                    	//
-                    	// zero is defined to be between (-epsilon, epsilon) exclusive
-                    	//
-                    	
-                    	function Epsilon(eps){
-                    		if (typeof eps !== 'number')
-                    			eps = 0.0000000001; // sane default? sure why not
-                    		var my = {
-                    			epsilon: function(v){
-                    				if (typeof v === 'number')
-                    					eps = v;
-                    				return eps;
-                    			},
-                    			pointAboveOrOnLine: function(pt, left, right){
-                    				var Ax = left[0];
-                    				var Ay = left[1];
-                    				var Bx = right[0];
-                    				var By = right[1];
-                    				var Cx = pt[0];
-                    				var Cy = pt[1];
-                    				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
-                    			},
-                    			pointBetween: function(p, left, right){
-                    				// p must be collinear with left->right
-                    				// returns false if p == left, p == right, or left == right
-                    				var d_py_ly = p[1] - left[1];
-                    				var d_rx_lx = right[0] - left[0];
-                    				var d_px_lx = p[0] - left[0];
-                    				var d_ry_ly = right[1] - left[1];
-                    	
-                    				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
-                    				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
-                    				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
-                    				if (dot < eps)
-                    					return false;
-                    	
-                    				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
-                    				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
-                    				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
-                    				if (dot - sqlen > -eps)
-                    					return false;
-                    	
-                    				return true;
-                    			},
-                    			pointsSameX: function(p1, p2){
-                    				return Math.abs(p1[0] - p2[0]) < eps;
-                    			},
-                    			pointsSameY: function(p1, p2){
-                    				return Math.abs(p1[1] - p2[1]) < eps;
-                    			},
-                    			pointsSame: function(p1, p2){
-                    				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
-                    			},
-                    			pointsCompare: function(p1, p2){
-                    				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
-                    				if (my.pointsSameX(p1, p2))
-                    					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
-                    				return p1[0] < p2[0] ? -1 : 1;
-                    			},
-                    			pointsCollinear: function(pt1, pt2, pt3){
-                    				// does pt1->pt2->pt3 make a straight line?
-                    				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
-                    				// if slopes are equal, then they must be collinear, because they share pt2
-                    				var dx1 = pt1[0] - pt2[0];
-                    				var dy1 = pt1[1] - pt2[1];
-                    				var dx2 = pt2[0] - pt3[0];
-                    				var dy2 = pt2[1] - pt3[1];
-                    				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
-                    			},
-                    			linesIntersect: function(a0, a1, b0, b1){
-                    				// returns false if the lines are coincident (e.g., parallel or on top of each other)
-                    				//
-                    				// returns an object if the lines intersect:
-                    				//   {
-                    				//     pt: [x, y],    where the intersection point is at
-                    				//     alongA: where intersection point is along A,
-                    				//     alongB: where intersection point is along B
-                    				//   }
-                    				//
-                    				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
-                    				//
-                    				//  with the following meaning:
-                    				//
-                    				//    -2   intersection point is before segment's first point
-                    				//    -1   intersection point is directly on segment's first point
-                    				//     0   intersection point is between segment's first and second points (exclusive)
-                    				//     1   intersection point is directly on segment's second point
-                    				//     2   intersection point is after segment's second point
-                    				var adx = a1[0] - a0[0];
-                    				var ady = a1[1] - a0[1];
-                    				var bdx = b1[0] - b0[0];
-                    				var bdy = b1[1] - b0[1];
-                    	
-                    				var axb = adx * bdy - ady * bdx;
-                    				if (Math.abs(axb) < eps)
-                    					return false; // lines are coincident
-                    	
-                    				var dx = a0[0] - b0[0];
-                    				var dy = a0[1] - b0[1];
-                    	
-                    				var A = (bdx * dy - bdy * dx) / axb;
-                    				var B = (adx * dy - ady * dx) / axb;
-                    	
-                    				var ret = {
-                    					alongA: 0,
-                    					alongB: 0,
-                    					pt: [
-                    						a0[0] + A * adx,
-                    						a0[1] + A * ady
-                    					]
-                    				};
-                    	
-                    				// categorize where intersection point is along A and B
-                    	
-                    				if (A <= -eps)
-                    					ret.alongA = -2;
-                    				else if (A < eps)
-                    					ret.alongA = -1;
-                    				else if (A - 1 <= -eps)
-                    					ret.alongA = 0;
-                    				else if (A - 1 < eps)
-                    					ret.alongA = 1;
-                    				else
-                    					ret.alongA = 2;
-                    	
-                    				if (B <= -eps)
-                    					ret.alongB = -2;
-                    				else if (B < eps)
-                    					ret.alongB = -1;
-                    				else if (B - 1 <= -eps)
-                    					ret.alongB = 0;
-                    				else if (B - 1 < eps)
-                    					ret.alongB = 1;
-                    				else
-                    					ret.alongB = 2;
-                    	
-                    				return ret;
-                    			},
-                    			pointInsideRegion: function(pt, region){
-                    				var x = pt[0];
-                    				var y = pt[1];
-                    				var last_x = region[region.length - 1][0];
-                    				var last_y = region[region.length - 1][1];
-                    				var inside = false;
-                    				for (var i = 0; i < region.length; i++){
-                    					var curr_x = region[i][0];
-                    					var curr_y = region[i][1];
-                    	
-                    					// if y is between curr_y and last_y, and
-                    					// x is to the right of the boundary created by the line
-                    					if ((curr_y - y > eps) != (last_y - y > eps) &&
-                    						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
-                    						inside = !inside
-                    	
-                    					last_x = curr_x;
-                    					last_y = curr_y;
-                    				}
-                    				return inside;
-                    			}
-                    		};
-                    		return my;
-                    	}
-                    	
-                    	module.exports = Epsilon;
-                    	
-                    	},{}],4:[function(require,module,exports){
-                    	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
-                    	// MIT License
-                    	// Project Home: https://github.com/voidqk/polybooljs
-                    	
-                    	//
-                    	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
-                    	//
-                    	
-                    	var GeoJSON = {
-                    		// convert a GeoJSON object to a PolyBool polygon
-                    		toPolygon: function(PolyBool, geojson){
-                    	
-                    			// converts list of LineString's to segments
-                    			function GeoPoly(coords){
-                    				// check for empty coords
-                    				if (coords.length <= 0)
-                    					return PolyBool.segments({ inverted: false, regions: [] });
-                    	
-                    				// convert LineString to segments
-                    				function LineString(ls){
-                    					// remove tail which should be the same as head
-                    					var reg = ls.slice(0, ls.length - 1);
-                    					return PolyBool.segments({ inverted: false, regions: [reg] });
-                    				}
-                    	
-                    				// the first LineString is considered the outside
-                    				var out = LineString(coords[0]);
-                    	
-                    				// the rest of the LineStrings are considered interior holes, so subtract them from the
-                    				// current result
-                    				for (var i = 1; i < coords.length; i++)
-                    					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
-                    	
-                    				return out;
-                    			}
-                    	
-                    			if (geojson.type === 'Polygon'){
-                    				// single polygon, so just convert it and we're done
-                    				return PolyBool.polygon(GeoPoly(geojson.coordinates));
-                    			}
-                    			else if (geojson.type === 'MultiPolygon'){
-                    				// multiple polygons, so union all the polygons together
-                    				var out = PolyBool.segments({ inverted: false, regions: [] });
-                    				for (var i = 0; i < geojson.coordinates.length; i++)
-                    					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
-                    				return PolyBool.polygon(out);
-                    			}
-                    			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
-                    		},
-                    	
-                    		// convert a PolyBool polygon to a GeoJSON object
-                    		fromPolygon: function(PolyBool, eps, poly){
-                    			// make sure out polygon is clean
-                    			poly = PolyBool.polygon(PolyBool.segments(poly));
-                    	
-                    			// test if r1 is inside r2
-                    			function regionInsideRegion(r1, r2){
-                    				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
-                    				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
-                    				// edge of the first line, which cannot be on an edge
-                    				return eps.pointInsideRegion([
-                    					(r1[0][0] + r1[1][0]) * 0.5,
-                    					(r1[0][1] + r1[1][1]) * 0.5
-                    				], r2);
-                    			}
-                    	
-                    			// calculate inside heirarchy
-                    			//
-                    			//  _____________________   _______    roots -> A       -> F
-                    			// |          A          | |   F   |            |          |
-                    			// |  _______   _______  | |  ___  |            +-- B      +-- G
-                    			// | |   B   | |   C   | | | |   | |            |   |
-                    			// | |  ___  | |  ___  | | | |   | |            |   +-- D
-                    			// | | | D | | | | E | | | | | G | |            |
-                    			// | | |___| | | |___| | | | |   | |            +-- C
-                    			// | |_______| |_______| | | |___| |                |
-                    			// |_____________________| |_______|                +-- E
-                    	
-                    			function newNode(region){
-                    				return {
-                    					region: region,
-                    					children: []
-                    				};
-                    			}
-                    	
-                    			var roots = newNode(null);
-                    	
-                    			function addChild(root, region){
-                    				// first check if we're inside any children
-                    				for (var i = 0; i < root.children.length; i++){
-                    					var child = root.children[i];
-                    					if (regionInsideRegion(region, child.region)){
-                    						// we are, so insert inside them instead
-                    						addChild(child, region);
-                    						return;
-                    					}
-                    				}
-                    	
-                    				// not inside any children, so check to see if any children are inside us
-                    				var node = newNode(region);
-                    				for (var i = 0; i < root.children.length; i++){
-                    					var child = root.children[i];
-                    					if (regionInsideRegion(child.region, region)){
-                    						// oops... move the child beneath us, and remove them from root
-                    						node.children.push(child);
-                    						root.children.splice(i, 1);
-                    						i--;
-                    					}
-                    				}
-                    	
-                    				// now we can add ourselves
-                    				root.children.push(node);
-                    			}
-                    	
-                    			// add all regions to the root
-                    			for (var i = 0; i < poly.regions.length; i++){
-                    				var region = poly.regions[i];
-                    				if (region.length < 3) // regions must have at least 3 points (sanity check)
-                    					continue;
-                    				addChild(roots, region);
-                    			}
-                    	
-                    			// with our heirarchy, we can distinguish between exterior borders, and interior holes
-                    			// the root nodes are exterior, children are interior, children's children are exterior,
-                    			// children's children's children are interior, etc
-                    	
-                    			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
-                    	
-                    			function forceWinding(region, clockwise){
-                    				// first, see if we're clockwise or counter-clockwise
-                    				// https://en.wikipedia.org/wiki/Shoelace_formula
-                    				var winding = 0;
-                    				var last_x = region[region.length - 1][0];
-                    				var last_y = region[region.length - 1][1];
-                    				var copy = [];
-                    				for (var i = 0; i < region.length; i++){
-                    					var curr_x = region[i][0];
-                    					var curr_y = region[i][1];
-                    					copy.push([curr_x, curr_y]); // create a copy while we're at it
-                    					winding += curr_y * last_x - curr_x * last_y;
-                    					last_x = curr_x;
-                    					last_y = curr_y;
-                    				}
-                    				// this assumes Cartesian coordinates (Y is positive going up)
-                    				var isclockwise = winding < 0;
-                    				if (isclockwise !== clockwise)
-                    					copy.reverse();
-                    				// while we're here, the last point must be the first point...
-                    				copy.push([copy[0][0], copy[0][1]]);
-                    				return copy;
-                    			}
-                    	
-                    			var geopolys = [];
-                    	
-                    			function addExterior(node){
-                    				var poly = [forceWinding(node.region, false)];
-                    				geopolys.push(poly);
-                    				// children of exteriors are interior
-                    				for (var i = 0; i < node.children.length; i++)
-                    					poly.push(getInterior(node.children[i]));
-                    			}
-                    	
-                    			function getInterior(node){
-                    				// children of interiors are exterior
-                    				for (var i = 0; i < node.children.length; i++)
-                    					addExterior(node.children[i]);
-                    				// return the clockwise interior
-                    				return forceWinding(node.region, true);
-                    			}
-                    	
-                    			// root nodes are exterior
-                    			for (var i = 0; i < roots.children.length; i++)
-                    				addExterior(roots.children[i]);
-                    	
-                    			// lastly, construct the approrpriate GeoJSON object
-                    	
-                    			if (geopolys.length <= 0) // empty GeoJSON Polygon
-                    				return { type: 'Polygon', coordinates: [] };
-                    			if (geopolys.length == 1) // use a GeoJSON Polygon
-                    				return { type: 'Polygon', coordinates: geopolys[0] };
-                    			return { // otherwise, use a GeoJSON MultiPolygon
-                    				type: 'MultiPolygon',
-                    				coordinates: geopolys
-                    			};
-                    		}
-                    	};
-                    	
-                    	module.exports = GeoJSON;
-                    	
-                    	},{}],5:[function(require,module,exports){
-                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                    	// MIT License
-                    	// Project Home: https://github.com/voidqk/polybooljs
-                    	
-                    	//
-                    	// this is the core work-horse
-                    	//
-                    	
-                    	var LinkedList = require('./linked-list');
-                    	
-                    	function Intersecter(selfIntersection, eps, buildLog){
-                    		// selfIntersection is true/false depending on the phase of the overall algorithm
-                    	
-                    		//
-                    		// segment creation
-                    		//
-                    	
-                    		function segmentNew(start, end){
-                    			return {
-                    				id: buildLog ? buildLog.segmentId() : -1,
-                    				start: start,
-                    				end: end,
-                    				myFill: {
-                    					above: null, // is there fill above us?
-                    					below: null  // is there fill below us?
-                    				},
-                    				otherFill: null
-                    			};
-                    		}
-                    	
-                    		function segmentCopy(start, end, seg){
-                    			return {
-                    				id: buildLog ? buildLog.segmentId() : -1,
-                    				start: start,
-                    				end: end,
-                    				myFill: {
-                    					above: seg.myFill.above,
-                    					below: seg.myFill.below
-                    				},
-                    				otherFill: null
-                    			};
-                    		}
-                    	
-                    		//
-                    		// event logic
-                    		//
-                    	
-                    		var event_root = LinkedList.create();
-                    	
-                    		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
-                    			// compare the selected points first
-                    			var comp = eps.pointsCompare(p1_1, p2_1);
-                    			if (comp !== 0)
-                    				return comp;
-                    			// the selected points are the same
-                    	
-                    			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
-                    				return 0; // then the segments are equal
-                    	
-                    			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
-                    				return p1_isStart ? 1 : -1; // favor the one that isn't the start
-                    	
-                    			// otherwise, we'll have to calculate which one is below the other manually
-                    			return eps.pointAboveOrOnLine(p1_2,
-                    				p2_isStart ? p2_1 : p2_2, // order matters
-                    				p2_isStart ? p2_2 : p2_1
-                    			) ? 1 : -1;
-                    		}
-                    	
-                    		function eventAdd(ev, other_pt){
-                    			event_root.insertBefore(ev, function(here){
-                    				// should ev be inserted before here?
-                    				var comp = eventCompare(
-                    					ev  .isStart, ev  .pt,      other_pt,
-                    					here.isStart, here.pt, here.other.pt
-                    				);
-                    				return comp < 0;
-                    			});
-                    		}
-                    	
-                    		function eventAddSegmentStart(seg, primary){
-                    			var ev_start = LinkedList.node({
-                    				isStart: true,
-                    				pt: seg.start,
-                    				seg: seg,
-                    				primary: primary,
-                    				other: null,
-                    				status: null
-                    			});
-                    			eventAdd(ev_start, seg.end);
-                    			return ev_start;
-                    		}
-                    	
-                    		function eventAddSegmentEnd(ev_start, seg, primary){
-                    			var ev_end = LinkedList.node({
-                    				isStart: false,
-                    				pt: seg.end,
-                    				seg: seg,
-                    				primary: primary,
-                    				other: ev_start,
-                    				status: null
-                    			});
-                    			ev_start.other = ev_end;
-                    			eventAdd(ev_end, ev_start.pt);
-                    		}
-                    	
-                    		function eventAddSegment(seg, primary){
-                    			var ev_start = eventAddSegmentStart(seg, primary);
-                    			eventAddSegmentEnd(ev_start, seg, primary);
-                    			return ev_start;
-                    		}
-                    	
-                    		function eventUpdateEnd(ev, end){
-                    			// slides an end backwards
-                    			//   (start)------------(end)    to:
-                    			//   (start)---(end)
-                    	
-                    			if (buildLog)
-                    				buildLog.segmentChop(ev.seg, end);
-                    	
-                    			ev.other.remove();
-                    			ev.seg.end = end;
-                    			ev.other.pt = end;
-                    			eventAdd(ev.other, ev.pt);
-                    		}
-                    	
-                    		function eventDivide(ev, pt){
-                    			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
-                    			eventUpdateEnd(ev, pt);
-                    			return eventAddSegment(ns, ev.primary);
-                    		}
-                    	
-                    		function calculate(primaryPolyInverted, secondaryPolyInverted){
-                    			// if selfIntersection is true then there is no secondary polygon, so that isn't used
-                    	
-                    			//
-                    			// status logic
-                    			//
-                    	
-                    			var status_root = LinkedList.create();
-                    	
-                    			function statusCompare(ev1, ev2){
-                    				var a1 = ev1.seg.start;
-                    				var a2 = ev1.seg.end;
-                    				var b1 = ev2.seg.start;
-                    				var b2 = ev2.seg.end;
-                    	
-                    				if (eps.pointsCollinear(a1, b1, b2)){
-                    					if (eps.pointsCollinear(a2, b1, b2))
-                    						return 1;//eventCompare(true, a1, a2, true, b1, b2);
-                    					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
-                    				}
-                    				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
-                    			}
-                    	
-                    			function statusFindSurrounding(ev){
-                    				return status_root.findTransition(function(here){
-                    					var comp = statusCompare(ev, here.ev);
-                    					return comp > 0;
-                    				});
-                    			}
-                    	
-                    			function checkIntersection(ev1, ev2){
-                    				// returns the segment equal to ev1, or false if nothing equal
-                    	
-                    				var seg1 = ev1.seg;
-                    				var seg2 = ev2.seg;
-                    				var a1 = seg1.start;
-                    				var a2 = seg1.end;
-                    				var b1 = seg2.start;
-                    				var b2 = seg2.end;
-                    	
-                    				if (buildLog)
-                    					buildLog.checkIntersection(seg1, seg2);
-                    	
-                    				var i = eps.linesIntersect(a1, a2, b1, b2);
-                    	
-                    				if (i === false){
-                    					// segments are parallel or coincident
-                    	
-                    					// if points aren't collinear, then the segments are parallel, so no intersections
-                    					if (!eps.pointsCollinear(a1, a2, b1))
-                    						return false;
-                    					// otherwise, segments are on top of each other somehow (aka coincident)
-                    	
-                    					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
-                    						return false; // segments touch at endpoints... no intersection
-                    	
-                    					var a1_equ_b1 = eps.pointsSame(a1, b1);
-                    					var a2_equ_b2 = eps.pointsSame(a2, b2);
-                    	
-                    					if (a1_equ_b1 && a2_equ_b2)
-                    						return ev2; // segments are exactly equal
-                    	
-                    					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
-                    					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
-                    	
-                    					// handy for debugging:
-                    					// buildLog.log({
-                    					//	a1_equ_b1: a1_equ_b1,
-                    					//	a2_equ_b2: a2_equ_b2,
-                    					//	a1_between: a1_between,
-                    					//	a2_between: a2_between
-                    					// });
-                    	
-                    					if (a1_equ_b1){
-                    						if (a2_between){
-                    							//  (a1)---(a2)
-                    							//  (b1)----------(b2)
-                    							eventDivide(ev2, a2);
-                    						}
-                    						else{
-                    							//  (a1)----------(a2)
-                    							//  (b1)---(b2)
-                    							eventDivide(ev1, b2);
-                    						}
-                    						return ev2;
-                    					}
-                    					else if (a1_between){
-                    						if (!a2_equ_b2){
-                    							// make a2 equal to b2
-                    							if (a2_between){
-                    								//         (a1)---(a2)
-                    								//  (b1)-----------------(b2)
-                    								eventDivide(ev2, a2);
-                    							}
-                    							else{
-                    								//         (a1)----------(a2)
-                    								//  (b1)----------(b2)
-                    								eventDivide(ev1, b2);
-                    							}
-                    						}
-                    	
-                    						//         (a1)---(a2)
-                    						//  (b1)----------(b2)
-                    						eventDivide(ev2, a1);
-                    					}
-                    				}
-                    				else{
-                    					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
-                    	
-                    					// is A divided between its endpoints? (exclusive)
-                    					if (i.alongA === 0){
-                    						if (i.alongB === -1) // yes, at exactly b1
-                    							eventDivide(ev1, b1);
-                    						else if (i.alongB === 0) // yes, somewhere between B's endpoints
-                    							eventDivide(ev1, i.pt);
-                    						else if (i.alongB === 1) // yes, at exactly b2
-                    							eventDivide(ev1, b2);
-                    					}
-                    	
-                    					// is B divided between its endpoints? (exclusive)
-                    					if (i.alongB === 0){
-                    						if (i.alongA === -1) // yes, at exactly a1
-                    							eventDivide(ev2, a1);
-                    						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
-                    							eventDivide(ev2, i.pt);
-                    						else if (i.alongA === 1) // yes, at exactly a2
-                    							eventDivide(ev2, a2);
-                    					}
-                    				}
-                    				return false;
-                    			}
-                    	
-                    			//
-                    			// main event loop
-                    			//
-                    			var segments = [];
-                    			while (!event_root.isEmpty()){
-                    				var ev = event_root.getHead();
-                    	
-                    				if (buildLog)
-                    					buildLog.vert(ev.pt[0]);
-                    	
-                    				if (ev.isStart){
-                    	
-                    					if (buildLog)
-                    						buildLog.segmentNew(ev.seg, ev.primary);
-                    	
-                    					var surrounding = statusFindSurrounding(ev);
-                    					var above = surrounding.before ? surrounding.before.ev : null;
-                    					var below = surrounding.after ? surrounding.after.ev : null;
-                    	
-                    					if (buildLog){
-                    						buildLog.tempStatus(
-                    							ev.seg,
-                    							above ? above.seg : false,
-                    							below ? below.seg : false
-                    						);
-                    					}
-                    	
-                    					function checkBothIntersections(){
-                    						if (above){
-                    							var eve = checkIntersection(ev, above);
-                    							if (eve)
-                    								return eve;
-                    						}
-                    						if (below)
-                    							return checkIntersection(ev, below);
-                    						return false;
-                    					}
-                    	
-                    					var eve = checkBothIntersections();
-                    					if (eve){
-                    						// ev and eve are equal
-                    						// we'll keep eve and throw away ev
-                    	
-                    						// merge ev.seg's fill information into eve.seg
-                    	
-                    						if (selfIntersection){
-                    							var toggle; // are we a toggling edge?
-                    							if (ev.seg.myFill.below === null)
-                    								toggle = true;
-                    							else
-                    								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
-                    	
-                    							// merge two segments that belong to the same polygon
-                    							// think of this as sandwiching two segments together, where `eve.seg` is
-                    							// the bottom -- this will cause the above fill flag to toggle
-                    							if (toggle)
-                    								eve.seg.myFill.above = !eve.seg.myFill.above;
-                    						}
-                    						else{
-                    							// merge two segments that belong to different polygons
-                    							// each segment has distinct knowledge, so no special logic is needed
-                    							// note that this can only happen once per segment in this phase, because we
-                    							// are guaranteed that all self-intersections are gone
-                    							eve.seg.otherFill = ev.seg.myFill;
-                    						}
-                    	
-                    						if (buildLog)
-                    							buildLog.segmentUpdate(eve.seg);
-                    	
-                    						ev.other.remove();
-                    						ev.remove();
-                    					}
-                    	
-                    					if (event_root.getHead() !== ev){
-                    						// something was inserted before us in the event queue, so loop back around and
-                    						// process it before continuing
-                    						if (buildLog)
-                    							buildLog.rewind(ev.seg);
-                    						continue;
-                    					}
-                    	
-                    					//
-                    					// calculate fill flags
-                    					//
-                    					if (selfIntersection){
-                    						var toggle; // are we a toggling edge?
-                    						if (ev.seg.myFill.below === null) // if we are a new segment...
-                    							toggle = true; // then we toggle
-                    						else // we are a segment that has previous knowledge from a division
-                    							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
-                    	
-                    						// next, calculate whether we are filled below us
-                    						if (!below){ // if nothing is below us...
-                    							// we are filled below us if the polygon is inverted
-                    							ev.seg.myFill.below = primaryPolyInverted;
-                    						}
-                    						else{
-                    							// otherwise, we know the answer -- it's the same if whatever is below
-                    							// us is filled above it
-                    							ev.seg.myFill.below = below.seg.myFill.above;
-                    						}
-                    	
-                    						// since now we know if we're filled below us, we can calculate whether
-                    						// we're filled above us by applying toggle to whatever is below us
-                    						if (toggle)
-                    							ev.seg.myFill.above = !ev.seg.myFill.below;
-                    						else
-                    							ev.seg.myFill.above = ev.seg.myFill.below;
-                    					}
-                    					else{
-                    						// now we fill in any missing transition information, since we are all-knowing
-                    						// at this point
-                    	
-                    						if (ev.seg.otherFill === null){
-                    							// if we don't have other information, then we need to figure out if we're
-                    							// inside the other polygon
-                    							var inside;
-                    							if (!below){
-                    								// if nothing is below us, then we're inside if the other polygon is
-                    								// inverted
-                    								inside =
-                    									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
-                    							}
-                    							else{ // otherwise, something is below us
-                    								// so copy the below segment's other polygon's above
-                    								if (ev.primary === below.primary)
-                    									inside = below.seg.otherFill.above;
-                    								else
-                    									inside = below.seg.myFill.above;
-                    							}
-                    							ev.seg.otherFill = {
-                    								above: inside,
-                    								below: inside
-                    							};
-                    						}
-                    					}
-                    	
-                    					if (buildLog){
-                    						buildLog.status(
-                    							ev.seg,
-                    							above ? above.seg : false,
-                    							below ? below.seg : false
-                    						);
-                    					}
-                    	
-                    					// insert the status and remember it for later removal
-                    					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
-                    				}
-                    				else{
-                    					var st = ev.status;
-                    	
-                    					if (st === null){
-                    						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
-                    							'probably too small or too large');
-                    					}
-                    	
-                    					// removing the status will create two new adjacent edges, so we'll need to check
-                    					// for those
-                    					if (status_root.exists(st.prev) && status_root.exists(st.next))
-                    						checkIntersection(st.prev.ev, st.next.ev);
-                    	
-                    					if (buildLog)
-                    						buildLog.statusRemove(st.ev.seg);
-                    	
-                    					// remove the status
-                    					st.remove();
-                    	
-                    					// if we've reached this point, we've calculated everything there is to know, so
-                    					// save the segment for reporting
-                    					if (!ev.primary){
-                    						// make sure `seg.myFill` actually points to the primary polygon though
-                    						var s = ev.seg.myFill;
-                    						ev.seg.myFill = ev.seg.otherFill;
-                    						ev.seg.otherFill = s;
-                    					}
-                    					segments.push(ev.seg);
-                    				}
-                    	
-                    				// remove the event and continue
-                    				event_root.getHead().remove();
-                    			}
-                    	
-                    			if (buildLog)
-                    				buildLog.done();
-                    	
-                    			return segments;
-                    		}
-                    	
-                    		// return the appropriate API depending on what we're doing
-                    		if (!selfIntersection){
-                    			// performing combination of polygons, so only deal with already-processed segments
-                    			return {
-                    				calculate: function(segments1, inverted1, segments2, inverted2){
-                    					// segmentsX come from the self-intersection API, or this API
-                    					// invertedX is whether we treat that list of segments as an inverted polygon or not
-                    					// returns segments that can be used for further operations
-                    					segments1.forEach(function(seg){
-                    						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
-                    					});
-                    					segments2.forEach(function(seg){
-                    						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
-                    					});
-                    					return calculate(inverted1, inverted2);
-                    				}
-                    			};
-                    		}
-                    	
-                    		// otherwise, performing self-intersection, so deal with regions
-                    		return {
-                    			addRegion: function(region){
-                    				// regions are a list of points:
-                    				//  [ [0, 0], [100, 0], [50, 100] ]
-                    				// you can add multiple regions before running calculate
-                    				var pt1;
-                    				var pt2 = region[region.length - 1];
-                    				for (var i = 0; i < region.length; i++){
-                    					pt1 = pt2;
-                    					pt2 = region[i];
-                    	
-                    					var forward = eps.pointsCompare(pt1, pt2);
-                    					if (forward === 0) // points are equal, so we have a zero-length segment
-                    						continue; // just skip it
-                    	
-                    					eventAddSegment(
-                    						segmentNew(
-                    							forward < 0 ? pt1 : pt2,
-                    							forward < 0 ? pt2 : pt1
-                    						),
-                    						true
-                    					);
-                    				}
-                    			},
-                    			calculate: function(inverted){
-                    				// is the polygon inverted?
-                    				// returns segments
-                    				return calculate(inverted, false);
-                    			}
-                    		};
-                    	}
-                    	
-                    	module.exports = Intersecter;
-                    	
-                    	},{"./linked-list":6}],6:[function(require,module,exports){
-                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                    	// MIT License
-                    	// Project Home: https://github.com/voidqk/polybooljs
-                    	
-                    	//
-                    	// simple linked list implementation that allows you to traverse down nodes and save positions
-                    	//
-                    	
-                    	var LinkedList = {
-                    		create: function(){
-                    			var my = {
-                    				root: { root: true, next: null },
-                    				exists: function(node){
-                    					if (node === null || node === my.root)
-                    						return false;
-                    					return true;
-                    				},
-                    				isEmpty: function(){
-                    					return my.root.next === null;
-                    				},
-                    				getHead: function(){
-                    					return my.root.next;
-                    				},
-                    				insertBefore: function(node, check){
-                    					var last = my.root;
-                    					var here = my.root.next;
-                    					while (here !== null){
-                    						if (check(here)){
-                    							node.prev = here.prev;
-                    							node.next = here;
-                    							here.prev.next = node;
-                    							here.prev = node;
-                    							return;
-                    						}
-                    						last = here;
-                    						here = here.next;
-                    					}
-                    					last.next = node;
-                    					node.prev = last;
-                    					node.next = null;
-                    				},
-                    				findTransition: function(check){
-                    					var prev = my.root;
-                    					var here = my.root.next;
-                    					while (here !== null){
-                    						if (check(here))
-                    							break;
-                    						prev = here;
-                    						here = here.next;
-                    					}
-                    					return {
-                    						before: prev === my.root ? null : prev,
-                    						after: here,
-                    						insert: function(node){
-                    							node.prev = prev;
-                    							node.next = here;
-                    							prev.next = node;
-                    							if (here !== null)
-                    								here.prev = node;
-                    							return node;
-                    						}
-                    					};
-                    				}
-                    			};
-                    			return my;
-                    		},
-                    		node: function(data){
-                    			data.prev = null;
-                    			data.next = null;
-                    			data.remove = function(){
-                    				data.prev.next = data.next;
-                    				if (data.next)
-                    					data.next.prev = data.prev;
-                    				data.prev = null;
-                    				data.next = null;
-                    			};
-                    			return data;
-                    		}
-                    	};
-                    	
-                    	module.exports = LinkedList;
-                    	
-                    	},{}],7:[function(require,module,exports){
-                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                    	// MIT License
-                    	// Project Home: https://github.com/voidqk/polybooljs
-                    	
-                    	//
-                    	// converts a list of segments into a list of regions, while also removing unnecessary verticies
-                    	//
-                    	
-                    	function SegmentChainer(segments, eps, buildLog){
-                    		var chains = [];
-                    		var regions = [];
-                    	
-                    		segments.forEach(function(seg){
-                    			var pt1 = seg.start;
-                    			var pt2 = seg.end;
-                    			if (eps.pointsSame(pt1, pt2)){
-                    				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
-                    					'probably too small or too large');
-                    				return;
-                    			}
-                    	
-                    			if (buildLog)
-                    				buildLog.chainStart(seg);
-                    	
-                    			// search for two chains that this segment matches
-                    			var first_match = {
-                    				index: 0,
-                    				matches_head: false,
-                    				matches_pt1: false
-                    			};
-                    			var second_match = {
-                    				index: 0,
-                    				matches_head: false,
-                    				matches_pt1: false
-                    			};
-                    			var next_match = first_match;
-                    			function setMatch(index, matches_head, matches_pt1){
-                    				// return true if we've matched twice
-                    				next_match.index = index;
-                    				next_match.matches_head = matches_head;
-                    				next_match.matches_pt1 = matches_pt1;
-                    				if (next_match === first_match){
-                    					next_match = second_match;
-                    					return false;
-                    				}
-                    				next_match = null;
-                    				return true; // we've matched twice, we're done here
-                    			}
-                    			for (var i = 0; i < chains.length; i++){
-                    				var chain = chains[i];
-                    				var head  = chain[0];
-                    				var head2 = chain[1];
-                    				var tail  = chain[chain.length - 1];
-                    				var tail2 = chain[chain.length - 2];
-                    				if (eps.pointsSame(head, pt1)){
-                    					if (setMatch(i, true, true))
-                    						break;
-                    				}
-                    				else if (eps.pointsSame(head, pt2)){
-                    					if (setMatch(i, true, false))
-                    						break;
-                    				}
-                    				else if (eps.pointsSame(tail, pt1)){
-                    					if (setMatch(i, false, true))
-                    						break;
-                    				}
-                    				else if (eps.pointsSame(tail, pt2)){
-                    					if (setMatch(i, false, false))
-                    						break;
-                    				}
-                    			}
-                    	
-                    			if (next_match === first_match){
-                    				// we didn't match anything, so create a new chain
-                    				chains.push([ pt1, pt2 ]);
-                    				if (buildLog)
-                    					buildLog.chainNew(pt1, pt2);
-                    				return;
-                    			}
-                    	
-                    			if (next_match === second_match){
-                    				// we matched a single chain
-                    	
-                    				if (buildLog)
-                    					buildLog.chainMatch(first_match.index);
-                    	
-                    				// add the other point to the apporpriate end, and check to see if we've closed the
-                    				// chain into a loop
-                    	
-                    				var index = first_match.index;
-                    				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
-                    				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
-                    	
-                    				var chain = chains[index];
-                    				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
-                    				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
-                    				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
-                    				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
-                    	
-                    				if (eps.pointsCollinear(grow2, grow, pt)){
-                    					// grow isn't needed because it's directly between grow2 and pt:
-                    					// grow2 ---grow---> pt
-                    					if (addToHead){
-                    						if (buildLog)
-                    							buildLog.chainRemoveHead(first_match.index, pt);
-                    						chain.shift();
-                    					}
-                    					else{
-                    						if (buildLog)
-                    							buildLog.chainRemoveTail(first_match.index, pt);
-                    						chain.pop();
-                    					}
-                    					grow = grow2; // old grow is gone... new grow is what grow2 was
-                    				}
-                    	
-                    				if (eps.pointsSame(oppo, pt)){
-                    					// we're closing the loop, so remove chain from chains
-                    					chains.splice(index, 1);
-                    	
-                    					if (eps.pointsCollinear(oppo2, oppo, grow)){
-                    						// oppo isn't needed because it's directly between oppo2 and grow:
-                    						// oppo2 ---oppo--->grow
-                    						if (addToHead){
-                    							if (buildLog)
-                    								buildLog.chainRemoveTail(first_match.index, grow);
-                    							chain.pop();
-                    						}
-                    						else{
-                    							if (buildLog)
-                    								buildLog.chainRemoveHead(first_match.index, grow);
-                    							chain.shift();
-                    						}
-                    					}
-                    	
-                    					if (buildLog)
-                    						buildLog.chainClose(first_match.index);
-                    	
-                    					// we have a closed chain!
-                    					regions.push(chain);
-                    					return;
-                    				}
-                    	
-                    				// not closing a loop, so just add it to the apporpriate side
-                    				if (addToHead){
-                    					if (buildLog)
-                    						buildLog.chainAddHead(first_match.index, pt);
-                    					chain.unshift(pt);
-                    				}
-                    				else{
-                    					if (buildLog)
-                    						buildLog.chainAddTail(first_match.index, pt);
-                    					chain.push(pt);
-                    				}
-                    				return;
-                    			}
-                    	
-                    			// otherwise, we matched two chains, so we need to combine those chains together
-                    	
-                    			function reverseChain(index){
-                    				if (buildLog)
-                    					buildLog.chainReverse(index);
-                    				chains[index].reverse(); // gee, that's easy
-                    			}
-                    	
-                    			function appendChain(index1, index2){
-                    				// index1 gets index2 appended to it, and index2 is removed
-                    				var chain1 = chains[index1];
-                    				var chain2 = chains[index2];
-                    				var tail  = chain1[chain1.length - 1];
-                    				var tail2 = chain1[chain1.length - 2];
-                    				var head  = chain2[0];
-                    				var head2 = chain2[1];
-                    	
-                    				if (eps.pointsCollinear(tail2, tail, head)){
-                    					// tail isn't needed because it's directly between tail2 and head
-                    					// tail2 ---tail---> head
-                    					if (buildLog)
-                    						buildLog.chainRemoveTail(index1, tail);
-                    					chain1.pop();
-                    					tail = tail2; // old tail is gone... new tail is what tail2 was
-                    				}
-                    	
-                    				if (eps.pointsCollinear(tail, head, head2)){
-                    					// head isn't needed because it's directly between tail and head2
-                    					// tail ---head---> head2
-                    					if (buildLog)
-                    						buildLog.chainRemoveHead(index2, head);
-                    					chain2.shift();
-                    				}
-                    	
-                    				if (buildLog)
-                    					buildLog.chainJoin(index1, index2);
-                    				chains[index1] = chain1.concat(chain2);
-                    				chains.splice(index2, 1);
-                    			}
-                    	
-                    			var F = first_match.index;
-                    			var S = second_match.index;
-                    	
-                    			if (buildLog)
-                    				buildLog.chainConnect(F, S);
-                    	
-                    			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
-                    			if (first_match.matches_head){
-                    				if (second_match.matches_head){
-                    					if (reverseF){
-                    						// <<<< F <<<< --- >>>> S >>>>
-                    						reverseChain(F);
-                    						// >>>> F >>>> --- >>>> S >>>>
-                    						appendChain(F, S);
-                    					}
-                    					else{
-                    						// <<<< F <<<< --- >>>> S >>>>
-                    						reverseChain(S);
-                    						// <<<< F <<<< --- <<<< S <<<<   logically same as:
-                    						// >>>> S >>>> --- >>>> F >>>>
-                    						appendChain(S, F);
-                    					}
-                    				}
-                    				else{
-                    					// <<<< F <<<< --- <<<< S <<<<   logically same as:
-                    					// >>>> S >>>> --- >>>> F >>>>
-                    					appendChain(S, F);
-                    				}
-                    			}
-                    			else{
-                    				if (second_match.matches_head){
-                    					// >>>> F >>>> --- >>>> S >>>>
-                    					appendChain(F, S);
-                    				}
-                    				else{
-                    					if (reverseF){
-                    						// >>>> F >>>> --- <<<< S <<<<
-                    						reverseChain(F);
-                    						// <<<< F <<<< --- <<<< S <<<<   logically same as:
-                    						// >>>> S >>>> --- >>>> F >>>>
-                    						appendChain(S, F);
-                    					}
-                    					else{
-                    						// >>>> F >>>> --- <<<< S <<<<
-                    						reverseChain(S);
-                    						// >>>> F >>>> --- >>>> S >>>>
-                    						appendChain(F, S);
-                    					}
-                    				}
-                    			}
-                    		});
-                    	
-                    		return regions;
-                    	}
-                    	
-                    	module.exports = SegmentChainer;
-                    	
-                    	},{}],8:[function(require,module,exports){
-                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                    	// MIT License
-                    	// Project Home: https://github.com/voidqk/polybooljs
-                    	
-                    	//
-                    	// filter a list of segments based on boolean operations
-                    	//
-                    	
-                    	function select(segments, selection, buildLog){
-                    		var result = [];
-                    		segments.forEach(function(seg){
-                    			var index =
-                    				(seg.myFill.above ? 8 : 0) +
-                    				(seg.myFill.below ? 4 : 0) +
-                    				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
-                    				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
-                    			if (selection[index] !== 0){
-                    				// copy the segment to the results, while also calculating the fill status
-                    				result.push({
-                    					id: buildLog ? buildLog.segmentId() : -1,
-                    					start: seg.start,
-                    					end: seg.end,
-                    					myFill: {
-                    						above: selection[index] === 1, // 1 if filled above
-                    						below: selection[index] === 2  // 2 if filled below
-                    					},
-                    					otherFill: null
-                    				});
-                    			}
-                    		});
-                    	
-                    		if (buildLog)
-                    			buildLog.selected(result);
-                    	
-                    		return result;
-                    	}
-                    	
-                    	var SegmentSelector = {
-                    		union: function(segments, buildLog){ // primary | secondary
-                    			// above1 below1 above2 below2    Keep?               Value
-                    			//    0      0      0      0   =>   no                  0
-                    			//    0      0      0      1   =>   yes filled below    2
-                    			//    0      0      1      0   =>   yes filled above    1
-                    			//    0      0      1      1   =>   no                  0
-                    			//    0      1      0      0   =>   yes filled below    2
-                    			//    0      1      0      1   =>   yes filled below    2
-                    			//    0      1      1      0   =>   no                  0
-                    			//    0      1      1      1   =>   no                  0
-                    			//    1      0      0      0   =>   yes filled above    1
-                    			//    1      0      0      1   =>   no                  0
-                    			//    1      0      1      0   =>   yes filled above    1
-                    			//    1      0      1      1   =>   no                  0
-                    			//    1      1      0      0   =>   no                  0
-                    			//    1      1      0      1   =>   no                  0
-                    			//    1      1      1      0   =>   no                  0
-                    			//    1      1      1      1   =>   no                  0
-                    			return select(segments, [
-                    				0, 2, 1, 0,
-                    				2, 2, 0, 0,
-                    				1, 0, 1, 0,
-                    				0, 0, 0, 0
-                    			], buildLog);
-                    		},
-                    		intersect: function(segments, buildLog){ // primary & secondary
-                    			// above1 below1 above2 below2    Keep?               Value
-                    			//    0      0      0      0   =>   no                  0
-                    			//    0      0      0      1   =>   no                  0
-                    			//    0      0      1      0   =>   no                  0
-                    			//    0      0      1      1   =>   no                  0
-                    			//    0      1      0      0   =>   no                  0
-                    			//    0      1      0      1   =>   yes filled below    2
-                    			//    0      1      1      0   =>   no                  0
-                    			//    0      1      1      1   =>   yes filled below    2
-                    			//    1      0      0      0   =>   no                  0
-                    			//    1      0      0      1   =>   no                  0
-                    			//    1      0      1      0   =>   yes filled above    1
-                    			//    1      0      1      1   =>   yes filled above    1
-                    			//    1      1      0      0   =>   no                  0
-                    			//    1      1      0      1   =>   yes filled below    2
-                    			//    1      1      1      0   =>   yes filled above    1
-                    			//    1      1      1      1   =>   no                  0
-                    			return select(segments, [
-                    				0, 0, 0, 0,
-                    				0, 2, 0, 2,
-                    				0, 0, 1, 1,
-                    				0, 2, 1, 0
-                    			], buildLog);
-                    		},
-                    		difference: function(segments, buildLog){ // primary - secondary
-                    			// above1 below1 above2 below2    Keep?               Value
-                    			//    0      0      0      0   =>   no                  0
-                    			//    0      0      0      1   =>   no                  0
-                    			//    0      0      1      0   =>   no                  0
-                    			//    0      0      1      1   =>   no                  0
-                    			//    0      1      0      0   =>   yes filled below    2
-                    			//    0      1      0      1   =>   no                  0
-                    			//    0      1      1      0   =>   yes filled below    2
-                    			//    0      1      1      1   =>   no                  0
-                    			//    1      0      0      0   =>   yes filled above    1
-                    			//    1      0      0      1   =>   yes filled above    1
-                    			//    1      0      1      0   =>   no                  0
-                    			//    1      0      1      1   =>   no                  0
-                    			//    1      1      0      0   =>   no                  0
-                    			//    1      1      0      1   =>   yes filled above    1
-                    			//    1      1      1      0   =>   yes filled below    2
-                    			//    1      1      1      1   =>   no                  0
-                    			return select(segments, [
-                    				0, 0, 0, 0,
-                    				2, 0, 2, 0,
-                    				1, 1, 0, 0,
-                    				0, 1, 2, 0
-                    			], buildLog);
-                    		},
-                    		differenceRev: function(segments, buildLog){ // secondary - primary
-                    			// above1 below1 above2 below2    Keep?               Value
-                    			//    0      0      0      0   =>   no                  0
-                    			//    0      0      0      1   =>   yes filled below    2
-                    			//    0      0      1      0   =>   yes filled above    1
-                    			//    0      0      1      1   =>   no                  0
-                    			//    0      1      0      0   =>   no                  0
-                    			//    0      1      0      1   =>   no                  0
-                    			//    0      1      1      0   =>   yes filled above    1
-                    			//    0      1      1      1   =>   yes filled above    1
-                    			//    1      0      0      0   =>   no                  0
-                    			//    1      0      0      1   =>   yes filled below    2
-                    			//    1      0      1      0   =>   no                  0
-                    			//    1      0      1      1   =>   yes filled below    2
-                    			//    1      1      0      0   =>   no                  0
-                    			//    1      1      0      1   =>   no                  0
-                    			//    1      1      1      0   =>   no                  0
-                    			//    1      1      1      1   =>   no                  0
-                    			return select(segments, [
-                    				0, 2, 1, 0,
-                    				0, 0, 1, 1,
-                    				0, 2, 0, 2,
-                    				0, 0, 0, 0
-                    			], buildLog);
-                    		},
-                    		xor: function(segments, buildLog){ // primary ^ secondary
-                    			// above1 below1 above2 below2    Keep?               Value
-                    			//    0      0      0      0   =>   no                  0
-                    			//    0      0      0      1   =>   yes filled below    2
-                    			//    0      0      1      0   =>   yes filled above    1
-                    			//    0      0      1      1   =>   no                  0
-                    			//    0      1      0      0   =>   yes filled below    2
-                    			//    0      1      0      1   =>   no                  0
-                    			//    0      1      1      0   =>   no                  0
-                    			//    0      1      1      1   =>   yes filled above    1
-                    			//    1      0      0      0   =>   yes filled above    1
-                    			//    1      0      0      1   =>   no                  0
-                    			//    1      0      1      0   =>   no                  0
-                    			//    1      0      1      1   =>   yes filled below    2
-                    			//    1      1      0      0   =>   no                  0
-                    			//    1      1      0      1   =>   yes filled above    1
-                    			//    1      1      1      0   =>   yes filled below    2
-                    			//    1      1      1      1   =>   no                  0
-                    			return select(segments, [
-                    				0, 2, 1, 0,
-                    				2, 0, 0, 1,
-                    				1, 0, 0, 2,
-                    				0, 1, 2, 0
-                    			], buildLog);
-                    		}
-                    	};
-                    	
-                    	module.exports = SegmentSelector;
-                    	
-                    },{}]},{},[1]);
                     this.lzString = (function(){
                         // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
                         // This work is free. You can redistribute it and/or modify it
@@ -23262,723 +21663,1623 @@
                     	Object.defineProperty(exports, '__esModule', { value: true });
                     
                     })));
-                    this.earcut = function(points,holeIndices){
-                    	//https://github.com/mapbox/earcut
+                    (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+                    
+                    	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+                    	// @license MIT
+                    	// @preserve Project Home: https://github.com/voidqk/polybooljs
                     	
-                        var outputPoints = [];
-                        earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
-                        return outputPoints;
-                    
-                        function earcut(data, holeIndices, dim) {
-                    
-                            dim = dim || 2;
-                    
-                            var hasHoles = holeIndices && holeIndices.length,
-                                outerLen = hasHoles ? holeIndices[0] * dim : data.length,
-                                outerNode = linkedList(data, 0, outerLen, dim, true),
-                                triangles = [];
-                    
-                            if (!outerNode || outerNode.next === outerNode.prev) return triangles;
-                    
-                            var minX, minY, maxX, maxY, x, y, invSize;
-                    
-                            if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
-                    
-                            // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-                            if (data.length > 80 * dim) {
-                                minX = maxX = data[0];
-                                minY = maxY = data[1];
-                    
-                                for (var i = dim; i < outerLen; i += dim) {
-                                    x = data[i];
-                                    y = data[i + 1];
-                                    if (x < minX) minX = x;
-                                    if (y < minY) minY = y;
-                                    if (x > maxX) maxX = x;
-                                    if (y > maxY) maxY = y;
-                                }
-                    
-                                // minX, minY and invSize are later used to transform coords into integers for z-order calculation
-                                invSize = Math.max(maxX - minX, maxY - minY);
-                                invSize = invSize !== 0 ? 1 / invSize : 0;
-                            }
-                    
-                            earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
-                    
-                            return triangles;
-                        }
-                    
-                        // create a circular doubly linked list from polygon points in the specified winding order
-                        function linkedList(data, start, end, dim, clockwise) {
-                            var i, last;
-                    
-                            if (clockwise === (signedArea(data, start, end, dim) > 0)) {
-                                for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
-                            } else {
-                                for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
-                            }
-                    
-                            if (last && equals(last, last.next)) {
-                                removeNode(last);
-                                last = last.next;
-                            }
-                    
-                            return last;
-                        }
-                    
-                        // eliminate colinear or duplicate points
-                        function filterPoints(start, end) {
-                            if (!start) return start;
-                            if (!end) end = start;
-                    
-                            var p = start,
-                                again;
-                            do {
-                                again = false;
-                    
-                                if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
-                                    removeNode(p);
-                                    p = end = p.prev;
-                                    if (p === p.next) break;
-                                    again = true;
-                    
-                                } else {
-                                    p = p.next;
-                                }
-                            } while (again || p !== end);
-                    
-                            return end;
-                        }
-                    
-                        // main ear slicing loop which triangulates a polygon (given as a linked list)
-                        function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-                            if (!ear) return;
-                    
-                            // interlink polygon nodes in z-order
-                            if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
-                    
-                            var stop = ear,
-                                prev, next;
-                    
-                            // iterate through ears, slicing them one by one
-                            while (ear.prev !== ear.next) {
-                                prev = ear.prev;
-                                next = ear.next;
-                    
-                                if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
-                                    // cut off the triangle
-                                    triangles.push(prev.i / dim);
-                                    triangles.push(ear.i / dim);
-                                    triangles.push(next.i / dim);
-                    
-                                    removeNode(ear);
-                    
-                                    // skipping the next vertex leads to less sliver triangles
-                                    ear = next.next;
-                                    stop = next.next;
-                    
-                                    continue;
-                                }
-                    
-                                ear = next;
-                    
-                                // if we looped through the whole remaining polygon and can't find any more ears
-                                if (ear === stop) {
-                                    // try filtering points and slicing again
-                                    if (!pass) {
-                                        earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
-                    
-                                    // if this didn't work, try curing all small self-intersections locally
-                                    } else if (pass === 1) {
-                                        ear = cureLocalIntersections(ear, triangles, dim);
-                                        earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
-                    
-                                    // as a last resort, try splitting the remaining polygon into two
-                                    } else if (pass === 2) {
-                                        splitEarcut(ear, triangles, dim, minX, minY, invSize);
-                                    }
-                    
-                                    break;
-                                }
-                            }
-                        }
-                    
-                        // check whether a polygon node forms a valid ear with adjacent nodes
-                        function isEar(ear) {
-                            var a = ear.prev,
-                                b = ear,
-                                c = ear.next;
-                    
-                            if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-                    
-                            // now make sure we don't have other points inside the potential ear
-                            var p = ear.next.next;
-                    
-                            while (p !== ear.prev) {
-                                if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                                    area(p.prev, p, p.next) >= 0) return false;
-                                p = p.next;
-                            }
-                    
-                            return true;
-                        }
-                    
-                        function isEarHashed(ear, minX, minY, invSize) {
-                            var a = ear.prev,
-                                b = ear,
-                                c = ear.next;
-                    
-                            if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-                    
-                            // triangle bbox; min & max are calculated like this for speed
-                            var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
-                                minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
-                                maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
-                                maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
-                    
-                            // z-order range for the current triangle bbox;
-                            var minZ = zOrder(minTX, minTY, minX, minY, invSize),
-                                maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
-                    
-                            var p = ear.prevZ,
-                                n = ear.nextZ;
-                    
-                            // look for points inside the triangle in both directions
-                            while (p && p.z >= minZ && n && n.z <= maxZ) {
-                                if (p !== ear.prev && p !== ear.next &&
-                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                                    area(p.prev, p, p.next) >= 0) return false;
-                                p = p.prevZ;
-                    
-                                if (n !== ear.prev && n !== ear.next &&
-                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-                                    area(n.prev, n, n.next) >= 0) return false;
-                                n = n.nextZ;
-                            }
-                    
-                            // look for remaining points in decreasing z-order
-                            while (p && p.z >= minZ) {
-                                if (p !== ear.prev && p !== ear.next &&
-                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                                    area(p.prev, p, p.next) >= 0) return false;
-                                p = p.prevZ;
-                            }
-                    
-                            // look for remaining points in increasing z-order
-                            while (n && n.z <= maxZ) {
-                                if (n !== ear.prev && n !== ear.next &&
-                                    pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-                                    area(n.prev, n, n.next) >= 0) return false;
-                                n = n.nextZ;
-                            }
-                    
-                            return true;
-                        }
-                    
-                        // go through all polygon nodes and cure small local self-intersections
-                        function cureLocalIntersections(start, triangles, dim) {
-                            var p = start;
-                            do {
-                                var a = p.prev,
-                                    b = p.next.next;
-                    
-                                if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-                    
-                                    triangles.push(a.i / dim);
-                                    triangles.push(p.i / dim);
-                                    triangles.push(b.i / dim);
-                    
-                                    // remove two nodes involved
-                                    removeNode(p);
-                                    removeNode(p.next);
-                    
-                                    p = start = b;
-                                }
-                                p = p.next;
-                            } while (p !== start);
-                    
-                            return p;
-                        }
-                    
-                        // try splitting polygon into two and triangulate them independently
-                        function splitEarcut(start, triangles, dim, minX, minY, invSize) {
-                            // look for a valid diagonal that divides the polygon into two
-                            var a = start;
-                            do {
-                                var b = a.next.next;
-                                while (b !== a.prev) {
-                                    if (a.i !== b.i && isValidDiagonal(a, b)) {
-                                        // split the polygon in two by the diagonal
-                                        var c = splitPolygon(a, b);
-                    
-                                        // filter colinear points around the cuts
-                                        a = filterPoints(a, a.next);
-                                        c = filterPoints(c, c.next);
-                    
-                                        // run earcut on each half
-                                        earcutLinked(a, triangles, dim, minX, minY, invSize);
-                                        earcutLinked(c, triangles, dim, minX, minY, invSize);
-                                        return;
-                                    }
-                                    b = b.next;
-                                }
-                                a = a.next;
-                            } while (a !== start);
-                        }
-                    
-                        // link every hole into the outer loop, producing a single-ring polygon without holes
-                        function eliminateHoles(data, holeIndices, outerNode, dim) {
-                            var queue = [],
-                                i, len, start, end, list;
-                    
-                            for (i = 0, len = holeIndices.length; i < len; i++) {
-                                start = holeIndices[i] * dim;
-                                end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-                                list = linkedList(data, start, end, dim, false);
-                                if (list === list.next) list.steiner = true;
-                                queue.push(getLeftmost(list));
-                            }
-                    
-                            queue.sort(compareX);
-                    
-                            // process holes from left to right
-                            for (i = 0; i < queue.length; i++) {
-                                eliminateHole(queue[i], outerNode);
-                                outerNode = filterPoints(outerNode, outerNode.next);
-                            }
-                    
-                            return outerNode;
-                        }
-                    
-                        function compareX(a, b) {
-                            return a.x - b.x;
-                        }
-                    
-                        // find a bridge between vertices that connects hole with an outer ring and and link it
-                        function eliminateHole(hole, outerNode) {
-                            outerNode = findHoleBridge(hole, outerNode);
-                            if (outerNode) {
-                                var b = splitPolygon(outerNode, hole);
-                                filterPoints(b, b.next);
-                            }
-                        }
-                    
-                        // David Eberly's algorithm for finding a bridge between hole and outer polygon
-                        function findHoleBridge(hole, outerNode) {
-                            var p = outerNode,
-                                hx = hole.x,
-                                hy = hole.y,
-                                qx = -Infinity,
-                                m;
-                    
-                            // find a segment intersected by a ray from the hole's leftmost point to the left;
-                            // segment's endpoint with lesser x will be potential connection point
-                            do {
-                                if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
-                                    var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-                                    if (x <= hx && x > qx) {
-                                        qx = x;
-                                        if (x === hx) {
-                                            if (hy === p.y) return p;
-                                            if (hy === p.next.y) return p.next;
-                                        }
-                                        m = p.x < p.next.x ? p : p.next;
-                                    }
-                                }
-                                p = p.next;
-                            } while (p !== outerNode);
-                    
-                            if (!m) return null;
-                    
-                            if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
-                    
-                            // look for points inside the triangle of hole point, segment intersection and endpoint;
-                            // if there are no points found, we have a valid connection;
-                            // otherwise choose the point of the minimum angle with the ray as connection point
-                    
-                            var stop = m,
-                                mx = m.x,
-                                my = m.y,
-                                tanMin = Infinity,
-                                tan;
-                    
-                            p = m.next;
-                    
-                            while (p !== stop) {
-                                if (hx >= p.x && p.x >= mx && hx !== p.x &&
-                                        pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-                    
-                                    tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
-                    
-                                    if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
-                                        m = p;
-                                        tanMin = tan;
-                                    }
-                                }
-                    
-                                p = p.next;
-                            }
-                    
-                            return m;
-                        }
-                    
-                        // interlink polygon nodes in z-order
-                        function indexCurve(start, minX, minY, invSize) {
-                            var p = start;
-                            do {
-                                if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
-                                p.prevZ = p.prev;
-                                p.nextZ = p.next;
-                                p = p.next;
-                            } while (p !== start);
-                    
-                            p.prevZ.nextZ = null;
-                            p.prevZ = null;
-                    
-                            sortLinked(p);
-                        }
-                    
-                        // Simon Tatham's linked list merge sort algorithm
-                        // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-                        function sortLinked(list) {
-                            var i, p, q, e, tail, numMerges, pSize, qSize,
-                                inSize = 1;
-                    
-                            do {
-                                p = list;
-                                list = null;
-                                tail = null;
-                                numMerges = 0;
-                    
-                                while (p) {
-                                    numMerges++;
-                                    q = p;
-                                    pSize = 0;
-                                    for (i = 0; i < inSize; i++) {
-                                        pSize++;
-                                        q = q.nextZ;
-                                        if (!q) break;
-                                    }
-                                    qSize = inSize;
-                    
-                                    while (pSize > 0 || (qSize > 0 && q)) {
-                    
-                                        if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
-                                            e = p;
-                                            p = p.nextZ;
-                                            pSize--;
-                                        } else {
-                                            e = q;
-                                            q = q.nextZ;
-                                            qSize--;
-                                        }
-                    
-                                        if (tail) tail.nextZ = e;
-                                        else list = e;
-                    
-                                        e.prevZ = tail;
-                                        tail = e;
-                                    }
-                    
-                                    p = q;
-                                }
-                    
-                                tail.nextZ = null;
-                                inSize *= 2;
-                    
-                            } while (numMerges > 1);
-                    
-                            return list;
-                        }
-                    
-                        // z-order of a point given coords and inverse of the longer side of data bbox
-                        function zOrder(x, y, minX, minY, invSize) {
-                            // coords are transformed into non-negative 15-bit integer range
-                            x = 32767 * (x - minX) * invSize;
-                            y = 32767 * (y - minY) * invSize;
-                    
-                            x = (x | (x << 8)) & 0x00FF00FF;
-                            x = (x | (x << 4)) & 0x0F0F0F0F;
-                            x = (x | (x << 2)) & 0x33333333;
-                            x = (x | (x << 1)) & 0x55555555;
-                    
-                            y = (y | (y << 8)) & 0x00FF00FF;
-                            y = (y | (y << 4)) & 0x0F0F0F0F;
-                            y = (y | (y << 2)) & 0x33333333;
-                            y = (y | (y << 1)) & 0x55555555;
-                    
-                            return x | (y << 1);
-                        }
-                    
-                        // find the leftmost node of a polygon ring
-                        function getLeftmost(start) {
-                            var p = start,
-                                leftmost = start;
-                            do {
-                                if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
-                                p = p.next;
-                            } while (p !== start);
-                    
-                            return leftmost;
-                        }
-                    
-                        // check if a point lies within a convex triangle
-                        function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
-                            return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
-                                (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
-                                (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
-                        }
-                    
-                        // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-                        function isValidDiagonal(a, b) {
-                            return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
-                                locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
-                        }
-                    
-                        // signed area of a triangle
-                        function area(p, q, r) {
-                            return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-                        }
-                    
-                        // check if two points are equal
-                        function equals(p1, p2) {
-                            return p1.x === p2.x && p1.y === p2.y;
-                        }
-                    
-                        // check if two segments intersect
-                        function intersects(p1, q1, p2, q2) {
-                            if ((equals(p1, p2) && equals(q1, q2)) ||
-                                (equals(p1, q2) && equals(p2, q1))) return true;
-                            return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
-                                area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
-                        }
-                    
-                        // check if a polygon diagonal intersects any polygon segments
-                        function intersectsPolygon(a, b) {
-                            var p = a;
-                            do {
-                                if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
-                                        intersects(p, p.next, a, b)) return true;
-                                p = p.next;
-                            } while (p !== a);
-                    
-                            return false;
-                        }
-                    
-                        // check if a polygon diagonal is locally inside the polygon
-                        function locallyInside(a, b) {
-                            return area(a.prev, a, a.next) < 0 ?
-                                area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
-                                area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
-                        }
-                    
-                        // check if the middle point of a polygon diagonal is inside the polygon
-                        function middleInside(a, b) {
-                            var p = a,
-                                inside = false,
-                                px = (a.x + b.x) / 2,
-                                py = (a.y + b.y) / 2;
-                            do {
-                                if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
-                                        (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
-                                    inside = !inside;
-                                p = p.next;
-                            } while (p !== a);
-                    
-                            return inside;
-                        }
-                    
-                        // link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
-                        // if one belongs to the outer ring and another to a hole, it merges it into a single ring
-                        function splitPolygon(a, b) {
-                            var a2 = new Node(a.i, a.x, a.y),
-                                b2 = new Node(b.i, b.x, b.y),
-                                an = a.next,
-                                bp = b.prev;
-                    
-                            a.next = b;
-                            b.prev = a;
-                    
-                            a2.next = an;
-                            an.prev = a2;
-                    
-                            b2.next = a2;
-                            a2.prev = b2;
-                    
-                            bp.next = b2;
-                            b2.prev = bp;
-                    
-                            return b2;
-                        }
-                    
-                        // create a node and optionally link it with previous one (in a circular doubly linked list)
-                        function insertNode(i, x, y, last) {
-                            var p = new Node(i, x, y);
-                    
-                            if (!last) {
-                                p.prev = p;
-                                p.next = p;
-                    
-                            } else {
-                                p.next = last.next;
-                                p.prev = last;
-                                last.next.prev = p;
-                                last.next = p;
-                            }
-                            return p;
-                        }
-                    
-                        function removeNode(p) {
-                            p.next.prev = p.prev;
-                            p.prev.next = p.next;
-                    
-                            if (p.prevZ) p.prevZ.nextZ = p.nextZ;
-                            if (p.nextZ) p.nextZ.prevZ = p.prevZ;
-                        }
-                    
-                        function Node(i, x, y) {
-                            // vertex index in coordinates array
-                            this.i = i;
-                    
-                            // vertex coordinates
-                            this.x = x;
-                            this.y = y;
-                    
-                            // previous and next vertex nodes in a polygon ring
-                            this.prev = null;
-                            this.next = null;
-                    
-                            // z-order curve value
-                            this.z = null;
-                    
-                            // previous and next nodes in z-order
-                            this.prevZ = null;
-                            this.nextZ = null;
-                    
-                            // indicates whether this is a steiner point
-                            this.steiner = false;
-                        }
-                    
-                        // // return a percentage difference between the polygon area and its triangulation area;
-                        // // used to verify correctness of triangulation
-                        // earcut.deviation = function (data, holeIndices, dim, triangles) {
-                        //     var hasHoles = holeIndices && holeIndices.length;
-                        //     var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
-                    
-                        //     var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
-                        //     if (hasHoles) {
-                        //         for (var i = 0, len = holeIndices.length; i < len; i++) {
-                        //             var start = holeIndices[i] * dim;
-                        //             var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-                        //             polygonArea -= Math.abs(signedArea(data, start, end, dim));
-                        //         }
-                        //     }
-                    
-                        //     var trianglesArea = 0;
-                        //     for (i = 0; i < triangles.length; i += 3) {
-                        //         var a = triangles[i] * dim;
-                        //         var b = triangles[i + 1] * dim;
-                        //         var c = triangles[i + 2] * dim;
-                        //         trianglesArea += Math.abs(
-                        //             (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
-                        //             (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
-                        //     }
-                    
-                        //     return polygonArea === 0 && trianglesArea === 0 ? 0 :
-                        //         Math.abs((trianglesArea - polygonArea) / polygonArea);
-                        // };
-                    
-                        function signedArea(data, start, end, dim) {
-                            var sum = 0;
-                            for (var i = start, j = end - dim; i < end; i += dim) {
-                                sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-                                j = i;
-                            }
-                            return sum;
-                        }
-                    
-                        // // turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-                        // earcut.flatten = function (data) {
-                        //     var dim = data[0][0].length,
-                        //         result = {vertices: [], holes: [], dimensions: dim},
-                        //         holeIndex = 0;
-                    
-                        //     for (var i = 0; i < data.length; i++) {
-                        //         for (var j = 0; j < data[i].length; j++) {
-                        //             for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
-                        //         }
-                        //         if (i > 0) {
-                        //             holeIndex += data[i - 1].length;
-                        //             result.holes.push(holeIndex);
-                        //         }
-                        //     }
-                        //     return result;
-                        // };
-                    };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    this.earcut2 = function(points,holeIndices){
+                        // Modified by Metasophiea <metasophiea@gmail.com>
+                    
+                    	var BuildLog = require('./lib/build-log');
+                    	var Epsilon = require('./lib/epsilon');
+                    	var Intersecter = require('./lib/intersecter');
+                    	var SegmentChainer = require('./lib/segment-chainer');
+                    	var SegmentSelector = require('./lib/segment-selector');
+                    	var GeoJSON = require('./lib/geojson');
+                    	
+                    	var buildLog = false;
+                    	var epsilon = Epsilon();
+                    	
+                    	var PolyBool;
+                    	PolyBool = {
+                    		// getter/setter for buildLog
+                    		buildLog: function(bl){
+                    			if (bl === true)
+                    				buildLog = BuildLog();
+                    			else if (bl === false)
+                    				buildLog = false;
+                    			return buildLog === false ? false : buildLog.list;
+                    		},
+                    		// getter/setter for epsilon
+                    		epsilon: function(v){
+                    			return epsilon.epsilon(v);
+                    		},
+                    	
+                    		// core API
+                    		segments: function(poly){
+                    			var i = Intersecter(true, epsilon, buildLog);
+                    			poly.regions.forEach(i.addRegion);
+                    			return {
+                    				segments: i.calculate(poly.inverted),
+                    				inverted: poly.inverted
+                    			};
+                    		},
+                    		combine: function(segments1, segments2){
+                    			var i3 = Intersecter(false, epsilon, buildLog);
+                    			return {
+                    				combined: i3.calculate(
+                    					segments1.segments, segments1.inverted,
+                    					segments2.segments, segments2.inverted
+                    				),
+                    				inverted1: segments1.inverted,
+                    				inverted2: segments2.inverted
+                    			};
+                    		},
+                    		selectUnion: function(combined){
+                    			return {
+                    				segments: SegmentSelector.union(combined.combined, buildLog),
+                    				inverted: combined.inverted1 || combined.inverted2
+                    			}
+                    		},
+                    		selectIntersect: function(combined){
+                    			return {
+                    				segments: SegmentSelector.intersect(combined.combined, buildLog),
+                    				inverted: combined.inverted1 && combined.inverted2
+                    			}
+                    		},
+                    		selectDifference: function(combined){
+                    			return {
+                    				segments: SegmentSelector.difference(combined.combined, buildLog),
+                    				inverted: combined.inverted1 && !combined.inverted2
+                    			}
+                    		},
+                    		selectDifferenceRev: function(combined){
+                    			return {
+                    				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
+                    				inverted: !combined.inverted1 && combined.inverted2
+                    			}
+                    		},
+                    		selectXor: function(combined){
+                    			return {
+                    				segments: SegmentSelector.xor(combined.combined, buildLog),
+                    				inverted: combined.inverted1 !== combined.inverted2
+                    			}
+                    		},
+                    		polygon: function(segments){
+                    			return {
+                    				regions: SegmentChainer(segments.segments, epsilon, buildLog),
+                    				inverted: segments.inverted
+                    			};
+                    		},
+                    	
+                    		// GeoJSON converters
+                    		polygonFromGeoJSON: function(geojson){
+                    			return GeoJSON.toPolygon(PolyBool, geojson);
+                    		},
+                    		polygonToGeoJSON: function(poly){
+                    			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
+                    		},
+                    	
+                    		// helper functions for common operations
+                    		union: function(poly1, poly2){
+                    			return operate(poly1, poly2, PolyBool.selectUnion);
+                    		},
+                    		intersect: function(poly1, poly2){
+                    			return operate(poly1, poly2, PolyBool.selectIntersect);
+                    		},
+                    		difference: function(poly1, poly2){
+                    			return operate(poly1, poly2, PolyBool.selectDifference);
+                    		},
+                    		differenceRev: function(poly1, poly2){
+                    			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
+                    		},
+                    		xor: function(poly1, poly2){
+                    			return operate(poly1, poly2, PolyBool.selectXor);
+                    		}
+                    	};
+                    
+                    	thirdparty.PolyBool = PolyBool;
+                    	
+                    	function operate(poly1, poly2, selector){
+                    		var seg1 = PolyBool.segments(poly1);
+                    		var seg2 = PolyBool.segments(poly2);
+                    		var comb = PolyBool.combine(seg1, seg2);
+                    		var seg3 = selector(comb);
+                    		return PolyBool.polygon(seg3);
+                    	}
+                    		
+                    	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
+                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                    	// MIT License
+                    	// Project Home: https://github.com/voidqk/polybooljs
+                    	
+                    	//
+                    	// used strictly for logging the processing of the algorithm... only useful if you intend on
+                    	// looking under the covers (for pretty UI's or debugging)
+                    	//
+                    	
+                    	function BuildLog(){
+                    		var my;
+                    		var nextSegmentId = 0;
+                    		var curVert = false;
+                    	
+                    		function push(type, data){
+                    			my.list.push({
+                    				type: type,
+                    				data: data ? JSON.parse(JSON.stringify(data)) : void 0
+                    			});
+                    			return my;
+                    		}
+                    	
+                    		my = {
+                    			list: [],
+                    			segmentId: function(){
+                    				return nextSegmentId++;
+                    			},
+                    			checkIntersection: function(seg1, seg2){
+                    				return push('check', { seg1: seg1, seg2: seg2 });
+                    			},
+                    			segmentChop: function(seg, end){
+                    				push('div_seg', { seg: seg, pt: end });
+                    				return push('chop', { seg: seg, pt: end });
+                    			},
+                    			statusRemove: function(seg){
+                    				return push('pop_seg', { seg: seg });
+                    			},
+                    			segmentUpdate: function(seg){
+                    				return push('seg_update', { seg: seg });
+                    			},
+                    			segmentNew: function(seg, primary){
+                    				return push('new_seg', { seg: seg, primary: primary });
+                    			},
+                    			segmentRemove: function(seg){
+                    				return push('rem_seg', { seg: seg });
+                    			},
+                    			tempStatus: function(seg, above, below){
+                    				return push('temp_status', { seg: seg, above: above, below: below });
+                    			},
+                    			rewind: function(seg){
+                    				return push('rewind', { seg: seg });
+                    			},
+                    			status: function(seg, above, below){
+                    				return push('status', { seg: seg, above: above, below: below });
+                    			},
+                    			vert: function(x){
+                    				if (x === curVert)
+                    					return my;
+                    				curVert = x;
+                    				return push('vert', { x: x });
+                    			},
+                    			log: function(data){
+                    				if (typeof data !== 'string')
+                    					data = JSON.stringify(data, false, '  ');
+                    				return push('log', { txt: data });
+                    			},
+                    			reset: function(){
+                    				return push('reset');
+                    			},
+                    			selected: function(segs){
+                    				return push('selected', { segs: segs });
+                    			},
+                    			chainStart: function(seg){
+                    				return push('chain_start', { seg: seg });
+                    			},
+                    			chainRemoveHead: function(index, pt){
+                    				return push('chain_rem_head', { index: index, pt: pt });
+                    			},
+                    			chainRemoveTail: function(index, pt){
+                    				return push('chain_rem_tail', { index: index, pt: pt });
+                    			},
+                    			chainNew: function(pt1, pt2){
+                    				return push('chain_new', { pt1: pt1, pt2: pt2 });
+                    			},
+                    			chainMatch: function(index){
+                    				return push('chain_match', { index: index });
+                    			},
+                    			chainClose: function(index){
+                    				return push('chain_close', { index: index });
+                    			},
+                    			chainAddHead: function(index, pt){
+                    				return push('chain_add_head', { index: index, pt: pt });
+                    			},
+                    			chainAddTail: function(index, pt){
+                    				return push('chain_add_tail', { index: index, pt: pt, });
+                    			},
+                    			chainConnect: function(index1, index2){
+                    				return push('chain_con', { index1: index1, index2: index2 });
+                    			},
+                    			chainReverse: function(index){
+                    				return push('chain_rev', { index: index });
+                    			},
+                    			chainJoin: function(index1, index2){
+                    				return push('chain_join', { index1: index1, index2: index2 });
+                    			},
+                    			done: function(){
+                    				return push('done');
+                    			}
+                    		};
+                    		return my;
+                    	}
+                    	
+                    	module.exports = BuildLog;
+                    	
+                    	},{}],3:[function(require,module,exports){
+                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                    	// MIT License
+                    	// Project Home: https://github.com/voidqk/polybooljs
+                    	
+                    	//
+                    	// provides the raw computation functions that takes epsilon into account
+                    	//
+                    	// zero is defined to be between (-epsilon, epsilon) exclusive
+                    	//
+                    	
+                    	function Epsilon(eps){
+                    		if (typeof eps !== 'number')
+                    			eps = 0.0000000001; // sane default? sure why not
+                    		var my = {
+                    			epsilon: function(v){
+                    				if (typeof v === 'number')
+                    					eps = v;
+                    				return eps;
+                    			},
+                    			pointAboveOrOnLine: function(pt, left, right){
+                    				var Ax = left[0];
+                    				var Ay = left[1];
+                    				var Bx = right[0];
+                    				var By = right[1];
+                    				var Cx = pt[0];
+                    				var Cy = pt[1];
+                    				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
+                    			},
+                    			pointBetween: function(p, left, right){
+                    				// p must be collinear with left->right
+                    				// returns false if p == left, p == right, or left == right
+                    				var d_py_ly = p[1] - left[1];
+                    				var d_rx_lx = right[0] - left[0];
+                    				var d_px_lx = p[0] - left[0];
+                    				var d_ry_ly = right[1] - left[1];
+                    	
+                    				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
+                    				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
+                    				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
+                    				if (dot < eps)
+                    					return false;
+                    	
+                    				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
+                    				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
+                    				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
+                    				if (dot - sqlen > -eps)
+                    					return false;
+                    	
+                    				return true;
+                    			},
+                    			pointsSameX: function(p1, p2){
+                    				return Math.abs(p1[0] - p2[0]) < eps;
+                    			},
+                    			pointsSameY: function(p1, p2){
+                    				return Math.abs(p1[1] - p2[1]) < eps;
+                    			},
+                    			pointsSame: function(p1, p2){
+                    				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
+                    			},
+                    			pointsCompare: function(p1, p2){
+                    				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
+                    				if (my.pointsSameX(p1, p2))
+                    					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
+                    				return p1[0] < p2[0] ? -1 : 1;
+                    			},
+                    			pointsCollinear: function(pt1, pt2, pt3){
+                    				// does pt1->pt2->pt3 make a straight line?
+                    				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
+                    				// if slopes are equal, then they must be collinear, because they share pt2
+                    				var dx1 = pt1[0] - pt2[0];
+                    				var dy1 = pt1[1] - pt2[1];
+                    				var dx2 = pt2[0] - pt3[0];
+                    				var dy2 = pt2[1] - pt3[1];
+                    				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
+                    			},
+                    			linesIntersect: function(a0, a1, b0, b1){
+                    				// returns false if the lines are coincident (e.g., parallel or on top of each other)
+                    				//
+                    				// returns an object if the lines intersect:
+                    				//   {
+                    				//     pt: [x, y],    where the intersection point is at
+                    				//     alongA: where intersection point is along A,
+                    				//     alongB: where intersection point is along B
+                    				//   }
+                    				//
+                    				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
+                    				//
+                    				//  with the following meaning:
+                    				//
+                    				//    -2   intersection point is before segment's first point
+                    				//    -1   intersection point is directly on segment's first point
+                    				//     0   intersection point is between segment's first and second points (exclusive)
+                    				//     1   intersection point is directly on segment's second point
+                    				//     2   intersection point is after segment's second point
+                    				var adx = a1[0] - a0[0];
+                    				var ady = a1[1] - a0[1];
+                    				var bdx = b1[0] - b0[0];
+                    				var bdy = b1[1] - b0[1];
+                    	
+                    				var axb = adx * bdy - ady * bdx;
+                    				if (Math.abs(axb) < eps)
+                    					return false; // lines are coincident
+                    	
+                    				var dx = a0[0] - b0[0];
+                    				var dy = a0[1] - b0[1];
+                    	
+                    				var A = (bdx * dy - bdy * dx) / axb;
+                    				var B = (adx * dy - ady * dx) / axb;
+                    	
+                    				var ret = {
+                    					alongA: 0,
+                    					alongB: 0,
+                    					pt: [
+                    						a0[0] + A * adx,
+                    						a0[1] + A * ady
+                    					]
+                    				};
+                    	
+                    				// categorize where intersection point is along A and B
+                    	
+                    				if (A <= -eps)
+                    					ret.alongA = -2;
+                    				else if (A < eps)
+                    					ret.alongA = -1;
+                    				else if (A - 1 <= -eps)
+                    					ret.alongA = 0;
+                    				else if (A - 1 < eps)
+                    					ret.alongA = 1;
+                    				else
+                    					ret.alongA = 2;
+                    	
+                    				if (B <= -eps)
+                    					ret.alongB = -2;
+                    				else if (B < eps)
+                    					ret.alongB = -1;
+                    				else if (B - 1 <= -eps)
+                    					ret.alongB = 0;
+                    				else if (B - 1 < eps)
+                    					ret.alongB = 1;
+                    				else
+                    					ret.alongB = 2;
+                    	
+                    				return ret;
+                    			},
+                    			pointInsideRegion: function(pt, region){
+                    				var x = pt[0];
+                    				var y = pt[1];
+                    				var last_x = region[region.length - 1][0];
+                    				var last_y = region[region.length - 1][1];
+                    				var inside = false;
+                    				for (var i = 0; i < region.length; i++){
+                    					var curr_x = region[i][0];
+                    					var curr_y = region[i][1];
+                    	
+                    					// if y is between curr_y and last_y, and
+                    					// x is to the right of the boundary created by the line
+                    					if ((curr_y - y > eps) != (last_y - y > eps) &&
+                    						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
+                    						inside = !inside
+                    	
+                    					last_x = curr_x;
+                    					last_y = curr_y;
+                    				}
+                    				return inside;
+                    			}
+                    		};
+                    		return my;
+                    	}
+                    	
+                    	module.exports = Epsilon;
+                    	
+                    	},{}],4:[function(require,module,exports){
+                    	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
+                    	// MIT License
+                    	// Project Home: https://github.com/voidqk/polybooljs
+                    	
+                    	//
+                    	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
+                    	//
+                    	
+                    	var GeoJSON = {
+                    		// convert a GeoJSON object to a PolyBool polygon
+                    		toPolygon: function(PolyBool, geojson){
+                    	
+                    			// converts list of LineString's to segments
+                    			function GeoPoly(coords){
+                    				// check for empty coords
+                    				if (coords.length <= 0)
+                    					return PolyBool.segments({ inverted: false, regions: [] });
+                    	
+                    				// convert LineString to segments
+                    				function LineString(ls){
+                    					// remove tail which should be the same as head
+                    					var reg = ls.slice(0, ls.length - 1);
+                    					return PolyBool.segments({ inverted: false, regions: [reg] });
+                    				}
+                    	
+                    				// the first LineString is considered the outside
+                    				var out = LineString(coords[0]);
+                    	
+                    				// the rest of the LineStrings are considered interior holes, so subtract them from the
+                    				// current result
+                    				for (var i = 1; i < coords.length; i++)
+                    					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
+                    	
+                    				return out;
+                    			}
+                    	
+                    			if (geojson.type === 'Polygon'){
+                    				// single polygon, so just convert it and we're done
+                    				return PolyBool.polygon(GeoPoly(geojson.coordinates));
+                    			}
+                    			else if (geojson.type === 'MultiPolygon'){
+                    				// multiple polygons, so union all the polygons together
+                    				var out = PolyBool.segments({ inverted: false, regions: [] });
+                    				for (var i = 0; i < geojson.coordinates.length; i++)
+                    					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
+                    				return PolyBool.polygon(out);
+                    			}
+                    			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
+                    		},
+                    	
+                    		// convert a PolyBool polygon to a GeoJSON object
+                    		fromPolygon: function(PolyBool, eps, poly){
+                    			// make sure out polygon is clean
+                    			poly = PolyBool.polygon(PolyBool.segments(poly));
+                    	
+                    			// test if r1 is inside r2
+                    			function regionInsideRegion(r1, r2){
+                    				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
+                    				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
+                    				// edge of the first line, which cannot be on an edge
+                    				return eps.pointInsideRegion([
+                    					(r1[0][0] + r1[1][0]) * 0.5,
+                    					(r1[0][1] + r1[1][1]) * 0.5
+                    				], r2);
+                    			}
+                    	
+                    			// calculate inside heirarchy
+                    			//
+                    			//  _____________________   _______    roots -> A       -> F
+                    			// |          A          | |   F   |            |          |
+                    			// |  _______   _______  | |  ___  |            +-- B      +-- G
+                    			// | |   B   | |   C   | | | |   | |            |   |
+                    			// | |  ___  | |  ___  | | | |   | |            |   +-- D
+                    			// | | | D | | | | E | | | | | G | |            |
+                    			// | | |___| | | |___| | | | |   | |            +-- C
+                    			// | |_______| |_______| | | |___| |                |
+                    			// |_____________________| |_______|                +-- E
+                    	
+                    			function newNode(region){
+                    				return {
+                    					region: region,
+                    					children: []
+                    				};
+                    			}
+                    	
+                    			var roots = newNode(null);
+                    	
+                    			function addChild(root, region){
+                    				// first check if we're inside any children
+                    				for (var i = 0; i < root.children.length; i++){
+                    					var child = root.children[i];
+                    					if (regionInsideRegion(region, child.region)){
+                    						// we are, so insert inside them instead
+                    						addChild(child, region);
+                    						return;
+                    					}
+                    				}
+                    	
+                    				// not inside any children, so check to see if any children are inside us
+                    				var node = newNode(region);
+                    				for (var i = 0; i < root.children.length; i++){
+                    					var child = root.children[i];
+                    					if (regionInsideRegion(child.region, region)){
+                    						// oops... move the child beneath us, and remove them from root
+                    						node.children.push(child);
+                    						root.children.splice(i, 1);
+                    						i--;
+                    					}
+                    				}
+                    	
+                    				// now we can add ourselves
+                    				root.children.push(node);
+                    			}
+                    	
+                    			// add all regions to the root
+                    			for (var i = 0; i < poly.regions.length; i++){
+                    				var region = poly.regions[i];
+                    				if (region.length < 3) // regions must have at least 3 points (sanity check)
+                    					continue;
+                    				addChild(roots, region);
+                    			}
+                    	
+                    			// with our heirarchy, we can distinguish between exterior borders, and interior holes
+                    			// the root nodes are exterior, children are interior, children's children are exterior,
+                    			// children's children's children are interior, etc
+                    	
+                    			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
+                    	
+                    			function forceWinding(region, clockwise){
+                    				// first, see if we're clockwise or counter-clockwise
+                    				// https://en.wikipedia.org/wiki/Shoelace_formula
+                    				var winding = 0;
+                    				var last_x = region[region.length - 1][0];
+                    				var last_y = region[region.length - 1][1];
+                    				var copy = [];
+                    				for (var i = 0; i < region.length; i++){
+                    					var curr_x = region[i][0];
+                    					var curr_y = region[i][1];
+                    					copy.push([curr_x, curr_y]); // create a copy while we're at it
+                    					winding += curr_y * last_x - curr_x * last_y;
+                    					last_x = curr_x;
+                    					last_y = curr_y;
+                    				}
+                    				// this assumes Cartesian coordinates (Y is positive going up)
+                    				var isclockwise = winding < 0;
+                    				if (isclockwise !== clockwise)
+                    					copy.reverse();
+                    				// while we're here, the last point must be the first point...
+                    				copy.push([copy[0][0], copy[0][1]]);
+                    				return copy;
+                    			}
+                    	
+                    			var geopolys = [];
+                    	
+                    			function addExterior(node){
+                    				var poly = [forceWinding(node.region, false)];
+                    				geopolys.push(poly);
+                    				// children of exteriors are interior
+                    				for (var i = 0; i < node.children.length; i++)
+                    					poly.push(getInterior(node.children[i]));
+                    			}
+                    	
+                    			function getInterior(node){
+                    				// children of interiors are exterior
+                    				for (var i = 0; i < node.children.length; i++)
+                    					addExterior(node.children[i]);
+                    				// return the clockwise interior
+                    				return forceWinding(node.region, true);
+                    			}
+                    	
+                    			// root nodes are exterior
+                    			for (var i = 0; i < roots.children.length; i++)
+                    				addExterior(roots.children[i]);
+                    	
+                    			// lastly, construct the approrpriate GeoJSON object
+                    	
+                    			if (geopolys.length <= 0) // empty GeoJSON Polygon
+                    				return { type: 'Polygon', coordinates: [] };
+                    			if (geopolys.length == 1) // use a GeoJSON Polygon
+                    				return { type: 'Polygon', coordinates: geopolys[0] };
+                    			return { // otherwise, use a GeoJSON MultiPolygon
+                    				type: 'MultiPolygon',
+                    				coordinates: geopolys
+                    			};
+                    		}
+                    	};
+                    	
+                    	module.exports = GeoJSON;
+                    	
+                    	},{}],5:[function(require,module,exports){
+                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                    	// MIT License
+                    	// Project Home: https://github.com/voidqk/polybooljs
+                    	
+                    	//
+                    	// this is the core work-horse
+                    	//
+                    	
+                    	var LinkedList = require('./linked-list');
+                    	
+                    	function Intersecter(selfIntersection, eps, buildLog){
+                    		// selfIntersection is true/false depending on the phase of the overall algorithm
+                    	
+                    		//
+                    		// segment creation
+                    		//
+                    	
+                    		function segmentNew(start, end){
+                    			return {
+                    				id: buildLog ? buildLog.segmentId() : -1,
+                    				start: start,
+                    				end: end,
+                    				myFill: {
+                    					above: null, // is there fill above us?
+                    					below: null  // is there fill below us?
+                    				},
+                    				otherFill: null
+                    			};
+                    		}
+                    	
+                    		function segmentCopy(start, end, seg){
+                    			return {
+                    				id: buildLog ? buildLog.segmentId() : -1,
+                    				start: start,
+                    				end: end,
+                    				myFill: {
+                    					above: seg.myFill.above,
+                    					below: seg.myFill.below
+                    				},
+                    				otherFill: null
+                    			};
+                    		}
+                    	
+                    		//
+                    		// event logic
+                    		//
+                    	
+                    		var event_root = LinkedList.create();
+                    	
+                    		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
+                    			// compare the selected points first
+                    			var comp = eps.pointsCompare(p1_1, p2_1);
+                    			if (comp !== 0)
+                    				return comp;
+                    			// the selected points are the same
+                    	
+                    			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
+                    				return 0; // then the segments are equal
+                    	
+                    			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
+                    				return p1_isStart ? 1 : -1; // favor the one that isn't the start
+                    	
+                    			// otherwise, we'll have to calculate which one is below the other manually
+                    			return eps.pointAboveOrOnLine(p1_2,
+                    				p2_isStart ? p2_1 : p2_2, // order matters
+                    				p2_isStart ? p2_2 : p2_1
+                    			) ? 1 : -1;
+                    		}
+                    	
+                    		function eventAdd(ev, other_pt){
+                    			event_root.insertBefore(ev, function(here){
+                    				// should ev be inserted before here?
+                    				var comp = eventCompare(
+                    					ev  .isStart, ev  .pt,      other_pt,
+                    					here.isStart, here.pt, here.other.pt
+                    				);
+                    				return comp < 0;
+                    			});
+                    		}
+                    	
+                    		function eventAddSegmentStart(seg, primary){
+                    			var ev_start = LinkedList.node({
+                    				isStart: true,
+                    				pt: seg.start,
+                    				seg: seg,
+                    				primary: primary,
+                    				other: null,
+                    				status: null
+                    			});
+                    			eventAdd(ev_start, seg.end);
+                    			return ev_start;
+                    		}
+                    	
+                    		function eventAddSegmentEnd(ev_start, seg, primary){
+                    			var ev_end = LinkedList.node({
+                    				isStart: false,
+                    				pt: seg.end,
+                    				seg: seg,
+                    				primary: primary,
+                    				other: ev_start,
+                    				status: null
+                    			});
+                    			ev_start.other = ev_end;
+                    			eventAdd(ev_end, ev_start.pt);
+                    		}
+                    	
+                    		function eventAddSegment(seg, primary){
+                    			var ev_start = eventAddSegmentStart(seg, primary);
+                    			eventAddSegmentEnd(ev_start, seg, primary);
+                    			return ev_start;
+                    		}
+                    	
+                    		function eventUpdateEnd(ev, end){
+                    			// slides an end backwards
+                    			//   (start)------------(end)    to:
+                    			//   (start)---(end)
+                    	
+                    			if (buildLog)
+                    				buildLog.segmentChop(ev.seg, end);
+                    	
+                    			ev.other.remove();
+                    			ev.seg.end = end;
+                    			ev.other.pt = end;
+                    			eventAdd(ev.other, ev.pt);
+                    		}
+                    	
+                    		function eventDivide(ev, pt){
+                    			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
+                    			eventUpdateEnd(ev, pt);
+                    			return eventAddSegment(ns, ev.primary);
+                    		}
+                    	
+                    		function calculate(primaryPolyInverted, secondaryPolyInverted){
+                    			// if selfIntersection is true then there is no secondary polygon, so that isn't used
+                    	
+                    			//
+                    			// status logic
+                    			//
+                    	
+                    			var status_root = LinkedList.create();
+                    	
+                    			function statusCompare(ev1, ev2){
+                    				var a1 = ev1.seg.start;
+                    				var a2 = ev1.seg.end;
+                    				var b1 = ev2.seg.start;
+                    				var b2 = ev2.seg.end;
+                    	
+                    				if (eps.pointsCollinear(a1, b1, b2)){
+                    					if (eps.pointsCollinear(a2, b1, b2))
+                    						return 1;//eventCompare(true, a1, a2, true, b1, b2);
+                    					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
+                    				}
+                    				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
+                    			}
+                    	
+                    			function statusFindSurrounding(ev){
+                    				return status_root.findTransition(function(here){
+                    					var comp = statusCompare(ev, here.ev);
+                    					return comp > 0;
+                    				});
+                    			}
+                    	
+                    			function checkIntersection(ev1, ev2){
+                    				// returns the segment equal to ev1, or false if nothing equal
+                    	
+                    				var seg1 = ev1.seg;
+                    				var seg2 = ev2.seg;
+                    				var a1 = seg1.start;
+                    				var a2 = seg1.end;
+                    				var b1 = seg2.start;
+                    				var b2 = seg2.end;
+                    	
+                    				if (buildLog)
+                    					buildLog.checkIntersection(seg1, seg2);
+                    	
+                    				var i = eps.linesIntersect(a1, a2, b1, b2);
+                    	
+                    				if (i === false){
+                    					// segments are parallel or coincident
+                    	
+                    					// if points aren't collinear, then the segments are parallel, so no intersections
+                    					if (!eps.pointsCollinear(a1, a2, b1))
+                    						return false;
+                    					// otherwise, segments are on top of each other somehow (aka coincident)
+                    	
+                    					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
+                    						return false; // segments touch at endpoints... no intersection
+                    	
+                    					var a1_equ_b1 = eps.pointsSame(a1, b1);
+                    					var a2_equ_b2 = eps.pointsSame(a2, b2);
+                    	
+                    					if (a1_equ_b1 && a2_equ_b2)
+                    						return ev2; // segments are exactly equal
+                    	
+                    					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
+                    					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
+                    	
+                    					// handy for debugging:
+                    					// buildLog.log({
+                    					//	a1_equ_b1: a1_equ_b1,
+                    					//	a2_equ_b2: a2_equ_b2,
+                    					//	a1_between: a1_between,
+                    					//	a2_between: a2_between
+                    					// });
+                    	
+                    					if (a1_equ_b1){
+                    						if (a2_between){
+                    							//  (a1)---(a2)
+                    							//  (b1)----------(b2)
+                    							eventDivide(ev2, a2);
+                    						}
+                    						else{
+                    							//  (a1)----------(a2)
+                    							//  (b1)---(b2)
+                    							eventDivide(ev1, b2);
+                    						}
+                    						return ev2;
+                    					}
+                    					else if (a1_between){
+                    						if (!a2_equ_b2){
+                    							// make a2 equal to b2
+                    							if (a2_between){
+                    								//         (a1)---(a2)
+                    								//  (b1)-----------------(b2)
+                    								eventDivide(ev2, a2);
+                    							}
+                    							else{
+                    								//         (a1)----------(a2)
+                    								//  (b1)----------(b2)
+                    								eventDivide(ev1, b2);
+                    							}
+                    						}
+                    	
+                    						//         (a1)---(a2)
+                    						//  (b1)----------(b2)
+                    						eventDivide(ev2, a1);
+                    					}
+                    				}
+                    				else{
+                    					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
+                    	
+                    					// is A divided between its endpoints? (exclusive)
+                    					if (i.alongA === 0){
+                    						if (i.alongB === -1) // yes, at exactly b1
+                    							eventDivide(ev1, b1);
+                    						else if (i.alongB === 0) // yes, somewhere between B's endpoints
+                    							eventDivide(ev1, i.pt);
+                    						else if (i.alongB === 1) // yes, at exactly b2
+                    							eventDivide(ev1, b2);
+                    					}
+                    	
+                    					// is B divided between its endpoints? (exclusive)
+                    					if (i.alongB === 0){
+                    						if (i.alongA === -1) // yes, at exactly a1
+                    							eventDivide(ev2, a1);
+                    						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
+                    							eventDivide(ev2, i.pt);
+                    						else if (i.alongA === 1) // yes, at exactly a2
+                    							eventDivide(ev2, a2);
+                    					}
+                    				}
+                    				return false;
+                    			}
+                    	
+                    			//
+                    			// main event loop
+                    			//
+                    			var segments = [];
+                    			while (!event_root.isEmpty()){
+                    				var ev = event_root.getHead();
+                    	
+                    				if (buildLog)
+                    					buildLog.vert(ev.pt[0]);
+                    	
+                    				if (ev.isStart){
+                    	
+                    					if (buildLog)
+                    						buildLog.segmentNew(ev.seg, ev.primary);
+                    	
+                    					var surrounding = statusFindSurrounding(ev);
+                    					var above = surrounding.before ? surrounding.before.ev : null;
+                    					var below = surrounding.after ? surrounding.after.ev : null;
+                    	
+                    					if (buildLog){
+                    						buildLog.tempStatus(
+                    							ev.seg,
+                    							above ? above.seg : false,
+                    							below ? below.seg : false
+                    						);
+                    					}
+                    	
+                    					function checkBothIntersections(){
+                    						if (above){
+                    							var eve = checkIntersection(ev, above);
+                    							if (eve)
+                    								return eve;
+                    						}
+                    						if (below)
+                    							return checkIntersection(ev, below);
+                    						return false;
+                    					}
+                    	
+                    					var eve = checkBothIntersections();
+                    					if (eve){
+                    						// ev and eve are equal
+                    						// we'll keep eve and throw away ev
+                    	
+                    						// merge ev.seg's fill information into eve.seg
+                    	
+                    						if (selfIntersection){
+                    							var toggle; // are we a toggling edge?
+                    							if (ev.seg.myFill.below === null)
+                    								toggle = true;
+                    							else
+                    								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
+                    	
+                    							// merge two segments that belong to the same polygon
+                    							// think of this as sandwiching two segments together, where `eve.seg` is
+                    							// the bottom -- this will cause the above fill flag to toggle
+                    							if (toggle)
+                    								eve.seg.myFill.above = !eve.seg.myFill.above;
+                    						}
+                    						else{
+                    							// merge two segments that belong to different polygons
+                    							// each segment has distinct knowledge, so no special logic is needed
+                    							// note that this can only happen once per segment in this phase, because we
+                    							// are guaranteed that all self-intersections are gone
+                    							eve.seg.otherFill = ev.seg.myFill;
+                    						}
+                    	
+                    						if (buildLog)
+                    							buildLog.segmentUpdate(eve.seg);
+                    	
+                    						ev.other.remove();
+                    						ev.remove();
+                    					}
+                    	
+                    					if (event_root.getHead() !== ev){
+                    						// something was inserted before us in the event queue, so loop back around and
+                    						// process it before continuing
+                    						if (buildLog)
+                    							buildLog.rewind(ev.seg);
+                    						continue;
+                    					}
+                    	
+                    					//
+                    					// calculate fill flags
+                    					//
+                    					if (selfIntersection){
+                    						var toggle; // are we a toggling edge?
+                    						if (ev.seg.myFill.below === null) // if we are a new segment...
+                    							toggle = true; // then we toggle
+                    						else // we are a segment that has previous knowledge from a division
+                    							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
+                    	
+                    						// next, calculate whether we are filled below us
+                    						if (!below){ // if nothing is below us...
+                    							// we are filled below us if the polygon is inverted
+                    							ev.seg.myFill.below = primaryPolyInverted;
+                    						}
+                    						else{
+                    							// otherwise, we know the answer -- it's the same if whatever is below
+                    							// us is filled above it
+                    							ev.seg.myFill.below = below.seg.myFill.above;
+                    						}
+                    	
+                    						// since now we know if we're filled below us, we can calculate whether
+                    						// we're filled above us by applying toggle to whatever is below us
+                    						if (toggle)
+                    							ev.seg.myFill.above = !ev.seg.myFill.below;
+                    						else
+                    							ev.seg.myFill.above = ev.seg.myFill.below;
+                    					}
+                    					else{
+                    						// now we fill in any missing transition information, since we are all-knowing
+                    						// at this point
+                    	
+                    						if (ev.seg.otherFill === null){
+                    							// if we don't have other information, then we need to figure out if we're
+                    							// inside the other polygon
+                    							var inside;
+                    							if (!below){
+                    								// if nothing is below us, then we're inside if the other polygon is
+                    								// inverted
+                    								inside =
+                    									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
+                    							}
+                    							else{ // otherwise, something is below us
+                    								// so copy the below segment's other polygon's above
+                    								if (ev.primary === below.primary)
+                    									inside = below.seg.otherFill.above;
+                    								else
+                    									inside = below.seg.myFill.above;
+                    							}
+                    							ev.seg.otherFill = {
+                    								above: inside,
+                    								below: inside
+                    							};
+                    						}
+                    					}
+                    	
+                    					if (buildLog){
+                    						buildLog.status(
+                    							ev.seg,
+                    							above ? above.seg : false,
+                    							below ? below.seg : false
+                    						);
+                    					}
+                    	
+                    					// insert the status and remember it for later removal
+                    					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
+                    				}
+                    				else{
+                    					var st = ev.status;
+                    	
+                    					if (st === null){
+                    						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
+                    							'probably too small or too large');
+                    					}
+                    	
+                    					// removing the status will create two new adjacent edges, so we'll need to check
+                    					// for those
+                    					if (status_root.exists(st.prev) && status_root.exists(st.next))
+                    						checkIntersection(st.prev.ev, st.next.ev);
+                    	
+                    					if (buildLog)
+                    						buildLog.statusRemove(st.ev.seg);
+                    	
+                    					// remove the status
+                    					st.remove();
+                    	
+                    					// if we've reached this point, we've calculated everything there is to know, so
+                    					// save the segment for reporting
+                    					if (!ev.primary){
+                    						// make sure `seg.myFill` actually points to the primary polygon though
+                    						var s = ev.seg.myFill;
+                    						ev.seg.myFill = ev.seg.otherFill;
+                    						ev.seg.otherFill = s;
+                    					}
+                    					segments.push(ev.seg);
+                    				}
+                    	
+                    				// remove the event and continue
+                    				event_root.getHead().remove();
+                    			}
+                    	
+                    			if (buildLog)
+                    				buildLog.done();
+                    	
+                    			return segments;
+                    		}
+                    	
+                    		// return the appropriate API depending on what we're doing
+                    		if (!selfIntersection){
+                    			// performing combination of polygons, so only deal with already-processed segments
+                    			return {
+                    				calculate: function(segments1, inverted1, segments2, inverted2){
+                    					// segmentsX come from the self-intersection API, or this API
+                    					// invertedX is whether we treat that list of segments as an inverted polygon or not
+                    					// returns segments that can be used for further operations
+                    					segments1.forEach(function(seg){
+                    						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
+                    					});
+                    					segments2.forEach(function(seg){
+                    						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
+                    					});
+                    					return calculate(inverted1, inverted2);
+                    				}
+                    			};
+                    		}
+                    	
+                    		// otherwise, performing self-intersection, so deal with regions
+                    		return {
+                    			addRegion: function(region){
+                    				// regions are a list of points:
+                    				//  [ [0, 0], [100, 0], [50, 100] ]
+                    				// you can add multiple regions before running calculate
+                    				var pt1;
+                    				var pt2 = region[region.length - 1];
+                    				for (var i = 0; i < region.length; i++){
+                    					pt1 = pt2;
+                    					pt2 = region[i];
+                    	
+                    					var forward = eps.pointsCompare(pt1, pt2);
+                    					if (forward === 0) // points are equal, so we have a zero-length segment
+                    						continue; // just skip it
+                    	
+                    					eventAddSegment(
+                    						segmentNew(
+                    							forward < 0 ? pt1 : pt2,
+                    							forward < 0 ? pt2 : pt1
+                    						),
+                    						true
+                    					);
+                    				}
+                    			},
+                    			calculate: function(inverted){
+                    				// is the polygon inverted?
+                    				// returns segments
+                    				return calculate(inverted, false);
+                    			}
+                    		};
+                    	}
+                    	
+                    	module.exports = Intersecter;
+                    	
+                    	},{"./linked-list":6}],6:[function(require,module,exports){
+                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                    	// MIT License
+                    	// Project Home: https://github.com/voidqk/polybooljs
+                    	
+                    	//
+                    	// simple linked list implementation that allows you to traverse down nodes and save positions
+                    	//
+                    	
+                    	var LinkedList = {
+                    		create: function(){
+                    			var my = {
+                    				root: { root: true, next: null },
+                    				exists: function(node){
+                    					if (node === null || node === my.root)
+                    						return false;
+                    					return true;
+                    				},
+                    				isEmpty: function(){
+                    					return my.root.next === null;
+                    				},
+                    				getHead: function(){
+                    					return my.root.next;
+                    				},
+                    				insertBefore: function(node, check){
+                    					var last = my.root;
+                    					var here = my.root.next;
+                    					while (here !== null){
+                    						if (check(here)){
+                    							node.prev = here.prev;
+                    							node.next = here;
+                    							here.prev.next = node;
+                    							here.prev = node;
+                    							return;
+                    						}
+                    						last = here;
+                    						here = here.next;
+                    					}
+                    					last.next = node;
+                    					node.prev = last;
+                    					node.next = null;
+                    				},
+                    				findTransition: function(check){
+                    					var prev = my.root;
+                    					var here = my.root.next;
+                    					while (here !== null){
+                    						if (check(here))
+                    							break;
+                    						prev = here;
+                    						here = here.next;
+                    					}
+                    					return {
+                    						before: prev === my.root ? null : prev,
+                    						after: here,
+                    						insert: function(node){
+                    							node.prev = prev;
+                    							node.next = here;
+                    							prev.next = node;
+                    							if (here !== null)
+                    								here.prev = node;
+                    							return node;
+                    						}
+                    					};
+                    				}
+                    			};
+                    			return my;
+                    		},
+                    		node: function(data){
+                    			data.prev = null;
+                    			data.next = null;
+                    			data.remove = function(){
+                    				data.prev.next = data.next;
+                    				if (data.next)
+                    					data.next.prev = data.prev;
+                    				data.prev = null;
+                    				data.next = null;
+                    			};
+                    			return data;
+                    		}
+                    	};
+                    	
+                    	module.exports = LinkedList;
+                    	
+                    	},{}],7:[function(require,module,exports){
+                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                    	// MIT License
+                    	// Project Home: https://github.com/voidqk/polybooljs
+                    	
+                    	//
+                    	// converts a list of segments into a list of regions, while also removing unnecessary verticies
+                    	//
+                    	
+                    	function SegmentChainer(segments, eps, buildLog){
+                    		var chains = [];
+                    		var regions = [];
+                    	
+                    		segments.forEach(function(seg){
+                    			var pt1 = seg.start;
+                    			var pt2 = seg.end;
+                    			if (eps.pointsSame(pt1, pt2)){
+                    				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
+                    					'probably too small or too large');
+                    				return;
+                    			}
+                    	
+                    			if (buildLog)
+                    				buildLog.chainStart(seg);
+                    	
+                    			// search for two chains that this segment matches
+                    			var first_match = {
+                    				index: 0,
+                    				matches_head: false,
+                    				matches_pt1: false
+                    			};
+                    			var second_match = {
+                    				index: 0,
+                    				matches_head: false,
+                    				matches_pt1: false
+                    			};
+                    			var next_match = first_match;
+                    			function setMatch(index, matches_head, matches_pt1){
+                    				// return true if we've matched twice
+                    				next_match.index = index;
+                    				next_match.matches_head = matches_head;
+                    				next_match.matches_pt1 = matches_pt1;
+                    				if (next_match === first_match){
+                    					next_match = second_match;
+                    					return false;
+                    				}
+                    				next_match = null;
+                    				return true; // we've matched twice, we're done here
+                    			}
+                    			for (var i = 0; i < chains.length; i++){
+                    				var chain = chains[i];
+                    				var head  = chain[0];
+                    				var head2 = chain[1];
+                    				var tail  = chain[chain.length - 1];
+                    				var tail2 = chain[chain.length - 2];
+                    				if (eps.pointsSame(head, pt1)){
+                    					if (setMatch(i, true, true))
+                    						break;
+                    				}
+                    				else if (eps.pointsSame(head, pt2)){
+                    					if (setMatch(i, true, false))
+                    						break;
+                    				}
+                    				else if (eps.pointsSame(tail, pt1)){
+                    					if (setMatch(i, false, true))
+                    						break;
+                    				}
+                    				else if (eps.pointsSame(tail, pt2)){
+                    					if (setMatch(i, false, false))
+                    						break;
+                    				}
+                    			}
+                    	
+                    			if (next_match === first_match){
+                    				// we didn't match anything, so create a new chain
+                    				chains.push([ pt1, pt2 ]);
+                    				if (buildLog)
+                    					buildLog.chainNew(pt1, pt2);
+                    				return;
+                    			}
+                    	
+                    			if (next_match === second_match){
+                    				// we matched a single chain
+                    	
+                    				if (buildLog)
+                    					buildLog.chainMatch(first_match.index);
+                    	
+                    				// add the other point to the apporpriate end, and check to see if we've closed the
+                    				// chain into a loop
+                    	
+                    				var index = first_match.index;
+                    				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
+                    				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
+                    	
+                    				var chain = chains[index];
+                    				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
+                    				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
+                    				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
+                    				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
+                    	
+                    				if (eps.pointsCollinear(grow2, grow, pt)){
+                    					// grow isn't needed because it's directly between grow2 and pt:
+                    					// grow2 ---grow---> pt
+                    					if (addToHead){
+                    						if (buildLog)
+                    							buildLog.chainRemoveHead(first_match.index, pt);
+                    						chain.shift();
+                    					}
+                    					else{
+                    						if (buildLog)
+                    							buildLog.chainRemoveTail(first_match.index, pt);
+                    						chain.pop();
+                    					}
+                    					grow = grow2; // old grow is gone... new grow is what grow2 was
+                    				}
+                    	
+                    				if (eps.pointsSame(oppo, pt)){
+                    					// we're closing the loop, so remove chain from chains
+                    					chains.splice(index, 1);
+                    	
+                    					if (eps.pointsCollinear(oppo2, oppo, grow)){
+                    						// oppo isn't needed because it's directly between oppo2 and grow:
+                    						// oppo2 ---oppo--->grow
+                    						if (addToHead){
+                    							if (buildLog)
+                    								buildLog.chainRemoveTail(first_match.index, grow);
+                    							chain.pop();
+                    						}
+                    						else{
+                    							if (buildLog)
+                    								buildLog.chainRemoveHead(first_match.index, grow);
+                    							chain.shift();
+                    						}
+                    					}
+                    	
+                    					if (buildLog)
+                    						buildLog.chainClose(first_match.index);
+                    	
+                    					// we have a closed chain!
+                    					regions.push(chain);
+                    					return;
+                    				}
+                    	
+                    				// not closing a loop, so just add it to the apporpriate side
+                    				if (addToHead){
+                    					if (buildLog)
+                    						buildLog.chainAddHead(first_match.index, pt);
+                    					chain.unshift(pt);
+                    				}
+                    				else{
+                    					if (buildLog)
+                    						buildLog.chainAddTail(first_match.index, pt);
+                    					chain.push(pt);
+                    				}
+                    				return;
+                    			}
+                    	
+                    			// otherwise, we matched two chains, so we need to combine those chains together
+                    	
+                    			function reverseChain(index){
+                    				if (buildLog)
+                    					buildLog.chainReverse(index);
+                    				chains[index].reverse(); // gee, that's easy
+                    			}
+                    	
+                    			function appendChain(index1, index2){
+                    				// index1 gets index2 appended to it, and index2 is removed
+                    				var chain1 = chains[index1];
+                    				var chain2 = chains[index2];
+                    				var tail  = chain1[chain1.length - 1];
+                    				var tail2 = chain1[chain1.length - 2];
+                    				var head  = chain2[0];
+                    				var head2 = chain2[1];
+                    	
+                    				if (eps.pointsCollinear(tail2, tail, head)){
+                    					// tail isn't needed because it's directly between tail2 and head
+                    					// tail2 ---tail---> head
+                    					if (buildLog)
+                    						buildLog.chainRemoveTail(index1, tail);
+                    					chain1.pop();
+                    					tail = tail2; // old tail is gone... new tail is what tail2 was
+                    				}
+                    	
+                    				if (eps.pointsCollinear(tail, head, head2)){
+                    					// head isn't needed because it's directly between tail and head2
+                    					// tail ---head---> head2
+                    					if (buildLog)
+                    						buildLog.chainRemoveHead(index2, head);
+                    					chain2.shift();
+                    				}
+                    	
+                    				if (buildLog)
+                    					buildLog.chainJoin(index1, index2);
+                    				chains[index1] = chain1.concat(chain2);
+                    				chains.splice(index2, 1);
+                    			}
+                    	
+                    			var F = first_match.index;
+                    			var S = second_match.index;
+                    	
+                    			if (buildLog)
+                    				buildLog.chainConnect(F, S);
+                    	
+                    			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
+                    			if (first_match.matches_head){
+                    				if (second_match.matches_head){
+                    					if (reverseF){
+                    						// <<<< F <<<< --- >>>> S >>>>
+                    						reverseChain(F);
+                    						// >>>> F >>>> --- >>>> S >>>>
+                    						appendChain(F, S);
+                    					}
+                    					else{
+                    						// <<<< F <<<< --- >>>> S >>>>
+                    						reverseChain(S);
+                    						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                    						// >>>> S >>>> --- >>>> F >>>>
+                    						appendChain(S, F);
+                    					}
+                    				}
+                    				else{
+                    					// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                    					// >>>> S >>>> --- >>>> F >>>>
+                    					appendChain(S, F);
+                    				}
+                    			}
+                    			else{
+                    				if (second_match.matches_head){
+                    					// >>>> F >>>> --- >>>> S >>>>
+                    					appendChain(F, S);
+                    				}
+                    				else{
+                    					if (reverseF){
+                    						// >>>> F >>>> --- <<<< S <<<<
+                    						reverseChain(F);
+                    						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                    						// >>>> S >>>> --- >>>> F >>>>
+                    						appendChain(S, F);
+                    					}
+                    					else{
+                    						// >>>> F >>>> --- <<<< S <<<<
+                    						reverseChain(S);
+                    						// >>>> F >>>> --- >>>> S >>>>
+                    						appendChain(F, S);
+                    					}
+                    				}
+                    			}
+                    		});
+                    	
+                    		return regions;
+                    	}
+                    	
+                    	module.exports = SegmentChainer;
+                    	
+                    	},{}],8:[function(require,module,exports){
+                    	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                    	// MIT License
+                    	// Project Home: https://github.com/voidqk/polybooljs
+                    	
+                    	//
+                    	// filter a list of segments based on boolean operations
+                    	//
+                    	
+                    	function select(segments, selection, buildLog){
+                    		var result = [];
+                    		segments.forEach(function(seg){
+                    			var index =
+                    				(seg.myFill.above ? 8 : 0) +
+                    				(seg.myFill.below ? 4 : 0) +
+                    				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
+                    				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
+                    			if (selection[index] !== 0){
+                    				// copy the segment to the results, while also calculating the fill status
+                    				result.push({
+                    					id: buildLog ? buildLog.segmentId() : -1,
+                    					start: seg.start,
+                    					end: seg.end,
+                    					myFill: {
+                    						above: selection[index] === 1, // 1 if filled above
+                    						below: selection[index] === 2  // 2 if filled below
+                    					},
+                    					otherFill: null
+                    				});
+                    			}
+                    		});
+                    	
+                    		if (buildLog)
+                    			buildLog.selected(result);
+                    	
+                    		return result;
+                    	}
+                    	
+                    	var SegmentSelector = {
+                    		union: function(segments, buildLog){ // primary | secondary
+                    			// above1 below1 above2 below2    Keep?               Value
+                    			//    0      0      0      0   =>   no                  0
+                    			//    0      0      0      1   =>   yes filled below    2
+                    			//    0      0      1      0   =>   yes filled above    1
+                    			//    0      0      1      1   =>   no                  0
+                    			//    0      1      0      0   =>   yes filled below    2
+                    			//    0      1      0      1   =>   yes filled below    2
+                    			//    0      1      1      0   =>   no                  0
+                    			//    0      1      1      1   =>   no                  0
+                    			//    1      0      0      0   =>   yes filled above    1
+                    			//    1      0      0      1   =>   no                  0
+                    			//    1      0      1      0   =>   yes filled above    1
+                    			//    1      0      1      1   =>   no                  0
+                    			//    1      1      0      0   =>   no                  0
+                    			//    1      1      0      1   =>   no                  0
+                    			//    1      1      1      0   =>   no                  0
+                    			//    1      1      1      1   =>   no                  0
+                    			return select(segments, [
+                    				0, 2, 1, 0,
+                    				2, 2, 0, 0,
+                    				1, 0, 1, 0,
+                    				0, 0, 0, 0
+                    			], buildLog);
+                    		},
+                    		intersect: function(segments, buildLog){ // primary & secondary
+                    			// above1 below1 above2 below2    Keep?               Value
+                    			//    0      0      0      0   =>   no                  0
+                    			//    0      0      0      1   =>   no                  0
+                    			//    0      0      1      0   =>   no                  0
+                    			//    0      0      1      1   =>   no                  0
+                    			//    0      1      0      0   =>   no                  0
+                    			//    0      1      0      1   =>   yes filled below    2
+                    			//    0      1      1      0   =>   no                  0
+                    			//    0      1      1      1   =>   yes filled below    2
+                    			//    1      0      0      0   =>   no                  0
+                    			//    1      0      0      1   =>   no                  0
+                    			//    1      0      1      0   =>   yes filled above    1
+                    			//    1      0      1      1   =>   yes filled above    1
+                    			//    1      1      0      0   =>   no                  0
+                    			//    1      1      0      1   =>   yes filled below    2
+                    			//    1      1      1      0   =>   yes filled above    1
+                    			//    1      1      1      1   =>   no                  0
+                    			return select(segments, [
+                    				0, 0, 0, 0,
+                    				0, 2, 0, 2,
+                    				0, 0, 1, 1,
+                    				0, 2, 1, 0
+                    			], buildLog);
+                    		},
+                    		difference: function(segments, buildLog){ // primary - secondary
+                    			// above1 below1 above2 below2    Keep?               Value
+                    			//    0      0      0      0   =>   no                  0
+                    			//    0      0      0      1   =>   no                  0
+                    			//    0      0      1      0   =>   no                  0
+                    			//    0      0      1      1   =>   no                  0
+                    			//    0      1      0      0   =>   yes filled below    2
+                    			//    0      1      0      1   =>   no                  0
+                    			//    0      1      1      0   =>   yes filled below    2
+                    			//    0      1      1      1   =>   no                  0
+                    			//    1      0      0      0   =>   yes filled above    1
+                    			//    1      0      0      1   =>   yes filled above    1
+                    			//    1      0      1      0   =>   no                  0
+                    			//    1      0      1      1   =>   no                  0
+                    			//    1      1      0      0   =>   no                  0
+                    			//    1      1      0      1   =>   yes filled above    1
+                    			//    1      1      1      0   =>   yes filled below    2
+                    			//    1      1      1      1   =>   no                  0
+                    			return select(segments, [
+                    				0, 0, 0, 0,
+                    				2, 0, 2, 0,
+                    				1, 1, 0, 0,
+                    				0, 1, 2, 0
+                    			], buildLog);
+                    		},
+                    		differenceRev: function(segments, buildLog){ // secondary - primary
+                    			// above1 below1 above2 below2    Keep?               Value
+                    			//    0      0      0      0   =>   no                  0
+                    			//    0      0      0      1   =>   yes filled below    2
+                    			//    0      0      1      0   =>   yes filled above    1
+                    			//    0      0      1      1   =>   no                  0
+                    			//    0      1      0      0   =>   no                  0
+                    			//    0      1      0      1   =>   no                  0
+                    			//    0      1      1      0   =>   yes filled above    1
+                    			//    0      1      1      1   =>   yes filled above    1
+                    			//    1      0      0      0   =>   no                  0
+                    			//    1      0      0      1   =>   yes filled below    2
+                    			//    1      0      1      0   =>   no                  0
+                    			//    1      0      1      1   =>   yes filled below    2
+                    			//    1      1      0      0   =>   no                  0
+                    			//    1      1      0      1   =>   no                  0
+                    			//    1      1      1      0   =>   no                  0
+                    			//    1      1      1      1   =>   no                  0
+                    			return select(segments, [
+                    				0, 2, 1, 0,
+                    				0, 0, 1, 1,
+                    				0, 2, 0, 2,
+                    				0, 0, 0, 0
+                    			], buildLog);
+                    		},
+                    		xor: function(segments, buildLog){ // primary ^ secondary
+                    			// above1 below1 above2 below2    Keep?               Value
+                    			//    0      0      0      0   =>   no                  0
+                    			//    0      0      0      1   =>   yes filled below    2
+                    			//    0      0      1      0   =>   yes filled above    1
+                    			//    0      0      1      1   =>   no                  0
+                    			//    0      1      0      0   =>   yes filled below    2
+                    			//    0      1      0      1   =>   no                  0
+                    			//    0      1      1      0   =>   no                  0
+                    			//    0      1      1      1   =>   yes filled above    1
+                    			//    1      0      0      0   =>   yes filled above    1
+                    			//    1      0      0      1   =>   no                  0
+                    			//    1      0      1      0   =>   no                  0
+                    			//    1      0      1      1   =>   yes filled below    2
+                    			//    1      1      0      0   =>   no                  0
+                    			//    1      1      0      1   =>   yes filled above    1
+                    			//    1      1      1      0   =>   yes filled below    2
+                    			//    1      1      1      1   =>   no                  0
+                    			return select(segments, [
+                    				0, 2, 1, 0,
+                    				2, 0, 0, 1,
+                    				1, 0, 0, 2,
+                    				0, 1, 2, 0
+                    			], buildLog);
+                    		}
+                    	};
+                    	
+                    	module.exports = SegmentSelector;
+                    	
+                    },{}]},{},[1]);
+                    this.earcut = function(points,holeIndices){
                     	//https://github.com/mapbox/earcut (10/03/2020)
                     
                         var outputPoints = [];
@@ -24667,12 +23968,12 @@
             _canvas_.library.audio.nowReady = function(){
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
-
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:6,d:25} };
-                const core_engine = new Worker("/js/core_engine.js");
-                const self = this;
-                
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:30} };
+            
+                const core = this;
+            
+                const core_engine = new Worker("js/core_engine.js");
                 const communicationModuleMaker = function(communicationObject,callerName){
                     const self = this;
                     const devMode = false;
@@ -24694,10 +23995,19 @@
                 
                     communicationObject.onmessage = function(encodedPacket){
                         self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
+                        self.log('::communicationObject.onmessage -> <encodedPacket>'); //#development
+                        if(devMode){console.log(encodedPacket);} //#development
+                        self.log('::communicationObject.onmessage -> </encodedPacket>'); //#development
                         let message = encodedPacket.data;
                 
-                        if(message.outgoing){
-                            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
+                        if(!message.response){
+                            self.log('::communicationObject.onmessage -> message is a calling one'); //#development
+                
+                            if(message.cargo == undefined){
+                                self.log('::communicationObject.onmessage -> message cargo not found; aborting'); //#development
+                                return;
+                            }
+                
                             if(message.cargo.function in self.function){
                                 self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
                                 self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
@@ -24709,7 +24019,7 @@
                                     self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                                     communicationObject.postMessage({
                                         id:message.id,
-                                        outgoing:false,
+                                        response:true,
                                         cargo:self.function[message.cargo.function](...message.cargo.arguments),
                                     });
                                 }
@@ -24722,58 +24032,68 @@
                                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                                 }else{
                                     self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
-                                    cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
-                                        communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
+                                    self.delayedFunction[message.cargo.function](...[function(returnedData){
+                                        communicationObject.postMessage({ id:message.id, response:true, cargo:returnedData });
                                     }].concat(message.cargo.arguments));
                                 }
                             }else{
                                 self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
                             }
                         }else{
-                            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
+                            self.log('::communicationObject.onmessage -> message is a response one'); //#development
                             self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
                             messagingCallbacks[message.id](message.cargo);
                             delete messagingCallbacks[message.id];
                         }
                     };
-                    this.run = function(functionName,argumentList=[],callback,transferables){
-                        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
-                        let id = null;
-                        if(callback != undefined){
-                            self.log('.run -> callback was defined; generating message ID'); //#development
-                            id = generateMessageID();
-                            self.log('.run -> message ID:',id); //#development
-                            messagingCallbacks[id] = callback;
-                        }
-                        communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
+                
+                    this.run_withoutPromise = function(functionName,argumentList=[],transferables){
+                        self.log('::communicationObject.run_withoutPromise('+functionName+','+JSON.stringify(argumentList)+','+JSON.stringify(transferables)+')'); //#development
+                        communicationObject.postMessage({ id:undefined, response:false, cargo:{function:functionName,arguments:argumentList} }, transferables);
+                    };
+                    this.run_withPromise = function(functionName,argumentList=[],transferables){
+                        self.log('::communicationObject.run_withPromise('+functionName+','+JSON.stringify(argumentList)+','+JSON.stringify(transferables)+')'); //#development
+                
+                        let id = generateMessageID();
+                        self.log('::communicationObject.run_withPromise -> message ID:',id); //#development
+                
+                        return new Promise((resolve, reject) => {
+                            messagingCallbacks[id] = resolve;
+                            self.log('::communicationObject.run_withPromise -> sending calling message'); //#development
+                            communicationObject.postMessage({ id:id, response:false, cargo:{function:functionName,arguments:argumentList} }, transferables);
+                        });
                     };
                 };
                 const communicationModule = new communicationModuleMaker(core_engine,'core_console');
-                this.__com = communicationModule;
-                
+            
                 _canvas_.setAttribute('tabIndex',1);
-                
+                _canvas_.style.outline = "none";
+            
                 const dev = new function(){
                     const prefix = 'core_console';
                     const active = {
-                        elementLibrary:{
-                            genericElementProxyTemplate:false,
-                            rectangle:false,
-                            rectangleWithOutline:false,
-                
-                            group:false,
-                            circle:false,
-                            circleWithOutline:false,
-                            polygon:false,
-                            polygonWithOutline:false,
-                            path:false,
-                            image:false,
-                            canvas:false,
-                            character:false,
-                            characterString:false,
-                        },
                         service:false,
                         interface:false,
+                        elementLibrary:{
+                            Group:false,
+                            Rectangle:false,
+                            RectangleWithOutline:false,
+                            Circle:false,
+                            CircleWithOutline:false,
+                            Polygon:false,
+                            PolygonWithOutline:false,
+                            Path:false,
+                            Image:false,
+                            Canvas:false,
+                            Character:false,
+                            CharacterString:false,
+                        },
+                        element:false,
+                        arrangement:false,
+                        render:false,
+                        viewport:false,
+                        stats:false,
+                        callback:false,
                     };
                 
                     this.log = {};
@@ -24805,1032 +24125,1449 @@
                     };
                     this.countResults = function(){return countMemory;};
                 };
-
-                let elementRegistry = [];
-                const elementLibrary = new function(){
-                    const genericElementProxy = function(_type, _name){
-                        const self = this;
-                    
-                        //type
-                            const type = _type;
-                            this.getType = function(){return type;};
-                            dev.log.elementLibrary[type](' - new '+type+'(',_name); //#development
-                    
-                        //id
-                            let id = -1;
-                            this.getId = function(){return id;};
-                            this.__idReceived = function(){};
-                            this.__id = function(a,updateIdOnly=false){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].__id(',a); //#development
-                                id = a;
-                                if(updateIdOnly){return;}
-                    
-                                //repush
-                                    _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
-                                    Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(this,entry[0],entry[1]); });
-                                    if(this.__repush != undefined){this.__repush();}
-                    
-                                if(this.__idReceived){this.__idReceived();}
-                            };
-                    
-                        //name
-                            let name = _name;
-                            this.getName = function(){return name;};
-                            // this.setName = function(a){
-                            //     dev.log.elementLibrary[type]('['+this.getAddress+'].setName(',a); //#development
-                            //     name = a;
-                            // };
-                    
-                        //hierarchy
-                            this.parent = undefined;
-                            this.getAddress = function(){
-                                return (this.parent != undefined && this.parent.getId() != 0 ? this.parent.getAddress() : '') + '/' + name;
-                            };
-                            this.getOffset = function(){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
-                    
-                                let output = {x:0,y:0,scale:1,angle:0};
-                    
-                                if(this.parent){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset() -> parent found'); //#development
-                                    const offset = this.parent.getOffset();
-                                    const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
-                                    output = { 
-                                        x: point.x*offset.scale + offset.x,
-                                        y: point.y*offset.scale + offset.y,
-                                        scale: offset.scale * cashedAttributes.scale,
-                                        angle: offset.angle + cashedAttributes.angle,
-                                    };
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> no parent found'); //#development
-                                    output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
-                                }
-                    
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> output: '+JSON.stringify(output)); //#development
-                                return output;
-                            };
-                    
-                        //attributes
-                            const cashedAttributes = {};
-                            this.setupSimpleAttribute = function(name,defaultValue){
-                                cashedAttributes[name] = defaultValue;
-                                this[name] = function(a){
-                                    if(a == undefined){ return cashedAttributes[name]; }
-                                    if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',...arguments); //#development
-                                    cashedAttributes[name] = a;
-                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[...arguments]); }
+                communicationModule.function.frame = function(data){
+                    dev.log.service(' -> frame(',data); //#development
+                    _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(data);
+                };
+                communicationModule.function.ready = function(){
+                    dev.log.service(' -> ready()'); //#development
+                    core.ready();
+                };
+                communicationModule.function.setCanvasSize = function(width,height){
+                    dev.log.service(' -> setCanvasSize(',width,height); //#development
+                    _canvas_.setAttribute('width',width);
+                    _canvas_.setAttribute('height',height);
+                }
+                
+                communicationModule.function.updateElement = function(ele_id, data={}){
+                    dev.log.service(' -> updateElement(',ele_id,data); //#development
+                    const proxyElement = _canvas_.core.element.getElementById(ele_id);
+                    if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
+                };
+                communicationModule.function.runElementCallback = function(ele_id, data={}){
+                    dev.log.service(' -> runElementCallback(',ele_id,data); //#development
+                    const proxyElement = _canvas_.core.element.getElementById(ele_id);
+                    if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
+                };
+                
+                communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    dev.log.service(' -> getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
+                    });    
+                };
+                communicationModule.function.setCanvasAttributes = function(attributeNames=[],values=[],prefixActiveArray=[]){
+                    dev.log.service(' -> setCanvasAttributes(',attributeNames,values,prefixActiveArray); //#development
+                    attributeNames.map((name,index) => {
+                        _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name, values[index]);
+                    });
+                };
+                
+                communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    dev.log.service(' -> getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
+                    });
+                };
+                
+                communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
+                    dev.log.service(' -> getDocumentAttributes(',attributeNames); //#development
+                    return attributeNames.map(attribute => {
+                        return eval('document.'+attribute);
+                    });
+                };
+                communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
+                    dev.log.service(' -> setDocumentAttributes(',attributeNames,values); //#development
+                    return attributeNames.map((attribute,index) => {
+                        eval('document.'+attribute+' = "'+values[index]+'"');
+                    });
+                };
+                communicationModule.function.getWindowAttributes = function(attributeNames=[]){
+                    dev.log.service(' -> getWindowAttributes(',attributeNames); //#development
+                    return attributeNames.map(attribute => {
+                        return eval('window.'+attribute);
+                    });
+                };
+                communicationModule.function.setWindowAttributes = function(attributes=[]){
+                    dev.log.service(' -> setWindowAttributes(',attributes); //#development
+                    attributes.map((attribute,index) => {
+                        eval('window.'+attribute.name+' = "'+attribute.value+'"');
+                    });
+                };
+                const interface = new function(){
+                    this.operator = new function(){
+                        this.element = new function(){
+                            //element library
+                                this.getAvailableElements = function(){
+                                    dev.log.interface('.operator.element.getAvailableElements()'); //#development
+                                    return communicationModule.run_withPromise('operator__element__getAvailableElements');
                                 };
-                            }
-                            Object.entries({
-                                ignored: false,
-                                scale: 1,
-                            }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                            this.unifiedAttribute = function(attributes){
-                                if(attributes == undefined){ return cashedAttributes; }
-                                dev.log.elementLibrary[type]('['+this.getAddress+'].unifiedAttribute(',attributes); //#development
-                                Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-                                if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
-                            };
-                    
-                        //callbacks
-                            const cashedCallbacks = {};
-                            this.getCallback = function(callbackType){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getCallback(',callbackType); //#development
-                                return cashedCallbacks[callbackType];
-                            };
-                            this.attachCallback = function(callbackType, callback){
-                                dev.log.elementLibrary[type]('['+this.getAddress+'].attachCallback(',callbackType,callback); //#development
-                                cashedCallbacks[callbackType] = callback;
-                                if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
-                            }
-                            this.removeCallback = function(callbackType){
-                                dev.log.elementLibrary[type]('['+this.getAddress+'].removeCallback(',callbackType); //#development
-                                delete cashedCallbacks[callbackType];
-                                if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
-                            }
-                    
-                        //info dump
-                            this._dump = function(){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']._dump()'); //#development
-                                _canvas_.core.element.__executeMethod(id,'_dump',[]);
-                            };
-                    };
-                    
-                    // this.getType
-                    // this.getId
-                    // this.__idReceived
-                    // this.__id
-                    // this.__repush
-                    // this.getName
-                    // this.setName
-                    // this.parent
-                    // this.getAddress
-                    // this.getOffset
-                    // this.setupSimpleAttribute
-                    // this.unifiedAttribute
-                    // this.getCallback
-                    // this.attachCallback
-                    // this.removeCallback
-                    // this._dump
-                    
-                    this.group = function(_name){
-                        genericElementProxy.call(this,'group',_name);
-                    
-                        Object.entries({
-                            heedCamera: false,
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            clipActive: false,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    
-                    
-                        const self = this;
-                    
-                        let children = [];
-                        let childRegistry = {};
-                        let stencilElement = undefined;
-                    
-                        let clearingLock = false;
-                        function lockClearingLock(){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::lockClearingLock()'); //#development
-                            clearingLock = true;
-                        }
-                        function unlockClearingLock(){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::unlockClearingLock()'); //#development
-                            self.__repush();
-                            clearingLock = false;
-                        }
-                    
-                        function checkForName(name){ return childRegistry[name] != undefined; }
-                        function isValidElement(elementToCheck){
-                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::isValidElement(',elementToCheck); //#development
-                            if( elementToCheck == undefined ){ return false; }
-                            if( elementToCheck.getName() == undefined || elementToCheck.getName().length == 0 ){
-                                console.warn('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
-                                return false;
-                            }
-                            if( checkForName(elementToCheck.getName()) ){
-                                console.warn('group error: element with name "'+elementToCheck.getName()+'" already exists in group "'+self.getAddress()+'", therefore; the element will not be added');
-                                return false;
-                            }
-                    
-                            return true;
-                        }
-                    
-                        this.__repush = function(){
-                            if(stencilElement != undefined){
-                                function readdStencil(){
-                                    if( stencilElement.getId() == -1 ){ setTimeout(readdStencil,1); }
-                                    else{ _canvas_.core.element.__executeMethod(self.getId(),'stencil',[stencilElement.getId()]); }
+                            //basic management
+                                this.create = function(type, name){
+                                    dev.log.interface('.operator.element.create(',type, name); //#development
+                                    return communicationModule.run_withPromise('operator__element__create', [type, name]);
+                                };
+                                this.delete = function(element_id){
+                                    dev.log.interface('.operator.element.delete(',element_id); //#development
+                                    communicationModule.run_withoutPromise('operator__element__delete', [element_id]);
+                                };
+                                this.deleteAllCreated = function(){
+                                    dev.log.interface('.operator.element.deleteAllCreated()'); //#development
+                                    communicationModule.run_withoutPromise('operator__element__deleteAllCreated');
+                                };
+                            //get element
+                                this.getTypeById = function(element_id){
+                                    dev.log.interface('.operator.element.getTypeById(',element_id); //#development
+                                    return communicationModule.run_withPromise('operator__element__getTypeById', [element_id]);
+                                };
+                            //execute method
+                                this.executeMethod = new function(){
+                                    //hierarchy and identity
+                                        this.getElementType = function(id){
+                                            dev.log.interface('.operator.element.getElementType(',id); //#development
+                                            communicationModule.run_withPromise('operator__element__executeMethod__getElementType', [id]);
+                                        };
+                                        this.getName = function(id){
+                                            dev.log.interface('.operator.element.getName(',id); //#development
+                                            communicationModule.run_withPromise('operator__element__executeMethod__getName', [id]);
+                                        };
+                                        this.setName = function(id, new_name){
+                                            dev.log.interface('.operator.element.setName(',id, new_name); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__getName', [id, new_name]);
+                                        };
+                                        this.getParentId = function(id){
+                                            dev.log.interface('.operator.element.getParentId(',id); //#development
+                                            communicationModule.run_withPromise('operator__element__executeMethod__getParentId', [id]);
+                                        };
+                                    //position
+                                        this.setX = function(id, x){
+                                            dev.log.interface('.operator.element.setX(',id, x); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__setX', [id, x]);
+                                        };
+                                        this.setY = function(id, y){
+                                            dev.log.interface('.operator.element.setY(',id, y); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__setY', [id, y]);
+                                        };
+                                        this.setAngle = function(id, angle){
+                                            dev.log.interface('.operator.element.setAngle(',id, angle); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__setAngle', [id, angle]);
+                                        };
+                                        this.setScale = function(id, scale){
+                                            dev.log.interface('.operator.element.setScale(',id, scale); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__setScale', [id, scale]);
+                                        };
+                                    //other
+                                        this.getIgnored = function(id){
+                                            dev.log.interface('.operator.element.getIgnored(',id); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__getIgnored', [id]);
+                                        };
+                                        this.setIgnored = function(id, bool){
+                                            dev.log.interface('.operator.element.setIgnored(',id, bool); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__setIgnored', [id, bool]);
+                                        };
+                                    //universal attribute
+                                        this.unifiedAttribute = function(id,data,transferables){
+                                            dev.log.interface('.operator.element.unifiedAttribute(',id,data,transferables); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__unifiedAttribute', [id, data], transferables);
+                                        };
+                                    //addressing
+                                        this.getAddress = function(id){
+                                            dev.log.interface('.operator.element.getAddress(',id); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__getAddress', [id]);
+                                        };
+                                    //extremities
+                                        this.getAllowComputeExtremities = function(id){
+                                            dev.log.interface('.operator.element.getAllowComputeExtremities(',id); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__getAllowComputeExtremities', [id]);
+                                        };
+                                        this.setAllowComputeExtremities = function(id, bool){
+                                            dev.log.interface('.operator.element.setAllowComputeExtremities(',id, bool); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__setAllowComputeExtremities', [id, bool]);
+                                        };
+                                    //render
+                                        this.getDotFrame = function(id){
+                                            dev.log.interface('.operator.element.getDotFrame(',id); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__getDotFrame', [id]);
+                                        };
+                                        this.setDotFrame = function(id, bool){
+                                            dev.log.interface('.operator.element.setDotFrame(',id, bool); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__setDotFrame', [id, bool]);
+                                        };
+                                    //info/dump
+                                        this.info = function(id){
+                                            dev.log.interface('.operator.element.info(',id); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__info', [id]);
+                                        };
+                                        this.dump = function(id){
+                                            dev.log.interface('.operator.element.dump(',id); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__dump', [id]);
+                                        };
+                                    this.Group = new function(){
+                                        this.setUnifiedAttribute = function(id, x, y, angle, scale, heed_camera){
+                                            dev.log.interface('.operator.element.Group.setUnifiedAttribute(',id, x, y, angle, scale, heed_camera); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__setUnifiedAttribute', [id, x, y, angle, scale, heed_camera]);
+                                        };
+                        
+                                        this.children = function(id){
+                                            dev.log.interface('.operator.element.Group.children(',id); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__Group__children', [id]);
+                                        };
+                                        this.getChildByName = function(id, name){
+                                            dev.log.interface('.operator.element.Group.getChildByName(',id, name); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__Group__getChildByName', [id, name]);
+                                        };
+                        
+                                        this.append = function(parent_id, child_id){
+                                            dev.log.interface('.operator.element.Group.append(',parent_id, child_id); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__append', [parent_id, child_id]);
+                                        };
+                                        this.prepend = function(parent_id, child_id){
+                                            dev.log.interface('.operator.element.Group.prepend(',parent_id, child_id); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__prepend', [parent_id, child_id]);
+                                        };
+                                        this.remove = function(parent_id, child_id){
+                                            dev.log.interface('.operator.element.Group.remove(',parent_id, child_id); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__remove', [parent_id, child_id]);
+                                        };
+                                        this.clear = function(parent_id){
+                                            dev.log.interface('.operator.element.Group.clear(',parent_id); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__clear', [parent_id]);
+                                        };
+                                        this.shift = function(parent_id, child_id, new_position){
+                                            dev.log.interface('.operator.element.Group.shift(',parent_id, child_id, new_position); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__shift', [parent_id, child_id, new_position]);
+                                        };
+                                        this.replaceWithTheseChildren = function(id, new_elements){
+                                            dev.log.interface('.operator.element.Group.replaceWithTheseChildren(',id, new_elements); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__replace_with_these_children', [id, new_elements]);
+                                        };
+                        
+                                        this.getElementsUnderPoint = function(id, x, y){
+                                            dev.log.interface('.operator.element.Group.getElementsUnderPoint(',id, x, y); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__Group__getElementsUnderPoint', [id, x, y]);
+                                        };
+                                        this.getElementsUnderArea = function(id, points){
+                                            dev.log.interface('.operator.element.Group.getElementsUnderArea(',id, points); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__Group__getElementsUnderArea', [id, points]);
+                                        };
+                        
+                                        this.stencil = function(id, stencil_id){
+                                            dev.log.interface('.operator.element.Group.stencil(',id, stencil_id); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__stencil', [id, stencil_id]);
+                                        };
+                                        this.getClipActive = function(id){
+                                            dev.log.interface('.operator.element.Group.getClipActive(',id); //#development
+                                            return communicationModule.run_withPromise('operator__element__executeMethod__Group__getClipActive', [id]);
+                                        };
+                                        this.setClipActive = function(id, bool){
+                                            dev.log.interface('.operator.element.Group.setClipActive(',id, bool); //#development
+                                            communicationModule.run_withoutPromise('operator__element__executeMethod__Group__setClipActive', [id, bool]);
+                                        };
+                                    };
+                                    // this.Rectangle = new function(){
+                                    //     this.getWidth = function(id){
+                                    //         dev.log.interface('.operator.element.Rectangle.getWidth(',id); //#development
+                                    //         return communicationModule.run_withPromise('operator__element__executeMethod__Rectangle__getWidth', [id]);
+                                    //     };
+                                    //     this.setWidth = function(id, width){
+                                    //         dev.log.interface('.operator.element.Rectangle.setWidth(',id, width); //#development
+                                    //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setWidth', [id, width]);
+                                    //     };
+                                    //     this.getHeight = function(id){
+                                    //         dev.log.interface('.operator.element.Rectangle.getHeight(',id); //#development
+                                    //         return communicationModule.run_withPromise('operator__element__executeMethod__Rectangle__getHeight', [id]);
+                                    //     };
+                                    //     this.setHeight = function(id, height){
+                                    //         dev.log.interface('.operator.element.Rectangle.setHeight(',id, height); //#development
+                                    //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setHeight', [id, height]);
+                                    //     };
+                                    //     this.getAnchor = function(id){
+                                    //         dev.log.interface('.operator.element.Rectangle.getAnchor(',id); //#development
+                                    //         return communicationModule.run_withPromise('operator__element__executeMethod__Rectangle__getAnchor', [id]);
+                                    //     };
+                                    //     this.setAnchor = function(id, x, y){
+                                    //         dev.log.interface('.operator.element.Rectangle.setAnchor(',id, x, y); //#development
+                                    //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setAnchor', [id, x, y]);
+                                    //     };
+                                    //     this.getColour = function(id){
+                                    //         dev.log.interface('.operator.element.Rectangle.getColour(',id); //#development
+                                    //         return communicationModule.run_withPromise('operator__element__executeMethod__Rectangle__getColour', [id]);
+                                    //     };
+                                    //     this.setColour = function(id, r, g, b, a){
+                                    //         dev.log.interface('.operator.element.Rectangle.setColour(',id, r, g, b, a); //#development
+                                    //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setColour', [id, r, g, b, a]);
+                                    //     };
+                        
+                                    //     this.setUnifiedAttribute = function(id, x, y, angle, scale, width, height, anchor_x, anchor_y, colour_r, colour_g, colour_b, colour_a){
+                                    //         dev.log.interface('.operator.element.Rectangle.setUnifiedAttribute(',id, x, y, angle, scale, width, height, anchor_x, anchor_y, colour_r, colour_g, colour_b, colour_a); //#development
+                                    //         communicationModule.run_withoutPromise('operator__element__executeMethod__Rectangle__setUnifiedAttribute', [id, x, y, angle, scale, width, height, anchor_x, anchor_y, colour_r, colour_g, colour_b, colour_a]);
+                                    //     };
+                                    // };
+                                };
+                            //misc
+                                this.createSetAppend = function(type, name, data, group_id){
+                                    return communicationModule.run_withPromise('operator__element___createSetAppend', [type, name, data, group_id]);
                                 }
-                                readdStencil();
+                                this._dump = function(){
+                                    communicationModule.run_withoutPromise('operator__element___dump');
+                                };
+                        };
+                        
+                        this.arrangement = new function(){
+                            //root
+                                this.prepend = function(element_id){
+                                    dev.log.interface('.operator.arrangement.prepend(',element_id); //#development
+                                    communicationModule.run_withoutPromise('operator__arrangement__prepend', [element_id]);
+                                };
+                                this.append = function(element_id){
+                                    dev.log.interface('.operator.arrangement.append(',element_id); //#development
+                                    communicationModule.run_withoutPromise('operator__arrangement__append', [element_id]);
+                                };
+                                this.remove = function(element_id){
+                                    dev.log.interface('.operator.arrangement.remove(',element_id); //#development
+                                    communicationModule.run_withoutPromise('operator__arrangement__remove', [element_id]);
+                                };
+                                this.clear = function(){
+                                    dev.log.interface('.operator.arrangement.clear()'); //#development
+                                    communicationModule.run_withoutPromise('operator__arrangement__clear');
+                                };
+                            //discovery
+                                this.getElementByAddress = function(address){
+                                    dev.log.interface('.operator.arrangement.getElementByAddress(',address); //#development
+                                    return communicationModule.run_withPromise('operator__arrangement__getElementByAddress', [address]);
+                                };
+                                this.getElementsUnderPoint = function(x,y){
+                                    dev.log.interface('.operator.arrangement.getElementsUnderPoint(',x,y); //#development
+                                    return communicationModule.run_withPromise('operator__arrangement__getElementsUnderPoint', [x,y]);
+                                };
+                                this.getElementsUnderArea = function(points){
+                                    dev.log.interface('.operator.arrangement.getElementsUnderArea(',points); //#development
+                                    return communicationModule.run_withPromise('operator__arrangement__getElementsUnderArea', [points]);
+                                };
+                            //misc
+                                this.printTree = function(mode){
+                                    dev.log.interface('.operator.arrangement.printTree(',mode); //#development
+                                    communicationModule.run_withoutPromise('operator__arrangement__printTree', [mode]);
+                                };
+                                this.printSurvey = function(){
+                                    dev.log.interface('.operator.arrangement.printSurvey()'); //#development
+                                    communicationModule.run_withoutPromise('operator__arrangement__printSurvey');
+                                };
+                                this._dump = function(){
+                                    dev.log.interface('.operator.arrangement._dump()'); //#development
+                                    communicationModule.run_withoutPromise('operator__arrangement___dump');
+                                };
+                        };
+                        
+                        this.render = new function(){
+                            //canvas and webGL context
+                                this.clearColour = function(colour){
+                                    dev.log.interface('.operator.render.clearColour(',colour); //#development
+                                    communicationModule.run_withoutPromise('operator__render__clearColour', [colour]);
+                                };
+                                this.getCanvasSize = function(){
+                                    dev.log.interface('.operator.render.getCanvasSize()'); //#development
+                                    return communicationModule.run_withPromise('operator__render__getCanvasSize', undefined);
+                                };
+                                this.adjustCanvasSize = function(newWidth, newHeight){
+                                    dev.log.interface('.operator.render.adjustCanvasSize(',newWidth, newHeight); //#development
+                                    communicationModule.run_withoutPromise('operator__render__adjustCanvasSize', [newWidth, newHeight]);
+                                };
+                                this.refreshCoordinates = function(){
+                                    dev.log.interface('.operator.render.refreshCoordinates()'); //#development
+                                    communicationModule.run_withoutPromise('operator__render__refreshCoordinates');
+                                };
+                                this.refresh = function(){
+                                    dev.log.interface('.operator.render.refresh()'); //#development
+                                    communicationModule.run_withoutPromise('operator__render__refresh');
+                                };
+                            //frame rate control
+                                this.activeLimitToFrameRate = function(a){
+                                    dev.log.interface('.operator.render.activeLimitToFrameRate(',a); //#development
+                                    communicationModule.run_withoutPromise('operator__render__activeLimitToFrameRate', [a]);
+                                };
+                                this.frameRateLimit = function(a){
+                                    dev.log.interface('.operator.render.frameRateLimit(',a); //#development
+                                    communicationModule.run_withoutPromise('operator__render__frameRateLimit', [a]);
+                                };
+                            //actual render
+                                this.frame = function(noClear){
+                                    dev.log.interface('.operator.render.frame(',noClear); //#development
+                                    communicationModule.run_withoutPromise('operator__render__frame', [noClear]);
+                                };
+                                this.active = function(bool){
+                                    dev.log.interface('.operator.render.active(',bool); //#development
+                                    communicationModule.run_withoutPromise('operator__render__active', [bool]);
+                                };
+                            //misc
+                                this.drawDot = function(x,y,r,colour){
+                                    dev.log.interface('.operator.render.drawDot(',x,y,r,colour); //#development
+                                    communicationModule.run_withoutPromise('operator__render__drawDot', [x,y,r,colour]);
+                                };
+                                this._dump = function(){
+                                    dev.log.interface('.operator.render._dump()'); //#development
+                                    communicationModule.run_withoutPromise('operator__render___dump');
+                                };
+                        }
+                        
+                        this.viewport = new function(){
+                            //camera position
+                                this.position = function(x,y){
+                                    dev.log.interface('.operator.viewport.position(',x,y); //#development
+                                    communicationModule.run_withoutPromise('operator__viewport__position', [x,y]);
+                                };
+                                this.scale = function(s){
+                                    dev.log.interface('.operator.viewport.scale(',s); //#development
+                                    communicationModule.run_withoutPromise('operator__viewport__scale', [s]);
+                                };
+                                this.angle = function(a){
+                                    dev.log.interface('.operator.viewport.angle(',a); //#development
+                                    communicationModule.run_withoutPromise('operator__viewport__angle', [a]);
+                                };
+                                this.anchor = function(x,y){
+                                    dev.log.interface('.operator.viewport.anchor(',x,y); //#development
+                                    communicationModule.run_withoutPromise('operator__viewport__anchor', [x,y]);
+                                };
+                        
+                            //mouse interaction
+                                this.getElementsUnderPoint = function(x,y){
+                                    dev.log.interface('.operator.viewport.getElementsUnderPoint(',x,y); //#development
+                                    return communicationModule.run_withPromise('operator__viewport__getElementsUnderPoint', [x,y]);
+                                };
+                                this.getElementsUnderArea = function(points){
+                                    dev.log.interface('.operator.viewport.getElementsUnderArea(',points); //#development
+                                    return communicationModule.run_withPromise('operator__viewport__getElementsUnderArea', [points]);
+                                };
+                                this.stopMouseScroll = function(bool){
+                                    dev.log.interface('.operator.viewport.stopMouseScroll(',bool); //#development
+                                    communicationModule.run_withoutPromise('operator__viewport__stopMouseScroll', [bool]);
+                                };
+                        
+                            //misc
+                                this.refresh = function(){
+                                    dev.log.interface('.operator.viewport.refresh()'); //#development
+                                    communicationModule.run_withoutPromise('operator__viewport___refresh');
+                                };
+                                this._dump = function(){
+                                    dev.log.interface('.operator.viewport._dump()'); //#development
+                                    communicationModule.run_withoutPromise('operator__viewport___dump');
+                                };
+                        };
+                        
+                        this.stats = new function(){
+                            this.active = function(bool){
+                                dev.log.interface('.operator.stats.active(',bool); //#development
+                                communicationModule.run_withoutPromise('operator__stats__active', [bool]);
+                            };
+                            this.getReport = function(){
+                                dev.log.interface('.operator.stats.getReport()'); //#development
+                                return communicationModule.run_withPromise('operator__stats__getReport');
+                            };
+                        };
+                        
+                        this.callback = new function(){
+                            this.listCallbackTypes = function(){
+                                dev.log.interface('.operator.callback.listCallbackTypes()'); //#development
+                                return communicationModule.run_withPromise('operator__callback__listCallbackTypes');
+                            };
+                            this.listActivationModes = function(){
+                                dev.log.interface('.operator.callback.listActivationModes()'); //#development
+                                return communicationModule.run_withPromise('operator__callback__listActivationModes');
+                            };
+                            this.attachCallback = function(id, callbackType){
+                                dev.log.interface('.operator.callback.attachCallback(',id, callbackType); //#development
+                                communicationModule.run_withoutPromise('operator__callback__attachCallback', [id, callbackType]);
+                            };
+                            this.removeCallback = function(id, callbackType){
+                                dev.log.interface('.operator.callback.removeCallback(',id, callbackType); //#development
+                                communicationModule.run_withoutPromise('operator__callback__removeCallback', [id, callbackType]);
+                            };
+                            this.callbackActivationMode = function(mode){
+                                dev.log.interface('.operator.callback.callbackActivationMode(',mode); //#development
+                                communicationModule.run_withoutPromise('operator__callback__callbackActivationMode', [mode]);
+                            };
+                            this._dump = function(){
+                                dev.log.interface('.operator.callback._dump()'); //#development
+                                communicationModule.run_withoutPromise('operator__callback___dump');
+                            };
+                        };
+                        
+                        this.meta = new function(){
+                            this.refresh = function(){
+                                return communicationModule.run_withPromise('operator__meta__refresh');
+                            };
+                        };
+                    };
+                };
+                this.if = interface;
+                this.element = new function(){
+                    const elementLibrary = new function(){
+                        const genericElement = function(_type, _name){
+                            const self = this;
+                        
+                            //type
+                                const type = _type;
+                                this.getType = function(){return type;};
+                        
+                            //id
+                                let id = undefined;
+                                this.getId = function(){return id;};
+                                this.__onIdReceived = function(){};
+                                this.__id = function(a){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].__id(',a); //#development
+                                    id = a;
+                        
+                                    __unifiedAttribute(__unifiedAttribute());
+                                    Object.entries(cashedCallbacks).forEach(entry => { 
+                                        core.callback.attachCallback(this, entry[0], entry[1]);
+                                    });
+                        
+                                    if(this.__repush != undefined){this.__repush();}
+                                    if(this.__onIdReceived){this.__onIdReceived(id);}
+                                };
+                        
+                            //name
+                                let name = _name;
+                                this.getName = function(){return name;};
+                        
+                            //hierarchy
+                                this.parent = undefined;
+                                this.getAddress = function(){
+                                    return (this.parent != undefined && this.parent.getId() != 0 ? this.parent.getAddress() : '') + '/' + name;
+                                };
+                                this.getOffset = function(){
+                                    let output = {x:0,y:0,scale:1,angle:0};
+                        
+                                    if(this.parent){
+                                        const offset = this.parent.getOffset();
+                                        const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
+                                        output = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale * cashedAttributes.scale,
+                                            angle: offset.angle + cashedAttributes.angle,
+                                        };
+                                    }else{
+                                        output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
+                                    }
+                        
+                                    return output;
+                                };
+                        
+                            //attributes
+                                const cashedAttributes = {};
+                                const transferableAttributes = [];
+                                this.__setupSimpleAttribute = function(name,defaultValue){
+                                    cashedAttributes[name] = defaultValue;
+                                    this[name] = function(a){
+                                        if(a == undefined){ return cashedAttributes[name]; }
+                                        if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].'+name+'(',...arguments); //#development
+                                        cashedAttributes[name] = a;
+                                        if(this.getId() != undefined){
+                                            const obj = {};
+                                            obj[name] = a;
+                                            interface.operator.element.executeMethod.unifiedAttribute(this.getId(),obj);
+                                        }
+                                    };
+                                }
+                                this.__setupTransferableAttribute = function(name,defaultValue){
+                                    transferableAttributes.push(name);
+                                    cashedAttributes[name] = defaultValue;
+                                    this[name] = function(a){
+                                        if(a == undefined){ return cashedAttributes[name]; }
+                                        if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].'+name+'(',...arguments); //#development
+                                        cashedAttributes[name] = a;
+                                        if(this.getId() != undefined){
+                                            const obj = {};
+                                            obj[name] = a;
+                                            interface.operator.element.executeMethod.unifiedAttribute(this.getId(),obj,[a]);
+                                        }
+                                    };
+                                }
+                                Object.entries({
+                                    x: 0,
+                                    y: 0,
+                                    angle: 0,
+                                    scale: 1,
+                                    ignored: false,
+                                }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                                
+                                const __unifiedAttribute = function(attributes){
+                                    if(attributes == undefined){ return cashedAttributes; }
+                                    Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                                    if(id != undefined){
+                                        interface.operator.element.executeMethod.unifiedAttribute(
+                                            id,
+                                            attributes,
+                                            transferableAttributes.map(name => attributes[name]).filter(item => item != undefined)
+                                        );
+                                    }
+                                };
+                                this.unifiedAttribute = function(attributes){ return __unifiedAttribute(attributes); };
+                        
+                            //callbacks
+                                const cashedCallbacks = {};
+                                this.getCallback = function(callbackType){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].getCallback(',callbackType); //#development
+                                    return cashedCallbacks[callbackType];
+                                };
+                                this.attachCallback = function(callbackType, callback){
+                                    dev.log.elementLibrary[type]('['+this.getAddress()+'].attachCallback(',callbackType,callback); //#development
+                                    cashedCallbacks[callbackType] = callback;
+                                    if(id != undefined){
+                                        interface.operator.callback.attachCallback(this, callbackType, callback);
+                                    }
+                                }
+                                this.removeCallback = function(callbackType){
+                                    dev.log.elementLibrary[type]('['+this.getAddress()+'].removeCallback(',callbackType); //#development
+                                    delete cashedCallbacks[callbackType];
+                                    if(id != undefined){ 
+                                        interface.operator.callback.removeCallback(this, callbackType);
+                                    }
+                                }
+                        
+                            //info dump
+                                this._dump = function(){
+                                    if(id != undefined){
+                                        interface.operator.element.executeMethod.dump(id);
+                                    }
+                                };
+                        };
+                        
+                        this.Group = function(_name){
+                            genericElement.call(this,'Group',_name);
+                        
+                            Object.entries({
+                                heedCamera: false,
+                                clipActive: false,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        
+                            const self = this;
+                        
+                            let children = [];
+                            let childRegistry = {};
+                            let stencilElement = undefined;
+                        
+                            function checkForName(name){ return childRegistry[name] != undefined; }
+                            function isValidElement(elementToCheck){
+                                if( elementToCheck == undefined ){ return false; }
+                                if( elementToCheck.getName() == undefined || elementToCheck.getName().length == 0 ){
+                                    console.error('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
+                                    return false;
+                                }
+                                if( checkForName(elementToCheck.getName()) ){
+                                    console.error('group error: element with name "'+elementToCheck.getName()+'" already exists in group "'+self.getAddress()+'", therefore; the element will not be added');
+                                    return false;
+                                }
+                        
+                                return true;
                             }
-                    
-                            communicationModule.run('element.executeMethod',[self.getId(),'clear'],() => {
+                        
+                            this.__repush = function(){
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].__repush()'); //#development
+                        
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].__repush -> pushing unifiedAttribute'); //#development
+                                self.unifiedAttribute(self.unifiedAttribute());
+                        
+                                if(stencilElement != undefined){
+                                    function readdStencil(){
+                                        if( stencilElement.getId() == undefined ){ 
+                                            setTimeout(readdStencil,1);
+                                        } else{ 
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].__repush -> pushing stencil'); //#development
+                                            interface.operator.element.executeMethod.Group.stencil(self.getId(),stencilElement.getId());
+                                        }
+                                    }
+                                    readdStencil();
+                                }
+                        
                                 function readdChildren(){
-                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::repush::readdChildren -> children:',children); //#development
                                     const childIds = children.map(child => child.getId());
-                                    if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
-                                    else{ _canvas_.core.element.__executeMethod(self.getId(),'syncChildren',[childIds]); }
+                                    if( childIds.indexOf(-1) != -1 ){ 
+                                        setTimeout(readdChildren,1);
+                                    }else{
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].__repush -> pushing children'); //#development
+                                        interface.operator.element.executeMethod.Group.replaceWithTheseChildren(self.getId(),childIds.filter(id => id!=undefined));
+                                    }
                                 }
                                 readdChildren();
-                            });
-                        };
+                            };
                         
-                        this.getChildren = function(){ 
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildren()'); //#development
-                            return children;
-                        };
-                        this.getChildByName = function(name){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildByName(',name); //#development
-                            return childRegistry[name];
-                        };
-                        this.getChildIndexByName = function(name){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildIndexByName(',name); //#development
-                            return children.indexOf(childRegistry[name]);
-                        };
-                        this.contains = function(elementToCheck){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].contains(',elementToCheck); //#development
-                            return children.indexOf(elementToCheck) != -1;
-                        };
-                        this.append = function(newElement){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append(',newElement,'(',newElement.getName(),')'); //#development
-                    
-                            if( !isValidElement(newElement) ){ return false; }
-                            newElement.parent = this;
-                            children.push(newElement);
-                            childRegistry[newElement.getName()] = newElement;
-                            if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
-                    
-                            if(clearingLock){ return; }
-                    
-                            if(newElement.getId() == -1){
-                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> newElement\'s id missing; setting up "__idReceived" callback..'); //#development
-                                newElement.__calledBy = this.getAddress();
-                                newElement.__idReceived = function(){
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> newElement\'s "__idReceived" callback, called by '+newElement.__calledBy+', id is: '+newElement.getId()+' ()'); //#development
-                                    if(self.getId() != -1){ 
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id:',self.getId()); //#development
-                                        if(children.indexOf(newElement) != -1){
-                                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> element position:',children.indexOf(newElement)); //#development
-                                            _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
-                                        }else{
-                                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
-                                        }
-                                    }else{
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
-                                    }
-                                };
-                            }else{
-                                if(self.getId() != -1){
-                                    _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
-                                }else{
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
-                                }
-                            }
-                        };
-                        this.prepend = function(newElement){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend(',newElement,'(',newElement.getName(),')'); //#development
-                    
-                            if( !isValidElement(newElement) ){ return false; }
-                    
-                            //add element
-                                newElement.parent = this;
-                                children.unshift(newElement);
-                                childRegistry[newElement.getName()] = newElement;
-                    
-                            //perform addition callback
-                                if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
-                    
-                            //communicate with engine for removal
-                                if(clearingLock){ return; }
-                    
-                                if(newElement.getId() == -1){
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> newElement\'s id missing; setting up "__idReceived" callback..'); //#development
-                                    newElement.__idReceived = function(){
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> newElement\'s "__idReceived" callback ->'); //#development
-                                        if(children.indexOf(newElement) != -1 && self.getId() != -1){ 
-                                            _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
-                                        }else{
-                                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> this group\'s id missing; will not send message'); //#development
-                                        }
-                                    };
-                                }else{
-                                    if(self.getId() != -1){
-                                        _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
-                                    }else{
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
-                                    }
-                                }
-                        };
-                        this.remove = function(elementToRemove){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove(',elementToRemove,'(',elementToRemove.getName(),')'); //#development
-                    
-                            //ensure that removing elements is actually a child of this group
-                                if( !children.includes(elementToRemove) ){ return; }
-                    
-                            //clear out children of removing element (if it is a group)
-                                if(elementToRemove.getType() == 'group'){ elementToRemove.clear(); }
+                            this.getChildren = function(){ 
+                                return children;
+                            };
+                            this.getChildByName = function(name){
+                                return childRegistry[name];
+                            };
+                            this.getChildIndexByName = function(name){
+                                return children.indexOf(childRegistry[name]);
+                            };
+                            this.contains = function(elementToCheck){
+                                return children.indexOf(elementToCheck) != -1;
+                            };
                             
-                            //perform removal callback
-                                if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
-                    
-                            //remove element
-                                children.splice(children.indexOf(elementToRemove), 1);
-                                delete childRegistry[elementToRemove.getName()];
-                                elementToRemove.parent = undefined;
-                    
-                            //communicate with engine for removal
-                                if(clearingLock){ return; }
-                    
-                                if(elementToRemove.getId() == -1){
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s id missing'); //#development
-                                    elementToRemove.__idReceived = function(){
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s "__idReceived" callback ->'); //#development
-                                        if(children.indexOf(elementToRemove) == -1 && self.getId() != -1){ 
-                                            _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                            this.prepend = function(newElement){
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend(',newElement,'(',newElement.getName(),')'); //#development
+                        
+                                if( !isValidElement(newElement) ){ return false; }
+                        
+                                //don't add an element twice
+                                    if( children.includes(newElement) ){ return; }
+                        
+                                //add element
+                                    newElement.parent = this;
+                                    children.push(newElement);
+                                    childRegistry[newElement.getName()] = newElement;
+                                    if(newElement.getCallback('onadd')){ newElement.getCallback('onadd')(); }
+                        
+                                //perform addition callback
+                                    // if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
+                        
+                                //communicate with engine for addition
+                                    if(newElement.getId() == undefined){
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> newElement\'s id missing; setting up "__onIdReceived" callback..'); //#development
+                                        newElement.__calledBy = self.getAddress();
+                                        newElement.__onIdReceived = function(){
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> newElement\'s "__onIdReceived" callback, called by '+newElement.__calledBy+', id is: '+newElement.getId()+' ()'); //#development
+                                            if(self.getId() != undefined){ 
+                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> this group\'s id:',self.getId()); //#development
+                                                if(children.indexOf(newElement) != -1){
+                                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> element position:',children.indexOf(newElement)); //#development
+                                                    interface.operator.element.executeMethod.Group.prepend(self.getId(), newElement.getId());
+                                                }else{
+                                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
+                                                }
+                                            }else{
+                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> this group\'s id missing; will not send message'); //#development
+                                            }
+                                        };
+                                    }else{
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> newElement\'s id present'); //#development
+                                        if(self.getId() != undefined){
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> group\'s id present, pushing prepend through...'); //#development
+                                            interface.operator.element.executeMethod.Group.prepend(self.getId(), newElement.getId());
                                         }else{
-                                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].prepend -> this group\'s id missing; will not send message'); //#development
+                                        }
+                                    }
+                            };
+                            this.append = function(newElement){
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append(',newElement,'(',newElement.getName(),')'); //#development
+                        
+                                if( !isValidElement(newElement) ){ return false; }
+                        
+                                //don't add an element twice
+                                    if( children.includes(newElement) ){ return; }
+                        
+                                //add element
+                                    newElement.parent = this;
+                                    children.push(newElement);
+                                    childRegistry[newElement.getName()] = newElement;
+                                    if(newElement.getCallback('onadd')){ newElement.getCallback('onadd')();}
+                        
+                                //perform addition callback
+                                    // if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
+                        
+                                //communicate with engine for addition
+                                    if(newElement.getId() == undefined){
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> newElement\'s id missing; setting up "__onIdReceived" callback..'); //#development
+                                        newElement.__calledBy = self.getAddress();
+                                        newElement.__onIdReceived = function(){
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> newElement\'s "__onIdReceived" callback, called by '+newElement.__calledBy+', id is: '+newElement.getId()+' ()'); //#development
+                                            if(self.getId() != undefined){ 
+                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> this group\'s id:',self.getId()); //#development
+                                                if(children.indexOf(newElement) != -1){
+                                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> element position:',children.indexOf(newElement)); //#development
+                                                    interface.operator.element.executeMethod.Group.append(self.getId(), newElement.getId());
+                                                }else{
+                                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
+                                                }
+                                            }else{
+                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
+                                            }
+                                        };
+                                    }else{
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> newElement\'s id present'); //#development
+                                        if(self.getId() != undefined){
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> group\'s id present, pushing append through...'); //#development
+                                            interface.operator.element.executeMethod.Group.append(self.getId(), newElement.getId());
+                                        }else{
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
+                                        }
+                                    }
+                            };
+                            this.remove = function(elementToRemove){
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove(',elementToRemove,'(',elementToRemove.getName(),')'); //#development
+                        
+                                //ensure that removing element is actually a child of this group
+                                    if( !children.includes(elementToRemove) ){ return; }
+                        
+                                //clear out children of removing element (if it is a group)
+                                    if(elementToRemove.getType() == 'Group'){ elementToRemove.clear(); }
+                                
+                                //perform removal callback
+                                    if(elementToRemove.getCallback('onremove')){ elementToRemove.getCallback('onremove')(); }
+                                
+                                // //perform removal callback
+                                //     if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
+                        
+                                //remove element
+                                    children.splice(children.indexOf(elementToRemove), 1);
+                                    delete childRegistry[elementToRemove.getName()];
+                                    elementToRemove.parent = undefined;
+                        
+                                //communicate with engine for removal
+                                    if(elementToRemove.getId() == undefined){
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> elementToRemove\'s id is missing, setting up __onIdReceived callback...'); //#development
+                                        elementToRemove.__onIdReceived = function(){
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> elementToRemove\'s "__onIdReceived" callback ->'); //#development
+                                            if(children.indexOf(elementToRemove) == -1){ 
+                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> element is not in the proxy group, pushing remove through...'); //#development
+                                                interface.operator.element.executeMethod.Group.remove(self.getId(), elementToRemove.getId());
+                                            }else{
+                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> element is still in the group; will not send message'); //#development
+                                            }
+                                        };
+                                    }else{
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> elementToRemove\'s id:',elementToRemove.getId()); //#development
+                                        if(self.getId() != undefined){
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> group\'s id present, pushing remove through...'); //#development
+                                            interface.operator.element.executeMethod.Group.remove(self.getId(), elementToRemove.getId());
+                                        }else{
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
+                                        }
+                                    }
+                            };
+                            this.clear = function(){
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].clear()'); //#development
+                                children.forEach(child => {if(child.getCallback('onremove')){ child.getCallback('onremove')(); }});
+                                children = [];
+                                childRegistry = {};
+                                if(self.getId() != undefined){ 
+                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].clear -> this group\'s id is present; setting lock and sending message...'); //#development
+                                    interface.operator.element.executeMethod.Group.clear(self.getId());
+                                }else{
+                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].clear -> this group\'s id is missing; will not send message'); //#development
+                                }
+                            };
+                            this.shift = function(elementToShift,newPosition){
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift(',elementToShift,newPosition); //#development
+                        
+                                //ensure that moving element is actually a child of this group
+                                    if( !children.includes(elementToShift) ){ return; }
+                        
+                                //shift element
+                                    children.splice(children.indexOf(elementToShift), 1);
+                                    children.splice(newPosition,0,elementToShift);
+                        
+                                //perform shift callback
+                                    if(elementToShift.getCallback('onshift')){elementToShift.getCallback('onshift')(children.indexOf(elementToShift));}
+                        
+                                //communicate with engine for shift
+                                    if(elementToShift.getId() == undefined){
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> elementToShift\'s id missing, setting up replacement "__onIdReceived" callback'); //#development
+                                        elementToShift.__onIdReceived = function(){
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> elementToShift\'s "__onIdReceived" callback ->'); //#development
+                                            if(self.getId() != undefined){ 
+                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> this group\'s id:',self.getId()); //#development
+                                                if(children.indexOf(elementToShift) != -1){
+                                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> element position:',children.indexOf(elementToShift)); //#development
+                                                    interface.operator.element.executeMethod.Group.replaceWithTheseChildren(self.getId(),children.map(child => child.getId()).filter(id => id!=undefined) );
+                                                }else{
+                                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
+                                                }
+                                            }else{
+                                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> this group\'s id missing; will not send message'); //#development
+                                            }
+                                        };
+                                    }else{
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> elementToShift\'s id:',elementToShift.getId()); //#development
+                                        if(self.getId() != undefined){
+                                            interface.operator.element.executeMethod.Group.shift(self.getId(), elementToShift.getId(), newPosition);
+                                        }else{
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].shift -> this group\'s id missing; will not send message'); //#development
+                                        }
+                                    }
+                            };
+                        
+                            this.getElementsUnderPoint = function(x,y){
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].getElementsUnderPoint(',x,y); //#development
+                                if(self.getId() != undefined){
+                                    return interface.operator.element.executeMethod.Group.getElementsUnderPoint(self.getId(),x,y);
+                                }
+                            };
+                        
+                            this.stencil = function(newStencilElement){
+                                if(newStencilElement == undefined){ return stencilElement; }
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil(',newStencilElement); //#development
+                        
+                                if( !isValidElement(newStencilElement) ){ return false; }
+                        
+                                stencilElement = newStencilElement;
+                        
+                                if(newStencilElement.getId() == undefined){
+                                    dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> newStencilElement\'s id missing; setting up "__onIdReceived" callback..'); //#development
+                                    newStencilElement.__onIdReceived = function(){
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> newStencilElement\'s "__onIdReceived" callback, called by '+newStencilElement.__calledBy+', id is: '+newStencilElement.getId()+' ()'); //#development
+                                        if(self.getId() != undefined){
+                                            dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> sending message...:'); //#development
+                                            interface.operator.element.executeMethod.Group.stencil(self.getId(), newStencilElement.getId());
                                         }
                                     };
                                 }else{
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s id:',elementToRemove.getId()); //#development
-                                    if(self.getId() != -1){
-                                        _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                                    if(self.getId() != undefined){
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> sending message...:'); //#development
+                                        interface.operator.element.executeMethod.Group.stencil(self.getId(), newStencilElement.getId());
                                     }else{
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
+                                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+'].stencil -> this group\'s id missing; will not send message'); //#development
                                     }
                                 }
+                            };
                         };
-                        this.clear = function(){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].clear()'); //#development
-                            children.forEach(child => {if(child.getCallback('onremove')){child.getCallback('onremove')();}});
-                            children = [];
-                            childRegistry = {};
-                            if(self.getId() != -1){ 
-                                lockClearingLock();
-                                communicationModule.run('element.executeMethod',[self.getId(),'clear',[]],unlockClearingLock);
-                            }else{
-                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
+                        this.Rectangle = function(_name){
+                            genericElement.call(this,'Rectangle',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                anchor: {x:0,y:0},
+                                width: 10,
+                                height: 10,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        };
+                        this.RectangleWithOutline = function(_name){
+                            genericElement.call(this,'RectangleWithOutline',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                lineColour: {r:1,g:0,b:0,a:1},
+                                anchor: {x:0,y:0},
+                                width: 10,
+                                height: 10,
+                                thickness: 0,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        };
+                        this.Circle = function(_name){
+                            genericElement.call(this,'Circle',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                radius: 10,
+                                detail: 25,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        };
+                        this.CircleWithOutline = function(_name){
+                            genericElement.call(this,'CircleWithOutline',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                lineColour: {r:1,g:0,b:0,a:1},
+                                radius: 10,
+                                detail: 25,
+                                thickness: 0,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        };
+                        this.Polygon = function(_name){
+                            genericElement.call(this,'Polygon',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                points: [], 
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        
+                            function XYArrayToPoints(XYArray){
+                                return XYArray.flatMap(i => [i.x,i.y]);
                             }
-                        };
-                        this.shift = function(elementToShift,newPosition){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift(',elementToShift,newPosition); //#development
-                    
-                            //ensure that removing elements is actually a child of this group
-                                if( !children.includes(elementToShift) ){ return; }
-                    
-                            //shift element
-                                children.splice(children.indexOf(elementToShift), 1);
-                                children.splice(newPosition,0,elementToShift);
-                    
-                            //perform removal callback
-                                if(elementToShift.getCallback('onshift')){elementToShift.getCallback('onshift')(children.indexOf(elementToShift));}
-                    
-                            //communicate with engine for shifting
-                                if(clearingLock){ return; }
-                    
-                                if(elementToShift.getId() == -1){
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> elementToShift\'s id missing'); //#development
-                                    // elementToShift.__idReceived = function(){
-                                    //     dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> elementToShift\'s "__idReceived" callback ->'); //#development
-                                    //     if(children.indexOf(elementToShift) != -1 && self.getId() != -1){ 
-                                    //         _canvas_.core.element.__executeMethod(self.getId(),'shift', [elementToShift.getId(),newPosition]);
-                                    //     }else{
-                                    //         dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> this group\'s id missing; will not send message'); //#development
-                                    //     }
-                                    // };
-                                }else{
-                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> elementToShift\'s id:',elementToShift.getId()); //#development
-                                    if(self.getId() != -1){
-                                        _canvas_.core.element.__executeMethod(self.getId(),'shift', [elementToShift.getId(),newPosition]);
-                                    }else{
-                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> this group\'s id missing; will not send message'); //#development
-                                    }
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                        
+                            this.pointsAsXYArray = function(XYArray){
+                                if(XYArray == undefined){ return pointsToXYArray(this.points()); }
+                                this.points(XYArrayToPoints(XYArray));
+                            };
+                        
+                            const __unifiedAttribute = this.unifiedAttribute;
+                            this.unifiedAttribute = function(attributes){
+                                if(attributes == undefined){ return __unifiedAttribute(); }
+                                if(attributes.points != undefined){
+                                    attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
                                 }
+                                if(attributes.pointsAsXYArray != undefined){
+                                    attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                }
+                                __unifiedAttribute(attributes);
+                            };
                         };
-                        this.getElementsUnderPoint = function(x,y){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getElementsUnderPoint(',x,y); //#development
-                            if(self.getId() != -1){
-                                return new Promise((resolve, reject) => {
-                                    _canvas_.core.element.__executeMethod(self.getId(),'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
-                                });
+                        this.PolygonWithOutline = function(_name){
+                            genericElement.call(this,'PolygonWithOutline',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                lineColour: {r:1,g:0,b:0,a:1},
+                                points: [],
+                                thickness: 0,
+                                jointDetail: 25,
+                                jointType: 'sharp',
+                                sharpLimit: 4,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        
+                            function XYArrayToPoints(XYArrray){
+                                return XYArrray.flatMap(i => [i.x,i.y]);
                             }
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                        
+                            this.pointsAsXYArray = function(XYArrray){
+                                if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                                this.points(XYArrayToPoints(XYArrray));
+                            };
+                        
+                            const __unifiedAttribute = this.unifiedAttribute;
+                            this.unifiedAttribute = function(attributes){
+                                if(attributes == undefined){ return __unifiedAttribute(); }
+                                if(attributes.points != undefined){
+                                    attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                                }
+                                if(attributes.pointsAsXYArray != undefined){
+                                    attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                }
+                                __unifiedAttribute(attributes);
+                            };
                         };
-                        this.getTree = function(){
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getTree()'); //#development
-                    
-                            const result = {name:this.getName(), type:this.getType(), id:this.getId(), children:[]};
-                            children.forEach(function(a){
-                                if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
-                                else{ result.children.push({ type:a.getType(), name:a.getName(), id:a.getId() }); }
-                            });
-                            return result;
+                        this.Path = function(_name){
+                            genericElement.call(this,'Path',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                points: [], 
+                                thickness: 0,
+                                capType: 'none',
+                                jointDetail: 25,
+                                jointType: 'sharp',
+                                sharpLimit: 4,
+                                loop: false,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        
+                            function XYArrayToPoints(XYArrray){
+                                return XYArrray.flatMap(i => [i.x,i.y]);
+                            }
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                        
+                            this.pointsAsXYArray = function(XYArrray){
+                                if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                                this.points(XYArrayToPoints(XYArrray));
+                            };
+                        
+                            const __unifiedAttribute = this.unifiedAttribute;
+                            this.unifiedAttribute = function(attributes){
+                                if(attributes == undefined){ return __unifiedAttribute(); }
+                                if(attributes.points != undefined){
+                                    attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                                }
+                                if(attributes.pointsAsXYArray != undefined){
+                                    attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                                }
+                                __unifiedAttribute(attributes);
+                            };
                         };
-                        this.stencil = function(newStencilElement){
-                            if(newStencilElement == undefined){ return stencilElement; }
-                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].stencil(',newStencilElement); //#development
-                            stencilElement = newStencilElement;
-                    
-                            if(newStencilElement.getId() == -1){
-                                newStencilElement.__idReceived = function(){
-                                    if(self.getId() != -1){ _canvas_.core.element.__executeMethod(self.getId(),'stencil', [newStencilElement.getId()]); }
+                        this.Image = function(_name){
+                            genericElement.call(this,'Image',_name);
+                        
+                            Object.entries({
+                                x: 0,
+                                y: 0,
+                                angle: 0,
+                                anchor: {x:0,y:0},
+                                width: 10,
+                                height: 10,
+                                url:undefined,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        
+                            Object.entries({
+                                bitmap: undefined,
+                            }).forEach(([name,defaultValue]) => this.__setupTransferableAttribute(name,defaultValue) );
+                        };
+                        this.Canvas = function(_name){
+                            genericElement.call(this,'Canvas',_name);
+                        
+                            Object.entries({
+                                x: 0,
+                                y: 0,
+                                angle: 0,
+                                anchor: {x:0,y:0},
+                                width: 10,
+                                height: 10,
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        
+                            //subCanvas
+                                const subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1 };
+                                subCanvas.context = subCanvas.object.getContext('2d');
+                        
+                                function updateDimensions(self){
+                                    subCanvas.object.setAttribute('width',self.width()*subCanvas.resolution);
+                                    subCanvas.object.setAttribute('height',self.height()*subCanvas.resolution);
+                                }
+                                updateDimensions(this);
+                        
+                                this._ = subCanvas.context;
+                                this.$ = function(a){return a*subCanvas.resolution;};
+                                this.resolution = function(a){
+                                    if(a == undefined){return subCanvas.resolution;}
+                                    subCanvas.resolution = a;
+                                    updateDimensions(this);
                                 };
-                            }else{
-                                if(self.getId() != -1){ _canvas_.core.element.__executeMethod(self.getId(),'stencil', [newStencilElement.getId()]); }
-                            }
-                        };
-                    };
-                    
-                    this.rectangle = function(_name){
-                        genericElementProxy.call(this,'rectangle',_name);
-                    
-                        Object.entries({
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            colour: {r:1,g:0,b:0,a:1},
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.rectangleWithOutline = function(_name){
-                        genericElementProxy.call(this,'rectangleWithOutline',_name);
-                    
-                        Object.entries({
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                            thickness: 0,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.circle = function(_name){
-                        genericElementProxy.call(this,'circle',_name);
-                    
-                        Object.entries({
-                            x: 0,
-                            y: 0,
-                            colour: {r:1,g:0,b:0,a:1},
-                            radius: 10,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.circleWithOutline = function(_name){
-                        genericElementProxy.call(this,'circleWithOutline',_name);
-                    
-                        Object.entries({
-                            x: 0,
-                            y: 0,
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
-                            radius: 10,
-                            thickness: 0,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.polygon = function(_name){
-                        genericElementProxy.call(this,'polygon',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            points: [], 
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    
-                        function XYArrayToPoints(XYArrray){
-                            return XYArrray.flatMap(i => [i.x,i.y]);
-                        }
-                        function pointsToXYArray(points){ 
-                            const output = [];
-                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                            return output;
-                        }
-                    
-                        this.pointsAsXYArray = function(XYArrray){
-                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
-                            this.points(XYArrayToPoints(XYArrray));
-                        };
-                    
-                        const __unifiedAttribute = this.unifiedAttribute;
-                        this.unifiedAttribute = function(attributes){
-                            __unifiedAttribute(attributes);
-                            if(attributes.points != undefined){
-                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
-                                return attributes;
-                            }
-                            if(attributes.pointsAsXYArray != undefined){
-                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
-                                return attributes;
-                            }
-                        };
-                    };
-                    this.polygonWithOutline = function(_name){
-                        genericElementProxy.call(this,'polygonWithOutline',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            lineColour: {r:1,g:0,b:0,a:1},
-                            points: [],
-                            thickness: 0,
-                            jointDetail: 25,
-                            jointType: 'sharp',
-                            sharpLimit: 4,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    
-                        function XYArrayToPoints(XYArrray){
-                            return XYArrray.flatMap(i => [i.x,i.y]);
-                        }
-                        function pointsToXYArray(points){ 
-                            const output = [];
-                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                            return output;
-                        }
-                    
-                        this.pointsAsXYArray = function(XYArrray){
-                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
-                            this.points(XYArrayToPoints(XYArrray));
-                        };
-                    
-                        const __unifiedAttribute = this.unifiedAttribute;
-                        this.unifiedAttribute = function(attributes){
-                            __unifiedAttribute(attributes);
-                            if(attributes.points != undefined){
-                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
-                                return attributes;
-                            }
-                            if(attributes.pointsAsXYArray != undefined){
-                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
-                                return attributes;
-                            }
-                        };
-                    };
-                    
-                    this.path = function(_name){
-                        genericElementProxy.call(this,'path',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            points: [], 
-                            thickness: 0,
-                            capType: 'none',
-                            jointDetail: 25,
-                            jointType: 'sharp',
-                            sharpLimit: 4,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    
-                        function XYArrayToPoints(XYArrray){
-                            return XYArrray.flatMap(i => [i.x,i.y]);
-                        }
-                        function pointsToXYArray(points){ 
-                            const output = [];
-                            for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                            return output;
-                        }
-                    
-                        this.pointsAsXYArray = function(XYArrray){
-                            if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
-                            this.points(XYArrayToPoints(XYArrray));
-                        };
-                    
-                        const __unifiedAttribute = this.unifiedAttribute;
-                        this.unifiedAttribute = function(attributes){
-                            __unifiedAttribute(attributes);
-                            if(attributes.points != undefined){
-                                attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
-                                return attributes;
-                            }
-                            if(attributes.pointsAsXYArray != undefined){
-                                attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
-                                return attributes;
-                            }
-                        };
-                    };
-                    
-                    this.image = function(_name){
-                        genericElementProxy.call(this,'image',_name);
-                    
-                        Object.entries({
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                            url:undefined,
-                            bitmap: undefined,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.canvas = function(_name){
-                        genericElementProxy.call(this,'canvas',_name);
-                    
-                        Object.entries({
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    
-                        //subCanvas
-                            const subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1 };
-                            subCanvas.context = subCanvas.object.getContext('2d');
-                    
-                            function updateDimentions(self){
-                                subCanvas.object.setAttribute('width',self.width()*subCanvas.resolution);
-                                subCanvas.object.setAttribute('height',self.height()*subCanvas.resolution);
-                            }
-                            updateDimentions(this);
-                    
-                            this._ = subCanvas.context;
-                            this.$ = function(a){return a*subCanvas.resolution;};
-                            this.resolution = function(a){
-                                if(a == undefined){return subCanvas.resolution;}
-                                subCanvas.resolution = a;
-                                updateDimentions(this);
+                                this.requestUpdate = function(){
+                                    if(this.getId() != undefined){
+                                        createImageBitmap(subCanvas.object).then(bitmap => {
+                                            interface.operator.element.executeMethod.unifiedAttribute(this.getId(),{bitmap:bitmap},[bitmap]);
+                                        });
+                                    }
+                                };
+                                this.requestUpdate();
+                                this.__repush = function(){ this.requestUpdate(); };
+                        
+                            const __unifiedAttribute = this.unifiedAttribute;
+                            this.unifiedAttribute = function(attributes){
+                                if(attributes == undefined){ return __unifiedAttribute(); }
+                                if(attributes.resolution != undefined){
+                                    this.resolution(attributes.resolution);
+                                    delete attributes.resolution;
+                                }
+                                __unifiedAttribute(attributes);
+                                updateDimensions(this);
                             };
-                            this.requestUpdate = function(){
-                                createImageBitmap(subCanvas.object).then(bitmap => {
-                                    if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),'imageBitmap',[bitmap],undefined,[bitmap]); }
+                        };
+                        this.Character = function(_name){
+                            genericElement.call(this,'Character',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                x: 0,
+                                y: 0,
+                                angle: 0,
+                                anchor: {x:0,y:0},
+                                width: 10,
+                                height: 10,
+                                font: 'defaultThin',
+                                character: '',
+                                printingMode: { horizontal:'left', vertical:'bottom' },
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        };
+                        this.CharacterString = function(_name){
+                            genericElement.call(this,'CharacterString',_name);
+                        
+                            Object.entries({
+                                colour: {r:1,g:0,b:0,a:1},
+                                x: 0,
+                                y: 0,
+                                angle: 0,
+                                width: 10,
+                                height: 10,
+                                font: 'defaultThin',
+                                string: '',
+                                spacing: 0.5,
+                                interCharacterSpacing: 0,
+                                printingMode: { widthCalculation:'absolute', horizontal:'left', vertical:'bottom' },
+                            }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
+                        
+                            const cashedAttributes_presentationOnly = {
+                                resultingWidth: 0, 
+                            };
+                            const cashedCallbacks_elementSpecific = {
+                                onFontUpdateCallback:function(){},
+                            };
+                            this.__updateValues = function(data){
+                                Object.keys(data).forEach(key => { cashedAttributes_presentationOnly[key] = data[key]; });
+                            };
+                            this.__runCallback = function(data){
+                                Object.entries(data).forEach(([name,values]) => {
+                                    if(name in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[name](values); }
                                 });
                             };
-                            this.requestUpdate();
-                            this.__repush = function(){ this.requestUpdate(); };
-                    
-                    
-                        const __unifiedAttribute = this.unifiedAttribute;
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes.resolution != undefined){
-                                this.resolution(attributes.resolution);
-                                delete attributes.resolution;
+                            this.resultingWidth = function(){
+                                return cashedAttributes_presentationOnly.resultingWidth;
+                            };
+                        
+                            const __getCallback = this.getCallback;
+                            this.getCallback = function(callbackType){
+                                if(callbackType in cashedCallbacks_elementSpecific){
+                                    return cashedCallbacks_elementSpecific[callbackType];
+                                }
+                                __getCallback(callbackType);
+                            };
+                            const __attachCallback = this.attachCallback;
+                            this.attachCallback = function(callbackType, callback){
+                                if(callbackType in cashedCallbacks_elementSpecific){
+                                    cashedCallbacks_elementSpecific[callbackType] = callback;
+                                    return;
+                                }
+                                __attachCallback(callbackType);
                             }
-                            __unifiedAttribute(attributes);
-                            updateDimentions(this);
+                            const __removeCallback = this.removeCallback;
+                            this.removeCallback = function(callbackType){
+                                if(callbackType in cashedCallbacks_elementSpecific){
+                                    delete cashedCallbacks_elementSpecific[callbackType];
+                                    return;
+                                }
+                                __removeCallback(callbackType);
+                            }
                         };
                     };
+                    const elementRegistry = [];
                     
-                    this.character = function(_name){
-                        genericElementProxy.call(this,'character',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            anchor: {x:0,y:0},
-                            width: 10,
-                            height: 10,
-                            font: 'defaultThin',
-                            character: '',
-                            printingMode: { horizontal:'left', vertical:'bottom' },
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    };
-                    this.characterString = function(_name){
-                        genericElementProxy.call(this,'characterString',_name);
-                    
-                        Object.entries({
-                            colour: {r:1,g:0,b:0,a:1},
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            width: 10,
-                            height: 10,
-                            font: 'defaultThin',
-                            string: '',
-                            spacing: 0.5,
-                            interCharacterSpacing: 0,
-                            printingMode: { widthCalculation:'absolute', horizontal:'left', vertical:'bottom' },
-                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
-                    
-                        const cashedAttributes_presentationOnly = {
-                            resultingWidth: 0, 
+                    //element library
+                        this.getAvailableElements = function(){
+                            return Object.keys(elementLibrary);
                         };
-                        const cashedCallbacks_elementSpecific = {
-                            onFontUpdateCallback:function(){},
+                        this.getElementById = function(id){
+                            return elementRegistry[id];
                         };
-                        this.__updateValues = function(data){
-                            Object.keys(data).forEach(key => { cashedAttributes_presentationOnly[key] = data[key]; });
-                        };
-                        this.__runCallback = function(data){
-                            Object.entries(data).forEach(([name,values]) => {
-                                if(name in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[name](values); }
-                            });
-                        };
-                        this.resultingWidth = function(){
-                            return cashedAttributes_presentationOnly.resultingWidth;
-                        };
-                    
-                        const __getCallback = this.getCallback;
-                        this.getCallback = function(callbackType){
-                            if(callbackType in cashedCallbacks_elementSpecific){
-                                return cashedCallbacks_elementSpecific[callbackType];
-                            }
-                            __getCallback(callbackType);
-                        };
-                        const __attachCallback = this.attachCallback;
-                        this.attachCallback = function(callbackType, callback){
-                            if(callbackType in cashedCallbacks_elementSpecific){
-                                cashedCallbacks_elementSpecific[callbackType] = callback;
+                    //basic management
+                        this.__createLocalWithId = function(type,name,id){
+                            if( type == undefined || name == undefined || id == undefined ){
+                                console.error("core.element.__createLocalWithId(",type,name,id);
+                                console.error("missing arguments");
                                 return;
                             }
-                            __attachCallback(callbackType);
-                        }
-                        const __removeCallback = this.removeCallback;
-                        this.removeCallback = function(callbackType){
-                            if(callbackType in cashedCallbacks_elementSpecific){
-                                delete cashedCallbacks_elementSpecific[callbackType];
+                            if( elementRegistry[id] != undefined ){
+                                console.error("core.element.__createLocalWithId(",type,name,id);
+                                console.error("proxy already present");
                                 return;
                             }
-                            __removeCallback(callbackType);
-                        }
-                    };
-
-                };
                 
-                this.meta = new function(){
-                    this.areYouReady = function(){
-                        dev.log.interface('.meta.areYouReady()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('areYouReady',[],resolve);
-                        });
-                    };
-                    this.refresh = function(){
-                        dev.log.interface('.meta.refresh()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('refresh',[],resolve);
-                        });
-                    };
-                    this.getElementFromId = function(id){
-                        dev.log.interface('.meta.getElementFromId('+id+')'); //#development
-                        return elementRegistry[id];
-                    };
-                };
+                            elementRegistry[id] = new elementLibrary[type](name);
+                            elementRegistry[id].__id(id);
+                            return elementRegistry[id];
+                        };
+                        this.create = function(type,name){
+                            if( ! (type in elementLibrary) ){
+                                console.error("core.element.create -> element type: \""+type+"\" is not a known type");
+                                return;
+                            }
                 
-                this._dump = new function(){
-                    this.elememt = function(){
-                        dev.log.interface('._dump.elememt()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('_dump.element',[],resolve);
-                        });
-                    };
-                    this.arrangement = function(){
-                        dev.log.interface('._dump.arrangement()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('_dump.arrangement',[],resolve);
-                        });
-                    };
-                    this.render = function(){
-                        dev.log.interface('._dump.render()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('_dump.render',[],resolve);
-                        });
-                    };
-                    this.viewport = function(){
-                        dev.log.interface('._dump.viewport()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('_dump.viewport',[],resolve);
-                        });
-                    };
-                    this.callback = function(){
-                        dev.log.interface('._dump.callback()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('_dump.callback',[],resolve);
-                        });
-                    };
-                };
-                
-                this.element = new function(){
-                    this.getAvailableElements = function(){
-                        dev.log.interface('.element.getAvailableElements()'); //#development
-                        return Object.keys(elementLibrary);
-                    };
-                
-                    this.create = function(type,name,forceId,updateIdOnly){
-                        dev.log.interface('.element.create(',type,name,forceId,updateIdOnly); //#development
-                
-                        if(elementLibrary[type] == undefined){
-                            console.warn('interface.element.create - unknown element type "'+type+'"');
-                            return;
-                        }
-                
-                        const newElementProxy = new elementLibrary[type](name);
-                        if(forceId == undefined){
-                            communicationModule.run('element.create', [type,name], id => {
-                                newElementProxy.__id(id);
-                                elementRegistry[id] = newElementProxy;
-                            });
-                        }else{
-                            newElementProxy.__id(forceId,updateIdOnly);
-                            elementRegistry[forceId] = newElementProxy;
-                        }
-                        return newElementProxy;
-                    };
-                    this.delete = function(ele){
-                        dev.log.interface('.element.delete(',ele); //#development
-                        communicationModule.run('element.delete',[ele.getId()]);
-                        elementRegistry[element.getId()] = undefined;
-                    };
-                    this.deleteAllCreated = function(){
-                        dev.log.interface('.element.deleteAllCreated()'); //#development
-                        communicationModule.run('element.deleteAllCreated',[]);
-                        elementRegistry = [];
-                    };
-                
-                    this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
-                        dev.log.interface('.element.__executeMethod(',id,attribute,argumentList,callback,transferables); //#development
-                        communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
-                    };
+                            const newElementProxy = new elementLibrary[type](name);
+                            interface.operator.element.create(type,name).then(id => {
+                                    newElementProxy.__id(id);
+                                    elementRegistry[id] = newElementProxy;
+                                }
+                            );
+                            return newElementProxy;
+                        };
+                        this.delete = function(element){
+                            interface.operator.element.delete(element.getId());
+                            elementRegistry[element.getId()] = undefined;
+                        };
+                        this.deleteAllCreated = function(){
+                            interface.operator.element.deleteAllCreated();
+                            elementRegistry = [];
+                        };
+                    //misc
+                        this._dump = function(){
+                            console.log("┌─Console Element Dump─");
+                            console.log("│ elementRegistry:", elementRegistry);
+                            console.log("└──────────────────────");
+                            interface.operator.element._dump();
+                        };
                 };
                 this.arrangement = new function(){
-                    const design = self.element.create('group','root',0,true)
+                    const design = core.element.__createLocalWithId('Group','root',0);
                 
-                    this.new = function(){
-                        dev.log.interface('.arrangement.new()'); //#development
-                        communicationModule.run('arrangement.new');
-                        design.clear();
-                        design.unifiedAttribute({
-                            x: 0,
-                            y: 0,
-                            angle: 0,
-                            scale: 1,
-                            heedCamera: false,
-                            // static: false,
-                        });
-                    };
-                    this.get = function(){
-                        dev.log.interface('.arrangement.get()'); //#development
-                        return design;
-                    };
-                    this.prepend = function(element){
-                        dev.log.interface('.arrangement.prepend()'); //#development
-                        return design.prepend(element);
-                    };
-                    this.append = function(element){
-                        dev.log.interface('.arrangement.append()'); //#development
-                        return design.append(element);
-                    };
-                    this.remove = function(element){
-                        dev.log.interface('.arrangement.remove()'); //#development
-                        return design.remove(element);
-                    };
-                    this.clear = function(){
-                        dev.log.interface('.arrangement.clear()'); //#development
-                        return design.clear();
-                    };
-                    this.getElementByAddress = function(address){
-                        dev.log.interface('.arrangement.getElementByAddress(',address); //#development
+                    //root
+                        this.prepend = function(element){
+                            return design.prepend(element);
+                        };
+                        this.append = function(element){
+                            return design.append(element);
+                        };
+                        this.remove = function(element){
+                            return design.remove(element);
+                        };
+                        this.clear = function(){
+                            return design.clear();
+                        };
+                        this.shift = function(element, newPosition){
+                            return design.shift(element, newPosition);
+                        };
+                
+                    //discovery
+                        this.getElementByAddress = function(address,local=true){
+                            if(local){
+                                const route = address.split('/');
+                                route.shift();
+                                route.shift();
                         
-                        const route = address.split('/');
-                        route.shift();
-                
-                        let currentObject = design;
-                        route.forEach((a) => {
-                            currentObject = currentObject.getChildByName(a);
-                        });
-                
-                        return currentObject;
-                    };
-                    this.getElementsUnderPoint = function(x,y){
-                        dev.log.interface('.arrangement.getElementsUnderPoint(',x,y); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('arrangement.getElementsUnderPoint',[x,y],results => {
-                                resolve(results.map(result => elementRegistry[result]));
-                            });
-                        });
-                    };
-                    this.getElementsUnderArea = function(points){
-                        dev.log.interface('.arrangement.getElementsUnderArea(',points); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('arrangement.getElementsUnderArea',[points],results => {
-                                resolve(results.map(result => elementRegistry[result]));
-                            });
-                        });
-                    };
-                    this.printTree = function(mode='spaced',local=false,includeTypes=false){
-                        dev.log.interface('.arrangement.printTree(',mode,local); //#development
-                
-                        if(local){
-                            function recursivePrint(grouping,prefix=''){
-                                grouping.children.forEach(function(a){
-                                    const data = '('+a.id + (includeTypes ? ' : '+a.type : '') +')';
-                
-                                    if(mode == 'spaced'){
-                                        console.log(prefix+' -  '+a.name+' '+data);
-                                        if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
-                                    }else if(mode == 'tabular'){
-                                        console.log(prefix+'\t-\t\t'+a.name+' '+data);
-                                        if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
-                                    }else if(mode == 'address'){
-                                        console.log(prefix+'/'+a.name+' '+data);
-                                        if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
-                                    }
+                                let currentObject = design;
+                                route.forEach((a) => {
+                                    currentObject = currentObject.getChildByName(a);
                                 });
-                            }
-                    
-                            if(design.getChildren().length == 0){console.log('-empty-');}
-                            console.log(design.getName()+' ('+design.getId()+')');
-                            recursivePrint(design.getTree(), '');
-                        }else{
-                            communicationModule.run('arrangement.printTree',[mode,includeTypes]);
-                        }
-                    };
-                    this.printSurvey = function(local=true){
-                        if(local){
-                            const results = {};
-                
-                            function recursiveSearch(grouping){
-                                grouping.children.forEach(child => {
-                                    results[child.type] = results[child.type] == undefined ? 1 : results[child.type]+1;
-                                    if(child.type == 'group'){
-                                        recursiveSearch(child)
-                                    }
+                        
+                                return currentObject;
+                            }else{
+                                return new Promise((resolve, reject) => {
+                                    interface.operator.arrangement.getElementByAddress(address).then(id => {
+                                        resolve(core.element.getElementById(id));
+                                    });
                                 });
                             }
                 
-                            recursiveSearch(design.getTree());
-                            return results;
-                        }else{
+                        };
+                        this.getElementsUnderPoint = function(x,y){
                             return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.printSurvey',[],results => {
-                                    resolve(results);
+                                interface.operator.arrangement.getElementsUnderPoint(x,y).then(ids => {
+                                    const output = [];
+                                    for(let a = 0; a < ids.length; a++){
+                                        output.push( core.element.getElementById(ids[a]) );
+                                    }
+                                    resolve(output);
                                 });
                             });
-                        }
-                    };
-                    this.areParents = function(element,potentialParents=[]){
-                        dev.log.interface('.arrangement.areParents(',element,potentialParents); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('arrangement.areParents',[element.getId(),potentialParents.map(parent => parent.getId())],resolve);
-                        });
-                    };
-                    this._dump = function(local=true,engine=true){
-                        dev.log.interface('.arrangement._dump(',local,engine); //#development
+                        };
+                        this.getElementsUnderArea = function(points){
+                            return new Promise((resolve, reject) => {
+                                interface.operator.arrangement.getElementsUnderArea(points).then(ids => {
+                                    const output = [];
+                                    for(let a = 0; a < ids.length; a++){
+                                        output.push( core.element.getElementById(ids[a]) );
+                                    }
+                                    resolve(output);
+                                });
+                            });
+                        };
                 
-                        if(local){
-                            console.log(design.getAddress(),'._dump()');
-                            console.log(design.getAddress(),'._dump -> id: '+design.getId());
-                            console.log(design.getAddress(),'._dump -> type: '+design.getType());
-                            console.log(design.getAddress(),'._dump -> name: '+design.getName());
-                            console.log(design.getAddress(),'._dump -> address: '+design.getAddress());
-                            console.log(design.getAddress(),'._dump -> parent: ',design.parent);
-                            console.log(design.getAddress(),'._dump -> ignored: '+design.ignored());
-                            console.log(design.getAddress(),'._dump -> x: '+design.x());
-                            console.log(design.getAddress(),'._dump -> y: '+design.y());
-                            console.log(design.getAddress(),'._dump -> angle: '+design.angle());
-                            console.log(design.getAddress(),'._dump -> scale: '+design.scale());
-                            console.log(design.getAddress(),'._dump -> heedCamera: '+design.heedCamera());
-                            // console.log(design.getAddress(),'._dump -> static: '+design.static());
-                            console.log(design.getAddress(),'._dump -> children.length: '+design.getChildren().length);
-                            console.log(design.getAddress(),'._dump -> children: ',design.getChildren());
-                            console.log(design.getAddress(),'._dump -> clipActive: '+design.clipActive());
-                        }
-                        if(engine){
-                            _canvas_.core.element.__executeMethod(design.getId(),'_dump',[]);
-                        }
-                    };
+                    //misc
+                        this.printTree = function(mode='spaced',local=false){
+                            if(local){               
+                                function format(element, prefix='', mode='spaced'){
+                                    const data = '(id:'+element.getId() + ', type:'+element.getType() + ', x:'+element.x()+ ', y:'+element.y()+ ', angle:'+element.angle()+ ', scale:'+element.scale() + ')';
+                                    if(mode == 'spaced'){
+                                        return prefix+element.getName()+' '+data;
+                                    }else if(mode == 'tabular'){
+                                        return prefix+element.getName()+' '+data;
+                                    }else if(mode == 'address'){
+                                        return prefix+'/'+element.getName()+' '+data;
+                                    }
+                                }
+                                function recursivePrint(group, prefix='', mode='spaced'){
+                                    console.log( format(group, prefix, mode) );
+                
+                                    let new_prefix = '';
+                                    if(mode == 'spaced'){
+                                        new_prefix = prefix+'- ';
+                                    }else if(mode == 'tabular'){
+                                        new_prefix = prefix+'-\t';
+                                    }else if(mode == 'address'){
+                                        new_prefix = prefix+'/'+group.getName();
+                                    }
+                
+                                    group.getChildren().forEach(element => {
+                                        if(element.getType() == 'Group'){
+                                            recursivePrint(element, new_prefix, mode)
+                                        } else {
+                                            console.log( format(element, new_prefix, mode) );
+                                        }
+                                    });
+                                }
+                                recursivePrint(design, undefined, mode);
+                            } else {
+                                interface.operator.arrangement.printTree(mode);
+                            }
+                        };
+                        this.printSurvey = function(local=false){
+                            if(local){
+                                
+                            } else {
+                                interface.operator.arrangement.printSurvey();
+                            }
+                        };
+                        this._dump = function(){
+                            interface.operator.arrangement._dump();
+                        };
                 };
                 this.render = new function(){
                     const cachedValues = {
                         clearColour:{r:1,g:1,b:1,a:1},
-                        frameRateLimit:30,
-                        allowFrameSkipping:true,
-                        active:false,
                         activeLimitToFrameRate:false,
+                        frameRateLimit:30,
+                        active:false,
                     };
                 
-                    this.refresh = function(){
-                        dev.log.interface('.render.refresh()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('render.refresh',[],resolve);
-                        });
-                    };
-                    this.clearColour = function(colour){
-                        dev.log.interface('.render.clearColour(',colour); //#development
-                        if(colour == undefined){return cachedValues.clearColour;}
-                        cachedValues.clearColour = colour;
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('render.clearColour',[colour],resolve);
-                        });
-                    };
-                    this.adjustCanvasSize = function(newWidth, newHeight){
-                        dev.log.interface('.render.adjustCanvasSize(',newWidth, newHeight); //#development
-                        communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
-                    };
-                    this.getCanvasSize = function(){
-                        dev.log.interface('.render.getCanvasSize()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('render.getCanvasSize',[],resolve);
-                        });
-                    };
-                    this.activeLimitToFrameRate = function(active){
-                        dev.log.interface('.render.activeLimitToFrameRate(',active); //#development
-                        if(active == undefined){return cachedValues.activeLimitToFrameRate;}
-                        cachedValues.activeLimitToFrameRate = active;
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
-                        });
-                    };
-                    this.frameRateLimit = function(rate){
-                        dev.log.interface('.render.frameRateLimit(',rate); //#development
-                        if(rate == undefined){return cachedValues.frameRateLimit;}
-                        cachedValues.frameRateLimit = rate;
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('render.frameRateLimit',[rate],resolve);
-                        });
-                    };
-                    this.allowFrameSkipping = function(active){
-                        dev.log.interface('.render.allowFrameSkipping(',active); //#development
-                        if(active == undefined){return cachedValues.allowFrameSkipping;}
-                        cachedValues.allowFrameSkipping = active;
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('render.allowFrameSkipping',[active],resolve);
-                        });
-                    };
-                    this.fra
-                    this.frame = function(){
-                        dev.log.interface('.render.frame()'); //#development
-                        communicationModule.run('render.frame',[]);
-                    };
-                    this.active = function(active){
-                        dev.log.interface('.render.active(',active); //#development
-                        if(active == undefined){return cachedValues.active;}
-                        cachedValues.active = active;
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('render.active',[active],resolve);
-                        });
-                    };
+                    //canvas and webGL context
+                        this.clearColour = function(colour){
+                            dev.log.render('.clearColour(',colour); //#development
+                            if(colour == undefined){ return cachedValues.clearColour; }
+                            cachedValues.clearColour = colour;
+                            interface.operator.render.clearColour(colour);
+                        };
+                        this.getCanvasSize = function(){
+                            dev.log.render('.getCanvasSize()'); //#development
+                            return interface.operator.render.getCanvasSize();
+                        };
+                        this.adjustCanvasSize = function(newWidth, newHeight){
+                            dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
+                            interface.operator.render.adjustCanvasSize(newWidth, newHeight);
+                        };
+                        this.refreshCoordinates = function(){
+                            dev.log.render('.refreshCoordinates()'); //#development
+                            interface.operator.render.refreshCoordinates();
+                        };
+                        this.refresh = function(){
+                            dev.log.render('.refresh()'); //#development
+                            interface.operator.render.refresh();
+                        };
+                
+                    //frame rate control
+                        this.activeLimitToFrameRate = function(a){
+                            dev.log.render('.activeLimitToFrameRate(',a); //#development
+                            if(a == undefined){ return cachedValues.activeLimitToFrameRate; }
+                            cachedValues.activeLimitToFrameRate = a;
+                            interface.operator.render.activeLimitToFrameRate(a);
+                        };
+                        this.frameRateLimit = function(a){
+                            dev.log.render('.frameRateLimit(',a); //#development
+                            if(a == undefined){ return cachedValues.frameRateLimit; }
+                            cachedValues.frameRateLimit = a;
+                            interface.operator.render.frameRateLimit(a);
+                        };
+                
+                    //actual render
+                        this.frame = function(noClear=false){
+                            dev.log.render('.frame(',noClear); //#development
+                            interface.operator.render.frame(noClear);
+                        };
+                        this.active = function(bool){
+                            dev.log.render('.active(',bool); //#development
+                            if(bool == undefined){ return cachedValues.active; }
+                            cachedValues.active = bool;
+                            interface.operator.render.active(bool);
+                        };
+                
+                    //misc
+                        this.drawDot = function(x,y,r=2,colour={r:1,g:0,b:0,a:1}){
+                            dev.log.render('.drawDot(',x,y,r,colour); //#development
+                            interface.operator.render.drawDot(x,y,r,colour);
+                        };
+                        this._dump = function(){
+                            dev.log.render('._dump()'); //#development
+                            interface.operator.render._dump();
+                        };
                 };
-
                 this.viewport = new function(){
                     const cachedValues = {
                         position:{x:0,y:0},
                         scale:1,
                         angle:0,
+                        anchor:{x:0,y:0},
                         stopMouseScroll:false,
                     };
                     const mouseData = { 
@@ -25847,116 +25584,113 @@
                                 const angle = cachedValues.angle;
                 
                                 let tmp = {x:x, y:y};
-                                tmp.x = (tmp.x - position.x)/scale;
-                                tmp.y = (tmp.y - position.y)/scale;
                                 tmp = _canvas_.library.math.cartesianAngleAdjust(tmp.x,tmp.y,-angle);
+                                tmp.x = tmp.x/scale + position.x;
+                                tmp.y = tmp.y/scale + position.y;
                 
                                 return tmp;
                             };
-                            // this.workspacePoint2windowPoint = function(x,y){
-                                // const position = cachedValues.position;
-                                // const scale = cachedValues.scale;
-                                // const angle = cachedValues.angle;
-                
-                            //     let point = _canvas_.library.math.cartesianAngleAdjust(x,y,angle);
-                
-                            //     return {
-                            //         x: (point.x+position.x) * scale,
-                            //         y: (point.y+position.y) * scale
-                            //     };
-                            // };
                         };
-                
-                    this.refresh = function(){
-                        dev.log.interface('.viewport.refresh()'); //#development
-                        communicationModule.run('viewport.refresh',[]);
-                    };
-                    this.position = function(x,y){
-                        if(x==undefined || y==undefined){ return cachedValues.position; }
-                        cachedValues.position = {x:x,y:y};
-                        dev.log.interface('.viewport.position(',x,y); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.position',[x,y],resolve);
-                        });
-                    };
-                    this.scale = function(s){
-                        if(s==undefined){ return cachedValues.scale; }
-                        if(s == 0){console.error('cannot set scale to zero');}
-                        cachedValues.scale = s;
-                        dev.log.interface('.viewport.scale(',s); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.scale',[s],resolve);
-                        });
-                    };
-                    this.angle = function(a){
-                        if(a==undefined){ return cachedValues.angle; }
-                        cachedValues.angle = a;
-                        dev.log.interface('.viewport.angle(',a); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.angle',[a],resolve);
-                        });
-                    };
-                    this.getElementsUnderPoint = function(x,y){
-                        dev.log.interface('.viewport.getElementsUnderPoint(',x,y); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
-                        });
-                    };
-                    this.getElementsUnderArea = function(points){
-                        dev.log.interface('.viewport.getElementsUnderArea(',points); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
-                        });
-                    };
-                    this.getMousePosition = function(x,y){
-                        dev.log.interface('.viewport.getMousePosition(',x,y); //#development
-                        if(x == undefined || y == undefined){ return mouseData; }
-                        mouseData.x = x;
-                        mouseData.y = y;
-                        communicationModule.run('viewport.getMousePosition',[x,y]);
-                    };
-                    this.getBoundingBox = function(){
-                        dev.log.interface('.viewport.getBoundingBox()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('viewport.getBoundingBox',[],resolve);
-                        });
-                    };
-                    this.stopMouseScroll = function(bool){
-                        if(bool==undefined){ return cachedValues.stopMouseScroll; }
-                        cachedValues.stopMouseScroll = bool;
-                        dev.log.interface('.viewport.stopMouseScroll(',bool); //#development
-                        communicationModule.run('viewport.stopMouseScroll',[bool]);
-                    };
-                
-                    this.cursor = function(type){
-                        //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
-                        if(type == undefined){return document.body.style.cursor;}
-                        document.body.style.cursor = type;
-                    };
+                        
+                    //camera position
+                        this.position = function(x,y){
+                            dev.log.viewport('.position(',x,y); //#development
+                            if(x == undefined || y == undefined){ return cachedValues.position; }
+                            cachedValues.position = {x:x,y:y};
+                            interface.operator.viewport.position(x,y);
+                        };
+                        this.scale = function(s){
+                            dev.log.viewport('.scale(',s); //#development
+                            if(s == undefined){ return cachedValues.scale; }
+                            if(s == 0){ console.error('cannot set scale to zero'); }
+                            cachedValues.scale = s;
+                            interface.operator.viewport.scale(s);
+                        };
+                        this.angle = function(a){
+                            dev.log.viewport('.angle(',a); //#development
+                            if(a == undefined){ return cachedValues.angle; }
+                            cachedValues.angle = a;
+                            interface.operator.viewport.angle(a);
+                        };
+                        this.anchor = function(x,y){
+                            dev.log.viewport('.anchor(',x,y); //#development
+                            if(x == undefined || y == undefined){ return cachedValues.anchor; }
+                            cachedValues.anchor = {x:x,y:y};
+                            interface.operator.viewport.anchor(x,y);
+                        };
+                    
+                    //mouse interaction
+                        this.getElementsUnderPoint = function(x,y){
+                            dev.log.viewport('.getElementsUnderPoint(',x,y); //#development
+                            return new Promise((resolve, reject) => {
+                                interface.operator.viewport.getElementsUnderPoint(x,y).then(ids => {
+                                    resolve(ids.map(id => self.element.getElementById(id)));
+                                });
+                            });
+                        };
+                        this.getElementsUnderArea = function(points){
+                            dev.log.viewport('.getElementsUnderArea(',points); //#development
+                            return new Promise((resolve, reject) => {
+                                interface.operator.viewport.getElementsUnderArea(points).then(ids => {
+                                    resolve(ids.map(id => self.element.getElementById(id)));
+                                });
+                            });
+                        };
+                        this.mousePosition = function(x,y){
+                            dev.log.viewport('.mousePosition(',x,y); //#development
+                            if(x == undefined || y == undefined){ return mouseData; }
+                            mouseData.x = x;
+                            mouseData.y = y;
+                            interface.operator.viewport.mousePosition(x,y);
+                        };
+                        this.stopMouseScroll = function(bool){
+                            dev.log.viewport('.stopMouseScroll(',bool); //#development
+                            if(bool == undefined){ return cachedValues.stopMouseScroll; }
+                            cachedValues.stopMouseScroll = bool;
+                            interface.operator.viewport.stopMouseScroll(bool);
+                        };
+                    
+                    //misc
+                        this.refresh = function(){
+                            dev.log.viewport('.refresh()'); //#development
+                            interface.operator.viewport.refresh();
+                        };
+                        this.cursor = function(type){
+                            //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
+                            if(type == undefined){return document.body.style.cursor;}
+                            document.body.style.cursor = type;
+                        };
+                        this._dump = function(){
+                            dev.log.viewport('._dump()'); //#development
+                            interface.operator.viewport._dump();
+                        };
                 };
                 this.stats = new function(){
+                    const cachedValues = {
+                        active:false,
+                    };
+                
                     this.active = function(active){
-                        dev.log.interface('.stats.active(',active); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('stats.active',[active],resolve);
-                        });
+                        dev.log.stats('.active(',active); //#development
+                        if(active == undefined){ return cachedValues.active; }
+                        cachedValues.active = active;
+                        interface.operator.stats.active(active);
                     };
                     this.getReport = function(){
-                        dev.log.interface('.stats.getReport()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('stats.getReport',[],resolve);
-                        });
+                        dev.log.stats('.getReport()'); //#development
+                        return interface.operator.stats.getReport();
                     };
                 
                     let autoPrintActive = false;
                     let autoPrintIntervalId = undefined;
                     this.autoPrint = function(bool){
+                        dev.log.stats('.autoPrint(',bool); //#development
                         if(bool == undefined){ return autoPrintActive; }
                         autoPrintActive = bool;
                 
                         if(autoPrintActive){
                             autoPrintIntervalId = setInterval(() => {
-                                _canvas_.core.stats.getReport().then(console.log)
+                                core.stats.getReport().then(console.log)
                             }, 500);
                         }else{
                             clearInterval(autoPrintIntervalId);
@@ -25967,10 +25701,11 @@
                     let onScreenAutoPrint_intervalId = false;
                     let onScreenAutoPrint_section = undefined;
                     this.onScreenAutoPrint = function(bool){
+                        dev.log.stats('.onScreenAutoPrint(',bool); //#development
                         if(bool == undefined){ return onScreenAutoPrint_active; }
                         onScreenAutoPrint_active = bool;
                 
-                        _canvas_.core.stats.active(bool);
+                        core.stats.active(bool);
                 
                         if(onScreenAutoPrint_active){
                             onScreenAutoPrint_section = document.createElement('section');
@@ -25979,18 +25714,19 @@
                                 
                             onScreenAutoPrint_intervalId = setInterval(() => {
                                 onScreenAutoPrint_section.style.top = (window.innerHeight-onScreenAutoPrint_section.offsetHeight)+'px';
-                                _canvas_.core.stats.getReport().then(data => {
-                                    const position = _canvas_.core.viewport.position();
+                                core.stats.getReport().then(data => {
+                                    const position = core.viewport.position();
+                                    const anchor = core.viewport.anchor();
                 
                                     const potentialFPS = data.secondsPerFrameOverTheLastThirtyFrames != 0 ? (1/data.secondsPerFrameOverTheLastThirtyFrames).toFixed(2) : 'infinite ';
                         
                                     onScreenAutoPrint_section.innerHTML = ''+
                                         '<p style="margin:1px"> position: x:'+ position.x + ' y:' + position.y +'</p>' +
-                                        '<p style="margin:1px"> scale:'+ _canvas_.core.viewport.scale() +'</p>' +
-                                        '<p style="margin:1px"> angle:'+ _canvas_.core.viewport.angle()+'</p>' +
+                                        '<p style="margin:1px"> scale:'+ core.viewport.scale() +'</p>' +
+                                        '<p style="margin:1px"> angle:'+ core.viewport.angle()+'</p>' +
+                                        '<p style="margin:1px"> anchor: x:'+ anchor.x + ' y:' + anchor.y +'</p>' +
                                         '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond.toFixed(2) +'</p>' +
                                         '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(5) +' (potentially '+ potentialFPS +'fps)</p>' +
-                                        '<p style="margin:1px"> renderNonRenderSplitOverTheLastThirtyFrames: '+ data.renderNonRenderSplitOverTheLastThirtyFrames.toFixed(2) +'</p>' +
                                     '';
                                 });
                             }, 100);
@@ -26003,10 +25739,12 @@
                 };
                 this.callback = new function(){
                     this.listCallbackTypes = function(){
-                        dev.log.interface('.callback.listCallbackTypes()'); //#development
-                        return new Promise((resolve, reject) => {
-                            communicationModule.run('callback.listCallbackTypes',[],resolve);
-                        });
+                        dev.log.callback('.listCallbackTypes()'); //#development
+                        return interface.operator.callback.listCallbackTypes();
+                    };
+                    this.listActivationModes = function(){
+                        dev.log.callback('.listActivationModes()'); //#development
+                        return interface.operator.callback.listActivationModes();
                     };
                 
                     const callbackRegistry = new function(){
@@ -26031,163 +25769,120 @@
                         };
                     };
                     this.getCallback = function(element, callbackType){
-                        dev.log.interface('.callback.getCallback(',element,callbackType); //#development
+                        dev.log.callback('.getCallback(',element,callbackType); //#development
                         callbackRegistry.getCallback(element.getId(), callbackType);
                     };
                     this.attachCallback = function(element, callbackType, callback){
-                        dev.log.interface('.callback.attachCallback(',element,callbackType,callback); //#development
+                        dev.log.callback('.attachCallback(',element,callbackType,callback); //#development
                         callbackRegistry.register(element.getId(), callbackType, callback);
-                        communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
+                        interface.operator.callback.attachCallback(element.getId(),callbackType);
                     };
                     this.removeCallback = function(element, callbackType){
-                        dev.log.interface('.callback.removeCallback(',element,callbackType); //#development
+                        dev.log.callback('.removeCallback(',element,callbackType); //#development
                         callbackRegistry.remove(element.getId(), callbackType);
-                        communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
+                        interface.operator.callback.removeCallback(element.getId(),callbackType);
                     };
                 
                     let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
                     this.callbackActivationMode = function(mode){
-                        if(mode==undefined){return callbackActivationMode;}
-                        dev.log.interface('.callback.callbackActivationMode(',mode); //#development
+                        if(mode == undefined){return callbackActivationMode;}
+                        dev.log.callback('.callbackActivationMode(',mode); //#development
                         callbackActivationMode = mode;
+                        return interface.operator.callback.callbackActivationMode(callbackActivationMode);
                     };
                 
                     this.functions = {};
-                    this.listCallbackTypes().then(callbackNames => {
-                        callbackNames.forEach(callbackName => {
-                            _canvas_[callbackName] = function(event){
-                                let sudoEvent = {};
-                                if(event instanceof KeyboardEvent){
-                                    sudoEvent = {
-                                        key: event.key,
-                                        code: event.code,
-                                        keyCode: event.keyCode,
-                                        altKey: event.altKey,
-                                        ctrlKey: event.ctrlKey,
-                                        metaKey: event.metaKey,
-                                        shiftKey: event.shiftKey,
-                                    };
-                                }else if(event instanceof WheelEvent){
-                                    sudoEvent = { 
-                                        X: event.offsetX,
-                                        Y: event.offsetY,
-                                        wheelDelta: event.wheelDelta,
-                                        wheelDeltaX: event.wheelDeltaX,
-                                        wheelDeltaY: event.wheelDeltaY,
-                                        altKey: event.altKey,
-                                        ctrlKey: event.ctrlKey,
-                                        metaKey: event.metaKey,
-                                        shiftKey: event.shiftKey,
-                                    };
-                                }else if(event instanceof MouseEvent){
-                                    sudoEvent = { 
-                                        X: event.offsetX, 
-                                        Y: event.offsetY,
-                                        altKey: event.altKey,
-                                        ctrlKey: event.ctrlKey,
-                                        metaKey: event.metaKey,
-                                        shiftKey: event.shiftKey,
-                                        buttons: event.buttons,
-                                    };
-                                    if(callbackName == 'onmousemove'){
-                                        _canvas_.core.viewport.getMousePosition(sudoEvent.X,sudoEvent.Y);
-                                    }
-                                }else{
-                                    console.warn('unknown event type: ',event);
-                                }
-                                
-                                communicationModule.run('callback.coupling_in.'+callbackName,[sudoEvent]);
-                            };
+                    this.__attachCallbacks = function(){
+                        return new Promise((resolve, reject) => {
+                            this.listCallbackTypes().then(callbackNames => {
+                                dev.log.callback(' setting up outgoing message callbacks'); //#development
+                                callbackNames.forEach(callbackName => {
+                                    dev.log.callback(' ->',callbackName); //#development
                 
-                            //service
-                                communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
-                                    if(self.callback.functions[callbackName]){
-                                        self.callback.functions[callbackName](x,y,event,{
-                                            all: elements.all.map(id => elementRegistry[id]),
-                                            relevant: elements.relevant ? elements.relevant.map(id => elementRegistry[id]) : undefined,
-                                        });
-                                    }
+                                    //outgoing messages
+                                        _canvas_[callbackName] = function(event){
+                                            let sudoEvent = {};
+                                            if(event instanceof KeyboardEvent){
+                                                sudoEvent = {
+                                                    key: event.key,
+                                                    code: event.code,
+                                                    keyCode: event.keyCode,
+                                                    altKey: event.altKey,
+                                                    ctrlKey: event.ctrlKey,
+                                                    metaKey: event.metaKey,
+                                                    shiftKey: event.shiftKey,
+                                                };
+                                            }else if(event instanceof WheelEvent){
+                                                sudoEvent = { 
+                                                    x: event.offsetX,
+                                                    y: event.offsetY,
+                                                    wheelDelta: event.wheelDelta,
+                                                    wheelDeltaX: event.wheelDeltaX,
+                                                    wheelDeltaY: event.wheelDeltaY,
+                                                    altKey: event.altKey,
+                                                    ctrlKey: event.ctrlKey,
+                                                    metaKey: event.metaKey,
+                                                    shiftKey: event.shiftKey,
+                                                };
+                                            }else if(event instanceof MouseEvent){
+                                                sudoEvent = { 
+                                                    x: event.offsetX, 
+                                                    y: event.offsetY,
+                                                    altKey: event.altKey,
+                                                    ctrlKey: event.ctrlKey,
+                                                    metaKey: event.metaKey,
+                                                    shiftKey: event.shiftKey,
+                                                    buttons: event.buttons,
+                                                };
+                                            }else{
+                                                console.warn('unknown event type: ',event);
+                                            }
+                                            
+                                            communicationModule.run_withoutPromise('operator__callback__coupling_in__'+callbackName, [sudoEvent]);
+                                        };
                 
-                                    elements.relevant.forEach(id => callbackRegistry.call(id,callbackName,x,y,event) );
-                                };
+                                    //incoming messages
+                                        communicationModule.function['callback__'+callbackName] = function(xy,event,all_elements,relevant_elements){
+                                            dev.log.callback('.callback - engine has called: callback__'+callbackName+'(',xy,event,all_elements,relevant_elements); //#development
+                                            
+                                            if(core.callback.functions[callbackName]){
+                                                core.callback.functions[callbackName](xy.x,xy.y,event,{
+                                                    all: all_elements.map(core.element.getElementById),
+                                                    relevant: relevant_elements.map(core.element.getElementById),
+                                                });
+                                            }
                 
+                                            relevant_elements.forEach(id => callbackRegistry.call(id,callbackName,xy.x,xy.y,event) );
+                                        };
+                
+                                    resolve();
+                                });
+                            });
                         });
-                    });
-                };
-
-                communicationModule.function.go = function(){
-                    dev.log.service('.go()'); //#development
-                    _canvas_.layers.declareLayerAsLoaded("core");
-                };
-                communicationModule.function.printToScreen = function(imageData){
-                    dev.log.service('.printToScreen(',imageData); //#development
-                    _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
-                };
-                // communicationModule.function.onViewportAdjust = function(state){
-                //     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
-                //     console.log('onViewportAdjust -> ',state); /* callback */
-                // };
+                    }
                 
-                communicationModule.function.updateElement = function(elem, data={}){
-                    dev.log.service('.updateElement(',elem,data); //#development
-                    const proxyElement = _canvas_.core.meta.getElementFromId(elem);
-                    if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
-                };
-                communicationModule.function.runElementCallback = function(elem, data={}){
-                    dev.log.service('.runElementCallback(',elem,data); //#development
-                    const proxyElement = _canvas_.core.meta.getElementFromId(elem);
-                    if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
+                    this._dump = function(){
+                        dev.log.callback('._dump()'); //#development
+                        interface.operator.callback._dump();
+                    };
                 };
                 
-                communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
-                    return attributeNames.map((name,index) => {
-                        return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
-                    });    
+                this.meta = new function(){
+                    this.refresh = function(){
+                        return interface.operator.meta.refresh();
+                    };
                 };
-                communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
-                    dev.log.service('.setCanvasAttributes(',attributes,prefixActiveArray); //#development
-                    attributes.map((attribute,index) => {
-                        _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
+            
+                this.ready = function(){
+                    core.callback.__attachCallbacks().then(() => {
+                        _canvas_.layers.declareLayerAsLoaded("core");
                     });
-                };
-                communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                    dev.log.service('.getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
-                    return attributeNames.map((name,index) => {
-                        return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
-                    });
-                };
-                
-                communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                    dev.log.service('.getDocumentAttributes(',attributeNames); //#development
-                    return attributeNames.map(attribute => {
-                        return eval('document.'+attribute);
-                    });
-                };
-                communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                    dev.log.service('.setDocumentAttributes(',attributeNames,values); //#development
-                    return attributeNames.map((attribute,index) => {
-                        eval('document.'+attribute+' = "'+values[index]+'"');
-                    });
-                };
-                communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                    dev.log.service('.getWindowAttributes(',attributeNames); //#development
-                    return attributeNames.map(attribute => {
-                        return eval('window.'+attribute);
-                    });
-                };
-                communicationModule.function.setWindowAttributes = function(attributes=[]){
-                    dev.log.service('.setWindowAttributes(',attributes); //#development
-                    attributes.map((attribute,index) => {
-                        eval('window.'+attribute.name+' = "'+attribute.value+'"');
-                    });
-                };
-
+                }
             };
             
             _canvas_.layers.registerLayer("core", _canvas_.core);
             _canvas_.system = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:12,d:28} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:29} };
                 this.mouseReady = false;
             };
             _canvas_.system.mouse = new function(){
@@ -26204,6 +25899,8 @@
                     this.functionList.onwheel = [];
                     this.functionList.onclick = [];
                     this.functionList.ondblclick = [];
+                    this.functionList.onmouseenterelement = [];
+                    this.functionList.onmouseleaveelement = [];
                 
                 //save the listener functions of the canvas
                     _canvas_.layers.registerFunctionForLayer("core", function(){
@@ -26221,16 +25918,14 @@
                             //movement code
                                 _canvas_.onmousemove = function(event){ 
                                     if(moveCode!=undefined){
-                                        event.X = event.offsetX; event.Y = event.offsetY;
-                                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.offsetX,event.offsetY);
                                         moveCode(XY.x,XY.y,event);
                                     }
                                 };
                             //stopping code
                                 _canvas_.onmouseup = function(event){
                                     if(stopCode != undefined){ 
-                                        event.X = event.offsetX; event.Y = event.offsetY;
-                                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.offsetX,event.offsetY);
                                         stopCode(XY.x,XY.y,event);
                                     }
                 
@@ -26247,9 +25942,9 @@
                 //connect callbacks to mouse function lists
                     this.setUpCallbacks = function(){
                         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
-                            _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
+                            _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){ //console.log(event);
                                 if(elementIds.relevant.length == 0){
-                                    _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
+                                    _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); 
                                 }
                             }
                         });
@@ -26326,26 +26021,26 @@
             
             _canvas_.layers.registerFunctionForLayer("core", function(){
                 //background
-                    _canvas_.system.pane.background = _canvas_.core.element.create('group','background');
+                    _canvas_.system.pane.background = _canvas_.core.element.create('Group','background');
                     _canvas_.system.pane.background.ignored(true);
                     _canvas_.core.arrangement.append( _canvas_.system.pane.background );
             
                 //middleground
-                    _canvas_.system.pane.middleground = _canvas_.core.element.create('group','middleground');
+                    _canvas_.system.pane.middleground = _canvas_.core.element.create('Group','middleground');
                     _canvas_.system.pane.middleground.heedCamera(true);
                     _canvas_.core.arrangement.append( _canvas_.system.pane.middleground );
                     //back
-                        _canvas_.system.pane.middleground_back = _canvas_.core.element.create('group','back');
+                        _canvas_.system.pane.middleground_back = _canvas_.core.element.create('Group','back');
                         _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground_back );
                     //middle
-                        _canvas_.system.pane.middleground_middle = _canvas_.core.element.create('group','middle');
+                        _canvas_.system.pane.middleground_middle = _canvas_.core.element.create('Group','middle');
                         _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground_middle );
                     //front
-                        _canvas_.system.pane.middleground_front = _canvas_.core.element.create('group','front');
+                        _canvas_.system.pane.middleground_front = _canvas_.core.element.create('Group','front');
                         _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground_front );
             
                 //foreground
-                    _canvas_.system.pane.foreground = _canvas_.core.element.create('group','foreground');
+                    _canvas_.system.pane.foreground = _canvas_.core.element.create('Group','foreground');
                     _canvas_.core.arrangement.append( _canvas_.system.pane.foreground );
             
                 //shortcuts

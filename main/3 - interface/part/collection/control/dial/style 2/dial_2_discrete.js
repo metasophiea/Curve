@@ -82,12 +82,12 @@ this.dial_2_discrete = function(
         dial.getChildByName('handle').attachCallback('onmousedown', function(x,y,event){
             if(!interactable){return;}
             const initialValue = value;
-            const initialY = event.Y;
+            const initialY = event.y;
 
             grappled = true;
             _canvas_.system.mouse.mouseInteractionHandler(
                 function(x,y,event){
-                    const diff = Math.round( (event.Y - initialY)/25 );
+                    const diff = Math.round( (event.y - initialY)/25 );
                     set( initialValue - diff );
                 },
                 function(x,y,event){

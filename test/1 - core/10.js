@@ -2,11 +2,12 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
     var gap = 50;
     _canvas_.library.font.getLoadableFonts().forEach((name,index) => {
         
-        let characterString = _canvas_.core.element.create('characterString','characterString_'+index);
+        let characterString = _canvas_.core.element.create('CharacterString','characterString_'+index);
         characterString.unifiedAttribute({
             string:name,
             font:name,
             x:10, y:gap*index, width:gap, height:gap, 
+            printingMode:{vertical:'top'},
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString);

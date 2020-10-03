@@ -51,7 +51,7 @@ this.functionList.onmousedown.push(
                 if(!interactionState.unitGrappleRotation){return;}
             
             //collect together information on the click position and the selected unit's positions and section area
-                control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                 control.grapple.tmpdata.oldUnitsPositions = [];
                 control.grapple.tmpdata.oldUnitsSelectionArea = [];
                 control.grapple.tmpdata.focalPoint = {x:-1,y:-1};
@@ -71,7 +71,7 @@ this.functionList.onmousedown.push(
                             //calculate new angle
                                 const rotationalMux = 1/100;
                                 const oldClickPosition = control.grapple.tmpdata.oldClickPosition;
-                                const newClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                const newClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                                 const oldUnitPosition = control.grapple.tmpdata.oldUnitsPositions[a];
 
                                 const producedAngle = (newClickPosition.y - oldClickPosition.y) * rotationalMux;
@@ -138,7 +138,7 @@ this.functionList.onmousedown.push(
                 if(!interactionState.unitGrapplePosition){return;}
 
             //collect together information on the click position and the selected unit's positions and section area
-                control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                 control.grapple.tmpdata.oldUnitsPositions = [];
                 control.grapple.tmpdata.oldUnitsSelectionArea = [];
                 for(let a = 0; a < control.selection.selectedUnits.length; a++){
@@ -154,7 +154,7 @@ this.functionList.onmousedown.push(
 
                             //calculate new position
                                 const oldClickPosition = control.grapple.tmpdata.oldClickPosition;
-                                const newClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                const newClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                                 const oldUnitPosition = control.grapple.tmpdata.oldUnitsPositions[a];
                                 const newUnitPosition = {
                                     x: oldUnitPosition.x + (newClickPosition.x - oldClickPosition.x),

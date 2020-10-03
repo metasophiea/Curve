@@ -31,7 +31,7 @@ this.meter_level = function(
             });
         }
         function insertText(y,text){
-            return interfacePart.builder('basic','text', 'text_'+text, {x:0.5, y:y-0.5, height:markingStyle_size, width:markingStyle_size, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
+            return interfacePart.builder('basic','text', 'text_'+text, {x:0.5, y:y-0.5, height:markingStyle_size, width:markingStyle_size, text:String(text), colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
         }
         const markAndText = markings.map(marking => makeMark(height*(1-marking))).concat( markings.map(marking => insertText(height*(1-marking),marking)) );
         markAndText.forEach(element => object.append(element));

@@ -19,21 +19,19 @@ _canvas_.system.mouse.functionList.onmousedown.push(
                 if(!interactionState.mouseGroupSelect){return;}
 
             //create selection graphic and add it to the foreground
-                const mouseDownPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
                 _canvas_.system.mouse.tmp.selectionRectangle = _canvas_.interface.part.builder( 
                     'basic', 'rectangle', 'selectionRectangle', 
-                    { x:mouseDownPoint.x, y:mouseDownPoint.y, width:0, height:0, colour:{r:224/255, g:184/255, b:252/255, a:0.25} } 
+                    { x:data.x, y:data.y, width:0, height:0, colour:{r:224/255, g:184/255, b:252/255, a:0.25} } 
                 );
                 _canvas_.system.pane.mf.append( _canvas_.system.mouse.tmp.selectionRectangle );
-                dev.log.mouse('.onmousedown[group select (shift)] -> mouseDownPoint:',mouseDownPoint); //#development
 
             //follow mouse, adjusting selection rectangle as it moves. On mouse up, remove the rectangle and select all
             //units that touch the area
-                _canvas_.system.mouse.tmp.start = {x:mouseDownPoint.x, y:mouseDownPoint.y};
+                _canvas_.system.mouse.tmp.start = {x:data.x, y:data.y};
                 _canvas_.system.mouse.mouseInteractionHandler(
                     function(x,y,event){
                         const start = _canvas_.system.mouse.tmp.start;
-                        const end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                        const end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
 
                         _canvas_.system.mouse.tmp.selectionRectangle.width( end.x - start.x );
                         _canvas_.system.mouse.tmp.selectionRectangle.height( end.y - start.y );
@@ -42,7 +40,7 @@ _canvas_.system.mouse.functionList.onmousedown.push(
                         _canvas_.system.pane.mf.remove( _canvas_.system.mouse.tmp.selectionRectangle );
 
                         const start = _canvas_.system.mouse.tmp.start;
-                        const end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                        const end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
 
                         _canvas_.control.selection.selectUnits(
                             _canvas_.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
@@ -67,16 +65,22 @@ _canvas_.system.mouse.functionList.onmousedown.push(
                 if(!interactionState.mouseGripPanning){return;}
 
             //save the viewport position and click position
-                _canvas_.system.mouse.tmp.oldPosition = _canvas_.control.viewport.position();
-                _canvas_.system.mouse.tmp.clickPosition = {x:data.x, y:data.y};
+                _canvas_.system.mouse.tmp.oldPosition = _canvas_.control.viewport.position(); //workspace
+                _canvas_.system.mouse.tmp.clickPosition = {x:data.event.x, y:data.event.y}; //window
 
             //perform viewport movement
                 _canvas_.system.mouse.mouseInteractionHandler(
                     function(x,y,event){
+                        //calculate diff
+                            const pan = _canvas_.library.math.cartesianAngleAdjust(
+                                (_canvas_.system.mouse.tmp.clickPosition.x - event.x) / _canvas_.control.viewport.scale(),
+                                (_canvas_.system.mouse.tmp.clickPosition.y - event.y) / _canvas_.control.viewport.scale(),
+                                -_canvas_.control.viewport.angle()
+                            );
                         //update the viewport position
                             _canvas_.control.viewport.position(
-                                _canvas_.system.mouse.tmp.oldPosition.x - ((_canvas_.system.mouse.tmp.clickPosition.x-event.X)),
-                                _canvas_.system.mouse.tmp.oldPosition.y - ((_canvas_.system.mouse.tmp.clickPosition.y-event.Y)),
+                                _canvas_.system.mouse.tmp.oldPosition.x + pan.x,
+                                _canvas_.system.mouse.tmp.oldPosition.y + pan.y,
                             );
                     },
                     function(event){},
@@ -113,7 +117,7 @@ _canvas_.system.mouse.functionList.onwheel.push(
 
             //perform scale and associated pan
                 //discover point under mouse
-                    const originalPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
+                    const originalPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.event.x,data.event.y);
                 //perform actual scaling
                     let scale = _canvas_.control.viewport.scale();
                     scale += scale*(delta/100);
@@ -121,15 +125,13 @@ _canvas_.system.mouse.functionList.onwheel.push(
                     else if( scale < scaleLimits.min ){ scale = scaleLimits.min; }
                     _canvas_.control.viewport.scale(scale);
                 //discover new point under mouse
-                    const newPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
+                    const newPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.event.x,data.event.y);
                 //pan so we're back at the old point (accounting for angle)
-                    const pan = _canvas_.library.math.cartesianAngleAdjust(
-                        (newPoint.x - originalPoint.x),
-                        (newPoint.y - originalPoint.y),
-                        _canvas_.control.viewport.angle()
-                    );
                     const temp = _canvas_.control.viewport.position();
-                    _canvas_.control.viewport.position(temp.x+pan.x*scale,temp.y+pan.y*scale)
+                    _canvas_.control.viewport.position(
+                        temp.x + (originalPoint.x - newPoint.x), 
+                        temp.y + (originalPoint.y - newPoint.y)
+                    );
 
             //request that the function list stop here
                 return true;

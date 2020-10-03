@@ -1,3 +1,1493 @@
+let wasm_bindgen;
+(function() {
+    const __exports = {};
+    let wasm;
+
+    const heap = new Array(32).fill(undefined);
+
+    heap.push(undefined, null, true, false);
+
+function getObject(idx) { return heap[idx]; }
+
+let heap_next = heap.length;
+
+function dropObject(idx) {
+    if (idx < 36) return;
+    heap[idx] = heap_next;
+    heap_next = idx;
+}
+
+function takeObject(idx) {
+    const ret = getObject(idx);
+    dropObject(idx);
+    return ret;
+}
+
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+
+cachedTextDecoder.decode();
+
+let cachegetUint8Memory0 = null;
+function getUint8Memory0() {
+    if (cachegetUint8Memory0 === null || cachegetUint8Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint8Memory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachegetUint8Memory0;
+}
+
+function getStringFromWasm0(ptr, len) {
+    return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
+}
+
+function addHeapObject(obj) {
+    if (heap_next === heap.length) heap.push(heap.length + 1);
+    const idx = heap_next;
+    heap_next = heap[idx];
+
+    heap[idx] = obj;
+    return idx;
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
+
+let cachegetFloat64Memory0 = null;
+function getFloat64Memory0() {
+    if (cachegetFloat64Memory0 === null || cachegetFloat64Memory0.buffer !== wasm.memory.buffer) {
+        cachegetFloat64Memory0 = new Float64Array(wasm.memory.buffer);
+    }
+    return cachegetFloat64Memory0;
+}
+
+let cachegetInt32Memory0 = null;
+function getInt32Memory0() {
+    if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer);
+    }
+    return cachegetInt32Memory0;
+}
+
+let WASM_VECTOR_LEN = 0;
+
+let cachedTextEncoder = new TextEncoder('utf-8');
+
+const encodeString = (typeof cachedTextEncoder.encodeInto === 'function'
+    ? function (arg, view) {
+    return cachedTextEncoder.encodeInto(arg, view);
+}
+    : function (arg, view) {
+    const buf = cachedTextEncoder.encode(arg);
+    view.set(buf);
+    return {
+        read: arg.length,
+        written: buf.length
+    };
+});
+
+function passStringToWasm0(arg, malloc, realloc) {
+
+    if (realloc === undefined) {
+        const buf = cachedTextEncoder.encode(arg);
+        const ptr = malloc(buf.length);
+        getUint8Memory0().subarray(ptr, ptr + buf.length).set(buf);
+        WASM_VECTOR_LEN = buf.length;
+        return ptr;
+    }
+
+    let len = arg.length;
+    let ptr = malloc(len);
+
+    const mem = getUint8Memory0();
+
+    let offset = 0;
+
+    for (; offset < len; offset++) {
+        const code = arg.charCodeAt(offset);
+        if (code > 0x7F) break;
+        mem[ptr + offset] = code;
+    }
+
+    if (offset !== len) {
+        if (offset !== 0) {
+            arg = arg.slice(offset);
+        }
+        ptr = realloc(ptr, len, len = offset + arg.length * 3);
+        const view = getUint8Memory0().subarray(ptr + offset, ptr + len);
+        const ret = encodeString(arg, view);
+
+        offset += ret.written;
+    }
+
+    WASM_VECTOR_LEN = offset;
+    return ptr;
+}
+
+function debugString(val) {
+    // primitive types
+    const type = typeof val;
+    if (type == 'number' || type == 'boolean' || val == null) {
+        return  `${val}`;
+    }
+    if (type == 'string') {
+        return `"${val}"`;
+    }
+    if (type == 'symbol') {
+        const description = val.description;
+        if (description == null) {
+            return 'Symbol';
+        } else {
+            return `Symbol(${description})`;
+        }
+    }
+    if (type == 'function') {
+        const name = val.name;
+        if (typeof name == 'string' && name.length > 0) {
+            return `Function(${name})`;
+        } else {
+            return 'Function';
+        }
+    }
+    // objects
+    if (Array.isArray(val)) {
+        const length = val.length;
+        let debug = '[';
+        if (length > 0) {
+            debug += debugString(val[0]);
+        }
+        for(let i = 1; i < length; i++) {
+            debug += ', ' + debugString(val[i]);
+        }
+        debug += ']';
+        return debug;
+    }
+    // Test for built-in
+    const builtInMatches = /\[object ([^\]]+)\]/.exec(toString.call(val));
+    let className;
+    if (builtInMatches.length > 1) {
+        className = builtInMatches[1];
+    } else {
+        // Failed to match the standard '[object ClassName]'
+        return toString.call(val);
+    }
+    if (className == 'Object') {
+        // we're a user defined class or Object
+        // JSON.stringify avoids problems with cycles, and is generally much
+        // easier than looping through ownProperties of `val`.
+        try {
+            return 'Object(' + JSON.stringify(val) + ')';
+        } catch (_) {
+            return 'Object';
+        }
+    }
+    // errors
+    if (val instanceof Error) {
+        return `${val.name}: ${val.message}\n${val.stack}`;
+    }
+    // TODO we could test for more things here, like `Set`s and `Map`s.
+    return className;
+}
+
+let cachegetFloat32Memory0 = null;
+function getFloat32Memory0() {
+    if (cachegetFloat32Memory0 === null || cachegetFloat32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetFloat32Memory0 = new Float32Array(wasm.memory.buffer);
+    }
+    return cachegetFloat32Memory0;
+}
+
+function getArrayF32FromWasm0(ptr, len) {
+    return getFloat32Memory0().subarray(ptr / 4, ptr / 4 + len);
+}
+
+let cachegetUint32Memory0 = null;
+function getUint32Memory0() {
+    if (cachegetUint32Memory0 === null || cachegetUint32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint32Memory0 = new Uint32Array(wasm.memory.buffer);
+    }
+    return cachegetUint32Memory0;
+}
+
+function getArrayU32FromWasm0(ptr, len) {
+    return getUint32Memory0().subarray(ptr / 4, ptr / 4 + len);
+}
+
+function passArrayF32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4);
+    getFloat32Memory0().set(arg, ptr / 4);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function getArrayJsValueFromWasm0(ptr, len) {
+    const mem = getUint32Memory0();
+    const slice = mem.subarray(ptr / 4, ptr / 4 + len);
+    const result = [];
+    for (let i = 0; i < slice.length; i++) {
+        result.push(takeObject(slice[i]));
+    }
+    return result;
+}
+
+function passArray32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4);
+    getUint32Memory0().set(arg, ptr / 4);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function passArrayJsValueToWasm0(array, malloc) {
+    const ptr = malloc(array.length * 4);
+    const mem = getUint32Memory0();
+    for (let i = 0; i < array.length; i++) {
+        mem[ptr / 4 + i] = addHeapObject(array[i]);
+    }
+    WASM_VECTOR_LEN = array.length;
+    return ptr;
+}
+/**
+*/
+__exports.go = function() {
+    wasm.go();
+};
+
+function handleError(f) {
+    return function () {
+        try {
+            return f.apply(this, arguments);
+
+        } catch (e) {
+            wasm.__wbindgen_exn_store(addHeapObject(e));
+        }
+    };
+}
+/**
+*/
+class Engine {
+
+    static __wrap(ptr) {
+        const obj = Object.create(Engine.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_engine_free(ptr);
+    }
+    /**
+    * @param {number} id
+    * @returns {string | undefined}
+    */
+    element__execute_method__get_element_type(id) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_element__execute_method__get_element_type(retptr, this.ptr, id);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            let v0;
+            if (r0 !== 0) {
+                v0 = getStringFromWasm0(r0, r1).slice();
+                wasm.__wbindgen_free(r0, r1 * 1);
+            }
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} id
+    * @returns {string | undefined}
+    */
+    element__execute_method__get_name(id) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_element__execute_method__get_name(retptr, this.ptr, id);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            let v0;
+            if (r0 !== 0) {
+                v0 = getStringFromWasm0(r0, r1).slice();
+                wasm.__wbindgen_free(r0, r1 * 1);
+            }
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} id
+    * @param {string} new_string
+    */
+    element__execute_method__set_name(id, new_string) {
+        var ptr0 = passStringToWasm0(new_string, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.engine_element__execute_method__set_name(this.ptr, id, ptr0, len0);
+    }
+    /**
+    * @param {number} id
+    * @returns {number | undefined}
+    */
+    element__execute_method__get_parent_id(id) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_element__execute_method__get_parent_id(retptr, this.ptr, id);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} id
+    * @param {number} x
+    */
+    element__execute_method__set_x(id, x) {
+        wasm.engine_element__execute_method__set_x(this.ptr, id, x);
+    }
+    /**
+    * @param {number} id
+    * @param {number} y
+    */
+    element__execute_method__set_y(id, y) {
+        wasm.engine_element__execute_method__set_y(this.ptr, id, y);
+    }
+    /**
+    * @param {number} id
+    * @param {number} angle
+    */
+    element__execute_method__set_angle(id, angle) {
+        wasm.engine_element__execute_method__set_angle(this.ptr, id, angle);
+    }
+    /**
+    * @param {number} id
+    * @param {number} scale
+    */
+    element__execute_method__set_scale(id, scale) {
+        wasm.engine_element__execute_method__set_scale(this.ptr, id, scale);
+    }
+    /**
+    * @param {number} id
+    * @returns {boolean | undefined}
+    */
+    element__execute_method__get_ignored(id) {
+        var ret = wasm.engine_element__execute_method__get_ignored(this.ptr, id);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+    * @param {number} id
+    * @param {boolean} new_string
+    */
+    element__execute_method__set_ignored(id, new_string) {
+        wasm.engine_element__execute_method__set_ignored(this.ptr, id, new_string);
+    }
+    /**
+    * @param {number} id
+    * @param {object} universal_attribute
+    */
+    element__execute_method__set_unified_attribute(id, universal_attribute) {
+        wasm.engine_element__execute_method__set_unified_attribute(this.ptr, id, addHeapObject(universal_attribute));
+    }
+    /**
+    * @param {number} id
+    * @returns {string | undefined}
+    */
+    element__execute_method__get_address(id) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_element__execute_method__get_address(retptr, this.ptr, id);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            let v0;
+            if (r0 !== 0) {
+                v0 = getStringFromWasm0(r0, r1).slice();
+                wasm.__wbindgen_free(r0, r1 * 1);
+            }
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} id
+    * @returns {boolean | undefined}
+    */
+    element__execute_method__get_allow_compute_extremities(id) {
+        var ret = wasm.engine_element__execute_method__get_allow_compute_extremities(this.ptr, id);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+    * @param {number} id
+    * @param {boolean} new_bool
+    */
+    element__execute_method__set_allow_compute_extremities(id, new_bool) {
+        wasm.engine_element__execute_method__set_allow_compute_extremities(this.ptr, id, new_bool);
+    }
+    /**
+    * @param {number} id
+    * @returns {boolean | undefined}
+    */
+    element__execute_method__get_dot_frame(id) {
+        var ret = wasm.engine_element__execute_method__get_dot_frame(this.ptr, id);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+    * @param {number} id
+    * @param {boolean} new_bool
+    */
+    element__execute_method__set_dot_frame(id, new_bool) {
+        wasm.engine_element__execute_method__set_dot_frame(this.ptr, id, new_bool);
+    }
+    /**
+    * @param {number} id
+    * @returns {string}
+    */
+    element__execute_method__info(id) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_element__execute_method__info(retptr, this.ptr, id);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+            wasm.__wbindgen_free(r0, r1);
+        }
+    }
+    /**
+    * @param {number} id
+    */
+    element__execute_method__dump(id) {
+        wasm.engine_element__execute_method__dump(this.ptr, id);
+    }
+    /**
+    * @param {number} x
+    * @param {number} y
+    */
+    viewport__position(x, y) {
+        wasm.engine_viewport__position(this.ptr, x, y);
+    }
+    /**
+    * @param {number} s
+    */
+    viewport__scale(s) {
+        wasm.engine_viewport__scale(this.ptr, s);
+    }
+    /**
+    * @param {number} a
+    */
+    viewport__angle(a) {
+        wasm.engine_viewport__angle(this.ptr, a);
+    }
+    /**
+    * @param {number} x
+    * @param {number} y
+    */
+    viewport__anchor(x, y) {
+        wasm.engine_viewport__anchor(this.ptr, x, y);
+    }
+    /**
+    * @param {number} x
+    * @param {number} y
+    * @returns {Uint32Array}
+    */
+    viewport__get_elements_under_point(x, y) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_viewport__get_elements_under_point(retptr, this.ptr, x, y);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v0 = getArrayU32FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4);
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {Float32Array} points
+    * @returns {Uint32Array}
+    */
+    viewport__get_elements_under_area(points) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            var ptr0 = passArrayF32ToWasm0(points, wasm.__wbindgen_malloc);
+            var len0 = WASM_VECTOR_LEN;
+            wasm.engine_viewport__get_elements_under_area(retptr, this.ptr, ptr0, len0);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v1 = getArrayU32FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4);
+            return v1;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {boolean} active
+    */
+    viewport__set_stop_mouse_scroll(active) {
+        wasm.engine_viewport__set_stop_mouse_scroll(this.ptr, active);
+    }
+    /**
+    */
+    viewport__refresh() {
+        wasm.engine_viewport__refresh(this.ptr);
+    }
+    /**
+    */
+    viewport__dump() {
+        wasm.engine_viewport__dump(this.ptr);
+    }
+    /**
+    * @returns {any[]}
+    */
+    callback__list_callback_types() {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_callback__list_callback_types(retptr, this.ptr);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v0 = getArrayJsValueFromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4);
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @returns {any[]}
+    */
+    callback__list_activation_modes() {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_callback__list_activation_modes(retptr, this.ptr);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v0 = getArrayJsValueFromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4);
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} element_id
+    * @param {any} callback_type
+    */
+    callback__attach_callback(element_id, callback_type) {
+        wasm.engine_callback__attach_callback(this.ptr, element_id, addHeapObject(callback_type));
+    }
+    /**
+    * @param {number} element_id
+    * @param {any} callback_type
+    */
+    callback__remove_callback(element_id, callback_type) {
+        wasm.engine_callback__remove_callback(this.ptr, element_id, addHeapObject(callback_type));
+    }
+    /**
+    * @param {any} mode
+    */
+    callback__callback_activation_mode(mode) {
+        wasm.engine_callback__callback_activation_mode(this.ptr, addHeapObject(mode));
+    }
+    /**
+    */
+    callback__dump() {
+        wasm.engine_callback__dump(this.ptr);
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onmouseenter(event) {
+        wasm.engine_callback__coupling_in__onmouseenter(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onmouseleave(event) {
+        wasm.engine_callback__coupling_in__onmouseleave(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onmousemove(event) {
+        wasm.engine_callback__coupling_in__onmousemove(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onmousedown(event) {
+        wasm.engine_callback__coupling_in__onmousedown(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onmouseup(event) {
+        wasm.engine_callback__coupling_in__onmouseup(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onclick(event) {
+        wasm.engine_callback__coupling_in__onclick(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__ondblclick(event) {
+        wasm.engine_callback__coupling_in__ondblclick(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onwheel(event) {
+        wasm.engine_callback__coupling_in__onwheel(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onkeydown(event) {
+        wasm.engine_callback__coupling_in__onkeydown(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {object} event
+    */
+    callback__coupling_in__onkeyup(event) {
+        wasm.engine_callback__coupling_in__onkeyup(this.ptr, addHeapObject(event));
+    }
+    /**
+    * @param {number} element_id
+    */
+    arrangement__prepend(element_id) {
+        wasm.engine_arrangement__prepend(this.ptr, element_id);
+    }
+    /**
+    * @param {number} element_id
+    */
+    arrangement__append(element_id) {
+        wasm.engine_arrangement__append(this.ptr, element_id);
+    }
+    /**
+    * @param {number} element_id
+    */
+    arrangement__remove(element_id) {
+        wasm.engine_arrangement__remove(this.ptr, element_id);
+    }
+    /**
+    */
+    arrangement__clear() {
+        wasm.engine_arrangement__clear(this.ptr);
+    }
+    /**
+    * @param {string} address
+    * @returns {number | undefined}
+    */
+    arrangement__get_element_by_address(address) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            var ptr0 = passStringToWasm0(address, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            var len0 = WASM_VECTOR_LEN;
+            wasm.engine_arrangement__get_element_by_address(retptr, this.ptr, ptr0, len0);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number | undefined} mode
+    */
+    arrangement__print_tree(mode) {
+        wasm.engine_arrangement__print_tree(this.ptr, isLikeNone(mode) ? 0xFFFFFF : mode);
+    }
+    /**
+    */
+    arrangement__print_survey() {
+        wasm.engine_arrangement__print_survey(this.ptr);
+    }
+    /**
+    */
+    arrangement__dump() {
+        wasm.engine_arrangement__dump(this.ptr);
+    }
+    /**
+    * @param {number} id
+    * @param {number | undefined} x
+    * @param {number | undefined} y
+    * @param {number | undefined} angle
+    * @param {number | undefined} scale
+    * @param {boolean | undefined} heed_camera
+    * @param {boolean | undefined} clipping_active
+    */
+    element__execute_method__Group__set_unified_attribute(id, x, y, angle, scale, heed_camera, clipping_active) {
+        wasm.engine_element__execute_method__Group__set_unified_attribute(this.ptr, id, !isLikeNone(x), isLikeNone(x) ? 0 : x, !isLikeNone(y), isLikeNone(y) ? 0 : y, !isLikeNone(angle), isLikeNone(angle) ? 0 : angle, !isLikeNone(scale), isLikeNone(scale) ? 0 : scale, isLikeNone(heed_camera) ? 0xFFFFFF : heed_camera ? 1 : 0, isLikeNone(clipping_active) ? 0xFFFFFF : clipping_active ? 1 : 0);
+    }
+    /**
+    * @param {number} id
+    * @returns {Uint32Array | undefined}
+    */
+    element__execute_method__Group__children(id) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_element__execute_method__Group__children(retptr, this.ptr, id);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            let v0;
+            if (r0 !== 0) {
+                v0 = getArrayU32FromWasm0(r0, r1).slice();
+                wasm.__wbindgen_free(r0, r1 * 4);
+            }
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} id
+    * @param {string} name
+    * @returns {number | undefined}
+    */
+    element__execute_method__Group__get_child_by_name(id, name) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            var len0 = WASM_VECTOR_LEN;
+            wasm.engine_element__execute_method__Group__get_child_by_name(retptr, this.ptr, id, ptr0, len0);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} parent_id
+    * @param {number} child_id
+    */
+    element__execute_method__Group__append(parent_id, child_id) {
+        wasm.engine_element__execute_method__Group__append(this.ptr, parent_id, child_id);
+    }
+    /**
+    * @param {number} parent_id
+    * @param {number} child_id
+    */
+    element__execute_method__Group__prepend(parent_id, child_id) {
+        wasm.engine_element__execute_method__Group__prepend(this.ptr, parent_id, child_id);
+    }
+    /**
+    * @param {number} parent_id
+    * @param {number} child_id
+    */
+    element__execute_method__Group__remove(parent_id, child_id) {
+        wasm.engine_element__execute_method__Group__remove(this.ptr, parent_id, child_id);
+    }
+    /**
+    * @param {number} parent_id
+    */
+    element__execute_method__Group__clear(parent_id) {
+        wasm.engine_element__execute_method__Group__clear(this.ptr, parent_id);
+    }
+    /**
+    * @param {number} parent_id
+    * @param {number} child_id
+    * @param {number} new_position
+    */
+    element__execute_method__Group__shift(parent_id, child_id, new_position) {
+        wasm.engine_element__execute_method__Group__shift(this.ptr, parent_id, child_id, new_position);
+    }
+    /**
+    * @param {number} id
+    * @param {Uint32Array} new_elements
+    */
+    element__execute_method__Group__replace_with_these_children(id, new_elements) {
+        var ptr0 = passArray32ToWasm0(new_elements, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.engine_element__execute_method__Group__replace_with_these_children(this.ptr, id, ptr0, len0);
+    }
+    /**
+    * @param {number} id
+    * @param {number} x
+    * @param {number} y
+    * @returns {Uint32Array}
+    */
+    element__execute_method__Group__get_elements_under_point(id, x, y) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_element__execute_method__Group__get_elements_under_point(retptr, this.ptr, id, x, y);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v0 = getArrayU32FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4);
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} id
+    * @param {Float32Array} polygon
+    * @returns {Uint32Array}
+    */
+    element__execute_method__Group__get_elements_under_area(id, polygon) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            var ptr0 = passArrayF32ToWasm0(polygon, wasm.__wbindgen_malloc);
+            var len0 = WASM_VECTOR_LEN;
+            wasm.engine_element__execute_method__Group__get_elements_under_area(retptr, this.ptr, id, ptr0, len0);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v1 = getArrayU32FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_free(r0, r1 * 4);
+            return v1;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} id
+    * @param {number} new_stencil_id
+    */
+    element__execute_method__Group__stencil(id, new_stencil_id) {
+        wasm.engine_element__execute_method__Group__stencil(this.ptr, id, new_stencil_id);
+    }
+    /**
+    * @param {number} id
+    * @returns {boolean | undefined}
+    */
+    element__execute_method__Group__get_clip_active(id) {
+        var ret = wasm.engine_element__execute_method__Group__get_clip_active(this.ptr, id);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+    * @param {number} id
+    * @param {boolean} new_bool
+    */
+    element__execute_method__Group__set_clip_active(id, new_bool) {
+        wasm.engine_element__execute_method__Group__set_clip_active(this.ptr, id, new_bool);
+    }
+    /**
+    * @param {string} type_string
+    * @param {string} name
+    * @returns {number | undefined}
+    */
+    element__create(type_string, name) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            var ptr0 = passStringToWasm0(type_string, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            var len0 = WASM_VECTOR_LEN;
+            var ptr1 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            var len1 = WASM_VECTOR_LEN;
+            wasm.engine_element__create(retptr, this.ptr, ptr0, len0, ptr1, len1);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {number} id
+    * @returns {boolean}
+    */
+    element__delete(id) {
+        var ret = wasm.engine_element__delete(this.ptr, id);
+        return ret !== 0;
+    }
+    /**
+    */
+    element__delete_all() {
+        wasm.engine_element__delete_all(this.ptr);
+    }
+    /**
+    * @param {number} id
+    * @returns {string | undefined}
+    */
+    element__get_type_by_id(id) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            wasm.engine_element__get_type_by_id(retptr, this.ptr, id);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            let v0;
+            if (r0 !== 0) {
+                v0 = getStringFromWasm0(r0, r1).slice();
+                wasm.__wbindgen_free(r0, r1 * 1);
+            }
+            return v0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {string} type_string
+    * @param {string} name
+    * @param {object} universal_attribute
+    * @param {number} group_id
+    * @returns {number | undefined}
+    */
+    element__create_set_append(type_string, name, universal_attribute, group_id) {
+        try {
+            const retptr = wasm.__wbindgen_export_3.value - 16;
+            wasm.__wbindgen_export_3.value = retptr;
+            var ptr0 = passStringToWasm0(type_string, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            var len0 = WASM_VECTOR_LEN;
+            var ptr1 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            var len1 = WASM_VECTOR_LEN;
+            wasm.engine_element__create_set_append(retptr, this.ptr, ptr0, len0, ptr1, len1, addHeapObject(universal_attribute), group_id);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            return r0 === 0 ? undefined : r1 >>> 0;
+        } finally {
+            wasm.__wbindgen_export_3.value += 16;
+        }
+    }
+    /**
+    * @param {string} font_name
+    * @param {boolean} load_was_success
+    */
+    element__alert_font_loaded(font_name, load_was_success) {
+        var ptr0 = passStringToWasm0(font_name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.engine_element__alert_font_loaded(this.ptr, ptr0, len0, load_was_success);
+    }
+    /**
+    */
+    element__dump() {
+        wasm.engine_element__dump(this.ptr);
+    }
+    /**
+    * @returns {object}
+    */
+    render__get_clear_colour() {
+        var ret = wasm.engine_render__get_clear_colour(this.ptr);
+        return takeObject(ret);
+    }
+    /**
+    * @param {object} new_colour
+    */
+    render__set_clear_colour(new_colour) {
+        wasm.engine_render__set_clear_colour(this.ptr, addHeapObject(new_colour));
+    }
+    /**
+    * @param {number} width
+    * @param {number} height
+    * @param {number} devicePixelRatio
+    */
+    render__adjust_canvas_size(width, height, devicePixelRatio) {
+        wasm.engine_render__adjust_canvas_size(this.ptr, width, height, devicePixelRatio);
+    }
+    /**
+    * @returns {object}
+    */
+    render__get_canvas_size() {
+        var ret = wasm.engine_render__get_canvas_size(this.ptr);
+        return takeObject(ret);
+    }
+    /**
+    */
+    render__refresh_coordinates() {
+        wasm.engine_render__refresh_coordinates(this.ptr);
+    }
+    /**
+    * @param {number | undefined} arg_width
+    * @param {number | undefined} arg_height
+    * @param {number | undefined} devicePixelRatio
+    */
+    render__refresh(arg_width, arg_height, devicePixelRatio) {
+        wasm.engine_render__refresh(this.ptr, !isLikeNone(arg_width), isLikeNone(arg_width) ? 0 : arg_width, !isLikeNone(arg_height), isLikeNone(arg_height) ? 0 : arg_height, !isLikeNone(devicePixelRatio), isLikeNone(devicePixelRatio) ? 0 : devicePixelRatio);
+    }
+    /**
+    * @param {boolean} no_clear
+    */
+    render__frame(no_clear) {
+        wasm.engine_render__frame(this.ptr, no_clear);
+    }
+    /**
+    */
+    render__dump() {
+        wasm.engine_render__dump(this.ptr);
+    }
+    /**
+    * @param {Worker} worker
+    * @returns {Engine}
+    */
+    static new(worker) {
+        var ret = wasm.engine_new(addHeapObject(worker));
+        return Engine.__wrap(ret);
+    }
+    /**
+    */
+    static test() {
+        wasm.engine_test();
+    }
+}
+__exports.Engine = Engine;
+
+async function load(module, imports) {
+    if (typeof Response === 'function' && module instanceof Response) {
+
+        if (typeof WebAssembly.instantiateStreaming === 'function') {
+            try {
+                return await WebAssembly.instantiateStreaming(module, imports);
+
+            } catch (e) {
+                if (module.headers.get('Content-Type') != 'application/wasm') {
+                    console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
+
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        const bytes = await module.arrayBuffer();
+        return await WebAssembly.instantiate(bytes, imports);
+
+    } else {
+
+        const instance = await WebAssembly.instantiate(module, imports);
+
+        if (instance instanceof WebAssembly.Instance) {
+            return { instance, module };
+
+        } else {
+            return instance;
+        }
+    }
+}
+
+async function init(input) {
+    if (typeof input === 'undefined') {
+        let src;
+        if (typeof document === 'undefined') {
+            src = location.href;
+        } else {
+            src = document.currentScript.src;
+        }
+        input = src.replace(/\.js$/, '_bg.wasm');
+    }
+    const imports = {};
+    imports.wbg = {};
+    imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
+        takeObject(arg0);
+    };
+    imports.wbg.__wbindgen_string_new = function(arg0, arg1) {
+        var ret = getStringFromWasm0(arg0, arg1);
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbindgen_number_new = function(arg0) {
+        var ret = arg0;
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_error_5855d7b847478863 = function(arg0, arg1) {
+        console.error(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbg_warn_04ee7a63c48bd037 = function(arg0, arg1) {
+        console.warn(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbg_pathExtrapolation_4dfdf723787e0d2b = function(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) {
+        try {
+            var ret = library.math.pathExtrapolation(getArrayF32FromWasm0(arg0, arg1), arg2, getStringFromWasm0(arg3, arg4), getStringFromWasm0(arg5, arg6), arg7 !== 0, arg8 >>> 0, arg9, arg10 !== 0);
+            return addHeapObject(ret);
+        } finally {
+            wasm.__wbindgen_free(arg3, arg4);
+            wasm.__wbindgen_free(arg5, arg6);
+        }
+    };
+    imports.wbg.__wbg_log_a49fa2c9c487b4af = function(arg0, arg1) {
+        console.log(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbg_isImageLoaded_43d225484248a5cc = function(arg0, arg1) {
+        var ret = operator.library.imageRequester.isImageLoaded(getStringFromWasm0(arg0, arg1));
+        return ret;
+    };
+    imports.wbg.__wbg_earcut_16795793f97664ef = function(arg0, arg1, arg2, arg3, arg4) {
+        var ret = library._thirdparty.earcut(getArrayF32FromWasm0(arg1, arg2), getArrayU32FromWasm0(arg3, arg4));
+        var ptr0 = passArrayF32ToWasm0(ret, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbg_loadImage_b07a0e253203048c = function(arg0, arg1, arg2) {
+        operator.library.imageRequester.loadImage(getStringFromWasm0(arg0, arg1), arg2 !== 0);
+    };
+    imports.wbg.__wbg_getImageData_0c6c38bf2082efc8 = function(arg0, arg1) {
+        var ret = operator.library.imageRequester.getImageData(getStringFromWasm0(arg0, arg1));
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_getDefaultVector_1e56116c3318c4b7 = function(arg0, arg1, arg2) {
+        var ret = library.font.getDefaultVector(getStringFromWasm0(arg1, arg2));
+        var ptr0 = passArrayF32ToWasm0(ret, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbg_getMiscDefaultData_2cb27f558c5891b0 = function(arg0, arg1) {
+        var ret = library.font.getMiscDefaultData(getStringFromWasm0(arg0, arg1));
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_isValidCharacter_a4dfb167ccd643f4 = function(arg0, arg1, arg2) {
+        var ret = library.font.isValidCharacter(getStringFromWasm0(arg0, arg1), String.fromCodePoint(arg2));
+        return ret;
+    };
+    imports.wbg.__wbg_getVector_49685409a17ed64a = function(arg0, arg1, arg2, arg3) {
+        var ret = library.font.getVector(getStringFromWasm0(arg1, arg2), String.fromCodePoint(arg3));
+        var ptr0 = isLikeNone(ret) ? 0 : passArrayF32ToWasm0(ret, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbg_getMiscData_9439f344e657cecd = function(arg0, arg1, arg2) {
+        var ret = library.font.getMiscData(getStringFromWasm0(arg0, arg1), String.fromCodePoint(arg2));
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_loadFont_764986e4cd745bf8 = function(arg0, arg1, arg2) {
+        operator.library.font.loadFont(getStringFromWasm0(arg0, arg1), arg2 !== 0);
+    };
+    imports.wbg.__wbg_getLoadableFonts_67284f56c8ea7bf5 = function(arg0) {
+        var ret = library.font.getLoadableFonts();
+        var ptr0 = passArrayJsValueToWasm0(ret, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbindgen_jsval_eq = function(arg0, arg1) {
+        var ret = getObject(arg0) === getObject(arg1);
+        return ret;
+    };
+    imports.wbg.__wbindgen_is_undefined = function(arg0) {
+        var ret = getObject(arg0) === undefined;
+        return ret;
+    };
+    imports.wbg.__wbindgen_is_object = function(arg0) {
+        const val = getObject(arg0);
+        var ret = typeof(val) === 'object' && val !== null;
+        return ret;
+    };
+    imports.wbg.__wbg_new_59cb74e423758ede = function() {
+        var ret = new Error();
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_stack_558ba5917b466edd = function(arg0, arg1) {
+        var ret = getObject(arg1).stack;
+        var ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbg_error_4bb6c2a97407129a = function(arg0, arg1) {
+        try {
+            console.error(getStringFromWasm0(arg0, arg1));
+        } finally {
+            wasm.__wbindgen_free(arg0, arg1);
+        }
+    };
+    imports.wbg.__wbg_instanceof_WebGl2RenderingContext_97ea0fcd122c6bea = function(arg0) {
+        var ret = getObject(arg0) instanceof WebGL2RenderingContext;
+        return ret;
+    };
+    imports.wbg.__wbg_bindVertexArray_59be0e2201d7dbdd = function(arg0, arg1) {
+        getObject(arg0).bindVertexArray(getObject(arg1));
+    };
+    imports.wbg.__wbg_bufferData_50d5fe41aec684e4 = function(arg0, arg1, arg2, arg3) {
+        getObject(arg0).bufferData(arg1 >>> 0, getObject(arg2), arg3 >>> 0);
+    };
+    imports.wbg.__wbg_createVertexArray_cc565c538c3ff35e = function(arg0) {
+        var ret = getObject(arg0).createVertexArray();
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_deleteVertexArray_add9ea186273c33f = function(arg0, arg1) {
+        getObject(arg0).deleteVertexArray(getObject(arg1));
+    };
+    imports.wbg.__wbg_texImage2D_a6f2757b7cbb674e = handleError(function(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+        getObject(arg0).texImage2D(arg1 >>> 0, arg2, arg3, arg4 >>> 0, arg5 >>> 0, getObject(arg6));
+    });
+    imports.wbg.__wbg_attachShader_5eff139e1b567fc5 = function(arg0, arg1, arg2) {
+        getObject(arg0).attachShader(getObject(arg1), getObject(arg2));
+    };
+    imports.wbg.__wbg_bindBuffer_4d9ee91ad842ba92 = function(arg0, arg1, arg2) {
+        getObject(arg0).bindBuffer(arg1 >>> 0, getObject(arg2));
+    };
+    imports.wbg.__wbg_bindTexture_28d8d5d1a523ac28 = function(arg0, arg1, arg2) {
+        getObject(arg0).bindTexture(arg1 >>> 0, getObject(arg2));
+    };
+    imports.wbg.__wbg_blendFunc_17a5b103e8a5ae98 = function(arg0, arg1, arg2) {
+        getObject(arg0).blendFunc(arg1 >>> 0, arg2 >>> 0);
+    };
+    imports.wbg.__wbg_clear_3fcaf4948a30f1fa = function(arg0, arg1) {
+        getObject(arg0).clear(arg1 >>> 0);
+    };
+    imports.wbg.__wbg_clearColor_6b9aa12de1c75178 = function(arg0, arg1, arg2, arg3, arg4) {
+        getObject(arg0).clearColor(arg1, arg2, arg3, arg4);
+    };
+    imports.wbg.__wbg_colorMask_f0110eb84628c2ab = function(arg0, arg1, arg2, arg3, arg4) {
+        getObject(arg0).colorMask(arg1 !== 0, arg2 !== 0, arg3 !== 0, arg4 !== 0);
+    };
+    imports.wbg.__wbg_compileShader_54ff8de585d7b3ee = function(arg0, arg1) {
+        getObject(arg0).compileShader(getObject(arg1));
+    };
+    imports.wbg.__wbg_createBuffer_ff6fae04a8379012 = function(arg0) {
+        var ret = getObject(arg0).createBuffer();
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_createProgram_4f13aad8942a0f0d = function(arg0) {
+        var ret = getObject(arg0).createProgram();
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_createShader_bc96d3d7082bf183 = function(arg0, arg1) {
+        var ret = getObject(arg0).createShader(arg1 >>> 0);
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_createTexture_c87d4dc81bfac194 = function(arg0) {
+        var ret = getObject(arg0).createTexture();
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_deleteShader_b109483996812918 = function(arg0, arg1) {
+        getObject(arg0).deleteShader(getObject(arg1));
+    };
+    imports.wbg.__wbg_deleteTexture_1577f0a89813c9e6 = function(arg0, arg1) {
+        getObject(arg0).deleteTexture(getObject(arg1));
+    };
+    imports.wbg.__wbg_disable_36a1b52f923e9ece = function(arg0, arg1) {
+        getObject(arg0).disable(arg1 >>> 0);
+    };
+    imports.wbg.__wbg_drawArrays_0f3e5369dd3cb8d5 = function(arg0, arg1, arg2, arg3) {
+        getObject(arg0).drawArrays(arg1 >>> 0, arg2, arg3);
+    };
+    imports.wbg.__wbg_enable_b726776a768bd24d = function(arg0, arg1) {
+        getObject(arg0).enable(arg1 >>> 0);
+    };
+    imports.wbg.__wbg_enableVertexAttribArray_ccbac340a301dac1 = function(arg0, arg1) {
+        getObject(arg0).enableVertexAttribArray(arg1 >>> 0);
+    };
+    imports.wbg.__wbg_generateMipmap_dcae0c8987f25efc = function(arg0, arg1) {
+        getObject(arg0).generateMipmap(arg1 >>> 0);
+    };
+    imports.wbg.__wbg_getAttribLocation_d4033a8b97a4ad6b = function(arg0, arg1, arg2, arg3) {
+        var ret = getObject(arg0).getAttribLocation(getObject(arg1), getStringFromWasm0(arg2, arg3));
+        return ret;
+    };
+    imports.wbg.__wbg_getProgramInfoLog_990ced340fabdcbb = function(arg0, arg1, arg2) {
+        var ret = getObject(arg1).getProgramInfoLog(getObject(arg2));
+        var ptr0 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbg_getProgramParameter_e44f5daeacd98160 = function(arg0, arg1, arg2) {
+        var ret = getObject(arg0).getProgramParameter(getObject(arg1), arg2 >>> 0);
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_getShaderInfoLog_fd5c172fb8c03b96 = function(arg0, arg1, arg2) {
+        var ret = getObject(arg1).getShaderInfoLog(getObject(arg2));
+        var ptr0 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbg_getShaderParameter_7071856a1f55aa97 = function(arg0, arg1, arg2) {
+        var ret = getObject(arg0).getShaderParameter(getObject(arg1), arg2 >>> 0);
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_getUniformLocation_4b3c35f82457bdf3 = function(arg0, arg1, arg2, arg3) {
+        var ret = getObject(arg0).getUniformLocation(getObject(arg1), getStringFromWasm0(arg2, arg3));
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_linkProgram_dc68765f87076be7 = function(arg0, arg1) {
+        getObject(arg0).linkProgram(getObject(arg1));
+    };
+    imports.wbg.__wbg_shaderSource_dc7ae56eec603808 = function(arg0, arg1, arg2, arg3) {
+        getObject(arg0).shaderSource(getObject(arg1), getStringFromWasm0(arg2, arg3));
+    };
+    imports.wbg.__wbg_stencilFunc_a41117f5fdb210e9 = function(arg0, arg1, arg2, arg3) {
+        getObject(arg0).stencilFunc(arg1 >>> 0, arg2, arg3 >>> 0);
+    };
+    imports.wbg.__wbg_stencilMask_0a36d47aec1ddacf = function(arg0, arg1) {
+        getObject(arg0).stencilMask(arg1 >>> 0);
+    };
+    imports.wbg.__wbg_stencilOp_d3d2b1ecc6ba657b = function(arg0, arg1, arg2, arg3) {
+        getObject(arg0).stencilOp(arg1 >>> 0, arg2 >>> 0, arg3 >>> 0);
+    };
+    imports.wbg.__wbg_texParameteri_c1771e59529aea60 = function(arg0, arg1, arg2, arg3) {
+        getObject(arg0).texParameteri(arg1 >>> 0, arg2 >>> 0, arg3);
+    };
+    imports.wbg.__wbg_uniform1f_2a011c1edaa3c88b = function(arg0, arg1, arg2) {
+        getObject(arg0).uniform1f(getObject(arg1), arg2);
+    };
+    imports.wbg.__wbg_uniform2f_feef43477f513bae = function(arg0, arg1, arg2, arg3) {
+        getObject(arg0).uniform2f(getObject(arg1), arg2, arg3);
+    };
+    imports.wbg.__wbg_uniform4f_45e68429de9d6360 = function(arg0, arg1, arg2, arg3, arg4, arg5) {
+        getObject(arg0).uniform4f(getObject(arg1), arg2, arg3, arg4, arg5);
+    };
+    imports.wbg.__wbg_useProgram_f3c9bc74cb69780f = function(arg0, arg1) {
+        getObject(arg0).useProgram(getObject(arg1));
+    };
+    imports.wbg.__wbg_vertexAttribPointer_12cd254a2e5c6988 = function(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+        getObject(arg0).vertexAttribPointer(arg1 >>> 0, arg2, arg3 >>> 0, arg4 !== 0, arg5, arg6);
+    };
+    imports.wbg.__wbg_viewport_0b056ac66214d59d = function(arg0, arg1, arg2, arg3, arg4) {
+        getObject(arg0).viewport(arg1, arg2, arg3, arg4);
+    };
+    imports.wbg.__wbg_postMessage_9b2a3955e32171d0 = handleError(function(arg0, arg1) {
+        getObject(arg0).postMessage(getObject(arg1));
+    });
+    imports.wbg.__wbg_postMessage_5f17ff7b67974729 = handleError(function(arg0, arg1, arg2) {
+        getObject(arg0).postMessage(getObject(arg1), getObject(arg2));
+    });
+    imports.wbg.__wbg_width_e3c6fb3c84a5c438 = function(arg0) {
+        var ret = getObject(arg0).width;
+        return ret;
+    };
+    imports.wbg.__wbg_setwidth_3868d84fdd0b86f1 = function(arg0, arg1) {
+        getObject(arg0).width = arg1 >>> 0;
+    };
+    imports.wbg.__wbg_height_17e288b7c97e5539 = function(arg0) {
+        var ret = getObject(arg0).height;
+        return ret;
+    };
+    imports.wbg.__wbg_setheight_59a23ddc299753d4 = function(arg0, arg1) {
+        getObject(arg0).height = arg1 >>> 0;
+    };
+    imports.wbg.__wbg_new_feaad2aabfb6dd5b = handleError(function(arg0, arg1) {
+        var ret = new OffscreenCanvas(arg0 >>> 0, arg1 >>> 0);
+        return addHeapObject(ret);
+    });
+    imports.wbg.__wbg_getContext_edb19ad8396047e8 = handleError(function(arg0, arg1, arg2, arg3) {
+        var ret = getObject(arg0).getContext(getStringFromWasm0(arg1, arg2), getObject(arg3));
+        return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    });
+    imports.wbg.__wbg_transferToImageBitmap_d9b266cfc66fc870 = handleError(function(arg0) {
+        var ret = getObject(arg0).transferToImageBitmap();
+        return addHeapObject(ret);
+    });
+    imports.wbg.__wbg_get_9ca243f6a0c3698a = function(arg0, arg1) {
+        var ret = getObject(arg0)[arg1 >>> 0];
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_length_6e10a2de7ea5c08f = function(arg0) {
+        var ret = getObject(arg0).length;
+        return ret;
+    };
+    imports.wbg.__wbg_get_2e96a823c1c5a5bd = handleError(function(arg0, arg1) {
+        var ret = Reflect.get(getObject(arg0), getObject(arg1));
+        return addHeapObject(ret);
+    });
+    imports.wbg.__wbg_newwithlength_8126f98b89aa5e52 = function(arg0) {
+        var ret = new Array(arg0 >>> 0);
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_set_93f2b84bead79568 = function(arg0, arg1, arg2) {
+        getObject(arg0)[arg1 >>> 0] = takeObject(arg2);
+    };
+    imports.wbg.__wbg_from_c205b0d4f5dc1441 = function(arg0) {
+        var ret = Array.from(getObject(arg0));
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_of_5654e5e60920a8a6 = function(arg0) {
+        var ret = Array.of(getObject(arg0));
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_of_106d2202e53cc4a9 = function(arg0, arg1) {
+        var ret = Array.of(getObject(arg0), getObject(arg1));
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_of_949c33f61193cb77 = function(arg0, arg1, arg2, arg3) {
+        var ret = Array.of(getObject(arg0), getObject(arg1), getObject(arg2), getObject(arg3));
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_new_8172f4fed77fdb7c = function() {
+        var ret = new Object();
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_buffer_88f603259d7a7b82 = function(arg0) {
+        var ret = getObject(arg0).buffer;
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_newwithbyteoffsetandlength_66305c055ad2f047 = function(arg0, arg1, arg2) {
+        var ret = new Float32Array(getObject(arg0), arg1 >>> 0, arg2 >>> 0);
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_parse_24b8c67fcc435259 = handleError(function(arg0, arg1) {
+        var ret = JSON.parse(getStringFromWasm0(arg0, arg1));
+        return addHeapObject(ret);
+    });
+    imports.wbg.__wbg_set_afe54b1eeb1aa77c = handleError(function(arg0, arg1, arg2) {
+        var ret = Reflect.set(getObject(arg0), getObject(arg1), getObject(arg2));
+        return ret;
+    });
+    imports.wbg.__wbindgen_number_get = function(arg0, arg1) {
+        const obj = getObject(arg1);
+        var ret = typeof(obj) === 'number' ? obj : undefined;
+        getFloat64Memory0()[arg0 / 8 + 1] = isLikeNone(ret) ? 0 : ret;
+        getInt32Memory0()[arg0 / 4 + 0] = !isLikeNone(ret);
+    };
+    imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
+        const obj = getObject(arg1);
+        var ret = typeof(obj) === 'string' ? obj : undefined;
+        var ptr0 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbindgen_boolean_get = function(arg0) {
+        const v = getObject(arg0);
+        var ret = typeof(v) === 'boolean' ? (v ? 1 : 0) : 2;
+        return ret;
+    };
+    imports.wbg.__wbindgen_debug_string = function(arg0, arg1) {
+        var ret = debugString(getObject(arg1));
+        var ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    };
+    imports.wbg.__wbindgen_throw = function(arg0, arg1) {
+        throw new Error(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbindgen_memory = function() {
+        var ret = wasm.memory;
+        return addHeapObject(ret);
+    };
+
+    if (typeof input === 'string' || (typeof Request === 'function' && input instanceof Request) || (typeof URL === 'function' && input instanceof URL)) {
+        input = fetch(input);
+    }
+
+    const { instance, module } = await load(await input, imports);
+
+    wasm = instance.exports;
+    init.__wbindgen_wasm_module = module;
+    wasm.__wbindgen_start();
+    return wasm;
+}
+
+wasm_bindgen = Object.assign(init, __exports);
+
+})();
+
 const library = new function(){
     const library = this;
 
@@ -560,7 +2050,7 @@ const library = new function(){
             holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
             holes.pop();
         
-            return _thirdparty.earcut2(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+            return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
         };
         this.unionPolygons = function(polygon1,polygon2){
             dev.log.math('.unionPolygons(',polygon1,polygon2); //#development
@@ -572,34 +2062,6 @@ const library = new function(){
                 {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
             ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
         }
-        
-        
-        
-        
-        
-        
-        this.aVeryDifficultCalculation = function(a, b, c, d, e, f){
-        
-            a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
-            b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
-            c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
-            d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
-            e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
-            f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
-        
-            return { a:a, b:b, c:c, d:d, e:e, f:f };
-        };
-        this.anotherVeryDifficultCalculation = function(a, b, c, d, e, f){
-        
-            a = Math.sqrt( Math.atan(b) * Math.tan(c) / Math.cos(d) * Math.sqrt(e) / Math.sin(f) );
-            b = Math.sqrt( Math.atan(c) * Math.tan(d) / Math.cos(e) * Math.sqrt(f) / Math.sin(a) );
-            c = Math.sqrt( Math.atan(d) * Math.tan(e) / Math.cos(f) * Math.sqrt(a) / Math.sin(b) );
-            d = Math.sqrt( Math.atan(e) * Math.tan(f) / Math.cos(a) * Math.sqrt(b) / Math.sin(c) );
-            e = Math.sqrt( Math.atan(f) * Math.tan(a) / Math.cos(b) * Math.sqrt(c) / Math.sin(d) );
-            f = Math.sqrt( Math.atan(a) * Math.tan(b) / Math.cos(c) * Math.sqrt(d) / Math.sin(e) );
-        
-            return f;
-        };
         this.detectIntersect = new function(){
             this.boundingBoxes = function(box_a, box_b){
                 dev.log.math('.detectIntersect.boundingBoxes(',box_a,box_b); //#development
@@ -1021,8 +2483,8 @@ const library = new function(){
                 return results;
             };
         };
-        this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
-            dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
+        this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4,returnTriangles=true){
+            dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit,returnTriangles);
             dev.count('.math.pathExtrapolation'); //#development
         
             function loopThisPath(path){
@@ -1281,9 +2743,14 @@ const library = new function(){
                 if(capType == 'round'){ polygons = polygons.concat(roundCaps(jointData,thickness,detail)); }
         
             //union all polygons, convert to triangles and return
-                return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
+                if(returnTriangles){
+                    return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
+                } else {
+                    let tmp = polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon));
+                    tmp = tmp.map( points => points.map(point => [point.x,point.y]).flat() );
+                    return tmp;
+                }
         };
-
         this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},returnPathData=false){
             dev.log.math('.fitPolyIn(',freshPoly,environmentPolys,snapping);
             dev.count('.math.fitPolyIn'); //#development
@@ -1587,7 +3054,6 @@ const library = new function(){
         
             return route;
         };
-
     };
     this.glsl = new function(){
         this.geometry = `
@@ -1863,7 +3329,7 @@ const library = new function(){
         //create locations in the vector library for these fonts
         fontFileNames.forEach(name => {
             const fontName = name.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]; //produce font name from file name
-            vectorLibrary[fontName] = { fileName:name, loadAttempted:false, isLoaded:false };
+            vectorLibrary[fontName] = { fileName:name, loadAttempted:false, loadComplete:false, loadWasSuccess:undefined };
         });
         vectorLibrary.defaultThick = {
             loadAttempted:true,
@@ -2864,9 +4330,12 @@ const library = new function(){
             dev.count('.font.getLoadedFonts'); //#development
         
             const defaultFontNames = ['defaultThick','defaultThin'];
-            const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
+            const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].loadWasSuccess);
             return defaultFontNames.concat(loadedFontNames);
         };
+        
+        
+        
         
         this.isApprovedFont = function(fontName){
             dev.log.font('.isApprovedFont(',fontName); //#development
@@ -2874,21 +4343,7 @@ const library = new function(){
         
             return vectorLibrary[fontName] != undefined;
         };
-        this.isFontLoaded = function(fontName){
-            dev.log.font('.isFontLoaded(',fontName); //#development
-            dev.count('.font.isFontLoaded'); //#development
-        
-            if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
-            return vectorLibrary[fontName].isLoaded;
-        }
-        this.fontLoadAttempted = function(fontName){
-            dev.log.font('.fontLoadAttempted(',fontName); //#development
-            dev.count('.font.fontLoadAttempted'); //#development
-        
-            if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
-            return vectorLibrary[fontName].loadAttempted;
-        }
-        this.loadFont = function(fontName,onLoaded=()=>{}){
+        this.loadFont = function(fontName,force,onLoaded=()=>{}){
             dev.log.font('.loadFont(',fontName,onLoaded); //#development
             dev.count('.font.loadFont'); //#development
         
@@ -2901,11 +4356,12 @@ const library = new function(){
                 }
         
             //if font is already loaded, bail
-                if( this.isFontLoaded(fontName) ){return;}
+                if( !force && vectorLibrary[fontName].loadComplete ){return;}
         
             //set up library entry
                 vectorLibrary[fontName].loadAttempted = true;
-                vectorLibrary[fontName].isLoaded = false;
+                vectorLibrary[fontName].loadComplete = false;
+                vectorLibrary[fontName].loadWasSuccess = undefined;
                 vectorLibrary[fontName]['default'] = {vector:[0,0, 1,0, 0,-1, 1,0, 0,-1, 1,-1]};
         
             //load file
@@ -2915,16 +4371,71 @@ const library = new function(){
                     fontData => {
                         const vectors = library.font.extractGlyphs(fontData.response,reducedGlyphSet);
                         Object.keys(vectors).forEach(glyphName => vectorLibrary[fontName][glyphName] = vectors[glyphName] );
-                        vectorLibrary[fontName].isLoaded = true;
-                        onLoaded(true);
+                        vectorLibrary[fontName].loadComplete = true;
+                        vectorLibrary[fontName].loadWasSuccess = true;
+                        onLoaded({fontName:fontName, loadWasSuccess:true});
                     },
-                    () => { onLoaded(false); },
+                    () => {
+                        vectorLibrary[fontName].loadComplete = true;
+                        vectorLibrary[fontName].loadWasSuccess = false;
+                        onLoaded({fontName:fontName, loadWasSuccess:false});
+                    },
                     'arraybuffer',
                 );
         };
-        this.getVector = function(fontName,character){
-            return vectorLibrary[fontName][character];
+        
+        
+        this.isValidCharacter = function(fontName, character){
+            return vectorLibrary[fontName][character] != undefined;
+        };
+        
+        this.getDefaultVector = function(fontName){
+            return vectorLibrary[fontName].default.vector;
+        };
+        this.getVector = function(fontName, character){
+            return vectorLibrary[fontName][character].vector;
+        };
+        this.getRatio = function(fontName, character){
+            return vectorLibrary[fontName][character].ratio;
         }
+        this.getOffset = function(fontName, character){
+            return vectorLibrary[fontName][character].offset;
+        }
+        this.getEncroach = function(fontName, character, otherCharacter){
+            return vectorLibrary[fontName][character].encroach[otherCharacter];
+        }
+        this.getMiscDefaultData = function(fontName){
+            return {
+                ascender: vectorLibrary[fontName].default.ascender,
+                descender: vectorLibrary[fontName].default.descender,
+                leftSideBearing: vectorLibrary[fontName].default.leftSideBearing,
+                advanceWidth: vectorLibrary[fontName].default.advanceWidth,
+                xMax: vectorLibrary[fontName].default.xMax,
+                yMax: vectorLibrary[fontName].default.yMax,
+                xMin: vectorLibrary[fontName].default.xMin,
+                yMin: vectorLibrary[fontName].default.yMin,
+                top: vectorLibrary[fontName].default.top,
+                left: vectorLibrary[fontName].default.left,
+                bottom: vectorLibrary[fontName].default.bottom,
+                right: vectorLibrary[fontName].default.right,
+            };
+        };
+        this.getMiscData = function(fontName, character){
+            return {
+                ascender: vectorLibrary[fontName][character].ascender,
+                descender: vectorLibrary[fontName][character].descender,
+                leftSideBearing: vectorLibrary[fontName][character].leftSideBearing,
+                advanceWidth: vectorLibrary[fontName][character].advanceWidth,
+                xMax: vectorLibrary[fontName][character].xMax,
+                yMax: vectorLibrary[fontName][character].yMax,
+                xMin: vectorLibrary[fontName][character].xMin,
+                yMin: vectorLibrary[fontName][character].yMin,
+                top: vectorLibrary[fontName][character].top,
+                left: vectorLibrary[fontName][character].left,
+                bottom: vectorLibrary[fontName][character].bottom,
+                right: vectorLibrary[fontName][character].right,
+            };
+        };
     };
     this.misc = new function(){
         this.padString = function(string,length,padding=' ',paddingSide='l'){
@@ -3289,1624 +4800,8 @@ const library = new function(){
         };
         this.loadImageFromURL.loadedImageData = {};
     };
-    const _thirdparty = new function(){
+    this._thirdparty = new function(){
         const thirdparty = this;
-        (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-        
-        	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
-        	// @license MIT
-        	// @preserve Project Home: https://github.com/voidqk/polybooljs
-        	
-            // Modified by Metasophiea <metasophiea@gmail.com>
-        
-        	var BuildLog = require('./lib/build-log');
-        	var Epsilon = require('./lib/epsilon');
-        	var Intersecter = require('./lib/intersecter');
-        	var SegmentChainer = require('./lib/segment-chainer');
-        	var SegmentSelector = require('./lib/segment-selector');
-        	var GeoJSON = require('./lib/geojson');
-        	
-        	var buildLog = false;
-        	var epsilon = Epsilon();
-        	
-        	var PolyBool;
-        	PolyBool = {
-        		// getter/setter for buildLog
-        		buildLog: function(bl){
-        			if (bl === true)
-        				buildLog = BuildLog();
-        			else if (bl === false)
-        				buildLog = false;
-        			return buildLog === false ? false : buildLog.list;
-        		},
-        		// getter/setter for epsilon
-        		epsilon: function(v){
-        			return epsilon.epsilon(v);
-        		},
-        	
-        		// core API
-        		segments: function(poly){
-        			var i = Intersecter(true, epsilon, buildLog);
-        			poly.regions.forEach(i.addRegion);
-        			return {
-        				segments: i.calculate(poly.inverted),
-        				inverted: poly.inverted
-        			};
-        		},
-        		combine: function(segments1, segments2){
-        			var i3 = Intersecter(false, epsilon, buildLog);
-        			return {
-        				combined: i3.calculate(
-        					segments1.segments, segments1.inverted,
-        					segments2.segments, segments2.inverted
-        				),
-        				inverted1: segments1.inverted,
-        				inverted2: segments2.inverted
-        			};
-        		},
-        		selectUnion: function(combined){
-        			return {
-        				segments: SegmentSelector.union(combined.combined, buildLog),
-        				inverted: combined.inverted1 || combined.inverted2
-        			}
-        		},
-        		selectIntersect: function(combined){
-        			return {
-        				segments: SegmentSelector.intersect(combined.combined, buildLog),
-        				inverted: combined.inverted1 && combined.inverted2
-        			}
-        		},
-        		selectDifference: function(combined){
-        			return {
-        				segments: SegmentSelector.difference(combined.combined, buildLog),
-        				inverted: combined.inverted1 && !combined.inverted2
-        			}
-        		},
-        		selectDifferenceRev: function(combined){
-        			return {
-        				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
-        				inverted: !combined.inverted1 && combined.inverted2
-        			}
-        		},
-        		selectXor: function(combined){
-        			return {
-        				segments: SegmentSelector.xor(combined.combined, buildLog),
-        				inverted: combined.inverted1 !== combined.inverted2
-        			}
-        		},
-        		polygon: function(segments){
-        			return {
-        				regions: SegmentChainer(segments.segments, epsilon, buildLog),
-        				inverted: segments.inverted
-        			};
-        		},
-        	
-        		// GeoJSON converters
-        		polygonFromGeoJSON: function(geojson){
-        			return GeoJSON.toPolygon(PolyBool, geojson);
-        		},
-        		polygonToGeoJSON: function(poly){
-        			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
-        		},
-        	
-        		// helper functions for common operations
-        		union: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectUnion);
-        		},
-        		intersect: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectIntersect);
-        		},
-        		difference: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectDifference);
-        		},
-        		differenceRev: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
-        		},
-        		xor: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectXor);
-        		}
-        	};
-        
-        	thirdparty.PolyBool = PolyBool;
-        	
-        	function operate(poly1, poly2, selector){
-        		var seg1 = PolyBool.segments(poly1);
-        		var seg2 = PolyBool.segments(poly2);
-        		var comb = PolyBool.combine(seg1, seg2);
-        		var seg3 = selector(comb);
-        		return PolyBool.polygon(seg3);
-        	}
-        		
-        	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// used strictly for logging the processing of the algorithm... only useful if you intend on
-        	// looking under the covers (for pretty UI's or debugging)
-        	//
-        	
-        	function BuildLog(){
-        		var my;
-        		var nextSegmentId = 0;
-        		var curVert = false;
-        	
-        		function push(type, data){
-        			my.list.push({
-        				type: type,
-        				data: data ? JSON.parse(JSON.stringify(data)) : void 0
-        			});
-        			return my;
-        		}
-        	
-        		my = {
-        			list: [],
-        			segmentId: function(){
-        				return nextSegmentId++;
-        			},
-        			checkIntersection: function(seg1, seg2){
-        				return push('check', { seg1: seg1, seg2: seg2 });
-        			},
-        			segmentChop: function(seg, end){
-        				push('div_seg', { seg: seg, pt: end });
-        				return push('chop', { seg: seg, pt: end });
-        			},
-        			statusRemove: function(seg){
-        				return push('pop_seg', { seg: seg });
-        			},
-        			segmentUpdate: function(seg){
-        				return push('seg_update', { seg: seg });
-        			},
-        			segmentNew: function(seg, primary){
-        				return push('new_seg', { seg: seg, primary: primary });
-        			},
-        			segmentRemove: function(seg){
-        				return push('rem_seg', { seg: seg });
-        			},
-        			tempStatus: function(seg, above, below){
-        				return push('temp_status', { seg: seg, above: above, below: below });
-        			},
-        			rewind: function(seg){
-        				return push('rewind', { seg: seg });
-        			},
-        			status: function(seg, above, below){
-        				return push('status', { seg: seg, above: above, below: below });
-        			},
-        			vert: function(x){
-        				if (x === curVert)
-        					return my;
-        				curVert = x;
-        				return push('vert', { x: x });
-        			},
-        			log: function(data){
-        				if (typeof data !== 'string')
-        					data = JSON.stringify(data, false, '  ');
-        				return push('log', { txt: data });
-        			},
-        			reset: function(){
-        				return push('reset');
-        			},
-        			selected: function(segs){
-        				return push('selected', { segs: segs });
-        			},
-        			chainStart: function(seg){
-        				return push('chain_start', { seg: seg });
-        			},
-        			chainRemoveHead: function(index, pt){
-        				return push('chain_rem_head', { index: index, pt: pt });
-        			},
-        			chainRemoveTail: function(index, pt){
-        				return push('chain_rem_tail', { index: index, pt: pt });
-        			},
-        			chainNew: function(pt1, pt2){
-        				return push('chain_new', { pt1: pt1, pt2: pt2 });
-        			},
-        			chainMatch: function(index){
-        				return push('chain_match', { index: index });
-        			},
-        			chainClose: function(index){
-        				return push('chain_close', { index: index });
-        			},
-        			chainAddHead: function(index, pt){
-        				return push('chain_add_head', { index: index, pt: pt });
-        			},
-        			chainAddTail: function(index, pt){
-        				return push('chain_add_tail', { index: index, pt: pt, });
-        			},
-        			chainConnect: function(index1, index2){
-        				return push('chain_con', { index1: index1, index2: index2 });
-        			},
-        			chainReverse: function(index){
-        				return push('chain_rev', { index: index });
-        			},
-        			chainJoin: function(index1, index2){
-        				return push('chain_join', { index1: index1, index2: index2 });
-        			},
-        			done: function(){
-        				return push('done');
-        			}
-        		};
-        		return my;
-        	}
-        	
-        	module.exports = BuildLog;
-        	
-        	},{}],3:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// provides the raw computation functions that takes epsilon into account
-        	//
-        	// zero is defined to be between (-epsilon, epsilon) exclusive
-        	//
-        	
-        	function Epsilon(eps){
-        		if (typeof eps !== 'number')
-        			eps = 0.0000000001; // sane default? sure why not
-        		var my = {
-        			epsilon: function(v){
-        				if (typeof v === 'number')
-        					eps = v;
-        				return eps;
-        			},
-        			pointAboveOrOnLine: function(pt, left, right){
-        				var Ax = left[0];
-        				var Ay = left[1];
-        				var Bx = right[0];
-        				var By = right[1];
-        				var Cx = pt[0];
-        				var Cy = pt[1];
-        				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
-        			},
-        			pointBetween: function(p, left, right){
-        				// p must be collinear with left->right
-        				// returns false if p == left, p == right, or left == right
-        				var d_py_ly = p[1] - left[1];
-        				var d_rx_lx = right[0] - left[0];
-        				var d_px_lx = p[0] - left[0];
-        				var d_ry_ly = right[1] - left[1];
-        	
-        				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
-        				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
-        				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
-        				if (dot < eps)
-        					return false;
-        	
-        				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
-        				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
-        				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
-        				if (dot - sqlen > -eps)
-        					return false;
-        	
-        				return true;
-        			},
-        			pointsSameX: function(p1, p2){
-        				return Math.abs(p1[0] - p2[0]) < eps;
-        			},
-        			pointsSameY: function(p1, p2){
-        				return Math.abs(p1[1] - p2[1]) < eps;
-        			},
-        			pointsSame: function(p1, p2){
-        				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
-        			},
-        			pointsCompare: function(p1, p2){
-        				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
-        				if (my.pointsSameX(p1, p2))
-        					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
-        				return p1[0] < p2[0] ? -1 : 1;
-        			},
-        			pointsCollinear: function(pt1, pt2, pt3){
-        				// does pt1->pt2->pt3 make a straight line?
-        				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
-        				// if slopes are equal, then they must be collinear, because they share pt2
-        				var dx1 = pt1[0] - pt2[0];
-        				var dy1 = pt1[1] - pt2[1];
-        				var dx2 = pt2[0] - pt3[0];
-        				var dy2 = pt2[1] - pt3[1];
-        				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
-        			},
-        			linesIntersect: function(a0, a1, b0, b1){
-        				// returns false if the lines are coincident (e.g., parallel or on top of each other)
-        				//
-        				// returns an object if the lines intersect:
-        				//   {
-        				//     pt: [x, y],    where the intersection point is at
-        				//     alongA: where intersection point is along A,
-        				//     alongB: where intersection point is along B
-        				//   }
-        				//
-        				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
-        				//
-        				//  with the following meaning:
-        				//
-        				//    -2   intersection point is before segment's first point
-        				//    -1   intersection point is directly on segment's first point
-        				//     0   intersection point is between segment's first and second points (exclusive)
-        				//     1   intersection point is directly on segment's second point
-        				//     2   intersection point is after segment's second point
-        				var adx = a1[0] - a0[0];
-        				var ady = a1[1] - a0[1];
-        				var bdx = b1[0] - b0[0];
-        				var bdy = b1[1] - b0[1];
-        	
-        				var axb = adx * bdy - ady * bdx;
-        				if (Math.abs(axb) < eps)
-        					return false; // lines are coincident
-        	
-        				var dx = a0[0] - b0[0];
-        				var dy = a0[1] - b0[1];
-        	
-        				var A = (bdx * dy - bdy * dx) / axb;
-        				var B = (adx * dy - ady * dx) / axb;
-        	
-        				var ret = {
-        					alongA: 0,
-        					alongB: 0,
-        					pt: [
-        						a0[0] + A * adx,
-        						a0[1] + A * ady
-        					]
-        				};
-        	
-        				// categorize where intersection point is along A and B
-        	
-        				if (A <= -eps)
-        					ret.alongA = -2;
-        				else if (A < eps)
-        					ret.alongA = -1;
-        				else if (A - 1 <= -eps)
-        					ret.alongA = 0;
-        				else if (A - 1 < eps)
-        					ret.alongA = 1;
-        				else
-        					ret.alongA = 2;
-        	
-        				if (B <= -eps)
-        					ret.alongB = -2;
-        				else if (B < eps)
-        					ret.alongB = -1;
-        				else if (B - 1 <= -eps)
-        					ret.alongB = 0;
-        				else if (B - 1 < eps)
-        					ret.alongB = 1;
-        				else
-        					ret.alongB = 2;
-        	
-        				return ret;
-        			},
-        			pointInsideRegion: function(pt, region){
-        				var x = pt[0];
-        				var y = pt[1];
-        				var last_x = region[region.length - 1][0];
-        				var last_y = region[region.length - 1][1];
-        				var inside = false;
-        				for (var i = 0; i < region.length; i++){
-        					var curr_x = region[i][0];
-        					var curr_y = region[i][1];
-        	
-        					// if y is between curr_y and last_y, and
-        					// x is to the right of the boundary created by the line
-        					if ((curr_y - y > eps) != (last_y - y > eps) &&
-        						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
-        						inside = !inside
-        	
-        					last_x = curr_x;
-        					last_y = curr_y;
-        				}
-        				return inside;
-        			}
-        		};
-        		return my;
-        	}
-        	
-        	module.exports = Epsilon;
-        	
-        	},{}],4:[function(require,module,exports){
-        	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
-        	//
-        	
-        	var GeoJSON = {
-        		// convert a GeoJSON object to a PolyBool polygon
-        		toPolygon: function(PolyBool, geojson){
-        	
-        			// converts list of LineString's to segments
-        			function GeoPoly(coords){
-        				// check for empty coords
-        				if (coords.length <= 0)
-        					return PolyBool.segments({ inverted: false, regions: [] });
-        	
-        				// convert LineString to segments
-        				function LineString(ls){
-        					// remove tail which should be the same as head
-        					var reg = ls.slice(0, ls.length - 1);
-        					return PolyBool.segments({ inverted: false, regions: [reg] });
-        				}
-        	
-        				// the first LineString is considered the outside
-        				var out = LineString(coords[0]);
-        	
-        				// the rest of the LineStrings are considered interior holes, so subtract them from the
-        				// current result
-        				for (var i = 1; i < coords.length; i++)
-        					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
-        	
-        				return out;
-        			}
-        	
-        			if (geojson.type === 'Polygon'){
-        				// single polygon, so just convert it and we're done
-        				return PolyBool.polygon(GeoPoly(geojson.coordinates));
-        			}
-        			else if (geojson.type === 'MultiPolygon'){
-        				// multiple polygons, so union all the polygons together
-        				var out = PolyBool.segments({ inverted: false, regions: [] });
-        				for (var i = 0; i < geojson.coordinates.length; i++)
-        					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
-        				return PolyBool.polygon(out);
-        			}
-        			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
-        		},
-        	
-        		// convert a PolyBool polygon to a GeoJSON object
-        		fromPolygon: function(PolyBool, eps, poly){
-        			// make sure out polygon is clean
-        			poly = PolyBool.polygon(PolyBool.segments(poly));
-        	
-        			// test if r1 is inside r2
-        			function regionInsideRegion(r1, r2){
-        				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
-        				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
-        				// edge of the first line, which cannot be on an edge
-        				return eps.pointInsideRegion([
-        					(r1[0][0] + r1[1][0]) * 0.5,
-        					(r1[0][1] + r1[1][1]) * 0.5
-        				], r2);
-        			}
-        	
-        			// calculate inside heirarchy
-        			//
-        			//  _____________________   _______    roots -> A       -> F
-        			// |          A          | |   F   |            |          |
-        			// |  _______   _______  | |  ___  |            +-- B      +-- G
-        			// | |   B   | |   C   | | | |   | |            |   |
-        			// | |  ___  | |  ___  | | | |   | |            |   +-- D
-        			// | | | D | | | | E | | | | | G | |            |
-        			// | | |___| | | |___| | | | |   | |            +-- C
-        			// | |_______| |_______| | | |___| |                |
-        			// |_____________________| |_______|                +-- E
-        	
-        			function newNode(region){
-        				return {
-        					region: region,
-        					children: []
-        				};
-        			}
-        	
-        			var roots = newNode(null);
-        	
-        			function addChild(root, region){
-        				// first check if we're inside any children
-        				for (var i = 0; i < root.children.length; i++){
-        					var child = root.children[i];
-        					if (regionInsideRegion(region, child.region)){
-        						// we are, so insert inside them instead
-        						addChild(child, region);
-        						return;
-        					}
-        				}
-        	
-        				// not inside any children, so check to see if any children are inside us
-        				var node = newNode(region);
-        				for (var i = 0; i < root.children.length; i++){
-        					var child = root.children[i];
-        					if (regionInsideRegion(child.region, region)){
-        						// oops... move the child beneath us, and remove them from root
-        						node.children.push(child);
-        						root.children.splice(i, 1);
-        						i--;
-        					}
-        				}
-        	
-        				// now we can add ourselves
-        				root.children.push(node);
-        			}
-        	
-        			// add all regions to the root
-        			for (var i = 0; i < poly.regions.length; i++){
-        				var region = poly.regions[i];
-        				if (region.length < 3) // regions must have at least 3 points (sanity check)
-        					continue;
-        				addChild(roots, region);
-        			}
-        	
-        			// with our heirarchy, we can distinguish between exterior borders, and interior holes
-        			// the root nodes are exterior, children are interior, children's children are exterior,
-        			// children's children's children are interior, etc
-        	
-        			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
-        	
-        			function forceWinding(region, clockwise){
-        				// first, see if we're clockwise or counter-clockwise
-        				// https://en.wikipedia.org/wiki/Shoelace_formula
-        				var winding = 0;
-        				var last_x = region[region.length - 1][0];
-        				var last_y = region[region.length - 1][1];
-        				var copy = [];
-        				for (var i = 0; i < region.length; i++){
-        					var curr_x = region[i][0];
-        					var curr_y = region[i][1];
-        					copy.push([curr_x, curr_y]); // create a copy while we're at it
-        					winding += curr_y * last_x - curr_x * last_y;
-        					last_x = curr_x;
-        					last_y = curr_y;
-        				}
-        				// this assumes Cartesian coordinates (Y is positive going up)
-        				var isclockwise = winding < 0;
-        				if (isclockwise !== clockwise)
-        					copy.reverse();
-        				// while we're here, the last point must be the first point...
-        				copy.push([copy[0][0], copy[0][1]]);
-        				return copy;
-        			}
-        	
-        			var geopolys = [];
-        	
-        			function addExterior(node){
-        				var poly = [forceWinding(node.region, false)];
-        				geopolys.push(poly);
-        				// children of exteriors are interior
-        				for (var i = 0; i < node.children.length; i++)
-        					poly.push(getInterior(node.children[i]));
-        			}
-        	
-        			function getInterior(node){
-        				// children of interiors are exterior
-        				for (var i = 0; i < node.children.length; i++)
-        					addExterior(node.children[i]);
-        				// return the clockwise interior
-        				return forceWinding(node.region, true);
-        			}
-        	
-        			// root nodes are exterior
-        			for (var i = 0; i < roots.children.length; i++)
-        				addExterior(roots.children[i]);
-        	
-        			// lastly, construct the approrpriate GeoJSON object
-        	
-        			if (geopolys.length <= 0) // empty GeoJSON Polygon
-        				return { type: 'Polygon', coordinates: [] };
-        			if (geopolys.length == 1) // use a GeoJSON Polygon
-        				return { type: 'Polygon', coordinates: geopolys[0] };
-        			return { // otherwise, use a GeoJSON MultiPolygon
-        				type: 'MultiPolygon',
-        				coordinates: geopolys
-        			};
-        		}
-        	};
-        	
-        	module.exports = GeoJSON;
-        	
-        	},{}],5:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// this is the core work-horse
-        	//
-        	
-        	var LinkedList = require('./linked-list');
-        	
-        	function Intersecter(selfIntersection, eps, buildLog){
-        		// selfIntersection is true/false depending on the phase of the overall algorithm
-        	
-        		//
-        		// segment creation
-        		//
-        	
-        		function segmentNew(start, end){
-        			return {
-        				id: buildLog ? buildLog.segmentId() : -1,
-        				start: start,
-        				end: end,
-        				myFill: {
-        					above: null, // is there fill above us?
-        					below: null  // is there fill below us?
-        				},
-        				otherFill: null
-        			};
-        		}
-        	
-        		function segmentCopy(start, end, seg){
-        			return {
-        				id: buildLog ? buildLog.segmentId() : -1,
-        				start: start,
-        				end: end,
-        				myFill: {
-        					above: seg.myFill.above,
-        					below: seg.myFill.below
-        				},
-        				otherFill: null
-        			};
-        		}
-        	
-        		//
-        		// event logic
-        		//
-        	
-        		var event_root = LinkedList.create();
-        	
-        		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
-        			// compare the selected points first
-        			var comp = eps.pointsCompare(p1_1, p2_1);
-        			if (comp !== 0)
-        				return comp;
-        			// the selected points are the same
-        	
-        			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
-        				return 0; // then the segments are equal
-        	
-        			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
-        				return p1_isStart ? 1 : -1; // favor the one that isn't the start
-        	
-        			// otherwise, we'll have to calculate which one is below the other manually
-        			return eps.pointAboveOrOnLine(p1_2,
-        				p2_isStart ? p2_1 : p2_2, // order matters
-        				p2_isStart ? p2_2 : p2_1
-        			) ? 1 : -1;
-        		}
-        	
-        		function eventAdd(ev, other_pt){
-        			event_root.insertBefore(ev, function(here){
-        				// should ev be inserted before here?
-        				var comp = eventCompare(
-        					ev  .isStart, ev  .pt,      other_pt,
-        					here.isStart, here.pt, here.other.pt
-        				);
-        				return comp < 0;
-        			});
-        		}
-        	
-        		function eventAddSegmentStart(seg, primary){
-        			var ev_start = LinkedList.node({
-        				isStart: true,
-        				pt: seg.start,
-        				seg: seg,
-        				primary: primary,
-        				other: null,
-        				status: null
-        			});
-        			eventAdd(ev_start, seg.end);
-        			return ev_start;
-        		}
-        	
-        		function eventAddSegmentEnd(ev_start, seg, primary){
-        			var ev_end = LinkedList.node({
-        				isStart: false,
-        				pt: seg.end,
-        				seg: seg,
-        				primary: primary,
-        				other: ev_start,
-        				status: null
-        			});
-        			ev_start.other = ev_end;
-        			eventAdd(ev_end, ev_start.pt);
-        		}
-        	
-        		function eventAddSegment(seg, primary){
-        			var ev_start = eventAddSegmentStart(seg, primary);
-        			eventAddSegmentEnd(ev_start, seg, primary);
-        			return ev_start;
-        		}
-        	
-        		function eventUpdateEnd(ev, end){
-        			// slides an end backwards
-        			//   (start)------------(end)    to:
-        			//   (start)---(end)
-        	
-        			if (buildLog)
-        				buildLog.segmentChop(ev.seg, end);
-        	
-        			ev.other.remove();
-        			ev.seg.end = end;
-        			ev.other.pt = end;
-        			eventAdd(ev.other, ev.pt);
-        		}
-        	
-        		function eventDivide(ev, pt){
-        			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
-        			eventUpdateEnd(ev, pt);
-        			return eventAddSegment(ns, ev.primary);
-        		}
-        	
-        		function calculate(primaryPolyInverted, secondaryPolyInverted){
-        			// if selfIntersection is true then there is no secondary polygon, so that isn't used
-        	
-        			//
-        			// status logic
-        			//
-        	
-        			var status_root = LinkedList.create();
-        	
-        			function statusCompare(ev1, ev2){
-        				var a1 = ev1.seg.start;
-        				var a2 = ev1.seg.end;
-        				var b1 = ev2.seg.start;
-        				var b2 = ev2.seg.end;
-        	
-        				if (eps.pointsCollinear(a1, b1, b2)){
-        					if (eps.pointsCollinear(a2, b1, b2))
-        						return 1;//eventCompare(true, a1, a2, true, b1, b2);
-        					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
-        				}
-        				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
-        			}
-        	
-        			function statusFindSurrounding(ev){
-        				return status_root.findTransition(function(here){
-        					var comp = statusCompare(ev, here.ev);
-        					return comp > 0;
-        				});
-        			}
-        	
-        			function checkIntersection(ev1, ev2){
-        				// returns the segment equal to ev1, or false if nothing equal
-        	
-        				var seg1 = ev1.seg;
-        				var seg2 = ev2.seg;
-        				var a1 = seg1.start;
-        				var a2 = seg1.end;
-        				var b1 = seg2.start;
-        				var b2 = seg2.end;
-        	
-        				if (buildLog)
-        					buildLog.checkIntersection(seg1, seg2);
-        	
-        				var i = eps.linesIntersect(a1, a2, b1, b2);
-        	
-        				if (i === false){
-        					// segments are parallel or coincident
-        	
-        					// if points aren't collinear, then the segments are parallel, so no intersections
-        					if (!eps.pointsCollinear(a1, a2, b1))
-        						return false;
-        					// otherwise, segments are on top of each other somehow (aka coincident)
-        	
-        					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
-        						return false; // segments touch at endpoints... no intersection
-        	
-        					var a1_equ_b1 = eps.pointsSame(a1, b1);
-        					var a2_equ_b2 = eps.pointsSame(a2, b2);
-        	
-        					if (a1_equ_b1 && a2_equ_b2)
-        						return ev2; // segments are exactly equal
-        	
-        					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
-        					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
-        	
-        					// handy for debugging:
-        					// buildLog.log({
-        					//	a1_equ_b1: a1_equ_b1,
-        					//	a2_equ_b2: a2_equ_b2,
-        					//	a1_between: a1_between,
-        					//	a2_between: a2_between
-        					// });
-        	
-        					if (a1_equ_b1){
-        						if (a2_between){
-        							//  (a1)---(a2)
-        							//  (b1)----------(b2)
-        							eventDivide(ev2, a2);
-        						}
-        						else{
-        							//  (a1)----------(a2)
-        							//  (b1)---(b2)
-        							eventDivide(ev1, b2);
-        						}
-        						return ev2;
-        					}
-        					else if (a1_between){
-        						if (!a2_equ_b2){
-        							// make a2 equal to b2
-        							if (a2_between){
-        								//         (a1)---(a2)
-        								//  (b1)-----------------(b2)
-        								eventDivide(ev2, a2);
-        							}
-        							else{
-        								//         (a1)----------(a2)
-        								//  (b1)----------(b2)
-        								eventDivide(ev1, b2);
-        							}
-        						}
-        	
-        						//         (a1)---(a2)
-        						//  (b1)----------(b2)
-        						eventDivide(ev2, a1);
-        					}
-        				}
-        				else{
-        					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
-        	
-        					// is A divided between its endpoints? (exclusive)
-        					if (i.alongA === 0){
-        						if (i.alongB === -1) // yes, at exactly b1
-        							eventDivide(ev1, b1);
-        						else if (i.alongB === 0) // yes, somewhere between B's endpoints
-        							eventDivide(ev1, i.pt);
-        						else if (i.alongB === 1) // yes, at exactly b2
-        							eventDivide(ev1, b2);
-        					}
-        	
-        					// is B divided between its endpoints? (exclusive)
-        					if (i.alongB === 0){
-        						if (i.alongA === -1) // yes, at exactly a1
-        							eventDivide(ev2, a1);
-        						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
-        							eventDivide(ev2, i.pt);
-        						else if (i.alongA === 1) // yes, at exactly a2
-        							eventDivide(ev2, a2);
-        					}
-        				}
-        				return false;
-        			}
-        	
-        			//
-        			// main event loop
-        			//
-        			var segments = [];
-        			while (!event_root.isEmpty()){
-        				var ev = event_root.getHead();
-        	
-        				if (buildLog)
-        					buildLog.vert(ev.pt[0]);
-        	
-        				if (ev.isStart){
-        	
-        					if (buildLog)
-        						buildLog.segmentNew(ev.seg, ev.primary);
-        	
-        					var surrounding = statusFindSurrounding(ev);
-        					var above = surrounding.before ? surrounding.before.ev : null;
-        					var below = surrounding.after ? surrounding.after.ev : null;
-        	
-        					if (buildLog){
-        						buildLog.tempStatus(
-        							ev.seg,
-        							above ? above.seg : false,
-        							below ? below.seg : false
-        						);
-        					}
-        	
-        					function checkBothIntersections(){
-        						if (above){
-        							var eve = checkIntersection(ev, above);
-        							if (eve)
-        								return eve;
-        						}
-        						if (below)
-        							return checkIntersection(ev, below);
-        						return false;
-        					}
-        	
-        					var eve = checkBothIntersections();
-        					if (eve){
-        						// ev and eve are equal
-        						// we'll keep eve and throw away ev
-        	
-        						// merge ev.seg's fill information into eve.seg
-        	
-        						if (selfIntersection){
-        							var toggle; // are we a toggling edge?
-        							if (ev.seg.myFill.below === null)
-        								toggle = true;
-        							else
-        								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
-        	
-        							// merge two segments that belong to the same polygon
-        							// think of this as sandwiching two segments together, where `eve.seg` is
-        							// the bottom -- this will cause the above fill flag to toggle
-        							if (toggle)
-        								eve.seg.myFill.above = !eve.seg.myFill.above;
-        						}
-        						else{
-        							// merge two segments that belong to different polygons
-        							// each segment has distinct knowledge, so no special logic is needed
-        							// note that this can only happen once per segment in this phase, because we
-        							// are guaranteed that all self-intersections are gone
-        							eve.seg.otherFill = ev.seg.myFill;
-        						}
-        	
-        						if (buildLog)
-        							buildLog.segmentUpdate(eve.seg);
-        	
-        						ev.other.remove();
-        						ev.remove();
-        					}
-        	
-        					if (event_root.getHead() !== ev){
-        						// something was inserted before us in the event queue, so loop back around and
-        						// process it before continuing
-        						if (buildLog)
-        							buildLog.rewind(ev.seg);
-        						continue;
-        					}
-        	
-        					//
-        					// calculate fill flags
-        					//
-        					if (selfIntersection){
-        						var toggle; // are we a toggling edge?
-        						if (ev.seg.myFill.below === null) // if we are a new segment...
-        							toggle = true; // then we toggle
-        						else // we are a segment that has previous knowledge from a division
-        							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
-        	
-        						// next, calculate whether we are filled below us
-        						if (!below){ // if nothing is below us...
-        							// we are filled below us if the polygon is inverted
-        							ev.seg.myFill.below = primaryPolyInverted;
-        						}
-        						else{
-        							// otherwise, we know the answer -- it's the same if whatever is below
-        							// us is filled above it
-        							ev.seg.myFill.below = below.seg.myFill.above;
-        						}
-        	
-        						// since now we know if we're filled below us, we can calculate whether
-        						// we're filled above us by applying toggle to whatever is below us
-        						if (toggle)
-        							ev.seg.myFill.above = !ev.seg.myFill.below;
-        						else
-        							ev.seg.myFill.above = ev.seg.myFill.below;
-        					}
-        					else{
-        						// now we fill in any missing transition information, since we are all-knowing
-        						// at this point
-        	
-        						if (ev.seg.otherFill === null){
-        							// if we don't have other information, then we need to figure out if we're
-        							// inside the other polygon
-        							var inside;
-        							if (!below){
-        								// if nothing is below us, then we're inside if the other polygon is
-        								// inverted
-        								inside =
-        									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
-        							}
-        							else{ // otherwise, something is below us
-        								// so copy the below segment's other polygon's above
-        								if (ev.primary === below.primary)
-        									inside = below.seg.otherFill.above;
-        								else
-        									inside = below.seg.myFill.above;
-        							}
-        							ev.seg.otherFill = {
-        								above: inside,
-        								below: inside
-        							};
-        						}
-        					}
-        	
-        					if (buildLog){
-        						buildLog.status(
-        							ev.seg,
-        							above ? above.seg : false,
-        							below ? below.seg : false
-        						);
-        					}
-        	
-        					// insert the status and remember it for later removal
-        					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
-        				}
-        				else{
-        					var st = ev.status;
-        	
-        					if (st === null){
-        						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
-        							'probably too small or too large');
-        					}
-        	
-        					// removing the status will create two new adjacent edges, so we'll need to check
-        					// for those
-        					if (status_root.exists(st.prev) && status_root.exists(st.next))
-        						checkIntersection(st.prev.ev, st.next.ev);
-        	
-        					if (buildLog)
-        						buildLog.statusRemove(st.ev.seg);
-        	
-        					// remove the status
-        					st.remove();
-        	
-        					// if we've reached this point, we've calculated everything there is to know, so
-        					// save the segment for reporting
-        					if (!ev.primary){
-        						// make sure `seg.myFill` actually points to the primary polygon though
-        						var s = ev.seg.myFill;
-        						ev.seg.myFill = ev.seg.otherFill;
-        						ev.seg.otherFill = s;
-        					}
-        					segments.push(ev.seg);
-        				}
-        	
-        				// remove the event and continue
-        				event_root.getHead().remove();
-        			}
-        	
-        			if (buildLog)
-        				buildLog.done();
-        	
-        			return segments;
-        		}
-        	
-        		// return the appropriate API depending on what we're doing
-        		if (!selfIntersection){
-        			// performing combination of polygons, so only deal with already-processed segments
-        			return {
-        				calculate: function(segments1, inverted1, segments2, inverted2){
-        					// segmentsX come from the self-intersection API, or this API
-        					// invertedX is whether we treat that list of segments as an inverted polygon or not
-        					// returns segments that can be used for further operations
-        					segments1.forEach(function(seg){
-        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
-        					});
-        					segments2.forEach(function(seg){
-        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
-        					});
-        					return calculate(inverted1, inverted2);
-        				}
-        			};
-        		}
-        	
-        		// otherwise, performing self-intersection, so deal with regions
-        		return {
-        			addRegion: function(region){
-        				// regions are a list of points:
-        				//  [ [0, 0], [100, 0], [50, 100] ]
-        				// you can add multiple regions before running calculate
-        				var pt1;
-        				var pt2 = region[region.length - 1];
-        				for (var i = 0; i < region.length; i++){
-        					pt1 = pt2;
-        					pt2 = region[i];
-        	
-        					var forward = eps.pointsCompare(pt1, pt2);
-        					if (forward === 0) // points are equal, so we have a zero-length segment
-        						continue; // just skip it
-        	
-        					eventAddSegment(
-        						segmentNew(
-        							forward < 0 ? pt1 : pt2,
-        							forward < 0 ? pt2 : pt1
-        						),
-        						true
-        					);
-        				}
-        			},
-        			calculate: function(inverted){
-        				// is the polygon inverted?
-        				// returns segments
-        				return calculate(inverted, false);
-        			}
-        		};
-        	}
-        	
-        	module.exports = Intersecter;
-        	
-        	},{"./linked-list":6}],6:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// simple linked list implementation that allows you to traverse down nodes and save positions
-        	//
-        	
-        	var LinkedList = {
-        		create: function(){
-        			var my = {
-        				root: { root: true, next: null },
-        				exists: function(node){
-        					if (node === null || node === my.root)
-        						return false;
-        					return true;
-        				},
-        				isEmpty: function(){
-        					return my.root.next === null;
-        				},
-        				getHead: function(){
-        					return my.root.next;
-        				},
-        				insertBefore: function(node, check){
-        					var last = my.root;
-        					var here = my.root.next;
-        					while (here !== null){
-        						if (check(here)){
-        							node.prev = here.prev;
-        							node.next = here;
-        							here.prev.next = node;
-        							here.prev = node;
-        							return;
-        						}
-        						last = here;
-        						here = here.next;
-        					}
-        					last.next = node;
-        					node.prev = last;
-        					node.next = null;
-        				},
-        				findTransition: function(check){
-        					var prev = my.root;
-        					var here = my.root.next;
-        					while (here !== null){
-        						if (check(here))
-        							break;
-        						prev = here;
-        						here = here.next;
-        					}
-        					return {
-        						before: prev === my.root ? null : prev,
-        						after: here,
-        						insert: function(node){
-        							node.prev = prev;
-        							node.next = here;
-        							prev.next = node;
-        							if (here !== null)
-        								here.prev = node;
-        							return node;
-        						}
-        					};
-        				}
-        			};
-        			return my;
-        		},
-        		node: function(data){
-        			data.prev = null;
-        			data.next = null;
-        			data.remove = function(){
-        				data.prev.next = data.next;
-        				if (data.next)
-        					data.next.prev = data.prev;
-        				data.prev = null;
-        				data.next = null;
-        			};
-        			return data;
-        		}
-        	};
-        	
-        	module.exports = LinkedList;
-        	
-        	},{}],7:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// converts a list of segments into a list of regions, while also removing unnecessary verticies
-        	//
-        	
-        	function SegmentChainer(segments, eps, buildLog){
-        		var chains = [];
-        		var regions = [];
-        	
-        		segments.forEach(function(seg){
-        			var pt1 = seg.start;
-        			var pt2 = seg.end;
-        			if (eps.pointsSame(pt1, pt2)){
-        				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
-        					'probably too small or too large');
-        				return;
-        			}
-        	
-        			if (buildLog)
-        				buildLog.chainStart(seg);
-        	
-        			// search for two chains that this segment matches
-        			var first_match = {
-        				index: 0,
-        				matches_head: false,
-        				matches_pt1: false
-        			};
-        			var second_match = {
-        				index: 0,
-        				matches_head: false,
-        				matches_pt1: false
-        			};
-        			var next_match = first_match;
-        			function setMatch(index, matches_head, matches_pt1){
-        				// return true if we've matched twice
-        				next_match.index = index;
-        				next_match.matches_head = matches_head;
-        				next_match.matches_pt1 = matches_pt1;
-        				if (next_match === first_match){
-        					next_match = second_match;
-        					return false;
-        				}
-        				next_match = null;
-        				return true; // we've matched twice, we're done here
-        			}
-        			for (var i = 0; i < chains.length; i++){
-        				var chain = chains[i];
-        				var head  = chain[0];
-        				var head2 = chain[1];
-        				var tail  = chain[chain.length - 1];
-        				var tail2 = chain[chain.length - 2];
-        				if (eps.pointsSame(head, pt1)){
-        					if (setMatch(i, true, true))
-        						break;
-        				}
-        				else if (eps.pointsSame(head, pt2)){
-        					if (setMatch(i, true, false))
-        						break;
-        				}
-        				else if (eps.pointsSame(tail, pt1)){
-        					if (setMatch(i, false, true))
-        						break;
-        				}
-        				else if (eps.pointsSame(tail, pt2)){
-        					if (setMatch(i, false, false))
-        						break;
-        				}
-        			}
-        	
-        			if (next_match === first_match){
-        				// we didn't match anything, so create a new chain
-        				chains.push([ pt1, pt2 ]);
-        				if (buildLog)
-        					buildLog.chainNew(pt1, pt2);
-        				return;
-        			}
-        	
-        			if (next_match === second_match){
-        				// we matched a single chain
-        	
-        				if (buildLog)
-        					buildLog.chainMatch(first_match.index);
-        	
-        				// add the other point to the apporpriate end, and check to see if we've closed the
-        				// chain into a loop
-        	
-        				var index = first_match.index;
-        				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
-        				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
-        	
-        				var chain = chains[index];
-        				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
-        				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
-        				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
-        				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
-        	
-        				if (eps.pointsCollinear(grow2, grow, pt)){
-        					// grow isn't needed because it's directly between grow2 and pt:
-        					// grow2 ---grow---> pt
-        					if (addToHead){
-        						if (buildLog)
-        							buildLog.chainRemoveHead(first_match.index, pt);
-        						chain.shift();
-        					}
-        					else{
-        						if (buildLog)
-        							buildLog.chainRemoveTail(first_match.index, pt);
-        						chain.pop();
-        					}
-        					grow = grow2; // old grow is gone... new grow is what grow2 was
-        				}
-        	
-        				if (eps.pointsSame(oppo, pt)){
-        					// we're closing the loop, so remove chain from chains
-        					chains.splice(index, 1);
-        	
-        					if (eps.pointsCollinear(oppo2, oppo, grow)){
-        						// oppo isn't needed because it's directly between oppo2 and grow:
-        						// oppo2 ---oppo--->grow
-        						if (addToHead){
-        							if (buildLog)
-        								buildLog.chainRemoveTail(first_match.index, grow);
-        							chain.pop();
-        						}
-        						else{
-        							if (buildLog)
-        								buildLog.chainRemoveHead(first_match.index, grow);
-        							chain.shift();
-        						}
-        					}
-        	
-        					if (buildLog)
-        						buildLog.chainClose(first_match.index);
-        	
-        					// we have a closed chain!
-        					regions.push(chain);
-        					return;
-        				}
-        	
-        				// not closing a loop, so just add it to the apporpriate side
-        				if (addToHead){
-        					if (buildLog)
-        						buildLog.chainAddHead(first_match.index, pt);
-        					chain.unshift(pt);
-        				}
-        				else{
-        					if (buildLog)
-        						buildLog.chainAddTail(first_match.index, pt);
-        					chain.push(pt);
-        				}
-        				return;
-        			}
-        	
-        			// otherwise, we matched two chains, so we need to combine those chains together
-        	
-        			function reverseChain(index){
-        				if (buildLog)
-        					buildLog.chainReverse(index);
-        				chains[index].reverse(); // gee, that's easy
-        			}
-        	
-        			function appendChain(index1, index2){
-        				// index1 gets index2 appended to it, and index2 is removed
-        				var chain1 = chains[index1];
-        				var chain2 = chains[index2];
-        				var tail  = chain1[chain1.length - 1];
-        				var tail2 = chain1[chain1.length - 2];
-        				var head  = chain2[0];
-        				var head2 = chain2[1];
-        	
-        				if (eps.pointsCollinear(tail2, tail, head)){
-        					// tail isn't needed because it's directly between tail2 and head
-        					// tail2 ---tail---> head
-        					if (buildLog)
-        						buildLog.chainRemoveTail(index1, tail);
-        					chain1.pop();
-        					tail = tail2; // old tail is gone... new tail is what tail2 was
-        				}
-        	
-        				if (eps.pointsCollinear(tail, head, head2)){
-        					// head isn't needed because it's directly between tail and head2
-        					// tail ---head---> head2
-        					if (buildLog)
-        						buildLog.chainRemoveHead(index2, head);
-        					chain2.shift();
-        				}
-        	
-        				if (buildLog)
-        					buildLog.chainJoin(index1, index2);
-        				chains[index1] = chain1.concat(chain2);
-        				chains.splice(index2, 1);
-        			}
-        	
-        			var F = first_match.index;
-        			var S = second_match.index;
-        	
-        			if (buildLog)
-        				buildLog.chainConnect(F, S);
-        	
-        			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
-        			if (first_match.matches_head){
-        				if (second_match.matches_head){
-        					if (reverseF){
-        						// <<<< F <<<< --- >>>> S >>>>
-        						reverseChain(F);
-        						// >>>> F >>>> --- >>>> S >>>>
-        						appendChain(F, S);
-        					}
-        					else{
-        						// <<<< F <<<< --- >>>> S >>>>
-        						reverseChain(S);
-        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
-        						// >>>> S >>>> --- >>>> F >>>>
-        						appendChain(S, F);
-        					}
-        				}
-        				else{
-        					// <<<< F <<<< --- <<<< S <<<<   logically same as:
-        					// >>>> S >>>> --- >>>> F >>>>
-        					appendChain(S, F);
-        				}
-        			}
-        			else{
-        				if (second_match.matches_head){
-        					// >>>> F >>>> --- >>>> S >>>>
-        					appendChain(F, S);
-        				}
-        				else{
-        					if (reverseF){
-        						// >>>> F >>>> --- <<<< S <<<<
-        						reverseChain(F);
-        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
-        						// >>>> S >>>> --- >>>> F >>>>
-        						appendChain(S, F);
-        					}
-        					else{
-        						// >>>> F >>>> --- <<<< S <<<<
-        						reverseChain(S);
-        						// >>>> F >>>> --- >>>> S >>>>
-        						appendChain(F, S);
-        					}
-        				}
-        			}
-        		});
-        	
-        		return regions;
-        	}
-        	
-        	module.exports = SegmentChainer;
-        	
-        	},{}],8:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// filter a list of segments based on boolean operations
-        	//
-        	
-        	function select(segments, selection, buildLog){
-        		var result = [];
-        		segments.forEach(function(seg){
-        			var index =
-        				(seg.myFill.above ? 8 : 0) +
-        				(seg.myFill.below ? 4 : 0) +
-        				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
-        				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
-        			if (selection[index] !== 0){
-        				// copy the segment to the results, while also calculating the fill status
-        				result.push({
-        					id: buildLog ? buildLog.segmentId() : -1,
-        					start: seg.start,
-        					end: seg.end,
-        					myFill: {
-        						above: selection[index] === 1, // 1 if filled above
-        						below: selection[index] === 2  // 2 if filled below
-        					},
-        					otherFill: null
-        				});
-        			}
-        		});
-        	
-        		if (buildLog)
-        			buildLog.selected(result);
-        	
-        		return result;
-        	}
-        	
-        	var SegmentSelector = {
-        		union: function(segments, buildLog){ // primary | secondary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   yes filled below    2
-        			//    0      0      1      0   =>   yes filled above    1
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   yes filled below    2
-        			//    0      1      0      1   =>   yes filled below    2
-        			//    0      1      1      0   =>   no                  0
-        			//    0      1      1      1   =>   no                  0
-        			//    1      0      0      0   =>   yes filled above    1
-        			//    1      0      0      1   =>   no                  0
-        			//    1      0      1      0   =>   yes filled above    1
-        			//    1      0      1      1   =>   no                  0
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   no                  0
-        			//    1      1      1      0   =>   no                  0
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 2, 1, 0,
-        				2, 2, 0, 0,
-        				1, 0, 1, 0,
-        				0, 0, 0, 0
-        			], buildLog);
-        		},
-        		intersect: function(segments, buildLog){ // primary & secondary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   no                  0
-        			//    0      0      1      0   =>   no                  0
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   no                  0
-        			//    0      1      0      1   =>   yes filled below    2
-        			//    0      1      1      0   =>   no                  0
-        			//    0      1      1      1   =>   yes filled below    2
-        			//    1      0      0      0   =>   no                  0
-        			//    1      0      0      1   =>   no                  0
-        			//    1      0      1      0   =>   yes filled above    1
-        			//    1      0      1      1   =>   yes filled above    1
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   yes filled below    2
-        			//    1      1      1      0   =>   yes filled above    1
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 0, 0, 0,
-        				0, 2, 0, 2,
-        				0, 0, 1, 1,
-        				0, 2, 1, 0
-        			], buildLog);
-        		},
-        		difference: function(segments, buildLog){ // primary - secondary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   no                  0
-        			//    0      0      1      0   =>   no                  0
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   yes filled below    2
-        			//    0      1      0      1   =>   no                  0
-        			//    0      1      1      0   =>   yes filled below    2
-        			//    0      1      1      1   =>   no                  0
-        			//    1      0      0      0   =>   yes filled above    1
-        			//    1      0      0      1   =>   yes filled above    1
-        			//    1      0      1      0   =>   no                  0
-        			//    1      0      1      1   =>   no                  0
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   yes filled above    1
-        			//    1      1      1      0   =>   yes filled below    2
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 0, 0, 0,
-        				2, 0, 2, 0,
-        				1, 1, 0, 0,
-        				0, 1, 2, 0
-        			], buildLog);
-        		},
-        		differenceRev: function(segments, buildLog){ // secondary - primary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   yes filled below    2
-        			//    0      0      1      0   =>   yes filled above    1
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   no                  0
-        			//    0      1      0      1   =>   no                  0
-        			//    0      1      1      0   =>   yes filled above    1
-        			//    0      1      1      1   =>   yes filled above    1
-        			//    1      0      0      0   =>   no                  0
-        			//    1      0      0      1   =>   yes filled below    2
-        			//    1      0      1      0   =>   no                  0
-        			//    1      0      1      1   =>   yes filled below    2
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   no                  0
-        			//    1      1      1      0   =>   no                  0
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 2, 1, 0,
-        				0, 0, 1, 1,
-        				0, 2, 0, 2,
-        				0, 0, 0, 0
-        			], buildLog);
-        		},
-        		xor: function(segments, buildLog){ // primary ^ secondary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   yes filled below    2
-        			//    0      0      1      0   =>   yes filled above    1
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   yes filled below    2
-        			//    0      1      0      1   =>   no                  0
-        			//    0      1      1      0   =>   no                  0
-        			//    0      1      1      1   =>   yes filled above    1
-        			//    1      0      0      0   =>   yes filled above    1
-        			//    1      0      0      1   =>   no                  0
-        			//    1      0      1      0   =>   no                  0
-        			//    1      0      1      1   =>   yes filled below    2
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   yes filled above    1
-        			//    1      1      1      0   =>   yes filled below    2
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 2, 1, 0,
-        				2, 0, 0, 1,
-        				1, 0, 0, 2,
-        				0, 1, 2, 0
-        			], buildLog);
-        		}
-        	};
-        	
-        	module.exports = SegmentSelector;
-        	
-        },{}]},{},[1]);
         this.lzString = (function(){
             // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
             // This work is free. You can redistribute it and/or modify it
@@ -19618,723 +19513,1623 @@ const library = new function(){
         	Object.defineProperty(exports, '__esModule', { value: true });
         
         })));
-        this.earcut = function(points,holeIndices){
-        	//https://github.com/mapbox/earcut
+        (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+        
+        	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+        	// @license MIT
+        	// @preserve Project Home: https://github.com/voidqk/polybooljs
         	
-            var outputPoints = [];
-            earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
-            return outputPoints;
-        
-            function earcut(data, holeIndices, dim) {
-        
-                dim = dim || 2;
-        
-                var hasHoles = holeIndices && holeIndices.length,
-                    outerLen = hasHoles ? holeIndices[0] * dim : data.length,
-                    outerNode = linkedList(data, 0, outerLen, dim, true),
-                    triangles = [];
-        
-                if (!outerNode || outerNode.next === outerNode.prev) return triangles;
-        
-                var minX, minY, maxX, maxY, x, y, invSize;
-        
-                if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
-        
-                // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-                if (data.length > 80 * dim) {
-                    minX = maxX = data[0];
-                    minY = maxY = data[1];
-        
-                    for (var i = dim; i < outerLen; i += dim) {
-                        x = data[i];
-                        y = data[i + 1];
-                        if (x < minX) minX = x;
-                        if (y < minY) minY = y;
-                        if (x > maxX) maxX = x;
-                        if (y > maxY) maxY = y;
-                    }
-        
-                    // minX, minY and invSize are later used to transform coords into integers for z-order calculation
-                    invSize = Math.max(maxX - minX, maxY - minY);
-                    invSize = invSize !== 0 ? 1 / invSize : 0;
-                }
-        
-                earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
-        
-                return triangles;
-            }
-        
-            // create a circular doubly linked list from polygon points in the specified winding order
-            function linkedList(data, start, end, dim, clockwise) {
-                var i, last;
-        
-                if (clockwise === (signedArea(data, start, end, dim) > 0)) {
-                    for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
-                } else {
-                    for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
-                }
-        
-                if (last && equals(last, last.next)) {
-                    removeNode(last);
-                    last = last.next;
-                }
-        
-                return last;
-            }
-        
-            // eliminate colinear or duplicate points
-            function filterPoints(start, end) {
-                if (!start) return start;
-                if (!end) end = start;
-        
-                var p = start,
-                    again;
-                do {
-                    again = false;
-        
-                    if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
-                        removeNode(p);
-                        p = end = p.prev;
-                        if (p === p.next) break;
-                        again = true;
-        
-                    } else {
-                        p = p.next;
-                    }
-                } while (again || p !== end);
-        
-                return end;
-            }
-        
-            // main ear slicing loop which triangulates a polygon (given as a linked list)
-            function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-                if (!ear) return;
-        
-                // interlink polygon nodes in z-order
-                if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
-        
-                var stop = ear,
-                    prev, next;
-        
-                // iterate through ears, slicing them one by one
-                while (ear.prev !== ear.next) {
-                    prev = ear.prev;
-                    next = ear.next;
-        
-                    if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
-                        // cut off the triangle
-                        triangles.push(prev.i / dim);
-                        triangles.push(ear.i / dim);
-                        triangles.push(next.i / dim);
-        
-                        removeNode(ear);
-        
-                        // skipping the next vertex leads to less sliver triangles
-                        ear = next.next;
-                        stop = next.next;
-        
-                        continue;
-                    }
-        
-                    ear = next;
-        
-                    // if we looped through the whole remaining polygon and can't find any more ears
-                    if (ear === stop) {
-                        // try filtering points and slicing again
-                        if (!pass) {
-                            earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
-        
-                        // if this didn't work, try curing all small self-intersections locally
-                        } else if (pass === 1) {
-                            ear = cureLocalIntersections(ear, triangles, dim);
-                            earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
-        
-                        // as a last resort, try splitting the remaining polygon into two
-                        } else if (pass === 2) {
-                            splitEarcut(ear, triangles, dim, minX, minY, invSize);
-                        }
-        
-                        break;
-                    }
-                }
-            }
-        
-            // check whether a polygon node forms a valid ear with adjacent nodes
-            function isEar(ear) {
-                var a = ear.prev,
-                    b = ear,
-                    c = ear.next;
-        
-                if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-        
-                // now make sure we don't have other points inside the potential ear
-                var p = ear.next.next;
-        
-                while (p !== ear.prev) {
-                    if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                        area(p.prev, p, p.next) >= 0) return false;
-                    p = p.next;
-                }
-        
-                return true;
-            }
-        
-            function isEarHashed(ear, minX, minY, invSize) {
-                var a = ear.prev,
-                    b = ear,
-                    c = ear.next;
-        
-                if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-        
-                // triangle bbox; min & max are calculated like this for speed
-                var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
-                    minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
-                    maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
-                    maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
-        
-                // z-order range for the current triangle bbox;
-                var minZ = zOrder(minTX, minTY, minX, minY, invSize),
-                    maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
-        
-                var p = ear.prevZ,
-                    n = ear.nextZ;
-        
-                // look for points inside the triangle in both directions
-                while (p && p.z >= minZ && n && n.z <= maxZ) {
-                    if (p !== ear.prev && p !== ear.next &&
-                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                        area(p.prev, p, p.next) >= 0) return false;
-                    p = p.prevZ;
-        
-                    if (n !== ear.prev && n !== ear.next &&
-                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-                        area(n.prev, n, n.next) >= 0) return false;
-                    n = n.nextZ;
-                }
-        
-                // look for remaining points in decreasing z-order
-                while (p && p.z >= minZ) {
-                    if (p !== ear.prev && p !== ear.next &&
-                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                        area(p.prev, p, p.next) >= 0) return false;
-                    p = p.prevZ;
-                }
-        
-                // look for remaining points in increasing z-order
-                while (n && n.z <= maxZ) {
-                    if (n !== ear.prev && n !== ear.next &&
-                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-                        area(n.prev, n, n.next) >= 0) return false;
-                    n = n.nextZ;
-                }
-        
-                return true;
-            }
-        
-            // go through all polygon nodes and cure small local self-intersections
-            function cureLocalIntersections(start, triangles, dim) {
-                var p = start;
-                do {
-                    var a = p.prev,
-                        b = p.next.next;
-        
-                    if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-        
-                        triangles.push(a.i / dim);
-                        triangles.push(p.i / dim);
-                        triangles.push(b.i / dim);
-        
-                        // remove two nodes involved
-                        removeNode(p);
-                        removeNode(p.next);
-        
-                        p = start = b;
-                    }
-                    p = p.next;
-                } while (p !== start);
-        
-                return p;
-            }
-        
-            // try splitting polygon into two and triangulate them independently
-            function splitEarcut(start, triangles, dim, minX, minY, invSize) {
-                // look for a valid diagonal that divides the polygon into two
-                var a = start;
-                do {
-                    var b = a.next.next;
-                    while (b !== a.prev) {
-                        if (a.i !== b.i && isValidDiagonal(a, b)) {
-                            // split the polygon in two by the diagonal
-                            var c = splitPolygon(a, b);
-        
-                            // filter colinear points around the cuts
-                            a = filterPoints(a, a.next);
-                            c = filterPoints(c, c.next);
-        
-                            // run earcut on each half
-                            earcutLinked(a, triangles, dim, minX, minY, invSize);
-                            earcutLinked(c, triangles, dim, minX, minY, invSize);
-                            return;
-                        }
-                        b = b.next;
-                    }
-                    a = a.next;
-                } while (a !== start);
-            }
-        
-            // link every hole into the outer loop, producing a single-ring polygon without holes
-            function eliminateHoles(data, holeIndices, outerNode, dim) {
-                var queue = [],
-                    i, len, start, end, list;
-        
-                for (i = 0, len = holeIndices.length; i < len; i++) {
-                    start = holeIndices[i] * dim;
-                    end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-                    list = linkedList(data, start, end, dim, false);
-                    if (list === list.next) list.steiner = true;
-                    queue.push(getLeftmost(list));
-                }
-        
-                queue.sort(compareX);
-        
-                // process holes from left to right
-                for (i = 0; i < queue.length; i++) {
-                    eliminateHole(queue[i], outerNode);
-                    outerNode = filterPoints(outerNode, outerNode.next);
-                }
-        
-                return outerNode;
-            }
-        
-            function compareX(a, b) {
-                return a.x - b.x;
-            }
-        
-            // find a bridge between vertices that connects hole with an outer ring and and link it
-            function eliminateHole(hole, outerNode) {
-                outerNode = findHoleBridge(hole, outerNode);
-                if (outerNode) {
-                    var b = splitPolygon(outerNode, hole);
-                    filterPoints(b, b.next);
-                }
-            }
-        
-            // David Eberly's algorithm for finding a bridge between hole and outer polygon
-            function findHoleBridge(hole, outerNode) {
-                var p = outerNode,
-                    hx = hole.x,
-                    hy = hole.y,
-                    qx = -Infinity,
-                    m;
-        
-                // find a segment intersected by a ray from the hole's leftmost point to the left;
-                // segment's endpoint with lesser x will be potential connection point
-                do {
-                    if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
-                        var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-                        if (x <= hx && x > qx) {
-                            qx = x;
-                            if (x === hx) {
-                                if (hy === p.y) return p;
-                                if (hy === p.next.y) return p.next;
-                            }
-                            m = p.x < p.next.x ? p : p.next;
-                        }
-                    }
-                    p = p.next;
-                } while (p !== outerNode);
-        
-                if (!m) return null;
-        
-                if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
-        
-                // look for points inside the triangle of hole point, segment intersection and endpoint;
-                // if there are no points found, we have a valid connection;
-                // otherwise choose the point of the minimum angle with the ray as connection point
-        
-                var stop = m,
-                    mx = m.x,
-                    my = m.y,
-                    tanMin = Infinity,
-                    tan;
-        
-                p = m.next;
-        
-                while (p !== stop) {
-                    if (hx >= p.x && p.x >= mx && hx !== p.x &&
-                            pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-        
-                        tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
-        
-                        if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
-                            m = p;
-                            tanMin = tan;
-                        }
-                    }
-        
-                    p = p.next;
-                }
-        
-                return m;
-            }
-        
-            // interlink polygon nodes in z-order
-            function indexCurve(start, minX, minY, invSize) {
-                var p = start;
-                do {
-                    if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
-                    p.prevZ = p.prev;
-                    p.nextZ = p.next;
-                    p = p.next;
-                } while (p !== start);
-        
-                p.prevZ.nextZ = null;
-                p.prevZ = null;
-        
-                sortLinked(p);
-            }
-        
-            // Simon Tatham's linked list merge sort algorithm
-            // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-            function sortLinked(list) {
-                var i, p, q, e, tail, numMerges, pSize, qSize,
-                    inSize = 1;
-        
-                do {
-                    p = list;
-                    list = null;
-                    tail = null;
-                    numMerges = 0;
-        
-                    while (p) {
-                        numMerges++;
-                        q = p;
-                        pSize = 0;
-                        for (i = 0; i < inSize; i++) {
-                            pSize++;
-                            q = q.nextZ;
-                            if (!q) break;
-                        }
-                        qSize = inSize;
-        
-                        while (pSize > 0 || (qSize > 0 && q)) {
-        
-                            if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
-                                e = p;
-                                p = p.nextZ;
-                                pSize--;
-                            } else {
-                                e = q;
-                                q = q.nextZ;
-                                qSize--;
-                            }
-        
-                            if (tail) tail.nextZ = e;
-                            else list = e;
-        
-                            e.prevZ = tail;
-                            tail = e;
-                        }
-        
-                        p = q;
-                    }
-        
-                    tail.nextZ = null;
-                    inSize *= 2;
-        
-                } while (numMerges > 1);
-        
-                return list;
-            }
-        
-            // z-order of a point given coords and inverse of the longer side of data bbox
-            function zOrder(x, y, minX, minY, invSize) {
-                // coords are transformed into non-negative 15-bit integer range
-                x = 32767 * (x - minX) * invSize;
-                y = 32767 * (y - minY) * invSize;
-        
-                x = (x | (x << 8)) & 0x00FF00FF;
-                x = (x | (x << 4)) & 0x0F0F0F0F;
-                x = (x | (x << 2)) & 0x33333333;
-                x = (x | (x << 1)) & 0x55555555;
-        
-                y = (y | (y << 8)) & 0x00FF00FF;
-                y = (y | (y << 4)) & 0x0F0F0F0F;
-                y = (y | (y << 2)) & 0x33333333;
-                y = (y | (y << 1)) & 0x55555555;
-        
-                return x | (y << 1);
-            }
-        
-            // find the leftmost node of a polygon ring
-            function getLeftmost(start) {
-                var p = start,
-                    leftmost = start;
-                do {
-                    if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
-                    p = p.next;
-                } while (p !== start);
-        
-                return leftmost;
-            }
-        
-            // check if a point lies within a convex triangle
-            function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
-                return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
-                    (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
-                    (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
-            }
-        
-            // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-            function isValidDiagonal(a, b) {
-                return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
-                    locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
-            }
-        
-            // signed area of a triangle
-            function area(p, q, r) {
-                return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-            }
-        
-            // check if two points are equal
-            function equals(p1, p2) {
-                return p1.x === p2.x && p1.y === p2.y;
-            }
-        
-            // check if two segments intersect
-            function intersects(p1, q1, p2, q2) {
-                if ((equals(p1, p2) && equals(q1, q2)) ||
-                    (equals(p1, q2) && equals(p2, q1))) return true;
-                return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
-                    area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
-            }
-        
-            // check if a polygon diagonal intersects any polygon segments
-            function intersectsPolygon(a, b) {
-                var p = a;
-                do {
-                    if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
-                            intersects(p, p.next, a, b)) return true;
-                    p = p.next;
-                } while (p !== a);
-        
-                return false;
-            }
-        
-            // check if a polygon diagonal is locally inside the polygon
-            function locallyInside(a, b) {
-                return area(a.prev, a, a.next) < 0 ?
-                    area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
-                    area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
-            }
-        
-            // check if the middle point of a polygon diagonal is inside the polygon
-            function middleInside(a, b) {
-                var p = a,
-                    inside = false,
-                    px = (a.x + b.x) / 2,
-                    py = (a.y + b.y) / 2;
-                do {
-                    if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
-                            (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
-                        inside = !inside;
-                    p = p.next;
-                } while (p !== a);
-        
-                return inside;
-            }
-        
-            // link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
-            // if one belongs to the outer ring and another to a hole, it merges it into a single ring
-            function splitPolygon(a, b) {
-                var a2 = new Node(a.i, a.x, a.y),
-                    b2 = new Node(b.i, b.x, b.y),
-                    an = a.next,
-                    bp = b.prev;
-        
-                a.next = b;
-                b.prev = a;
-        
-                a2.next = an;
-                an.prev = a2;
-        
-                b2.next = a2;
-                a2.prev = b2;
-        
-                bp.next = b2;
-                b2.prev = bp;
-        
-                return b2;
-            }
-        
-            // create a node and optionally link it with previous one (in a circular doubly linked list)
-            function insertNode(i, x, y, last) {
-                var p = new Node(i, x, y);
-        
-                if (!last) {
-                    p.prev = p;
-                    p.next = p;
-        
-                } else {
-                    p.next = last.next;
-                    p.prev = last;
-                    last.next.prev = p;
-                    last.next = p;
-                }
-                return p;
-            }
-        
-            function removeNode(p) {
-                p.next.prev = p.prev;
-                p.prev.next = p.next;
-        
-                if (p.prevZ) p.prevZ.nextZ = p.nextZ;
-                if (p.nextZ) p.nextZ.prevZ = p.prevZ;
-            }
-        
-            function Node(i, x, y) {
-                // vertex index in coordinates array
-                this.i = i;
-        
-                // vertex coordinates
-                this.x = x;
-                this.y = y;
-        
-                // previous and next vertex nodes in a polygon ring
-                this.prev = null;
-                this.next = null;
-        
-                // z-order curve value
-                this.z = null;
-        
-                // previous and next nodes in z-order
-                this.prevZ = null;
-                this.nextZ = null;
-        
-                // indicates whether this is a steiner point
-                this.steiner = false;
-            }
-        
-            // // return a percentage difference between the polygon area and its triangulation area;
-            // // used to verify correctness of triangulation
-            // earcut.deviation = function (data, holeIndices, dim, triangles) {
-            //     var hasHoles = holeIndices && holeIndices.length;
-            //     var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
-        
-            //     var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
-            //     if (hasHoles) {
-            //         for (var i = 0, len = holeIndices.length; i < len; i++) {
-            //             var start = holeIndices[i] * dim;
-            //             var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-            //             polygonArea -= Math.abs(signedArea(data, start, end, dim));
-            //         }
-            //     }
-        
-            //     var trianglesArea = 0;
-            //     for (i = 0; i < triangles.length; i += 3) {
-            //         var a = triangles[i] * dim;
-            //         var b = triangles[i + 1] * dim;
-            //         var c = triangles[i + 2] * dim;
-            //         trianglesArea += Math.abs(
-            //             (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
-            //             (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
-            //     }
-        
-            //     return polygonArea === 0 && trianglesArea === 0 ? 0 :
-            //         Math.abs((trianglesArea - polygonArea) / polygonArea);
-            // };
-        
-            function signedArea(data, start, end, dim) {
-                var sum = 0;
-                for (var i = start, j = end - dim; i < end; i += dim) {
-                    sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-                    j = i;
-                }
-                return sum;
-            }
-        
-            // // turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-            // earcut.flatten = function (data) {
-            //     var dim = data[0][0].length,
-            //         result = {vertices: [], holes: [], dimensions: dim},
-            //         holeIndex = 0;
-        
-            //     for (var i = 0; i < data.length; i++) {
-            //         for (var j = 0; j < data[i].length; j++) {
-            //             for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
-            //         }
-            //         if (i > 0) {
-            //             holeIndex += data[i - 1].length;
-            //             result.holes.push(holeIndex);
-            //         }
-            //     }
-            //     return result;
-            // };
-        };
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        this.earcut2 = function(points,holeIndices){
+            // Modified by Metasophiea <metasophiea@gmail.com>
+        
+        	var BuildLog = require('./lib/build-log');
+        	var Epsilon = require('./lib/epsilon');
+        	var Intersecter = require('./lib/intersecter');
+        	var SegmentChainer = require('./lib/segment-chainer');
+        	var SegmentSelector = require('./lib/segment-selector');
+        	var GeoJSON = require('./lib/geojson');
+        	
+        	var buildLog = false;
+        	var epsilon = Epsilon();
+        	
+        	var PolyBool;
+        	PolyBool = {
+        		// getter/setter for buildLog
+        		buildLog: function(bl){
+        			if (bl === true)
+        				buildLog = BuildLog();
+        			else if (bl === false)
+        				buildLog = false;
+        			return buildLog === false ? false : buildLog.list;
+        		},
+        		// getter/setter for epsilon
+        		epsilon: function(v){
+        			return epsilon.epsilon(v);
+        		},
+        	
+        		// core API
+        		segments: function(poly){
+        			var i = Intersecter(true, epsilon, buildLog);
+        			poly.regions.forEach(i.addRegion);
+        			return {
+        				segments: i.calculate(poly.inverted),
+        				inverted: poly.inverted
+        			};
+        		},
+        		combine: function(segments1, segments2){
+        			var i3 = Intersecter(false, epsilon, buildLog);
+        			return {
+        				combined: i3.calculate(
+        					segments1.segments, segments1.inverted,
+        					segments2.segments, segments2.inverted
+        				),
+        				inverted1: segments1.inverted,
+        				inverted2: segments2.inverted
+        			};
+        		},
+        		selectUnion: function(combined){
+        			return {
+        				segments: SegmentSelector.union(combined.combined, buildLog),
+        				inverted: combined.inverted1 || combined.inverted2
+        			}
+        		},
+        		selectIntersect: function(combined){
+        			return {
+        				segments: SegmentSelector.intersect(combined.combined, buildLog),
+        				inverted: combined.inverted1 && combined.inverted2
+        			}
+        		},
+        		selectDifference: function(combined){
+        			return {
+        				segments: SegmentSelector.difference(combined.combined, buildLog),
+        				inverted: combined.inverted1 && !combined.inverted2
+        			}
+        		},
+        		selectDifferenceRev: function(combined){
+        			return {
+        				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
+        				inverted: !combined.inverted1 && combined.inverted2
+        			}
+        		},
+        		selectXor: function(combined){
+        			return {
+        				segments: SegmentSelector.xor(combined.combined, buildLog),
+        				inverted: combined.inverted1 !== combined.inverted2
+        			}
+        		},
+        		polygon: function(segments){
+        			return {
+        				regions: SegmentChainer(segments.segments, epsilon, buildLog),
+        				inverted: segments.inverted
+        			};
+        		},
+        	
+        		// GeoJSON converters
+        		polygonFromGeoJSON: function(geojson){
+        			return GeoJSON.toPolygon(PolyBool, geojson);
+        		},
+        		polygonToGeoJSON: function(poly){
+        			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
+        		},
+        	
+        		// helper functions for common operations
+        		union: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectUnion);
+        		},
+        		intersect: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectIntersect);
+        		},
+        		difference: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectDifference);
+        		},
+        		differenceRev: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
+        		},
+        		xor: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectXor);
+        		}
+        	};
+        
+        	thirdparty.PolyBool = PolyBool;
+        	
+        	function operate(poly1, poly2, selector){
+        		var seg1 = PolyBool.segments(poly1);
+        		var seg2 = PolyBool.segments(poly2);
+        		var comb = PolyBool.combine(seg1, seg2);
+        		var seg3 = selector(comb);
+        		return PolyBool.polygon(seg3);
+        	}
+        		
+        	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// used strictly for logging the processing of the algorithm... only useful if you intend on
+        	// looking under the covers (for pretty UI's or debugging)
+        	//
+        	
+        	function BuildLog(){
+        		var my;
+        		var nextSegmentId = 0;
+        		var curVert = false;
+        	
+        		function push(type, data){
+        			my.list.push({
+        				type: type,
+        				data: data ? JSON.parse(JSON.stringify(data)) : void 0
+        			});
+        			return my;
+        		}
+        	
+        		my = {
+        			list: [],
+        			segmentId: function(){
+        				return nextSegmentId++;
+        			},
+        			checkIntersection: function(seg1, seg2){
+        				return push('check', { seg1: seg1, seg2: seg2 });
+        			},
+        			segmentChop: function(seg, end){
+        				push('div_seg', { seg: seg, pt: end });
+        				return push('chop', { seg: seg, pt: end });
+        			},
+        			statusRemove: function(seg){
+        				return push('pop_seg', { seg: seg });
+        			},
+        			segmentUpdate: function(seg){
+        				return push('seg_update', { seg: seg });
+        			},
+        			segmentNew: function(seg, primary){
+        				return push('new_seg', { seg: seg, primary: primary });
+        			},
+        			segmentRemove: function(seg){
+        				return push('rem_seg', { seg: seg });
+        			},
+        			tempStatus: function(seg, above, below){
+        				return push('temp_status', { seg: seg, above: above, below: below });
+        			},
+        			rewind: function(seg){
+        				return push('rewind', { seg: seg });
+        			},
+        			status: function(seg, above, below){
+        				return push('status', { seg: seg, above: above, below: below });
+        			},
+        			vert: function(x){
+        				if (x === curVert)
+        					return my;
+        				curVert = x;
+        				return push('vert', { x: x });
+        			},
+        			log: function(data){
+        				if (typeof data !== 'string')
+        					data = JSON.stringify(data, false, '  ');
+        				return push('log', { txt: data });
+        			},
+        			reset: function(){
+        				return push('reset');
+        			},
+        			selected: function(segs){
+        				return push('selected', { segs: segs });
+        			},
+        			chainStart: function(seg){
+        				return push('chain_start', { seg: seg });
+        			},
+        			chainRemoveHead: function(index, pt){
+        				return push('chain_rem_head', { index: index, pt: pt });
+        			},
+        			chainRemoveTail: function(index, pt){
+        				return push('chain_rem_tail', { index: index, pt: pt });
+        			},
+        			chainNew: function(pt1, pt2){
+        				return push('chain_new', { pt1: pt1, pt2: pt2 });
+        			},
+        			chainMatch: function(index){
+        				return push('chain_match', { index: index });
+        			},
+        			chainClose: function(index){
+        				return push('chain_close', { index: index });
+        			},
+        			chainAddHead: function(index, pt){
+        				return push('chain_add_head', { index: index, pt: pt });
+        			},
+        			chainAddTail: function(index, pt){
+        				return push('chain_add_tail', { index: index, pt: pt, });
+        			},
+        			chainConnect: function(index1, index2){
+        				return push('chain_con', { index1: index1, index2: index2 });
+        			},
+        			chainReverse: function(index){
+        				return push('chain_rev', { index: index });
+        			},
+        			chainJoin: function(index1, index2){
+        				return push('chain_join', { index1: index1, index2: index2 });
+        			},
+        			done: function(){
+        				return push('done');
+        			}
+        		};
+        		return my;
+        	}
+        	
+        	module.exports = BuildLog;
+        	
+        	},{}],3:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// provides the raw computation functions that takes epsilon into account
+        	//
+        	// zero is defined to be between (-epsilon, epsilon) exclusive
+        	//
+        	
+        	function Epsilon(eps){
+        		if (typeof eps !== 'number')
+        			eps = 0.0000000001; // sane default? sure why not
+        		var my = {
+        			epsilon: function(v){
+        				if (typeof v === 'number')
+        					eps = v;
+        				return eps;
+        			},
+        			pointAboveOrOnLine: function(pt, left, right){
+        				var Ax = left[0];
+        				var Ay = left[1];
+        				var Bx = right[0];
+        				var By = right[1];
+        				var Cx = pt[0];
+        				var Cy = pt[1];
+        				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
+        			},
+        			pointBetween: function(p, left, right){
+        				// p must be collinear with left->right
+        				// returns false if p == left, p == right, or left == right
+        				var d_py_ly = p[1] - left[1];
+        				var d_rx_lx = right[0] - left[0];
+        				var d_px_lx = p[0] - left[0];
+        				var d_ry_ly = right[1] - left[1];
+        	
+        				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
+        				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
+        				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
+        				if (dot < eps)
+        					return false;
+        	
+        				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
+        				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
+        				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
+        				if (dot - sqlen > -eps)
+        					return false;
+        	
+        				return true;
+        			},
+        			pointsSameX: function(p1, p2){
+        				return Math.abs(p1[0] - p2[0]) < eps;
+        			},
+        			pointsSameY: function(p1, p2){
+        				return Math.abs(p1[1] - p2[1]) < eps;
+        			},
+        			pointsSame: function(p1, p2){
+        				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
+        			},
+        			pointsCompare: function(p1, p2){
+        				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
+        				if (my.pointsSameX(p1, p2))
+        					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
+        				return p1[0] < p2[0] ? -1 : 1;
+        			},
+        			pointsCollinear: function(pt1, pt2, pt3){
+        				// does pt1->pt2->pt3 make a straight line?
+        				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
+        				// if slopes are equal, then they must be collinear, because they share pt2
+        				var dx1 = pt1[0] - pt2[0];
+        				var dy1 = pt1[1] - pt2[1];
+        				var dx2 = pt2[0] - pt3[0];
+        				var dy2 = pt2[1] - pt3[1];
+        				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
+        			},
+        			linesIntersect: function(a0, a1, b0, b1){
+        				// returns false if the lines are coincident (e.g., parallel or on top of each other)
+        				//
+        				// returns an object if the lines intersect:
+        				//   {
+        				//     pt: [x, y],    where the intersection point is at
+        				//     alongA: where intersection point is along A,
+        				//     alongB: where intersection point is along B
+        				//   }
+        				//
+        				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
+        				//
+        				//  with the following meaning:
+        				//
+        				//    -2   intersection point is before segment's first point
+        				//    -1   intersection point is directly on segment's first point
+        				//     0   intersection point is between segment's first and second points (exclusive)
+        				//     1   intersection point is directly on segment's second point
+        				//     2   intersection point is after segment's second point
+        				var adx = a1[0] - a0[0];
+        				var ady = a1[1] - a0[1];
+        				var bdx = b1[0] - b0[0];
+        				var bdy = b1[1] - b0[1];
+        	
+        				var axb = adx * bdy - ady * bdx;
+        				if (Math.abs(axb) < eps)
+        					return false; // lines are coincident
+        	
+        				var dx = a0[0] - b0[0];
+        				var dy = a0[1] - b0[1];
+        	
+        				var A = (bdx * dy - bdy * dx) / axb;
+        				var B = (adx * dy - ady * dx) / axb;
+        	
+        				var ret = {
+        					alongA: 0,
+        					alongB: 0,
+        					pt: [
+        						a0[0] + A * adx,
+        						a0[1] + A * ady
+        					]
+        				};
+        	
+        				// categorize where intersection point is along A and B
+        	
+        				if (A <= -eps)
+        					ret.alongA = -2;
+        				else if (A < eps)
+        					ret.alongA = -1;
+        				else if (A - 1 <= -eps)
+        					ret.alongA = 0;
+        				else if (A - 1 < eps)
+        					ret.alongA = 1;
+        				else
+        					ret.alongA = 2;
+        	
+        				if (B <= -eps)
+        					ret.alongB = -2;
+        				else if (B < eps)
+        					ret.alongB = -1;
+        				else if (B - 1 <= -eps)
+        					ret.alongB = 0;
+        				else if (B - 1 < eps)
+        					ret.alongB = 1;
+        				else
+        					ret.alongB = 2;
+        	
+        				return ret;
+        			},
+        			pointInsideRegion: function(pt, region){
+        				var x = pt[0];
+        				var y = pt[1];
+        				var last_x = region[region.length - 1][0];
+        				var last_y = region[region.length - 1][1];
+        				var inside = false;
+        				for (var i = 0; i < region.length; i++){
+        					var curr_x = region[i][0];
+        					var curr_y = region[i][1];
+        	
+        					// if y is between curr_y and last_y, and
+        					// x is to the right of the boundary created by the line
+        					if ((curr_y - y > eps) != (last_y - y > eps) &&
+        						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
+        						inside = !inside
+        	
+        					last_x = curr_x;
+        					last_y = curr_y;
+        				}
+        				return inside;
+        			}
+        		};
+        		return my;
+        	}
+        	
+        	module.exports = Epsilon;
+        	
+        	},{}],4:[function(require,module,exports){
+        	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
+        	//
+        	
+        	var GeoJSON = {
+        		// convert a GeoJSON object to a PolyBool polygon
+        		toPolygon: function(PolyBool, geojson){
+        	
+        			// converts list of LineString's to segments
+        			function GeoPoly(coords){
+        				// check for empty coords
+        				if (coords.length <= 0)
+        					return PolyBool.segments({ inverted: false, regions: [] });
+        	
+        				// convert LineString to segments
+        				function LineString(ls){
+        					// remove tail which should be the same as head
+        					var reg = ls.slice(0, ls.length - 1);
+        					return PolyBool.segments({ inverted: false, regions: [reg] });
+        				}
+        	
+        				// the first LineString is considered the outside
+        				var out = LineString(coords[0]);
+        	
+        				// the rest of the LineStrings are considered interior holes, so subtract them from the
+        				// current result
+        				for (var i = 1; i < coords.length; i++)
+        					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
+        	
+        				return out;
+        			}
+        	
+        			if (geojson.type === 'Polygon'){
+        				// single polygon, so just convert it and we're done
+        				return PolyBool.polygon(GeoPoly(geojson.coordinates));
+        			}
+        			else if (geojson.type === 'MultiPolygon'){
+        				// multiple polygons, so union all the polygons together
+        				var out = PolyBool.segments({ inverted: false, regions: [] });
+        				for (var i = 0; i < geojson.coordinates.length; i++)
+        					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
+        				return PolyBool.polygon(out);
+        			}
+        			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
+        		},
+        	
+        		// convert a PolyBool polygon to a GeoJSON object
+        		fromPolygon: function(PolyBool, eps, poly){
+        			// make sure out polygon is clean
+        			poly = PolyBool.polygon(PolyBool.segments(poly));
+        	
+        			// test if r1 is inside r2
+        			function regionInsideRegion(r1, r2){
+        				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
+        				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
+        				// edge of the first line, which cannot be on an edge
+        				return eps.pointInsideRegion([
+        					(r1[0][0] + r1[1][0]) * 0.5,
+        					(r1[0][1] + r1[1][1]) * 0.5
+        				], r2);
+        			}
+        	
+        			// calculate inside heirarchy
+        			//
+        			//  _____________________   _______    roots -> A       -> F
+        			// |          A          | |   F   |            |          |
+        			// |  _______   _______  | |  ___  |            +-- B      +-- G
+        			// | |   B   | |   C   | | | |   | |            |   |
+        			// | |  ___  | |  ___  | | | |   | |            |   +-- D
+        			// | | | D | | | | E | | | | | G | |            |
+        			// | | |___| | | |___| | | | |   | |            +-- C
+        			// | |_______| |_______| | | |___| |                |
+        			// |_____________________| |_______|                +-- E
+        	
+        			function newNode(region){
+        				return {
+        					region: region,
+        					children: []
+        				};
+        			}
+        	
+        			var roots = newNode(null);
+        	
+        			function addChild(root, region){
+        				// first check if we're inside any children
+        				for (var i = 0; i < root.children.length; i++){
+        					var child = root.children[i];
+        					if (regionInsideRegion(region, child.region)){
+        						// we are, so insert inside them instead
+        						addChild(child, region);
+        						return;
+        					}
+        				}
+        	
+        				// not inside any children, so check to see if any children are inside us
+        				var node = newNode(region);
+        				for (var i = 0; i < root.children.length; i++){
+        					var child = root.children[i];
+        					if (regionInsideRegion(child.region, region)){
+        						// oops... move the child beneath us, and remove them from root
+        						node.children.push(child);
+        						root.children.splice(i, 1);
+        						i--;
+        					}
+        				}
+        	
+        				// now we can add ourselves
+        				root.children.push(node);
+        			}
+        	
+        			// add all regions to the root
+        			for (var i = 0; i < poly.regions.length; i++){
+        				var region = poly.regions[i];
+        				if (region.length < 3) // regions must have at least 3 points (sanity check)
+        					continue;
+        				addChild(roots, region);
+        			}
+        	
+        			// with our heirarchy, we can distinguish between exterior borders, and interior holes
+        			// the root nodes are exterior, children are interior, children's children are exterior,
+        			// children's children's children are interior, etc
+        	
+        			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
+        	
+        			function forceWinding(region, clockwise){
+        				// first, see if we're clockwise or counter-clockwise
+        				// https://en.wikipedia.org/wiki/Shoelace_formula
+        				var winding = 0;
+        				var last_x = region[region.length - 1][0];
+        				var last_y = region[region.length - 1][1];
+        				var copy = [];
+        				for (var i = 0; i < region.length; i++){
+        					var curr_x = region[i][0];
+        					var curr_y = region[i][1];
+        					copy.push([curr_x, curr_y]); // create a copy while we're at it
+        					winding += curr_y * last_x - curr_x * last_y;
+        					last_x = curr_x;
+        					last_y = curr_y;
+        				}
+        				// this assumes Cartesian coordinates (Y is positive going up)
+        				var isclockwise = winding < 0;
+        				if (isclockwise !== clockwise)
+        					copy.reverse();
+        				// while we're here, the last point must be the first point...
+        				copy.push([copy[0][0], copy[0][1]]);
+        				return copy;
+        			}
+        	
+        			var geopolys = [];
+        	
+        			function addExterior(node){
+        				var poly = [forceWinding(node.region, false)];
+        				geopolys.push(poly);
+        				// children of exteriors are interior
+        				for (var i = 0; i < node.children.length; i++)
+        					poly.push(getInterior(node.children[i]));
+        			}
+        	
+        			function getInterior(node){
+        				// children of interiors are exterior
+        				for (var i = 0; i < node.children.length; i++)
+        					addExterior(node.children[i]);
+        				// return the clockwise interior
+        				return forceWinding(node.region, true);
+        			}
+        	
+        			// root nodes are exterior
+        			for (var i = 0; i < roots.children.length; i++)
+        				addExterior(roots.children[i]);
+        	
+        			// lastly, construct the approrpriate GeoJSON object
+        	
+        			if (geopolys.length <= 0) // empty GeoJSON Polygon
+        				return { type: 'Polygon', coordinates: [] };
+        			if (geopolys.length == 1) // use a GeoJSON Polygon
+        				return { type: 'Polygon', coordinates: geopolys[0] };
+        			return { // otherwise, use a GeoJSON MultiPolygon
+        				type: 'MultiPolygon',
+        				coordinates: geopolys
+        			};
+        		}
+        	};
+        	
+        	module.exports = GeoJSON;
+        	
+        	},{}],5:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// this is the core work-horse
+        	//
+        	
+        	var LinkedList = require('./linked-list');
+        	
+        	function Intersecter(selfIntersection, eps, buildLog){
+        		// selfIntersection is true/false depending on the phase of the overall algorithm
+        	
+        		//
+        		// segment creation
+        		//
+        	
+        		function segmentNew(start, end){
+        			return {
+        				id: buildLog ? buildLog.segmentId() : -1,
+        				start: start,
+        				end: end,
+        				myFill: {
+        					above: null, // is there fill above us?
+        					below: null  // is there fill below us?
+        				},
+        				otherFill: null
+        			};
+        		}
+        	
+        		function segmentCopy(start, end, seg){
+        			return {
+        				id: buildLog ? buildLog.segmentId() : -1,
+        				start: start,
+        				end: end,
+        				myFill: {
+        					above: seg.myFill.above,
+        					below: seg.myFill.below
+        				},
+        				otherFill: null
+        			};
+        		}
+        	
+        		//
+        		// event logic
+        		//
+        	
+        		var event_root = LinkedList.create();
+        	
+        		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
+        			// compare the selected points first
+        			var comp = eps.pointsCompare(p1_1, p2_1);
+        			if (comp !== 0)
+        				return comp;
+        			// the selected points are the same
+        	
+        			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
+        				return 0; // then the segments are equal
+        	
+        			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
+        				return p1_isStart ? 1 : -1; // favor the one that isn't the start
+        	
+        			// otherwise, we'll have to calculate which one is below the other manually
+        			return eps.pointAboveOrOnLine(p1_2,
+        				p2_isStart ? p2_1 : p2_2, // order matters
+        				p2_isStart ? p2_2 : p2_1
+        			) ? 1 : -1;
+        		}
+        	
+        		function eventAdd(ev, other_pt){
+        			event_root.insertBefore(ev, function(here){
+        				// should ev be inserted before here?
+        				var comp = eventCompare(
+        					ev  .isStart, ev  .pt,      other_pt,
+        					here.isStart, here.pt, here.other.pt
+        				);
+        				return comp < 0;
+        			});
+        		}
+        	
+        		function eventAddSegmentStart(seg, primary){
+        			var ev_start = LinkedList.node({
+        				isStart: true,
+        				pt: seg.start,
+        				seg: seg,
+        				primary: primary,
+        				other: null,
+        				status: null
+        			});
+        			eventAdd(ev_start, seg.end);
+        			return ev_start;
+        		}
+        	
+        		function eventAddSegmentEnd(ev_start, seg, primary){
+        			var ev_end = LinkedList.node({
+        				isStart: false,
+        				pt: seg.end,
+        				seg: seg,
+        				primary: primary,
+        				other: ev_start,
+        				status: null
+        			});
+        			ev_start.other = ev_end;
+        			eventAdd(ev_end, ev_start.pt);
+        		}
+        	
+        		function eventAddSegment(seg, primary){
+        			var ev_start = eventAddSegmentStart(seg, primary);
+        			eventAddSegmentEnd(ev_start, seg, primary);
+        			return ev_start;
+        		}
+        	
+        		function eventUpdateEnd(ev, end){
+        			// slides an end backwards
+        			//   (start)------------(end)    to:
+        			//   (start)---(end)
+        	
+        			if (buildLog)
+        				buildLog.segmentChop(ev.seg, end);
+        	
+        			ev.other.remove();
+        			ev.seg.end = end;
+        			ev.other.pt = end;
+        			eventAdd(ev.other, ev.pt);
+        		}
+        	
+        		function eventDivide(ev, pt){
+        			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
+        			eventUpdateEnd(ev, pt);
+        			return eventAddSegment(ns, ev.primary);
+        		}
+        	
+        		function calculate(primaryPolyInverted, secondaryPolyInverted){
+        			// if selfIntersection is true then there is no secondary polygon, so that isn't used
+        	
+        			//
+        			// status logic
+        			//
+        	
+        			var status_root = LinkedList.create();
+        	
+        			function statusCompare(ev1, ev2){
+        				var a1 = ev1.seg.start;
+        				var a2 = ev1.seg.end;
+        				var b1 = ev2.seg.start;
+        				var b2 = ev2.seg.end;
+        	
+        				if (eps.pointsCollinear(a1, b1, b2)){
+        					if (eps.pointsCollinear(a2, b1, b2))
+        						return 1;//eventCompare(true, a1, a2, true, b1, b2);
+        					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
+        				}
+        				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
+        			}
+        	
+        			function statusFindSurrounding(ev){
+        				return status_root.findTransition(function(here){
+        					var comp = statusCompare(ev, here.ev);
+        					return comp > 0;
+        				});
+        			}
+        	
+        			function checkIntersection(ev1, ev2){
+        				// returns the segment equal to ev1, or false if nothing equal
+        	
+        				var seg1 = ev1.seg;
+        				var seg2 = ev2.seg;
+        				var a1 = seg1.start;
+        				var a2 = seg1.end;
+        				var b1 = seg2.start;
+        				var b2 = seg2.end;
+        	
+        				if (buildLog)
+        					buildLog.checkIntersection(seg1, seg2);
+        	
+        				var i = eps.linesIntersect(a1, a2, b1, b2);
+        	
+        				if (i === false){
+        					// segments are parallel or coincident
+        	
+        					// if points aren't collinear, then the segments are parallel, so no intersections
+        					if (!eps.pointsCollinear(a1, a2, b1))
+        						return false;
+        					// otherwise, segments are on top of each other somehow (aka coincident)
+        	
+        					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
+        						return false; // segments touch at endpoints... no intersection
+        	
+        					var a1_equ_b1 = eps.pointsSame(a1, b1);
+        					var a2_equ_b2 = eps.pointsSame(a2, b2);
+        	
+        					if (a1_equ_b1 && a2_equ_b2)
+        						return ev2; // segments are exactly equal
+        	
+        					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
+        					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
+        	
+        					// handy for debugging:
+        					// buildLog.log({
+        					//	a1_equ_b1: a1_equ_b1,
+        					//	a2_equ_b2: a2_equ_b2,
+        					//	a1_between: a1_between,
+        					//	a2_between: a2_between
+        					// });
+        	
+        					if (a1_equ_b1){
+        						if (a2_between){
+        							//  (a1)---(a2)
+        							//  (b1)----------(b2)
+        							eventDivide(ev2, a2);
+        						}
+        						else{
+        							//  (a1)----------(a2)
+        							//  (b1)---(b2)
+        							eventDivide(ev1, b2);
+        						}
+        						return ev2;
+        					}
+        					else if (a1_between){
+        						if (!a2_equ_b2){
+        							// make a2 equal to b2
+        							if (a2_between){
+        								//         (a1)---(a2)
+        								//  (b1)-----------------(b2)
+        								eventDivide(ev2, a2);
+        							}
+        							else{
+        								//         (a1)----------(a2)
+        								//  (b1)----------(b2)
+        								eventDivide(ev1, b2);
+        							}
+        						}
+        	
+        						//         (a1)---(a2)
+        						//  (b1)----------(b2)
+        						eventDivide(ev2, a1);
+        					}
+        				}
+        				else{
+        					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
+        	
+        					// is A divided between its endpoints? (exclusive)
+        					if (i.alongA === 0){
+        						if (i.alongB === -1) // yes, at exactly b1
+        							eventDivide(ev1, b1);
+        						else if (i.alongB === 0) // yes, somewhere between B's endpoints
+        							eventDivide(ev1, i.pt);
+        						else if (i.alongB === 1) // yes, at exactly b2
+        							eventDivide(ev1, b2);
+        					}
+        	
+        					// is B divided between its endpoints? (exclusive)
+        					if (i.alongB === 0){
+        						if (i.alongA === -1) // yes, at exactly a1
+        							eventDivide(ev2, a1);
+        						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
+        							eventDivide(ev2, i.pt);
+        						else if (i.alongA === 1) // yes, at exactly a2
+        							eventDivide(ev2, a2);
+        					}
+        				}
+        				return false;
+        			}
+        	
+        			//
+        			// main event loop
+        			//
+        			var segments = [];
+        			while (!event_root.isEmpty()){
+        				var ev = event_root.getHead();
+        	
+        				if (buildLog)
+        					buildLog.vert(ev.pt[0]);
+        	
+        				if (ev.isStart){
+        	
+        					if (buildLog)
+        						buildLog.segmentNew(ev.seg, ev.primary);
+        	
+        					var surrounding = statusFindSurrounding(ev);
+        					var above = surrounding.before ? surrounding.before.ev : null;
+        					var below = surrounding.after ? surrounding.after.ev : null;
+        	
+        					if (buildLog){
+        						buildLog.tempStatus(
+        							ev.seg,
+        							above ? above.seg : false,
+        							below ? below.seg : false
+        						);
+        					}
+        	
+        					function checkBothIntersections(){
+        						if (above){
+        							var eve = checkIntersection(ev, above);
+        							if (eve)
+        								return eve;
+        						}
+        						if (below)
+        							return checkIntersection(ev, below);
+        						return false;
+        					}
+        	
+        					var eve = checkBothIntersections();
+        					if (eve){
+        						// ev and eve are equal
+        						// we'll keep eve and throw away ev
+        	
+        						// merge ev.seg's fill information into eve.seg
+        	
+        						if (selfIntersection){
+        							var toggle; // are we a toggling edge?
+        							if (ev.seg.myFill.below === null)
+        								toggle = true;
+        							else
+        								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
+        	
+        							// merge two segments that belong to the same polygon
+        							// think of this as sandwiching two segments together, where `eve.seg` is
+        							// the bottom -- this will cause the above fill flag to toggle
+        							if (toggle)
+        								eve.seg.myFill.above = !eve.seg.myFill.above;
+        						}
+        						else{
+        							// merge two segments that belong to different polygons
+        							// each segment has distinct knowledge, so no special logic is needed
+        							// note that this can only happen once per segment in this phase, because we
+        							// are guaranteed that all self-intersections are gone
+        							eve.seg.otherFill = ev.seg.myFill;
+        						}
+        	
+        						if (buildLog)
+        							buildLog.segmentUpdate(eve.seg);
+        	
+        						ev.other.remove();
+        						ev.remove();
+        					}
+        	
+        					if (event_root.getHead() !== ev){
+        						// something was inserted before us in the event queue, so loop back around and
+        						// process it before continuing
+        						if (buildLog)
+        							buildLog.rewind(ev.seg);
+        						continue;
+        					}
+        	
+        					//
+        					// calculate fill flags
+        					//
+        					if (selfIntersection){
+        						var toggle; // are we a toggling edge?
+        						if (ev.seg.myFill.below === null) // if we are a new segment...
+        							toggle = true; // then we toggle
+        						else // we are a segment that has previous knowledge from a division
+        							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
+        	
+        						// next, calculate whether we are filled below us
+        						if (!below){ // if nothing is below us...
+        							// we are filled below us if the polygon is inverted
+        							ev.seg.myFill.below = primaryPolyInverted;
+        						}
+        						else{
+        							// otherwise, we know the answer -- it's the same if whatever is below
+        							// us is filled above it
+        							ev.seg.myFill.below = below.seg.myFill.above;
+        						}
+        	
+        						// since now we know if we're filled below us, we can calculate whether
+        						// we're filled above us by applying toggle to whatever is below us
+        						if (toggle)
+        							ev.seg.myFill.above = !ev.seg.myFill.below;
+        						else
+        							ev.seg.myFill.above = ev.seg.myFill.below;
+        					}
+        					else{
+        						// now we fill in any missing transition information, since we are all-knowing
+        						// at this point
+        	
+        						if (ev.seg.otherFill === null){
+        							// if we don't have other information, then we need to figure out if we're
+        							// inside the other polygon
+        							var inside;
+        							if (!below){
+        								// if nothing is below us, then we're inside if the other polygon is
+        								// inverted
+        								inside =
+        									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
+        							}
+        							else{ // otherwise, something is below us
+        								// so copy the below segment's other polygon's above
+        								if (ev.primary === below.primary)
+        									inside = below.seg.otherFill.above;
+        								else
+        									inside = below.seg.myFill.above;
+        							}
+        							ev.seg.otherFill = {
+        								above: inside,
+        								below: inside
+        							};
+        						}
+        					}
+        	
+        					if (buildLog){
+        						buildLog.status(
+        							ev.seg,
+        							above ? above.seg : false,
+        							below ? below.seg : false
+        						);
+        					}
+        	
+        					// insert the status and remember it for later removal
+        					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
+        				}
+        				else{
+        					var st = ev.status;
+        	
+        					if (st === null){
+        						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
+        							'probably too small or too large');
+        					}
+        	
+        					// removing the status will create two new adjacent edges, so we'll need to check
+        					// for those
+        					if (status_root.exists(st.prev) && status_root.exists(st.next))
+        						checkIntersection(st.prev.ev, st.next.ev);
+        	
+        					if (buildLog)
+        						buildLog.statusRemove(st.ev.seg);
+        	
+        					// remove the status
+        					st.remove();
+        	
+        					// if we've reached this point, we've calculated everything there is to know, so
+        					// save the segment for reporting
+        					if (!ev.primary){
+        						// make sure `seg.myFill` actually points to the primary polygon though
+        						var s = ev.seg.myFill;
+        						ev.seg.myFill = ev.seg.otherFill;
+        						ev.seg.otherFill = s;
+        					}
+        					segments.push(ev.seg);
+        				}
+        	
+        				// remove the event and continue
+        				event_root.getHead().remove();
+        			}
+        	
+        			if (buildLog)
+        				buildLog.done();
+        	
+        			return segments;
+        		}
+        	
+        		// return the appropriate API depending on what we're doing
+        		if (!selfIntersection){
+        			// performing combination of polygons, so only deal with already-processed segments
+        			return {
+        				calculate: function(segments1, inverted1, segments2, inverted2){
+        					// segmentsX come from the self-intersection API, or this API
+        					// invertedX is whether we treat that list of segments as an inverted polygon or not
+        					// returns segments that can be used for further operations
+        					segments1.forEach(function(seg){
+        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
+        					});
+        					segments2.forEach(function(seg){
+        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
+        					});
+        					return calculate(inverted1, inverted2);
+        				}
+        			};
+        		}
+        	
+        		// otherwise, performing self-intersection, so deal with regions
+        		return {
+        			addRegion: function(region){
+        				// regions are a list of points:
+        				//  [ [0, 0], [100, 0], [50, 100] ]
+        				// you can add multiple regions before running calculate
+        				var pt1;
+        				var pt2 = region[region.length - 1];
+        				for (var i = 0; i < region.length; i++){
+        					pt1 = pt2;
+        					pt2 = region[i];
+        	
+        					var forward = eps.pointsCompare(pt1, pt2);
+        					if (forward === 0) // points are equal, so we have a zero-length segment
+        						continue; // just skip it
+        	
+        					eventAddSegment(
+        						segmentNew(
+        							forward < 0 ? pt1 : pt2,
+        							forward < 0 ? pt2 : pt1
+        						),
+        						true
+        					);
+        				}
+        			},
+        			calculate: function(inverted){
+        				// is the polygon inverted?
+        				// returns segments
+        				return calculate(inverted, false);
+        			}
+        		};
+        	}
+        	
+        	module.exports = Intersecter;
+        	
+        	},{"./linked-list":6}],6:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// simple linked list implementation that allows you to traverse down nodes and save positions
+        	//
+        	
+        	var LinkedList = {
+        		create: function(){
+        			var my = {
+        				root: { root: true, next: null },
+        				exists: function(node){
+        					if (node === null || node === my.root)
+        						return false;
+        					return true;
+        				},
+        				isEmpty: function(){
+        					return my.root.next === null;
+        				},
+        				getHead: function(){
+        					return my.root.next;
+        				},
+        				insertBefore: function(node, check){
+        					var last = my.root;
+        					var here = my.root.next;
+        					while (here !== null){
+        						if (check(here)){
+        							node.prev = here.prev;
+        							node.next = here;
+        							here.prev.next = node;
+        							here.prev = node;
+        							return;
+        						}
+        						last = here;
+        						here = here.next;
+        					}
+        					last.next = node;
+        					node.prev = last;
+        					node.next = null;
+        				},
+        				findTransition: function(check){
+        					var prev = my.root;
+        					var here = my.root.next;
+        					while (here !== null){
+        						if (check(here))
+        							break;
+        						prev = here;
+        						here = here.next;
+        					}
+        					return {
+        						before: prev === my.root ? null : prev,
+        						after: here,
+        						insert: function(node){
+        							node.prev = prev;
+        							node.next = here;
+        							prev.next = node;
+        							if (here !== null)
+        								here.prev = node;
+        							return node;
+        						}
+        					};
+        				}
+        			};
+        			return my;
+        		},
+        		node: function(data){
+        			data.prev = null;
+        			data.next = null;
+        			data.remove = function(){
+        				data.prev.next = data.next;
+        				if (data.next)
+        					data.next.prev = data.prev;
+        				data.prev = null;
+        				data.next = null;
+        			};
+        			return data;
+        		}
+        	};
+        	
+        	module.exports = LinkedList;
+        	
+        	},{}],7:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// converts a list of segments into a list of regions, while also removing unnecessary verticies
+        	//
+        	
+        	function SegmentChainer(segments, eps, buildLog){
+        		var chains = [];
+        		var regions = [];
+        	
+        		segments.forEach(function(seg){
+        			var pt1 = seg.start;
+        			var pt2 = seg.end;
+        			if (eps.pointsSame(pt1, pt2)){
+        				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
+        					'probably too small or too large');
+        				return;
+        			}
+        	
+        			if (buildLog)
+        				buildLog.chainStart(seg);
+        	
+        			// search for two chains that this segment matches
+        			var first_match = {
+        				index: 0,
+        				matches_head: false,
+        				matches_pt1: false
+        			};
+        			var second_match = {
+        				index: 0,
+        				matches_head: false,
+        				matches_pt1: false
+        			};
+        			var next_match = first_match;
+        			function setMatch(index, matches_head, matches_pt1){
+        				// return true if we've matched twice
+        				next_match.index = index;
+        				next_match.matches_head = matches_head;
+        				next_match.matches_pt1 = matches_pt1;
+        				if (next_match === first_match){
+        					next_match = second_match;
+        					return false;
+        				}
+        				next_match = null;
+        				return true; // we've matched twice, we're done here
+        			}
+        			for (var i = 0; i < chains.length; i++){
+        				var chain = chains[i];
+        				var head  = chain[0];
+        				var head2 = chain[1];
+        				var tail  = chain[chain.length - 1];
+        				var tail2 = chain[chain.length - 2];
+        				if (eps.pointsSame(head, pt1)){
+        					if (setMatch(i, true, true))
+        						break;
+        				}
+        				else if (eps.pointsSame(head, pt2)){
+        					if (setMatch(i, true, false))
+        						break;
+        				}
+        				else if (eps.pointsSame(tail, pt1)){
+        					if (setMatch(i, false, true))
+        						break;
+        				}
+        				else if (eps.pointsSame(tail, pt2)){
+        					if (setMatch(i, false, false))
+        						break;
+        				}
+        			}
+        	
+        			if (next_match === first_match){
+        				// we didn't match anything, so create a new chain
+        				chains.push([ pt1, pt2 ]);
+        				if (buildLog)
+        					buildLog.chainNew(pt1, pt2);
+        				return;
+        			}
+        	
+        			if (next_match === second_match){
+        				// we matched a single chain
+        	
+        				if (buildLog)
+        					buildLog.chainMatch(first_match.index);
+        	
+        				// add the other point to the apporpriate end, and check to see if we've closed the
+        				// chain into a loop
+        	
+        				var index = first_match.index;
+        				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
+        				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
+        	
+        				var chain = chains[index];
+        				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
+        				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
+        				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
+        				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
+        	
+        				if (eps.pointsCollinear(grow2, grow, pt)){
+        					// grow isn't needed because it's directly between grow2 and pt:
+        					// grow2 ---grow---> pt
+        					if (addToHead){
+        						if (buildLog)
+        							buildLog.chainRemoveHead(first_match.index, pt);
+        						chain.shift();
+        					}
+        					else{
+        						if (buildLog)
+        							buildLog.chainRemoveTail(first_match.index, pt);
+        						chain.pop();
+        					}
+        					grow = grow2; // old grow is gone... new grow is what grow2 was
+        				}
+        	
+        				if (eps.pointsSame(oppo, pt)){
+        					// we're closing the loop, so remove chain from chains
+        					chains.splice(index, 1);
+        	
+        					if (eps.pointsCollinear(oppo2, oppo, grow)){
+        						// oppo isn't needed because it's directly between oppo2 and grow:
+        						// oppo2 ---oppo--->grow
+        						if (addToHead){
+        							if (buildLog)
+        								buildLog.chainRemoveTail(first_match.index, grow);
+        							chain.pop();
+        						}
+        						else{
+        							if (buildLog)
+        								buildLog.chainRemoveHead(first_match.index, grow);
+        							chain.shift();
+        						}
+        					}
+        	
+        					if (buildLog)
+        						buildLog.chainClose(first_match.index);
+        	
+        					// we have a closed chain!
+        					regions.push(chain);
+        					return;
+        				}
+        	
+        				// not closing a loop, so just add it to the apporpriate side
+        				if (addToHead){
+        					if (buildLog)
+        						buildLog.chainAddHead(first_match.index, pt);
+        					chain.unshift(pt);
+        				}
+        				else{
+        					if (buildLog)
+        						buildLog.chainAddTail(first_match.index, pt);
+        					chain.push(pt);
+        				}
+        				return;
+        			}
+        	
+        			// otherwise, we matched two chains, so we need to combine those chains together
+        	
+        			function reverseChain(index){
+        				if (buildLog)
+        					buildLog.chainReverse(index);
+        				chains[index].reverse(); // gee, that's easy
+        			}
+        	
+        			function appendChain(index1, index2){
+        				// index1 gets index2 appended to it, and index2 is removed
+        				var chain1 = chains[index1];
+        				var chain2 = chains[index2];
+        				var tail  = chain1[chain1.length - 1];
+        				var tail2 = chain1[chain1.length - 2];
+        				var head  = chain2[0];
+        				var head2 = chain2[1];
+        	
+        				if (eps.pointsCollinear(tail2, tail, head)){
+        					// tail isn't needed because it's directly between tail2 and head
+        					// tail2 ---tail---> head
+        					if (buildLog)
+        						buildLog.chainRemoveTail(index1, tail);
+        					chain1.pop();
+        					tail = tail2; // old tail is gone... new tail is what tail2 was
+        				}
+        	
+        				if (eps.pointsCollinear(tail, head, head2)){
+        					// head isn't needed because it's directly between tail and head2
+        					// tail ---head---> head2
+        					if (buildLog)
+        						buildLog.chainRemoveHead(index2, head);
+        					chain2.shift();
+        				}
+        	
+        				if (buildLog)
+        					buildLog.chainJoin(index1, index2);
+        				chains[index1] = chain1.concat(chain2);
+        				chains.splice(index2, 1);
+        			}
+        	
+        			var F = first_match.index;
+        			var S = second_match.index;
+        	
+        			if (buildLog)
+        				buildLog.chainConnect(F, S);
+        	
+        			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
+        			if (first_match.matches_head){
+        				if (second_match.matches_head){
+        					if (reverseF){
+        						// <<<< F <<<< --- >>>> S >>>>
+        						reverseChain(F);
+        						// >>>> F >>>> --- >>>> S >>>>
+        						appendChain(F, S);
+        					}
+        					else{
+        						// <<<< F <<<< --- >>>> S >>>>
+        						reverseChain(S);
+        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+        						// >>>> S >>>> --- >>>> F >>>>
+        						appendChain(S, F);
+        					}
+        				}
+        				else{
+        					// <<<< F <<<< --- <<<< S <<<<   logically same as:
+        					// >>>> S >>>> --- >>>> F >>>>
+        					appendChain(S, F);
+        				}
+        			}
+        			else{
+        				if (second_match.matches_head){
+        					// >>>> F >>>> --- >>>> S >>>>
+        					appendChain(F, S);
+        				}
+        				else{
+        					if (reverseF){
+        						// >>>> F >>>> --- <<<< S <<<<
+        						reverseChain(F);
+        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+        						// >>>> S >>>> --- >>>> F >>>>
+        						appendChain(S, F);
+        					}
+        					else{
+        						// >>>> F >>>> --- <<<< S <<<<
+        						reverseChain(S);
+        						// >>>> F >>>> --- >>>> S >>>>
+        						appendChain(F, S);
+        					}
+        				}
+        			}
+        		});
+        	
+        		return regions;
+        	}
+        	
+        	module.exports = SegmentChainer;
+        	
+        	},{}],8:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// filter a list of segments based on boolean operations
+        	//
+        	
+        	function select(segments, selection, buildLog){
+        		var result = [];
+        		segments.forEach(function(seg){
+        			var index =
+        				(seg.myFill.above ? 8 : 0) +
+        				(seg.myFill.below ? 4 : 0) +
+        				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
+        				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
+        			if (selection[index] !== 0){
+        				// copy the segment to the results, while also calculating the fill status
+        				result.push({
+        					id: buildLog ? buildLog.segmentId() : -1,
+        					start: seg.start,
+        					end: seg.end,
+        					myFill: {
+        						above: selection[index] === 1, // 1 if filled above
+        						below: selection[index] === 2  // 2 if filled below
+        					},
+        					otherFill: null
+        				});
+        			}
+        		});
+        	
+        		if (buildLog)
+        			buildLog.selected(result);
+        	
+        		return result;
+        	}
+        	
+        	var SegmentSelector = {
+        		union: function(segments, buildLog){ // primary | secondary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   yes filled below    2
+        			//    0      0      1      0   =>   yes filled above    1
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   yes filled below    2
+        			//    0      1      0      1   =>   yes filled below    2
+        			//    0      1      1      0   =>   no                  0
+        			//    0      1      1      1   =>   no                  0
+        			//    1      0      0      0   =>   yes filled above    1
+        			//    1      0      0      1   =>   no                  0
+        			//    1      0      1      0   =>   yes filled above    1
+        			//    1      0      1      1   =>   no                  0
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   no                  0
+        			//    1      1      1      0   =>   no                  0
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 2, 1, 0,
+        				2, 2, 0, 0,
+        				1, 0, 1, 0,
+        				0, 0, 0, 0
+        			], buildLog);
+        		},
+        		intersect: function(segments, buildLog){ // primary & secondary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   no                  0
+        			//    0      0      1      0   =>   no                  0
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   no                  0
+        			//    0      1      0      1   =>   yes filled below    2
+        			//    0      1      1      0   =>   no                  0
+        			//    0      1      1      1   =>   yes filled below    2
+        			//    1      0      0      0   =>   no                  0
+        			//    1      0      0      1   =>   no                  0
+        			//    1      0      1      0   =>   yes filled above    1
+        			//    1      0      1      1   =>   yes filled above    1
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   yes filled below    2
+        			//    1      1      1      0   =>   yes filled above    1
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 0, 0, 0,
+        				0, 2, 0, 2,
+        				0, 0, 1, 1,
+        				0, 2, 1, 0
+        			], buildLog);
+        		},
+        		difference: function(segments, buildLog){ // primary - secondary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   no                  0
+        			//    0      0      1      0   =>   no                  0
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   yes filled below    2
+        			//    0      1      0      1   =>   no                  0
+        			//    0      1      1      0   =>   yes filled below    2
+        			//    0      1      1      1   =>   no                  0
+        			//    1      0      0      0   =>   yes filled above    1
+        			//    1      0      0      1   =>   yes filled above    1
+        			//    1      0      1      0   =>   no                  0
+        			//    1      0      1      1   =>   no                  0
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   yes filled above    1
+        			//    1      1      1      0   =>   yes filled below    2
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 0, 0, 0,
+        				2, 0, 2, 0,
+        				1, 1, 0, 0,
+        				0, 1, 2, 0
+        			], buildLog);
+        		},
+        		differenceRev: function(segments, buildLog){ // secondary - primary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   yes filled below    2
+        			//    0      0      1      0   =>   yes filled above    1
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   no                  0
+        			//    0      1      0      1   =>   no                  0
+        			//    0      1      1      0   =>   yes filled above    1
+        			//    0      1      1      1   =>   yes filled above    1
+        			//    1      0      0      0   =>   no                  0
+        			//    1      0      0      1   =>   yes filled below    2
+        			//    1      0      1      0   =>   no                  0
+        			//    1      0      1      1   =>   yes filled below    2
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   no                  0
+        			//    1      1      1      0   =>   no                  0
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 2, 1, 0,
+        				0, 0, 1, 1,
+        				0, 2, 0, 2,
+        				0, 0, 0, 0
+        			], buildLog);
+        		},
+        		xor: function(segments, buildLog){ // primary ^ secondary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   yes filled below    2
+        			//    0      0      1      0   =>   yes filled above    1
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   yes filled below    2
+        			//    0      1      0      1   =>   no                  0
+        			//    0      1      1      0   =>   no                  0
+        			//    0      1      1      1   =>   yes filled above    1
+        			//    1      0      0      0   =>   yes filled above    1
+        			//    1      0      0      1   =>   no                  0
+        			//    1      0      1      0   =>   no                  0
+        			//    1      0      1      1   =>   yes filled below    2
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   yes filled above    1
+        			//    1      1      1      0   =>   yes filled below    2
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 2, 1, 0,
+        				2, 0, 0, 1,
+        				1, 0, 0, 2,
+        				0, 1, 2, 0
+        			], buildLog);
+        		}
+        	};
+        	
+        	module.exports = SegmentSelector;
+        	
+        },{}]},{},[1]);
+        this.earcut = function(points,holeIndices){
         	//https://github.com/mapbox/earcut (10/03/2020)
         
             var outputPoints = [];
@@ -21017,6 +21812,7 @@ const library = new function(){
             // };
         };
     };
+    const _thirdparty = this._thirdparty;
 };
 
 const communicationModuleMaker = function(communicationObject,callerName){
@@ -21040,10 +21836,19 @@ const communicationModuleMaker = function(communicationObject,callerName){
 
     communicationObject.onmessage = function(encodedPacket){
         self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
+        self.log('::communicationObject.onmessage -> <encodedPacket>'); //#development
+        if(devMode){console.log(encodedPacket);} //#development
+        self.log('::communicationObject.onmessage -> </encodedPacket>'); //#development
         let message = encodedPacket.data;
 
-        if(message.outgoing){
-            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
+        if(!message.response){
+            self.log('::communicationObject.onmessage -> message is a calling one'); //#development
+
+            if(message.cargo == undefined){
+                self.log('::communicationObject.onmessage -> message cargo not found; aborting'); //#development
+                return;
+            }
+
             if(message.cargo.function in self.function){
                 self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
                 self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
@@ -21055,7 +21860,7 @@ const communicationModuleMaker = function(communicationObject,callerName){
                     self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                     communicationObject.postMessage({
                         id:message.id,
-                        outgoing:false,
+                        response:true,
                         cargo:self.function[message.cargo.function](...message.cargo.arguments),
                     });
                 }
@@ -21068,6546 +21873,875 @@ const communicationModuleMaker = function(communicationObject,callerName){
                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                 }else{
                     self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
-                    cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
-                        communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
+                    self.delayedFunction[message.cargo.function](...[function(returnedData){
+                        communicationObject.postMessage({ id:message.id, response:true, cargo:returnedData });
                     }].concat(message.cargo.arguments));
                 }
             }else{
                 self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
             }
         }else{
-            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
+            self.log('::communicationObject.onmessage -> message is a response one'); //#development
             self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
             messagingCallbacks[message.id](message.cargo);
             delete messagingCallbacks[message.id];
         }
     };
-    this.run = function(functionName,argumentList=[],callback,transferables){
-        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
-        let id = null;
-        if(callback != undefined){
-            self.log('.run -> callback was defined; generating message ID'); //#development
-            id = generateMessageID();
-            self.log('.run -> message ID:',id); //#development
-            messagingCallbacks[id] = callback;
-        }
-        communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
+
+    this.run_withoutPromise = function(functionName,argumentList=[],transferables){
+        self.log('::communicationObject.run_withoutPromise('+functionName+','+JSON.stringify(argumentList)+','+JSON.stringify(transferables)+')'); //#development
+        communicationObject.postMessage({ id:undefined, response:false, cargo:{function:functionName,arguments:argumentList} }, transferables);
+    };
+    this.run_withPromise = function(functionName,argumentList=[],transferables){
+        self.log('::communicationObject.run_withPromise('+functionName+','+JSON.stringify(argumentList)+','+JSON.stringify(transferables)+')'); //#development
+
+        let id = generateMessageID();
+        self.log('::communicationObject.run_withPromise -> message ID:',id); //#development
+
+        return new Promise((resolve, reject) => {
+            messagingCallbacks[id] = resolve;
+            self.log('::communicationObject.run_withPromise -> sending calling message'); //#development
+            communicationObject.postMessage({ id:id, response:false, cargo:{function:functionName,arguments:argumentList} }, transferables);
+        });
     };
 };
 const communicationModule = new communicationModuleMaker(this,'core_engine');
 
-const dev = new function(){
-    const prefix = 'core_engine';
-    const active = {
-        element:false,
-        elementLibrary:{
-            group:false,
-            rectangle:false,
-            rectangleWithOutline:false,
-            circle:false,
-            circleWithOutline:false,
-            polygon:false,
-            polygonWithOutline:false,
-            path:false,
-            image:false,
-            canvas:false,
-            character:false,
-            characterString:false,
-            characterFonts:false,
-        },
-        arrangement:false,
-        render:false,
-        viewport:false,
-        stats:false,
-        callback:false,
-        service:false,
-        interface:false,
-    };
-
-    this.log = {};
-    Object.entries(active).forEach(entry => {
-        if(typeof entry[1] == 'object'){
-            this.log[entry[0]] = {};
-            Object.keys(active[entry[0]]).forEach(key => {
-                this.log[entry[0]][key] = function(){
-                    if(active[entry[0]][key]){ 
-                        console.log( prefix+'.'+entry[0]+'.'+key+arguments[0], ...(new Array(...arguments).slice(1)) );
-                    }
-                };
-            });
-        }else{
-            this.log[entry[0]] = function(){
-                if(active[entry[0]]){ 
-                    console.log( prefix+'.'+entry[0]+arguments[0], ...(new Array(...arguments).slice(1)) );
-                }
-            };
-        }
+self.__getWorker = function(){ return self; };
+wasm_bindgen('/wasm/core_engine_bg.wasm').then(r => {
+    self.WASM = {};
+    Object.entries(wasm_bindgen).forEach(item => {
+        self.WASM[item[0]] = item[1];
     });
-
-    const countActive = !false;
-    const countMemory = {};
-    this.count = function(commandTag){
-        if(!countActive){return;}
-        if(commandTag in countMemory){ countMemory[commandTag]++; }
-        else{ countMemory[commandTag] = 1; }
-    };
-    this.countResults = function(){return countMemory;};
-};
-
-const element = new function(){
-    //element library
-        const elementLibrary = new function(){
-            const elementLibrary = this;
-            this.group = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'group'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-            
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-                    
-                    //attributes pertinent to extremity calculation
-                        let x = 0;     
-                        let y = 0;     
-                        let angle = 0; 
-                        let scale = 1; 
-                        let heedCamera = false;
-                        this.x = function(a){ 
-                            if(a==undefined){return x;}     
-                            x = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;}     
-                            y = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.angle = function(a){ 
-                            if(a==undefined){return angle;} 
-                            angle = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.heedCamera = function(a){
-                            if(a==undefined){return heedCamera;}     
-                            heedCamera = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].heedCamera(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to ',attributes[key]); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id+'['+self.getAddress()+'].unifiedAttribute -> unknown attribute "'+key+'" which was being set to "',attributes[key]+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //group functions
-                    let children = []; 
-                    let childRegistry = {};
-            
-                    function getChildByName(name){ return childRegistry[name]; }
-                    function checkForName(name){ return childRegistry[name] != undefined; }
-                    function checkForElement(element){ return children.find(a => a == element); }
-                    function isValidElement(element){
-                        if( element == undefined ){ return false; }
-                        if( element.name == undefined || element.name.length == 0 ){
-                            console.warn('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
-                            return false;
-                        }
-                        if( checkForName(element.name) ){
-                            console.warn('group error: element with name "'+element.name+'" already exists in group "'+self.getAddress()+'", therefore; the element will not be added');
-                            return false;
-                        }
-            
-                        return true;
-                    }
-            
-                    this.children = function(){return children;};
-                    this.syncChildren = function(foreignChildren){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren(',foreignChildren); //#development
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
-                        this.clear();
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
-                        foreignChildren.forEach(child => {
-                            this.append(child);
-                        });
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
-                        activateShouldRenderFrame();
-                    };
-                    this.getChildByName = function(name){return getChildByName(name);};
-                    this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
-                    this.contains = function(element){ return checkForElement(element) != undefined; };
-                    this.append = function(newElement){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].append(',newElement); //#development
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].append -> children:',children,'newElement.name:',newElement); //#development
-            
-                        if( !isValidElement(newElement) ){ return false; } 
-            
-                        children.push(newElement); 
-                        newElement.parent = this;
-                        augmentExtremities_add(newElement);
-            
-                        childRegistry[newElement.name] = newElement;
-            
-                        activateShouldRenderFrame();
-                        return true;
-                    };
-                    this.prepend = function(newElement){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].prepend(',newElement); //#development
-            
-                        if( !isValidElement(newElement) ){ return false; }
-            
-                        children.unshift(newElement); 
-                        newElement.parent = this;
-                        augmentExtremities_add(newElement);
-            
-                        childRegistry[newElement.name] = newElement;
-            
-                        activateShouldRenderFrame();
-                        return true;
-                    };
-                    this.remove = function(elementToRemove){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].remove(',elementToRemove); //#development
-                        if(elementToRemove == undefined){return;}
-                        if(!children.includes(elementToRemove)){return;}
-            
-                        if(elementToRemove.getType() == 'group'){ elementToRemove.clear(); }
-                        
-                        const index = children.indexOf(elementToRemove);
-                        if(index != -1){ children.splice(index,1); }
-                        augmentExtremities_remove(elementToRemove);
-            
-                        elementToRemove.parent = undefined;
-                        delete childRegistry[elementToRemove.name];
-                        activateShouldRenderFrame();
-                    };
-                    this.clear = function(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].clear()'); //#development
-                        children = [];
-                        childRegistry = {};
-                        activateShouldRenderFrame();
-                        return true;
-                    };
-                    this.shift = function(elementToShift,newPosition){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].shift(',elementToShift,newPosition); //#development
-                        if(elementToShift == undefined){return;}
-                        if(!children.includes(elementToShift)){return;}
-            
-                        children.splice(children.indexOf(elementToShift), 1);
-                        children.splice(newPosition,0,elementToShift);
-            
-                        activateShouldRenderFrame();
-                    };
-                    this.getElementsUnderPoint = function(x,y){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getElementsUnderPoint(',x,y); //#development
-            
-                        let returnList = [];
-            
-                        //run though children backwards (thus, front to back)
-                        for(let a = children.length-1; a >= 0; a--){
-                            //if child wants to be ignored, just move on to the next one
-                                if( children[a].ignored() ){ continue; }
-            
-                            //if the point is not within this child's bounding box, just move on to the next one
-                                if( !library.math.detectIntersect.pointWithinBoundingBox( {x:x,y:y}, children[a].extremities.boundingBox ) ){ continue; }
-            
-                            //if the child is a group type; pass this point to it's "getElementsUnderPoint" function and collect the results, then move on to the next item
-                                if( children[a].getType() == 'group' ){ returnList = returnList.concat( children[a].getElementsUnderPoint(x,y) ); continue; }
-            
-                            //if this point exists within the child; add it to the results list
-                                if( library.math.detectIntersect.pointWithinPoly( {x:x,y:y}, {points:children[a].extremities.points} ) != 'outside' ){ returnList = returnList.concat( children[a] ); }
-                        }
-            
-                        return returnList;
-                    };
-                    this.getElementsUnderArea = function(points){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getElementsUnderArea(',points); //#development
-            
-                        let returnList = [];
-            
-                        //run though children backwords (thus, front to back)
-                        for(let a = children.length-1; a >= 0; a--){
-                            //if child wants to be ignored, just move on to the next one
-                                if( children[a].ignored() ){ continue; }
-            
-                            //if the area does not overlap with this child's bounding box, just move on to the next one
-                                if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){ continue; }
-            
-                            //if the child is a group type; pass this area to it's "getElementsUnderArea" function and collect the results, then move on to the next item
-                                if( children[a].getType() == 'group' ){ returnList = returnList.concat( item.getElementUnderArea(points) ); continue; }
-            
-                            //if this area overlaps with the child; add it to the results list
-                                if( library.math.detectIntersect.polyOnPoly({points:points}, {points:item.extremities.points}) ){ returnList = returnList.concat( children[a] ); }
-                        }
-            
-                        return returnList;
-                    };
-                    this.getTree = function(){
-                        const result = {name:self.name, type:type, id:self.getId(), children:[]};
-            
-                        children.forEach(function(a){
-                            if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
-                            else{ result.children.push({ type:a.getType(), name:a.name, id:a.getId() }); }
-                        });
-            
-                        return result;
-                    };
-            
-                //clipping
-                    const clipping = { stencil:undefined, active:false };
-                    this.stencil = function(element){
-                        if(element == undefined){return clipping.stencil;}
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].stencil(',element); //#development
-                        clipping.stencil = element;
-                        clipping.stencil.parent = this;
-                        if(clipping.active){ computeExtremities(); }
-                        activateShouldRenderFrame();
-                    };
-                    this.clipActive = function(bool){
-                        if(bool == undefined){return clipping.active;}
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].clipActive(',bool); //#development
-                        clipping.active = bool;
-                        computeExtremities();
-                        activateShouldRenderFrame();
-                    };
-            
-                //extremities
-                    function calculateExtremitiesBox(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox()'); //#development
-            
-                        let limits = {left:undefined,right:undefined,top:undefined,bottom:undefined};
-                        if(children.length == 0){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> no children'); //#development
-                            limits = {left:x,right:x,top:y,bottom:y};
-                        }else{
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> children.length: '+children.length); //#development
-                            const firstChild = children[0].extremities.boundingBox;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> firstChild:',firstChild); //#development
-                            limits = { left:firstChild.topLeft.x, right:firstChild.bottomRight.x, top:firstChild.bottomRight.y, bottom:firstChild.topLeft.y }
-            
-                            children.slice(1).forEach(child => {
-                                const tmp = child.extremities.boundingBox;
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> child:',tmp); //#development
-                                if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
-                                if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
-                                if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
-                                if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
-                            });
-                        }
-            
-                        self.extremities.points = [ {x:limits.left,y:limits.top}, {x:limits.right,y:limits.top}, {x:limits.right,y:limits.bottom}, {x:limits.left,y:limits.bottom} ];
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> self.extremities.points:',self.extremities.points); //#development
-                    }
-                    function updateExtremities(informParent=true){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities(',informParent); //#development
-                       
-                        //generate extremity points
-                            self.extremities.points = [];
-            
-                            //if clipping is active and possible, the extremities of this group are limited to those of the clipping element
-                            //otherwise, gather extremities from children and calculate extremities here
-                            if(clipping.active && clipping.stencil != undefined){
-                                self.extremities.points = clipping.stencil.extremities.points.slice();
-                            }else{
-                                calculateExtremitiesBox();
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> extremities.points.length:',self.extremities.points.length); //#development
-            
-                        //generate bounding box from points
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
-            
-                        //update parent
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    function augmentExtremities(element){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities(',element); //#development
-            
-                        //get offset from parent
-                            const offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                        //combine offset with group's position, angle and scale to produce new offset for children
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const newOffset = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: offset.angle + angle,
-                            };
-                        //run computeExtremities on new child
-                            element.computeExtremities(false,newOffset);
-                        //augment points list
-                            calculateExtremitiesBox();
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities -> extremities.points.length:',self.extremities.points.length); //#development
-                        //recalculate bounding box
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                        //inform parent of change
-                            if(self.parent){self.parent.updateExtremities();}
-                    }
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                        
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //combine offset with group's position, angle and scale to produce new offset for children
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const newOffset = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: offset.angle + angle,
-                            };
-                        //run computeExtremities on all children
-                            children.forEach(child => child.computeExtremities(false,newOffset));
-                        //run computeExtremities on stencil (if applicable)
-                            if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
-                        //update extremities
-                            updateExtremities(informParent,offset);
-                    }
-                    function augmentExtremities_add(element){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add(',element); //#development
-            
-                        //get offset from parent
-                            const offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add -> generated offset:',offset); //#development
-                        //combine offset with group's position, angle and scale to produce new offset for children
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const newOffset = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: offset.angle + angle,
-                            };
-                        //run computeExtremities on new child
-                            element.computeExtremities(false,newOffset);
-            
-                        //augment points list
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints( self.extremities.points.concat(element.extremities.points) );
-                            self.extremities.points = [
-                                { x:self.extremities.boundingBox.topLeft.x, y:self.extremities.boundingBox.topLeft.y },
-                                { x:self.extremities.boundingBox.bottomRight.x, y:self.extremities.boundingBox.topLeft.y },
-                                { x:self.extremities.boundingBox.bottomRight.x, y:self.extremities.boundingBox.bottomRight.y },
-                                { x:self.extremities.boundingBox.topLeft.x, y:self.extremities.boundingBox.bottomRight.y },
-                            ];
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add -> extremities.points.length:',self.extremities.points.length); //#development
-                        //inform parent of change
-                            if(self.parent){self.parent.updateExtremities();}
-                    }
-                    function augmentExtremities_remove(element){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove(',element); //#development
-                        //this function assumes that the element has already been removed from the 'children' variable)
-                        //is the element's bounding box within the bounding box of the group; if so, no recalculation need be done
-                        //otherwise the element is touching the boundary, in which case search through the children for another 
-                        //element that also touches the boundary, or find the closest element and adjust the boundary to touch that
-            
-                        const data = {
-                            topLeft:{
-                                x: self.extremities.boundingBox.topLeft.x - element.extremities.boundingBox.topLeft.x,
-                                y: self.extremities.boundingBox.topLeft.y - element.extremities.boundingBox.topLeft.y,
-                            },
-                            bottomRight:{
-                                x: element.extremities.boundingBox.bottomRight.x - self.extremities.boundingBox.bottomRight.x,
-                                y: element.extremities.boundingBox.bottomRight.y - self.extremities.boundingBox.bottomRight.y,
-                            }
-                        };
-                        if( data.topLeft.x != 0 && data.topLeft.y != 0 && data.bottomRight.x != 0 && data.bottomRight.y != 0 ){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> easy remove: no changes to the group\'s bounding box required'); //#development
-                            return;
-                        }else{
-                            ['topLeft','bottomRight'].forEach(cornerName => {
-                                ['x','y'].forEach(axisName => {
-                                    if(data[cornerName][axisName] == 0){
-                                        dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> '+cornerName+'_'+axisName+' is at boundary'); //#development
-            
-                                        let boundaryToucherFound = false;
-                                        let closestToBoundary = {distance:undefined, position:undefined};
-                                        for(let a = 0; a < children.length; a++){
-                                            const tmp = Math.abs(children[a].extremities.boundingBox[cornerName][axisName] - self.extremities.boundingBox[cornerName][axisName]);
-                                            if(closestToBoundary.distance == undefined || closestToBoundary.distance > tmp){
-                                                closestToBoundary = { distance:tmp, position:children[a].extremities.boundingBox[cornerName][axisName] };
-                                                if(closestToBoundary.distance == 0){ boundaryToucherFound = true; break; }
-                                            }
-                                        }
-            
-                                        if(!boundaryToucherFound){
-                                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> need to adjust the bounding box'); //#development
-                                            self.extremities.boundingBox[cornerName][axisName] = closestToBoundary.position;
-                                        }
-                                    }
-                                });
-                            });
-                        }
-                    }
-            
-                    this.getOffset = function(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
-            
-                        let output = {x:0,y:0,scale:1,angle:0};
-            
-                        if(this.parent){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> parent found'); //#development
-                            const offset = this.parent.getOffset();
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            output = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale * scale,
-                                angle: offset.angle + angle,
-                            };
-                        }else{
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> no parent found'); //#development
-                            output = {x:x ,y:y ,scale:scale ,angle:angle};
-                        }
-            
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> output:',output); //#development
-                        return output;
-                    };
-                    this.computeExtremities = computeExtremities;
-                    this.updateExtremities = updateExtremities;
-                
-                //render
-                    function drawDotFrame(){
-                        //draw bounding box top left and bottom right points
-                        render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:0,b:0,a:0.75});
-                        render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
-                    }
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context, offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //if there's no children anyway, then don't worry about it
-                            if(children.length == 0){
-                                return;
-                            }
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //combine offset with group's position, angle and scale to produce new offset for children
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const newOffset = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: offset.angle + angle,
-                            };
-            
-                        //activate clipping (if requested, and is possible)
-                            if(clipping.active && clipping.stencil != undefined){
-                                //active stencil drawing mode
-                                    context.enable(context.STENCIL_TEST);
-                                    context.colorMask(false,false,false,false);
-                                    context.stencilFunc(context.ALWAYS,1,0xFF);
-                                    context.stencilOp(context.KEEP,context.KEEP,context.REPLACE);
-                                    context.stencilMask(0xFF);
-                                //draw stencil
-                                    clipping.stencil.render(context,newOffset);
-                                //reactive regular rendering
-                                    context.colorMask(true,true,true,true);
-                                    context.stencilFunc(context.EQUAL,1,0xFF);
-                            }
-                        
-                        //render children
-                            children.forEach(child => {
-                                child.render(context,newOffset);
-                            });
-            
-                        //deactivate clipping
-                            if(clipping.active){ 
-                                context.disable(context.STENCIL_TEST); 
-                                context.clear(context.STENCIL_BUFFER_BIT);
-                            }
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent:',self.parent);
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities:',self.extremities);
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> x: '+x);
-                        console.log(self.getAddress(),'._dump -> y: '+y);
-                        console.log(self.getAddress(),'._dump -> angle: '+angle);
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                        console.log(self.getAddress(),'._dump -> heedCamera: '+heedCamera);
-                        console.log(self.getAddress(),'._dump -> children.length: '+children.length);
-                        console.log(self.getAddress(),'._dump -> children:',children);
-                        console.log(self.getAddress(),'._dump -> childRegistry:',childRegistry);
-                        console.log(self.getAddress(),'._dump -> clipping:',clipping);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.angle = self.angle;
-                        this.scale = self.scale;
-                        this.heedCamera = self.heedCamera;
-                        this.unifiedAttribute = self.unifiedAttribute;
-            
-                        this.getAddress = self.getAddress;
-            
-                        this.children = function(){ return self.children().map(e => element.getIdFromElement(e)) };
-                        this.syncChildren = function(childIds){ self.syncChildren(childIds.map(id => element.getElementFromId(id))); };
-                        this.getChildByName = function(name){ return element.getIdFromElement(self.getChildByName(name)); };
-                        this.getChildIndexByName = self.getChildIndexByName;
-                        this.contains = function(elementId){ return self.contains(element.getElementFromId(elementId)); };
-                        this.append = function(elementId){ return self.append(element.getElementFromId(elementId)); };
-                        this.prepend = function(elementId){ return self.prepend(element.getElementFromId(elementId)); };
-                        this.remove = function(elementId){ return self.remove(element.getElementFromId(elementId)); };
-                        this.clear = self.clear;
-                        this.shift = function(elementId,newPosition){ return self.shift(element.getElementFromId(elementId),newPosition); };
-                        this.getElementsUnderPoint = function(x,y){ return self.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele)); };
-                        this.getElementsUnderArea = function(points){ return self.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele)); };
-                        this.getTree = self.getTree;
-                        this.stencil = function(elementId){ return self.stencil(element.getElementFromId(elementId)); };
-                        this.clipActive = self.clipActive;
-            
-                        this._dump = self._dump;
-                    };
-            };
-            
-            this.rectangle = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'rectangle'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-            
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-                    
-                    //attributes pertinent to extremity calculation
-                        let x = 0;
-                        let y = 0; 
-                        let angle = 0;
-                        let anchor = {x:0,y:0};
-                        let width = 10;
-                        let height = 10;
-                        let scale = 1;
-                        this.x = function(a){ 
-                            if(a==undefined){return x;}     
-                            x = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;}     
-                            y = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.angle = function(a){ 
-                            if(a==undefined){return angle;} 
-                            angle = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.anchor = function(a){
-                            if(a==undefined){return anchor;} 
-                            anchor = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.width = function(a){
-                            if(a==undefined){return width;}  
-                            width = a;  
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.height = function(a){
-                            if(a==undefined){return height;} 
-                            height = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to ',attributes[key]); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id+'['+self.getAddress()+'].unifiedAttribute -> unknown attribute "'+key+'" which was being set to "',attributes[key]);
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //webGL rendering functions
-                    const points = [
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,1,
-                    ];
-                    const vertexShaderSource = `#version 300 es
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            uniform vec2 resolution;
-                            uniform vec2 dimensions;
-                            uniform vec2 anchor;
-            
-                        void main(){
-                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                vec2 P = dimensions * adjust.scale * (point - anchor);
-                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-                        uniform vec4 colour;
-                                                                                    
-                        void main(){
-                            outputColour = colour;
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-            
-                        //buffers
-                            //points
-                                if(point.buffer == undefined){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-                        
-                        //uniforms
-                            if(uniformLocations == undefined){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "dimensions": context.getUniformLocation(program, "dimensions"),
-                                    "anchor": context.getUniformLocation(program, "anchor"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor:',anchor); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform2f(uniformLocations["dimensions"], width, height);
-                            context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-                        context.drawArrays(context.TRIANGLE_FAN, 0, 4);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                        
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //calculate adjusted offset based on the offset
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
-                            const adjusted = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> adjusted',adjusted); //#development
-                        //calculate points based on the adjusted offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                const P = {
-                                    x: adjusted.scale * width * (points[a] - anchor.x), 
-                                    y: adjusted.scale * height * (points[a+1] - anchor.y), 
-                                };
-            
-                                self.extremities.points.push({ 
-                                    x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-                                    y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-                                });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
-                    
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    }
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //combine offset with shape's position, angle and scale to produce adjust value for render
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjust = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-            
-                        //activate shape render code
-                            activateGLRender(context,adjust);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log('['+self.getAddress()+']','._dump()');
-                        console.log('['+self.getAddress()+']','._dump -> id: '+id);
-                        console.log('['+self.getAddress()+']','._dump -> type: '+type);
-                        console.log('['+self.getAddress()+']','._dump -> name: '+self.name);
-                        console.log('['+self.getAddress()+']','._dump -> address: '+'['+self.getAddress()+']');
-                        console.log('['+self.getAddress()+']','._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log('['+self.getAddress()+']','._dump -> dotFrame: '+self.dotFrame);
-                        console.log('['+self.getAddress()+']','._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log('['+self.getAddress()+']','._dump -> ignored: '+ignored);
-                        console.log('['+self.getAddress()+']','._dump -> colour: '+JSON.stringify(colour));
-                        console.log('['+self.getAddress()+']','._dump -> x: '+x);
-                        console.log('['+self.getAddress()+']','._dump -> y: '+y);
-                        console.log('['+self.getAddress()+']','._dump -> angle: '+angle);
-                        console.log('['+self.getAddress()+']','._dump -> anchor: '+JSON.stringify(anchor));
-                        console.log('['+self.getAddress()+']','._dump -> width: '+width);
-                        console.log('['+self.getAddress()+']','._dump -> height: '+height);
-                        console.log('['+self.getAddress()+']','._dump -> scale: '+scale);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.angle = self.angle;
-                        this.anchor = self.anchor;
-                        this.width = self.width;
-                        this.height = self.height;
-                        this.scale = self.scale;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            this.rectangleWithOutline = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'rectangleWithOutline'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        let lineColour = {r:1,g:0,b:0,a:1};
-                        this.lineColour = function(a){
-                            if(a==undefined){return lineColour;}     
-                            lineColour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-                        
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let x = 0;
-                        let y = 0; 
-                        let angle = 0;
-                        let anchor = {x:0,y:0};
-                        let width = 10;
-                        let height = 10;
-                        let scale = 1;
-                        let thickness = 0;
-            
-                        this.x = function(a){ 
-                            if(a==undefined){return x;}     
-                            x = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;}     
-                            y = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.angle = function(a){ 
-                            if(a==undefined){return angle;} 
-                            angle = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.anchor = function(a){
-                            if(a==undefined){return anchor;} 
-                            anchor = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.width = function(a){
-                            if(a==undefined){return width;}  
-                            width = a;  
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.height = function(a){
-                            if(a==undefined){return height;} 
-                            height = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.thickness = function(a){ 
-                            if(a==undefined){return thickness;} 
-                            thickness = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                        if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, thickness:thickness }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //webGL rendering functions
-                    const points = [
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,0,
-                        1,1,
-                        0,1,
-            
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,0,
-                        1,1,
-                        0,1,
-            
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,0,
-                        1,1,
-                        0,1,
-            
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,0,
-                        1,1,
-                        0,1,
-            
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,0,
-                        1,1,
-                        0,1,
-                    ];
-                    const vertexShaderSource = `#version 300 es
-                        //index
-                            in lowp float index;
-                            
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            uniform vec2 resolution;
-                            uniform vec2 dimensions;
-                            uniform float thickness;
-                            uniform vec2 anchor;
-            
-                            uniform vec4 colour;
-                            uniform vec4 lineColour;
-                        
-                        //varyings
-                            out vec4 activeColour;
-            
-                        void main(){
-                            //create triangle
-                                vec2 P = vec2(0,0);
-            
-                                if(index < 6.0){ //body
-                                    P = dimensions * (point * adjust.scale - anchor);
-                                }else if(index < 12.0){ //outline: top
-                                    P = vec2( dimensions.x + thickness, thickness ) * ((point - vec2(0.0,0.5)) * adjust.scale - anchor) - vec2(thickness/2.0,0.0)*adjust.scale;
-                                }else if(index < 18.0){ //outline: bottom
-                                    P = vec2( dimensions.x + thickness, thickness ) * ((point - vec2(0.0,-dimensions.y/thickness + 0.5)) * adjust.scale - anchor) - vec2(thickness/2.0,0.0)*adjust.scale;;
-                                }else if(index < 24.0){ //outline: left
-                                    P = vec2( thickness, dimensions.y - thickness ) * ((point - vec2(0.5,0.0)) * adjust.scale - anchor) + vec2(0.0,thickness/2.0)*adjust.scale;
-                                }else if(index < 30.0){ //outline: right
-                                    P = vec2( thickness, dimensions.y - thickness ) * ((point - vec2(-dimensions.x/thickness + 0.5,0.0)) * adjust.scale - anchor) + vec2(0.0,thickness/2.0)*adjust.scale;
-                                }
-                                
-                                //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                    P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-            
-                            //select colour
-                                activeColour = index < 6.0 ? colour : lineColour;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-                        in vec4 activeColour;
-                                                                                    
-                        void main(){
-                            outputColour = activeColour;
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    const index = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-            
-                        //buffers
-                            //points
-                                if(point.buffer == undefined){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-                            //index
-                                if(index.buffer == undefined){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating index.buffer...'); //#development
-                                    index.attributeLocation = context.getAttribLocation(program, "index");
-                                    index.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(index.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
-                                    context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating index.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
-                                    context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                }
-                            
-                        //uniforms
-                            if(uniformLocations == undefined){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "dimensions": context.getUniformLocation(program, "dimensions"),
-                                    "thickness": context.getUniformLocation(program, "thickness"),
-                                    "anchor": context.getUniformLocation(program, "anchor"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                    "lineColour": context.getUniformLocation(program, "lineColour"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> thickness:'+thickness); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor:',anchor); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> lineColour:',lineColour); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform2f(uniformLocations["dimensions"], width, height);
-                            context.uniform1f(uniformLocations["thickness"], thickness);
-                            context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
-                            context.uniform4f(uniformLocations["lineColour"], lineColour.r*lineColour.a, lineColour.g*lineColour.a, lineColour.b*lineColour.a, lineColour.a);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-                        context.drawArrays(context.TRIANGLES, 0, points.length/2);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                                    
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //calculate adjusted offset based on the offset
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
-                            const adjusted = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> adjusted',adjusted); //#development
-                        //calculate points based on the adjusted offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                const P = {
-                                    x: adjusted.scale * width * (points[a] - anchor.x), 
-                                    y: adjusted.scale * height * (points[a+1] - anchor.y), 
-                                };
-            
-                                self.extremities.points.push({ 
-                                    x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-                                    y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-                                });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
-                    
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    }
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //combine offset with shape's position, angle and scale to produce adjust value for render
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjust = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-            
-                        //activate shape render code
-                            activateGLRender(context,adjust);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        console.log(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
-                        console.log(self.getAddress(),'._dump -> x: '+x);
-                        console.log(self.getAddress(),'._dump -> y: '+y);
-                        console.log(self.getAddress(),'._dump -> angle: '+angle);
-                        console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        console.log(self.getAddress(),'._dump -> width: '+width);
-                        console.log(self.getAddress(),'._dump -> height: '+height);
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                        console.log(self.getAddress(),'._dump -> thickness: '+thickness);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.lineColour = self.lineColour;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.angle = self.angle;
-                        this.anchor = self.anchor;
-                        this.width = self.width;
-                        this.height = self.height;
-                        this.scale = self.scale;
-                        this.thickness = self.thickness;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            this.circle = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'circle'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-            
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let x = 0;
-                        let y = 0; 
-                        let angle = 0;
-                        let radius = 10;
-                        let detail = 25;
-                        let scale = 1;
-                        this.x = function(a){ 
-                            if(a==undefined){return x;}     
-                            x = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;}     
-                            y = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.radius = function(a){ 
-                            if(a==undefined){return radius;} 
-                            radius = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].radius(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.detail = function(a){ 
-                            if(a==undefined){return detail;}
-                            detail = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].detail(',a); //#development
-                            calculateCirclePoints();
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //webGL rendering functions
-                    let points = []; 
-                    let pointsChanged = true;
-                    function calculateCirclePoints(){
-                        points = [];
-                        for(let a = 0; a < detail; a++){
-                            points.push(
-                                Math.sin( 2*Math.PI * (a/detail) ),
-                                Math.cos( 2*Math.PI * (a/detail) )
-                            );
-                        }
-                        pointsChanged = true;
-                        activateShouldRenderFrame();
-                    }
-                    calculateCirclePoints();
-            
-                    const vertexShaderSource = 
-                        '#version 300 es' + library.glsl.geometry + `
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            uniform vec2 resolution;
-                            uniform float radius;
-                            uniform vec2 anchor;
-            
-                        void main(){
-                            //adjust points by radius and xy offset
-                                vec2 P = cartesianAngleAdjust(point*radius*adjust.scale, -adjust.angle) + adjust.xy;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-                        uniform vec4 colour;
-                                                                                    
-                        void main(){
-                            outputColour = colour;
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-            
-                        //buffers
-                            //points
-                                if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                    pointsChanged = false;
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-            
-                        //uniforms
-                            if(uniformLocations == undefined){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "radius": context.getUniformLocation(program, "radius"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> radius:'+radius); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform1f(uniformLocations["radius"], radius);
-                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram('circle', vertexShaderSource, fragmentShaderSource); }
-            
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-                        context.drawArrays(context.TRIANGLE_FAN, 0, points.length/2);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-            
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //calculate adjusted offset based on the offset
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            let adjusted = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-                        //calculate points based on the adjusted offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                self.extremities.points.push({
-                                    x: (points[a]   * radius * adjusted.scale) + adjusted.x,
-                                    y: (points[a+1] * radius * adjusted.scale) + adjusted.y,
-                                });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
-                    };
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){    
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-                    
-                        //combine offset with shape's position, angle and scale to produce adjust value for render
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjust = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-            
-                        //activate shape render code
-                            activateGLRender(context,adjust);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        console.log(self.getAddress(),'._dump -> x: '+x);
-                        console.log(self.getAddress(),'._dump -> y: '+y);
-                        console.log(self.getAddress(),'._dump -> radius: '+radius);
-                        console.log(self.getAddress(),'._dump -> detail: '+detail);
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.radius = self.radius;
-                        this.scale = self.scale;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            this.circleWithOutline = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'circleWithOutline'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        let lineColour = {r:1,g:0,b:0,a:1};
-                        this.lineColour = function(a){
-                            if(a==undefined){return lineColour;}     
-                            lineColour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                    
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-            
-                    //addressing
-                        this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let x = 0;
-                        let y = 0; 
-                        let angle = 0;
-                        let radius = 10;
-                        let detail = 25;
-                        let scale = 1;
-                        let thickness = 0;
-                        this.x = function(a){ 
-                            if(a==undefined){return x;}     
-                            x = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;}     
-                            y = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.radius = function(a){ 
-                            if(a==undefined){return radius;} 
-                            radius = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].radius(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.detail = function(a){ 
-                            if(a==undefined){return detail;}
-                            detail = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].detail(',a); //#development
-                            calculateCirclePoints();
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.thickness = function(a){ 
-                            if(a==undefined){return thickness;} 
-                            thickness = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                        if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, radius:radius, detail:detail, scale:scale, thickness:thickness }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //webGL rendering functions
-                    let points = []; 
-                    let pointsChanged = true;
-                    function calculateCirclePoints(){
-                        points = [];
-                        //outline
-                            for(let a = 0; a < detail; a++){
-                                points.push(0,0);
-                                points.push( Math.sin( 2*Math.PI * (a/detail) ), Math.cos( 2*Math.PI * (a/detail) ) );
-                                points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
-                            }
-                        //main circle
-                            for(let a = 0; a < detail; a++){
-                                points.push(0,0);
-                                points.push( Math.sin( 2*Math.PI * (a/detail) ), Math.cos( 2*Math.PI * (a/detail) ) );
-                                points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
-                            }
-                        pointsChanged = true;
-                        activateShouldRenderFrame();
-                    }
-                    calculateCirclePoints();
-            
-                    const vertexShaderSource = 
-                        '#version 300 es' + library.glsl.geometry + `
-                        //index
-                            in lowp float index;
-                        
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            uniform vec2 resolution;
-                            uniform float radius;
-                            uniform float thickness;
-                            uniform vec4 colour;
-                            uniform vec4 lineColour;
-                            uniform lowp float indexParting;
-                    
-                        //varyings
-                            out vec4 activeColour;
-            
-                        void main(){    
-                            //adjust points by radius and xy adjust
-                                float tmpRadius = radius + (thickness/2.0) * (index < indexParting ? 1.0 : -1.0);
-                                vec2 P = cartesianAngleAdjust(point*tmpRadius*adjust.scale, -adjust.angle) + adjust.xy;
-            
-                            //select colour
-                                activeColour = index >= indexParting ? colour : lineColour;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-                        in vec4 activeColour;
-                                                                                    
-                        void main(){
-                            outputColour = activeColour;
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    const index = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-            
-                        //buffers
-                            //points
-                                if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                    pointsChanged = false;
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                            }
-                            //index
-                                if(index.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating index.buffer...'); //#development
-                                    index.attributeLocation = context.getAttribLocation(program, "index");
-                                    index.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(index.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
-                                    context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating index.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
-                                    context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                }
-            
-                        //uniforms
-                            if(uniformLocations == undefined){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "radius": context.getUniformLocation(program, "radius"),
-                                    "thickness": context.getUniformLocation(program, "thickness"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                    "indexParting": context.getUniformLocation(program, "indexParting"),
-                                    "lineColour": context.getUniformLocation(program, "lineColour"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> radius:'+radius); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> thickness:'+thickness); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> lineColour:',lineColour); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> indexParting:'+points.length/4); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform1f(uniformLocations["radius"], radius);
-                            context.uniform1f(uniformLocations["thickness"], thickness);
-                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
-                            context.uniform4f(uniformLocations["lineColour"], lineColour.r*lineColour.a, lineColour.g*lineColour.a, lineColour.b*lineColour.a, lineColour.a);
-                            context.uniform1f(uniformLocations["indexParting"], points.length/4);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-            
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-                        context.drawArrays(context.TRIANGLES, 0, points.length/2);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-            
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //calculate adjusted offset based on the offset
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjusted = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-                        //calculate points based on the adjusted offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                self.extremities.points.push({
-                                    x: (points[a]   * radius * adjusted.scale) + adjusted.x,
-                                    y: (points[a+1] * radius * adjusted.scale) + adjusted.y,
-                                });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
-                    };
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //combine offset with shape's position, angle and scale to produce adjust value for render
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjust = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-            
-                        //activate shape render code
-                            activateGLRender(context,adjust);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        console.log(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
-                        console.log(self.getAddress(),'._dump -> x: '+x);
-                        console.log(self.getAddress(),'._dump -> y: '+y);
-                        console.log(self.getAddress(),'._dump -> radius: '+radius);
-                        console.log(self.getAddress(),'._dump -> detail: '+detail);
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                        console.log(self.getAddress(),'._dump -> thickness: '+thickness);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.lineColour = self.lineColour;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.radius = self.radius;
-                        this.scale = self.scale;
-                        this.thickness = self.thickness;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            this.polygon = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'polygon'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-                
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let points = [];
-                        let pointsChanged = true;
-                        let scale = 1;
-                        this.points = function(a){
-                            if(points==undefined){return points;}     
-                            points = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].points(',points); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            pointsChanged = true;
-                            activateShouldRenderFrame();
-                        };
-                        this.pointsAsXYArray = function(a){
-                            function pointsToXYArray(){ 
-                                let output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-            
-                            if(a==undefined){ return pointsToXYArray(); }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
-            
-                            this.points( a.map((point) => [point.x,point.y]).flat() );
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, points:points, pointsChanged:pointsChanged, scale:scale }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //webGL rendering functions
-                    const vertexShaderSource = 
-                        '#version 300 es' + library.glsl.geometry + `
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            in vec2 point;
-                            uniform vec2 resolution;
-            
-                        void main(){    
-                            //adjust point by adjust
-                                vec2 P = cartesianAngleAdjust(point*adjust.scale, adjust.angle) + adjust.xy;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-                        uniform vec4 colour;
-                                                                                    
-                        void main(){
-                            outputColour = colour;
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    let drawingPoints = [];
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-            
-                        //buffers
-                            //points
-                                if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = library.math.polygonToSubTriangles(points,'flatArray')), context.STATIC_DRAW);
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> points:',points); //#development
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> drawingPoints:',points); //#development
-                                    pointsChanged = false;
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-            
-                        //uniforms
-                            if( uniformLocations == undefined ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-            
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-            
-                        context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                        
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //calculate points based on the offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                const P = library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
-                                self.extremities.points.push({ x:P.x+offset.x, y:P.y+offset.y });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    }
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //activate shape render code
-                            activateGLRender(context,offset);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        console.log(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
-                        console.log(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.points = self.points;
-                        this.pointsAsXYArray = self.pointsAsXYArray;
-                        this.scale = self.scale;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            this.polygonWithOutline = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'polygonWithOutline'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        let lineColour = {r:1,g:0,b:0,a:1};
-                        this.lineColour = function(a){
-                            if(a==undefined){return lineColour;}     
-                            lineColour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-                
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let points = [];
-                        let pointsChanged = true;
-                        let scale = 1;
-                        let thickness = 0;
-                        let jointDetail = 25;
-                        let jointType = 'sharp';
-                        let sharpLimit = 4;
-                        this.points = function(a){
-                            if(points==undefined){return points;}     
-                            points = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].points(',points); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            pointsChanged = true;
-                            activateShouldRenderFrame();
-                        };
-                        this.pointsAsXYArray = function(a){
-                            function pointsToXYArray(){ 
-                                let output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-            
-                            if(a==undefined){ return pointsToXYArray(); }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
-            
-                            this.points( a.map((point) => [point.x,point.y]).flat() );
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.thickness = function(a){
-                            if(thickness==undefined){return thickness;}     
-                            thickness = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness('+thickness+')'); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                            pointsChanged = true;
-                        };
-                        this.jointDetail = function(a){
-                            if(jointDetail==undefined){return jointDetail;}     
-                            jointDetail = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].jointDetail('+jointDetail+')'); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                            pointsChanged = true;
-                        };
-                        this.jointType = function(a){
-                            if(jointType==undefined){return jointType;}     
-                            jointType = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].jointType('+jointType+')'); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                            pointsChanged = true;
-                        };
-                        this.sharpLimit = function(a){
-                            if(sharpLimit==undefined){return sharpLimit;}     
-                            sharpLimit = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].sharpLimit('+sharpLimit+')'); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                            pointsChanged = true;
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                        if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //webGL rendering functions
-                    function loopedLineGenerator(){ return library.math.pathExtrapolation(points,thickness/2,'none',jointType,true,jointDetail,sharpLimit); }
-                    const vertexShaderSource = 
-                        '#version 300 es' + library.glsl.geometry + `
-                        //index
-                            in lowp float index;
-                        
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-                            uniform vec2 resolution;
-                            uniform vec4 colour;
-                            uniform vec4 lineColour;
-                            uniform lowp float indexParting;
-                    
-                        //varyings
-                            out vec4 activeColour;
-            
-                        void main(){    
-                            //adjust point by adjust
-                                vec2 P = cartesianAngleAdjust(point*adjust.scale, adjust.angle) + adjust.xy;
-            
-                            //select colour
-                                activeColour = index < indexParting ? colour : lineColour;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-                        in vec4 activeColour;
-                                                                                    
-                        void main(){
-                            outputColour = activeColour;
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined, triangles:[] };
-                    const index = { buffer:undefined, attributeLocation:undefined };
-                    let drawingPoints = [];
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){            
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-                
-                        //buffers
-                            //points
-                                if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    point.triangles = library.math.polygonToSubTriangles(points,'flatArray');
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = point.triangles.concat(loopedLineGenerator())), context.STATIC_DRAW);
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> points:',points); //#development
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> drawingPoints:',drawingPoints); //#development
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-                            //index
-                                if(index.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating index.buffer...'); //#development
-                                    index.attributeLocation = context.getAttribLocation(program, "index");
-                                    index.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(index.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
-                                    context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:point.triangles.length/2 + loopedLineGenerator().length/2}).map(Number.call, Number)), context.STATIC_DRAW);
-                                    pointsChanged = false;
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating index.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
-                                    context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                }
-            
-                        //uniforms
-                            if( uniformLocations == undefined ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                    "indexParting": context.getUniformLocation(program, "indexParting"),
-                                    "lineColour": context.getUniformLocation(program, "lineColour"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> lineColour:',lineColour); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> indexParting:'+point.triangles.length/2); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
-                            context.uniform4f(uniformLocations["lineColour"], lineColour.r*lineColour.a, lineColour.g*lineColour.a, lineColour.b*lineColour.a, lineColour.a);
-                            context.uniform1f(uniformLocations["indexParting"], point.triangles.length/2);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-            
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-            
-                        context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                         
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
-                        //calculate points based on the offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                const P = library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
-                                self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    }
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //activate shape render code
-                            activateGLRender(context,offset);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        console.log(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
-                        console.log(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                        console.log(self.getAddress(),'._dump -> thickness: '+thickness);
-                        console.log(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
-                        console.log(self.getAddress(),'._dump -> jointType: '+jointType);
-                        console.log(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
-                    };
-            
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.lineColour = self.lineColour;
-                        this.points = self.points;
-                        this.pointsAsXYArray = self.pointsAsXYArray;
-                        this.scale = self.scale;
-                        this.thickness = self.thickness;
-                        this.jointDetail = self.jointDetail;
-                        this.jointType = self.jointType;
-                        this.sharpLimit = self.sharpLimit;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            
-            this.path = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'path'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-            
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let points = [];
-                        let pointsChanged = true;
-                        let scale = 1;
-                        let thickness = 1;
-                        let looping = false; 
-                        let capType = 'none';
-                        let jointType = 'sharp';
-                        let jointDetail = 25;
-                        let sharpLimit = 4;
-                        this.points = function(a){
-                            if(points==undefined){return points;}     
-                            points = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].points('+JSON.stringify(points)+')'); //#development
-                            generatedPathPolygon = lineGenerator();
-                            pointsChanged = true;
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.pointsAsXYArray = function(a){
-                            function pointsToXYArray(){ 
-                                let output = [];
-                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
-                                return output;
-                            }
-            
-                            if(a==undefined){ return pointsToXYArray(); }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
-            
-                            this.points( a.map((point) => [point.x,point.y]).flat() );
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.thickness = function(a){
-                            if(thickness==undefined){return thickness;}     
-                            thickness = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',thickness); //#development
-                            generatedPathPolygon = lineGenerator();
-                            pointsChanged = true;
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.looping = function(a){
-                            if(looping==undefined){return looping;}     
-                            looping = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].looping(',looping); //#development
-                            generatedPathPolygon = lineGenerator();
-                            pointsChanged = true;
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.capType = function(a){
-                            if(capType==undefined){return capType;}     
-                            capType = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].capType(',capType); //#development
-                            generatedPathPolygon = lineGenerator();
-                            pointsChanged = true;
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.jointType = function(a){
-                            if(jointType==undefined){return jointType;}     
-                            jointType = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].jointType(',jointType); //#development
-                            generatedPathPolygon = lineGenerator();
-                            pointsChanged = true;
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.jointDetail = function(a){
-                            if(jointDetail==undefined){return jointDetail;}     
-                            jointDetail = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].jointDetail(',jointDetail); //#development
-                            generatedPathPolygon = lineGenerator();
-                            pointsChanged = true;
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.sharpLimit = function(a){
-                            if(sharpLimit==undefined){return sharpLimit;}     
-                            sharpLimit = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].sharpLimit(',sharpLimit); //#development
-                            generatedPathPolygon = lineGenerator();
-                            pointsChanged = true;
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                        if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //webGL rendering functions
-                    let generatedPathPolygon = [];
-                    function lineGenerator(){ 
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::lineGenerator()'); //#development
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::lineGenerator -> '+'['+points+'],'+thickness+','+capType+','+jointType+','+looping+','+jointDetail+','+sharpLimit); //#development
-                        return library.math.pathExtrapolation(points,thickness/2,capType,jointType,looping,jointDetail,sharpLimit);
-                    }
-                    const vertexShaderSource = 
-                        '#version 300 es' + library.glsl.geometry + `
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            in vec2 point;
-                            uniform vec2 resolution;
-            
-                        void main(){    
-                            //adjust point by adjust
-                                vec2 P = cartesianAngleAdjust(point*adjust.scale, adjust.angle) + adjust.xy;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-                        uniform vec4 colour;
-                                                                                    
-                        void main(){
-                            outputColour = colour;
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){        
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-                
-                        //buffers
-                            //points
-                                if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(generatedPathPolygon), context.STATIC_DRAW);
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> generatedPathPolygon:',generatedPathPolygon); //#development
-                                    pointsChanged = false;
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-            
-                        //uniforms
-                            if(uniformLocations == undefined){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
-            
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-                        context.drawArrays(context.TRIANGLES, 0, generatedPathPolygon.length/2);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                        
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
-                        //calculate points based on the offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < generatedPathPolygon.length; a+=2){
-                                const P = library.math.cartesianAngleAdjust(generatedPathPolygon[a]*offset.scale,generatedPathPolygon[a+1]*offset.scale, offset.angle);
-                                self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    }
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //activate shape render code
-                            activateGLRender(context,offset);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        console.log(self.getAddress(),'._dump -> points: '+JSON.stringify(points));
-                        console.log(self.getAddress(),'._dump -> pointsAsXYArray: '+JSON.stringify(self.pointsAsXYArray()));
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                        console.log(self.getAddress(),'._dump -> looping: '+looping);
-                        console.log(self.getAddress(),'._dump -> thickness: '+thickness);
-                        console.log(self.getAddress(),'._dump -> capType: '+capType);
-                        console.log(self.getAddress(),'._dump -> jointType: '+jointType);
-                        console.log(self.getAddress(),'._dump -> jointDetail: '+jointDetail);
-                        console.log(self.getAddress(),'._dump -> sharpLimit: '+sharpLimit);
-                    };
-            
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.points = self.points;
-                        this.pointsAsXYArray = self.pointsAsXYArray;
-                        this.scale = self.scale;
-                        this.looping = self.looping;
-                        this.thickness = self.thickness;
-                        this.capType = self.capType;
-                        this.jointType = self.jointType;
-                        this.jointDetail = self.jointDetail;
-                        this.sharpLimit = self.sharpLimit;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            
-            /////original
-            // this.image = function(_id,_name){
-            //     const self = this;
-            
-            //     //attributes 
-            //         //protected attributes
-            //             const type = 'image'; 
-            //             this.getType = function(){return type;}
-            //             const id = _id; 
-            //             this.getId = function(){return id;}
-            
-            //         //simple attributes
-            //             this.name = _name;
-            //             this.parent = undefined;
-            //             this.dotFrame = false;
-            //             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-            //             let ignored = false;
-            //             this.ignored = function(a){
-            //                 if(a==undefined){return ignored;}     
-            //                 ignored = a;
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-                        
-            //         //advanced use attributes
-            //             let allowComputeExtremities = true;
-            
-            //         //addressing
-            //             this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-            //         //attributes pertinent to extremity calculation
-            //             let x = 0;
-            //             let y = 0; 
-            //             let angle = 0;
-            //             let anchor = {x:0,y:0};
-            //             let width = 10;
-            //             let height = 10;
-            //             let scale = 1;
-            //             this.x = function(a){ 
-            //                 if(a==undefined){return x;}     
-            //                 x = a;     
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.y = function(a){ 
-            //                 if(a==undefined){return y;}     
-            //                 y = a;
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.angle = function(a){ 
-            //                 if(a==undefined){return angle;} 
-            //                 angle = a;
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.anchor = function(a){
-            //                 if(a==undefined){return anchor;} 
-            //                 anchor = a; 
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.width = function(a){
-            //                 if(a==undefined){return width;}  
-            //                 width = a;  
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.height = function(a){
-            //                 if(a==undefined){return height;} 
-            //                 height = a; 
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            //             this.scale = function(a){ 
-            //                 if(a==undefined){return scale;} 
-            //                 scale = a;
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-            //                 if(allowComputeExtremities){computeExtremities();}
-            //                 activateShouldRenderFrame();
-            //             };
-            
-            //         //image data
-            //             const image = { 
-            //                 bitmap:undefined, 
-            //                 textureData:undefined, 
-            //                 url:'', 
-            //                 isLoaded:false, 
-            //                 isChanged:false, 
-            //                 defaultURL:'/images/noimageimage.png'
-            //             };
-            //             function loadImage(url,forceUpdate=false){
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url,forceUpdate); //#development
-                            
-            //                 if(url == ''){
-            //                     image.url = image.defaultURL;
-            //                     url = image.defaultURL;
-            //                 }
-            
-            //                 image.isLoaded = false;
-            
-            //                 library.misc.loadImageFromURL(
-            //                     url, 
-            //                     bitmap => {
-            //                         if(url != image.url){
-            //                             dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> URL has changed since this request started; re-requesting...'); //#development
-            //                             loadImage(image.url);
-            //                             return;
-            //                         }
-            
-            //                         image.bitmap = bitmap;
-            //                         image.isLoaded = true;
-            //                         image.isChanged = true;
-            //                         activateShouldRenderFrame();
-            //                     },
-            //                     (errorType, response, error) => {
-            //                         if(errorType == 'badURL'){
-            //                             console.warn(type,id,self.getAddress(),'could not find image at: '+url);
-            //                             console.warn(response);
-            //                             loadImage(image.defaultURL);
-            //                         }else if(errorType == 'imageDecodingError'){
-            //                             console.error('Image decoding error :: url:',url);
-            //                             console.error('-- -- -- -- -- -- -- :: response:',response);
-            //                             console.error(error);
-            //                             loadImage(image.defaultURL);
-            //                         }else if(errorType == 'previousFailure'){
-            //                             console.warn('previous failure to load "'+url+'" - load not attempted this time');
-            //                         }else{
-            //                             console.error('Unknown error :: errorType:',errorType);
-            //                             loadImage(image.defaultURL);
-            //                         }
-            //                     },
-            //                     forceUpdate
-            //                 );
-            //             }
-            //             setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
-            
-            //             this.url = function(a,forceUpdate=false){
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a,forceUpdate); //#development
-            
-            //                 if(a==undefined){return image.url;}
-            //                 if(a==image.url){return;} //no need to reload the same image
-            //                 image.url = a;
-            
-            //                 if(image.url == ''){ image.url = image.defaultURL; }
-            
-            //                 loadImage(image.url,forceUpdate);
-            //             };
-            //             this.bitmap = function(a){
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].bitmap(',a); //#development
-            
-            //                 if(a==undefined){return image.bitmap;}
-            //                 image.bitmap = a;
-            //                 image.url = 'internal bitmap';
-            
-            //                 image.isChanged = true;
-            //                 image.isLoaded = true;
-            //                 activateShouldRenderFrame();
-            //             };
-            
-            //         //unifiedAttribute
-            //             this.unifiedAttribute = function(attributes){
-            //                 if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, url:image.url }; } 
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-            //                 allowComputeExtremities = false;
-            //                 Object.keys(attributes).forEach(key => {
-            //                     dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-            //                     try{
-            //                         self[key](attributes[key]);
-            //                     }catch(err){
-            //                         console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-            //                     }
-            //                 });
-            //                 allowComputeExtremities = true;
-            
-            //                 computeExtremities();
-            //             };
-            
-            //     //webGL rendering functions
-            //         const points = [
-            //             0,0,
-            //             1,0,
-            //             1,1,
-            //             0,1,
-            //         ];
-            //         const vertexShaderSource = `#version 300 es
-            //             //constants
-            //                 in vec2 point;
-            
-            //             //variables
-            //                 struct location{
-            //                     vec2 xy;
-            //                     float scale;
-            //                     float angle;
-            //                 };
-            //                 uniform location adjust;
-            
-            //                 uniform vec2 resolution;
-            //                 uniform vec2 dimensions;
-            //                 uniform vec2 anchor;
-            
-            //             //vertex/fragment shader transfer variables
-            //                 out vec2 textureCoordinates;
-            
-            //             void main(){
-            //                 //transfer point to fragment shader
-            //                     textureCoordinates = point;
-            
-            //                 //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-            //                     vec2 P = dimensions * adjust.scale * (point - anchor);
-            //                     P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-            
-            //                 //convert from unit space to clipspace
-            //                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-            //             }
-            //         `;
-            //         const fragmentShaderSource = `#version 300 es
-            //             precision mediump float;
-            //             out vec4 outputColour;
-            
-            //             uniform sampler2D textureImage;
-            //             in vec2 textureCoordinates;
-                                                                                    
-            //             void main(){
-            //                 outputColour = texture(textureImage, textureCoordinates);
-            //             }
-            //         `;
-            //         const point = { buffer:undefined, attributeLocation:undefined };
-            //         let uniformLocations;
-            //         function updateGLAttributes(context,adjust){
-            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-            
-            //             //buffers
-            //                 //points
-            //                     if(point.buffer == undefined){
-            //                         dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-            //                         point.attributeLocation = context.getAttribLocation(program, "point");
-            //                         point.buffer = context.createBuffer();
-            //                         context.enableVertexAttribArray(point.attributeLocation);
-            //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-            //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-            //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-            //                     }else{
-            //                         dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-            //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-            //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-            //                     }
-            
-            //                 //texture
-            //                     if(image.isChanged){
-            //                         dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating image.textureData...'); //#development
-            //                         image.isChanged = false;
-            //                         image.textureData = context.createTexture();
-            //                         context.bindTexture(context.TEXTURE_2D, image.textureData);
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
-            //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
-            //                         context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
-            //                     }else{
-            //                         dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating image.textureData...'); //#development
-            //                         context.bindTexture(context.TEXTURE_2D, image.textureData);
-            //                     }
-            
-            //             //uniforms
-            //                 if( uniformLocations == undefined ){
-            //                     dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-            //                     uniformLocations = {
-            //                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-            //                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-            //                         "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-            //                         "resolution": context.getUniformLocation(program, "resolution"),
-            //                         "dimensions": context.getUniformLocation(program, "dimensions"),
-            //                         "anchor": context.getUniformLocation(program, "anchor"),
-            //                     };
-            //                 }
-            
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
-            //                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-            //                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-            //                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-            //                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-            //                 context.uniform2f(uniformLocations["dimensions"], width, height);
-            //                 context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-            //         }
-            //         let program;
-            //         function activateGLRender(context,adjust){
-            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-            //             if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                        
-            //             if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
-            
-            //             context.useProgram(program);
-            //             updateGLAttributes(context,adjust);
-            //             context.drawArrays(context.TRIANGLE_FAN, 0, 4);
-            //         }
-                    
-            //     //extremities
-            //         function computeExtremities(informParent=true,offset){
-            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                        
-            //             //get offset from parent, if one isn't provided
-            //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-            //             //calculate adjusted offset based on the offset
-            //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
-            //                 const adjusted = { 
-            //                     x: point.x*offset.scale + offset.x,
-            //                     y: point.y*offset.scale + offset.y,
-            //                     scale: offset.scale*scale,
-            //                     angle: -(offset.angle + angle),
-            //                 };
-            //             //calculate points based on the adjusted offset
-            //                 self.extremities.points = [];
-            //                 for(let a = 0; a < points.length; a+=2){
-            //                     const P = {
-            //                         x: adjusted.scale * width * (points[a] - anchor.x), 
-            //                         y: adjusted.scale * height * (points[a+1] - anchor.y), 
-            //                     };
-            
-            //                     self.extremities.points.push({ 
-            //                         x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-            //                         y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-            //                     });
-            //                 }
-            //                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
-                    
-            //             //if told to do so, inform parent (if there is one) that extremities have changed
-            //                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-            //         }
-            //         this.computeExtremities = computeExtremities;
-                    
-            //     //render
-            //         function drawDotFrame(){
-            //             //draw shape extremity points
-            //                 self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-            //             //draw bounding box top left and bottom right points
-            //                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-            //                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-            //         };
-            //         function activateShouldRenderFrame(){
-            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-            //             if(render.shouldRenderFrame){
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-            //                 return;
-            //             }
-            //             render.shouldRenderFrame = shouldThisElementRender();
-            //         }
-            //         function shouldThisElementRender(){
-            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-            //             if( self.parent == undefined || self.parent.clipActive == undefined ){
-            //                 return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-            //             }
-            //             return library.math.detectIntersect.boundingBoxes(
-            //                 self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-            //                 self.extremities.boundingBox
-            //             );
-            //         }
-            //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-            //             dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-            //             //judge whether element should be rendered
-            //                 if( !shouldThisElementRender() ){
-            //                     dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-            //                     return;
-            //                 }
-            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-            //             //combine offset with shape's position, angle and scale to produce adjust value for render
-            //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-            //                 const adjust = { 
-            //                     x: point.x*offset.scale + offset.x,
-            //                     y: point.y*offset.scale + offset.y,
-            //                     scale: offset.scale*scale,
-            //                     angle: -(offset.angle + angle),
-            //                 };
-            
-            //             //activate shape render code
-            //                 activateGLRender(context,adjust);
-            
-            //             //if requested; draw dot frame
-            //                 if(self.dotFrame){drawDotFrame();}
-            //         };
-            
-            //     //info dump
-            //         this._dump = function(){
-            //             report.info(self.getAddress(),'._dump()');
-            //             report.info(self.getAddress(),'._dump -> id: '+id);
-            //             report.info(self.getAddress(),'._dump -> type: '+type);
-            //             report.info(self.getAddress(),'._dump -> name: '+self.name);
-            //             report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-            //             report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-            //             report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-            //             report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-            //             report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-            //             report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
-            //             report.info(self.getAddress(),'._dump -> x: '+x);
-            //             report.info(self.getAddress(),'._dump -> y: '+y);
-            //             report.info(self.getAddress(),'._dump -> angle: '+angle);
-            //             report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-            //             report.info(self.getAddress(),'._dump -> width: '+width);
-            //             report.info(self.getAddress(),'._dump -> height: '+height);
-            //             report.info(self.getAddress(),'._dump -> scale: '+scale);
-            //             report.info(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
-            //         };
-                
-            //     //interface
-            //         this.interface = new function(){
-            //             this.ignored = self.ignored;
-            //             this.x = self.x;
-            //             this.y = self.y;
-            //             this.angle = self.angle;
-            //             this.anchor = self.anchor;
-            //             this.width = self.width;
-            //             this.height = self.height;
-            //             this.scale = self.scale;
-            //             this.url = self.url;
-            //             this.bitmap = self.bitmap;
-            //             this.unifiedAttribute = self.unifiedAttribute;
-            //             this.getAddress = self.getAddress;
-            //             this._dump = self._dump;
-            //         };
-            // };
-            
-            /////fresh
-            this.image = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'image'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-            
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let x = 0;
-                        let y = 0; 
-                        let angle = 0;
-                        let anchor = {x:0,y:0};
-                        let width = 10;
-                        let height = 10;
-                        let scale = 1;
-                        this.x = function(a){ 
-                            if(a==undefined){return x;}     
-                            x = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;}     
-                            y = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.angle = function(a){ 
-                            if(a==undefined){return angle;} 
-                            angle = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.anchor = function(a){
-                            if(a==undefined){return anchor;} 
-                            anchor = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.width = function(a){
-                            if(a==undefined){return width;}  
-                            width = a;  
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.height = function(a){
-                            if(a==undefined){return height;} 
-                            height = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //image data
-                        const state = {
-                            url:undefined,
-                            defaultURL:'/images/noimageimage.png',
-                        };
-                        elementLibrary.image.webglDataStore[undefined] = {
-                            bitmap: undefined,
-                            textureData: undefined,
-                            isLoaded: false,
-                            isProcessed: false,
-                        };
-                        function loadImage(url,forceUpdate=false){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url,forceUpdate); //#development
-                            
-                            if(url == ''){
-                                state.url = state.defaultURL;
-                                url = state.defaultURL;
-                            }
-                            if(elementLibrary.image.webglDataStore[state.url] != undefined && !forceUpdate){
-                                activateShouldRenderFrame();
-                                return;
-                            }
-            
-                            elementLibrary.image.webglDataStore[state.url] = {
-                                bitmap: undefined,
-                                textureData: undefined,
-                                isLoaded: false,
-                                isProcessed: false,
-                            };
-            
-                            library.misc.loadImageFromURL(
-                                url, 
-                                bitmap => {
-                                    elementLibrary.image.webglDataStore[url].bitmap = bitmap;
-                                    elementLibrary.image.webglDataStore[url].isLoaded = true;
-                                    elementLibrary.image.webglDataStore[url].isProcessed = false;
-            
-                                    if(url != state.url){
-                                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> URL has changed since this request started; re-requesting...'); //#development
-                                        loadImage(state.url);
-                                        return;
-                                    }
-            
-                                    activateShouldRenderFrame();
-                                },
-                                (errorType, response, error) => {
-                                    if(errorType == 'badURL'){
-                                        console.warn(type,id,self.getAddress(),'could not find image at: '+url);
-                                        console.warn(response);
-                                        loadImage(state.defaultURL);
-                                    }else if(errorType == 'imageDecodingError'){
-                                        console.error('Image decoding error :: url:',url);
-                                        console.error('-- -- -- -- -- -- -- :: response:',response);
-                                        console.error(error);
-                                        loadImage(state.defaultURL);
-                                    }else if(errorType == 'previousFailure'){
-                                        console.warn('previous failure to load "'+url+'" - load not attempted this time');
-                                    }else{
-                                        console.error('Unknown error :: errorType:',errorType);
-                                        loadImage(state.defaultURL);
-                                    }
-                                },
-                                forceUpdate
-                            );
-                        }
-                        setTimeout(()=>{ if(state.url == undefined){ 
-                            state.url = state.defaultURL;
-                            loadImage(state.defaultURL);
-                        } },1000);
-            
-                        this.url = function(a,forceUpdate=false){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a,forceUpdate); //#development
-            
-                            if(a==undefined){return state.url;}
-                            if(a==state.url){return;} //no need to reload the same image
-                            state.url = a;
-            
-                            if(state.url == ''){ state.url = state.defaultURL; }
-            
-                            loadImage(state.url,forceUpdate);
-                        };
-                        this.bitmap = function(a){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].bitmap(',a); //#development
-            
-                            if(a==undefined){
-                                return elementLibrary.image.webglDataStore[state.url] != undefined ? elementLibrary.image.webglDataStore[state.url].bitmap : undefined;
-                            }
-                            state.url = id+':internalBitmap';
-                            elementLibrary.image.webglDataStore[state.url] = {
-                                bitmap: a,
-                                textureData: undefined,
-                                isLoaded: true,
-                                isProcessed: false,
-                            };
-            
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, url:image.url }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                        };
-            
-                //webGL rendering functions
-                    const points = [
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,1,
-                    ];
-                    const vertexShaderSource = `#version 300 es
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            uniform vec2 resolution;
-                            uniform vec2 dimensions;
-                            uniform vec2 anchor;
-            
-                        //vertex/fragment shader transfer variables
-                            out vec2 textureCoordinates;
-            
-                        void main(){
-                            //transfer point to fragment shader
-                                textureCoordinates = point;
-            
-                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                vec2 P = dimensions * adjust.scale * (point - anchor);
-                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-            
-                        uniform sampler2D textureImage;
-                        in vec2 textureCoordinates;
-                                                                                    
-                        void main(){
-                            outputColour = texture(textureImage, textureCoordinates);
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-            
-                        //buffers
-                            //points
-                                if(point.buffer == undefined){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray( point.attributeLocation );
-                                    context.bindBuffer( context.ARRAY_BUFFER, point.buffer ); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData( context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW );
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer( context.ARRAY_BUFFER, point.buffer ); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-            
-                            //texture
-                                if( !elementLibrary.image.webglDataStore[state.url].isProcessed ){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> generating new textureData...'); //#development
-                                    elementLibrary.image.webglDataStore[state.url].textureData = context.createTexture();
-                                    context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[state.url].textureData );
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
-                                    context.texImage2D( context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, elementLibrary.image.webglDataStore[state.url].bitmap );
-            
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> mipmap generation...'); //#development
-                                    context.generateMipmap( context.TEXTURE_2D );
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST_MIPMAP_LINEAR );
-            
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> texture processing complete'); //#development
-                                    elementLibrary.image.webglDataStore[state.url].isProcessed = true;
-                                    activateShouldRenderFrame();
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> this texture has been found in image\'s webglDataStore, using that data instead as new textureData...'); //#development
-                                    context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[state.url].textureData );
-                                }
-            
-                        //uniforms
-                            if( uniformLocations == undefined ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "dimensions": context.getUniformLocation(program, "dimensions"),
-                                    "anchor": context.getUniformLocation(program, "anchor"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform2f(uniformLocations["dimensions"], width, height);
-                            context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                        
-                        if(!elementLibrary.image.webglDataStore[state.url].isLoaded){return;} //do not render, if the image has not yet been loaded and processed
-            
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-                        context.drawArrays(context.TRIANGLE_FAN, 0, 4);
-                    }
-                    
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                        
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //calculate adjusted offset based on the offset
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
-                            const adjusted = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-                        //calculate points based on the adjusted offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                const P = {
-                                    x: adjusted.scale * width * (points[a] - anchor.x), 
-                                    y: adjusted.scale * height * (points[a+1] - anchor.y), 
-                                };
-            
-                                self.extremities.points.push({ 
-                                    x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-                                    y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-                                });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
-                    
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-                    
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    };
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //combine offset with shape's position, angle and scale to produce adjust value for render
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjust = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-            
-                        //activate shape render code
-                            activateGLRender(context,adjust);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> state:',state);
-                        console.log(self.getAddress(),'._dump -> x: '+x);
-                        console.log(self.getAddress(),'._dump -> y: '+y);
-                        console.log(self.getAddress(),'._dump -> angle: '+angle);
-                        console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        console.log(self.getAddress(),'._dump -> width: '+width);
-                        console.log(self.getAddress(),'._dump -> height: '+height);
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                        console.log(self.getAddress(),'._dump -> elementLibrary.image.webglDataStore:',elementLibrary.image.webglDataStore);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.angle = self.angle;
-                        this.anchor = self.anchor;
-                        this.width = self.width;
-                        this.height = self.height;
-                        this.scale = self.scale;
-                        this.url = self.url;
-                        this.bitmap = self.bitmap;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            this.image.webglDataStore = {};
-            //this element is exactly the same as the image element; except the name and 
-            //type have been changed to 'canvas'
-            
-            this.canvas = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'canvas'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowComputeExtremities = true;
-            
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let x = 0;
-                        let y = 0; 
-                        let angle = 0;
-                        let anchor = {x:0,y:0};
-                        let width = 10;
-                        let height = 10;
-                        let scale = 1;
-                        this.x = function(a){ 
-                            if(a==undefined){return x;}     
-                            x = a;     
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;}     
-                            y = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.angle = function(a){ 
-                            if(a==undefined){return angle;} 
-                            angle = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.anchor = function(a){
-                            if(a==undefined){return anchor;} 
-                            anchor = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.width = function(a){
-                            if(a==undefined){return width;}  
-                            width = a;  
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.height = function(a){
-                            if(a==undefined){return height;} 
-                            height = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-            
-                    //image data
-                        const image = { 
-                            bitmap:undefined, 
-                            textureData:undefined, 
-                            url:'', 
-                            isLoaded:false, 
-                            isChanged:false, 
-                            defaultURL:'/images/noimageimage.png'
-                        };
-                        function loadImage(url){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url); //#development
-                            image.url = url;
-                            fetch(url).then( response => {
-                                if(response.status != 200){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> image was not found at url: '+url); //#development
-                                    console.warn(type,id,self.getAddress(),'cound not find image at: '+url);
-                                    return;
-                                }
-            
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> response:',response); //#development
-                                response.blob().then(data => {
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> data:',data); //#development
-                                    createImageBitmap(data).then(bitmap => {
-                                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> bitmap:',bitmap); //#development
-                                        image.bitmap = bitmap;
-                                        image.isLoaded = true;
-                                        image.isChanged = true;
-                                        activateShouldRenderFrame();
-                                    });
-                                });
-                            });
-                            image.isLoaded = false; 
-                        }
-                        setTimeout(()=>{ if(image.bitmap == undefined){ loadImage(image.defaultURL); } },1000);
-            
-                        this.imageURL = function(a){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].imageURL(',a); //#development
-            
-                            if(a==undefined){return image.url;}
-                            if(a==image.url){return;} //no need to reload the same image
-                            image.url = a;
-            
-                            if(image.url === ''){ image.url = image.defaultURL; }
-            
-                            loadImage(image.url);
-                        };
-                        this.imageBitmap = function(a){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].imageBitmap(',a); //#development
-            
-                            if(a==undefined){return image.bitmap;}
-                            image.bitmap = a;
-                            image.url = 'internal bitmap';
-            
-                            image.isChanged = true;
-                            image.isLoaded = true;
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowComputeExtremities = true;
-            
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //webGL rendering functions
-                    const points = [
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,1,
-                    ];
-                    const vertexShaderSource = `#version 300 es
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            uniform vec2 resolution;
-                            uniform vec2 dimensions;
-                            uniform vec2 anchor;
-            
-                        //vertex/fragment shader transfer variables
-                            out vec2 textureCoordinates;
-            
-                        void main(){
-                            //transfer point to fragment shader
-                                textureCoordinates = point;
-            
-                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                vec2 P = dimensions * adjust.scale * (point - anchor);
-                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-            
-                        uniform sampler2D textureImage;
-                        in vec2 textureCoordinates;
-                                                                                    
-                        void main(){
-                            outputColour = texture(textureImage, textureCoordinates);
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-            
-                        //buffers
-                            //points
-                                if(point.buffer == undefined){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-            
-                            //texture
-                                if(image.isChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating image.textureData...'); //#development
-                                    image.isChanged = false;
-                                    image.textureData = context.createTexture();
-                                    context.bindTexture(context.TEXTURE_2D, image.textureData);
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
-                                    context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
-                                    context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating image.textureData...'); //#development
-                                    context.bindTexture(context.TEXTURE_2D, image.textureData);
-                                }
-            
-                        //uniforms
-                            if( uniformLocations == undefined ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "dimensions": context.getUniformLocation(program, "dimensions"),
-                                    "anchor": context.getUniformLocation(program, "anchor"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform2f(uniformLocations["dimensions"], width, height);
-                            context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                        
-                        if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
-            
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-                        context.drawArrays(context.TRIANGLE_FAN, 0, 4);
-                    }
-                    
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                        
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //calculate adjusted offset based on the offset
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point:',point); //#development
-                            const adjusted = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-                        //calculate points based on the adjusted offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                const P = {
-                                    x: adjusted.scale * width * (points[a] - anchor.x), 
-                                    y: adjusted.scale * height * (points[a+1] - anchor.y), 
-                                };
-            
-                                self.extremities.points.push({ 
-                                    x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-                                    y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-                                });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
-                    
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-                    
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    };
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //combine offset with shape's position, angle and scale to produce adjust value for render
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjust = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-            
-                        //activate shape render code
-                            activateGLRender(context,adjust);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> image: '+JSON.stringify(image));
-                        console.log(self.getAddress(),'._dump -> x: '+x);
-                        console.log(self.getAddress(),'._dump -> y: '+y);
-                        console.log(self.getAddress(),'._dump -> angle: '+angle);
-                        console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        console.log(self.getAddress(),'._dump -> width: '+width);
-                        console.log(self.getAddress(),'._dump -> height: '+height);
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.angle = self.angle;
-                        this.anchor = self.anchor;
-                        this.width = self.width;
-                        this.height = self.height;
-                        this.scale = self.scale;
-                        this.imageURL = self.imageURL;
-                        this.imageBitmap = self.imageBitmap;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            
-            this.character = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'character'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-                        const defaultFontName = 'defaultThin';
-            
-                    //simple attributes
-                        this.name = _name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            activateShouldRenderFrame();
-                        };
-                        
-                    //advanced use attributes
-                        let allowProducePoints = true;
-                        let allowComputeExtremities = true;
-            
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                    //attributes pertinent to extremity calculation
-                        let x = 0;
-                        let y = 0;
-                        let angle = 0;
-                        let anchor = {x:0,y:0};
-                        let width = 10;
-                        let height = 10;
-                        let scale = 1;
-                        let font = defaultFontName;
-                        let character = ''; 
-                        let printingMode = {
-                            horizontal:'left', //left / middle / right
-                            vertical:'bottom', //top  / middle / bottom
-                        };
-                        this.x = function(a){ 
-                            if(a==undefined){return x;} 
-                            x = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;} 
-                            y = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.angle = function(a){ 
-                            if(a==undefined){return angle;} 
-                            angle = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.anchor = function(a){ 
-                            if(a==undefined){return anchor;} 
-                            anchor = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.width = function(a){
-                            if(a==undefined){return width;}  
-                            width = a;  
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.height = function(a){
-                            if(a==undefined){return height;} 
-                            height = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
-                            if(allowComputeExtremities){computeExtremities();}
-                            activateShouldRenderFrame();
-                        };
-                        this.font = function(newFont){
-                            if(newFont==undefined){return font;}
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
-            
-                            if( library.font.isApprovedFont(newFont) ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+library.font.fontLoadAttempted(newFont)); //#development
-                                if( !library.font.fontLoadAttempted(newFont) ){ library.font.loadFont(newFont); }
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+library.font.isFontLoaded(newFont)); //#development
-                                if( !library.font.isFontLoaded(newFont) ){
-                                    setTimeout(function(){ self.font(newFont); },500,newFont);
-                                    return;
-                                }
-            
-                                font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> font set to: "'+font+'"'); //#development
-                            }else{
-                                console.warn('library.font : error : unknown font:',newFont);
-                                font = defaultFontName;
-                            }
-            
-                            if(allowProducePoints){producePoints();}
-                            if(allowComputeExtremities){computeExtremities();} 
-                            activateShouldRenderFrame();
-                        };
-                        this.character = function(a){
-                            if(a==undefined){return character;} 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].character(',a); //#development
-                            character = a; 
-                            if(allowProducePoints){producePoints();}
-                            if(allowComputeExtremities){computeExtremities();} 
-                            activateShouldRenderFrame();
-                        };
-                        this.printingMode = function(a){
-                            if(a==undefined){return printingMode;} 
-                            printingMode = {
-                                horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
-                                vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
-                            };
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].printingMode(',printingMode); //#development
-            
-                            if(allowProducePoints){producePoints();}
-                            if(allowComputeExtremities){computeExtremities();} 
-                            activateShouldRenderFrame();
-                        };
-            
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale }; } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowProducePoints = false;
-                            allowComputeExtremities = false;
-                            Object.keys(attributes).forEach(key => {
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                try{
-                                    self[key](attributes[key]);
-                                }catch(err){
-                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
-                                }
-                            });
-                            allowProducePoints = true;
-                            allowComputeExtremities = true;
-            
-                            producePoints();
-                            computeExtremities();
-                            activateShouldRenderFrame();
-                        };
-            
-                //character data
-                    this.top = function(){ return library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).top; };
-                    this.bottom = function(){ return library.font.getVector(font,character) == undefined ? 1 : library.font.getVector(font,character).bottom; };
-                    this.left = function(){ return library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).left; };
-                    this.right = function(){ return library.font.getVector(font,character) == undefined ? 1 : library.font.getVector(font,character).right; };
-                    function producePoints(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints()'); //#development
-                        points = (library.font.getVector(font,character) == undefined ? library.font.getVector(font,'default').vector : library.font.getVector(font,character).vector).concat([]); //the concat, differentiates the point data
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints -> library.font.getVector['+font+']['+character+']:',library.font.getVector(font,character)); //#development
-            
-                        //adjust for vertical printingMode
-                            let horizontalAdjust = library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).right;
-                            if(printingMode.horizontal == 'middle'){ horizontalAdjust = horizontalAdjust/2; }
-                            if(printingMode.horizontal != 'left'){
-                                for(let a = 0; a < points.length; a+=2){
-                                    points[a] = points[a] - horizontalAdjust;
-                                }
-                            }
-            
-                        //adjust for horizontal printingMode
-                            let verticalAdjust = library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).top;
-                            if(printingMode.vertical == 'middle'){ verticalAdjust = verticalAdjust/2; }
-                            if(printingMode.vertical != 'bottom'){
-                                for(let a = 0; a < points.length; a+=2){
-                                    points[a+1] = points[a+1] - verticalAdjust;
-                                }
-                            }
-            
-                        pointsChanged = true;
-                    }
-            
-                //webGL rendering functions
-                    let pointsChanged = true;
-                    let points = [ 0,0, 1,0, 1,1,  0,0, 1,1, 0,1 ];
-                    const vertexShaderSource = 
-                        '#version 300 es' + library.glsl.geometry + `
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            uniform vec2 resolution;
-                            uniform vec2 dimensions;
-                            uniform vec2 anchor;
-            
-                        void main(){
-                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                vec2 P = dimensions * adjust.scale * (point - anchor);
-                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    const fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColour;
-                        uniform vec4 colour;
-                                                                                    
-                        void main(){
-                            outputColour = colour;
-                        }
-                    `;
-                    const point = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
-                
-                        //buffers
-                            //points
-                                if(point.buffer == undefined || pointsChanged){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                    pointsChanged = false;
-                                }else{
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-            
-                        //uniforms
-                            if( uniformLocations == undefined ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "dimensions": context.getUniformLocation(program, "dimensions"),
-                                    "anchor": context.getUniformLocation(program, "anchor"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                };
-                            }
-            
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> dimensions:'+width+' canvas.height:'+height); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor:'+JSON.stringify(anchor)); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform2f(uniformLocations["dimensions"], width, height);
-                            context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                            context.uniform4f(uniformLocations["colour"], colour.r*colour.a, colour.g*colour.a, colour.b*colour.a, colour.a);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-            
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-            
-                        context.drawArrays(context.TRIANGLES, 0, points.length/2);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){ 
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-                        
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){
-                                offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                                dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> no offset provided; generated offset:',offset); //#development
-                            }
-                            else{ dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> offset provided:',offset); }//#development
-                        //calculate adjusted offset based on the offset
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjusted = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-                        //calculate points based on the adjusted offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                const P = {
-                                    x: adjusted.scale * width * (points[a] - anchor.x), 
-                                    y: adjusted.scale * height * (points[a+1] - anchor.y), 
-                                };
-            
-                                self.extremities.points.push({ 
-                                    x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-                                    y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-                                });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-            
-                        //// "point in poly" detection currently doesn't understand polys with holes in them, so these complex
-                        //// shapes are being simplified to their bounding boxes
-                            self.extremities.points = [
-                                {x:self.extremities.boundingBox.topLeft.x,y:self.extremities.boundingBox.topLeft.y},
-                                {x:self.extremities.boundingBox.bottomRight.x,y:self.extremities.boundingBox.bottomRight.y},
-                            ];
-            
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    }
-                    function activateShouldRenderFrame(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
-                        if(render.shouldRenderFrame){
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
-                            return;
-                        }
-                        render.shouldRenderFrame = shouldThisElementRender();
-                    }
-                    function shouldThisElementRender(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
-                        if( self.parent == undefined || self.parent.clipActive == undefined ){
-                            return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
-                        }
-                        return library.math.detectIntersect.boundingBoxes(
-                            self.parent.clipActive() ? self.parent.extremities.boundingBox : viewport.getBoundingBox(),
-                            self.extremities.boundingBox
-                        );
-                    }
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
-            
-                        //judge whether element should be rendered
-                            if( !shouldThisElementRender() ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
-                                return;
-                            }
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
-            
-                        //combine offset with shape's position, angle and scale to produce adjust value for render
-                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            const adjust = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-            
-                        //activate shape render code
-                            activateGLRender(context,adjust);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        console.log(self.getAddress(),'._dump()');
-                        console.log(self.getAddress(),'._dump -> id: '+id);
-                        console.log(self.getAddress(),'._dump -> type: '+type);
-                        console.log(self.getAddress(),'._dump -> name: '+self.name);
-                        console.log(self.getAddress(),'._dump -> address: '+self.getAddress());
-                        console.log(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        console.log(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        console.log(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        console.log(self.getAddress(),'._dump -> ignored: '+ignored);
-                        console.log(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        console.log(self.getAddress(),'._dump -> x: '+x);
-                        console.log(self.getAddress(),'._dump -> y: '+y);
-                        console.log(self.getAddress(),'._dump -> angle: '+angle);
-                        console.log(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        console.log(self.getAddress(),'._dump -> width: '+width);
-                        console.log(self.getAddress(),'._dump -> height: '+height);
-                        console.log(self.getAddress(),'._dump -> scale: '+scale);
-                        console.log(self.getAddress(),'._dump -> font: '+font);
-                        console.log(self.getAddress(),'._dump -> character: '+character);
-                        console.log(self.getAddress(),'._dump -> printingMode: '+JSON.stringify(printingMode));
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.scale = self.scale;
-                        this.angle = self.angle;
-                        this.anchor = self.anchor;
-                        this.width = self.width;
-                        this.height = self.height;
-                        this.font = self.font;
-                        this.character = self.character;
-                        this.printingMode = self.printingMode;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this._dump = self._dump;
-                    };
-            };
-            this.characterString = function(_id,_name){
-                const self = this;
-            
-                //attributes 
-                    const innerGroup = element.create_skipDatabase('group','innerGroup');
-                        innerGroup.parent = this;
-            
-                    //protected attributes
-                        const type = 'characterString'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-                        this.name = _name;
-            
-                        const defaultFontName = 'defaultThin';
-            
-                        this.parent = undefined;
-                        this.dotFrame = false; innerGroup.dotFrame = this.dotFrame;
-                        this.extremities = innerGroup.extremities;
-                        this.ignored = innerGroup.ignored;
-                        this.getAddress = innerGroup.getAddress;
-                    //simple attributes
-                        let colour = {r:1,g:0,b:0,a:1};
-                        let width = 10;
-                        let height = 10;
-                        let font = 'defaultThin';
-                        let string = 'Hello';
-                        let spacing = 0.5;
-                        let interCharacterSpacing = 0;
-                        let printingMode =  {
-                            widthCalculation:'absolute', //filling / absolute
-                            horizontal:'left', //left / middle / right
-                            vertical:'bottom', //top  / middle / bottom
-                        };
-            
-                    //advanced use attributes
-                        let allowGenerateStringCharacters = true;
-            
-                    //callbacks
-                        this.onFontUpdateCallback = function(newFont){
-                            interface.runElementCallback(self, {onFontUpdateCallback:newFont});
-                        };
-                    
-                    //addressing
-                        this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-                    
-                    //attributes pertinent to extremity calculation
-                        this.x = innerGroup.x;
-                        this.y = innerGroup.y;
-                        this.angle = innerGroup.angle;
-                        this.scale = innerGroup.scale;
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
-                            recolourCharacters();
-                        };
-                        this.width = function(a){
-                            if(a==undefined){return width;}  
-                            width = a;  
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
-                            if(allowGenerateStringCharacters){generateStringCharacters();}
-                        };
-                        this.height = function(a){
-                            if(a==undefined){return height;} 
-                            height = a; 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
-                            if(allowGenerateStringCharacters){generateStringCharacters();}
-                        };
-                        this.font = function(newFont){
-                            if(newFont==undefined){return font;}
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
-            
-                            if( library.font.isApprovedFont(newFont) ){
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+library.font.fontLoadAttempted(newFont)); //#development
-                                if( !library.font.fontLoadAttempted(newFont) ){ library.font.loadFont(newFont); }
-                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+library.font.isFontLoaded(newFont)); //#development
-                                if( !library.font.isFontLoaded(newFont) ){ 
-                                    const timeoutId = setTimeout(function(){ 
-                                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun < '+timeoutId); //#development
-                                        self.font(newFont);
-                                    }, 100, newFont);
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun > '+timeoutId); //#development
-                                    return;
-                                }
-            
-                                font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
-                            }else{
-                                console.warn('library.font : error : unknown font:',newFont);
-                                font = defaultFontName;
-                            }
-            
-                            if(allowGenerateStringCharacters){generateStringCharacters();} 
-                            self.onFontUpdateCallback();
-                        };
-                        this.string = function(a){ 
-                            if(a==undefined){return string;} 
-                            string = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].string(',a); //#development
-                            if(allowGenerateStringCharacters){generateStringCharacters();}
-                        };
-                        this.spacing = function(a){ 
-                            if(a==undefined){return spacing;} 
-                            spacing = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].spacing(',a); //#development
-                            if(allowGenerateStringCharacters){generateStringCharacters();}
-                        };
-                        this.interCharacterSpacing = function(a){
-                            if(a==undefined){return interCharacterSpacing;}
-                            interCharacterSpacing = a;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].interCharacterSpacing(',a); //#development
-                            if(allowGenerateStringCharacters){generateStringCharacters();}
-                        };
-                        this.printingMode = function(a){
-                            if(a==undefined){return printingMode;} 
-                            printingMode = {
-                                widthCalculation: a.widthCalculation != undefined || a.widthCalculation != '' ? a.widthCalculation : printingMode.widthCalculation,
-                                horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
-                                vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
-                            };
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].printingMode(',printingMode); //#development
-            
-                            if(allowGenerateStringCharacters){generateStringCharacters();}
-                        };
-                    //unifiedAttribute
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ 
-                                return Object.assign(
-                                    {   
-                                        colour:colour,
-                                        width:width,
-                                        height:height,
-                                        font:font,
-                                        string:string,
-                                        spacing:spacing,
-                                        interCharacterSpacing:interCharacterSpacing,
-                                        printingMode:printingMode,
-                                    },
-                                    innerGroup.unifiedAttribute()
-                                );
-                            } 
-                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
-            
-                            allowGenerateStringCharacters = false;
-                            ['colour', 'width', 'height', 'font', 'string', 'spacing', 'interCharacterSpacing', 'printingMode' ].forEach(key => {
-                                if(key in attributes){
-                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                                    try{
-                                        self[key](attributes[key]);
-                                    }catch(err){
-                                        console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to '+JSON.stringify(attributes[key])+'');
-                                        console.warn(err);
-                                    }
-                                }
-                                delete attributes[key];
-                            });
-                            innerGroup.unifiedAttribute(attributes);
-                            allowGenerateStringCharacters = true;
-            
-                            generateStringCharacters();
-                            self.onFontUpdateCallback();
-                        }
-                //string
-                    let resultingWidth = 0;
-                    function recolourCharacters(){
-                        innerGroup.children().forEach(ele => ele.colour(colour));
-                    }
-                    function generateStringCharacters(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::generateStringCharacters()'); //#development
-                        innerGroup.clear();
-                        const tmpString = String(string).split('');
-                        let characterWidth = width;
-            
-                        //printingMode
-                            //widthCalculation
-                                if(printingMode.widthCalculation == 'filling'){
-                                    let internalWidth = 0;
-                                    tmpString.forEach(a => { internalWidth += library.font.getVector(font,a) ? library.font.getVector(font,a).right : spacing; });
-                                    characterWidth = characterWidth/internalWidth;
-                                }
-                            //vertical
-                                let verticalOffset = 0;
-                                let highestPoint = 0;
-                                if( printingMode.vertical == 'top'){ 
-                                    tmpString.forEach(a => {
-                                        const tmp = library.font.getVector(font,a) ? library.font.getVector(font,a).top : 0;
-                                        highestPoint = highestPoint > tmp ? tmp : highestPoint;
-                                    });
-                                    verticalOffset = height*-highestPoint;
-                                }
-                                if( printingMode.vertical == 'verymiddle' ){
-                                    tmpString.forEach(a => {
-                                        const tmp = library.font.getVector(font,a) ? library.font.getVector(font,a).top : 0;
-                                        highestPoint = highestPoint > tmp ? tmp : highestPoint;
-                                    });
-                                    verticalOffset = -(height/2)*highestPoint;
-                                }                 
-                                if( printingMode.vertical == 'middle' ){
-                                    highestPoint = library.font.getVector(font,'o') ? library.font.getVector(font,'o').top : 0;
-                                    verticalOffset = -(height/2)*highestPoint;
-                                }                 
-            
-                        //create character and add it to the group
-                            let cumulativeWidth = 0;
-                            for(let a = 0; a < tmpString.length; a++){
-                                if(tmpString[a] == ' '){ cumulativeWidth += characterWidth*spacing; continue; }
-            
-                                let tmp = element.create_skipDatabase('character',''+a);
-                                tmp.unifiedAttribute({
-                                    character:tmpString[a],
-                                    font:font,
-                                    x:cumulativeWidth,
-                                    y:verticalOffset,
-                                    width:characterWidth,
-                                    height:height,
-                                    colour:colour,
-                                });
-                                innerGroup.append(tmp);
-            
-                                cumulativeWidth += (interCharacterSpacing + tmp.right()) * characterWidth;
-                            }
-            
-                            resultingWidth = cumulativeWidth;
-                            interface.updateElement(self, {resultingWidth:resultingWidth});
-            
-                        //printingMode - horizontal
-                            if( printingMode.horizontal == 'middle' ){ innerGroup.children().forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }
-                            else if( printingMode.horizontal == 'right' ){ innerGroup.children().forEach(a => a.x( a.x() - cumulativeWidth) ); }
-                            else{ innerGroup.computeExtremities(); }
-                    }
-                    this.resultingWidth = function(){
-                        return resultingWidth;
-                    };
-                //extremities
-                    this.getElementsUnderPoint = innerGroup.getElementsUnderPoint;
-                    this.getElementsUnderArea = innerGroup.getElementsUnderArea;
-                    this.computeExtremities = function(informParent=true,offset){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
-            
-                        //run computeExtremities on inner group, passing the offset values through
-                            innerGroup.computeExtremities(false,offset);
-                        //update extremities
-                            this.updateExtremities(informParent,offset);
-                    }
-                    this.updateExtremities = function(informParent=true){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities(',informParent); //#development
-                       
-                        //grab extremity points and bounding box from inner group
-                            self.extremities.points = innerGroup.extremities.points;
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> extremities.points.length:',self.extremities.points.length); //#development
-                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
-            
-                        //update parent
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.getOffset = function(){
-                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
-                        return this.parent ? this.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                    };
-                //render
-                    this.render = innerGroup.render;
-                //info dump
-                    this.getTree = innerGroup.getTree;
-                    this._dump = innerGroup._dump;
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.angle = self.angle;
-                        this.width = self.width;
-                        this.height = self.height;
-                        this.scale = self.scale;
-                        this.font = self.font;
-                        this.string = self.string;
-                        this.interCharacterSpacing = self.interCharacterSpacing;
-                        this.printingMode = self.printingMode;
-                        this.unifiedAttribute = self.unifiedAttribute;
-                        this.getAddress = self.getAddress;
-                        this.resultingWidth = self.resultingWidth;
-                        this._dump = self._dump;
-                    };
-            };
-
-        };
-        this.__ = elementLibrary;
-        this.getAvailableElements = function(){ 
-            dev.log.element('.getAvailableElements()'); //#development
-            return Object.keys(elementLibrary);
-        };
-        this.installElement = function(elementName, creatorMethod, allowOverwrite=false){
-            dev.log.element('.installElement(',elementName,creatorMethod,allowOverwrite); //#development
-
-            if(!allowOverwrite && elementName in elementLibrary){
-                dev.log.element('.installElement -> element "'+elementName+'" is already in the elementLibrary'); //#development
-                return false
-            }
-            elementLibrary[elementName] = creatorMethod;
-            return true;
-        };
-
-    //element control
-        //database
-            const createdElements = [];
-            function generateElementId(){
-                let id = createdElements.findIndex(item => item==undefined);
-                return id != -1 ? id : createdElements.length;
-            }
-            function getElementFromId(id){ 
-                if(id == undefined){return;}
-                return createdElements[id];
-            }
-            function getIdFromElement(element){ 
-                if(element == undefined){return;}
-                return element.getId();
-            }
-
-            this.getElementFromId = getElementFromId;
-            this.getIdFromElement = getIdFromElement;
-            this.getCreatedElements = function(){ 
-                dev.log.element('.getCreatedElements()'); //#development
-                return createdElements;
-            };
-
-        //creation
-            this.create_skipDatabase = function(type,name){
-                dev.log.element('.create_skipDatabase(',type,name); //#development
-                return new elementLibrary[type](-1,name);
-            };
-            this.create = function(type,name){
-                dev.log.element('.create(',type,name); //#development
-
-                if(type == undefined){ console.error('elememt.createElement: type argument not provided - element will not be produced'); return; }
-                if(name == undefined){ console.error('elememt.createElement: name argument not provided - element will not be produced'); return; }
-                if(elementLibrary[type] == undefined){ console.error('elememt.createElement: type "'+type+'" does not exist - element will not be produced'); return; }
-
-                const newElement_id = generateElementId();
-                createdElements[newElement_id] = new elementLibrary[type](newElement_id,name);
-                return createdElements[newElement_id];
-            };
-
-        //deletion
-            this.delete = function(element){ 
-                dev.log.element('.delete(',element); //#development
-                createdElements[getIdFromElement(element)] = undefined;
-            };
-            this.deleteAllCreated = function(){ 
-                dev.log.element('.deleteAllCreated()'); //#development
-                for(let a = 0; a < createdElements.length; a++){this.delete(getElementFromId(a));}
-            };
-
-        //other
-            this.getTypeById = function(element){ 
-                dev.log.element('.getTypeById(',element); //#development
-                return element.getType();
-            };
-            this._dump = function(){
-                report.info('element._dump()');
-                Object.keys(elementLibrary).forEach(key => { report.info('element._dump -> elementLibrary: '+key); })
-
-                if(createdElements.length == 0){ report.info('element._dump -> there are no created elements'); }
-                else if(createdElements.length == 1){ report.info('element._dump -> there is 1 created element'); }
-                else{ report.info('element._dump -> there are '+createdElements.length+' created elements'); }
-                
-                createdElements.forEach(item => { report.info('element._dump -> createdElements: '+JSON.stringify(item)); });
-            };
-};
-const arrangement = new function(){
-    let design = element.create('group','root');
-
-    this.new = function(){ 
-        dev.log.arrangement('.new()'); //#development
-        design.clear(); 
-
-        design.unifiedAttribute({
-            x: 0,
-            y: 0,
-            angle: 0,
-            scale: 1,
-            heedCamera: false,
-            static: false,
-        });
-    };
-    this.get = function(){
-        dev.log.arrangement('.get()'); //#development
-        return design; 
-    };
-    this.set = function(arrangement){ 
-        dev.log.arrangement('.set(',arrangement); //#development
-        design = arrangement;
-    };
-    this.prepend = function(element){
-        dev.log.arrangement('.prepend(',element); //#development
-        design.prepend(element);
-    };
-    this.append = function(element){
-        dev.log.arrangement('.append(',element); //#development
-        design.append(element);
-    };
-    this.remove = function(element){ 
-        dev.log.arrangement('.remove(',element); //#development
-        design.remove(element); 
-    };
-    this.clear = function(){ 
-        dev.log.arrangement('.clear()'); //#development
-        design.clear(); 
-    };
-
-    this.getElementByAddress = function(address){
-        dev.log.arrangement('.getElementByAddress(',address); //#development
-
-        const route = address.split('/'); 
-        route.shift();
-
-        let currentObject = design;
-        route.forEach(function(a){
-            currentObject = currentObject.getChildByName(a);
-        });
-
-        return currentObject;
-    };
-    this.getElementsUnderPoint = function(x,y){
-        dev.log.arrangement('.getElementsUnderPoint(',x,y); //#development
-        return design.getElementsUnderPoint(x,y);
-    };
-    this.getElementsUnderArea = function(points){ 
-        dev.log.arrangement('.getElementByAddress(',points); //#development
-        return design.getElementsUnderArea(points); 
-    };
-        
-    this.printTree = function(mode='spaced',includeTypes=false){ //modes: spaced / tabular / address 
-        function recursivePrint(grouping,prefix=''){
-            grouping.children.forEach(function(a){
-                const data = '('+a.id + (includeTypes ? ' : '+a.type : '') +')';
-
-                if(mode == 'spaced'){
-                    console.log(prefix+' -  '+a.name+' '+data);
-                    if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
-                }else if(mode == 'tabular'){
-                    console.log(prefix+'\t-\t\t'+a.name+' '+data);
-                    if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
-                }else if(mode == 'address'){
-                    console.log(prefix+'/'+a.name+' '+data);
-                    if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
-                }
-            });
-        }
-
-        if(design.children().length == 0){console.log('-empty-');}
-        console.log(design.name+' ('+design.getId()+')');
-        recursivePrint(design.getTree(), '');
-    };
-    this.printSurvey = function(){
-        const results = {};
-
-        function recursiveSearch(grouping){
-            grouping.children.forEach(child => {
-                results[child.type] = results[child.type] == undefined ? 1 : results[child.type]+1;
-                if(child.type == 'group'){
-                    recursiveSearch(child)
-                }
-            });
-        }
-
-        recursiveSearch(design.getTree());
-        return results;
-    };
-    this.areParents = function(elementId,potentialParents=[]){
-        dev.log.arrangement('.areParents(',elementId,potentialParents); //#development
-
-        let count = 0;
-        let workingElement = element.getElementFromId(elementId);
-        potentialParents = potentialParents.map(id => element.getElementFromId(id));
-
-        do{
-            let index = potentialParents.indexOf(workingElement);
-            if(index != -1){
-                potentialParents[index] = count++;
-            }
-        }while((workingElement=workingElement.parent) != undefined);
-
-        return potentialParents.map(item => typeof item == 'number' ? item : null);
-    };
-
-    this._dump = function(){ design._dump(); };
-};
-const render = new function(){
-    const self = this; 
-
-    let isBusy = true;
-    this.isBusy = function(){ return isBusy };
-
-    const pageData = {
-        defaultCanvasSize:{width:800, height:600},
-        currentCanvasSize:{width:800, height:600},
-        selectedCanvasSize:{width:800, height:600},
-        devicePixelRatio:1,
-    };
-    const canvas = new OffscreenCanvas(pageData.defaultCanvasSize.width, pageData.defaultCanvasSize.height);
-    const context = canvas.getContext("webgl2", {alpha:false, preserveDrawingBuffer:true, stencil:true});
-    let animationRequestId = undefined;
-    let clearColour = {r:1,g:1,b:1,a:1};
-
-    //webGL setup
-        context.enable(context.BLEND);
-        context.blendFunc(context.ONE, context.ONE_MINUS_SRC_ALPHA);
-
-    //webGL program production
-        const storedPrograms = {};
-        this.produceProgram = function(name, vertexShaderSource, fragmentShaderSource){
-            dev.log.render('.produceProgram(',name,vertexShaderSource,fragmentShaderSource); //#development
-            function compileProgram(vertexShaderSource, fragmentShaderSource){
-                function createShader(type, source){
-                    let shader = context.createShader(type);
-                    context.shaderSource(shader, source);
-                    context.compileShader(shader);
-                    let success = context.getShaderParameter(shader, context.COMPILE_STATUS);
-                    if(success){ return shader; }
-            
-                    console.error('major error in core\'s "'+ type +'" shader creation');
-                    console.error(context.getShaderInfoLog(shader));
-                    context.deleteShader(shader);
-                }
-
-                let program = context.createProgram();
-                context.attachShader(program, createShader(context.VERTEX_SHADER,vertexShaderSource) );
-                context.attachShader(program, createShader(context.FRAGMENT_SHADER,fragmentShaderSource) );
-                context.linkProgram(program);
-                let success = context.getProgramParameter(program, context.LINK_STATUS);
-                if(success){ return program; }
-            
-                console.error('major error in core\'s program creation');
-                console.error(context.getProgramInfoLog(program));
-                context.deleteProgram(program);
-            };
-
-            if( !(name in storedPrograms) ){
-                dev.log.render('.produceProgram -> program not found; will be compiled and stored as "'+name+'"'); //#development
-                storedPrograms[name] = compileProgram(vertexShaderSource, fragmentShaderSource);
-                context.useProgram(storedPrograms[name]);
-            }else{
-                dev.log.render('.produceProgram -> program found; using stored program'); //#development
-            }
-
-            return storedPrograms[name];
-        };
-
-    //canvas and webGL context adjustment
-        this.clearColour = function(colour){
-            dev.log.render('.clearColour(',colour); //#development
-            if(colour == undefined){ return clearColour; }
-            clearColour = colour;
-            context.clearColor(clearColour.r, clearColour.g, clearColour.b, 1);
-        };
-        this.adjustCanvasSize = function(newWidth, newHeight){
-            dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
-            let adjustCanvasSize_isBusy = {width:false,height:false};
-            isBusy = true;
-
-            function updateInternalCanvasSize(direction,newValue){
-                dev.log.render('.adjustCanvasSize::updateInternalCanvasSize(',direction,newValue); //#development
-                newValue *= pageData.devicePixelRatio;
-                if(newValue != undefined){
-                    if(pageData.currentCanvasSize[direction] != newValue){
-                        pageData.currentCanvasSize[direction] = newValue;
-                        canvas[direction] = pageData.currentCanvasSize[direction];
-                    }
-                }else{
-                    if(pageData.currentCanvasSize[direction] != pageData.defaultCanvasSize[direction]){
-                        pageData.currentCanvasSize[direction] = pageData.defaultCanvasSize[direction];
-                        canvas[direction] = pageData.currentCanvasSize[direction];
-                    }
-                }
-
-                self.refreshCoordinates();
-                adjustCanvasSize_isBusy[direction] = false;
-                isBusy = adjustCanvasSize_isBusy['width'] || adjustCanvasSize_isBusy['height'];
-            }
-            
-            //request canvas data from the console, if none is provided in arguments
-            // -> argument data > requested data > default data
-            function updateSize_arguments(){
-                dev.log.render('.adjustCanvasSize::updateSize_arguments()'); //#development
-                adjustCanvasSize_isBusy = {width:true,height:true};
-
-                if(newWidth != undefined){
-                    updateInternalCanvasSize('width',newWidth*pageData.devicePixelRatio);
-                }else{
-                    dev.log.render('.adjustCanvasSize -> argument "newWidth" undefined; trying request...'); //#development
-                    updateSize_dataRequest('width');
-                }
-                if(newHeight != undefined){
-                    updateInternalCanvasSize('height',newHeight*pageData.devicePixelRatio);
-                }else{
-                    dev.log.render('.adjustCanvasSize -> argument "newHeight" undefined; trying request...'); //#development
-                    updateSize_dataRequest('height');
-                }
-            }
-            function updateSize_dataRequest(direction){
-                dev.log.render('.adjustCanvasSize::updateSize_dataRequest(',direction); //#development
-                const capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
-
-                interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
-                    pageData.selectedCanvasSize[direction] = sizes[0];
-                    dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> '+capitalizedDirection+':'+pageData.selectedCanvasSize[direction]); //#development
-                    const attribute = pageData.selectedCanvasSize[direction];
-
-                    function unparseableErrorMessage(direction,attribute){
-                        report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> unparseable format: '+attribute+', will use default instead'); //#development
-                        updateSize_usingDefault(direction);
-                    }
-
-                    if( attribute.indexOf('%') == (attribute.length-1) ){ //percentage
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a percentage'); //#development
-                        interface.getCanvasParentAttributes(['offset'+capitalizedDirection]).then(sizes => {
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parent'+capitalizedDirection+':'+sizes[0]); //#development
-                            const parentSize = sizes[0];
-                            const percent = parseFloat(attribute.slice(0,-1)) / 100;
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parsed percent: '+percent*100); //#development
-                            if( isNaN(percent) ){ unparseableErrorMessage(direction,attribute); return; }
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+parentSize*percent); //#development
-                            updateInternalCanvasSize(direction,parentSize*percent);
-                        });
-                    }else if( attribute.indexOf('px') != -1 ){ //px value
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a pixel number'); //#development
-                        const val = parseFloat(attribute.slice(0,-2));
-                        if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
-                        updateInternalCanvasSize(direction,val);
-                    }else{ //flat value
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a flat number'); //#development
-                        const val = parseFloat(attribute);
-                        if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
-                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
-                        updateInternalCanvasSize(direction,val);
-                    }
-                });
-            }
-            function updateSize_usingDefault(direction){
-                dev.log.render('.adjustCanvasSize::updateSize_usingDefault('+direction+')'); //#development
-                updateInternalCanvasSize(direction,pageData.defaultCanvasSize[direction]);
-            }
-
-            interface.getWindowAttributes(['devicePixelRatio']).then(values => {
-                pageData.devicePixelRatio = values[0];
-                updateSize_arguments();
-            });
-        };
-        this.refreshCoordinates = function(){
-            dev.log.render('.refreshCoordinates()'); //#development
-            dev.log.render('.refreshCoordinates: -> pageData.devicePixelRatio: '+pageData.devicePixelRatio); //#development
-            let w = context.canvas.width;
-            let h = context.canvas.height;
-            dev.log.render('.refreshCoordinates: -> w:'+w+' h:'+h); //#development
-
-            let x, y, width, height = 0;
-            if(pageData.devicePixelRatio == 1){
-                x = 0;
-                y = 0;
-                width = w;
-                height = h;
-            }else{
-                x = 0;
-                y = -h;
-                width = w*2;
-                height = h*2;
-            }
-
-            dev.log.render('.refreshCoordinates: -> context.viewport('+x+', '+y+', '+width+', '+height+')'); //#development
-            context.viewport(x, y, width, height);
-
-            interface.setCanvasAttributes([{name:'width',value:w/pageData.devicePixelRatio},{name:'height',value:h/pageData.devicePixelRatio}]);
-        };
-        this.refresh = function(allDoneCallback){
-            dev.log.render('.refresh()'); //#development
-            this.clearColour(clearColour);
-            this.frameRateLimit(this.frameRateLimit());
-            this.adjustCanvasSize();
-
-            const refresh_interval = setInterval(function(){
-                if(!render.isBusy()){
-                    clearInterval(refresh_interval);
-                    if(allDoneCallback){allDoneCallback()};
-                }
-            },1);
-        };
-
-    //frame rate control
-        const frameRateControl = {active:false, previousRenderTime:Date.now(), limit:30, interval:0};
-        this.activeLimitToFrameRate = function(a){
-            dev.log.render('.activeLimitToFrameRate(',a); //#development
-            if(a==undefined){return frameRateControl.active;}
-            frameRateControl.active=a
-        };
-        this.frameRateLimit = function(a){
-            dev.log.render('.frameRateLimit(',a); //#development
-            if(a==undefined){ return frameRateControl.limit; }
-            frameRateControl.limit=a;
-            frameRateControl.interval=1000/frameRateControl.limit;
-        };
-
-    //actual render
-        this.shouldRenderFrame = false;
-        let allowFrameSkipping = true;
-        this.allowFrameSkipping = function(bool){
-            dev.log.render('.allowFrameSkipping(',bool); //#development
-            if(bool == undefined){return allowFrameSkipping;}
-            allowFrameSkipping = bool;
-        };
-        function renderFrame(noClear=false,force=false){
-            dev.log.render('::renderFrame(',noClear,force); //#development
-
-            function func(){
-                stats.collectFrameDecision( !allowFrameSkipping || (self.shouldRenderFrame || force) );
-
-                if(allowFrameSkipping && (!self.shouldRenderFrame && !force)){
-                    dev.log.render('::renderFrame::func -> not actually rendering frame'); //#development
-                    return;
-                }
-                self.shouldRenderFrame = false;
-
-                if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
-                arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
-                const transferableImage = canvas.transferToImageBitmap();
-                interface.printToScreen(transferableImage);
-            }
-
-            if( stats._active() ){
-                const startTime = (new Date()).getTime();
-                func();
-                const endTime = (new Date()).getTime();
-                stats.collectFrameTime( endTime - startTime );
-            }else{
-                func();
-            }
-        }
-        function animate(timestamp){
-            dev.log.render('::animate(',timestamp); //#development
-            animationRequestId = requestAnimationFrame(animate);
-
-            //limit frame rate
-                if(frameRateControl.active){
-                    let currentRenderTime = Date.now();
-                    let delta = currentRenderTime - frameRateControl.previousRenderTime;
-                    if(delta < frameRateControl.interval){ return; }
-                    frameRateControl.previousRenderTime = currentRenderTime - delta%frameRateControl.interval;
-                }
-
-            //attempt to render frame, if there is a failure; stop animation loop and report the error
-                try{
-                    renderFrame();
-                }catch(error){
-                    render.active(false);
-                    console.error('major animation error');
-                    console.error(error);
-                }
-
-            //perform stats collection
-                stats.collectFrameTimestamp(timestamp);
-        }
-        this.frame = function(noClear=false,force=false){
-            dev.log.render('.frame(',noClear,force); //#development
-            renderFrame(noClear,force);
-        };
-        this.active = function(bool){
-            dev.log.render('.active(',bool); //#development
-            if(bool == undefined){return animationRequestId!=undefined;}
-
-            if(bool){
-                if(animationRequestId != undefined){return;}
-                animate();
-            }else{
-                if(animationRequestId == undefined){return;}
-                cancelAnimationFrame(animationRequestId);
-                animationRequestId = undefined;
-            }
-        };
-
-    //misc
-        this.getCanvasSize = function(){ return {width:pageData.currentCanvasSize.width/pageData.devicePixelRatio, height:pageData.currentCanvasSize.height/pageData.devicePixelRatio}; };
-        this.drawDot = function(x,y,r=2,colour={r:1,g:0,b:0,a:1}){
-            const dot = element.create_skipDatabase('circle','core-drawDot-dot');
-            dot.dotFrame = false;
-            dot.unifiedAttribute({x:x, y:y, radius:r, colour:colour});
-            dot.render(context);
-        };
-        this._dump = function(){
-            report.info('render._dump()');
-            report.info('render._dump -> pageData: '+JSON.stringify(pageData));
-            report.info('render._dump -> storedPrograms: '+JSON.stringify(storedPrograms));
-            report.info('render._dump -> frameRateControl: '+JSON.stringify(frameRateControl));
-            report.info('render._dump -> clearColour: '+JSON.stringify(clearColour));
-        };
-};
-const viewport = new function(){
-    const self = this;
-    const state = {
-        position:{x:0,y:0},
-        scale:1,
-        angle:0,
-    };
-    const viewbox = {
-        points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
-        boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
-    };
-    const mouseData = { 
-        x:undefined, 
-        y:undefined, 
-        stopScrollActive:false,
-    };
-
-    //adapter
-        this.adapter = new function(){
-            this.windowPoint2workspacePoint = function(x,y){
-                dev.log.viewport('.adapter.windowPoint2workspacePoint(',x,y); //#development
-                const position = viewport.position();
-                const scale = viewport.scale();
-                const angle = viewport.angle();
-
-                let tmp = {x:x, y:y};
-                tmp.x = (tmp.x - position.x)/scale;
-                tmp.y = (tmp.y - position.y)/scale;
-                tmp = library.math.cartesianAngleAdjust(tmp.x,tmp.y,-angle);
-
-                return tmp;
-            };
-            // this.workspacePoint2windowPoint = function(x,y){
-            //     let position = viewport.position();
-            //     let scale = viewport.scale();
-            //     let angle = viewport.angle();
-
-            //     let point = library.math.cartesianAngleAdjust(x,y,angle);
-
-            //     return {
-            //         x: (point.x+position.x) * scale,
-            //         y: (point.y+position.y) * scale
-            //     };
-            // };
-        };
-
-    //camera position
-        this.position = function(x,y){
-            dev.log.viewport('.position(',x,y); //#development
-            if(x == undefined || y == undefined){return {x:state.position.x,y:state.position.y};}
-            state.position.x = x;
-            state.position.y = y;
-
-            arrangement.get().children().forEach(function(item){
-                if(item.heedCamera && item.heedCamera()){ 
-                    dev.log.viewport('.position -> adjusting:',item); //#development
-                    item.unifiedAttribute({x:state.position.x,y:state.position.y});
-                }
-            });
-
-            calculateViewportExtremities();
-
-            self.onCameraAdjust( Object.assign({},state) );
-        };
-        this.scale = function(s){
-            dev.log.viewport('.scale(',s); //#development
-            if(s == undefined){return state.scale;}
-            state.scale = s <= 0 ? 1 : s;
-            arrangement.get().children().forEach(function(item){
-                if(item.heedCamera && item.heedCamera()){ 
-                    dev.log.viewport('.scale -> adjusting:',item); //#development
-                    item.scale(state.scale);
-                }
-            });
-            calculateViewportExtremities();
-
-            self.onCameraAdjust( Object.assign({},state) );
-        };
-        this.angle = function(a){
-            dev.log.viewport('.angle(',a); //#development
-            if(a == undefined){return state.angle;}
-            state.angle = a;
-            arrangement.get().children().forEach(function(item){
-                if(item.heedCamera && item.heedCamera()){ 
-                    dev.log.viewport('.angle -> adjusting:',item); //#development
-                    item.angle(state.angle);
-                }
-            });
-            calculateViewportExtremities();
-
-            self.onCameraAdjust( Object.assign({},state) );
-        };
-
-    //mouse interaction
-        this.getElementsUnderPoint = function(x,y){
-            dev.log.viewport('.getElementsUnderPoint(',x,y); //#development
-            let xy = this.adapter.windowPoint2canvasPoint(x,y);
-            return arrangement.getElementUnderPoint(xy.x,xy.y);
-        };
-        this.getElementsUnderArea = function(points){
-            dev.log.viewport('.getElementsUnderArea(',points); //#development
-            return arrangement.getElementsUnderArea(points.map(a => this.adapter.windowPoint2canvasPoint(a.x,a.y)));
-        };
- 
-    //misc
-        function calculateViewportExtremities(){
-            dev.log.viewport('::calculateViewportExtremities()'); //#development
-            const canvasDimensions = render.getCanvasSize();
-
-            //for each corner of the viewport; find out where they lie on the canvas
-                viewbox.points.tl = {x:0, y:0};
-                viewbox.points.tr = {x:canvasDimensions.width, y:0};
-                viewbox.points.bl = {x:0, y:canvasDimensions.height};
-                viewbox.points.br = {x:canvasDimensions.width, y:canvasDimensions.height};
-            //calculate a bounding box for the viewport from these points
-                viewbox.boundingBox = library.math.boundingBoxFromPoints([viewbox.points.tl, viewbox.points.tr, viewbox.points.br, viewbox.points.bl]);
-                dev.log.viewport('::calculateViewportExtremities -> viewbox.boundingBox:',viewbox.boundingBox); //#development
-        }
-        this.calculateViewportExtremities = calculateViewportExtremities;
-        this.refresh = function(){
-            dev.log.viewport('.refresh()'); //#development
-            calculateViewportExtremities();
-        };
-        this.getBoundingBox = function(){ 
-            dev.log.viewport('.getBoundingBox()'); //#development
-            return viewbox.boundingBox;
-        };
-        this.mousePosition = function(x,y){
-            dev.log.viewport('.mousePosition(',x,y); //#development
-            if(x == undefined || y == undefined){return {x:mouseData.x, y:mouseData.y};}
-            mouseData.x = x;
-            mouseData.y = y;
-        };
-        this.stopMouseScroll = function(bool){
-            dev.log.viewport('.stopMouseScroll(',bool); //#development
-            if(bool == undefined){return mouseData.stopScrollActive;}
-            mouseData.stopScrollActive = bool;
+    self.ENGINE = self.WASM.Engine.new(self);
+    setup();
+    // WASM.Engine.test();
+});
+
+function setup(){
+    const dev = new function(){
+        const prefix = 'core_engine';
+        const active = {
+            interface:false,
     
-            //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
-            if(!bool){
-                interface.setDocumentAttributes(['body.style.overflow'],['']);
-            }
+            element:false,
+            arrangement:false,
+            render:false,
+            viewport:false,
+            callback:false,
         };
-        this._dump = function(){
-            report.info('viewport._dump()');
-            report.info('viewport._dump -> state: '+JSON.stringify(state));
-            report.info('viewport._dump -> viewbox: '+JSON.stringify(viewbox));
-            report.info('viewport._dump -> mouseData: '+JSON.stringify(mouseData));
-        };
-
-    //callback
-        this.onCameraAdjust = function(state){};
-};
-const stats = new function(){
-    let active = false;
-    let average = 30;
-    let lastTimestamp = 0;
-
-    const framesPerSecond = {
-        compute:function(timestamp){
-            dev.log.stats('::framesPerSecond.compute(',timestamp); //#development
-
-            this.frameTimeArray.push( 1000/(timestamp-lastTimestamp) );
-            if( this.frameTimeArray.length > average){ this.frameTimeArray.shift(); }
-
-            this.rate = library.math.averageArray( this.frameTimeArray );
-
-            lastTimestamp = timestamp;
-        },
-        counter:0,
-        frameTimeArray:[],
-        rate:0,
-    };
-    const timePerFrame = {
-        compute:function(time){
-            dev.log.stats('::timePerFrame.compute(',time); //#development
-            this.timePerFrameArray.push( time );
-            if( this.timePerFrameArray.length > average){ this.timePerFrameArray.shift(); }
-            this.time = library.math.averageArray( this.timePerFrameArray )/1000;
-        },
-        timePerFrameArray:[],
-        time:0,
-    };
-    const frameDecision = {
-        compute:function(bool){
-            dev.log.stats('::frameDecision.compute(',bool); //#development
-
-            this.frameDecisionArray.push( bool );
-            if( this.frameDecisionArray.length > average){ this.frameDecisionArray.shift(); }
-
-            this.split = library.math.averageArray( this.frameDecisionArray );
-        },
-        frameDecisionArray:[],
-        split:0,
-    };
-
-    this.collectFrameTimestamp = function(timestamp){
-        dev.log.stats('.collectFrameTimestamp(',timestamp); //#development
-        //if stats are turned off, just bail
-            if(!active){return;}
-
-        framesPerSecond.compute(timestamp);
-    };
-    this.collectFrameTime = function(time){
-        dev.log.stats('.collectFrameTime(',time); //#development
-        //if stats are turned off, just bail
-            if(!active){return;}
-
-        timePerFrame.compute(time);
-    };
-    this.collectFrameDecision = function(bool){
-        dev.log.stats('.collectFrameDecision(',bool); //#development
-        //if stats are turned off, just bail
-            if(!active){return;}
-
-        frameDecision.compute(bool);
-    };
-
-
-    this._active = function(){ return active; };
-    this.active = function(bool){
-        dev.log.stats('.active(',bool); //#development
-        if(bool==undefined){return active;} 
-        active=bool;
-    };
-    this.getReport = function(){
-        dev.log.stats('.getReport()'); //#development
-        return {
-            framesPerSecond: framesPerSecond.rate,
-            secondsPerFrameOverTheLastThirtyFrames: timePerFrame.time,
-            renderNonRenderSplitOverTheLastThirtyFrames: frameDecision.split,
-        };
-    };
-};
-const callback = new function(){
-    const self = this; 
-
-    let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
-    const callbacks = [
-        'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick',
-        'onmouseenterelement', 'onmouseleaveelement',
-        'onkeydown', 'onkeyup',
-    ];
-    function gatherDetails(event){
-        dev.log.callback('::gatherDetails(',event); //#development
-        return {
-            point: viewport.adapter.windowPoint2workspacePoint(event.X,event.Y),
-            elements: arrangement.getElementsUnderPoint(event.X,event.Y)
-        };
-    }
-    let currentlyEnteredElement = undefined;
-    function activateElementCallback(callbackName, x, y, event, all, relevant){
-        switch(callbackActivationMode){
-            case 'topMostOnly':
-                if(callbackName == 'onmouseenterelement' && all[0] == relevant[0]){
-                    self.coupling_out.onmouseleaveelement(x, y, event, {all:all, relevant:[currentlyEnteredElement]});
-                    currentlyEnteredElement = relevant[0];
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
-                }else if(callbackName == 'onmouseenterelement'){
-                    //ignored
-                }else if(callbackName == 'onmouseleaveelement' && all[0] != relevant[0]){
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
-                    currentlyEnteredElement = all[0];
-                    self.coupling_out.onmouseenterelement(x, y, event, {all:all, relevant:[all[0]]});
-                }else if(callbackName == 'onmouseleaveelement'){
-                    currentlyEnteredElement = undefined;
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
-                }else if(all[0] == relevant[0]){
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
-                }
-            break;
-            case 'firstMatch':
-                if(callbackName == 'onmouseenterelement'){
-                    for(let a = 0; a < all.length; a++){
-                        if(all[a][callbackName] != undefined){
-                            if(relevant.indexOf(all[a]) >= 0){
-                                self.coupling_out.onmouseleaveelement(x, y, event, {all:all, relevant:[currentlyEnteredElement]});
-                                currentlyEnteredElement = all[a];
-                                self.coupling_out[callbackName](x, y, event, {all:all, relevant:[all[a]]});
-                            }
-                            break;
+    
+        this.log = {};
+        Object.entries(active).forEach(entry => {
+            if(typeof entry[1] == 'object'){
+                this.log[entry[0]] = {};
+                Object.keys(active[entry[0]]).forEach(key => {
+                    this.log[entry[0]][key] = function(){
+                        if(active[entry[0]][key]){ 
+                            console.log( prefix+'.'+entry[0]+'.'+key+arguments[0], ...(new Array(...arguments).slice(1)) );
                         }
-                    }
-                }else if(callbackName == 'onmouseleaveelement'){
-                    currentlyEnteredElement = undefined;
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
-                    for(let a = 0; a < all.length; a++){
-                        if(all[a].onmouseenterelement != undefined){
-                            currentlyEnteredElement = all[a];
-                            self.coupling_out.onmouseenterelement(x, y, event, {all:all, relevant:[all[a]]});
-                            break;
-                        }
-                    }
-                }else{
-                    self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant[0] == undefined ? [] : [relevant[0]]});
-                }
-            break;
-            case 'allMatches': default:
-                self.coupling_out[callbackName](x, y, event, {all:all, relevant:relevant});
-            break;
-        }
-    }
-
-    this.listCallbackTypes = function(){
-        return callbacks;
-    };
-    this.attachCallback = function(element,callbackType){
-        dev.log.callback('.attachCallback(',element,callbackType+')'); //#development
-        element[callbackType] = true;
-    };
-    this.removeCallback = function(element,callbackType){
-        dev.log.callback('.removeCallback(',element,callbackType+')'); //#development
-        element[callbackType] = undefined;
-        delete element[callbackType];
-    };
-    this.callbackActivationMode = function(mode){
-        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
-        if(mode==undefined){return callbackActivationMode;}
-        callbackActivationMode = mode;
-
-        self.coupling_out.onmouseleaveelement(0, 0, {}, {all:[currentlyEnteredElement], relevant:[currentlyEnteredElement]});
-        currentlyEnteredElement = undefined;
-    };
-
-    //main callback operation
-        this.coupling_in = {};
-        this.coupling_out = {};
-
-        //default
-            for(let a = 0; a < callbacks.length; a++){
-                this.coupling_in[callbacks[a]] = function(callbackName){
-                    return function(event){
-                        dev.log.callback('.coupling_in.'+callbackName+'(',event); //#development
-                        const data = gatherDetails(event);
-                        activateElementCallback(callbackName, data.point.x, data.point.y, event, data.elements);
-                    }
-                }(callbacks[a]);
-            }
-
-        //special cases
-            //canvas onmouseenter / onmouseleave
-                this.coupling_in.onmouseenter = function(event){
-                    //if appropriate, remove the window scrollbars
-                        if(viewport.stopMouseScroll()){ 
-                            interface.setDocumentAttributes(['body.style.overflow'],['hidden']);
-                        }
-                };
-                this.coupling_in.onmouseleave = function(event){
-                    //if appropriate, replace the window scrollbars
-                        if(viewport.stopMouseScroll()){ 
-                            interface.setDocumentAttributes(['body.style.overflow'],['']);
-                        }
-                };
-
-            //onmousemove / onmouseenter / onmouseleave
-                const elementMouseoverList = [];
-                this.coupling_in.onmousemove = function(event){
-                    dev.log.callback('.coupling_in.onmousemove(',event); //#development
-                    viewport.mousePosition(event.X,event.Y);
-                    const data = gatherDetails(event);
-                    dev.log.callback('.coupling_in.onmousemove -> data.elements.length:',data.elements.length); //#development
-                    dev.log.callback('.coupling_in.onmousemove -> workspace point:',data.point); //#development
-
-                    //check for onmouseenter / onmouseleave
-                        //go through the elementsUnderPoint list, comparing to the element transition list
-                            const diff = library.misc.getDifferenceOfArrays(elementMouseoverList,data.elements);
-                            //run both onmouseenterelement and onmouseenterelement, only if there's
-                            //  elements to report, providing only the relevant set of elements
-                            //elements only on elements list; add to elementMouseoverList
-                            //elements only on elementMouseoverList; remove from elementMouseoverList
-                            if(diff.b.length > 0){ activateElementCallback('onmouseenterelement', data.point.x, data.point.y, event, data.elements, diff.b); }
-                            if(diff.a.length > 0){ activateElementCallback('onmouseleaveelement', data.point.x, data.point.y, event, data.elements, diff.a); }
-                            diff.b.forEach(element => elementMouseoverList.push(element) );
-                            diff.a.forEach(element => elementMouseoverList.splice(elementMouseoverList.indexOf(element),1) );
-
-                    activateElementCallback('onmousemove', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmousemove != undefined) ) );
-                };
-
-            //onwheel
-                this.coupling_in.onwheel = function(event){
-                    dev.log.callback('.coupling_in.onwheel(',event); //#development
-                    const data = gatherDetails(event);
-                    activateElementCallback('onwheel', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onwheel != undefined) ) );
-                };
-
-            //onkeydown / onkeyup
-                ['onkeydown', 'onkeyup'].forEach(callbackName => {
-                    this.coupling_in[callbackName] = function(callback){
-                        return function(event){
-                            dev.log.callback('.coupling_in.'+callbackName+'(',event); //#development
-                            const p = viewport.mousePosition(); event.X = p.x; event.Y = p.y;
-                            const data = gatherDetails(event);
-                            dev.log.callback('.coupling_in.'+callbackName+' -> guessed mouse point:',data.point); //#development
-                            activateElementCallback(callback, data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element[callbackName] != undefined) ) );
-
-                        }
-                    }(callbackName);
+                    };
                 });
-
-            //onmousedown / onmouseup / onclick / ondblclick
-                let elementMouseClickList = [];
-                this.coupling_in.onmousedown = function(event){
-                    dev.log.callback('.coupling_in.onmousedown(',event); //#development
-                    const data = gatherDetails(event);
-                    elementMouseClickList = data.elements; //save current elements for use in the onclick callback
-                    activateElementCallback('onmousedown', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmousedown != undefined) ) );
+            }else{
+                this.log[entry[0]] = function(){
+                    if(active[entry[0]]){ 
+                        console.log( prefix+'.'+entry[0]+arguments[0], ...(new Array(...arguments).slice(1)) );
+                    }
                 };
-                this.coupling_in.onmouseup = function(event){
-                    dev.log.callback('.coupling_in.onmouseup(',event); //#development
-                    const data = gatherDetails(event);
-                    activateElementCallback('onmouseup', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmouseup != undefined) ) );
-                };
-                let recentlyClickedDoubleClickableElementList = [];
-                this.coupling_in.onclick = function(event){
-                    dev.log.callback('.coupling_in.onclick(',event); //#development
-                    const data = gatherDetails(event);
-                    recentlyClickedDoubleClickableElementList = data.elements.filter( element => (element.ondblclick != undefined && elementMouseClickList.includes(element)) );
-                    activateElementCallback('onclick', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onclick != undefined && elementMouseClickList.includes(element)) ) );
-                };
-                this.coupling_in.ondblclick = function(event){
-                    dev.log.callback('.coupling_in.ondblclick(',event); //#development
-                    const data = gatherDetails(event);
-                    activateElementCallback('ondblclick', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.ondblclick != undefined && recentlyClickedDoubleClickableElementList.includes(element)) ) );
-                };
-
-    this._dump = function(){
-        report.info('callback._dump()');
-        report.info('render._dump -> this.coupling_in:',this.coupling_in);
-        report.info('render._dump -> this.coupling_out:',this.coupling_out);
-        report.info('render._dump -> callbackActivationMode:',callbackActivationMode);
-        report.info('render._dump -> callbacks:',callbacks);
-    };
-};
-
-//meta
-    communicationModule.function['areYouReady'] = function(){
-        dev.log.service('.areYouReady()'); //#development
-        dev.count('service-areYouReady'); //#development
-        return true;
-    };
-    communicationModule.delayedFunction['refresh'] = function(responseFunction){
-        dev.log.service('.refresh(',responseFunction); //#development
-        dev.count('service-refresh'); //#development
-        render.refresh(() => {
-            viewport.refresh();
-            responseFunction();
+            }
         });
-    };
-    communicationModule.function['createSetAppend'] = function(type,name,setList,appendingGroup){
-        dev.log.service('.createSetAppend(',type,name,setList,appendingGroup); //#development
-        dev.count('service-createSetAppend'); //#development
-
-        const newElement = element.create(type,name);
-        const elementId = element.getIdFromElement(newElement);
-        newElement.unifiedAttribute(setList);
-        if(appendingGroup == -1 || appendingGroup == undefined){ arrangement.append(newElement); }
-        else{ element.getElementFromId(appendingGroup).interface['append'](elementId); }
-        return elementId;
-    };
-
-//_dump
-    communicationModule.function['_dump.element'] = function(){
-        dev.log.service('._dump.element()'); //#development
-        dev.count('service-element'); //#development
-        element._dump();
-    };
-    communicationModule.function['_dump.arrangement'] = function(){
-        dev.log.service('._dump.arrangement()'); //#development
-        dev.count('service-arrangement'); //#development
-        arrangement._dump();
-    };
-    communicationModule.function['_dump.render'] = function(){
-        dev.log.service('._dump.render()'); //#development
-        dev.count('service-render'); //#development
-        render._dump();
-    };
-    communicationModule.function['_dump.viewport'] = function(){
-        dev.log.service('._dump.viewport()'); //#development
-        dev.count('service-viewport'); //#development
-        viewport._dump();
-    };
-    communicationModule.function['_dump.callback'] = function(){
-        dev.log.service('._dump.callback()'); //#development
-        dev.count('service-callback'); //#development
-        callback._dump();
-    };
-
-//boatload
-    communicationModule.function['boatload.element.executeMethod'] = function(containers){
-        dev.log.service('.boatload.element.executeMethod(',containers); //#development
-        dev.count('service-boatload.element.executeMethod'); //#development
-        containers.forEach(container => { 
-            communicationModule.function['element.executeMethod'](container.id,container.method,container.argumentList); 
-        });
-    };
-
-//element
-    communicationModule.function['element.getAvailableElements'] = function(){
-        dev.log.service('.element.getAvailableElements()'); //#development
-        dev.count('service-element.getAvailableElements'); //#development
-        return element.getAvailableElements();
-    };
-    communicationModule.function['element.installElement'] = function(elementName,serializedCreatorMethod){
-        dev.log.service('.element.installElement()'); //#development
-        dev.count('service-element.installElement'); //#development
-        return element.installElement(elementName,library.misc.unserialize(serializedCreatorMethod));
-    };
-    communicationModule.function['element.getCreatedElements'] = function(){
-        dev.log.service('.element.getCreatedElements()'); //#development
-        dev.count('service-element.getCreatedElements'); //#development
-        return element.getCreatedElements().map(ele => element.getIdFromElement(ele));
-    };
-    communicationModule.function['element.create'] = function(type,name){
-        dev.log.service('.element.create(',type,name); //#development
-        dev.count('service-element.create'); //#development
-        return element.getIdFromElement(element.create(type,name));
-    };
-    communicationModule.function['element.delete'] = function(id){
-        dev.log.service('.element.delete(',id); //#development
-        dev.count('service-element.delete'); //#development
-        element.delete(element.getElementFromId(id));
-    };
-    communicationModule.function['element.deleteAllCreated'] = function(){
-        dev.log.service('.element.deleteAllCreated()'); //#development
-        dev.count('service-element.deleteAllCreated'); //#development
-        element.deleteAllCreated();
-    };
-    communicationModule.function['element.getTypeById'] = function(id){
-        dev.log.service('.element.getTypeById(',id); //#development
-        dev.count('service-element.getTypeById'); //#development
-        return element.getTypeById(element.getElementFromId(id));
-    };
-    communicationModule.function['element.executeMethod'] = function(id,method,argumentList=[]){
-        dev.log.service('.element.executeMethod(',id,method,argumentList); //#development
-        dev.count('service-element.executeMethod'); //#development
-
-        if(id == -1 || id == undefined){
-            dev.log.service('.element.executeMethod -> id was '+id+', no action will be attempted'); //#development
-            return null;
-        }
-        try{
-            return element.getElementFromId(id).interface[method](...argumentList);
-        }catch(err){
-            console.error('service.element.executeMethod(',id,method,argumentList);
-            console.error( 'element.getElementFromId('+id+').interface['+method+']:', element.getElementFromId(id).interface[method] );
-            console.error(err);
-        }
-    };
-
-//arrangement
-    communicationModule.function['arrangement.new'] = function(){
-        dev.log.service('.arrangement.new()'); //#development
-        dev.count('service-arrangement.new'); //#development
-        arrangement.new();
-    };
-    communicationModule.function['arrangement.get'] = function(){
-        dev.log.service('.arrangement.get()'); //#development
-        dev.count('service-arrangement.get'); //#development
-        return arrangement.get().children().map(element.getIdFromElement);
-    };
-    communicationModule.function['arrangement.prepend'] = function(id){
-        dev.log.service('.arrangement.prepend(',id); //#development
-        dev.count('service-arrangement.prepend'); //#development
-        arrangement.prepend(element.getElementFromId(id));
-    };
-    communicationModule.function['arrangement.append'] = function(id){
-        dev.log.service('.arrangement.append(',id); //#development
-        dev.count('service-arrangement.append'); //#development
-        arrangement.append(element.getElementFromId(id));
-    };
-    communicationModule.function['arrangement.remove'] = function(id){
-        dev.log.service('.arrangement.remove(',id); //#development
-        dev.count('service-arrangement.remove'); //#development
-        arrangement.remove(element.getElementFromId(id));
-    };
-    communicationModule.function['arrangement.clear'] = function(){
-        dev.log.service('.arrangement.clear()'); //#development
-        dev.count('service-arrangement.clear'); //#development
-        arrangement.clear();
-    };
-    communicationModule.function['arrangement.getElementAddress'] = function(id){
-        dev.log.service('.arrangement.getElementAddress(',id); //#development
-        dev.count('service-arrangement.getElementAddress'); //#development
-        return element.getElementFromId(id).getAddress();
-    };
-    communicationModule.function['arrangement.getElementByAddress'] = function(address){
-        dev.log.service('.arrangement.getElementByAddress(',address); //#development
-        dev.count('service-arrangement.getElementByAddress'); //#development
-        return element.getIdFromElement(arrangement.getElementByAddress(address));
-    };
-    communicationModule.function['arrangement.getElementsUnderPoint'] = function(x,y){
-        dev.log.service('.arrangement.getElementsUnderPoint(',x,y); //#development
-        dev.count('service-arrangement.getElementsUnderPoint'); //#development
-        return arrangement.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele));
-    };
-    communicationModule.function['arrangement.getElementsUnderArea'] = function(points){
-        dev.log.service('.arrangement.getElementsUnderArea(',points); //#development
-        dev.count('service-arrangement.getElementsUnderArea'); //#development
-        return arrangement.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele));
-    };
-    communicationModule.function['arrangement.printTree'] = function(mode,includeTypes){
-        dev.log.service('.arrangement.printTree(',mode,includeTypes); //#development
-        dev.count('service-arrangement.printTree'); //#development
-        arrangement.printTree(mode,includeTypes);
-    };
-    communicationModule.function['arrangement.printSurvey'] = function(mode){
-        dev.log.service('.arrangement.printSurvey()'); //#development
-        dev.count('service-arrangement.printSurvey'); //#development
-        return arrangement.printSurvey();
-    };
-    communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
-        dev.log.service('.arrangement.areParents('+elementId+','+potentialParents+')'); //#development
-        dev.count('service-arrangement.areParents'); //#development
-        return arrangement.areParents(elementId,potentialParents);
-    };
-
-//render
-    communicationModule.delayedFunction['render.refresh'] = function(responseFunction){
-        dev.log.service('.render.refresh(',responseFunction); //#development
-        dev.count('service-render.refresh'); //#development
-        render.refresh(responseFunction);
-    };
-    communicationModule.function['render.clearColour'] = function(colour){
-        dev.log.service('.render.clearColour(',colour); //#development
-        dev.count('service-render.clearColour'); //#development
-        return render.clearColour(colour);
-    };
-    communicationModule.function['render.adjustCanvasSize'] = function(newWidth, newHeight){
-        dev.log.service('.render.adjustCanvasSize(',newWidth,newHeight); //#development
-        dev.count('service-render.adjustCanvasSize'); //#development
-        render.adjustCanvasSize(newWidth, newHeight);
-    };
-    communicationModule.function['render.getCanvasSize'] = function(){
-        dev.log.service('.render.getCanvasSize()'); //#development
-        dev.count('service-render.getCanvasSize'); //#development
-        return render.getCanvasSize();
-    };
-    communicationModule.function['render.activeLimitToFrameRate'] = function(active){
-        dev.log.service('.render.activeLimitToFrameRate(',active); //#development
-        dev.count('service-render.activeLimitToFrameRate'); //#development
-        return render.activeLimitToFrameRate(active);
-    };
-    communicationModule.function['render.frameRateLimit'] = function(rate){
-        dev.log.service('.render.frameRateLimit(',rate); //#development
-        dev.count('service-render.frameRateLimit'); //#development
-        return render.frameRateLimit(rate);
-    };
-    communicationModule.function['render.allowFrameSkipping'] = function(active){
-        dev.log.service('.render.allowFrameSkipping(',active); //#development
-        dev.count('service-render.allowFrameSkipping'); //#development
-        return render.allowFrameSkipping(active);
-    };
-    communicationModule.function['render.frame'] = function(){
-        dev.log.service('.render.frame()'); //#development
-        dev.count('service-render.frame'); //#development
-        render.frame();
-    };
-    communicationModule.function['render.active'] = function(active){
-        dev.log.service('.render.active(',active); //#development
-        dev.count('service-render.active'); //#development
-        return render.active(active);
-    };
-
-//viewport
-    communicationModule.function['viewport.refresh'] = function(){
-        dev.log.service('.viewport.refresh()'); //#development
-        dev.count('service-viewport.refresh'); //#development
-        viewport.refresh();
-    };
-    communicationModule.function['viewport.position'] = function(x,y){
-        dev.log.service('.viewport.position(',x,y); //#development
-        dev.count('service-viewport.position'); //#development
-        return viewport.position(x,y);
-    };
-    communicationModule.function['viewport.scale'] = function(s){
-        dev.log.service('.viewport.scale(',s); //#development
-        dev.count('service-viewport.scale'); //#development
-        return viewport.scale(s);
-    };
-    communicationModule.function['viewport.angle'] = function(a){
-        dev.log.service('.viewport.angle(',a); //#development
-        dev.count('service-viewport.angle'); //#development
-        return viewport.angle(a);
-    };
-    communicationModule.function['viewport.getElementsUnderPoint'] = function(x,y){
-        dev.log.service('.viewport.getElementsUnderPoint(',x,y); //#development
-        dev.count('service-viewport.getElementsUnderPoint'); //#development
-        return viewport.getElementsUnderPoint(x,y);
-    };
-    communicationModule.function['viewport.getElementsUnderArea'] = function(points){
-        dev.log.service('.viewport.getElementsUnderArea(',points); //#development
-        dev.count('service-viewport.getElementsUnderArea'); //#development
-        return viewport.getElementsUnderArea(points);
-    };
-    communicationModule.function['viewport.getMousePosition'] = function(){
-        dev.log.service('.viewport.getMousePosition()'); //#development
-        dev.count('service-viewport.getMousePosition'); //#development
-        return viewport.mousePosition();
-    };
-    communicationModule.function['viewport.getBoundingBox'] = function(){
-        dev.log.service('.viewport.getBoundingBox()'); //#development
-        dev.count('service-viewport.getBoundingBox'); //#development
-        return viewport.getBoundingBox();
-    };
-    communicationModule.function['viewport.stopMouseScroll'] = function(bool){
-        dev.log.service('.viewport.stopMouseScroll(',bool); //#development
-        dev.count('service-viewport.stopMouseScroll'); //#development
-        return viewport.stopMouseScroll(bool);
-    };
-
-//stats
-    communicationModule.function['stats.active'] = function(active){
-        dev.log.service('.stats.active(',active); //#development
-        dev.count('service-stats.active'); //#development
-        return stats.active(active);
-    };
-    communicationModule.function['stats.getReport'] = function(){
-        dev.log.service('.stats.getReport()'); //#development
-        dev.count('service-stats.getReport'); //#development
-        return stats.getReport();
-    };
-
-//callback
-    communicationModule.function['callback.listCallbackTypes'] = function(){
-        dev.log.service('.callback.listCallbackTypes()'); //#development
-        dev.count('service-callback.listCallbackTypes'); //#development
-        return callback.listCallbackTypes();
-    };
-    communicationModule.function['callback.attachCallback'] = function(id, callbackType){
-        dev.log.service('.callback.attachCallback(',id,callbackType); //#development
-        dev.count('service-callback.attachCallback'); //#development
-        callback.attachCallback(element.getElementFromId(id),callbackType);
-    };
-    communicationModule.function['callback.removeCallback'] = function(id, callbackType){
-        dev.log.service('.callback.removeCallback(',id,callbackType); //#development
-        dev.count('service-callback.removeCallback'); //#development
-        callback.removeCallback(element.getElementFromId(id),callbackType);
-    };
-    callback.listCallbackTypes().forEach(callbackName => {
-        //for accepting the callback signals from the window's canvas
-        communicationModule.function['callback.coupling_in.'+callbackName] = function(event){
-            dev.log.service('.callback.coupling_in.'+callbackName+'(',event); //#development
-            dev.count('service-callback.coupling_in'); //#development
-            callback.coupling_in[callbackName](event);
+    
+        const countActive = !false;
+        const countMemory = {};
+        this.count = function(commandTag){
+            if(!countActive){return;}
+            if(commandTag in countMemory){ countMemory[commandTag]++; }
+            else{ countMemory[commandTag] = 1; }
         };
+        this.countResults = function(){return countMemory;};
+    };
+    self.operator = new function(){
+        this.library = new function(){
+            this.imageRequester = new function(){
+                const defaultImageUrl = '/images/noimageimage.png';
+                const database = {};
+        
+                this.isImageLoaded = function(url){
+                    if( ! (url in database) ) {
+                        return false;
+                    }
+        
+                    return database[url].isLoaded;
+                };
+                this.loadImage = function(url, forceReload=false){
+                    database[url] = {
+                        isLoaded: false,
+                        imageData: undefined,
+                    };
+        
+                    library.misc.loadImageFromURL(
+                        url, 
+                        data => {
+                            database[url].isLoaded = true;
+                            database[url].imageData = data;
+                        },
+                        data => {
+                            console.warn("operator.library.imageRequester : could not find image at url \""+url+"\"");
+                            console.warn("operator.library.imageRequester : error type:", data);
+                            library.misc.loadImageFromURL(
+                                defaultImageUrl,
+                                data => {
+                                    database[url].isLoaded = true;
+                                    database[url].imageData = data;
+                                },
+                            );
+                        }
+                    );
+                };
+                this.getImageData = function(url){
+                    if( ! (url in database) ) {
+                        return;
+                    }
+        
+                    return database[url].imageData;
+                };
+            };
+            this.font = new function(){
+                this.loadFont = function(font_name, force){
+                    library.font.loadFont(font_name, force, data => {
+                        ENGINE.element__alert_font_loaded(data.fontName, data.loadWasSuccess);
+                    });
+                };
+            };
+        };
+        this.element = new function(){
+            this.getAvailableElements = function(){
+                return WASM.Engine.element__get_available_elements();
+            };
+            //basic management
+                this.create = function(type,name){
+                    return ENGINE.element__create(type,name);
+                };
+                this.delete = function(element_id){
+                    ENGINE.element__delete(element_id);
+                };
+                this.deleteAllCreated = function(){
+                    ENGINE.element__delete_all();
+                };
+            //get element
+                this.getTypeById = function(element_id){
+                    return ENGINE.element__get_type_by_id(element_id);
+                };
+            //execute method
+                this.executeMethod = new function(){
+                    //hierarchy and identity
+                        this.getElementType = function(id){
+                            return ENGINE.element__execute_method__get_element_type(id);
+                        };
+                        this.getName = function(id){
+                            return ENGINE.element__execute_method__get_name(id);
+                        };
+                        this.setName = function(id, new_name){
+                            ENGINE.element__execute_method__set_name(id, new_name);
+                        };
+                        this.getParentId = function(id){
+                            return ENGINE.element__execute_method__get_parent_id(id);
+                        };
+                    //position
+                        this.setX = function(id, x){
+                            ENGINE.element__execute_method__set_x(id, x);
+                        };
+                        this.setY = function(id, y){
+                            ENGINE.element__execute_method__set_y(id, y);
+                        };
+                        this.setAngle = function(id, angle){
+                            ENGINE.element__execute_method__set_angle(id, angle);
+                        };
+                        this.setScale = function(id, scale){
+                            ENGINE.element__execute_method__set_scale(id, scale);
+                        };
+                    //other
+                        this.getIgnored = function(id){
+                            return ENGINE.element__execute_method__get_ignored(id);
+                        };
+                        this.setIgnored = function(id, bool){
+                            ENGINE.element__execute_method__set_ignored(id, bool);
+                        };
+                    //universal attribute
+                        this.unifiedAttribute = function(id,data){
+                            if(data == undefined){return;}
+                            ENGINE.element__execute_method__set_unified_attribute(id, data);
+                        };
+                    //addressing
+                        this.getAddress = function(id){
+                            return ENGINE.element__execute_method__get_address(id);
+                        };
+                    //extremities
+                        this.getAllowComputeExtremities = function(id){
+                            return ENGINE.element__execute_method__get_allow_compute_extremities(id);
+                        };
+                        this.setAllowComputeExtremities = function(id, bool){
+                            ENGINE.element__execute_method__set_allow_compute_extremities(id, bool);
+                        };
+                    //render
+                        this.getDotFrame = function(id){
+                            return ENGINE.element__execute_method__get_dot_frame(id);
+                        };
+                        this.setDotFrame = function(id, bool){
+                            ENGINE.element__execute_method__set_dot_frame(id, bool);
+                        };
+                    //info/dump
+                        this.info = function(id){
+                            return ENGINE.element__execute_method__info(id);
+                        };
+                        this.dump = function(id){
+                            ENGINE.element__execute_method__dump(id);
+                        };
+                    
+                    this.Group = new function(){
+                        this.setUnifiedAttribute = function(id, x, y, angle, scale, heed_camera, clipping_active){
+                            ENGINE.element__execute_method__Group__set_unified_attribute(
+                                id, 
+                                x, y,
+                                angle,
+                                scale,
+                                heed_camera,
+                                clipping_active,
+                            );
+                        };
+                    
+                        this.children = function(id){
+                            return ENGINE.element__execute_method__Group__children(id);
+                        };
+                        this.getChildByName = function(id, name){
+                            return ENGINE.element__execute_method__Group__get_child_by_name(id, name);
+                        };
+                    
+                        this.append = function(parent_id, child_id){
+                            ENGINE.element__execute_method__Group__append(parent_id, child_id);
+                        };
+                        this.prepend = function(parent_id, child_id){
+                            ENGINE.element__execute_method__Group__prepend(parent_id, child_id);
+                        };
+                        this.remove = function(parent_id, child_id){
+                            ENGINE.element__execute_method__Group__remove(parent_id, child_id);
+                        };
+                        this.clear = function(parent_id){
+                            dev.log.element('.clear(', parent_id); //#development
+                            ENGINE.element__execute_method__Group__clear(parent_id);
+                        };
+                        this.shift = function(parent_id, child_id, new_position){
+                            dev.log.element('.shift(', parent_id, child_id, new_position); //#development
+                            ENGINE.element__execute_method__Group__shift(parent_id, child_id, new_position);
+                        };
+                        this.replace_with_these_children = function(id, new_elements){
+                            dev.log.element('.replace_with_these_children(', id, new_elements); //#development
+                            ENGINE.element__execute_method__Group__replace_with_these_children(id, new_elements);
+                        };
+                    
+                        this.getElementsUnderPoint = function(id, x, y){
+                            return ENGINE.element__execute_method__Group__get_elements_under_point(id, x, y);
+                        };
+                        this.getElementsUnderArea = function(id, points){
+                            return ENGINE.element__execute_method__Group__get_elements_under_area(id, points);
+                        };
+                    
+                        this.stencil = function(id, stencil_id){
+                            ENGINE.element__execute_method__Group__stencil(id, stencil_id);
+                        };
+                        this.getClipActive = function(id){
+                            return ENGINE.element__execute_method__Group__get_clip_active(id);
+                        };
+                        this.setClipActive = function(id, bool){
+                            ENGINE.element__execute_method__Group__set_clip_active(id, bool);
+                        };
+                    };
+                    this.Rectangle = new function(){
+                        this.getWidth = function(id){
+                            return ENGINE.element__execute_method__Rectangle__get_width(id);
+                        };
+                        this.setWidth = function(id, width){
+                            ENGINE.element__execute_method__Rectangle__set_width(id, width);
+                        };
+                        this.getHeight = function(id){
+                            return ENGINE.element__execute_method__Rectangle__get_height(id);
+                        };
+                        this.setHeight = function(id, height){
+                            ENGINE.element__execute_method__Rectangle__set_height(id, height);
+                        };
+                        this.getAnchor = function(id){
+                            return ENGINE.element__execute_method__Rectangle__get_anchor(id);
+                        };
+                        this.setAnchor = function(id, x, y){
+                            ENGINE.element__execute_method__Rectangle__set_anchor(id, x, y);
+                        };
+                        this.getColour = function(id){
+                            return ENGINE.element__execute_method__Rectangle__get_colour(id);
+                        };
+                        this.setColour = function(id, r, g, b, a){
+                            ENGINE.element__execute_method__Rectangle__set_colour(id, r, g, b, a);
+                        };
+                    
+                        this.setUnifiedAttribute = function(id, x, y, angle, scale, width, height, anchor_x, anchor_y, colour_r, colour_g, colour_b, colour_a){
+                            ENGINE.element__execute_method__Rectangle__set_unified_attribute(
+                                id, 
+                                x, y,
+                                angle,
+                                scale,
+                                width, height,
+                                anchor_x, anchor_y,
+                                colour_r, colour_g, colour_b, colour_a
+                            );
+                        };
+                    };
+                };
+            //misc
+                this.createSetAppend = function(type, name, data, group_id){
+                    return ENGINE.element__create_set_append(type, name, data, group_id);
+                };
+                this._dump = function(){
+                    ENGINE.element__dump();
+                };
+        };
+        this.arrangement = new function(){
+            //root
+                this.prepend = function(element_id){
+                    ENGINE.arrangement__prepend(element_id);
+                };
+                this.append = function(element_id){
+                    ENGINE.arrangement__append(element_id);
+                };
+                this.remove = function(element_id){
+                    ENGINE.arrangement__remove(element_id);
+                };
+                this.clear = function(){
+                    ENGINE.arrangement__clear();
+                };
+        
+            //discovery
+                this.getElementByAddress = function(address){
+                    return ENGINE.arrangement__get_element_by_address(address);
+                };
+                this.getElementsUnderPoint = function(x,y){
+                    return ENGINE.arrangement__get_elements_under_point(x,y);
+                };
+                this.getElementsUnderArea = function(points){
+                    return ENGINE.arrangement__get_elements_under_area(points);
+                };
+                
+            //misc
+                this.printTree = function(mode='spaced'){
+                    ENGINE.arrangement__print_tree(
+                        ['spaced', 'tabular', 'address'].indexOf(mode)
+                    );
+                };
+                this.printSurvey = function(){
+                    ENGINE.arrangement__print_survey();
+                };
+                this._dump = function(){
+                    ENGINE.arrangement__dump();
+                };
+        };
+        this.render = new function(){
+            const pageData = {
+                defaultCanvasSize:{width:800, height:600},
+                currentCanvasSize:{width:800, height:600},
+                selectedCanvasSize:{width:800, height:600},
+                devicePixelRatio:1,
+            };
+        
+            //canvas and webGL context
+                function getCanvasDimensionFromMain(){
+                    dev.log.render('::getCanvasDimensionFromMain()'); //#development
+        
+                    function getDimensionOfCanvas(direction){
+                        dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas(',direction); //#development
+                        const capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
+        
+                        return new Promise((resolve, reject) => {
+                            interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
+                                pageData.selectedCanvasSize[direction] = sizes[0];
+                                dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> '+capitalizedDirection+':',pageData.selectedCanvasSize[direction]); //#development
+                                const attribute = pageData.selectedCanvasSize[direction];
+        
+                                function unparseableErrorMessage(direction,attribute){
+                                    report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
+                                    dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> unparseable format: '+attribute+', will use default instead'); //#development
+                                    resolve();
+                                }
+        
+                                if( attribute.indexOf('%') == (attribute.length-1) ){ //percentage
+                                    dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> its a percentage'); //#development
+                                    interface.getCanvasParentAttributes(['offset'+capitalizedDirection]).then(sizes => {
+                                        dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> parent'+capitalizedDirection+':',sizes[0]); //#development
+                                        const parentSize = sizes[0];
+                                        const percent = parseFloat(attribute.slice(0,-1)) / 100;
+                                        dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> parsed percent:',percent*100); //#development
+                                        if( isNaN(percent) ){ unparseableErrorMessage(direction,attribute); return; }
+                                        dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> calculated size:',parentSize*percent); //#development
+                                        resolve({direction:direction,value:parentSize*percent});
+                                    });
+                                }else if( attribute.indexOf('px') != -1 ){ //px value
+                                    dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> its a pixel number'); //#development
+                                    const val = parseFloat(attribute.slice(0,-2));
+                                    if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
+                                    dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> calculated size:',val); //#development
+                                    resolve({direction:direction,value:val});
+                                }else{ //flat value
+                                    dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> its a flat number'); //#development
+                                    const val = parseFloat(attribute);
+                                    if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
+                                    dev.log.render('::getCanvasDimensionFromMain::getDimensionOfCanvas -> calculated size:',val); //#development
+                                    resolve({direction:direction,value:val});
+                                }
+                            });
+                        });
+                    }
+                    function getDevicePixelRatio(){
+                        dev.log.render('::getCanvasDimensionFromMain::getDevicePixelRatio()'); //#development
+                        return new Promise((resolve, reject) => {
+                            interface.getWindowAttributes(['devicePixelRatio']).then(values => {
+                                dev.log.render('::getCanvasDimensionFromMain::getDevicePixelRatio -> devicePixelRatio:',values[0]); //#development
+                                pageData.devicePixelRatio = values[0];
+                                resolve(values[0]);
+                            });
+                        });
+                    }
+        
+                    return new Promise((resolve, reject) => {
+                        Promise.all([getDimensionOfCanvas('width'),getDimensionOfCanvas('height'),getDevicePixelRatio()]).then(values => {
+                            pageData.currentCanvasSize.width = values[0].value*values[2];
+                            pageData.currentCanvasSize.height = values[1].value*values[2];
+                            resolve({width:values[0].value, height:values[1].value, devicePixelRatio:values[2]})
+                        });
+                    });
+                }
+        
+                this.clearColour = function(colour){
+                    if(colour == undefined){
+                        return ENGINE.render__get_clear_colour();
+                    }else{
+                        ENGINE.render__set_clear_colour(colour);
+                    }
+                };
+                this.getCanvasSize = function(){
+                    return ENGINE.render__get_canvas_size();
+                };
+        
+                this.adjustCanvasSize = function(newWidth, newHeight, devicePixelRatio){
+                    dev.log.render('.adjustCanvasSize(',newWidth,newHeight,devicePixelRatio); //#development
+                    ENGINE.render__adjust_canvas_size(newWidth, newHeight, devicePixelRatio);
+                };
+                this.refreshCoordinates = function(){
+                    ENGINE.render__refresh_coordinates();
+                };
+                this.refresh = function(){
+                    return new Promise((resolve, reject) => {
+                        getCanvasDimensionFromMain().then(data => {
+                            ENGINE.render__refresh(data.width,data.height,data.devicePixelRatio);
+                            resolve();
+                        });
+                    });
+                };
+        
+            //frame rate control
+                const frameRateControl = {active:false, previousRenderTime:Date.now(), limit:30, interval:1000/30};
+                this.activeLimitToFrameRate = function(a){
+                    dev.log.render('.activeLimitToFrameRate(',a); //#development
+                    if(a == undefined){ return frameRateControl.active; }
+                    frameRateControl.active = a
+                };
+                this.frameRateLimit = function(a){
+                    dev.log.render('.frameRateLimit(',a); //#development
+                    if(a==undefined){ return frameRateControl.limit; }
+                    frameRateControl.limit = a;
+                    frameRateControl.interval = 1000/frameRateControl.limit;
+                };
+        
+            //actual render
+                let animationRequestId = undefined;
+                this.frame = function(noClear=false){
+                    ENGINE.render__frame(noClear);
+                };
+                function animate(timestamp){
+                    animationRequestId = requestAnimationFrame(animate);
+        
+                    //limit frame rate
+                        if(frameRateControl.active){
+                            let currentRenderTime = Date.now();
+                            let delta = currentRenderTime - frameRateControl.previousRenderTime;
+                            if(delta < frameRateControl.interval){ return; }
+                            frameRateControl.previousRenderTime = currentRenderTime - delta%frameRateControl.interval;
+                        }
+        
+                    //attempt to render frame, if there is a failure; stop animation loop and report the error
+                        try{
+                            if( operator.stats.active() ){
+                                const startTime = (new Date()).getTime();
+                                ENGINE.render__frame(false);
+                                const endTime = (new Date()).getTime();
+                                operator.stats.collectFrameTime( endTime - startTime );
+                            }else{
+                                ENGINE.render__frame(false);
+                            }
+                        }catch(error){
+                            self.operator.render.active(false);
+                            console.error('major animation error');
+                            console.error(error);
+                        }
+        
+                    //perform stats collection
+                        operator.stats.collectFrameTimestamp(timestamp);
+                }
+                this.active = function(bool){
+                    if(bool == undefined){return animationRequestId!=undefined;}
+        
+                    if(bool){
+                        if(animationRequestId != undefined){return;}
+                        animate();
+                    }else{
+                        if(animationRequestId == undefined){return;}
+                        cancelAnimationFrame(animationRequestId);
+                        animationRequestId = undefined;
+                    }
+                };
+        
+            //misc
+                this.drawDot = function(x,y,r=2,colour={r:1,g:0,b:0,a:1}){};
+                this._dump = function(){
+                    console.log("┌─Operator Render Dump─");
+                    console.log("│ animationRequestId:", animationRequestId);
+                    console.log("│ pageData.defaultCanvasSize:", pageData.defaultCanvasSize);
+                    console.log("│ pageData.currentCanvasSize:", pageData.currentCanvasSize);
+                    console.log("│ pageData.selectedCanvasSize:", pageData.selectedCanvasSize);
+                    console.log("│ pageData.devicePixelRatio:", pageData.devicePixelRatio);
+                    console.log("│");
+                    console.log("│ frameRateControl.active:", frameRateControl.active);
+                    console.log("│ frameRateControl.previousRenderTime:", frameRateControl.previousRenderTime);
+                    console.log("│ frameRateControl.limit:", frameRateControl.limit);
+                    console.log("│ frameRateControl.interval:", frameRateControl.interval);
+                    console.log("└──────────────────────");
+                    ENGINE.render__dump();
+                };
+        };
+        this.viewport = new function(){
+            const mouseData = { 
+                stopScrollActive:false,
+            };
+        
+            //camera position
+                this.position = function(x,y){
+                    ENGINE.viewport__position(x,y);
+                };
+                this.scale = function(s){
+                    ENGINE.viewport__scale(s);
+                };
+                this.angle = function(a){
+                    ENGINE.viewport__angle(a);
+                };
+                this.anchor = function(x,y){
+                    ENGINE.viewport__anchor(x,y);
+                };
+        
+            //mouse interaction
+                this.getElementsUnderPoint = function(x,y){
+                    return ENGINE.viewport__get_elements_under_point(x,y);
+                };
+                this.getElementsUnderArea = function(points){
+                    return ENGINE.viewport__get_elements_under_area(points);
+                };
+                this.stopMouseScroll = function(bool){
+                    if(bool == undefined){return mouseData.stopScrollActive;}
+                    mouseData.stopScrollActive = bool;
+        
+                    ENGINE.viewport__set_stop_mouse_scroll(bool);
+        
+                    //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
+                    if(!bool){
+                        interface.setDocumentAttributes(['body.style.overflow'],['']);
+                    }
+                };
+        
+            //misc
+                this.refresh = function(){
+                    ENGINE.viewport__refresh();
+                };
+                this._dump = function(){
+                    ENGINE.viewport__dump();
+                };
+        };
+        this.stats = new function(){
+            let active = false;
+            let average = 30;
+            let lastTimestamp = 0;
+        
+            const framesPerSecond = {
+                compute:function(timestamp){
+                    this.frameTimeArray.push( 1000/(timestamp-lastTimestamp) );
+                    if( this.frameTimeArray.length > average){ this.frameTimeArray.shift(); }
+        
+                    this.rate = library.math.averageArray( this.frameTimeArray );
+        
+                    lastTimestamp = timestamp;
+                },
+                counter:0,
+                frameTimeArray:[],
+                rate:0,
+            };
+            const timePerFrame = {
+                compute:function(time){
+                    this.timePerFrameArray.push( time );
+                    if( this.timePerFrameArray.length > average){ this.timePerFrameArray.shift(); }
+                    this.time = library.math.averageArray( this.timePerFrameArray )/1000;
+                },
+                timePerFrameArray:[],
+                time:0,
+            };
+        
+            this.collectFrameTimestamp = function(timestamp){
+                //if stats are turned off, just bail
+                    if(!active){return;}
+        
+                framesPerSecond.compute(timestamp);
+            };
+            this.collectFrameTime = function(time){
+                //if stats are turned off, just bail
+                    if(!active){return;}
+        
+                timePerFrame.compute(time);
+            };
+        
+        
+            this.active = function(bool){
+                if(bool==undefined){return active;} 
+                active=bool;
+            };
+            this.getReport = function(){
+                return {
+                    framesPerSecond: framesPerSecond.rate,
+                    // timeTakenByMostRecentFrame: timePerFrame.timePerFrameArray[timePerFrame.timePerFrameArray.length-1]/1000,
+                    secondsPerFrameOverTheLastThirtyFrames: timePerFrame.time,
+                };
+            };
+        };
+        this.callback = new function(){
+            this.listCallbackTypes = function(){
+                return ENGINE.callback__list_callback_types();
+            };
+            this.listActivationModes = function(){
+                return ENGINE.callback__list_activation_modes();
+            };
+            this.attachCallback = function(elementId,callbackType){
+                dev.log.callback('.attachCallback(',elementId,callbackType); //#development
+                ENGINE.callback__attach_callback(elementId,callbackType);
+            };
+            this.removeCallback = function(elementId,callbackType){
+                dev.log.callback('.removeCallback(',elementId,callbackType); //#development
+                ENGINE.callback__remove_callback(elementId,callbackType);
+            };
+            this.callbackActivationMode = function(mode){
+                dev.log.callback('.callbackActivationMode(',mode); //#development
+                ENGINE.callback__callback_activation_mode(mode);
+            };
+        
+            //main callback operation
+                this.coupling_in = {};
+                this.coupling_out = {};
+        
+                //default
+                this.listCallbackTypes().map(callback => {
+                    this.coupling_in[callback] = function(callbackName){
+                        return function(event){
+                            ENGINE['callback__coupling_in__'+callbackName](event);
+                        }
+                    }(callback);
+                });
+        
+        
+            this._dump = function(){
+                ENGINE.callback__dump();
+            };
+        };
+    
+        this.meta = new function(){
+            this.refresh = function(){
+                return new Promise((resolve, reject) => {
+                    self.operator.render.refresh().then(() => {
+                        self.operator.viewport.refresh();
+                        resolve();
+                    });
+                });
+            };
+        };
+    };
+    //element
+        //element library
+            communicationModule.function.operator__element__getAvailableElements = self.operator.element.getAvailableElements;
+            communicationModule.function.operator__element__getTypeById = self.operator.element.getTypeById;
+        //basic management
+            communicationModule.function.operator__element__create = self.operator.element.create;
+            communicationModule.function.operator__element__delete = self.operator.element.delete;
+            communicationModule.function.operator__element__deleteAllCreated = self.operator.element.deleteAllCreated;
+        //execute method
+            communicationModule.function.operator__element__executeMethod__getElementType = self.operator.element.executeMethod.getElementType;
+            communicationModule.function.operator__element__executeMethod__getName = self.operator.element.executeMethod.getName;
+            communicationModule.function.operator__element__executeMethod__setName = self.operator.element.executeMethod.setName;
+            communicationModule.function.operator__element__executeMethod__getParentId = self.operator.element.executeMethod.getParentId;
+            communicationModule.function.operator__element__executeMethod__setX = self.operator.element.executeMethod.setX;
+            communicationModule.function.operator__element__executeMethod__setY = self.operator.element.executeMethod.setY;
+            communicationModule.function.operator__element__executeMethod__setAngle = self.operator.element.executeMethod.setAngle;
+            communicationModule.function.operator__element__executeMethod__setScale = self.operator.element.executeMethod.setScale;
+            communicationModule.function.operator__element__executeMethod__getIgnored = self.operator.element.executeMethod.getIgnored;
+            communicationModule.function.operator__element__executeMethod__setIgnored = self.operator.element.executeMethod.setIgnored;
+            communicationModule.function.operator__element__executeMethod__unifiedAttribute = self.operator.element.executeMethod.unifiedAttribute;
+            communicationModule.function.operator__element__executeMethod__getAddress = self.operator.element.executeMethod.getAddress;
+            communicationModule.function.operator__element__executeMethod__getAllowComputeExtremities = self.operator.element.executeMethod.getAllowComputeExtremities;
+            communicationModule.function.operator__element__executeMethod__setAllowComputeExtremities = self.operator.element.executeMethod.setAllowComputeExtremities;
+            communicationModule.function.operator__element__executeMethod__getDotFrame = self.operator.element.executeMethod.getDotFrame;
+            communicationModule.function.operator__element__executeMethod__setDotFrame = self.operator.element.executeMethod.setDotFrame;
+            communicationModule.function.operator__element__executeMethod__info = self.operator.element.executeMethod.info;
+            communicationModule.function.operator__element__executeMethod__dump = self.operator.element.executeMethod.dump;
+            //Group
+                communicationModule.function.operator__element__executeMethod__Group__setUnifiedAttribute = self.operator.element.executeMethod.Group.setUnifiedAttribute;
+                communicationModule.function.operator__element__executeMethod__Group__children = self.operator.element.executeMethod.Group.children;
+                communicationModule.function.operator__element__executeMethod__Group__getChildByName = self.operator.element.executeMethod.Group.getChildByName;
+                communicationModule.function.operator__element__executeMethod__Group__append = self.operator.element.executeMethod.Group.append;
+                communicationModule.function.operator__element__executeMethod__Group__prepend = self.operator.element.executeMethod.Group.prepend;
+                communicationModule.function.operator__element__executeMethod__Group__remove = self.operator.element.executeMethod.Group.remove;
+                communicationModule.function.operator__element__executeMethod__Group__clear = self.operator.element.executeMethod.Group.clear;
+                communicationModule.function.operator__element__executeMethod__Group__shift = self.operator.element.executeMethod.Group.shift;
+                communicationModule.function.operator__element__executeMethod__Group__replace_with_these_children = self.operator.element.executeMethod.Group.replace_with_these_children;
+                communicationModule.function.operator__element__executeMethod__Group__getElementsUnderPoint = self.operator.element.executeMethod.Group.getElementsUnderPoint;
+                communicationModule.function.operator__element__executeMethod__Group__getElementsUnderArea = self.operator.element.executeMethod.Group.getElementsUnderArea;
+                communicationModule.function.operator__element__executeMethod__Group__stencil = self.operator.element.executeMethod.Group.stencil;
+                communicationModule.function.operator__element__executeMethod__Group__getClipActive = self.operator.element.executeMethod.Group.getClipActive;
+                communicationModule.function.operator__element__executeMethod__Group__setClipActive = self.operator.element.executeMethod.Group.setClipActive;
+            // //Rectangle
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__getWidth = self.operator.element.executeMethod.Rectangle.getWidth;
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__setWidth = self.operator.element.executeMethod.Rectangle.setWidth;
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__getHeight = self.operator.element.executeMethod.Rectangle.getHeight;
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__setHeight = self.operator.element.executeMethod.Rectangle.setHeight;
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__getAnchor = self.operator.element.executeMethod.Rectangle.getAnchor;
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__setAnchor = self.operator.element.executeMethod.Rectangle.setAnchor;
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__getColour = self.operator.element.executeMethod.Rectangle.getColour;
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__setColour = self.operator.element.executeMethod.Rectangle.setColour;
+            //     communicationModule.function.operator_element_executeMethod__Rectangle__setUnifiedAttribute = self.operator.element.executeMethod.Rectangle.setUnifiedAttribute;
+    
+        //misc
+            communicationModule.function.operator__element___createSetAppend = self.operator.element.createSetAppend;
+            communicationModule.function.operator__element___dump = self.operator.element._dump;
+    
+    //arrangement
+        //root
+            communicationModule.function.operator__arrangement__prepend = self.operator.arrangement.prepend;
+            communicationModule.function.operator__arrangement__append = self.operator.arrangement.append;
+            communicationModule.function.operator__arrangement__remove = self.operator.arrangement.remove;
+            communicationModule.function.operator__arrangement__clear = self.operator.arrangement.clear;
+        //discovery
+            communicationModule.function.operator__arrangement__getElementByAddress = self.operator.arrangement.getElementByAddress;
+            communicationModule.function.operator__arrangement__getElementsUnderPoint = self.operator.arrangement.getElementsUnderPoint;
+            communicationModule.function.operator__arrangement__getElementsUnderArea = self.operator.arrangement.getElementsUnderArea;
+        //misc
+            communicationModule.function.operator__arrangement__printTree = self.operator.arrangement.printTree;
+            communicationModule.function.operator__arrangement__printSurvey = self.operator.arrangement.printSurvey;
+            communicationModule.function.operator__arrangement___dump = self.operator.arrangement._dump;
+        
+    //render
+        //canvas and webGL context
+            communicationModule.function.operator__render__clearColour = self.operator.render.clearColour;
+            communicationModule.function.operator__render__getCanvasSize = self.operator.render.getCanvasSize;
+            communicationModule.function.operator__render__adjustCanvasSize = self.operator.render.adjustCanvasSize;
+            communicationModule.function.operator__render__refreshCoordinates = self.operator.render.refreshCoordinates;
+            communicationModule.function.operator__render__refresh = self.operator.render.refresh;
+        //frame rate control
+            communicationModule.function.operator__render__activeLimitToFrameRate = self.operator.render.activeLimitToFrameRate;
+            communicationModule.function.operator__render__frameRateLimit = self.operator.render.frameRateLimit;
+        //actual render
+            communicationModule.function.operator__render__frame = self.operator.render.frame;
+            communicationModule.function.operator__render__active = self.operator.render.active;
+        //misc
+            communicationModule.function.operator__render__drawDot = self.operator.render.drawDot;
+            communicationModule.function.operator__render___dump = self.operator.render._dump;
+    
+    //viewport
+        //camera position
+            communicationModule.function.operator__viewport__position = self.operator.viewport.position;
+            communicationModule.function.operator__viewport__scale = self.operator.viewport.scale;
+            communicationModule.function.operator__viewport__angle = self.operator.viewport.angle;
+            communicationModule.function.operator__viewport__anchor = self.operator.viewport.anchor;
+        //mouse interaction
+            communicationModule.function.operator__viewport__getElementsUnderPoint = self.operator.viewport.getElementsUnderPoint;
+            communicationModule.function.operator__viewport__getElementsUnderArea = self.operator.viewport.getElementsUnderArea;
+            communicationModule.function.operator__viewport__stopMouseScroll = self.operator.viewport.stopMouseScroll;
+        //misc
+            communicationModule.function.operator__viewport__refresh = self.operator.viewport.refresh;
+            communicationModule.function.operator__viewport___dump = self.operator.viewport._dump;
+    
+    //stats
+        communicationModule.function.operator__stats__active = self.operator.stats.active;
+        communicationModule.function.operator__stats__getReport = self.operator.stats.getReport;
+    
+    //callback
+        communicationModule.function.operator__callback__listCallbackTypes = self.operator.callback.listCallbackTypes;
+        communicationModule.function.operator__callback__listActivationModes = self.operator.callback.listActivationModes;
+        communicationModule.function.operator__callback__attachCallback = self.operator.callback.attachCallback;
+        communicationModule.function.operator__callback__removeCallback = self.operator.callback.removeCallback;
+        communicationModule.function.operator__callback__callbackActivationMode = self.operator.callback.callbackActivationMode;
+        communicationModule.function.operator__callback___dump = self.operator.callback._dump;
+        self.operator.callback.listCallbackTypes().forEach(callbackName => { //for accepting the callback signals from the window's canvas
+            communicationModule.function['operator__callback__coupling_in__'+callbackName] = function(event){
+                self.operator.callback.coupling_in[callbackName](event);
+            };
+        });
+    
+    
+    
+    
+    //meta
+        communicationModule.delayedFunction.operator__meta__refresh = function(responseFunction){
+            self.operator.meta.refresh().then(() => {
+                responseFunction();
+            });
+        };
+    self.interface = new function(){
+        this.ready = function(){
+            dev.log.interface('.operator.element.getAvailableElements()'); //#development
+            communicationModule.run_withoutPromise('ready');
+        };
+        this.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+            dev.log.interface('.getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
+            return communicationModule.run_withPromise('getCanvasAttributes',[attributeNames,prefixActiveArray]);
+        };
+        this.setCanvasAttributes = function(attributeNames=[],values=[],prefixActiveArray=[]){
+            dev.log.interface('.setCanvasAttributes(',attributeNames,values,prefixActiveArray); //#development
+            communicationModule.run_withoutPromise('setCanvasAttributes',[attributeNames,values,prefixActiveArray]);
+        };
+    
+        this.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+            dev.log.interface('.getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
+            return communicationModule.run_withPromise('getCanvasParentAttributes',[attributeNames,prefixActiveArray]);
+        };
+    
+        this.getDocumentAttributes = function(attributeNames=[]){
+            dev.log.interface('.getDocumentAttributes(',attributeNames); //#development
+            return communicationModule.run_withPromise('getDocumentAttributes',[attributeNames,prefixActiveArray]);
+        };
+        this.setDocumentAttributes = function(attributeNames=[],values=[]){
+            dev.log.interface('.setDocumentAttributes(',attributeNames,values); //#development
+            communicationModule.run_withoutPromise('setDocumentAttributes',[attributeNames,values]);
+        };
+    
+        this.getWindowAttributes = function(attributeNames=[]){
+            dev.log.interface('.getWindowAttributes(',attributeNames); //#development
+            return communicationModule.run_withPromise('getWindowAttributes',[attributeNames]);
+        };
+        this.setWindowAttributes = function(attributeNames=[],values=[]){
+            dev.log.interface('.setWindowAttributes(',attributeNames,values); //#development
+            communicationModule.run_withoutPromise('setWindowAttributes',[attributeNames,values]);
+        };
+    };
+
+    self.operator.meta.refresh().then(() => {
+        interface.ready();
     });
-const interface = new function(){
-    this.go = function(){
-        dev.log.interface('.go()'); //#development
-        dev.count('interface.go'); //#development
-        communicationModule.run('go');
-    };
-    this.printToScreen = function(imageData){
-        dev.log.interface('.printToScreen(',imageData); //#development
-        dev.count('interface.printToScreen'); //#development
-        communicationModule.run('printToScreen',[imageData],undefined,[imageData]);
-    };
-
-    // this.onViewportAdjust = function(state){
-    //     dev.log.interface('.onViewportAdjust(',state); //#development
-    //     communicationModule.run('onViewportAdjust',[state]);
-    // };
-
-    this.updateElement = function(elem, data={}){
-        dev.log.interface('.updateElement(',elem,data); //#development
-        dev.count('interface.updateElement'); //#development
-        communicationModule.run('updateElement',[element.getIdFromElement(elem), data]);
-    };
-    this.runElementCallback = function(elem, data={}){
-        dev.log.interface('.runElementCallback(',elem,data); //#development
-        dev.count('interface.runElementCallback'); //#development
-        communicationModule.run('runElementCallback',[element.getIdFromElement(elem), data]);
-    };
-
-    this.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-        dev.log.interface('.getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
-        dev.count('interface.getCanvasAttributes'); //#development
-        return new Promise((resolve, reject) => {
-            communicationModule.run('getCanvasAttributes',[attributeNames,prefixActiveArray],resolve);
-        });
-    };
-    this.setCanvasAttributes = function(attributeNames=[],values=[],prefixActiveArray=[]){
-        dev.log.interface('.setCanvasAttributes(',attributeNames,values,prefixActiveArray); //#development
-        dev.count('interface.setCanvasAttributes'); //#development
-        communicationModule.run('setCanvasAttributes',[attributeNames,values,prefixActiveArray]);
-    };
-
-    this.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-        dev.log.interface('.getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
-        dev.count('interface.getCanvasParentAttributes'); //#development
-        return new Promise((resolve, reject) => {
-            communicationModule.run('getCanvasParentAttributes',[attributeNames,prefixActiveArray],resolve);
-        });
-    };
-
-    this.getDocumentAttributes = function(attributeNames=[]){
-        dev.log.interface('.getDocumentAttributes(',attributeNames); //#development
-        dev.count('interface.getDocumentAttributes'); //#development
-        return new Promise((resolve, reject) => {
-            communicationModule.run('getDocumentAttributes',[attributeNames],resolve);
-        });
-    };
-    this.setDocumentAttributes = function(attributeNames=[],values=[]){
-        dev.log.interface('.setDocumentAttributes(',attributeNames,values); //#development
-        dev.count('interface.setDocumentAttributes'); //#development
-        communicationModule.run('setDocumentAttributes',[attributeNames,values]);
-    };
-
-    this.getWindowAttributes = function(attributeNames=[]){
-        dev.log.interface('.getWindowAttributes(',attributeNames); //#development
-        dev.count('interface.getWindowAttributes'); //#development
-        return new Promise((resolve, reject) => {
-            communicationModule.run('getWindowAttributes',[attributeNames],resolve);
-        });
-    };
-    this.setWindowAttributes = function(attributeNames=[],values=[]){
-        dev.log.interface('.setWindowAttributes(',attributeNames,values); //#development
-        dev.count('interface.setWindowAttributes'); //#development
-        communicationModule.run('setWindowAttributes',[attributeNames,values]);
-    };
-};
-callback.listCallbackTypes().forEach(callbackName => {
-    //for sending core's callbacks back out
-    callback.coupling_out[callbackName] = function(x, y, event, elements){
-        dev.log.interface('.callback.coupling_out.'+callbackName+'(',x,y,event,elements); //#development
-        dev.count('interface.callback.coupling_out.'+callbackName); //#development
-        communicationModule.run('callback.'+callbackName,[x, y, event, {
-            all: elements.all.map(ele => element.getIdFromElement(ele)),
-            relevant: elements.relevant ? elements.relevant.map(ele => element.getIdFromElement(ele)) : undefined,
-        }]);
-    };
-});
-
-render.refresh(() => {
-    viewport.refresh();
-    interface.go();
-});
-
+}

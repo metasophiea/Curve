@@ -4,19 +4,17 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
 
     _canvas_.core.render.active(true);
     _canvas_.core.render.activeLimitToFrameRate(true);
-    _canvas_.core.render.frameRateLimit(10);
+    _canvas_.core.render.frameRateLimit(30);
     _canvas_.core.viewport.stopMouseScroll(true);
 
-    // const scale = 7;
-    // const position = {x:490, y:0};
-    // _canvas_.core.viewport.scale(scale);
-    // _canvas_.core.viewport.position(-(position.x)*scale,-(position.y)*scale);
+    _canvas_.core.viewport.scale(5);
+    _canvas_.core.viewport.position(460,0);
 
     partsCreated.control = {};
     partsCreated.control.controlGroup = _canvas_.interface.part.builder('basic', 'group', 'controlGroup', { x:10, y:10 } );
     _canvas_.system.pane.mm.append(partsCreated.control.controlGroup);
 
-    //button
+    //button    
         //button_rectangle
             partsCreated.control.button_rectangle = _canvas_.interface.part.builder('control', 'button_rectangle', 'test_button_rectangle', {
                 x:0, y:0, text_centre:'rectangle', style:{text__hover__colour:{r:1,g:0,b:0,a:1}}

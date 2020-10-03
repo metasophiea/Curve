@@ -1,7 +1,7 @@
 this.path = function(name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[], jointType='sharp', capType='none', looping=false, jointDetail=25, sharpLimit=4){
     dev.log.partBasic('.path('+name+','+JSON.stringify(points)+','+thickness+','+ignored+','+JSON.stringify(colour)+','+JSON.stringify(pointsAsXYArray)+','+jointType+','+capType+','+looping+','+jointDetail+','+sharpLimit+')'); //#development
 
-    const element = _canvas_.core.element.create('path',name);
+    const element = _canvas_.core.element.create('Path',String(name));
     element.unifiedAttribute({
         ignored:ignored,
         colour:colour,

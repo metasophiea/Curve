@@ -1,5 +1,5 @@
-this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
-    dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
+this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4,returnTriangles=true){
+    dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit,returnTriangles);
     dev.count('.math.pathExtrapolation'); //#development
 
     function loopThisPath(path){
@@ -258,5 +258,11 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
         if(capType == 'round'){ polygons = polygons.concat(roundCaps(jointData,thickness,detail)); }
 
     //union all polygons, convert to triangles and return
-        return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
+        if(returnTriangles){
+            return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
+        } else {
+            let tmp = polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon));
+            tmp = tmp.map( points => points.map(point => [point.x,point.y]).flat() );
+            return tmp;
+        }
 };

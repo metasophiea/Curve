@@ -48,7 +48,7 @@ this.meter_gauge = function(
                 x:0, y:-distance, 
                 height:markingStyle_size, 
                 width:markingStyle_size, 
-                text:text, 
+                text:String(text), 
                 colour:markingStyle_fill, 
                 font:markingStyle_font,
                 printingMode:markingStyle_printingMode,

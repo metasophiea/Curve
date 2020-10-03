@@ -7,15 +7,15 @@ function rc(){return {r:Math.random(),g:Math.random(),b:Math.random(),a:1};}
 
 _canvas_.layers.registerFunctionForLayer("core", function(){
 
-    let rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
+    let rectangle_1 = _canvas_.core.element.create('Rectangle','rectangle_1');
     rectangle_1.unifiedAttribute({ x:10, y:10, width:50, height:50, colour:rc() });
     _canvas_.core.arrangement.append(rectangle_1);
 
-    let rectangle_2 = _canvas_.core.element.create('rectangle','rectangle_2');
+    let rectangle_2 = _canvas_.core.element.create('Rectangle','rectangle_2');
     rectangle_2.unifiedAttribute({ x:10, y:10, width:50, height:50, colour:rc() });
     _canvas_.core.arrangement.append(rectangle_2);
 
-    let characterString_1 = _canvas_.core.element.create('characterString','characterString_1');
+    let characterString_1 = _canvas_.core.element.create('CharacterString','characterString_1');
     _canvas_.core.arrangement.append(characterString_1);
     characterString_1.unifiedAttribute({
         string:customText, font:fontName, x:10, y:10, width:50, height:50, colour:rc(),

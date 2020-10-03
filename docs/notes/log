@@ -1,4 +1,57 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-10-03
+  - replaced the old gravity with the new, fresh, sophisticated, educated,
+    elegant and rather attractive Rust based one (which now has its own github
+    repo https://github.com/metasophiea/gravity)
+
+
+2020-09-30
+  - I've learned Rust and WebAssembly
+  - complete rewrite of the rendering engine (the core layer) to use
+    WebAssembly (written in Rust) and the primary method of getting work done.
+    Some necessary JS remains, though I will be working to remove as much as
+    possible (mainly library functions. Some of the more complex ones I didn't
+    try to convert, along with those that do the work of requesting multiple
+    items at once from URLs, which is much easier to do in JS..primarily because
+    there's no multi-threading in WebAssembly)
+      System is still using the console/engine concept, thus much of the rest of
+    the system can remain as it was, bar a few changes in naming. Overall the
+    new system is a lot like the old, with a few differences:
+      - the canvas element has been removed. Instead the Image is used in its
+        place which had all the bitmap update code needed anyway
+      - full-frame rendering culling has been removed. I plan on putting a 
+        lesser version back in soon, but only temporarily as I work on a more
+        advanced sub-rendering solution which should improve render performance 
+        greatly with respect to scenes where much - but not all - of the 
+        on-screen content is unchanging, which would cause a full-frame to be 
+        rendered in the old method
+      - the viewport positioning has been redone a little. Now the XY point
+        will be correct, though this has the effect of ruining any positions
+        that were in old saves. An easy fix if you just open that file,
+        reposition and save
+      - window scaling is being managed now. Before, I had assumed that there
+        were only two pixel densities; 1 and 2. Which made sense as my
+        desktop was 2 and my work laptop was 1. This is true for screens,
+        but if you adjust the zoom of a page it can become any number. The
+        engine can now account for this; adjusting the canvas size and pixel
+        density to match what should be on screen. In effect, when someone
+        with a screen of pixel density of 1, zooms the browser out to 50%;
+        the canvas is now running at double the pixel density on a canvas 4x
+        larger (2x in width and height) This now continues correctly for all 
+        zoom types. I still need to test on a windows device however...I'm
+        quietly confident.
+  - improved the stop overflow activation code, so that now it additionally
+    activates when the mouse first rolls the wheel, though is smart enough not
+    to be constantly sending that css update. This was done, as if you refreshed
+    the page with your mouse over the canvas, the overflow wouldn't be changed
+    and mouse wheeling would cause the window to attempt to scroll. Not such an
+    issue on more browsers, but on Mac it caused an unsightly attempted-scroll
+    effect
+  - fixed issue with the MRD-16, where buttons and selectors wouldn't glow
+    appropriately when the scene was loaded
+  - added a viewport lock to the tools menu
+
+
 2020-06-25
   - perhaps something changed in chrome, but the tests weren't working anymore,
     as when one of them attempted to create a canvas (for graphing, like the

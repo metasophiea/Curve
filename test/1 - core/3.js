@@ -55,7 +55,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         };
 
         function produceRectangle(a,x,y,namePrefix,grouping){
-            let rectangle = _canvas_.core.element.create('rectangle',namePrefix+a);
+            let rectangle = _canvas_.core.element.create('Rectangle',namePrefix+a);
             rectangle.unifiedAttribute({ x:(x - a*30), y:y, width:30, height:30 });
             _canvas_.core.arrangement.append(rectangle);
             grouping.push(rectangle);

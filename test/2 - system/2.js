@@ -17,21 +17,21 @@ _canvas_.layers.registerFunctionForLayer("system", function(){
         }
     );
 
-    let testRectangle_background = _canvas_.core.element.create('rectangle','testRectangle_background');
+    let testRectangle_background = _canvas_.core.element.create('Rectangle','testRectangle_background');
     testRectangle_background.unifiedAttribute({ 
         x:0, y:0, width:60, height:60, 
         colour:{r:1,g:0,b:0,a:0.3},
     });
     _canvas_.system.pane.b.append(testRectangle_background);
 
-    let testRectangle_middleground_back = _canvas_.core.element.create('rectangle','testRectangle_middleground_back');
+    let testRectangle_middleground_back = _canvas_.core.element.create('Rectangle','testRectangle_middleground_back');
     testRectangle_middleground_back.unifiedAttribute({ 
         x:10, y:60, width:60, height:60, 
         colour:{r:0,g:1,b:0,a:0.3},
     });
     _canvas_.system.pane.mb.append(testRectangle_middleground_back);
 
-    let testRectangle_middleground_middle = _canvas_.core.element.create('rectangle','testRectangle_middleground_middle');
+    let testRectangle_middleground_middle = _canvas_.core.element.create('Rectangle','testRectangle_middleground_middle');
     testRectangle_middleground_middle.unifiedAttribute({ 
         x:80, y:60, width:60, height:60, 
         colour:{r:0,g:1,b:0,a:0.6},
@@ -48,14 +48,14 @@ _canvas_.layers.registerFunctionForLayer("system", function(){
         console.log('rectangle::testRectangle_middleground_middle::onmouseleaveelement',x,y,event);
     });
 
-    let testRectangle_middleground_front = _canvas_.core.element.create('rectangle','testRectangle_middleground_front');
+    let testRectangle_middleground_front = _canvas_.core.element.create('Rectangle','testRectangle_middleground_front');
     testRectangle_middleground_front.unifiedAttribute({ 
         x:150, y:60, width:60, height:60, 
         colour:{r:0,g:1,b:0,a:0.8},
     });
     _canvas_.system.pane.mf.append(testRectangle_middleground_front);
 
-    let testRectangle_foreground = _canvas_.core.element.create('rectangle','testRectangle_foreground');
+    let testRectangle_foreground = _canvas_.core.element.create('Rectangle','testRectangle_foreground');
     testRectangle_foreground.unifiedAttribute({ 
         x:160, y:120, width:60, height:60, 
         colour:{r:0,g:0,b:1,a:0.6}

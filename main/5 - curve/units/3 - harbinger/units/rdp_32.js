@@ -296,6 +296,9 @@ this['rdp-32'] = function(name,x,y,angle){
                     object.elements.button_image.voltage.glow(true);
                 }
 
+            //unify
+                object.elements.checkbox_image.unify.set(state.unifyChannels);
+
             //channel
                 for(let a = 0; a < channelCount; a++){
                     object.elements.glowbox_path['channelLED_'+a].off();
@@ -654,10 +657,12 @@ this['rdp-32'] = function(name,x,y,angle){
                 for(let a = 0; a < selectorCount; a++){
                     object.elements.button_image['selector_'+a].onpress = function(){
                         if(state.playThrough.active){
-                            if( state.outputMode == 'signal' ){
-                                object.elements.connectionNode_signal['signal_out_'+a].set( true );
-                            }else if( state.outputMode == 'voltage' ){
-                                object.elements.connectionNode_voltage['voltage_out_'+a].set( state.playThrough.values[a] );
+                            if( a < 8 ){
+                                if( state.outputMode == 'signal' ){
+                                    object.elements.connectionNode_signal['signal_out_'+a].set( true );
+                                }else if( state.outputMode == 'voltage' ){
+                                    object.elements.connectionNode_voltage['voltage_out_'+a].set( state.playThrough.values[a] );
+                                }
                             }
                         }
 
@@ -685,10 +690,12 @@ this['rdp-32'] = function(name,x,y,angle){
                     };
                     object.elements.button_image['selector_'+a].onrelease = function(){
                         if(state.playThrough.active){
-                            if( state.outputMode == 'signal' ){
-                                object.elements.connectionNode_signal['signal_out_'+a].set( false );
-                            }else if( state.outputMode == 'voltage' ){
-                                object.elements.connectionNode_voltage['voltage_out_'+a].set( 0 );
+                            if( a < 8 ){
+                                if( state.outputMode == 'signal' ){
+                                    object.elements.connectionNode_signal['signal_out_'+a].set( false );
+                                }else if( state.outputMode == 'voltage' ){
+                                    object.elements.connectionNode_voltage['voltage_out_'+a].set( 0 );
+                                }
                             }
                         }
                     };

@@ -425,7 +425,7 @@ this.sequencer = function(
                         if(_canvas_.system.keyboard.pressedKeys.control || _canvas_.system.keyboard.pressedKeys.command){
                             const mux = 4;
                             const initialStrengths = activeBlocks.map(a => a.block.strength());
-                            const initial = event.Y;
+                            const initial = event.y;
                             _canvas_.system.mouse.mouseInteractionHandler(
                                 function(x,y,event){
                                     //check if ctrl/command is still pressed
@@ -433,7 +433,7 @@ this.sequencer = function(
                                             _canvas_.system.mouse.forceMouseUp();
                                         }
 
-                                    const diff = (initial - event.Y)/(_canvas_.core.viewport.scale()*height*mux);
+                                    const diff = (initial - event.y)/(_canvas_.core.viewport.scale()*height*mux);
                                     for(let a = 0; a < activeBlocks.length; a++){
                                         activeBlocks[a].block.strength(initialStrengths[a] + diff);
                                         signals.signalRegistry.update(activeBlocks[a].name, { strength: initialStrengths[a] + diff });
@@ -932,7 +932,7 @@ this.sequencer = function(
                                         },
                                 };
     
-                                if( _canvas_.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){children[a].select(true);}
+                                if( _canvas_.library.math.detectIntersect.boundingBoxes( block, selectionBox ) ){children[a].select(true);}
                             }
                     },
                 );
@@ -968,7 +968,7 @@ this.sequencer = function(
                     function(x,y,event){
                         viewareaInMotion = false;
                         if( 
-                            _canvas_.library.math.detectOverlap.pointWithinBoundingBox( 
+                            _canvas_.library.math.detectIntersect.pointWithinBoundingBox( 
                                 viewportPosition2internalPosition(currentMousePosition(x,y)), 
                                 viewport.viewArea 
                             ) && _canvas_.system.keyboard.pressedKeys.Space
@@ -1002,7 +1002,7 @@ this.sequencer = function(
             if( pressedKeys.Backspace || pressedKeys.Delete ){ deleteSelectedSignals(); }
             if( pressedKeys.Space ){ _canvas_.core.viewport.cursor(viewareaInMotion ? 'grabbing' : 'grab'); }
             if( pressedKeys.alt ){
-                signalPane.getElementsUnderPoint(event.X,event.Y).then(result => {
+                signalPane.getElementsUnderPoint(event.x,event.y).then(result => {
                     if( result[0] != undefined ){
                         _canvas_.core.viewport.cursor('copy');
                     }else{

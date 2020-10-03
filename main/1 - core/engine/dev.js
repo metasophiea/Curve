@@ -1,29 +1,13 @@
 const dev = new function(){
     const prefix = 'core_engine';
     const active = {
+        interface:false,
+
         element:false,
-        elementLibrary:{
-            group:false,
-            rectangle:false,
-            rectangleWithOutline:false,
-            circle:false,
-            circleWithOutline:false,
-            polygon:false,
-            polygonWithOutline:false,
-            path:false,
-            image:false,
-            canvas:false,
-            character:false,
-            characterString:false,
-            characterFonts:false,
-        },
         arrangement:false,
         render:false,
         viewport:false,
-        stats:false,
         callback:false,
-        service:false,
-        interface:false,
     };
 
     this.log = {};

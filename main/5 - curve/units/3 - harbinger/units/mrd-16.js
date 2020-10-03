@@ -228,6 +228,9 @@ this['mrd-16'] = function(name,x,y,angle){
                     object.elements.button_image.voltage.glow(true);
                 }
 
+            //unify
+                object.elements.checkbox_image.unify.set(state.unifyChannels);
+
             //channel
                 for(let a = 0; a < channelCount; a++){
                     object.elements.glowbox_path['channelLED_'+a].off();
@@ -615,7 +618,7 @@ this['mrd-16'] = function(name,x,y,angle){
             state.channel = data.channel;
             state.currentlySoundingChannels = data.currentlySoundingChannels;
             state.release = data.release;
-            refreshLEDs();
+            refresh();
         };
 
     //setup/tearDown

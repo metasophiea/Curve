@@ -201,7 +201,7 @@ this.needleOverlay = function(
 
     //internal functions
         function currentMousePosition_x(event){
-            return event.X*Math.cos(angle) - event.Y*Math.sin(angle);
+            return event.x*Math.cos(angle) - event.y*Math.sin(angle);
         }
         function getRelativeX(x,y){
             const offset = controlObjectsGroup.getOffset();

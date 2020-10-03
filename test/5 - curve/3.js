@@ -41,5 +41,5 @@ _canvas_.layers.registerFunctionForLayer("curve", function(){
 
 
     _canvas_.control.viewport.scale(4);
-    _canvas_.control.viewport.position(-5, -650);
+    _canvas_.control.viewport.position(-10,70);
 });

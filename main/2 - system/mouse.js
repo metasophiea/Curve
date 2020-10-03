@@ -11,6 +11,8 @@
     this.functionList.onwheel = [];
     this.functionList.onclick = [];
     this.functionList.ondblclick = [];
+    this.functionList.onmouseenterelement = [];
+    this.functionList.onmouseleaveelement = [];
 
 //save the listener functions of the canvas
     _canvas_.layers.registerFunctionForLayer("core", function(){
@@ -28,16 +30,14 @@
             //movement code
                 _canvas_.onmousemove = function(event){ 
                     if(moveCode!=undefined){
-                        event.X = event.offsetX; event.Y = event.offsetY;
-                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.offsetX,event.offsetY);
                         moveCode(XY.x,XY.y,event);
                     }
                 };
             //stopping code
                 _canvas_.onmouseup = function(event){
                     if(stopCode != undefined){ 
-                        event.X = event.offsetX; event.Y = event.offsetY;
-                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                        const XY = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.offsetX,event.offsetY);
                         stopCode(XY.x,XY.y,event);
                     }
 
@@ -54,9 +54,9 @@
 //connect callbacks to mouse function lists
     this.setUpCallbacks = function(){
         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
-            _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
+            _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){ //console.log(event);
                 if(elementIds.relevant.length == 0){
-                    _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
+                    _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); 
                 }
             }
         });

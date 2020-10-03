@@ -1,6 +1,6 @@
 _canvas_.layers.registerFunctionForLayer("core", function(){
 
-    let characterString_1 = _canvas_.core.element.create('characterString','test_characterString_1');
+    let characterString_1 = _canvas_.core.element.create('CharacterString','test_characterString_1');
         characterString_1.unifiedAttribute({
             string:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
             font:'defaultThick',
@@ -9,7 +9,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_1);
-    let characterString_2 = _canvas_.core.element.create('characterString','test_characterString_2');
+    let characterString_2 = _canvas_.core.element.create('CharacterString','test_characterString_2');
         characterString_2.unifiedAttribute({
             string:'abcdefghijklmnopqrstuvwxyz',
             font:'defaultThick',
@@ -18,7 +18,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_2);
-    let characterString_3 = _canvas_.core.element.create('characterString','test_characterString_3');
+    let characterString_3 = _canvas_.core.element.create('CharacterString','test_characterString_3');
         characterString_3.unifiedAttribute({
             string:'0123456789',
             font:'defaultThick',
@@ -27,7 +27,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_3);
-    let characterString_4 = _canvas_.core.element.create('characterString','test_characterString_4');
+    let characterString_4 = _canvas_.core.element.create('CharacterString','test_characterString_4');
         characterString_4.unifiedAttribute({
             string:'.,:;?!/\\()[]{}#-_\'"|><+=&*~%^$',
             font:'defaultThick',
@@ -36,7 +36,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_4);
-    let characterString_5 = _canvas_.core.element.create('characterString','test_characterString_5');
+    let characterString_5 = _canvas_.core.element.create('CharacterString','test_characterString_5');
         characterString_5.unifiedAttribute({
             string:'How are you today?',
             font:'defaultThick',
@@ -45,7 +45,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_5);
-    let characterString_6 = _canvas_.core.element.create('characterString','test_characterString_6');
+    let characterString_6 = _canvas_.core.element.create('CharacterString','test_characterString_6');
         characterString_6.unifiedAttribute({
             string:'(Kepp) [Yaaj] {Qua?}',
             font:'defaultThick',
@@ -54,7 +54,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_6);
-    let characterString_7 = _canvas_.core.element.create('characterString','test_characterString_7');
+    let characterString_7 = _canvas_.core.element.create('CharacterString','test_characterString_7');
         characterString_7.unifiedAttribute({
             string:'vo wo xo ao default',
             font:'defaultThick',
@@ -63,7 +63,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_7);
-    let characterString_8 = _canvas_.core.element.create('characterString','test_characterString_8');
+    let characterString_8 = _canvas_.core.element.create('CharacterString','test_characterString_8');
         characterString_8.unifiedAttribute({
             string:'defaultThin',
             font:'defaultThin',
@@ -72,7 +72,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_8);
-    let characterString_9 = _canvas_.core.element.create('characterString','test_characterString_9');
+    let characterString_9 = _canvas_.core.element.create('CharacterString','test_characterString_9');
         characterString_9.unifiedAttribute({
             string:'abcdefghijklmnopqrstuvwxyz',
             font:'defaultThin',
@@ -81,7 +81,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_9);
-    let characterString_10 = _canvas_.core.element.create('characterString','test_characterString_10');
+    let characterString_10 = _canvas_.core.element.create('CharacterString','test_characterString_10');
         characterString_10.unifiedAttribute({
             string:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
             font:'defaultThin',
@@ -90,7 +90,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_10);
-    let characterString_11 = _canvas_.core.element.create('characterString','test_characterString_11');
+    let characterString_11 = _canvas_.core.element.create('CharacterString','test_characterString_11');
         characterString_11.unifiedAttribute({
             string:'0123456789',
             font:'defaultThin',
@@ -99,7 +99,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
         _canvas_.core.arrangement.append(characterString_11);
-    let characterString_12 = _canvas_.core.element.create('characterString','test_characterString_12');
+    let characterString_12 = _canvas_.core.element.create('CharacterString','test_characterString_12');
         characterString_12.unifiedAttribute({
             string:'.,:;?!/\\()[]{}#-_\'"|><+=&*~%^$',
             font:'defaultThin',
@@ -110,4 +110,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         _canvas_.core.arrangement.append(characterString_12);
 
     setTimeout(()=>{_canvas_.core.render.frame();},100);
+
+    // _canvas_.core.viewport.position(-50,325);
+    // _canvas_.core.viewport.scale(8);
 } );

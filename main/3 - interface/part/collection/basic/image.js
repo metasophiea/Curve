@@ -1,7 +1,7 @@
 this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
     dev.log.partBasic('.image('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+url+')'); //#development
 
-    const element = _canvas_.core.element.create('image',name);
+    const element = _canvas_.core.element.create('Image',String(name));
     element.unifiedAttribute({
         x:x, 
         y:y, 

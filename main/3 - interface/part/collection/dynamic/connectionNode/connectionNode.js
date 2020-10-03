@@ -158,7 +158,7 @@ this.connectionNode = function(
                     if( object.isConnected() && !object.canDisconnect() ){return;}
                     if( object.getForeignNode() != undefined && object.getForeignNode().isConnected() && !object.getForeignNode().canDisconnect() ){return;}
 
-                    const mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                    const mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                     dev.log.partDynamic('.connectionNode-onmousedown -> mousePoint:'+JSON.stringify(mousePoint)); //#development
 
                     //gather connection nodes within proximity

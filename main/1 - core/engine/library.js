@@ -15,8 +15,9 @@ const library = new function(){
     this.misc = new function(){
         {{include:../../0 - library/modules/misc.js}}
     };
-    const _thirdparty = new function(){
+    this._thirdparty = new function(){
         const thirdparty = this;
         {{include:../../0 - library/modules/thirdparty/*}} /**/
     };
+    const _thirdparty = this._thirdparty;
 };

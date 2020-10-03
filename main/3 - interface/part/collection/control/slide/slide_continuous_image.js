@@ -58,7 +58,7 @@ this.slide_continuous_image = function(
         }
         function currentMousePosition(event){
             const calculationAngle = object.getOffset().angle;
-            return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
+            return event.y*Math.cos(calculationAngle) - event.x*Math.sin(calculationAngle);
         }
 
     //methods

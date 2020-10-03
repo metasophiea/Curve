@@ -1,13 +1,13 @@
 _canvas_.layers.registerFunctionForLayer("core", function(){
 
-    group_1 = _canvas_.core.element.create('group','group_1');
-    group_2 = _canvas_.core.element.create('group','group_2');
-    group_3 = _canvas_.core.element.create('group','group_3');
-    group_4 = _canvas_.core.element.create('group','group_4');
+    group_1 = _canvas_.core.element.create('Group','group_1');
+    group_2 = _canvas_.core.element.create('Group','group_2');
+    group_3 = _canvas_.core.element.create('Group','group_3');
+    group_4 = _canvas_.core.element.create('Group','group_4');
 
-    let rectangle_1 = _canvas_.core.element.create('rectangle','test_rectangle_1');
-    let rectangle_2 = _canvas_.core.element.create('rectangle','test_rectangle_2');
-    let rectangle_3 = _canvas_.core.element.create('rectangle','test_rectangle_3');
+    let rectangle_1 = _canvas_.core.element.create('Rectangle','test_rectangle_1');
+    let rectangle_2 = _canvas_.core.element.create('Rectangle','test_rectangle_2');
+    let rectangle_3 = _canvas_.core.element.create('Rectangle','test_rectangle_3');
 
     // _canvas_.core.arrangement.append(group_1);
     // group_1.append(group_2);
@@ -50,9 +50,5 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
     group_1.remove(group_3);
 
     _canvas_.core.arrangement.printTree('address',true);
-    _canvas_.core.arrangement.printTree('address');
-
-
-
-
+    setTimeout( () => {_canvas_.core.arrangement.printTree('address');}, 500 );
 } );

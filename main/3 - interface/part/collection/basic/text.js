@@ -1,7 +1,7 @@
 this.text = function(name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.5, interCharacterSpacing=0.0){
     dev.log.partBasic('.text('+name+','+text+','+x+','+y+','+width+','+height+','+angle+','+ignored+','+JSON.stringify(colour)+','+fontName+','+JSON.stringify(printingMode)+','+spacing+','+interCharacterSpacing+')'); //#development
 
-    const element = _canvas_.core.element.create('characterString',name);
+    const element = _canvas_.core.element.create('CharacterString',String(name));
     element.unifiedAttribute({
         x:x, 
         y:y, 
@@ -11,7 +11,7 @@ this.text = function(name=null, text='Hello', x=0, y=0, width=10, height=10, ang
         ignored:ignored, 
         colour:colour,
         font:fontName,
-        string:text,
+        string:String(text),
         printingMode:printingMode,
         spacing:spacing,
         interCharacterSpacing:interCharacterSpacing,

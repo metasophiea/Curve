@@ -1,24 +1,28 @@
 const dev = new function(){
     const prefix = 'core_console';
     const active = {
-        elementLibrary:{
-            genericElementProxyTemplate:false,
-            rectangle:false,
-            rectangleWithOutline:false,
-
-            group:false,
-            circle:false,
-            circleWithOutline:false,
-            polygon:false,
-            polygonWithOutline:false,
-            path:false,
-            image:false,
-            canvas:false,
-            character:false,
-            characterString:false,
-        },
         service:false,
         interface:false,
+        elementLibrary:{
+            Group:false,
+            Rectangle:false,
+            RectangleWithOutline:false,
+            Circle:false,
+            CircleWithOutline:false,
+            Polygon:false,
+            PolygonWithOutline:false,
+            Path:false,
+            Image:false,
+            Canvas:false,
+            Character:false,
+            CharacterString:false,
+        },
+        element:false,
+        arrangement:false,
+        render:false,
+        viewport:false,
+        stats:false,
+        callback:false,
     };
 
     this.log = {};

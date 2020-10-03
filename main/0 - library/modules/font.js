@@ -233,7 +233,7 @@ const fontFileNames = [
 //create locations in the vector library for these fonts
 fontFileNames.forEach(name => {
     const fontName = name.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]; //produce font name from file name
-    vectorLibrary[fontName] = { fileName:name, loadAttempted:false, isLoaded:false };
+    vectorLibrary[fontName] = { fileName:name, loadAttempted:false, loadComplete:false, loadWasSuccess:undefined };
 });
 {{include:defaultFonts/defaultThick.js}}
 {{include:defaultFonts/defaultThin.js}} 
@@ -254,9 +254,12 @@ this.getLoadedFonts = function(){
     dev.count('.font.getLoadedFonts'); //#development
 
     const defaultFontNames = ['defaultThick','defaultThin'];
-    const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
+    const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].loadWasSuccess);
     return defaultFontNames.concat(loadedFontNames);
 };
+
+
+
 
 this.isApprovedFont = function(fontName){
     dev.log.font('.isApprovedFont(',fontName); //#development
@@ -264,21 +267,7 @@ this.isApprovedFont = function(fontName){
 
     return vectorLibrary[fontName] != undefined;
 };
-this.isFontLoaded = function(fontName){
-    dev.log.font('.isFontLoaded(',fontName); //#development
-    dev.count('.font.isFontLoaded'); //#development
-
-    if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
-    return vectorLibrary[fontName].isLoaded;
-}
-this.fontLoadAttempted = function(fontName){
-    dev.log.font('.fontLoadAttempted(',fontName); //#development
-    dev.count('.font.fontLoadAttempted'); //#development
-
-    if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
-    return vectorLibrary[fontName].loadAttempted;
-}
-this.loadFont = function(fontName,onLoaded=()=>{}){
+this.loadFont = function(fontName,force,onLoaded=()=>{}){
     dev.log.font('.loadFont(',fontName,onLoaded); //#development
     dev.count('.font.loadFont'); //#development
 
@@ -291,11 +280,12 @@ this.loadFont = function(fontName,onLoaded=()=>{}){
         }
 
     //if font is already loaded, bail
-        if( this.isFontLoaded(fontName) ){return;}
+        if( !force && vectorLibrary[fontName].loadComplete ){return;}
 
     //set up library entry
         vectorLibrary[fontName].loadAttempted = true;
-        vectorLibrary[fontName].isLoaded = false;
+        vectorLibrary[fontName].loadComplete = false;
+        vectorLibrary[fontName].loadWasSuccess = undefined;
         vectorLibrary[fontName]['default'] = {vector:[0,0, 1,0, 0,-1, 1,0, 0,-1, 1,-1]};
 
     //load file
@@ -305,13 +295,68 @@ this.loadFont = function(fontName,onLoaded=()=>{}){
             fontData => {
                 const vectors = library.font.extractGlyphs(fontData.response,reducedGlyphSet);
                 Object.keys(vectors).forEach(glyphName => vectorLibrary[fontName][glyphName] = vectors[glyphName] );
-                vectorLibrary[fontName].isLoaded = true;
-                onLoaded(true);
+                vectorLibrary[fontName].loadComplete = true;
+                vectorLibrary[fontName].loadWasSuccess = true;
+                onLoaded({fontName:fontName, loadWasSuccess:true});
             },
-            () => { onLoaded(false); },
+            () => {
+                vectorLibrary[fontName].loadComplete = true;
+                vectorLibrary[fontName].loadWasSuccess = false;
+                onLoaded({fontName:fontName, loadWasSuccess:false});
+            },
             'arraybuffer',
         );
 };
-this.getVector = function(fontName,character){
-    return vectorLibrary[fontName][character];
+
+
+this.isValidCharacter = function(fontName, character){
+    return vectorLibrary[fontName][character] != undefined;
+};
+
+this.getDefaultVector = function(fontName){
+    return vectorLibrary[fontName].default.vector;
+};
+this.getVector = function(fontName, character){
+    return vectorLibrary[fontName][character].vector;
+};
+this.getRatio = function(fontName, character){
+    return vectorLibrary[fontName][character].ratio;
 }
+this.getOffset = function(fontName, character){
+    return vectorLibrary[fontName][character].offset;
+}
+this.getEncroach = function(fontName, character, otherCharacter){
+    return vectorLibrary[fontName][character].encroach[otherCharacter];
+}
+this.getMiscDefaultData = function(fontName){
+    return {
+        ascender: vectorLibrary[fontName].default.ascender,
+        descender: vectorLibrary[fontName].default.descender,
+        leftSideBearing: vectorLibrary[fontName].default.leftSideBearing,
+        advanceWidth: vectorLibrary[fontName].default.advanceWidth,
+        xMax: vectorLibrary[fontName].default.xMax,
+        yMax: vectorLibrary[fontName].default.yMax,
+        xMin: vectorLibrary[fontName].default.xMin,
+        yMin: vectorLibrary[fontName].default.yMin,
+        top: vectorLibrary[fontName].default.top,
+        left: vectorLibrary[fontName].default.left,
+        bottom: vectorLibrary[fontName].default.bottom,
+        right: vectorLibrary[fontName].default.right,
+    };
+};
+this.getMiscData = function(fontName, character){
+    return {
+        ascender: vectorLibrary[fontName][character].ascender,
+        descender: vectorLibrary[fontName][character].descender,
+        leftSideBearing: vectorLibrary[fontName][character].leftSideBearing,
+        advanceWidth: vectorLibrary[fontName][character].advanceWidth,
+        xMax: vectorLibrary[fontName][character].xMax,
+        yMax: vectorLibrary[fontName][character].yMax,
+        xMin: vectorLibrary[fontName][character].xMin,
+        yMin: vectorLibrary[fontName][character].yMin,
+        top: vectorLibrary[fontName][character].top,
+        left: vectorLibrary[fontName][character].left,
+        bottom: vectorLibrary[fontName][character].bottom,
+        right: vectorLibrary[fontName][character].right,
+    };
+};

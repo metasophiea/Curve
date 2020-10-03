@@ -454,7 +454,7 @@ this.list = function(
                         //internal callbacks
                             function(isOpen){
                                 if(!isOpen){return;}
-                                itemArray.forEach((item,a) => { if(list[a].type == 'list' && a != index && item.isOpen){ item.close(); } });
+                                itemArray.forEach((item,a) => { if((list[a].type == 'list' || list[a].type == 'radio' ) && a != index && item.isOpen){ item.close(); } });
                                 return -state.position * (style.default.heightLimit > 0 && style.default.heightLimit < calculatedListHeight ? (calculatedListHeight-style.default.heightLimit) : calculatedListHeight);
                             },
 
@@ -559,7 +559,7 @@ this.list = function(
                         //internal callbacks
                             function(isOpen){
                                 if(!isOpen){return;}
-                                itemArray.forEach((item,a) => { if(list[a].type == 'list' && a != index && item.isOpen){ item.close(); } });
+                                itemArray.forEach((item,a) => { if((list[a].type == 'list' || list[a].type == 'radio' ) && a != index && item.isOpen){ item.close(); } });
                                 return -state.position * (style.default.heightLimit > 0 && style.default.heightLimit < calculatedListHeight ? (calculatedListHeight-style.default.heightLimit) : calculatedListHeight);
                             },
                         

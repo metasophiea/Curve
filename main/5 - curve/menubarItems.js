@@ -179,6 +179,15 @@ _canvas_.layers.registerFunctionForLayer("control", function(){
                         _canvas_.control.viewport.position(0,0);
                         _canvas_.control.viewport.scale(1);
                     } },
+                    { type:'checkbox', text:'Viewport Lock', 
+                        updateFunction:function(){
+                            return !_canvas_.control.interaction.mouseGripPanning();
+                        }, 
+                        onclickFunction:function(val){
+                            _canvas_.control.interaction.mouseGripPanning(!val);
+                            _canvas_.control.interaction.mouseWheelZoom(!val);
+                        }
+                    },
                 ]
             }
         );
@@ -224,10 +233,10 @@ _canvas_.layers.registerFunctionForLayer("control", function(){
                             updateFunction:function(){return !_canvas_.control.interaction.unloadWarning(); }, 
                             onclickFunction:function(val){ _canvas_.control.interaction.unloadWarning(!val); }
                         },
-                        { type:'checkbox', text:'Frame Skipping', 
-                            updateFunction:function(){return _canvas_.core.render.allowFrameSkipping(); }, 
-                            onclickFunction:function(val){ _canvas_.core.render.allowFrameSkipping(val); }
-                        },
+                        // { type:'checkbox', text:'Frame Skipping', 
+                        //     updateFunction:function(){return _canvas_.core.render.allowFrameSkipping(); }, 
+                        //     onclickFunction:function(val){ _canvas_.core.render.allowFrameSkipping(val); }
+                        // },
                         { type:'checkbox', text:'Stat Readout', 
                             updateFunction:function(){return _canvas_.core.stats.onScreenAutoPrint(); }, 
                             onclickFunction:function(val){ _canvas_.core.stats.onScreenAutoPrint(val); }

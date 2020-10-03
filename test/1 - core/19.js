@@ -1,6 +1,6 @@
 _canvas_.layers.registerFunctionForLayer("core", function(){
 
-    const group = _canvas_.core.element.create('group','group');
+    const group = _canvas_.core.element.create('Group','group');
     group.unifiedAttribute({ heedCamera:true });
     _canvas_.core.arrangement.append(group);
 
@@ -11,35 +11,27 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
     for(let y = 0; y < yCount; y++){
         for(let x = 0; x < xCount; x++){
 
-
-
-            
-            // const tmp = _canvas_.core.element.create('rectangle','test_rectangle_'+y+'_'+x);
-            // tmp.unifiedAttribute({ 
+            // const test_rectangle = _canvas_.core.element.create('Rectangle','test_rectangle_'+y+'_'+x);
+            // test_rectangle.unifiedAttribute({ 
             //     x:10 + (size+1)*x, y:10 + (size+1)*y, width:size, height:size,
             // });
-            // group.append(tmp);
+            // group.append(test_rectangle);
 
-
-            const tmp = _canvas_.core.element.create('image','test_image_'+y+'_'+x);
-            tmp.unifiedAttribute({ 
+            const test_image = _canvas_.core.element.create('Image','test_image_'+y+'_'+x);
+            test_image.unifiedAttribute({ 
                 x:10 + (size+1)*x, y:10 + (size+1)*y, width:size, height:size, url:'/images/testImages/mikeandbrian.png',
             });
-            group.append(tmp);
-
-
-
+            group.append(test_image);
         }
     }
 
-    // setTimeout(_canvas_.core.render.frame,100);
-    // setTimeout(_canvas_.core.render.frame,1100);
+    // setTimeout(_canvas_.core.render.frame,1000);
+    // setTimeout(_canvas_.core.render.frame,2000);
 
-     _canvas_.core.render.activeLimitToFrameRate(true);
-     _canvas_.core.render.frameRateLimit(1);
+    _canvas_.core.render.activeLimitToFrameRate(true);
+    _canvas_.core.render.frameRateLimit(5);
 
     _canvas_.core.render.active(true);
-    _canvas_.core.render.allowFrameSkipping(false);
     _canvas_.core.stats.active(true);
     setInterval(() => {
         _canvas_.core.stats.getReport().then(console.log)

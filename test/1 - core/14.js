@@ -2,11 +2,11 @@ var group_1;
 var rectangle_1;
 
 _canvas_.layers.registerFunctionForLayer("core", function(){
-    group_1 = _canvas_.core.element.create('group','group_1');
+    group_1 = _canvas_.core.element.create('Group','group_1');
     _canvas_.core.arrangement.append(group_1);
 
 
-    rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_1 = _canvas_.core.element.create('Rectangle','rectangle_1');
     rectangle_1.attachCallback('onadd',() => {console.log('rectangle_1:onadd');});
     rectangle_1.attachCallback('onremove',() => {console.log('rectangle_1:onremove');});
 

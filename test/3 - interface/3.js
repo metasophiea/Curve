@@ -7,10 +7,8 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
     _canvas_.core.render.frameRateLimit(10);
     _canvas_.core.viewport.stopMouseScroll(true);
 
-    // const scale = 6;
-    // const position = {x:150, y:0};
-    // _canvas_.core.viewport.scale(scale);
-    // _canvas_.core.viewport.position(-(position.x)*scale,-(position.y)*scale);
+    // _canvas_.core.viewport.scale(5);
+    // _canvas_.core.viewport.position(550,0);
 
     partsCreated.display = {};
     partsCreated.display.displayGroup = _canvas_.interface.part.builder( 'basic', 'group', 'displayGroup', { x:10, y:10 } );
@@ -68,8 +66,8 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
             partsCreated.display.readout_sevenSegmentDisplay = _canvas_.interface.part.builder('display', 'readout_sevenSegmentDisplay', 'test_readout_sevenSegmentDisplay', {x:85, y:0});
             partsCreated.display.displayGroup.append(partsCreated.display.readout_sevenSegmentDisplay);
         //readout_sevenSegmentDisplay (static)
-            partsCreated.display.readout_sevenSegmentDisplay_static_merged = _canvas_.interface.part.builder('display', 'readout_sevenSegmentDisplay', 'test_readout_sevenSegmentDisplay_static_merged', {x:85, y:35, static:true});
-            partsCreated.display.displayGroup.append(partsCreated.display.readout_sevenSegmentDisplay_static_merged);
+            partsCreated.display.readout_sevenSegmentDisplay_static = _canvas_.interface.part.builder('display', 'readout_sevenSegmentDisplay', 'test_readout_sevenSegmentDisplay_static', {x:85, y:35, static:true});
+            partsCreated.display.displayGroup.append(partsCreated.display.readout_sevenSegmentDisplay_static);
         //readout_sixteenSegmentDisplay
             partsCreated.display.readout_sixteenSegmentDisplay = _canvas_.interface.part.builder('display', 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:190, y:0});
             partsCreated.display.displayGroup.append(partsCreated.display.readout_sixteenSegmentDisplay);
