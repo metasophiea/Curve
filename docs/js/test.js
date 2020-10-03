@@ -6987,6 +6987,1622 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
             const _thirdparty = new function(){
                 const thirdparty = this;
+                (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+                
+                	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+                	// @license MIT
+                	// @preserve Project Home: https://github.com/voidqk/polybooljs
+                	
+                    // Modified by Metasophiea <metasophiea@gmail.com>
+                
+                	var BuildLog = require('./lib/build-log');
+                	var Epsilon = require('./lib/epsilon');
+                	var Intersecter = require('./lib/intersecter');
+                	var SegmentChainer = require('./lib/segment-chainer');
+                	var SegmentSelector = require('./lib/segment-selector');
+                	var GeoJSON = require('./lib/geojson');
+                	
+                	var buildLog = false;
+                	var epsilon = Epsilon();
+                	
+                	var PolyBool;
+                	PolyBool = {
+                		// getter/setter for buildLog
+                		buildLog: function(bl){
+                			if (bl === true)
+                				buildLog = BuildLog();
+                			else if (bl === false)
+                				buildLog = false;
+                			return buildLog === false ? false : buildLog.list;
+                		},
+                		// getter/setter for epsilon
+                		epsilon: function(v){
+                			return epsilon.epsilon(v);
+                		},
+                	
+                		// core API
+                		segments: function(poly){
+                			var i = Intersecter(true, epsilon, buildLog);
+                			poly.regions.forEach(i.addRegion);
+                			return {
+                				segments: i.calculate(poly.inverted),
+                				inverted: poly.inverted
+                			};
+                		},
+                		combine: function(segments1, segments2){
+                			var i3 = Intersecter(false, epsilon, buildLog);
+                			return {
+                				combined: i3.calculate(
+                					segments1.segments, segments1.inverted,
+                					segments2.segments, segments2.inverted
+                				),
+                				inverted1: segments1.inverted,
+                				inverted2: segments2.inverted
+                			};
+                		},
+                		selectUnion: function(combined){
+                			return {
+                				segments: SegmentSelector.union(combined.combined, buildLog),
+                				inverted: combined.inverted1 || combined.inverted2
+                			}
+                		},
+                		selectIntersect: function(combined){
+                			return {
+                				segments: SegmentSelector.intersect(combined.combined, buildLog),
+                				inverted: combined.inverted1 && combined.inverted2
+                			}
+                		},
+                		selectDifference: function(combined){
+                			return {
+                				segments: SegmentSelector.difference(combined.combined, buildLog),
+                				inverted: combined.inverted1 && !combined.inverted2
+                			}
+                		},
+                		selectDifferenceRev: function(combined){
+                			return {
+                				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
+                				inverted: !combined.inverted1 && combined.inverted2
+                			}
+                		},
+                		selectXor: function(combined){
+                			return {
+                				segments: SegmentSelector.xor(combined.combined, buildLog),
+                				inverted: combined.inverted1 !== combined.inverted2
+                			}
+                		},
+                		polygon: function(segments){
+                			return {
+                				regions: SegmentChainer(segments.segments, epsilon, buildLog),
+                				inverted: segments.inverted
+                			};
+                		},
+                	
+                		// GeoJSON converters
+                		polygonFromGeoJSON: function(geojson){
+                			return GeoJSON.toPolygon(PolyBool, geojson);
+                		},
+                		polygonToGeoJSON: function(poly){
+                			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
+                		},
+                	
+                		// helper functions for common operations
+                		union: function(poly1, poly2){
+                			return operate(poly1, poly2, PolyBool.selectUnion);
+                		},
+                		intersect: function(poly1, poly2){
+                			return operate(poly1, poly2, PolyBool.selectIntersect);
+                		},
+                		difference: function(poly1, poly2){
+                			return operate(poly1, poly2, PolyBool.selectDifference);
+                		},
+                		differenceRev: function(poly1, poly2){
+                			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
+                		},
+                		xor: function(poly1, poly2){
+                			return operate(poly1, poly2, PolyBool.selectXor);
+                		}
+                	};
+                
+                	thirdparty.PolyBool = PolyBool;
+                	
+                	function operate(poly1, poly2, selector){
+                		var seg1 = PolyBool.segments(poly1);
+                		var seg2 = PolyBool.segments(poly2);
+                		var comb = PolyBool.combine(seg1, seg2);
+                		var seg3 = selector(comb);
+                		return PolyBool.polygon(seg3);
+                	}
+                		
+                	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
+                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                	// MIT License
+                	// Project Home: https://github.com/voidqk/polybooljs
+                	
+                	//
+                	// used strictly for logging the processing of the algorithm... only useful if you intend on
+                	// looking under the covers (for pretty UI's or debugging)
+                	//
+                	
+                	function BuildLog(){
+                		var my;
+                		var nextSegmentId = 0;
+                		var curVert = false;
+                	
+                		function push(type, data){
+                			my.list.push({
+                				type: type,
+                				data: data ? JSON.parse(JSON.stringify(data)) : void 0
+                			});
+                			return my;
+                		}
+                	
+                		my = {
+                			list: [],
+                			segmentId: function(){
+                				return nextSegmentId++;
+                			},
+                			checkIntersection: function(seg1, seg2){
+                				return push('check', { seg1: seg1, seg2: seg2 });
+                			},
+                			segmentChop: function(seg, end){
+                				push('div_seg', { seg: seg, pt: end });
+                				return push('chop', { seg: seg, pt: end });
+                			},
+                			statusRemove: function(seg){
+                				return push('pop_seg', { seg: seg });
+                			},
+                			segmentUpdate: function(seg){
+                				return push('seg_update', { seg: seg });
+                			},
+                			segmentNew: function(seg, primary){
+                				return push('new_seg', { seg: seg, primary: primary });
+                			},
+                			segmentRemove: function(seg){
+                				return push('rem_seg', { seg: seg });
+                			},
+                			tempStatus: function(seg, above, below){
+                				return push('temp_status', { seg: seg, above: above, below: below });
+                			},
+                			rewind: function(seg){
+                				return push('rewind', { seg: seg });
+                			},
+                			status: function(seg, above, below){
+                				return push('status', { seg: seg, above: above, below: below });
+                			},
+                			vert: function(x){
+                				if (x === curVert)
+                					return my;
+                				curVert = x;
+                				return push('vert', { x: x });
+                			},
+                			log: function(data){
+                				if (typeof data !== 'string')
+                					data = JSON.stringify(data, false, '  ');
+                				return push('log', { txt: data });
+                			},
+                			reset: function(){
+                				return push('reset');
+                			},
+                			selected: function(segs){
+                				return push('selected', { segs: segs });
+                			},
+                			chainStart: function(seg){
+                				return push('chain_start', { seg: seg });
+                			},
+                			chainRemoveHead: function(index, pt){
+                				return push('chain_rem_head', { index: index, pt: pt });
+                			},
+                			chainRemoveTail: function(index, pt){
+                				return push('chain_rem_tail', { index: index, pt: pt });
+                			},
+                			chainNew: function(pt1, pt2){
+                				return push('chain_new', { pt1: pt1, pt2: pt2 });
+                			},
+                			chainMatch: function(index){
+                				return push('chain_match', { index: index });
+                			},
+                			chainClose: function(index){
+                				return push('chain_close', { index: index });
+                			},
+                			chainAddHead: function(index, pt){
+                				return push('chain_add_head', { index: index, pt: pt });
+                			},
+                			chainAddTail: function(index, pt){
+                				return push('chain_add_tail', { index: index, pt: pt, });
+                			},
+                			chainConnect: function(index1, index2){
+                				return push('chain_con', { index1: index1, index2: index2 });
+                			},
+                			chainReverse: function(index){
+                				return push('chain_rev', { index: index });
+                			},
+                			chainJoin: function(index1, index2){
+                				return push('chain_join', { index1: index1, index2: index2 });
+                			},
+                			done: function(){
+                				return push('done');
+                			}
+                		};
+                		return my;
+                	}
+                	
+                	module.exports = BuildLog;
+                	
+                	},{}],3:[function(require,module,exports){
+                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                	// MIT License
+                	// Project Home: https://github.com/voidqk/polybooljs
+                	
+                	//
+                	// provides the raw computation functions that takes epsilon into account
+                	//
+                	// zero is defined to be between (-epsilon, epsilon) exclusive
+                	//
+                	
+                	function Epsilon(eps){
+                		if (typeof eps !== 'number')
+                			eps = 0.0000000001; // sane default? sure why not
+                		var my = {
+                			epsilon: function(v){
+                				if (typeof v === 'number')
+                					eps = v;
+                				return eps;
+                			},
+                			pointAboveOrOnLine: function(pt, left, right){
+                				var Ax = left[0];
+                				var Ay = left[1];
+                				var Bx = right[0];
+                				var By = right[1];
+                				var Cx = pt[0];
+                				var Cy = pt[1];
+                				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
+                			},
+                			pointBetween: function(p, left, right){
+                				// p must be collinear with left->right
+                				// returns false if p == left, p == right, or left == right
+                				var d_py_ly = p[1] - left[1];
+                				var d_rx_lx = right[0] - left[0];
+                				var d_px_lx = p[0] - left[0];
+                				var d_ry_ly = right[1] - left[1];
+                	
+                				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
+                				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
+                				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
+                				if (dot < eps)
+                					return false;
+                	
+                				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
+                				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
+                				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
+                				if (dot - sqlen > -eps)
+                					return false;
+                	
+                				return true;
+                			},
+                			pointsSameX: function(p1, p2){
+                				return Math.abs(p1[0] - p2[0]) < eps;
+                			},
+                			pointsSameY: function(p1, p2){
+                				return Math.abs(p1[1] - p2[1]) < eps;
+                			},
+                			pointsSame: function(p1, p2){
+                				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
+                			},
+                			pointsCompare: function(p1, p2){
+                				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
+                				if (my.pointsSameX(p1, p2))
+                					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
+                				return p1[0] < p2[0] ? -1 : 1;
+                			},
+                			pointsCollinear: function(pt1, pt2, pt3){
+                				// does pt1->pt2->pt3 make a straight line?
+                				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
+                				// if slopes are equal, then they must be collinear, because they share pt2
+                				var dx1 = pt1[0] - pt2[0];
+                				var dy1 = pt1[1] - pt2[1];
+                				var dx2 = pt2[0] - pt3[0];
+                				var dy2 = pt2[1] - pt3[1];
+                				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
+                			},
+                			linesIntersect: function(a0, a1, b0, b1){
+                				// returns false if the lines are coincident (e.g., parallel or on top of each other)
+                				//
+                				// returns an object if the lines intersect:
+                				//   {
+                				//     pt: [x, y],    where the intersection point is at
+                				//     alongA: where intersection point is along A,
+                				//     alongB: where intersection point is along B
+                				//   }
+                				//
+                				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
+                				//
+                				//  with the following meaning:
+                				//
+                				//    -2   intersection point is before segment's first point
+                				//    -1   intersection point is directly on segment's first point
+                				//     0   intersection point is between segment's first and second points (exclusive)
+                				//     1   intersection point is directly on segment's second point
+                				//     2   intersection point is after segment's second point
+                				var adx = a1[0] - a0[0];
+                				var ady = a1[1] - a0[1];
+                				var bdx = b1[0] - b0[0];
+                				var bdy = b1[1] - b0[1];
+                	
+                				var axb = adx * bdy - ady * bdx;
+                				if (Math.abs(axb) < eps)
+                					return false; // lines are coincident
+                	
+                				var dx = a0[0] - b0[0];
+                				var dy = a0[1] - b0[1];
+                	
+                				var A = (bdx * dy - bdy * dx) / axb;
+                				var B = (adx * dy - ady * dx) / axb;
+                	
+                				var ret = {
+                					alongA: 0,
+                					alongB: 0,
+                					pt: [
+                						a0[0] + A * adx,
+                						a0[1] + A * ady
+                					]
+                				};
+                	
+                				// categorize where intersection point is along A and B
+                	
+                				if (A <= -eps)
+                					ret.alongA = -2;
+                				else if (A < eps)
+                					ret.alongA = -1;
+                				else if (A - 1 <= -eps)
+                					ret.alongA = 0;
+                				else if (A - 1 < eps)
+                					ret.alongA = 1;
+                				else
+                					ret.alongA = 2;
+                	
+                				if (B <= -eps)
+                					ret.alongB = -2;
+                				else if (B < eps)
+                					ret.alongB = -1;
+                				else if (B - 1 <= -eps)
+                					ret.alongB = 0;
+                				else if (B - 1 < eps)
+                					ret.alongB = 1;
+                				else
+                					ret.alongB = 2;
+                	
+                				return ret;
+                			},
+                			pointInsideRegion: function(pt, region){
+                				var x = pt[0];
+                				var y = pt[1];
+                				var last_x = region[region.length - 1][0];
+                				var last_y = region[region.length - 1][1];
+                				var inside = false;
+                				for (var i = 0; i < region.length; i++){
+                					var curr_x = region[i][0];
+                					var curr_y = region[i][1];
+                	
+                					// if y is between curr_y and last_y, and
+                					// x is to the right of the boundary created by the line
+                					if ((curr_y - y > eps) != (last_y - y > eps) &&
+                						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
+                						inside = !inside
+                	
+                					last_x = curr_x;
+                					last_y = curr_y;
+                				}
+                				return inside;
+                			}
+                		};
+                		return my;
+                	}
+                	
+                	module.exports = Epsilon;
+                	
+                	},{}],4:[function(require,module,exports){
+                	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
+                	// MIT License
+                	// Project Home: https://github.com/voidqk/polybooljs
+                	
+                	//
+                	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
+                	//
+                	
+                	var GeoJSON = {
+                		// convert a GeoJSON object to a PolyBool polygon
+                		toPolygon: function(PolyBool, geojson){
+                	
+                			// converts list of LineString's to segments
+                			function GeoPoly(coords){
+                				// check for empty coords
+                				if (coords.length <= 0)
+                					return PolyBool.segments({ inverted: false, regions: [] });
+                	
+                				// convert LineString to segments
+                				function LineString(ls){
+                					// remove tail which should be the same as head
+                					var reg = ls.slice(0, ls.length - 1);
+                					return PolyBool.segments({ inverted: false, regions: [reg] });
+                				}
+                	
+                				// the first LineString is considered the outside
+                				var out = LineString(coords[0]);
+                	
+                				// the rest of the LineStrings are considered interior holes, so subtract them from the
+                				// current result
+                				for (var i = 1; i < coords.length; i++)
+                					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
+                	
+                				return out;
+                			}
+                	
+                			if (geojson.type === 'Polygon'){
+                				// single polygon, so just convert it and we're done
+                				return PolyBool.polygon(GeoPoly(geojson.coordinates));
+                			}
+                			else if (geojson.type === 'MultiPolygon'){
+                				// multiple polygons, so union all the polygons together
+                				var out = PolyBool.segments({ inverted: false, regions: [] });
+                				for (var i = 0; i < geojson.coordinates.length; i++)
+                					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
+                				return PolyBool.polygon(out);
+                			}
+                			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
+                		},
+                	
+                		// convert a PolyBool polygon to a GeoJSON object
+                		fromPolygon: function(PolyBool, eps, poly){
+                			// make sure out polygon is clean
+                			poly = PolyBool.polygon(PolyBool.segments(poly));
+                	
+                			// test if r1 is inside r2
+                			function regionInsideRegion(r1, r2){
+                				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
+                				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
+                				// edge of the first line, which cannot be on an edge
+                				return eps.pointInsideRegion([
+                					(r1[0][0] + r1[1][0]) * 0.5,
+                					(r1[0][1] + r1[1][1]) * 0.5
+                				], r2);
+                			}
+                	
+                			// calculate inside heirarchy
+                			//
+                			//  _____________________   _______    roots -> A       -> F
+                			// |          A          | |   F   |            |          |
+                			// |  _______   _______  | |  ___  |            +-- B      +-- G
+                			// | |   B   | |   C   | | | |   | |            |   |
+                			// | |  ___  | |  ___  | | | |   | |            |   +-- D
+                			// | | | D | | | | E | | | | | G | |            |
+                			// | | |___| | | |___| | | | |   | |            +-- C
+                			// | |_______| |_______| | | |___| |                |
+                			// |_____________________| |_______|                +-- E
+                	
+                			function newNode(region){
+                				return {
+                					region: region,
+                					children: []
+                				};
+                			}
+                	
+                			var roots = newNode(null);
+                	
+                			function addChild(root, region){
+                				// first check if we're inside any children
+                				for (var i = 0; i < root.children.length; i++){
+                					var child = root.children[i];
+                					if (regionInsideRegion(region, child.region)){
+                						// we are, so insert inside them instead
+                						addChild(child, region);
+                						return;
+                					}
+                				}
+                	
+                				// not inside any children, so check to see if any children are inside us
+                				var node = newNode(region);
+                				for (var i = 0; i < root.children.length; i++){
+                					var child = root.children[i];
+                					if (regionInsideRegion(child.region, region)){
+                						// oops... move the child beneath us, and remove them from root
+                						node.children.push(child);
+                						root.children.splice(i, 1);
+                						i--;
+                					}
+                				}
+                	
+                				// now we can add ourselves
+                				root.children.push(node);
+                			}
+                	
+                			// add all regions to the root
+                			for (var i = 0; i < poly.regions.length; i++){
+                				var region = poly.regions[i];
+                				if (region.length < 3) // regions must have at least 3 points (sanity check)
+                					continue;
+                				addChild(roots, region);
+                			}
+                	
+                			// with our heirarchy, we can distinguish between exterior borders, and interior holes
+                			// the root nodes are exterior, children are interior, children's children are exterior,
+                			// children's children's children are interior, etc
+                	
+                			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
+                	
+                			function forceWinding(region, clockwise){
+                				// first, see if we're clockwise or counter-clockwise
+                				// https://en.wikipedia.org/wiki/Shoelace_formula
+                				var winding = 0;
+                				var last_x = region[region.length - 1][0];
+                				var last_y = region[region.length - 1][1];
+                				var copy = [];
+                				for (var i = 0; i < region.length; i++){
+                					var curr_x = region[i][0];
+                					var curr_y = region[i][1];
+                					copy.push([curr_x, curr_y]); // create a copy while we're at it
+                					winding += curr_y * last_x - curr_x * last_y;
+                					last_x = curr_x;
+                					last_y = curr_y;
+                				}
+                				// this assumes Cartesian coordinates (Y is positive going up)
+                				var isclockwise = winding < 0;
+                				if (isclockwise !== clockwise)
+                					copy.reverse();
+                				// while we're here, the last point must be the first point...
+                				copy.push([copy[0][0], copy[0][1]]);
+                				return copy;
+                			}
+                	
+                			var geopolys = [];
+                	
+                			function addExterior(node){
+                				var poly = [forceWinding(node.region, false)];
+                				geopolys.push(poly);
+                				// children of exteriors are interior
+                				for (var i = 0; i < node.children.length; i++)
+                					poly.push(getInterior(node.children[i]));
+                			}
+                	
+                			function getInterior(node){
+                				// children of interiors are exterior
+                				for (var i = 0; i < node.children.length; i++)
+                					addExterior(node.children[i]);
+                				// return the clockwise interior
+                				return forceWinding(node.region, true);
+                			}
+                	
+                			// root nodes are exterior
+                			for (var i = 0; i < roots.children.length; i++)
+                				addExterior(roots.children[i]);
+                	
+                			// lastly, construct the approrpriate GeoJSON object
+                	
+                			if (geopolys.length <= 0) // empty GeoJSON Polygon
+                				return { type: 'Polygon', coordinates: [] };
+                			if (geopolys.length == 1) // use a GeoJSON Polygon
+                				return { type: 'Polygon', coordinates: geopolys[0] };
+                			return { // otherwise, use a GeoJSON MultiPolygon
+                				type: 'MultiPolygon',
+                				coordinates: geopolys
+                			};
+                		}
+                	};
+                	
+                	module.exports = GeoJSON;
+                	
+                	},{}],5:[function(require,module,exports){
+                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                	// MIT License
+                	// Project Home: https://github.com/voidqk/polybooljs
+                	
+                	//
+                	// this is the core work-horse
+                	//
+                	
+                	var LinkedList = require('./linked-list');
+                	
+                	function Intersecter(selfIntersection, eps, buildLog){
+                		// selfIntersection is true/false depending on the phase of the overall algorithm
+                	
+                		//
+                		// segment creation
+                		//
+                	
+                		function segmentNew(start, end){
+                			return {
+                				id: buildLog ? buildLog.segmentId() : -1,
+                				start: start,
+                				end: end,
+                				myFill: {
+                					above: null, // is there fill above us?
+                					below: null  // is there fill below us?
+                				},
+                				otherFill: null
+                			};
+                		}
+                	
+                		function segmentCopy(start, end, seg){
+                			return {
+                				id: buildLog ? buildLog.segmentId() : -1,
+                				start: start,
+                				end: end,
+                				myFill: {
+                					above: seg.myFill.above,
+                					below: seg.myFill.below
+                				},
+                				otherFill: null
+                			};
+                		}
+                	
+                		//
+                		// event logic
+                		//
+                	
+                		var event_root = LinkedList.create();
+                	
+                		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
+                			// compare the selected points first
+                			var comp = eps.pointsCompare(p1_1, p2_1);
+                			if (comp !== 0)
+                				return comp;
+                			// the selected points are the same
+                	
+                			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
+                				return 0; // then the segments are equal
+                	
+                			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
+                				return p1_isStart ? 1 : -1; // favor the one that isn't the start
+                	
+                			// otherwise, we'll have to calculate which one is below the other manually
+                			return eps.pointAboveOrOnLine(p1_2,
+                				p2_isStart ? p2_1 : p2_2, // order matters
+                				p2_isStart ? p2_2 : p2_1
+                			) ? 1 : -1;
+                		}
+                	
+                		function eventAdd(ev, other_pt){
+                			event_root.insertBefore(ev, function(here){
+                				// should ev be inserted before here?
+                				var comp = eventCompare(
+                					ev  .isStart, ev  .pt,      other_pt,
+                					here.isStart, here.pt, here.other.pt
+                				);
+                				return comp < 0;
+                			});
+                		}
+                	
+                		function eventAddSegmentStart(seg, primary){
+                			var ev_start = LinkedList.node({
+                				isStart: true,
+                				pt: seg.start,
+                				seg: seg,
+                				primary: primary,
+                				other: null,
+                				status: null
+                			});
+                			eventAdd(ev_start, seg.end);
+                			return ev_start;
+                		}
+                	
+                		function eventAddSegmentEnd(ev_start, seg, primary){
+                			var ev_end = LinkedList.node({
+                				isStart: false,
+                				pt: seg.end,
+                				seg: seg,
+                				primary: primary,
+                				other: ev_start,
+                				status: null
+                			});
+                			ev_start.other = ev_end;
+                			eventAdd(ev_end, ev_start.pt);
+                		}
+                	
+                		function eventAddSegment(seg, primary){
+                			var ev_start = eventAddSegmentStart(seg, primary);
+                			eventAddSegmentEnd(ev_start, seg, primary);
+                			return ev_start;
+                		}
+                	
+                		function eventUpdateEnd(ev, end){
+                			// slides an end backwards
+                			//   (start)------------(end)    to:
+                			//   (start)---(end)
+                	
+                			if (buildLog)
+                				buildLog.segmentChop(ev.seg, end);
+                	
+                			ev.other.remove();
+                			ev.seg.end = end;
+                			ev.other.pt = end;
+                			eventAdd(ev.other, ev.pt);
+                		}
+                	
+                		function eventDivide(ev, pt){
+                			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
+                			eventUpdateEnd(ev, pt);
+                			return eventAddSegment(ns, ev.primary);
+                		}
+                	
+                		function calculate(primaryPolyInverted, secondaryPolyInverted){
+                			// if selfIntersection is true then there is no secondary polygon, so that isn't used
+                	
+                			//
+                			// status logic
+                			//
+                	
+                			var status_root = LinkedList.create();
+                	
+                			function statusCompare(ev1, ev2){
+                				var a1 = ev1.seg.start;
+                				var a2 = ev1.seg.end;
+                				var b1 = ev2.seg.start;
+                				var b2 = ev2.seg.end;
+                	
+                				if (eps.pointsCollinear(a1, b1, b2)){
+                					if (eps.pointsCollinear(a2, b1, b2))
+                						return 1;//eventCompare(true, a1, a2, true, b1, b2);
+                					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
+                				}
+                				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
+                			}
+                	
+                			function statusFindSurrounding(ev){
+                				return status_root.findTransition(function(here){
+                					var comp = statusCompare(ev, here.ev);
+                					return comp > 0;
+                				});
+                			}
+                	
+                			function checkIntersection(ev1, ev2){
+                				// returns the segment equal to ev1, or false if nothing equal
+                	
+                				var seg1 = ev1.seg;
+                				var seg2 = ev2.seg;
+                				var a1 = seg1.start;
+                				var a2 = seg1.end;
+                				var b1 = seg2.start;
+                				var b2 = seg2.end;
+                	
+                				if (buildLog)
+                					buildLog.checkIntersection(seg1, seg2);
+                	
+                				var i = eps.linesIntersect(a1, a2, b1, b2);
+                	
+                				if (i === false){
+                					// segments are parallel or coincident
+                	
+                					// if points aren't collinear, then the segments are parallel, so no intersections
+                					if (!eps.pointsCollinear(a1, a2, b1))
+                						return false;
+                					// otherwise, segments are on top of each other somehow (aka coincident)
+                	
+                					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
+                						return false; // segments touch at endpoints... no intersection
+                	
+                					var a1_equ_b1 = eps.pointsSame(a1, b1);
+                					var a2_equ_b2 = eps.pointsSame(a2, b2);
+                	
+                					if (a1_equ_b1 && a2_equ_b2)
+                						return ev2; // segments are exactly equal
+                	
+                					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
+                					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
+                	
+                					// handy for debugging:
+                					// buildLog.log({
+                					//	a1_equ_b1: a1_equ_b1,
+                					//	a2_equ_b2: a2_equ_b2,
+                					//	a1_between: a1_between,
+                					//	a2_between: a2_between
+                					// });
+                	
+                					if (a1_equ_b1){
+                						if (a2_between){
+                							//  (a1)---(a2)
+                							//  (b1)----------(b2)
+                							eventDivide(ev2, a2);
+                						}
+                						else{
+                							//  (a1)----------(a2)
+                							//  (b1)---(b2)
+                							eventDivide(ev1, b2);
+                						}
+                						return ev2;
+                					}
+                					else if (a1_between){
+                						if (!a2_equ_b2){
+                							// make a2 equal to b2
+                							if (a2_between){
+                								//         (a1)---(a2)
+                								//  (b1)-----------------(b2)
+                								eventDivide(ev2, a2);
+                							}
+                							else{
+                								//         (a1)----------(a2)
+                								//  (b1)----------(b2)
+                								eventDivide(ev1, b2);
+                							}
+                						}
+                	
+                						//         (a1)---(a2)
+                						//  (b1)----------(b2)
+                						eventDivide(ev2, a1);
+                					}
+                				}
+                				else{
+                					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
+                	
+                					// is A divided between its endpoints? (exclusive)
+                					if (i.alongA === 0){
+                						if (i.alongB === -1) // yes, at exactly b1
+                							eventDivide(ev1, b1);
+                						else if (i.alongB === 0) // yes, somewhere between B's endpoints
+                							eventDivide(ev1, i.pt);
+                						else if (i.alongB === 1) // yes, at exactly b2
+                							eventDivide(ev1, b2);
+                					}
+                	
+                					// is B divided between its endpoints? (exclusive)
+                					if (i.alongB === 0){
+                						if (i.alongA === -1) // yes, at exactly a1
+                							eventDivide(ev2, a1);
+                						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
+                							eventDivide(ev2, i.pt);
+                						else if (i.alongA === 1) // yes, at exactly a2
+                							eventDivide(ev2, a2);
+                					}
+                				}
+                				return false;
+                			}
+                	
+                			//
+                			// main event loop
+                			//
+                			var segments = [];
+                			while (!event_root.isEmpty()){
+                				var ev = event_root.getHead();
+                	
+                				if (buildLog)
+                					buildLog.vert(ev.pt[0]);
+                	
+                				if (ev.isStart){
+                	
+                					if (buildLog)
+                						buildLog.segmentNew(ev.seg, ev.primary);
+                	
+                					var surrounding = statusFindSurrounding(ev);
+                					var above = surrounding.before ? surrounding.before.ev : null;
+                					var below = surrounding.after ? surrounding.after.ev : null;
+                	
+                					if (buildLog){
+                						buildLog.tempStatus(
+                							ev.seg,
+                							above ? above.seg : false,
+                							below ? below.seg : false
+                						);
+                					}
+                	
+                					function checkBothIntersections(){
+                						if (above){
+                							var eve = checkIntersection(ev, above);
+                							if (eve)
+                								return eve;
+                						}
+                						if (below)
+                							return checkIntersection(ev, below);
+                						return false;
+                					}
+                	
+                					var eve = checkBothIntersections();
+                					if (eve){
+                						// ev and eve are equal
+                						// we'll keep eve and throw away ev
+                	
+                						// merge ev.seg's fill information into eve.seg
+                	
+                						if (selfIntersection){
+                							var toggle; // are we a toggling edge?
+                							if (ev.seg.myFill.below === null)
+                								toggle = true;
+                							else
+                								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
+                	
+                							// merge two segments that belong to the same polygon
+                							// think of this as sandwiching two segments together, where `eve.seg` is
+                							// the bottom -- this will cause the above fill flag to toggle
+                							if (toggle)
+                								eve.seg.myFill.above = !eve.seg.myFill.above;
+                						}
+                						else{
+                							// merge two segments that belong to different polygons
+                							// each segment has distinct knowledge, so no special logic is needed
+                							// note that this can only happen once per segment in this phase, because we
+                							// are guaranteed that all self-intersections are gone
+                							eve.seg.otherFill = ev.seg.myFill;
+                						}
+                	
+                						if (buildLog)
+                							buildLog.segmentUpdate(eve.seg);
+                	
+                						ev.other.remove();
+                						ev.remove();
+                					}
+                	
+                					if (event_root.getHead() !== ev){
+                						// something was inserted before us in the event queue, so loop back around and
+                						// process it before continuing
+                						if (buildLog)
+                							buildLog.rewind(ev.seg);
+                						continue;
+                					}
+                	
+                					//
+                					// calculate fill flags
+                					//
+                					if (selfIntersection){
+                						var toggle; // are we a toggling edge?
+                						if (ev.seg.myFill.below === null) // if we are a new segment...
+                							toggle = true; // then we toggle
+                						else // we are a segment that has previous knowledge from a division
+                							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
+                	
+                						// next, calculate whether we are filled below us
+                						if (!below){ // if nothing is below us...
+                							// we are filled below us if the polygon is inverted
+                							ev.seg.myFill.below = primaryPolyInverted;
+                						}
+                						else{
+                							// otherwise, we know the answer -- it's the same if whatever is below
+                							// us is filled above it
+                							ev.seg.myFill.below = below.seg.myFill.above;
+                						}
+                	
+                						// since now we know if we're filled below us, we can calculate whether
+                						// we're filled above us by applying toggle to whatever is below us
+                						if (toggle)
+                							ev.seg.myFill.above = !ev.seg.myFill.below;
+                						else
+                							ev.seg.myFill.above = ev.seg.myFill.below;
+                					}
+                					else{
+                						// now we fill in any missing transition information, since we are all-knowing
+                						// at this point
+                	
+                						if (ev.seg.otherFill === null){
+                							// if we don't have other information, then we need to figure out if we're
+                							// inside the other polygon
+                							var inside;
+                							if (!below){
+                								// if nothing is below us, then we're inside if the other polygon is
+                								// inverted
+                								inside =
+                									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
+                							}
+                							else{ // otherwise, something is below us
+                								// so copy the below segment's other polygon's above
+                								if (ev.primary === below.primary)
+                									inside = below.seg.otherFill.above;
+                								else
+                									inside = below.seg.myFill.above;
+                							}
+                							ev.seg.otherFill = {
+                								above: inside,
+                								below: inside
+                							};
+                						}
+                					}
+                	
+                					if (buildLog){
+                						buildLog.status(
+                							ev.seg,
+                							above ? above.seg : false,
+                							below ? below.seg : false
+                						);
+                					}
+                	
+                					// insert the status and remember it for later removal
+                					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
+                				}
+                				else{
+                					var st = ev.status;
+                	
+                					if (st === null){
+                						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
+                							'probably too small or too large');
+                					}
+                	
+                					// removing the status will create two new adjacent edges, so we'll need to check
+                					// for those
+                					if (status_root.exists(st.prev) && status_root.exists(st.next))
+                						checkIntersection(st.prev.ev, st.next.ev);
+                	
+                					if (buildLog)
+                						buildLog.statusRemove(st.ev.seg);
+                	
+                					// remove the status
+                					st.remove();
+                	
+                					// if we've reached this point, we've calculated everything there is to know, so
+                					// save the segment for reporting
+                					if (!ev.primary){
+                						// make sure `seg.myFill` actually points to the primary polygon though
+                						var s = ev.seg.myFill;
+                						ev.seg.myFill = ev.seg.otherFill;
+                						ev.seg.otherFill = s;
+                					}
+                					segments.push(ev.seg);
+                				}
+                	
+                				// remove the event and continue
+                				event_root.getHead().remove();
+                			}
+                	
+                			if (buildLog)
+                				buildLog.done();
+                	
+                			return segments;
+                		}
+                	
+                		// return the appropriate API depending on what we're doing
+                		if (!selfIntersection){
+                			// performing combination of polygons, so only deal with already-processed segments
+                			return {
+                				calculate: function(segments1, inverted1, segments2, inverted2){
+                					// segmentsX come from the self-intersection API, or this API
+                					// invertedX is whether we treat that list of segments as an inverted polygon or not
+                					// returns segments that can be used for further operations
+                					segments1.forEach(function(seg){
+                						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
+                					});
+                					segments2.forEach(function(seg){
+                						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
+                					});
+                					return calculate(inverted1, inverted2);
+                				}
+                			};
+                		}
+                	
+                		// otherwise, performing self-intersection, so deal with regions
+                		return {
+                			addRegion: function(region){
+                				// regions are a list of points:
+                				//  [ [0, 0], [100, 0], [50, 100] ]
+                				// you can add multiple regions before running calculate
+                				var pt1;
+                				var pt2 = region[region.length - 1];
+                				for (var i = 0; i < region.length; i++){
+                					pt1 = pt2;
+                					pt2 = region[i];
+                	
+                					var forward = eps.pointsCompare(pt1, pt2);
+                					if (forward === 0) // points are equal, so we have a zero-length segment
+                						continue; // just skip it
+                	
+                					eventAddSegment(
+                						segmentNew(
+                							forward < 0 ? pt1 : pt2,
+                							forward < 0 ? pt2 : pt1
+                						),
+                						true
+                					);
+                				}
+                			},
+                			calculate: function(inverted){
+                				// is the polygon inverted?
+                				// returns segments
+                				return calculate(inverted, false);
+                			}
+                		};
+                	}
+                	
+                	module.exports = Intersecter;
+                	
+                	},{"./linked-list":6}],6:[function(require,module,exports){
+                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                	// MIT License
+                	// Project Home: https://github.com/voidqk/polybooljs
+                	
+                	//
+                	// simple linked list implementation that allows you to traverse down nodes and save positions
+                	//
+                	
+                	var LinkedList = {
+                		create: function(){
+                			var my = {
+                				root: { root: true, next: null },
+                				exists: function(node){
+                					if (node === null || node === my.root)
+                						return false;
+                					return true;
+                				},
+                				isEmpty: function(){
+                					return my.root.next === null;
+                				},
+                				getHead: function(){
+                					return my.root.next;
+                				},
+                				insertBefore: function(node, check){
+                					var last = my.root;
+                					var here = my.root.next;
+                					while (here !== null){
+                						if (check(here)){
+                							node.prev = here.prev;
+                							node.next = here;
+                							here.prev.next = node;
+                							here.prev = node;
+                							return;
+                						}
+                						last = here;
+                						here = here.next;
+                					}
+                					last.next = node;
+                					node.prev = last;
+                					node.next = null;
+                				},
+                				findTransition: function(check){
+                					var prev = my.root;
+                					var here = my.root.next;
+                					while (here !== null){
+                						if (check(here))
+                							break;
+                						prev = here;
+                						here = here.next;
+                					}
+                					return {
+                						before: prev === my.root ? null : prev,
+                						after: here,
+                						insert: function(node){
+                							node.prev = prev;
+                							node.next = here;
+                							prev.next = node;
+                							if (here !== null)
+                								here.prev = node;
+                							return node;
+                						}
+                					};
+                				}
+                			};
+                			return my;
+                		},
+                		node: function(data){
+                			data.prev = null;
+                			data.next = null;
+                			data.remove = function(){
+                				data.prev.next = data.next;
+                				if (data.next)
+                					data.next.prev = data.prev;
+                				data.prev = null;
+                				data.next = null;
+                			};
+                			return data;
+                		}
+                	};
+                	
+                	module.exports = LinkedList;
+                	
+                	},{}],7:[function(require,module,exports){
+                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                	// MIT License
+                	// Project Home: https://github.com/voidqk/polybooljs
+                	
+                	//
+                	// converts a list of segments into a list of regions, while also removing unnecessary verticies
+                	//
+                	
+                	function SegmentChainer(segments, eps, buildLog){
+                		var chains = [];
+                		var regions = [];
+                	
+                		segments.forEach(function(seg){
+                			var pt1 = seg.start;
+                			var pt2 = seg.end;
+                			if (eps.pointsSame(pt1, pt2)){
+                				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
+                					'probably too small or too large');
+                				return;
+                			}
+                	
+                			if (buildLog)
+                				buildLog.chainStart(seg);
+                	
+                			// search for two chains that this segment matches
+                			var first_match = {
+                				index: 0,
+                				matches_head: false,
+                				matches_pt1: false
+                			};
+                			var second_match = {
+                				index: 0,
+                				matches_head: false,
+                				matches_pt1: false
+                			};
+                			var next_match = first_match;
+                			function setMatch(index, matches_head, matches_pt1){
+                				// return true if we've matched twice
+                				next_match.index = index;
+                				next_match.matches_head = matches_head;
+                				next_match.matches_pt1 = matches_pt1;
+                				if (next_match === first_match){
+                					next_match = second_match;
+                					return false;
+                				}
+                				next_match = null;
+                				return true; // we've matched twice, we're done here
+                			}
+                			for (var i = 0; i < chains.length; i++){
+                				var chain = chains[i];
+                				var head  = chain[0];
+                				var head2 = chain[1];
+                				var tail  = chain[chain.length - 1];
+                				var tail2 = chain[chain.length - 2];
+                				if (eps.pointsSame(head, pt1)){
+                					if (setMatch(i, true, true))
+                						break;
+                				}
+                				else if (eps.pointsSame(head, pt2)){
+                					if (setMatch(i, true, false))
+                						break;
+                				}
+                				else if (eps.pointsSame(tail, pt1)){
+                					if (setMatch(i, false, true))
+                						break;
+                				}
+                				else if (eps.pointsSame(tail, pt2)){
+                					if (setMatch(i, false, false))
+                						break;
+                				}
+                			}
+                	
+                			if (next_match === first_match){
+                				// we didn't match anything, so create a new chain
+                				chains.push([ pt1, pt2 ]);
+                				if (buildLog)
+                					buildLog.chainNew(pt1, pt2);
+                				return;
+                			}
+                	
+                			if (next_match === second_match){
+                				// we matched a single chain
+                	
+                				if (buildLog)
+                					buildLog.chainMatch(first_match.index);
+                	
+                				// add the other point to the apporpriate end, and check to see if we've closed the
+                				// chain into a loop
+                	
+                				var index = first_match.index;
+                				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
+                				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
+                	
+                				var chain = chains[index];
+                				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
+                				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
+                				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
+                				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
+                	
+                				if (eps.pointsCollinear(grow2, grow, pt)){
+                					// grow isn't needed because it's directly between grow2 and pt:
+                					// grow2 ---grow---> pt
+                					if (addToHead){
+                						if (buildLog)
+                							buildLog.chainRemoveHead(first_match.index, pt);
+                						chain.shift();
+                					}
+                					else{
+                						if (buildLog)
+                							buildLog.chainRemoveTail(first_match.index, pt);
+                						chain.pop();
+                					}
+                					grow = grow2; // old grow is gone... new grow is what grow2 was
+                				}
+                	
+                				if (eps.pointsSame(oppo, pt)){
+                					// we're closing the loop, so remove chain from chains
+                					chains.splice(index, 1);
+                	
+                					if (eps.pointsCollinear(oppo2, oppo, grow)){
+                						// oppo isn't needed because it's directly between oppo2 and grow:
+                						// oppo2 ---oppo--->grow
+                						if (addToHead){
+                							if (buildLog)
+                								buildLog.chainRemoveTail(first_match.index, grow);
+                							chain.pop();
+                						}
+                						else{
+                							if (buildLog)
+                								buildLog.chainRemoveHead(first_match.index, grow);
+                							chain.shift();
+                						}
+                					}
+                	
+                					if (buildLog)
+                						buildLog.chainClose(first_match.index);
+                	
+                					// we have a closed chain!
+                					regions.push(chain);
+                					return;
+                				}
+                	
+                				// not closing a loop, so just add it to the apporpriate side
+                				if (addToHead){
+                					if (buildLog)
+                						buildLog.chainAddHead(first_match.index, pt);
+                					chain.unshift(pt);
+                				}
+                				else{
+                					if (buildLog)
+                						buildLog.chainAddTail(first_match.index, pt);
+                					chain.push(pt);
+                				}
+                				return;
+                			}
+                	
+                			// otherwise, we matched two chains, so we need to combine those chains together
+                	
+                			function reverseChain(index){
+                				if (buildLog)
+                					buildLog.chainReverse(index);
+                				chains[index].reverse(); // gee, that's easy
+                			}
+                	
+                			function appendChain(index1, index2){
+                				// index1 gets index2 appended to it, and index2 is removed
+                				var chain1 = chains[index1];
+                				var chain2 = chains[index2];
+                				var tail  = chain1[chain1.length - 1];
+                				var tail2 = chain1[chain1.length - 2];
+                				var head  = chain2[0];
+                				var head2 = chain2[1];
+                	
+                				if (eps.pointsCollinear(tail2, tail, head)){
+                					// tail isn't needed because it's directly between tail2 and head
+                					// tail2 ---tail---> head
+                					if (buildLog)
+                						buildLog.chainRemoveTail(index1, tail);
+                					chain1.pop();
+                					tail = tail2; // old tail is gone... new tail is what tail2 was
+                				}
+                	
+                				if (eps.pointsCollinear(tail, head, head2)){
+                					// head isn't needed because it's directly between tail and head2
+                					// tail ---head---> head2
+                					if (buildLog)
+                						buildLog.chainRemoveHead(index2, head);
+                					chain2.shift();
+                				}
+                	
+                				if (buildLog)
+                					buildLog.chainJoin(index1, index2);
+                				chains[index1] = chain1.concat(chain2);
+                				chains.splice(index2, 1);
+                			}
+                	
+                			var F = first_match.index;
+                			var S = second_match.index;
+                	
+                			if (buildLog)
+                				buildLog.chainConnect(F, S);
+                	
+                			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
+                			if (first_match.matches_head){
+                				if (second_match.matches_head){
+                					if (reverseF){
+                						// <<<< F <<<< --- >>>> S >>>>
+                						reverseChain(F);
+                						// >>>> F >>>> --- >>>> S >>>>
+                						appendChain(F, S);
+                					}
+                					else{
+                						// <<<< F <<<< --- >>>> S >>>>
+                						reverseChain(S);
+                						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                						// >>>> S >>>> --- >>>> F >>>>
+                						appendChain(S, F);
+                					}
+                				}
+                				else{
+                					// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                					// >>>> S >>>> --- >>>> F >>>>
+                					appendChain(S, F);
+                				}
+                			}
+                			else{
+                				if (second_match.matches_head){
+                					// >>>> F >>>> --- >>>> S >>>>
+                					appendChain(F, S);
+                				}
+                				else{
+                					if (reverseF){
+                						// >>>> F >>>> --- <<<< S <<<<
+                						reverseChain(F);
+                						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                						// >>>> S >>>> --- >>>> F >>>>
+                						appendChain(S, F);
+                					}
+                					else{
+                						// >>>> F >>>> --- <<<< S <<<<
+                						reverseChain(S);
+                						// >>>> F >>>> --- >>>> S >>>>
+                						appendChain(F, S);
+                					}
+                				}
+                			}
+                		});
+                	
+                		return regions;
+                	}
+                	
+                	module.exports = SegmentChainer;
+                	
+                	},{}],8:[function(require,module,exports){
+                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                	// MIT License
+                	// Project Home: https://github.com/voidqk/polybooljs
+                	
+                	//
+                	// filter a list of segments based on boolean operations
+                	//
+                	
+                	function select(segments, selection, buildLog){
+                		var result = [];
+                		segments.forEach(function(seg){
+                			var index =
+                				(seg.myFill.above ? 8 : 0) +
+                				(seg.myFill.below ? 4 : 0) +
+                				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
+                				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
+                			if (selection[index] !== 0){
+                				// copy the segment to the results, while also calculating the fill status
+                				result.push({
+                					id: buildLog ? buildLog.segmentId() : -1,
+                					start: seg.start,
+                					end: seg.end,
+                					myFill: {
+                						above: selection[index] === 1, // 1 if filled above
+                						below: selection[index] === 2  // 2 if filled below
+                					},
+                					otherFill: null
+                				});
+                			}
+                		});
+                	
+                		if (buildLog)
+                			buildLog.selected(result);
+                	
+                		return result;
+                	}
+                	
+                	var SegmentSelector = {
+                		union: function(segments, buildLog){ // primary | secondary
+                			// above1 below1 above2 below2    Keep?               Value
+                			//    0      0      0      0   =>   no                  0
+                			//    0      0      0      1   =>   yes filled below    2
+                			//    0      0      1      0   =>   yes filled above    1
+                			//    0      0      1      1   =>   no                  0
+                			//    0      1      0      0   =>   yes filled below    2
+                			//    0      1      0      1   =>   yes filled below    2
+                			//    0      1      1      0   =>   no                  0
+                			//    0      1      1      1   =>   no                  0
+                			//    1      0      0      0   =>   yes filled above    1
+                			//    1      0      0      1   =>   no                  0
+                			//    1      0      1      0   =>   yes filled above    1
+                			//    1      0      1      1   =>   no                  0
+                			//    1      1      0      0   =>   no                  0
+                			//    1      1      0      1   =>   no                  0
+                			//    1      1      1      0   =>   no                  0
+                			//    1      1      1      1   =>   no                  0
+                			return select(segments, [
+                				0, 2, 1, 0,
+                				2, 2, 0, 0,
+                				1, 0, 1, 0,
+                				0, 0, 0, 0
+                			], buildLog);
+                		},
+                		intersect: function(segments, buildLog){ // primary & secondary
+                			// above1 below1 above2 below2    Keep?               Value
+                			//    0      0      0      0   =>   no                  0
+                			//    0      0      0      1   =>   no                  0
+                			//    0      0      1      0   =>   no                  0
+                			//    0      0      1      1   =>   no                  0
+                			//    0      1      0      0   =>   no                  0
+                			//    0      1      0      1   =>   yes filled below    2
+                			//    0      1      1      0   =>   no                  0
+                			//    0      1      1      1   =>   yes filled below    2
+                			//    1      0      0      0   =>   no                  0
+                			//    1      0      0      1   =>   no                  0
+                			//    1      0      1      0   =>   yes filled above    1
+                			//    1      0      1      1   =>   yes filled above    1
+                			//    1      1      0      0   =>   no                  0
+                			//    1      1      0      1   =>   yes filled below    2
+                			//    1      1      1      0   =>   yes filled above    1
+                			//    1      1      1      1   =>   no                  0
+                			return select(segments, [
+                				0, 0, 0, 0,
+                				0, 2, 0, 2,
+                				0, 0, 1, 1,
+                				0, 2, 1, 0
+                			], buildLog);
+                		},
+                		difference: function(segments, buildLog){ // primary - secondary
+                			// above1 below1 above2 below2    Keep?               Value
+                			//    0      0      0      0   =>   no                  0
+                			//    0      0      0      1   =>   no                  0
+                			//    0      0      1      0   =>   no                  0
+                			//    0      0      1      1   =>   no                  0
+                			//    0      1      0      0   =>   yes filled below    2
+                			//    0      1      0      1   =>   no                  0
+                			//    0      1      1      0   =>   yes filled below    2
+                			//    0      1      1      1   =>   no                  0
+                			//    1      0      0      0   =>   yes filled above    1
+                			//    1      0      0      1   =>   yes filled above    1
+                			//    1      0      1      0   =>   no                  0
+                			//    1      0      1      1   =>   no                  0
+                			//    1      1      0      0   =>   no                  0
+                			//    1      1      0      1   =>   yes filled above    1
+                			//    1      1      1      0   =>   yes filled below    2
+                			//    1      1      1      1   =>   no                  0
+                			return select(segments, [
+                				0, 0, 0, 0,
+                				2, 0, 2, 0,
+                				1, 1, 0, 0,
+                				0, 1, 2, 0
+                			], buildLog);
+                		},
+                		differenceRev: function(segments, buildLog){ // secondary - primary
+                			// above1 below1 above2 below2    Keep?               Value
+                			//    0      0      0      0   =>   no                  0
+                			//    0      0      0      1   =>   yes filled below    2
+                			//    0      0      1      0   =>   yes filled above    1
+                			//    0      0      1      1   =>   no                  0
+                			//    0      1      0      0   =>   no                  0
+                			//    0      1      0      1   =>   no                  0
+                			//    0      1      1      0   =>   yes filled above    1
+                			//    0      1      1      1   =>   yes filled above    1
+                			//    1      0      0      0   =>   no                  0
+                			//    1      0      0      1   =>   yes filled below    2
+                			//    1      0      1      0   =>   no                  0
+                			//    1      0      1      1   =>   yes filled below    2
+                			//    1      1      0      0   =>   no                  0
+                			//    1      1      0      1   =>   no                  0
+                			//    1      1      1      0   =>   no                  0
+                			//    1      1      1      1   =>   no                  0
+                			return select(segments, [
+                				0, 2, 1, 0,
+                				0, 0, 1, 1,
+                				0, 2, 0, 2,
+                				0, 0, 0, 0
+                			], buildLog);
+                		},
+                		xor: function(segments, buildLog){ // primary ^ secondary
+                			// above1 below1 above2 below2    Keep?               Value
+                			//    0      0      0      0   =>   no                  0
+                			//    0      0      0      1   =>   yes filled below    2
+                			//    0      0      1      0   =>   yes filled above    1
+                			//    0      0      1      1   =>   no                  0
+                			//    0      1      0      0   =>   yes filled below    2
+                			//    0      1      0      1   =>   no                  0
+                			//    0      1      1      0   =>   no                  0
+                			//    0      1      1      1   =>   yes filled above    1
+                			//    1      0      0      0   =>   yes filled above    1
+                			//    1      0      0      1   =>   no                  0
+                			//    1      0      1      0   =>   no                  0
+                			//    1      0      1      1   =>   yes filled below    2
+                			//    1      1      0      0   =>   no                  0
+                			//    1      1      0      1   =>   yes filled above    1
+                			//    1      1      1      0   =>   yes filled below    2
+                			//    1      1      1      1   =>   no                  0
+                			return select(segments, [
+                				0, 2, 1, 0,
+                				2, 0, 0, 1,
+                				1, 0, 0, 2,
+                				0, 1, 2, 0
+                			], buildLog);
+                		}
+                	};
+                	
+                	module.exports = SegmentSelector;
+                	
+                },{}]},{},[1]);
                 this.lzString = (function(){
                     // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
                     // This work is free. You can redistribute it and/or modify it
@@ -23096,1622 +24712,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //     return result;
                     // };
                 };
-                (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-                
-                	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
-                	// @license MIT
-                	// @preserve Project Home: https://github.com/voidqk/polybooljs
-                	
-                    // Modified by Metasophiea <metasophiea@gmail.com>
-                
-                	var BuildLog = require('./lib/build-log');
-                	var Epsilon = require('./lib/epsilon');
-                	var Intersecter = require('./lib/intersecter');
-                	var SegmentChainer = require('./lib/segment-chainer');
-                	var SegmentSelector = require('./lib/segment-selector');
-                	var GeoJSON = require('./lib/geojson');
-                	
-                	var buildLog = false;
-                	var epsilon = Epsilon();
-                	
-                	var PolyBool;
-                	PolyBool = {
-                		// getter/setter for buildLog
-                		buildLog: function(bl){
-                			if (bl === true)
-                				buildLog = BuildLog();
-                			else if (bl === false)
-                				buildLog = false;
-                			return buildLog === false ? false : buildLog.list;
-                		},
-                		// getter/setter for epsilon
-                		epsilon: function(v){
-                			return epsilon.epsilon(v);
-                		},
-                	
-                		// core API
-                		segments: function(poly){
-                			var i = Intersecter(true, epsilon, buildLog);
-                			poly.regions.forEach(i.addRegion);
-                			return {
-                				segments: i.calculate(poly.inverted),
-                				inverted: poly.inverted
-                			};
-                		},
-                		combine: function(segments1, segments2){
-                			var i3 = Intersecter(false, epsilon, buildLog);
-                			return {
-                				combined: i3.calculate(
-                					segments1.segments, segments1.inverted,
-                					segments2.segments, segments2.inverted
-                				),
-                				inverted1: segments1.inverted,
-                				inverted2: segments2.inverted
-                			};
-                		},
-                		selectUnion: function(combined){
-                			return {
-                				segments: SegmentSelector.union(combined.combined, buildLog),
-                				inverted: combined.inverted1 || combined.inverted2
-                			}
-                		},
-                		selectIntersect: function(combined){
-                			return {
-                				segments: SegmentSelector.intersect(combined.combined, buildLog),
-                				inverted: combined.inverted1 && combined.inverted2
-                			}
-                		},
-                		selectDifference: function(combined){
-                			return {
-                				segments: SegmentSelector.difference(combined.combined, buildLog),
-                				inverted: combined.inverted1 && !combined.inverted2
-                			}
-                		},
-                		selectDifferenceRev: function(combined){
-                			return {
-                				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
-                				inverted: !combined.inverted1 && combined.inverted2
-                			}
-                		},
-                		selectXor: function(combined){
-                			return {
-                				segments: SegmentSelector.xor(combined.combined, buildLog),
-                				inverted: combined.inverted1 !== combined.inverted2
-                			}
-                		},
-                		polygon: function(segments){
-                			return {
-                				regions: SegmentChainer(segments.segments, epsilon, buildLog),
-                				inverted: segments.inverted
-                			};
-                		},
-                	
-                		// GeoJSON converters
-                		polygonFromGeoJSON: function(geojson){
-                			return GeoJSON.toPolygon(PolyBool, geojson);
-                		},
-                		polygonToGeoJSON: function(poly){
-                			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
-                		},
-                	
-                		// helper functions for common operations
-                		union: function(poly1, poly2){
-                			return operate(poly1, poly2, PolyBool.selectUnion);
-                		},
-                		intersect: function(poly1, poly2){
-                			return operate(poly1, poly2, PolyBool.selectIntersect);
-                		},
-                		difference: function(poly1, poly2){
-                			return operate(poly1, poly2, PolyBool.selectDifference);
-                		},
-                		differenceRev: function(poly1, poly2){
-                			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
-                		},
-                		xor: function(poly1, poly2){
-                			return operate(poly1, poly2, PolyBool.selectXor);
-                		}
-                	};
-                
-                	thirdparty.PolyBool = PolyBool;
-                	
-                	function operate(poly1, poly2, selector){
-                		var seg1 = PolyBool.segments(poly1);
-                		var seg2 = PolyBool.segments(poly2);
-                		var comb = PolyBool.combine(seg1, seg2);
-                		var seg3 = selector(comb);
-                		return PolyBool.polygon(seg3);
-                	}
-                		
-                	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
-                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                	// MIT License
-                	// Project Home: https://github.com/voidqk/polybooljs
-                	
-                	//
-                	// used strictly for logging the processing of the algorithm... only useful if you intend on
-                	// looking under the covers (for pretty UI's or debugging)
-                	//
-                	
-                	function BuildLog(){
-                		var my;
-                		var nextSegmentId = 0;
-                		var curVert = false;
-                	
-                		function push(type, data){
-                			my.list.push({
-                				type: type,
-                				data: data ? JSON.parse(JSON.stringify(data)) : void 0
-                			});
-                			return my;
-                		}
-                	
-                		my = {
-                			list: [],
-                			segmentId: function(){
-                				return nextSegmentId++;
-                			},
-                			checkIntersection: function(seg1, seg2){
-                				return push('check', { seg1: seg1, seg2: seg2 });
-                			},
-                			segmentChop: function(seg, end){
-                				push('div_seg', { seg: seg, pt: end });
-                				return push('chop', { seg: seg, pt: end });
-                			},
-                			statusRemove: function(seg){
-                				return push('pop_seg', { seg: seg });
-                			},
-                			segmentUpdate: function(seg){
-                				return push('seg_update', { seg: seg });
-                			},
-                			segmentNew: function(seg, primary){
-                				return push('new_seg', { seg: seg, primary: primary });
-                			},
-                			segmentRemove: function(seg){
-                				return push('rem_seg', { seg: seg });
-                			},
-                			tempStatus: function(seg, above, below){
-                				return push('temp_status', { seg: seg, above: above, below: below });
-                			},
-                			rewind: function(seg){
-                				return push('rewind', { seg: seg });
-                			},
-                			status: function(seg, above, below){
-                				return push('status', { seg: seg, above: above, below: below });
-                			},
-                			vert: function(x){
-                				if (x === curVert)
-                					return my;
-                				curVert = x;
-                				return push('vert', { x: x });
-                			},
-                			log: function(data){
-                				if (typeof data !== 'string')
-                					data = JSON.stringify(data, false, '  ');
-                				return push('log', { txt: data });
-                			},
-                			reset: function(){
-                				return push('reset');
-                			},
-                			selected: function(segs){
-                				return push('selected', { segs: segs });
-                			},
-                			chainStart: function(seg){
-                				return push('chain_start', { seg: seg });
-                			},
-                			chainRemoveHead: function(index, pt){
-                				return push('chain_rem_head', { index: index, pt: pt });
-                			},
-                			chainRemoveTail: function(index, pt){
-                				return push('chain_rem_tail', { index: index, pt: pt });
-                			},
-                			chainNew: function(pt1, pt2){
-                				return push('chain_new', { pt1: pt1, pt2: pt2 });
-                			},
-                			chainMatch: function(index){
-                				return push('chain_match', { index: index });
-                			},
-                			chainClose: function(index){
-                				return push('chain_close', { index: index });
-                			},
-                			chainAddHead: function(index, pt){
-                				return push('chain_add_head', { index: index, pt: pt });
-                			},
-                			chainAddTail: function(index, pt){
-                				return push('chain_add_tail', { index: index, pt: pt, });
-                			},
-                			chainConnect: function(index1, index2){
-                				return push('chain_con', { index1: index1, index2: index2 });
-                			},
-                			chainReverse: function(index){
-                				return push('chain_rev', { index: index });
-                			},
-                			chainJoin: function(index1, index2){
-                				return push('chain_join', { index1: index1, index2: index2 });
-                			},
-                			done: function(){
-                				return push('done');
-                			}
-                		};
-                		return my;
-                	}
-                	
-                	module.exports = BuildLog;
-                	
-                	},{}],3:[function(require,module,exports){
-                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                	// MIT License
-                	// Project Home: https://github.com/voidqk/polybooljs
-                	
-                	//
-                	// provides the raw computation functions that takes epsilon into account
-                	//
-                	// zero is defined to be between (-epsilon, epsilon) exclusive
-                	//
-                	
-                	function Epsilon(eps){
-                		if (typeof eps !== 'number')
-                			eps = 0.0000000001; // sane default? sure why not
-                		var my = {
-                			epsilon: function(v){
-                				if (typeof v === 'number')
-                					eps = v;
-                				return eps;
-                			},
-                			pointAboveOrOnLine: function(pt, left, right){
-                				var Ax = left[0];
-                				var Ay = left[1];
-                				var Bx = right[0];
-                				var By = right[1];
-                				var Cx = pt[0];
-                				var Cy = pt[1];
-                				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
-                			},
-                			pointBetween: function(p, left, right){
-                				// p must be collinear with left->right
-                				// returns false if p == left, p == right, or left == right
-                				var d_py_ly = p[1] - left[1];
-                				var d_rx_lx = right[0] - left[0];
-                				var d_px_lx = p[0] - left[0];
-                				var d_ry_ly = right[1] - left[1];
-                	
-                				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
-                				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
-                				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
-                				if (dot < eps)
-                					return false;
-                	
-                				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
-                				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
-                				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
-                				if (dot - sqlen > -eps)
-                					return false;
-                	
-                				return true;
-                			},
-                			pointsSameX: function(p1, p2){
-                				return Math.abs(p1[0] - p2[0]) < eps;
-                			},
-                			pointsSameY: function(p1, p2){
-                				return Math.abs(p1[1] - p2[1]) < eps;
-                			},
-                			pointsSame: function(p1, p2){
-                				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
-                			},
-                			pointsCompare: function(p1, p2){
-                				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
-                				if (my.pointsSameX(p1, p2))
-                					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
-                				return p1[0] < p2[0] ? -1 : 1;
-                			},
-                			pointsCollinear: function(pt1, pt2, pt3){
-                				// does pt1->pt2->pt3 make a straight line?
-                				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
-                				// if slopes are equal, then they must be collinear, because they share pt2
-                				var dx1 = pt1[0] - pt2[0];
-                				var dy1 = pt1[1] - pt2[1];
-                				var dx2 = pt2[0] - pt3[0];
-                				var dy2 = pt2[1] - pt3[1];
-                				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
-                			},
-                			linesIntersect: function(a0, a1, b0, b1){
-                				// returns false if the lines are coincident (e.g., parallel or on top of each other)
-                				//
-                				// returns an object if the lines intersect:
-                				//   {
-                				//     pt: [x, y],    where the intersection point is at
-                				//     alongA: where intersection point is along A,
-                				//     alongB: where intersection point is along B
-                				//   }
-                				//
-                				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
-                				//
-                				//  with the following meaning:
-                				//
-                				//    -2   intersection point is before segment's first point
-                				//    -1   intersection point is directly on segment's first point
-                				//     0   intersection point is between segment's first and second points (exclusive)
-                				//     1   intersection point is directly on segment's second point
-                				//     2   intersection point is after segment's second point
-                				var adx = a1[0] - a0[0];
-                				var ady = a1[1] - a0[1];
-                				var bdx = b1[0] - b0[0];
-                				var bdy = b1[1] - b0[1];
-                	
-                				var axb = adx * bdy - ady * bdx;
-                				if (Math.abs(axb) < eps)
-                					return false; // lines are coincident
-                	
-                				var dx = a0[0] - b0[0];
-                				var dy = a0[1] - b0[1];
-                	
-                				var A = (bdx * dy - bdy * dx) / axb;
-                				var B = (adx * dy - ady * dx) / axb;
-                	
-                				var ret = {
-                					alongA: 0,
-                					alongB: 0,
-                					pt: [
-                						a0[0] + A * adx,
-                						a0[1] + A * ady
-                					]
-                				};
-                	
-                				// categorize where intersection point is along A and B
-                	
-                				if (A <= -eps)
-                					ret.alongA = -2;
-                				else if (A < eps)
-                					ret.alongA = -1;
-                				else if (A - 1 <= -eps)
-                					ret.alongA = 0;
-                				else if (A - 1 < eps)
-                					ret.alongA = 1;
-                				else
-                					ret.alongA = 2;
-                	
-                				if (B <= -eps)
-                					ret.alongB = -2;
-                				else if (B < eps)
-                					ret.alongB = -1;
-                				else if (B - 1 <= -eps)
-                					ret.alongB = 0;
-                				else if (B - 1 < eps)
-                					ret.alongB = 1;
-                				else
-                					ret.alongB = 2;
-                	
-                				return ret;
-                			},
-                			pointInsideRegion: function(pt, region){
-                				var x = pt[0];
-                				var y = pt[1];
-                				var last_x = region[region.length - 1][0];
-                				var last_y = region[region.length - 1][1];
-                				var inside = false;
-                				for (var i = 0; i < region.length; i++){
-                					var curr_x = region[i][0];
-                					var curr_y = region[i][1];
-                	
-                					// if y is between curr_y and last_y, and
-                					// x is to the right of the boundary created by the line
-                					if ((curr_y - y > eps) != (last_y - y > eps) &&
-                						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
-                						inside = !inside
-                	
-                					last_x = curr_x;
-                					last_y = curr_y;
-                				}
-                				return inside;
-                			}
-                		};
-                		return my;
-                	}
-                	
-                	module.exports = Epsilon;
-                	
-                	},{}],4:[function(require,module,exports){
-                	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
-                	// MIT License
-                	// Project Home: https://github.com/voidqk/polybooljs
-                	
-                	//
-                	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
-                	//
-                	
-                	var GeoJSON = {
-                		// convert a GeoJSON object to a PolyBool polygon
-                		toPolygon: function(PolyBool, geojson){
-                	
-                			// converts list of LineString's to segments
-                			function GeoPoly(coords){
-                				// check for empty coords
-                				if (coords.length <= 0)
-                					return PolyBool.segments({ inverted: false, regions: [] });
-                	
-                				// convert LineString to segments
-                				function LineString(ls){
-                					// remove tail which should be the same as head
-                					var reg = ls.slice(0, ls.length - 1);
-                					return PolyBool.segments({ inverted: false, regions: [reg] });
-                				}
-                	
-                				// the first LineString is considered the outside
-                				var out = LineString(coords[0]);
-                	
-                				// the rest of the LineStrings are considered interior holes, so subtract them from the
-                				// current result
-                				for (var i = 1; i < coords.length; i++)
-                					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
-                	
-                				return out;
-                			}
-                	
-                			if (geojson.type === 'Polygon'){
-                				// single polygon, so just convert it and we're done
-                				return PolyBool.polygon(GeoPoly(geojson.coordinates));
-                			}
-                			else if (geojson.type === 'MultiPolygon'){
-                				// multiple polygons, so union all the polygons together
-                				var out = PolyBool.segments({ inverted: false, regions: [] });
-                				for (var i = 0; i < geojson.coordinates.length; i++)
-                					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
-                				return PolyBool.polygon(out);
-                			}
-                			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
-                		},
-                	
-                		// convert a PolyBool polygon to a GeoJSON object
-                		fromPolygon: function(PolyBool, eps, poly){
-                			// make sure out polygon is clean
-                			poly = PolyBool.polygon(PolyBool.segments(poly));
-                	
-                			// test if r1 is inside r2
-                			function regionInsideRegion(r1, r2){
-                				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
-                				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
-                				// edge of the first line, which cannot be on an edge
-                				return eps.pointInsideRegion([
-                					(r1[0][0] + r1[1][0]) * 0.5,
-                					(r1[0][1] + r1[1][1]) * 0.5
-                				], r2);
-                			}
-                	
-                			// calculate inside heirarchy
-                			//
-                			//  _____________________   _______    roots -> A       -> F
-                			// |          A          | |   F   |            |          |
-                			// |  _______   _______  | |  ___  |            +-- B      +-- G
-                			// | |   B   | |   C   | | | |   | |            |   |
-                			// | |  ___  | |  ___  | | | |   | |            |   +-- D
-                			// | | | D | | | | E | | | | | G | |            |
-                			// | | |___| | | |___| | | | |   | |            +-- C
-                			// | |_______| |_______| | | |___| |                |
-                			// |_____________________| |_______|                +-- E
-                	
-                			function newNode(region){
-                				return {
-                					region: region,
-                					children: []
-                				};
-                			}
-                	
-                			var roots = newNode(null);
-                	
-                			function addChild(root, region){
-                				// first check if we're inside any children
-                				for (var i = 0; i < root.children.length; i++){
-                					var child = root.children[i];
-                					if (regionInsideRegion(region, child.region)){
-                						// we are, so insert inside them instead
-                						addChild(child, region);
-                						return;
-                					}
-                				}
-                	
-                				// not inside any children, so check to see if any children are inside us
-                				var node = newNode(region);
-                				for (var i = 0; i < root.children.length; i++){
-                					var child = root.children[i];
-                					if (regionInsideRegion(child.region, region)){
-                						// oops... move the child beneath us, and remove them from root
-                						node.children.push(child);
-                						root.children.splice(i, 1);
-                						i--;
-                					}
-                				}
-                	
-                				// now we can add ourselves
-                				root.children.push(node);
-                			}
-                	
-                			// add all regions to the root
-                			for (var i = 0; i < poly.regions.length; i++){
-                				var region = poly.regions[i];
-                				if (region.length < 3) // regions must have at least 3 points (sanity check)
-                					continue;
-                				addChild(roots, region);
-                			}
-                	
-                			// with our heirarchy, we can distinguish between exterior borders, and interior holes
-                			// the root nodes are exterior, children are interior, children's children are exterior,
-                			// children's children's children are interior, etc
-                	
-                			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
-                	
-                			function forceWinding(region, clockwise){
-                				// first, see if we're clockwise or counter-clockwise
-                				// https://en.wikipedia.org/wiki/Shoelace_formula
-                				var winding = 0;
-                				var last_x = region[region.length - 1][0];
-                				var last_y = region[region.length - 1][1];
-                				var copy = [];
-                				for (var i = 0; i < region.length; i++){
-                					var curr_x = region[i][0];
-                					var curr_y = region[i][1];
-                					copy.push([curr_x, curr_y]); // create a copy while we're at it
-                					winding += curr_y * last_x - curr_x * last_y;
-                					last_x = curr_x;
-                					last_y = curr_y;
-                				}
-                				// this assumes Cartesian coordinates (Y is positive going up)
-                				var isclockwise = winding < 0;
-                				if (isclockwise !== clockwise)
-                					copy.reverse();
-                				// while we're here, the last point must be the first point...
-                				copy.push([copy[0][0], copy[0][1]]);
-                				return copy;
-                			}
-                	
-                			var geopolys = [];
-                	
-                			function addExterior(node){
-                				var poly = [forceWinding(node.region, false)];
-                				geopolys.push(poly);
-                				// children of exteriors are interior
-                				for (var i = 0; i < node.children.length; i++)
-                					poly.push(getInterior(node.children[i]));
-                			}
-                	
-                			function getInterior(node){
-                				// children of interiors are exterior
-                				for (var i = 0; i < node.children.length; i++)
-                					addExterior(node.children[i]);
-                				// return the clockwise interior
-                				return forceWinding(node.region, true);
-                			}
-                	
-                			// root nodes are exterior
-                			for (var i = 0; i < roots.children.length; i++)
-                				addExterior(roots.children[i]);
-                	
-                			// lastly, construct the approrpriate GeoJSON object
-                	
-                			if (geopolys.length <= 0) // empty GeoJSON Polygon
-                				return { type: 'Polygon', coordinates: [] };
-                			if (geopolys.length == 1) // use a GeoJSON Polygon
-                				return { type: 'Polygon', coordinates: geopolys[0] };
-                			return { // otherwise, use a GeoJSON MultiPolygon
-                				type: 'MultiPolygon',
-                				coordinates: geopolys
-                			};
-                		}
-                	};
-                	
-                	module.exports = GeoJSON;
-                	
-                	},{}],5:[function(require,module,exports){
-                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                	// MIT License
-                	// Project Home: https://github.com/voidqk/polybooljs
-                	
-                	//
-                	// this is the core work-horse
-                	//
-                	
-                	var LinkedList = require('./linked-list');
-                	
-                	function Intersecter(selfIntersection, eps, buildLog){
-                		// selfIntersection is true/false depending on the phase of the overall algorithm
-                	
-                		//
-                		// segment creation
-                		//
-                	
-                		function segmentNew(start, end){
-                			return {
-                				id: buildLog ? buildLog.segmentId() : -1,
-                				start: start,
-                				end: end,
-                				myFill: {
-                					above: null, // is there fill above us?
-                					below: null  // is there fill below us?
-                				},
-                				otherFill: null
-                			};
-                		}
-                	
-                		function segmentCopy(start, end, seg){
-                			return {
-                				id: buildLog ? buildLog.segmentId() : -1,
-                				start: start,
-                				end: end,
-                				myFill: {
-                					above: seg.myFill.above,
-                					below: seg.myFill.below
-                				},
-                				otherFill: null
-                			};
-                		}
-                	
-                		//
-                		// event logic
-                		//
-                	
-                		var event_root = LinkedList.create();
-                	
-                		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
-                			// compare the selected points first
-                			var comp = eps.pointsCompare(p1_1, p2_1);
-                			if (comp !== 0)
-                				return comp;
-                			// the selected points are the same
-                	
-                			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
-                				return 0; // then the segments are equal
-                	
-                			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
-                				return p1_isStart ? 1 : -1; // favor the one that isn't the start
-                	
-                			// otherwise, we'll have to calculate which one is below the other manually
-                			return eps.pointAboveOrOnLine(p1_2,
-                				p2_isStart ? p2_1 : p2_2, // order matters
-                				p2_isStart ? p2_2 : p2_1
-                			) ? 1 : -1;
-                		}
-                	
-                		function eventAdd(ev, other_pt){
-                			event_root.insertBefore(ev, function(here){
-                				// should ev be inserted before here?
-                				var comp = eventCompare(
-                					ev  .isStart, ev  .pt,      other_pt,
-                					here.isStart, here.pt, here.other.pt
-                				);
-                				return comp < 0;
-                			});
-                		}
-                	
-                		function eventAddSegmentStart(seg, primary){
-                			var ev_start = LinkedList.node({
-                				isStart: true,
-                				pt: seg.start,
-                				seg: seg,
-                				primary: primary,
-                				other: null,
-                				status: null
-                			});
-                			eventAdd(ev_start, seg.end);
-                			return ev_start;
-                		}
-                	
-                		function eventAddSegmentEnd(ev_start, seg, primary){
-                			var ev_end = LinkedList.node({
-                				isStart: false,
-                				pt: seg.end,
-                				seg: seg,
-                				primary: primary,
-                				other: ev_start,
-                				status: null
-                			});
-                			ev_start.other = ev_end;
-                			eventAdd(ev_end, ev_start.pt);
-                		}
-                	
-                		function eventAddSegment(seg, primary){
-                			var ev_start = eventAddSegmentStart(seg, primary);
-                			eventAddSegmentEnd(ev_start, seg, primary);
-                			return ev_start;
-                		}
-                	
-                		function eventUpdateEnd(ev, end){
-                			// slides an end backwards
-                			//   (start)------------(end)    to:
-                			//   (start)---(end)
-                	
-                			if (buildLog)
-                				buildLog.segmentChop(ev.seg, end);
-                	
-                			ev.other.remove();
-                			ev.seg.end = end;
-                			ev.other.pt = end;
-                			eventAdd(ev.other, ev.pt);
-                		}
-                	
-                		function eventDivide(ev, pt){
-                			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
-                			eventUpdateEnd(ev, pt);
-                			return eventAddSegment(ns, ev.primary);
-                		}
-                	
-                		function calculate(primaryPolyInverted, secondaryPolyInverted){
-                			// if selfIntersection is true then there is no secondary polygon, so that isn't used
-                	
-                			//
-                			// status logic
-                			//
-                	
-                			var status_root = LinkedList.create();
-                	
-                			function statusCompare(ev1, ev2){
-                				var a1 = ev1.seg.start;
-                				var a2 = ev1.seg.end;
-                				var b1 = ev2.seg.start;
-                				var b2 = ev2.seg.end;
-                	
-                				if (eps.pointsCollinear(a1, b1, b2)){
-                					if (eps.pointsCollinear(a2, b1, b2))
-                						return 1;//eventCompare(true, a1, a2, true, b1, b2);
-                					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
-                				}
-                				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
-                			}
-                	
-                			function statusFindSurrounding(ev){
-                				return status_root.findTransition(function(here){
-                					var comp = statusCompare(ev, here.ev);
-                					return comp > 0;
-                				});
-                			}
-                	
-                			function checkIntersection(ev1, ev2){
-                				// returns the segment equal to ev1, or false if nothing equal
-                	
-                				var seg1 = ev1.seg;
-                				var seg2 = ev2.seg;
-                				var a1 = seg1.start;
-                				var a2 = seg1.end;
-                				var b1 = seg2.start;
-                				var b2 = seg2.end;
-                	
-                				if (buildLog)
-                					buildLog.checkIntersection(seg1, seg2);
-                	
-                				var i = eps.linesIntersect(a1, a2, b1, b2);
-                	
-                				if (i === false){
-                					// segments are parallel or coincident
-                	
-                					// if points aren't collinear, then the segments are parallel, so no intersections
-                					if (!eps.pointsCollinear(a1, a2, b1))
-                						return false;
-                					// otherwise, segments are on top of each other somehow (aka coincident)
-                	
-                					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
-                						return false; // segments touch at endpoints... no intersection
-                	
-                					var a1_equ_b1 = eps.pointsSame(a1, b1);
-                					var a2_equ_b2 = eps.pointsSame(a2, b2);
-                	
-                					if (a1_equ_b1 && a2_equ_b2)
-                						return ev2; // segments are exactly equal
-                	
-                					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
-                					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
-                	
-                					// handy for debugging:
-                					// buildLog.log({
-                					//	a1_equ_b1: a1_equ_b1,
-                					//	a2_equ_b2: a2_equ_b2,
-                					//	a1_between: a1_between,
-                					//	a2_between: a2_between
-                					// });
-                	
-                					if (a1_equ_b1){
-                						if (a2_between){
-                							//  (a1)---(a2)
-                							//  (b1)----------(b2)
-                							eventDivide(ev2, a2);
-                						}
-                						else{
-                							//  (a1)----------(a2)
-                							//  (b1)---(b2)
-                							eventDivide(ev1, b2);
-                						}
-                						return ev2;
-                					}
-                					else if (a1_between){
-                						if (!a2_equ_b2){
-                							// make a2 equal to b2
-                							if (a2_between){
-                								//         (a1)---(a2)
-                								//  (b1)-----------------(b2)
-                								eventDivide(ev2, a2);
-                							}
-                							else{
-                								//         (a1)----------(a2)
-                								//  (b1)----------(b2)
-                								eventDivide(ev1, b2);
-                							}
-                						}
-                	
-                						//         (a1)---(a2)
-                						//  (b1)----------(b2)
-                						eventDivide(ev2, a1);
-                					}
-                				}
-                				else{
-                					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
-                	
-                					// is A divided between its endpoints? (exclusive)
-                					if (i.alongA === 0){
-                						if (i.alongB === -1) // yes, at exactly b1
-                							eventDivide(ev1, b1);
-                						else if (i.alongB === 0) // yes, somewhere between B's endpoints
-                							eventDivide(ev1, i.pt);
-                						else if (i.alongB === 1) // yes, at exactly b2
-                							eventDivide(ev1, b2);
-                					}
-                	
-                					// is B divided between its endpoints? (exclusive)
-                					if (i.alongB === 0){
-                						if (i.alongA === -1) // yes, at exactly a1
-                							eventDivide(ev2, a1);
-                						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
-                							eventDivide(ev2, i.pt);
-                						else if (i.alongA === 1) // yes, at exactly a2
-                							eventDivide(ev2, a2);
-                					}
-                				}
-                				return false;
-                			}
-                	
-                			//
-                			// main event loop
-                			//
-                			var segments = [];
-                			while (!event_root.isEmpty()){
-                				var ev = event_root.getHead();
-                	
-                				if (buildLog)
-                					buildLog.vert(ev.pt[0]);
-                	
-                				if (ev.isStart){
-                	
-                					if (buildLog)
-                						buildLog.segmentNew(ev.seg, ev.primary);
-                	
-                					var surrounding = statusFindSurrounding(ev);
-                					var above = surrounding.before ? surrounding.before.ev : null;
-                					var below = surrounding.after ? surrounding.after.ev : null;
-                	
-                					if (buildLog){
-                						buildLog.tempStatus(
-                							ev.seg,
-                							above ? above.seg : false,
-                							below ? below.seg : false
-                						);
-                					}
-                	
-                					function checkBothIntersections(){
-                						if (above){
-                							var eve = checkIntersection(ev, above);
-                							if (eve)
-                								return eve;
-                						}
-                						if (below)
-                							return checkIntersection(ev, below);
-                						return false;
-                					}
-                	
-                					var eve = checkBothIntersections();
-                					if (eve){
-                						// ev and eve are equal
-                						// we'll keep eve and throw away ev
-                	
-                						// merge ev.seg's fill information into eve.seg
-                	
-                						if (selfIntersection){
-                							var toggle; // are we a toggling edge?
-                							if (ev.seg.myFill.below === null)
-                								toggle = true;
-                							else
-                								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
-                	
-                							// merge two segments that belong to the same polygon
-                							// think of this as sandwiching two segments together, where `eve.seg` is
-                							// the bottom -- this will cause the above fill flag to toggle
-                							if (toggle)
-                								eve.seg.myFill.above = !eve.seg.myFill.above;
-                						}
-                						else{
-                							// merge two segments that belong to different polygons
-                							// each segment has distinct knowledge, so no special logic is needed
-                							// note that this can only happen once per segment in this phase, because we
-                							// are guaranteed that all self-intersections are gone
-                							eve.seg.otherFill = ev.seg.myFill;
-                						}
-                	
-                						if (buildLog)
-                							buildLog.segmentUpdate(eve.seg);
-                	
-                						ev.other.remove();
-                						ev.remove();
-                					}
-                	
-                					if (event_root.getHead() !== ev){
-                						// something was inserted before us in the event queue, so loop back around and
-                						// process it before continuing
-                						if (buildLog)
-                							buildLog.rewind(ev.seg);
-                						continue;
-                					}
-                	
-                					//
-                					// calculate fill flags
-                					//
-                					if (selfIntersection){
-                						var toggle; // are we a toggling edge?
-                						if (ev.seg.myFill.below === null) // if we are a new segment...
-                							toggle = true; // then we toggle
-                						else // we are a segment that has previous knowledge from a division
-                							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
-                	
-                						// next, calculate whether we are filled below us
-                						if (!below){ // if nothing is below us...
-                							// we are filled below us if the polygon is inverted
-                							ev.seg.myFill.below = primaryPolyInverted;
-                						}
-                						else{
-                							// otherwise, we know the answer -- it's the same if whatever is below
-                							// us is filled above it
-                							ev.seg.myFill.below = below.seg.myFill.above;
-                						}
-                	
-                						// since now we know if we're filled below us, we can calculate whether
-                						// we're filled above us by applying toggle to whatever is below us
-                						if (toggle)
-                							ev.seg.myFill.above = !ev.seg.myFill.below;
-                						else
-                							ev.seg.myFill.above = ev.seg.myFill.below;
-                					}
-                					else{
-                						// now we fill in any missing transition information, since we are all-knowing
-                						// at this point
-                	
-                						if (ev.seg.otherFill === null){
-                							// if we don't have other information, then we need to figure out if we're
-                							// inside the other polygon
-                							var inside;
-                							if (!below){
-                								// if nothing is below us, then we're inside if the other polygon is
-                								// inverted
-                								inside =
-                									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
-                							}
-                							else{ // otherwise, something is below us
-                								// so copy the below segment's other polygon's above
-                								if (ev.primary === below.primary)
-                									inside = below.seg.otherFill.above;
-                								else
-                									inside = below.seg.myFill.above;
-                							}
-                							ev.seg.otherFill = {
-                								above: inside,
-                								below: inside
-                							};
-                						}
-                					}
-                	
-                					if (buildLog){
-                						buildLog.status(
-                							ev.seg,
-                							above ? above.seg : false,
-                							below ? below.seg : false
-                						);
-                					}
-                	
-                					// insert the status and remember it for later removal
-                					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
-                				}
-                				else{
-                					var st = ev.status;
-                	
-                					if (st === null){
-                						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
-                							'probably too small or too large');
-                					}
-                	
-                					// removing the status will create two new adjacent edges, so we'll need to check
-                					// for those
-                					if (status_root.exists(st.prev) && status_root.exists(st.next))
-                						checkIntersection(st.prev.ev, st.next.ev);
-                	
-                					if (buildLog)
-                						buildLog.statusRemove(st.ev.seg);
-                	
-                					// remove the status
-                					st.remove();
-                	
-                					// if we've reached this point, we've calculated everything there is to know, so
-                					// save the segment for reporting
-                					if (!ev.primary){
-                						// make sure `seg.myFill` actually points to the primary polygon though
-                						var s = ev.seg.myFill;
-                						ev.seg.myFill = ev.seg.otherFill;
-                						ev.seg.otherFill = s;
-                					}
-                					segments.push(ev.seg);
-                				}
-                	
-                				// remove the event and continue
-                				event_root.getHead().remove();
-                			}
-                	
-                			if (buildLog)
-                				buildLog.done();
-                	
-                			return segments;
-                		}
-                	
-                		// return the appropriate API depending on what we're doing
-                		if (!selfIntersection){
-                			// performing combination of polygons, so only deal with already-processed segments
-                			return {
-                				calculate: function(segments1, inverted1, segments2, inverted2){
-                					// segmentsX come from the self-intersection API, or this API
-                					// invertedX is whether we treat that list of segments as an inverted polygon or not
-                					// returns segments that can be used for further operations
-                					segments1.forEach(function(seg){
-                						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
-                					});
-                					segments2.forEach(function(seg){
-                						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
-                					});
-                					return calculate(inverted1, inverted2);
-                				}
-                			};
-                		}
-                	
-                		// otherwise, performing self-intersection, so deal with regions
-                		return {
-                			addRegion: function(region){
-                				// regions are a list of points:
-                				//  [ [0, 0], [100, 0], [50, 100] ]
-                				// you can add multiple regions before running calculate
-                				var pt1;
-                				var pt2 = region[region.length - 1];
-                				for (var i = 0; i < region.length; i++){
-                					pt1 = pt2;
-                					pt2 = region[i];
-                	
-                					var forward = eps.pointsCompare(pt1, pt2);
-                					if (forward === 0) // points are equal, so we have a zero-length segment
-                						continue; // just skip it
-                	
-                					eventAddSegment(
-                						segmentNew(
-                							forward < 0 ? pt1 : pt2,
-                							forward < 0 ? pt2 : pt1
-                						),
-                						true
-                					);
-                				}
-                			},
-                			calculate: function(inverted){
-                				// is the polygon inverted?
-                				// returns segments
-                				return calculate(inverted, false);
-                			}
-                		};
-                	}
-                	
-                	module.exports = Intersecter;
-                	
-                	},{"./linked-list":6}],6:[function(require,module,exports){
-                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                	// MIT License
-                	// Project Home: https://github.com/voidqk/polybooljs
-                	
-                	//
-                	// simple linked list implementation that allows you to traverse down nodes and save positions
-                	//
-                	
-                	var LinkedList = {
-                		create: function(){
-                			var my = {
-                				root: { root: true, next: null },
-                				exists: function(node){
-                					if (node === null || node === my.root)
-                						return false;
-                					return true;
-                				},
-                				isEmpty: function(){
-                					return my.root.next === null;
-                				},
-                				getHead: function(){
-                					return my.root.next;
-                				},
-                				insertBefore: function(node, check){
-                					var last = my.root;
-                					var here = my.root.next;
-                					while (here !== null){
-                						if (check(here)){
-                							node.prev = here.prev;
-                							node.next = here;
-                							here.prev.next = node;
-                							here.prev = node;
-                							return;
-                						}
-                						last = here;
-                						here = here.next;
-                					}
-                					last.next = node;
-                					node.prev = last;
-                					node.next = null;
-                				},
-                				findTransition: function(check){
-                					var prev = my.root;
-                					var here = my.root.next;
-                					while (here !== null){
-                						if (check(here))
-                							break;
-                						prev = here;
-                						here = here.next;
-                					}
-                					return {
-                						before: prev === my.root ? null : prev,
-                						after: here,
-                						insert: function(node){
-                							node.prev = prev;
-                							node.next = here;
-                							prev.next = node;
-                							if (here !== null)
-                								here.prev = node;
-                							return node;
-                						}
-                					};
-                				}
-                			};
-                			return my;
-                		},
-                		node: function(data){
-                			data.prev = null;
-                			data.next = null;
-                			data.remove = function(){
-                				data.prev.next = data.next;
-                				if (data.next)
-                					data.next.prev = data.prev;
-                				data.prev = null;
-                				data.next = null;
-                			};
-                			return data;
-                		}
-                	};
-                	
-                	module.exports = LinkedList;
-                	
-                	},{}],7:[function(require,module,exports){
-                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                	// MIT License
-                	// Project Home: https://github.com/voidqk/polybooljs
-                	
-                	//
-                	// converts a list of segments into a list of regions, while also removing unnecessary verticies
-                	//
-                	
-                	function SegmentChainer(segments, eps, buildLog){
-                		var chains = [];
-                		var regions = [];
-                	
-                		segments.forEach(function(seg){
-                			var pt1 = seg.start;
-                			var pt2 = seg.end;
-                			if (eps.pointsSame(pt1, pt2)){
-                				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
-                					'probably too small or too large');
-                				return;
-                			}
-                	
-                			if (buildLog)
-                				buildLog.chainStart(seg);
-                	
-                			// search for two chains that this segment matches
-                			var first_match = {
-                				index: 0,
-                				matches_head: false,
-                				matches_pt1: false
-                			};
-                			var second_match = {
-                				index: 0,
-                				matches_head: false,
-                				matches_pt1: false
-                			};
-                			var next_match = first_match;
-                			function setMatch(index, matches_head, matches_pt1){
-                				// return true if we've matched twice
-                				next_match.index = index;
-                				next_match.matches_head = matches_head;
-                				next_match.matches_pt1 = matches_pt1;
-                				if (next_match === first_match){
-                					next_match = second_match;
-                					return false;
-                				}
-                				next_match = null;
-                				return true; // we've matched twice, we're done here
-                			}
-                			for (var i = 0; i < chains.length; i++){
-                				var chain = chains[i];
-                				var head  = chain[0];
-                				var head2 = chain[1];
-                				var tail  = chain[chain.length - 1];
-                				var tail2 = chain[chain.length - 2];
-                				if (eps.pointsSame(head, pt1)){
-                					if (setMatch(i, true, true))
-                						break;
-                				}
-                				else if (eps.pointsSame(head, pt2)){
-                					if (setMatch(i, true, false))
-                						break;
-                				}
-                				else if (eps.pointsSame(tail, pt1)){
-                					if (setMatch(i, false, true))
-                						break;
-                				}
-                				else if (eps.pointsSame(tail, pt2)){
-                					if (setMatch(i, false, false))
-                						break;
-                				}
-                			}
-                	
-                			if (next_match === first_match){
-                				// we didn't match anything, so create a new chain
-                				chains.push([ pt1, pt2 ]);
-                				if (buildLog)
-                					buildLog.chainNew(pt1, pt2);
-                				return;
-                			}
-                	
-                			if (next_match === second_match){
-                				// we matched a single chain
-                	
-                				if (buildLog)
-                					buildLog.chainMatch(first_match.index);
-                	
-                				// add the other point to the apporpriate end, and check to see if we've closed the
-                				// chain into a loop
-                	
-                				var index = first_match.index;
-                				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
-                				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
-                	
-                				var chain = chains[index];
-                				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
-                				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
-                				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
-                				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
-                	
-                				if (eps.pointsCollinear(grow2, grow, pt)){
-                					// grow isn't needed because it's directly between grow2 and pt:
-                					// grow2 ---grow---> pt
-                					if (addToHead){
-                						if (buildLog)
-                							buildLog.chainRemoveHead(first_match.index, pt);
-                						chain.shift();
-                					}
-                					else{
-                						if (buildLog)
-                							buildLog.chainRemoveTail(first_match.index, pt);
-                						chain.pop();
-                					}
-                					grow = grow2; // old grow is gone... new grow is what grow2 was
-                				}
-                	
-                				if (eps.pointsSame(oppo, pt)){
-                					// we're closing the loop, so remove chain from chains
-                					chains.splice(index, 1);
-                	
-                					if (eps.pointsCollinear(oppo2, oppo, grow)){
-                						// oppo isn't needed because it's directly between oppo2 and grow:
-                						// oppo2 ---oppo--->grow
-                						if (addToHead){
-                							if (buildLog)
-                								buildLog.chainRemoveTail(first_match.index, grow);
-                							chain.pop();
-                						}
-                						else{
-                							if (buildLog)
-                								buildLog.chainRemoveHead(first_match.index, grow);
-                							chain.shift();
-                						}
-                					}
-                	
-                					if (buildLog)
-                						buildLog.chainClose(first_match.index);
-                	
-                					// we have a closed chain!
-                					regions.push(chain);
-                					return;
-                				}
-                	
-                				// not closing a loop, so just add it to the apporpriate side
-                				if (addToHead){
-                					if (buildLog)
-                						buildLog.chainAddHead(first_match.index, pt);
-                					chain.unshift(pt);
-                				}
-                				else{
-                					if (buildLog)
-                						buildLog.chainAddTail(first_match.index, pt);
-                					chain.push(pt);
-                				}
-                				return;
-                			}
-                	
-                			// otherwise, we matched two chains, so we need to combine those chains together
-                	
-                			function reverseChain(index){
-                				if (buildLog)
-                					buildLog.chainReverse(index);
-                				chains[index].reverse(); // gee, that's easy
-                			}
-                	
-                			function appendChain(index1, index2){
-                				// index1 gets index2 appended to it, and index2 is removed
-                				var chain1 = chains[index1];
-                				var chain2 = chains[index2];
-                				var tail  = chain1[chain1.length - 1];
-                				var tail2 = chain1[chain1.length - 2];
-                				var head  = chain2[0];
-                				var head2 = chain2[1];
-                	
-                				if (eps.pointsCollinear(tail2, tail, head)){
-                					// tail isn't needed because it's directly between tail2 and head
-                					// tail2 ---tail---> head
-                					if (buildLog)
-                						buildLog.chainRemoveTail(index1, tail);
-                					chain1.pop();
-                					tail = tail2; // old tail is gone... new tail is what tail2 was
-                				}
-                	
-                				if (eps.pointsCollinear(tail, head, head2)){
-                					// head isn't needed because it's directly between tail and head2
-                					// tail ---head---> head2
-                					if (buildLog)
-                						buildLog.chainRemoveHead(index2, head);
-                					chain2.shift();
-                				}
-                	
-                				if (buildLog)
-                					buildLog.chainJoin(index1, index2);
-                				chains[index1] = chain1.concat(chain2);
-                				chains.splice(index2, 1);
-                			}
-                	
-                			var F = first_match.index;
-                			var S = second_match.index;
-                	
-                			if (buildLog)
-                				buildLog.chainConnect(F, S);
-                	
-                			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
-                			if (first_match.matches_head){
-                				if (second_match.matches_head){
-                					if (reverseF){
-                						// <<<< F <<<< --- >>>> S >>>>
-                						reverseChain(F);
-                						// >>>> F >>>> --- >>>> S >>>>
-                						appendChain(F, S);
-                					}
-                					else{
-                						// <<<< F <<<< --- >>>> S >>>>
-                						reverseChain(S);
-                						// <<<< F <<<< --- <<<< S <<<<   logically same as:
-                						// >>>> S >>>> --- >>>> F >>>>
-                						appendChain(S, F);
-                					}
-                				}
-                				else{
-                					// <<<< F <<<< --- <<<< S <<<<   logically same as:
-                					// >>>> S >>>> --- >>>> F >>>>
-                					appendChain(S, F);
-                				}
-                			}
-                			else{
-                				if (second_match.matches_head){
-                					// >>>> F >>>> --- >>>> S >>>>
-                					appendChain(F, S);
-                				}
-                				else{
-                					if (reverseF){
-                						// >>>> F >>>> --- <<<< S <<<<
-                						reverseChain(F);
-                						// <<<< F <<<< --- <<<< S <<<<   logically same as:
-                						// >>>> S >>>> --- >>>> F >>>>
-                						appendChain(S, F);
-                					}
-                					else{
-                						// >>>> F >>>> --- <<<< S <<<<
-                						reverseChain(S);
-                						// >>>> F >>>> --- >>>> S >>>>
-                						appendChain(F, S);
-                					}
-                				}
-                			}
-                		});
-                	
-                		return regions;
-                	}
-                	
-                	module.exports = SegmentChainer;
-                	
-                	},{}],8:[function(require,module,exports){
-                	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-                	// MIT License
-                	// Project Home: https://github.com/voidqk/polybooljs
-                	
-                	//
-                	// filter a list of segments based on boolean operations
-                	//
-                	
-                	function select(segments, selection, buildLog){
-                		var result = [];
-                		segments.forEach(function(seg){
-                			var index =
-                				(seg.myFill.above ? 8 : 0) +
-                				(seg.myFill.below ? 4 : 0) +
-                				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
-                				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
-                			if (selection[index] !== 0){
-                				// copy the segment to the results, while also calculating the fill status
-                				result.push({
-                					id: buildLog ? buildLog.segmentId() : -1,
-                					start: seg.start,
-                					end: seg.end,
-                					myFill: {
-                						above: selection[index] === 1, // 1 if filled above
-                						below: selection[index] === 2  // 2 if filled below
-                					},
-                					otherFill: null
-                				});
-                			}
-                		});
-                	
-                		if (buildLog)
-                			buildLog.selected(result);
-                	
-                		return result;
-                	}
-                	
-                	var SegmentSelector = {
-                		union: function(segments, buildLog){ // primary | secondary
-                			// above1 below1 above2 below2    Keep?               Value
-                			//    0      0      0      0   =>   no                  0
-                			//    0      0      0      1   =>   yes filled below    2
-                			//    0      0      1      0   =>   yes filled above    1
-                			//    0      0      1      1   =>   no                  0
-                			//    0      1      0      0   =>   yes filled below    2
-                			//    0      1      0      1   =>   yes filled below    2
-                			//    0      1      1      0   =>   no                  0
-                			//    0      1      1      1   =>   no                  0
-                			//    1      0      0      0   =>   yes filled above    1
-                			//    1      0      0      1   =>   no                  0
-                			//    1      0      1      0   =>   yes filled above    1
-                			//    1      0      1      1   =>   no                  0
-                			//    1      1      0      0   =>   no                  0
-                			//    1      1      0      1   =>   no                  0
-                			//    1      1      1      0   =>   no                  0
-                			//    1      1      1      1   =>   no                  0
-                			return select(segments, [
-                				0, 2, 1, 0,
-                				2, 2, 0, 0,
-                				1, 0, 1, 0,
-                				0, 0, 0, 0
-                			], buildLog);
-                		},
-                		intersect: function(segments, buildLog){ // primary & secondary
-                			// above1 below1 above2 below2    Keep?               Value
-                			//    0      0      0      0   =>   no                  0
-                			//    0      0      0      1   =>   no                  0
-                			//    0      0      1      0   =>   no                  0
-                			//    0      0      1      1   =>   no                  0
-                			//    0      1      0      0   =>   no                  0
-                			//    0      1      0      1   =>   yes filled below    2
-                			//    0      1      1      0   =>   no                  0
-                			//    0      1      1      1   =>   yes filled below    2
-                			//    1      0      0      0   =>   no                  0
-                			//    1      0      0      1   =>   no                  0
-                			//    1      0      1      0   =>   yes filled above    1
-                			//    1      0      1      1   =>   yes filled above    1
-                			//    1      1      0      0   =>   no                  0
-                			//    1      1      0      1   =>   yes filled below    2
-                			//    1      1      1      0   =>   yes filled above    1
-                			//    1      1      1      1   =>   no                  0
-                			return select(segments, [
-                				0, 0, 0, 0,
-                				0, 2, 0, 2,
-                				0, 0, 1, 1,
-                				0, 2, 1, 0
-                			], buildLog);
-                		},
-                		difference: function(segments, buildLog){ // primary - secondary
-                			// above1 below1 above2 below2    Keep?               Value
-                			//    0      0      0      0   =>   no                  0
-                			//    0      0      0      1   =>   no                  0
-                			//    0      0      1      0   =>   no                  0
-                			//    0      0      1      1   =>   no                  0
-                			//    0      1      0      0   =>   yes filled below    2
-                			//    0      1      0      1   =>   no                  0
-                			//    0      1      1      0   =>   yes filled below    2
-                			//    0      1      1      1   =>   no                  0
-                			//    1      0      0      0   =>   yes filled above    1
-                			//    1      0      0      1   =>   yes filled above    1
-                			//    1      0      1      0   =>   no                  0
-                			//    1      0      1      1   =>   no                  0
-                			//    1      1      0      0   =>   no                  0
-                			//    1      1      0      1   =>   yes filled above    1
-                			//    1      1      1      0   =>   yes filled below    2
-                			//    1      1      1      1   =>   no                  0
-                			return select(segments, [
-                				0, 0, 0, 0,
-                				2, 0, 2, 0,
-                				1, 1, 0, 0,
-                				0, 1, 2, 0
-                			], buildLog);
-                		},
-                		differenceRev: function(segments, buildLog){ // secondary - primary
-                			// above1 below1 above2 below2    Keep?               Value
-                			//    0      0      0      0   =>   no                  0
-                			//    0      0      0      1   =>   yes filled below    2
-                			//    0      0      1      0   =>   yes filled above    1
-                			//    0      0      1      1   =>   no                  0
-                			//    0      1      0      0   =>   no                  0
-                			//    0      1      0      1   =>   no                  0
-                			//    0      1      1      0   =>   yes filled above    1
-                			//    0      1      1      1   =>   yes filled above    1
-                			//    1      0      0      0   =>   no                  0
-                			//    1      0      0      1   =>   yes filled below    2
-                			//    1      0      1      0   =>   no                  0
-                			//    1      0      1      1   =>   yes filled below    2
-                			//    1      1      0      0   =>   no                  0
-                			//    1      1      0      1   =>   no                  0
-                			//    1      1      1      0   =>   no                  0
-                			//    1      1      1      1   =>   no                  0
-                			return select(segments, [
-                				0, 2, 1, 0,
-                				0, 0, 1, 1,
-                				0, 2, 0, 2,
-                				0, 0, 0, 0
-                			], buildLog);
-                		},
-                		xor: function(segments, buildLog){ // primary ^ secondary
-                			// above1 below1 above2 below2    Keep?               Value
-                			//    0      0      0      0   =>   no                  0
-                			//    0      0      0      1   =>   yes filled below    2
-                			//    0      0      1      0   =>   yes filled above    1
-                			//    0      0      1      1   =>   no                  0
-                			//    0      1      0      0   =>   yes filled below    2
-                			//    0      1      0      1   =>   no                  0
-                			//    0      1      1      0   =>   no                  0
-                			//    0      1      1      1   =>   yes filled above    1
-                			//    1      0      0      0   =>   yes filled above    1
-                			//    1      0      0      1   =>   no                  0
-                			//    1      0      1      0   =>   no                  0
-                			//    1      0      1      1   =>   yes filled below    2
-                			//    1      1      0      0   =>   no                  0
-                			//    1      1      0      1   =>   yes filled above    1
-                			//    1      1      1      0   =>   yes filled below    2
-                			//    1      1      1      1   =>   no                  0
-                			return select(segments, [
-                				0, 2, 1, 0,
-                				2, 0, 0, 1,
-                				1, 0, 0, 2,
-                				0, 1, 2, 0
-                			], buildLog);
-                		}
-                	};
-                	
-                	module.exports = SegmentSelector;
-                	
-                },{}]},{},[1]);
             };
         };
         
@@ -24720,1518 +24720,1689 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("library");
         };
 
-        const grapher = new function(){
-            let canvas;
-            let context;
+        _canvas_.core = new function(){
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:6,d:25} };
+            const core_engine = new Worker("/js/core_engine.js");
+            const self = this;
             
-            this._width = 500;
-            this._height = 500;
-            this.newCanvas = function(){
-                canvas = document.createElement('canvas');
-                canvas.width = this._width;
-                canvas.height = this._height;
-                context = canvas.getContext('2d');
-                document.body.prepend(canvas);
-            };
-        
-            this.clear = function(){
-                context.fillStyle = 'rgba(255,255,255,1)';
-                context.fillRect(0,0,canvas.width,canvas.height);
-            }
-            this.drawLine = function(point_a,point_b,style,strokeWidth=1){
-                context.strokeStyle = style;
-                context.lineWidth = strokeWidth;
-                context.beginPath();
-                context.moveTo(point_a.x,point_a.y);
-                context.lineTo(point_b.x,point_b.y);
-                context.stroke();
-                context.fill();
-            }
-            this.drawCircle = function(x,y,r,style,strokeStyle,strokeWidth=1){
-                context.fillStyle = style;
-                context.strokeStyle = strokeStyle;
-                context.lineWidth = strokeWidth;
-                context.beginPath();
-                context.arc(x, y, r, 0, 2*Math.PI);
-                context.fill();
-                if(strokeStyle != undefined){context.stroke();}
-            };
-            this.drawPoly = function(poly,style,strokeStyle,strokeWidth=1){
-                context.fillStyle = style;
-                context.strokeStyle = strokeStyle;
-                context.lineWidth = strokeWidth;
-                context.beginPath();
-        
-                context.moveTo(poly[0].x,poly[0].y);
-                for(let a = 1; a < poly.length; a++){
-                    context.lineTo(poly[a].x,poly[a].y);
+            const communicationModuleMaker = function(communicationObject,callerName){
+                const self = this;
+                const devMode = false;
+                this.log = function(){
+                    if(!devMode){return;}
+                    let prefix = 'communicationModule['+callerName+']';
+                    console.log('%c'+prefix+(new Array(...arguments).join(' ')),'color:rgb(235, 52, 131); font-style:italic;' );
+                };
+                this.function = {};
+                this.delayedFunction = {};
+            
+                let messageId = 0;
+                const messagingCallbacks = {};
+            
+                function generateMessageID(){
+                    self.log('::generateMessageID()'); //#development
+                    return messageId++;
                 }
-        
-                context.closePath();
-                context.fill();
-                if(strokeStyle != undefined){context.stroke();}
-            }
-        };
-        
-        {
-            console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
             
-            //averageArray
-                console.log('%c- averageArray', 'font-weight: bold;');
-                    tester(_canvas_.library.math.averageArray([1]),1);
-                    tester(_canvas_.library.math.averageArray([1,1,1,1,1,1,1,1]),1);
-                    tester(_canvas_.library.math.averageArray([0,1,2,3,4,5,6,7,8,9]),4.5);
-                console.log('');
+                communicationObject.onmessage = function(encodedPacket){
+                    self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
+                    let message = encodedPacket.data;
             
-            //averagePoint
-                console.log('%c- averagePoint', 'font-weight: bold;');
-                    tester(_canvas_.library.math.averagePoint([{x:0,y:0}]),{x:0,y:0});
-                    tester(_canvas_.library.math.averagePoint([{x:0,y:0},{x:10,y:0}]),{x:5,y:0});
-                    tester(_canvas_.library.math.averagePoint([{x:-10,y:0},{x:10,y:0}]),{x:0,y:0});
-                    tester(_canvas_.library.math.averagePoint([{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:0,y:10}]),{x:5,y:5});
-                console.log('');
-            
-            //boundingBoxFromPoints
-                console.log('%c- boundingBoxFromPoints', 'font-weight: bold;');
-                    console.log('%c-- simple box', 'font-weight: bold;');
-                        var poly = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-                        tester(_canvas_.library.math.boundingBoxFromPoints(poly),{topLeft:{x:0,y:0}, bottomRight:{x:10,y:10}});
-                    console.log('%c-- triangle', 'font-weight: bold;');
-                        var poly = [{x:0,y:0},{x:10,y:0},{x:5,y:10}];
-                        tester(_canvas_.library.math.boundingBoxFromPoints(poly),{topLeft:{x:0,y:0}, bottomRight:{x:10,y:10}});
-                    console.log('%c-- line', 'font-weight: bold;');
-                        var poly = [{x:0,y:0},{x:10,y:0}];
-                        tester(_canvas_.library.math.boundingBoxFromPoints(poly),{topLeft:{x:0,y:0}, bottomRight:{x:10,y:0}});
-                console.log('');
-                
-            //cartesianAngleAdjust
-                console.log('%c- cartesianAngleAdjust', 'font-weight: bold;');
-                tester(_canvas_.library.math.cartesianAngleAdjust(0,0,0),{x:0,y:0});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI),{x:-10,y:0});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI*2),{x:10,y:0});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI/2),{x:0,y:10});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,-Math.PI/2),{x:0,y:-10});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI/4),{x:7.0710678118654755,y:7.0710678118654755});
-                console.log('');
-            
-            //convertColour
-                console.log('%c- convertColour', 'font-weight: bold;');
-                //obj2rgba
-                    console.log('%c-- obj2rgba', 'font-weight: bold;');
-                    tester(_canvas_.library.math.convertColour.obj2rgba({r:0,g:0,b:0,a:0}),"rgba(0,0,0,0)");
-                    tester(_canvas_.library.math.convertColour.obj2rgba({r:1,g:0,b:0,a:0}),"rgba(255,0,0,0)");
-                    tester(_canvas_.library.math.convertColour.obj2rgba({r:0.5,g:0.5,b:0.5,a:0.5}),"rgba(127.5,127.5,127.5,0.5)");
-                //rgba2obj
-                    console.log('%c-- rgba2obj', 'font-weight: bold;');
-                    tester(_canvas_.library.math.convertColour.rgba2obj("rgba(0,0,0,0)"),{r:0,g:0,b:0,a:0});
-                    tester(_canvas_.library.math.convertColour.rgba2obj("rgba(255,0,0,0)"),{r:1,g:0,b:0,a:0});
-                    tester(_canvas_.library.math.convertColour.rgba2obj("rgba(127.5,127.5,127.5,0.5)"),{r:0.5,g:0.5,b:0.5,a:0.5});
-                console.log('');
-            
-            //curveGenerator
-                console.log('%c- curveGenerator', 'font-weight: bold;');
-                //linear
-                    console.log('%c-- linear', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.linear(),       [0, 1]);
-                    tester(_canvas_.library.math.curveGenerator.linear(10),     [0, 0.1111111111111111, 0.2222222222222222, 0.3333333333333333, 0.4444444444444444, 0.5555555555555556, 0.6666666666666666, 0.7777777777777778, 0.8888888888888888, 1]);
-                    tester(_canvas_.library.math.curveGenerator.linear(10,5,10),[5, 5.555555555555555, 6.111111111111111, 6.666666666666666, 7.222222222222222, 7.777777777777778, 8.333333333333332, 8.88888888888889, 9.444444444444445, 10]);
-                    tester(_canvas_.library.math.curveGenerator.linear(10,8),   [8, 7.222222222222222, 6.444444444444445, 5.666666666666667, 4.888888888888889, 4.111111111111111, 3.333333333333334, 2.5555555555555554, 1.7777777777777786, 1]);
-                //sin
-                    console.log('%c-- sin', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.sin(),        [0, 1] );
-                    tester(_canvas_.library.math.curveGenerator.sin(10),      [0, 0.17364817766693033, 0.3420201433256687, 0.49999999999999994, 0.6427876096865393, 0.766044443118978, 0.8660254037844386, 0.9396926207859083, 0.984807753012208, 1] );
-                    tester(_canvas_.library.math.curveGenerator.sin(10,5,10), [5, 5.868240888334651, 6.710100716628343, 7.5, 8.213938048432697, 8.83022221559489, 9.330127018922193, 9.69846310392954, 9.92403876506104, 10] );
-                    tester(_canvas_.library.math.curveGenerator.sin(10,8),    [8, 6.784462756331488, 5.605858996720319, 4.5, 3.5004867321942257, 2.637688898167154, 1.9378221735089296, 1.4221516544986414, 1.106345728914544, 1] );
-                //cos
-                    console.log('%c-- cos', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.cos(),        [0, 1] );
-                    tester(_canvas_.library.math.curveGenerator.cos(10),      [0, 0.01519224698779198, 0.06030737921409157, 0.1339745962155613, 0.233955556881022, 0.35721239031346064, 0.4999999999999999, 0.6579798566743311, 0.8263518223330696, 1] );
-                    tester(_canvas_.library.math.curveGenerator.cos(10,5,10), [5, 5.07596123493896, 5.301536896070457, 5.669872981077806, 6.16977778440511, 6.786061951567303, 7.5, 8.289899283371655, 9.131759111665348, 10]);
-                    tester(_canvas_.library.math.curveGenerator.cos(10,8),    [8, 7.893654271085456, 7.5778483455013586, 7.062177826491071, 6.362311101832846, 5.499513267805776, 4.500000000000001, 3.3941410032796817, 2.2155372436685132, 1] );
-                //s
-                    console.log('%c-- s', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.s(),        [0, 1] );
-                    tester(_canvas_.library.math.curveGenerator.s(10),      [0, 0.022463335897421843, 0.06913784818223383, 0.15908756682599312, 0.309741642431138, 0.5112316679487109, 0.712721693466284, 0.8633757690714288, 0.953325487715188, 1] );
-                    tester(_canvas_.library.math.curveGenerator.s(10,5,10), [5, 5.112316679487109, 5.345689240911169, 5.795437834129966, 6.54870821215569, 7.556158339743554, 8.56360846733142, 9.316878845357143, 9.76662743857594, 10] );
-                    tester(_canvas_.library.math.curveGenerator.s(10,8),    [8, 7.842756648718047, 7.516035062724363, 6.886387032218048, 5.8318085029820335, 4.421378324359024, 3.0109481457360117, 1.9563696164999982, 1.3267215859936838, 1] );
-                //exponential
-                    console.log('%c-- exponential', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.exponential(),        [0, 1] );
-                    tester(_canvas_.library.math.curveGenerator.exponential(10),      [0, 0.03894923837706363, 0.08759095067273646, 0.1483370980594927, 0.2241998555196527, 0.3189409743731226, 0.4372583135012321, 0.5850187886546604, 0.7695492909331704, 1] );
-                    tester(_canvas_.library.math.curveGenerator.exponential(10,5,10), [5, 5.194746191885318, 5.437954753363682, 5.7416854902974634, 6.120999277598264, 6.594704871865613, 7.18629156750616, 7.925093943273302, 8.847746454665852, 10] );
-                    tester(_canvas_.library.math.curveGenerator.exponential(10,8),    [8, 7.727355331360554, 7.386863345290845, 6.961640313583551, 6.430601011362431, 5.767413179388142, 4.939191805491375, 3.9048684794173774, 2.6131549634678075, 1] );
-                console.log('');
-            
-            //curvePoint
-                console.log('%c- curvePoint', 'font-weight: bold;');
-                //linear
-                    console.log('%c-- linear', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.linear(),0.5);
-                    tester(_canvas_.library.math.curvePoint.linear(0.1,0,1),.1);
-                    tester(_canvas_.library.math.curvePoint.linear(0.1,0,2),0.2);
-                    tester(_canvas_.library.math.curvePoint.linear(0.5,-1,1),0);
-                    tester(_canvas_.library.math.curvePoint.linear(0.99,-5,10),9.85);
-                    for(var a = 0; a <= 10; a++){
-                        tester(_canvas_.library.math.curvePoint.linear(a/10),a/10);
+                    if(message.outgoing){
+                        self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
+                        if(message.cargo.function in self.function){
+                            self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
+                            self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
+                            if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
+                            if(message.id == null){
+                                self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
+                                self.function[message.cargo.function](...message.cargo.arguments);
+                            }else{
+                                self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
+                                communicationObject.postMessage({
+                                    id:message.id,
+                                    outgoing:false,
+                                    cargo:self.function[message.cargo.function](...message.cargo.arguments),
+                                });
+                            }
+                        }else if(message.cargo.function in self.delayedFunction){
+                            self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
+                            self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
+                            if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
+                            if(message.id == null){
+                                self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
+                                self.delayedFunction[message.cargo.function](...message.cargo.arguments);
+                            }else{
+                                self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
+                                cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
+                                    communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
+                                }].concat(message.cargo.arguments));
+                            }
+                        }else{
+                            self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
+                        }
+                    }else{
+                        self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
+                        self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
+                        messagingCallbacks[message.id](message.cargo);
+                        delete messagingCallbacks[message.id];
                     }
-                    var answers = [0.025,0.1225,0.22,0.3175,0.41500000000000004,0.5125,0.61,0.7075,0.805,0.9025,1];
-                    for(var a = 0; a <= 10; a++){
-                        tester(_canvas_.library.math.curvePoint.linear(a/10,0.025,1),answers[a] );
+                };
+                this.run = function(functionName,argumentList=[],callback,transferables){
+                    self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
+                    let id = null;
+                    if(callback != undefined){
+                        self.log('.run -> callback was defined; generating message ID'); //#development
+                        id = generateMessageID();
+                        self.log('.run -> message ID:',id); //#development
+                        messagingCallbacks[id] = callback;
                     }
-                //sin
-                    console.log('%c-- sin', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.sin(),           0.7071067811865475);
-                    tester(_canvas_.library.math.curvePoint.sin(0.1,0,1),    0.15643446504023087);
-                    tester(_canvas_.library.math.curvePoint.sin(0.1,0,2),    0.31286893008046174);
-                    tester(_canvas_.library.math.curvePoint.sin(0.5,-1,1),   0.4142135623730949);
-                    tester(_canvas_.library.math.curvePoint.sin(1/3,-1,1),   -1.1102230246251565e-16);
-                    tester(_canvas_.library.math.curvePoint.sin(0.99,-5,10), 9.998149487224909);
-                //cos
-                    console.log('%c-- cos', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.cos(),             0.2928932188134524);
-                    tester(_canvas_.library.math.curvePoint.cos(0.1,0,1),      0.01231165940486223);
-                    tester(_canvas_.library.math.curvePoint.cos(0.1,0,2),      0.02462331880972446);
-                    tester(_canvas_.library.math.curvePoint.cos(0.5,-1,1),     -0.41421356237309515);
-                    tester(_canvas_.library.math.curvePoint.cos(2/3,-1,1),     -2.220446049250313e-16);
-                    tester(_canvas_.library.math.curvePoint.cos(0.0001,-5,10), -4.999999814944917);
-                    tester(_canvas_.library.math.curvePoint.cos(0.9999,-5,10), 9.997643805519496);
-                //s
-                    console.log('%c-- s', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.s()   , 0.5000000000000001 );
-                    tester(_canvas_.library.math.curvePoint.s(0.0), 0 );
-                    tester(_canvas_.library.math.curvePoint.s(0.1), 0.021969820441244133 );
-                    tester(_canvas_.library.math.curvePoint.s(0.2), 0.06761890207197617 );
-                    tester(_canvas_.library.math.curvePoint.s(0.3), 0.15559244154839164 );
-                    tester(_canvas_.library.math.curvePoint.s(0.4), 0.30293667416374986 );
-                    tester(_canvas_.library.math.curvePoint.s(0.5), 0.5000000000000001 );
-                    tester(_canvas_.library.math.curvePoint.s(0.6), 0.6970633258362502 );
-                    tester(_canvas_.library.math.curvePoint.s(0.7), 0.8444075584516083 );
-                    tester(_canvas_.library.math.curvePoint.s(0.8), 0.9323810979280239 );
-                    tester(_canvas_.library.math.curvePoint.s(0.9), 0.9780301795587558 );
-                    tester(_canvas_.library.math.curvePoint.s(1)  , 1 );
-                //exponential
-                    console.log('%c-- exponential', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.exponential(),     0.26894142136999516 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.0),  0 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.1),  0.03465343780550409 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.2),  0.07697924232087867 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.3),  0.12867609669730537 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.4),  0.19181877722087765 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.5),  0.26894142136999516 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.6),  0.3631392316503325 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.7),  0.47819269693938515 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.8),  0.6187193167793194 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.9),  0.7903589178467405 );
-                    tester(_canvas_.library.math.curvePoint.exponential(1),    1 );
-                console.log('');
-            
-            //getAngleOfTwoPoints
-                console.log('%c- getAngleOfTwoPoints', 'font-weight: bold;');
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:0}),0);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:0}),0);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:10}),Math.PI/2);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-10,y:0}),Math.PI);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:-10}),Math.PI*1.5);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:52,y:-13.5},{x:10,y:650}),1.6340126596091948);
-                console.log('');
-            
-            //getIndexOfSequence
-                console.log('%c- getIndexOfSequence', 'font-weight: bold;');
-                    tester( _canvas_.library.math.getIndexOfSequence([],[]),undefined );
-                    tester( _canvas_.library.math.getIndexOfSequence([],[1,2,3,4,5,6]),undefined );
-                    tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6],[]),undefined );
-                    tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6],[3,4,5,6]),2 );
-                    tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],[5,6]),4 );
-                    tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],[6,18]),undefined );
-                console.log('');
-            
-            //largestValueFound
-                console.log('%c- largestValueFound', 'font-weight: bold;');
-                    tester(_canvas_.library.math.largestValueFound([1,2,3,4,5,6,10,0,9]),10);
-                    tester(_canvas_.library.math.largestValueFound([1]),1);
-                    tester(_canvas_.library.math.largestValueFound([]),undefined);
-                    tester(_canvas_.library.math.largestValueFound([-1,-2,-3,-4,-5,-6,-10,-0,-9]),-10);
-                console.log('');
-            
-            //normalizeStretchArray
-                console.log('%c- normalizeStretchArray', 'font-weight: bold;');
-                tester( _canvas_.library.math.normalizeStretchArray([0, 1]),[0, 1] );
-                tester( _canvas_.library.math.normalizeStretchArray([0, 0.5, 1]),[0, 0.5, 1] );
-                tester( _canvas_.library.math.normalizeStretchArray([0,1,2,3,4,5,6,7,8,9,10]),[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1] );
-                tester( _canvas_.library.math.normalizeStretchArray([0, 11523.140939388142, 23046.27759202532]),[0, 0.5000000930031097, 1] );
-                tester( _canvas_.library.math.normalizeStretchArray([0,1]),[0,1]);
-                tester( _canvas_.library.math.normalizeStretchArray([0,0.5,1]),[0,0.5,1]);
-                tester( _canvas_.library.math.normalizeStretchArray([0,0.9,1]),[0,0.9,1]);
-                tester( _canvas_.library.math.normalizeStretchArray([0.9,0.99,0.999]),[0, 0.9090909090909088, 1]);
-                tester( _canvas_.library.math.normalizeStretchArray([0,0.0001,1.9]),[0, 0.000052631578947368424, 1]);
-                tester( _canvas_.library.math.normalizeStretchArray([-1,-0.9999,0.9]),[0, 0.000052631578947397684, 1]);
-                console.log('');
-            
-            //relativeDistance
-                console.log('%c- relativeDistance', 'font-weight: bold;');
-                tester( _canvas_.library.math.relativeDistance(100, 0,1, 0),0 );
-                tester( _canvas_.library.math.relativeDistance(100, 0,1, 1),100 );
-                tester( _canvas_.library.math.relativeDistance(100, 0,1, 0.1),10 );
-                tester( _canvas_.library.math.relativeDistance(100, 0,1, 0.5),50 );
-                tester( _canvas_.library.math.relativeDistance(100, -1,1, 0),50 );
-                tester( _canvas_.library.math.relativeDistance(100, -1,0, 0),100 );
-                tester( _canvas_.library.math.relativeDistance(100, -1,0, 0.5),100 );
-                tester( _canvas_.library.math.relativeDistance(100, -1,0, 0.5, true),150 );
-                tester( _canvas_.library.math.relativeDistance(120, -1, 1, 0, false), 60 );
-                tester( _canvas_.library.math.relativeDistance(60, -1, 1, 1, false), 60 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, 1, false), 57.272727272727266 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, 0.75, false), 50.45454545454545 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, 0.5, false), 43.63636363636364 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7096312918194273, true), 10.64641931401562 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7610384342079204, true), 9.24440633978399 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7528039816331866, true), 9.468982319094911 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7746699074885954, true), 8.872638886674672 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.8054839748931785, true), 8.032255230186044 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.8168779246382837, true), 7.721511146228629 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7989772731353805, true), 8.209710732671443 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7687872823270903, true), 9.033074118352085 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7542679542679545, true), 9.429055792692154 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7687872823270891, true), 9.033074118352115 );
-                console.log('');
-            
-            //seconds2time
-                console.log('%c- seconds2time', 'font-weight: bold;');
-                tester( _canvas_.library.math.seconds2time(10),{h:0, m:0, s:10, ms:0, µs:0, ns:0, ps:0, fs:0} );
-                tester( _canvas_.library.math.seconds2time(100),{h:0, m:1, s:40, ms:0, µs:0, ns:0, ps:0, fs:0} )
-                tester( _canvas_.library.math.seconds2time(900),{h:0, m:15, s:0, ms:0, µs:0, ns:0, ps:0, fs:0} )
-                tester( _canvas_.library.math.seconds2time(1000),{h:0, m:16, s:40, ms:0, µs:0, ns:0, ps:0, fs:0} );
-                console.log('');
-            
-            //distanceBetweenTwoPoints
-                console.log('%c- distanceBetweenTwoPoints', 'font-weight: bold;');
-                tester( _canvas_.library.math.distanceBetweenTwoPoints({x:0,y:0},{x:0,y:0}), 0 );
-                tester( _canvas_.library.math.distanceBetweenTwoPoints({x:0,y:0},{x:0,y:10}), 10 )
-                tester( _canvas_.library.math.distanceBetweenTwoPoints({x:0,y:0},{x:10,y:0}), 10 )
-                tester( _canvas_.library.math.distanceBetweenTwoPoints({x:0,y:0},{x:10,y:10}), Math.sqrt(2)*10 );
-                console.log('');
-            
-            //cartesian2polar
-                console.log('%c- cartesian2polar', 'font-weight: bold;');
-                    var x = 10;
-                    var y = 0;
-                    tester(_canvas_.library.math.cartesian2polar(x,y),{dis: 10, ang: 0});
-                    var x = -10;
-                    var y = 0;
-                    tester(_canvas_.library.math.cartesian2polar(x,y),{dis: 10, ang: 3.141592653589793});
-                    var x = 0;
-                    var y = 10;
-                    tester( _canvas_.library.math.cartesian2polar(x,y),{dis: 10, ang: 1.5707963267948966});
-                    var x = 10;
-                    var y = 40;
-                    tester(_canvas_.library.math.cartesian2polar(x,y),{dis: 41.23105625617661, ang: 1.3258176636680326});
-                    var x = 2.5;
-                    var y = 2.5;
-                    tester(_canvas_.library.math.cartesian2polar(x,y),{dis: 3.5355339059327378, ang: 0.7853981633974483});
-                console.log('');
-            
-            //polar2cartesian
-                console.log('%c- polar2cartesian', 'font-weight: bold;');
-                    var distance = 10;
-                    var angle = 0;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: 10, y: 0});
-                    var distance = -10;
-                    var angle = 0;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: -10, y: -0});
-                    var distance = 10;
-                    var angle = Math.PI/2;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: 6.123233995736766e-16, y: 10});
-                    var distance = -10;
-                    var angle = Math.PI;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: 10, y: -1.2246467991473533e-15});
-                    var distance = 3.5355339059327378;
-                    var angle = Math.PI/4;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: 2.5000000000000004, y: 2.5});
-                console.log('');
-            
-            //blendColours
-                console.log('%c- blendColours', 'font-weight: bold;');
-                tester( _canvas_.library.math.blendColours({r:0,g:0,b:0,a:0},{r:0,g:0,b:0,a:0},0.5), {r:0,g:0,b:0,a:0} );
-                tester( _canvas_.library.math.blendColours({r:1,g:0,b:0,a:0},{r:0,g:0,b:0,a:0},0.0), {r:1,g:0,b:0,a:0} );
-                tester( _canvas_.library.math.blendColours({r:1,g:0,b:0,a:0},{r:0,g:0,b:0,a:0},1.0), {r:0,g:0,b:0,a:0} );
-                tester( _canvas_.library.math.blendColours({r:0.35,g:0.55,b:0.1,a:1},{r:0.2,g:1,b:0.01,a:0.99},0.25), {r:0.31249999999999994, g:0.6625000000000001, b:0.07750000000000001, a:0.9975} );
-                console.log('');
-            
-            //multiBlendColours
-                console.log('%c- multiBlendColours', 'font-weight: bold;');
-                tester(_canvas_.library.math.multiBlendColours([
-                    {r:0.5411,g:0.5411,b:0.5411,a:0.6},
-                    {r:0.5098,g:0.7803,b:0.8156,a:0.6},
-                    {r:0.5058,g:0.8196,b:0.6784,a:0.6},
-                    {r:0.9176,g:0.9333,b:0.4313,a:0.6},
-                    {r:0.9764,g:0.6980,b:0.4039,a:0.6},
-                    {r:1.0000,g:0.2705,b:0.2705,a:0.6}
-                ],0.88),{r:0.98584,g:0.5269999999999998,b:0.35053999999999996,a:0.6} );
-                tester(_canvas_.library.math.multiBlendColours([
-                    {r:0.5411,g:0.5411,b:0.6980,a:0.9333},
-                    {r:0.7803,g:0.5098,b:1.0000,a:0.6980},
-                    {r:0.8196,g:0.5058,b:0.6784,a:0.8196},
-                    {r:0.9333,g:0.9176,b:0.5411,a:0.5058},
-                    {r:0.6980,g:0.9764,b:0.4039,a:0.9176},
-                    {r:0.2705,g:1.0000,b:0.2705,a:0.9764}
-                ],0.11),{r:0.67266,g:0.523885,b:0.8641,a:0.803885} );
-                console.log('');
-        }
-        {
-            console.log('%c- detectIntersect', 'font-weight: bold;');
-                //pointWithinBoundingBox
-                    console.log('%c-- pointWithinBoundingBox', 'font-weight: bold;');
-                    {
-                        const testingPairs = [
-                            {point:{x:5,y:5},                  box:{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}, result:true},
-                            {point:{x:50,y:5},                 box:{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}, result:false},
-                            {point:{x:0,y:0},                  box:{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}, result:true},
-                            {point:{x:10,y:0},                 box:{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}, result:true},
-                            {point:{x:10,y:10},                box:{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}, result:true},
-                            {point:{x:0,y:10},                 box:{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}, result:true},
-                            {point:{x:-0.000000000000001,y:0}, box:{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}, result:false},
-                        ];
-                        testingPairs.forEach(pair => {
-                            tester( _canvas_.library.math.detectIntersect.pointWithinBoundingBox( pair.point, pair.box ), pair.result );
-                        });
-                    }
-            
-                //boundingBoxes
-                    console.log('%c-- boundingBoxes', 'font-weight: bold;');
-                    {
-                        const testingPairs = [
-                                {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} }, box_b:{ topLeft:{x:5,y:5}, bottomRight:{x:15,y:15} },   result:true},
-                                {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} }, box_b:{ topLeft:{x:15,y:15}, bottomRight:{x:25,y:25} }, result:false},
-                                {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} }, box_b:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} },   result:true},
-                                {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} }, box_b:{ topLeft:{x:10,y:0}, bottomRight:{x:20,y:10} },  result:true},
-                                {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:10,y:10} }, box_b:{ topLeft:{x:11,y:0}, bottomRight:{x:20,y:10} },  result:false},
-                                {box_a:{ topLeft:{x:0,y:0}, bottomRight:{x:50,y:45} }, box_b:{ topLeft:{x:0,y:0}, bottomRight:{x:70,y:45} },   result:true}
-                        ];
-                        testingPairs.forEach(pair => {
-                            tester( _canvas_.library.math.detectIntersect.boundingBoxes( pair.box_a, pair.box_b ), pair.result );
-                        });
-                    }
-                //pointOnLine
-                    console.log('%c-- pointOnLine', 'font-weight: bold;');
-                    {
-                        const testingPairs = [
-                            {point: {x:10,y:10}, line:[{x:100,y:100},{x:100,y:100}], result:false},
-                            {point: {x:100,y:100}, line:[{x:100,y:100},{x:100,y:100}], result:true},
-                            {point: {x:10,y:10}, line:[{x:0,y:0},{x:100,y:100}], result:true},
-                            {point: {x:0,y:0}, line:[{x:0,y:0},{x:100,y:100}], result:true},
-                            {point: {x:100,y:100}, line:[{x:0,y:0},{x:100,y:100}], result:true},
-                            {point: {x:50,y:50}, line:[{x:0,y:0},{x:100,y:100}], result:true},
-                            {point: {x:50,y:51}, line:[{x:0,y:0},{x:100,y:100}], result:false},
-                            {point: {x:50,y:50}, line:[{x:0,y:50},{x:100,y:50}], result:true},
-                            {point: {x:50,y:49}, line:[{x:0,y:50},{x:100,y:50}], result:false},
-                            {point: {x:20,y:49}, line:[{x:20,y:10},{x:20,y:50}], result:true},
-                            {point: {x:21,y:49}, line:[{x:20,y:10},{x:20,y:50}], result:false},
-                            {point: {x:0,y:0}, line:[{x:1,y:1},{x:9,y:9}], result:false},
-                        ];
-                        testingPairs.forEach(pair => {
-                            tester( _canvas_.library.math.detectIntersect.pointOnLine( pair.point, pair.line ), pair.result );
-                        });
-                    }
-                //pointWithinPoly
-                    console.log('%c-- pointWithinPoly', 'font-weight: bold;');
-                    {
-                        const testingPairs = [
-                            {point:{x:0,y:0},                  poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'onPoint'},
-                            {point:{x:-0.001,y:0},             poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'outside'},
-                            {point:{x:-0.000000000000001,y:0}, poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'outside'},
-                            {point:{x:1,y:1},                  poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'inside'},
-                            {point:{x:2.5,y:0},                poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'onEdge'},
-                            {point:{x:4.9999,y:4.9999},        poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'inside'},
-                            {point:{x:5,y:5},                  poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'onEdge'},
-                            {point:{x:5.0001,y:5.0001},        poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'outside'},
-                            {point:{x:5.1,y:5.1},              poly:{points:[{x:0,y:0},{x:10,y:0},{x:0,y:10}]},                         result:'outside'},
-                            {point:{x:115,y:30},               poly:{points:[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]},       result:'outside'},
-                            {point:{x:200,y:0},                poly:{points:[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]},       result:'outside'},
-                            {point:{x:399,y:0},                poly:{points:[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]},       result:'outside'},
-                            {point:{x:400,y:0},                poly:{points:[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]},       result:'outside'},
-                            {point:{x:400,y:1},                poly:{points:[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]},       result:'outside'},
-                            {point:{x:400,y:-1},               poly:{points:[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]},       result:'outside'},
-                            {point:{x:10,y:20},                poly:{points:[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]},       result:'inside'},
-                            {point:{x:5,y:0},                  poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},             result:'onEdge'},
-                            {point:{x:5,y:5},                  poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},             result:'inside'},
-                            {point:{x:420,y:410},              poly:{points:[{x:300,y:360},{x:300,y:410},{x:350,y:410},{x:350,y:360}]}, result:'outside'},
-                            {point:{x:420,y:190},              poly:{points:[{x:300,y:360},{x:300,y:410},{x:350,y:410},{x:350,y:360}]}, result:'outside'},
-                            {point:{x:75,y:20},                poly:{points:[{x:50,y:0},{x:100,y:50},{x:50,y:100},{x:0,y:50}]},         result:'outside'},
-                            {point:{x:-380,y:-380},            poly:{points:[{x:0,y:0},{x:-400,y:0},{x:-400,y:-400},{x:0,y:-400}]},     result:'inside'},
-                        ];
-                        testingPairs.forEach(pair => {
-                            tester( _canvas_.library.math.detectIntersect.pointWithinPoly( pair.point, pair.poly ), pair.result );
-                        });
-                    }
-                //lineOnLine
-                    console.log('%c-- lineOnLine', 'font-weight: bold;');
-                    //the function tells where the lines would intersect if they were infinitely long in both directions,
-                    //'intersect' reveals if this point is within both the segments given
-                    //'contact' shows if the two segments touch in any way
-                    //so, a configuration like X will be in contact and intersect, but T will only be in contact
-                    { 
-                        const testingPairs = [
-                            {line_a:[{x:0,y:0},{x:5,y:5}],  line_b:[{x:5,y:0},{x:0,y:5}],     result:{x:2.5, y:2.5, intersect:true, contact:true}               },
-                            {line_a:[{x:0,y:0},{x:5,y:0}],  line_b:[{x:0,y:2},{x:5,y:2}],     result:{x:undefined, y:undefined, intersect:false, contact:false} },
-                            {line_a:[{x:0,y:2},{x:5,y:2}],  line_b:[{x:0,y:2},{x:5,y:2}],     result:{x:undefined, y:undefined, intersect:false, contact:true}  },
-                            {line_a:[{x:0,y:2},{x:3,y:2}],  line_b:[{x:0,y:2},{x:5,y:2}],     result:{x:0, y:2, intersect:false, contact:true}                  },
-                            {line_a:[{x:0,y:0},{x:5,y:5}],  line_b:[{x:0,y:1},{x:0,y:2}],     result:{x:0, y:0, intersect:false, contact:false}                 },
-                            {line_a:[{x:0,y:0},{x:5,y:5}],  line_b:[{x:2.5,y:2.5},{x:0,y:5}], result:{x:2.5, y:2.5, intersect:false, contact:true}              },
-                            {line_a:[{x:0,y:0},{x:5,y:5}],  line_b:[{x:0,y:5},{x:2.5,y:2.5}], result:{x:2.5, y:2.5, intersect:false, contact:true}              },
-                            {line_a:[{x:0,y:0},{x:0,y:5}],  line_b:[{x:0,y:5},{x:2.5,y:2.5}], result:{x:0, y:5, intersect:false, contact:true}                  },
-                            {line_a:[{x:1,y:1},{x:9,y:9}],  line_b:[{x:0,y:0},{x:0,y:10}],    result:{x:undefined, y:undefined, intersect:false, contact:false} },
-                            {line_a:[{x:0,y:0},{x:0,y:10}], line_b:[{x:0,y:0},{x:0,y:10}],    result:{x:undefined, y:undefined, intersect:false, contact:true}  },
-                            {line_a:[{x:5,y:0},{x:15,y:0}], line_b:[{x:0,y:0},{x:10,y:0}],    result:{x1:5, y1:0, x2:10, y2:0, intersect:false, contact:true}},
-                            {line_a:[{x:0,y:0},{x:10,y:0}], line_b:[{x:2,y:0},{x:8,y:0}],     result:{x1:2, y1:0, x2:8, y2:0, intersect:false, contact:true}}
-                        ];
-                        testingPairs.forEach(pair => {
-                            tester( _canvas_.library.math.detectIntersect.lineOnLine( pair.line_a, pair.line_b ), pair.result );
-                        });
-                    }
-                //lineOnPoly
-                    console.log('%c-- lineOnPoly', 'font-weight: bold;');
-                    { 
-                        const testingPairs = [
-                            {line:[{x:-5,y:5},{x:15,y:5}],       poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:5},{x:10,y:5}],        intersect:true,  contact:true}  },
-                            {line:[{x:-5,y:5},{x:5,y:5}],        poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:5}],                   intersect:true,  contact:true}  },
-                            {line:[{x:-5,y:5},{x:15,y:5}],       poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:5},{x:10,y:5}],        intersect:true,  contact:true}  },
-                            {line:[{x:5,y:5},{x:15,y:5}],        poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:10,y:5}],                  intersect:true,  contact:true}  },
-                            {line:[{x:-5,y:0},{x:0,y:10}],       poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:10}],                  intersect:false, contact:true}  },
-                            {line:[{x:-5,y:-5},{x:5,y:5}],       poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:0}],                   intersect:true,  contact:true}  },
-                            {line:[{x:-5,y:-5},{x:0,y:5}],       poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:5}],                   intersect:false, contact:true}  }, //skirt 
-                            {line:[{x:0,y:0},{x:10,y:0}],        poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:0},{x:10,y:0}],        intersect:false, contact:true}  }, //skirt 
-                            {line:[{x:400,y:400},{x:410,y:400}], poly:{points:[{x:400,y:400},{x:410,y:400},{x:420,y:410},{x:430,y:420},{x:430,y:450},{x:400,y:450}]}, result:{points:[{x:400,y:400},{x:410,y:400}], intersect:false, contact:true}  }, //skirt 
-                            {line:[{x:0,y:0},{x:10,y:10}],       poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:0},{x:10,y:10}],       intersect:true,  contact:true}  }, //perfect traversal
-                            {line:[{x:1,y:1},{x:9,y:9}],         poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[],                            intersect:true,  contact:false} }, //completely within
-                            {line:[{x:-10,y:0},{x:10,y:10}],     poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:0,y:5},{x:10,y:10}],       intersect:true,  contact:true}  },
-                            {line:[{x:10,y:0},{x:100,y:0}],      poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:10,y:0}],                  intersect:false, contact:true}  },
-                            {line:[{x:5,y:0},{x:15,y:0}],        poly:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},                                         result:{points:[{x:5,y:0},{x:10,y:0}],                  intersect:false, contact:true}  },
-                        ];
-                        testingPairs.forEach(pair => {
-                            tester( _canvas_.library.math.detectIntersect.lineOnPoly( pair.line, pair.poly ), pair.result );
-                        });
-                    }
-                //polyOnPoly
-                    console.log('%c-- polyOnPoly', 'font-weight: bold;');
-                    {
-                        const testingPairs = [
-                            //totally separate shapes
-                                {   
-                                    poly_a:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},     
-                                    poly_b:{points:[{x:15,y:15},{x:25,y:15},{x:25,y:25},{x:15,y:25}]}, 
-                                    result:{points:[], intersect:false, contact:false}
-                                },
-                            //simple overlap
-                                {   
-                                    poly_a:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},     
-                                    poly_b:{points:[{x:5,y:5},{x:15,y:5},{x:15,y:15},{x:5,y:15}]}, 
-                                    result:{points:[{x:10,y:5},{x:5,y:10}], intersect:true, contact:true}
-                                },
-                            //the same shape twice
-                                {   
-                                    poly_a:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},     
-                                    poly_b:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]}, 
-                                    result:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}], intersect:true, contact:true}
-                                },
-                            //shape totally inside the other shape
-                                {   
-                                    poly_a:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]},     
-                                    poly_b:{points:[{x:1,y:1},{x:9,y:1},{x:9,y:9},{x:1,y:9}]}, 
-                                    result:{points:[], intersect:true, contact:false}
-                                },
-                            //same, but the other way around
-                                {   
-                                    poly_a:{points:[{x:1,y:1},{x:9,y:1},{x:9,y:9},{x:1,y:9}]},         
-                                    poly_b:{points:[{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}]}, 
-                                    result:{points:[], intersect:true, contact:false}
-                                },
-                            //overlapping sides (like a cross shape)
-                                {   
-                                    poly_a:{points:[{x:0,y:0},{x:100,y:0},{x:100,y:10},{x:0,y:10}]},   
-                                    poly_b:{points:[{x:50,y:-50},{x:60,y:-50},{x:60,y:50},{x:50,y:50}]}, 
-                                    result:{points:[{x:50,y:0},{x:60,y:0},{x:50,y:10},{x:60,y:10}], intersect:true, contact:true}
-                                },
-                            //live examples (should all be 'true')
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:50,y:50},{x:105,y:50},{x:105,y:105},{x:50,y:105}]},
-                                    result:{points:[{x:68,y:50},{x:68,y:105}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:875,y:50},{x:930,y:50},{x:930,y:105},{x:875,y:105}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:150,y:50},{x:345,y:50},{x:345,y:160},{x:150,y:160}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:400,y:50},{x:500,y:50},{x:500,y:105},{x:400,y:105}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:550,y:50},{x:790,y:50},{x:790,y:90},{x:740,y:140},{x:550,y:140}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:25,y:130},{x:35,y:120},{x:59.166666666666664,y:120},{x:71.125,y:130},{x:81.375,y:130},{x:93.33333333333333,y:120},{x:117.5,y:120},{x:127.5,y:130},{x:127.5,y:205},{x:117.5,y:215},{x:93.33333333333333,y:215},{x:81.375,y:205},{x:71.125,y:205},{x:59.166666666666664,y:215},{x:35,y:215},{x:25,y:205}]},
-                                    result:{points:[{x:68,y:127.38675958188156},{x:68,y:207.61324041811847}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:160,y:175},{x:242.5,y:175},{x:252.5,y:245},{x:201.25,y:275},{x:150,y:245}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:280,y:180},{x:331.25,y:170},{x:382.5,y:180},{x:382.5,y:210},{x:331.25,y:220},{x:280,y:210}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:425,y:160},{x:645,y:160},{x:645,y:215},{x:425,y:215}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:425,y:220},{x:645,y:220},{x:645,y:275},{x:425,y:275}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:425,y:280},{x:645,y:280},{x:645,y:335},{x:425,y:335}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:425,y:340},{x:645,y:340},{x:645,y:420},{x:425,y:420}]},
-                                    result:{points:[{x:425,y:355},{x:645,y:355}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:675,y:160},{x:895,y:160},{x:895,y:545},{x:675,y:545}]},
-                                    result:{points:[{x:675,y:355},{x:895,y:355}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:355,y:110},{x:530,y:110},{x:530,y:150},{x:355,y:150}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:15,y:285},{x:25,y:285},{x:37.5,y:275},{x:52.5,y:275},{x:65,y:285},{x:260,y:285},{x:260,y:315},{x:65,y:315},{x:52.5,y:325},{x:37.5,y:325},{x:25,y:315},{x:15,y:315}]}, 
-                                    result:{points:[{x:68,y:285},{x:68,y:315}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:270,y:225},{x:395,y:225},{x:395,y:275},{x:370,y:285},{x:370,y:325},{x:270,y:325}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:830,y:50},{x:820,y:52.67949192431122},{x:812.6794919243113,y:60},{x:810,y:70},{x:812.6794919243113,y:80},{x:820,y:87.32050807568876},{x:830,y:90},{x:840,y:87.32050807568878},{x:847.3205080756887,y:80},{x:850,y:70},{x:847.3205080756887,y:60.000000000000014},{x:840,y:52.679491924311236}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:790,y:120},{x:800,y:110},{x:890,y:110},{x:905,y:120},{x:905,y:140},{x:890,y:150},{x:800,y:150},{x:790,y:140}]},
-                                    result:{points:[],contact:false,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:1027,y:34},{x:1027,y:355},{x:68,y:355},{x:68,y:34}]}, 
-                                    poly_b:{points:[{x:80,y:330},{x:400,y:330},{x:400,y:392.5},{x:80,y:392.5}]},
-                                    result:{points:[{x:80,y:355},{x:400,y:355}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:6,y:6},{x:56,y:6},{x:56,y:51},{x:6,y:51}]},
-                                    poly_b:{points:[{x:6,y:6},{x:76,y:6},{x:76,y:51},{x:6,y:51}]},
-                                    result:{points:[{x:6,y:51},{x:6,y:6},{x:56,y:6},{x:56,y:51}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:0,y:0},{x:70,y:0},{x:70,y:45},{x:0,y:45}]},
-                                    poly_b:{points:[{x:0,y:0},{x:50,y:0},{x:50,y:45},{x:0,y:45}]},
-                                    result:{points:[{x:0,y:45},{x:0,y:0},{x:50,y:0},{x:50,y:45}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:0,y:0},{x:100,y:0},{x:100,y:100},{x:0,y:100}]},
-                                    poly_b:{points:[{x:0,y:0},{x:50,y:0},{x:0,y:100},{x:50,y:100}]},
-                                    result:{points:[{x:0,y:100},{x:0,y:0},{x:50,y:0},{x:50,y:100}],contact:true,intersect:true}
-                                },
-                                {
-                                    poly_a:{points:[{x:0,y:0},{x:100,y:0},{x:100,y:100},{x:0,y:100}]},
-                                    poly_b:{points:[{x:-50,y:0},{x:50,y:0},{x:50,y:100},{x:-50,y:100}]},
-                                    result:{points:[{x:0,y:100},{x:0,y:0},{x:50,y:0},{x:50,y:100}],contact:true,intersect:true}
-                                }
-                        ];
-                        testingPairs.forEach(pair => {
-                            tester( _canvas_.library.math.detectIntersect.polyOnPoly( pair.poly_a, pair.poly_b ), pair.result ); 
-                        });
-                    }
-        }
-        {
-            console.log('%cTesting - library.math.pathExtrapolation', 'font-size:15px; font-weight:bold;');
-            // var drawDotCounter = 0;
-            // function drawDot(x,y){
-            //     var temp = _canvas_.core.shape.create('circle');
-            //     temp.x(x);
-            //     temp.y(y);
-            //     temp.radius(1);
-            //     temp.name = 'circle_'+(drawDotCounter++);
-            //     _canvas_.core.arrangement.append(temp);
-            //     _canvas_.core.render.frame();
-            // }
-            // var drawLineCounter = 0;
-            // function drawLine(points){
-            //     var temp = _canvas_.core.shape.create('path');
-            //     temp.points(points);
-            //     temp.jointType(false);
-            //     temp.looping(true);
-            //     temp.thickness(0.75);
-            //     temp.name = 'path_'+(drawLineCounter++);
-            //     _canvas_.core.arrangement.append(temp);
-            //     _canvas_.core.render.frame();
-            // }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10,100,10]);
-                tester(points,[100,0, 100,20, 0,20, 0,20, 0,0, 100,0]);
-                // for(var a = 0; a < points.length-2; a+=2){ drawLine({ x:points[a],y:points[a+1] },{ x:points[a+2],y:points[a+3] }); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100]);
-                tester(points,[110,10, 110,100, 90,100, 90,20, 0,20, 0,0, 0,0, 100,0, 100,10, 100,10, 110,10, 90,100, 90,20, 0,0, 100,10, 100,10, 90,100, 90,20]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-                // drawLine(points);
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 50,100, 200,0]);
-                tester(points,[
-                    194.4529980377477,-8.320502943378434,
-                    205.5470019622523,8.320502943378434,
-                    55.547001962252295,108.32050294337843,
-                    50,100,
-                    41.25842723878462,95.14357068821369,
-                    83.00485539890335,20,
-                    83.00485539890335,20,
-                    0,20,
-                    0,0,
-                    0,0,
-                    100,0,
-                    100,10,
-                    100,10,
-                    108.74157276121538,14.856429311786318,
-                    78.77332164722408,68.79928131697065,
-                    78.77332164722408,68.79928131697065, 
-                    194.4529980377477,-8.320502943378434,
-                    55.547001962252295,108.32050294337843,
-                    55.547001962252295,108.32050294337843,
-                    50,100,
-                    83.00485539890335,20,
-                    83.00485539890335,20,
-                    0,0,
-                    100,10,
-                    100,10,
-                    78.77332164722408,68.79928131697065,
-                    55.547001962252295,108.32050294337843,
-                    55.547001962252295,108.32050294337843,
-                    83.00485539890335,20,
-                    100,10]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100],5,undefined,'sharp');
-                tester(points,[105,5, 105,100, 95,100, 95,15, 0,15, 0,5, 105,5, 95,100, 95,15, 95,15, 0,5, 105,5]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100],5,undefined,'round');
-                tester(points,[
-                    105,10, 105,100, 95,100, 95,15, 0,15, 0,5, 0,5, 100,5,
-                    102.5,5.669872981077806, 102.5,5.669872981077806, 104.3301270189222,7.5,
-                    105,10, 105,10, 95,100, 95,15, 95,15, 0,5,
-                    102.5,5.669872981077806, 102.5,5.669872981077806,
-                    105,10, 95,15]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100],5,undefined,'flat');
-                tester(points,[105,10, 105,100, 95,100, 95,15, 0,15, 0,5, 0,5, 100,5, 105,10, 105,10, 95,100, 95,15, 95,15, 0,5, 105,10]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100],5,undefined,'sharp',true);
-                tester(points,[
-                    105,111.22681202353685, 
-                    -13.029791137263166,5.000000000000007, 
-                    13.029791137263171,15, 
-                    95,15, 
-                    13.029791137263171,15,
-                    -13.029791137263166,5.000000000000007,
-                    105,111.22681202353685,
-                    13.029791137263171,15,
-                    95,88.77318797646315,
-                    95,15,
-                    -13.029791137263166,5.000000000000007,
-                    105,4.999999999999994,
-                    105,4.999999999999994,
-                    105,111.22681202353685,
-                    95,88.77318797646315,
-                    95,88.77318797646315,
-                    95,15,
-                    105,4.999999999999994
-                ]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-            
-                
-                console.log('');
-        }
-        {
-            console.log('%cTesting - library.math.fitPolyIn', 'font-size:15px; font-weight:bold;');
-            let sceneValues = {
-                environment: 0, // 0, 1 
-                testPoly: 0, // 0, 1, 2
+                    communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
+                };
             };
+            const communicationModule = new communicationModuleMaker(core_engine,'core_console');
+            this.__com = communicationModule;
             
-            grapher.newCanvas();
-            grapher.clear();
+            _canvas_.setAttribute('tabIndex',1);
             
-            //generate environment 
-                let environmentPolys = [
-                    [
-                        [{x:10,y:10},{x:110,y:10},{x:110,y:110},{x:10,y:110}],
-                        [{x:120,y:10},{x:220,y:10},{x:220,y:110},{x:120,y:110}],
-                        [{x:170,y:110},{x:270,y:110},{x:270,y:210},{x:170,y:210}],
-                    ],
-                    [
-                        [{x:10,y:10},{x:110,y:10},{x:110,y:110},{x:10,y:110}], //the one to the left
-                        [{x:150,y:30},{x:250,y:30},{x:250,y:130},{x:150,y:130}], //the one to the right
-                    ],
-                ][sceneValues.environment];
+            const dev = new function(){
+                const prefix = 'core_console';
+                const active = {
+                    elementLibrary:{
+                        genericElementProxyTemplate:false,
+                        rectangle:false,
+                        rectangleWithOutline:false,
             
-                environmentPolys.forEach(a => {
-                    grapher.drawPoly(
-                        a,
-                        'rgba('+Math.random()*255+','+Math.random()*255+','+Math.random()*255+',1)'
-                    );
-                });
-            
-                environmentPolys = environmentPolys.map(a => {
-                    return { points: a, boundingBox: _canvas_.library.math.boundingBoxFromPoints(a) };
-                });
-                
-            //test poly
-                let testPoly = [
-                    [
-                        {x:70,y:60},{x:170,y:60},{x:170,y:160},{x:70,y:160}
-                    ],
-                    [
-                        {x:184.97070312499994, y:84.00439687354094},
-                        {x:184.97070312499994+100, y:84.00439687354094},
-                        {x:184.97070312499994+100, y:84.00439687354094+100},
-                        {x:184.97070312499994, y:84.00439687354094+100},
-                    ],
-                    [
-                        {x:110.07110595703125,y:21.0598977691692},
-                        {x:210.0711059570313,y:21.0598977691692},
-                        {x:210.0711059570313,y:121.05989776916923},
-                        {x:110.07110595703125,y:121.05989776916923},
-                    ],
-                ][sceneValues.testPoly];
-                grapher.drawPoly(
-                    testPoly,
-                    'rgba('+Math.random()*255+','+Math.random()*255+','+Math.random()*255+',1)',
-                    'rgba(255,0,0,1)',
-                    2
-                );
-            
-                testPoly = {
-                    points: testPoly,
-                    boundingBox: _canvas_.library.math.boundingBoxFromPoints(testPoly),
+                        group:false,
+                        circle:false,
+                        circleWithOutline:false,
+                        polygon:false,
+                        polygonWithOutline:false,
+                        path:false,
+                        image:false,
+                        canvas:false,
+                        character:false,
+                        characterString:false,
+                    },
+                    service:false,
+                    interface:false,
                 };
             
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            //correct polygon location
-                //perform calculation
-                    console.time('_canvas_.library.math.fitPolyIn');
-                    let data = _canvas_.library.math.fitPolyIn(testPoly,environmentPolys,undefined,true);
-                    console.timeEnd('_canvas_.library.math.fitPolyIn');
-                //adjust
-                    testPoly.points = testPoly.points.map(a => { return{x:a.x+data.offset.x,y:a.y+data.offset.y} } );
-                    testPoly.boundingBox = _canvas_.library.math.boundingBoxFromPoints(testPoly.points);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            //draw new position
-                grapher.drawPoly(
-                    testPoly.points,
-                    'rgba('+Math.random()*255+','+Math.random()*255+','+Math.random()*255+',0.2)',
-                    'rgba(0,0,0,1)',
-                    2
-                );
-            
-            //draw in calculation paths
-                for(let a = 0; a < data.paths.length; a++){
-                    if(data.paths[a].length == 0){continue;}
-            
-                    let colour = 'rgba('+Math.random()*255+','+Math.random()*255+','+Math.random()*255+',1)';
-                    for(let b = 0; b < data.paths[a].length-1; b++){
-                        grapher.drawLine( data.paths[a][b], data.paths[a][b+1], colour );
+                this.log = {};
+                Object.entries(active).forEach(entry => {
+                    if(typeof entry[1] == 'object'){
+                        this.log[entry[0]] = {};
+                        Object.keys(active[entry[0]]).forEach(key => {
+                            this.log[entry[0]][key] = function(){
+                                if(active[entry[0]][key]){ 
+                                    console.log( prefix+'.'+entry[0]+'.'+key+arguments[0], ...(new Array(...arguments).slice(1)) );
+                                }
+                            };
+                        });
+                    }else{
+                        this.log[entry[0]] = function(){
+                            if(active[entry[0]]){ 
+                                console.log( prefix+'.'+entry[0]+arguments[0], ...(new Array(...arguments).slice(1)) );
+                            }
+                        };
                     }
-                }
-        }
-        {
-            const point_a = {x:10,y:10};
-            const point_b = {x:490,y:490};
-            let field = [
-                [
-                    {x:400,y:400},
-                    {x:410,y:380},
-                    {x:420,y:410},
-                    {x:430,y:420},
-                    {x:430,y:450},
-                    {x:400,y:450},
-                ],
-                [
-                    {x:200,y:270},
-                    {x:200,y:320},
-                    {x:250,y:320},
-                    {x:250,y:260},
-                    {x:225,y:220},
-                ],
-                [
-                    {x:300,y:360},
-                    {x:300,y:410},
-                    {x:350,y:410},
-                    {x:350,y:360},
-                ],
-                [
-                    {x:100,y:90},
-                    {x:200,y:90},
-                    {x:150,y:190},
-                ],
-                [
-                    {x:350,y:90},
-                    {x:450,y:90},
-                    {x:400,y:190},
-                ],
-                [
-                    {x:80,y:290},
-                    {x:180,y:250},
-                    {x:130,y:390},
-                    {x:85,y:360},
-                ],
-            ];
-            field = field/*.concat([[point_a],[point_b]])*/.map(a => {
-                return { points: a, boundingBox: _canvas_.library.math.boundingBoxFromPoints(a) };
-            });
-            
-            grapher.newCanvas();
-            grapher.clear();
-            for(let a = 0; a < field.length; a++){
-                grapher.drawPoly(field[a].points,'rgba(200,200,200,1)');
-            }
-            // grapher.drawLine(point_a,point_b,'rgba(100,100,100,1)');
-            
-            
-            
-            
-            
-            
-            
-            const visibilityGraph = _canvas_.library.math.polygonsToVisibilityGraph( field );
-            
-            // console.log(visibilityGraph);
-            visibilityGraph.forEach(point_source => {
-                grapher.drawCircle(
-                    field[point_source.polyIndex].points[point_source.pointIndex].x,
-                    field[point_source.polyIndex].points[point_source.pointIndex].y,
-                    2.5,
-                    'rgba(255,0,0,1)'
-                );
-            
-                let colour = ['rgba(200,100,0,1)','rgba(255,0,0,1)','rgba(0,255,0,1)','rgba(0,0,255,1)','rgba(0,255,255,1)','rgba(255,0,255,1)'][point_source.polyIndex];
-                point_source.destination.forEach(destination => {
-                    grapher.drawLine(
-                        field[point_source.polyIndex].points[point_source.pointIndex],
-                        field[destination.polyIndex].points[destination.pointIndex],
-                        colour
-                    );
                 });
-            });
-        }
-        {
-            const point_a = {x:10,y:10};
-            const point_b = {x:490,y:490};
-            let field = [
-                [point_a],
-                [point_b],
             
-                [
-                    {x:400,y:400},
-                    {x:410,y:380},
-                    {x:420,y:410},
-                    {x:430,y:420},
-                    {x:430,y:450},
-                    {x:400,y:450},
-                ],
-                [
-                    {x:200,y:270},
-                    {x:200,y:320},
-                    {x:250,y:320},
-                    {x:250,y:260},
-                    {x:225,y:220},
-                ],
-                [
-                    {x:300,y:360},
-                    {x:300,y:410},
-                    {x:350,y:410},
-                    {x:350,y:360},
-                ],
-                [
-                    {x:100,y:90},
-                    {x:200,y:90},
-                    {x:150,y:190},
-                ],
-                [
-                    {x:350,y:90},
-                    {x:450,y:90},
-                    {x:400,y:190},
-                ],
-                [
-                    {x:80,y:290},
-                    {x:180,y:250},
-                    {x:130,y:390},
-                    {x:85,y:360},
-                ],
-            ];
-            field = field.map(a => {
-                return { points: a, boundingBox: _canvas_.library.math.boundingBoxFromPoints(a) };
-            });
-            
-            grapher.newCanvas();
-            grapher.clear();
-            for(let a = 0; a < field.length; a++){
-                grapher.drawPoly(field[a].points,'rgba(200,200,200,1)');
-            }
-            
-            
-            
-            
-            
-            
-            
-            
-            const visibilityGraph = _canvas_.library.math.polygonsToVisibilityGraph( field );
-            // console.log(visibilityGraph);
-            visibilityGraph.forEach(point_source => {
-                grapher.drawCircle(
-                    field[point_source.polyIndex].points[point_source.pointIndex].x,
-                    field[point_source.polyIndex].points[point_source.pointIndex].y,
-                    2.5,
-                    'rgba(255,0,0,1)'
-                );
-            
-                let colour = [
-                    'rgba(200,200,0,1)',
-                    'rgba(255,0,0,1)',
-                    'rgba(0,255,0,1)',
-                    'rgba(0,0,255,1)',
-                    'rgba(0,255,255,1)',
-                    'rgba(255,0,255,1)',
-                    'rgba(200,200,255,1)',
-                    'rgba(100,0,200,1)',
-                ][point_source.polyIndex];
-                point_source.destination.forEach(destination => {
-                    grapher.drawLine(
-                        field[point_source.polyIndex].points[point_source.pointIndex],
-                        field[destination.polyIndex].points[destination.pointIndex],
-                        colour
-                    );
-                });
-            });
-            
-            
-            
-            
-            
-            
-            
-            
-            let path = _canvas_.library.math.shortestRouteFromVisibilityGraph( visibilityGraph, 0, 1 );
-            path = path.map(step => visibilityGraph[step] );
-            path = path.map(step => field[step.polyIndex].points[step.pointIndex] );
-            for(let a = 0; a < path.length-1; a++){
-                grapher.drawLine( path[a], path[a+1], 'rgba(0,0,0,0.5)', 10);
-            }
-        }
-        {
-            console.log('%cTesting - library.structure.signalRegistry', 'font-size:15px; font-weight:bold;');
-                console.log('%c- regular use', 'font-weight: bold;');
-                    console.log('%c-- adding a signal', 'font-weight: bold;');
-                        var signalRegistry = new _canvas_.library.structure.signalRegistry(64, 10, 10);
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:0, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 0, strength: 1},{signalID: 0, line: 0, position: 5, strength: 0}]);
-            
-                    console.log('%c--removing it', 'font-weight: bold;');
-                        signalRegistry.remove(0);
-                        tester(signalRegistry.getAllSignals(), [null]);
-                        tester(signalRegistry.getAllEvents(), [null,null]);
-            
-                    console.log('%c- adding three signals', 'font-weight: bold;');
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        signalRegistry.add({ line:1, position:1, length:1, strength:0.5 });
-                        signalRegistry.add({ line:2, position:2, length:10, strength:0.25 });
-                        tester(signalRegistry.getAllSignals(), [
-                            {line:0,position:0,length:5,strength:1},
-                            {line:1,position:1,length:1,strength:0.5},
-                            {line:2,position:2,length:10,strength:0.25}
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID:0,line:0,position:0,strength:1},{signalID:0,line:0,position:5,strength:0},
-                            {signalID:1,line:1,position:1,strength:0.5},{signalID:1,line:1,position:2,strength:0},
-                            {signalID:2,line:2,position:2,strength:0.25},{signalID:2,line:2,position:12,strength:0}
-                        ]);
-            
-                    console.log('%c- removing the middle one', 'font-weight: bold;');
-                        signalRegistry.remove(1);
-                        tester(signalRegistry.getAllSignals(), [
-                            {line:0,position:0,length:5,strength:1},
-                            null,
-                            {line:2,position:2,length:10,strength:0.25}
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID:0,line:0,position:0,strength:1},{signalID:0,line:0,position:5,strength:0},
-                            null,null,
-                            {signalID:2,line:2,position:2,strength:0.25},{signalID:2,line:2,position:12,strength:0}
-                        ]);
-            
-                    console.log('%c-- adding a signal (to be automatically inserted in the middle position)', 'font-weight: bold;');
-                        signalRegistry.add({ line:4, position:4, length:6, strength:0.75 });
-                        tester(signalRegistry.getAllSignals(), [
-                            {line:0,position:0,length:5,strength:1},
-                            {line:4,position:4,length:6,strength:0.75},
-                            {line:2,position:2,length:10,strength:0.25}
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID:0,line:0,position:0,strength:1},{signalID:0,line:0,position:5,strength:0},
-                            {signalID:1,line:4,position:4,strength:0.75},{signalID:1,line:4,position:10,strength:0},
-                            {signalID:2,line:2,position:2,strength:0.25},{signalID:2,line:2,position:12,strength:0}
-                        ]);
-            
-                    console.log('%c-- updating a signal', 'font-weight: bold;');
-                        signalRegistry.update(0,{ line:9, position:50, length:2, strength:0.1 });
-                        tester(signalRegistry.getAllSignals(), [
-                            {line:9,position:50,length:2,strength:0.1},
-                            {line:4,position:4,length:6,strength:0.75},
-                            {line:2,position:2,length:10,strength:0.25}
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID:0,line:9,position:50,strength:0.1},{signalID:0,line:9,position:52,strength:0},
-                            {signalID:1,line:4,position:4,strength:0.75},{signalID:1,line:4,position:10,strength:0},
-                            {signalID:2,line:2,position:2,strength:0.25},{signalID:2,line:2,position:12,strength:0}
-                        ]);
-            
-                    console.log('%c-- full reset', 'font-weight: bold;');
-                        signalRegistry.reset();
-                        tester(signalRegistry.getAllSignals(), []);
-                        tester(signalRegistry.getAllEvents(), []);
-            
-                    console.log('%c-- getting events', 'font-weight: bold;');
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        signalRegistry.add({ line:1, position:1, length:1, strength:0.5 });
-                        signalRegistry.add({ line:2, position:6, length:10, strength:0.25 });
-                        tester( signalRegistry.eventsBetween(0,3), [
-                            {signalID: 0, line: 0, position: 0, strength: 1},
-                            {signalID: 1, line: 1, position: 1, strength: 0.5},
-                            {signalID: 1, line: 1, position: 2, strength: 0}
-                        ]);
-                        tester( signalRegistry.eventsBetween(16), [
-                            {signalID: 2, line: 2, position: 16, strength: 0}
-                        ]);
-            
-                    console.log('%c-- import/export', 'font-weight: bold;');
-                        signalRegistry.import({
-                            "signals":[
-                                {"line":9,"position":50,"length":2,"strength":0.1},
-                                {"line":4,"position":4,"length":6,"strength":0.75},
-                                {"line":2,"position":2,"length":10,"strength":0.25}
-                            ],
-                            "selectedSignals":[],
-                            "events":[
-                                {"signalID":0,"line":9,"position":50,"strength":0.1},
-                                {"signalID":0,"line":9,"position":52,"strength":0},
-                                {"signalID":1,"line":4,"position":4,"strength":0.75},
-                                {"signalID":1,"line":4,"position":10,"strength":0},
-                                {"signalID":2,"line":2,"position":2,"strength":0.25},
-                                {"signalID":2,"line":2,"position":12,"strength":0}
-                            ],
-                            "events_byID":[[0,1],[2,3],[4,5]],
-                            "events_byPosition":{"2":[4],"4":[2],"10":[3],"12":[5],"50":[0],"52":[1]},
-                            "positions":[2,12,4,10,50,52]
-                        });
-                        tester( signalRegistry.export(), {
-                            "signals":[
-                                {"line":9,"position":50,"length":2,"strength":0.1},
-                                {"line":4,"position":4,"length":6,"strength":0.75},
-                                {"line":2,"position":2,"length":10,"strength":0.25}
-                            ],
-                            "selectedSignals":[],
-                            "events":[
-                                {"signalID":0,"line":9,"position":50,"strength":0.1},
-                                {"signalID":0,"line":9,"position":52,"strength":0},
-                                {"signalID":1,"line":4,"position":4,"strength":0.75},
-                                {"signalID":1,"line":4,"position":10,"strength":0},
-                                {"signalID":2,"line":2,"position":2,"strength":0.25},
-                                {"signalID":2,"line":2,"position":12,"strength":0}
-                            ],
-                            "events_byID":[[0,1],[2,3],[4,5]],
-                            "events_byPosition":{"2":[4],"4":[2],"10":[3],"12":[5],"50":[0],"52":[1]},
-                            "positions":[2,12,4,10,50,52]
-                        });
-            
-                console.log('%c- irregular use', 'font-weight: bold;');
-                    signalRegistry.reset();
-                        
-                    console.log('%c-- adding a signal (bad line)', 'font-weight: bold;');
-                        //(line should clip to a number within the bounds)
-                        signalRegistry.add({ line:20, position:0, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:9, position:0, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 9, position: 0, strength: 1},{signalID: 0, line: 9, position: 5, strength: 0}]);
-                        signalRegistry.reset();
-            
-                        signalRegistry.add({ line:-1, position:0, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:0, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line:0, position: 0, strength: 1},{signalID: 0, line:0, position: 5, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- adding a signal (bad position)', 'font-weight: bold;');
-                        //(position should clip to a place within the bounds, where there length of the signal is also taken into account)
-                        signalRegistry.add({ line:5, position:100, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:59, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 5, position:59, strength: 1},{signalID: 0, line:5, position:64, strength: 0}]);
-                        signalRegistry.reset();
-            
-                        signalRegistry.add({ line:5, position:-1, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:0, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 5, position:0, strength: 1},{signalID: 0, line:5, position:5, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- adding a signal (bad length)', 'font-weight: bold;');
-                        //(length should clip to whatever the max is, or at minimum zero)
-                        signalRegistry.add({ line:5, position:10, length:100, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:10, length:10, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 5, position:10, strength: 1},{signalID: 0, line:5, position:20, strength: 0}]);
-                        signalRegistry.reset();
-            
-                        signalRegistry.add({ line:5, position:10, length:-1, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:10, length:0, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 5, position:10, strength: 1},{signalID: 0, line:5, position:10, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- adding a signal (ends beyond boundaries)', 'font-weight: bold;');
-                        //(signal should be clipped to fit)
-                        //too far to the right
-                        signalRegistry.add({ line:5, position:62, length:8, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:62, length:2, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line:5, position:62, strength: 1},{signalID: 0, line:5, position:64, strength: 0}]);
-                        signalRegistry.reset();
-                        //too far to the left
-                        signalRegistry.add({ line:5, position:-5, length:8, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:0, length:8, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line:5, position:0, strength: 1},{signalID: 0, line:5, position:8, strength: 0}]);
-                        signalRegistry.reset();
-                        //below last line
-                        signalRegistry.add({ line:50, position:5, length:8, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:9, position:5, length:8, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID:0, line:9, position:5, strength: 1},{signalID:0, line:9, position:13, strength: 0}]);
-                        signalRegistry.reset();
-                        //above top line
-                        signalRegistry.add({ line:-6, position:5, length:8, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:5, length:8, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID:0, line:0, position:5, strength: 1},{signalID:0, line:0, position:13, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- adding a signal (all of the above)', 'font-weight: bold;');
-                        //(length is limited before the position is corrected. Line can be corrected in an unrelated way)
-                        signalRegistry.add({ line:50, position:100, length:100, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:9, position:54, length:10, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line:9, position:54, strength: 1},{signalID: 0, line:9, position:64, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- remove signal (signal doesn\'t exist)', 'font-weight: bold;');
-                        //remove should just do nothing
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        signalRegistry.add({ line:1, position:1, length:1, strength:0.5 });
-                        signalRegistry.add({ line:2, position:6, length:10, strength:0.25 });
-                        signalRegistry.remove(10);
-                        signalRegistry.remove(-1);
-                        tester(signalRegistry.getAllSignals(), [
-                            {line: 0, position: 0, length: 5, strength: 1},
-                            {line: 1, position: 1, length: 1, strength: 0.5},
-                            {line: 2, position: 6, length: 10, strength: 0.25},
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID: 0, line: 0, position: 0, strength: 1},{signalID: 0, line: 0, position: 5, strength: 0},
-                            {signalID: 1, line: 1, position: 1, strength: 0.5},{signalID: 1, line: 1, position: 2, strength: 0},
-                            {signalID: 2, line: 2, position: 6, strength: 0.25},{signalID: 2, line: 2, position: 16, strength: 0},
-                        ]);
-            
-                    console.log('%c-- getting events (out of range)', 'font-weight: bold;');
-                        //should be pretty straight-forward. Either there are events in the range, or there aren't
-                        tester( signalRegistry.eventsBetween(100,1000), []);
-                        tester( signalRegistry.eventsBetween(-100,-1), []);
-                        tester( signalRegistry.eventsBetween(-100,100), [
-                            {signalID: 0, line: 0, position: 0, strength: 1},
-                            {signalID: 1, line: 1, position: 1, strength: 0.5},
-                            {signalID: 1, line: 1, position: 2, strength: 0},
-                            {signalID: 0, line: 0, position: 5, strength: 0},
-                            {signalID: 2, line: 2, position: 6, strength: 0.25},
-                            {signalID: 2, line: 2, position: 16, strength: 0},
-                        ]);
-                        
-                    console.log('%c-- updating a signal (wrong position)', 'font-weight: bold;');
-                        //(signal should be prevented from moving too far to the right)
-                        var signalRegistry = new _canvas_.library.structure.signalRegistry(64, 10, 10);
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        signalRegistry.update(0,{position:100});
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:59, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 59, strength: 1},{signalID: 0, line: 0, position: 64, strength: 0}]);
-                    console.log('%c-- updating a signal (wrong length)', 'font-weight: bold;');
-                        //(signal should be prevented from extending past the right limit)
-                        var signalRegistry = new _canvas_.library.structure.signalRegistry(64, 10);
-                        signalRegistry.add({ line:0, position:7, length:5, strength:1 });
-                        signalRegistry.update(0,{length:100});
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:7, length:57, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 7, strength: 1},{signalID: 0, line: 0, position: 64, strength: 0}]);
-                    console.log('%c-- updating a signal (wrong length and position)', 'font-weight: bold;');
-                        //(signal should be prevented from extending past the right limit)
-                        var signalRegistry = new _canvas_.library.structure.signalRegistry(64, 10);
-                        signalRegistry.add({ line:0, position:7, length:5, strength:1 });
-                        signalRegistry.update(0,{position:100,length:100});
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:64, length:0, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 64, strength: 1},{signalID: 0, line: 0, position: 64, strength: 0}]);
-            
-            console.log('');
-        }
-        {
-            console.log('%cTesting - library.audio', 'font-size:15px; font-weight:bold;');
-            
-            //num2name
-                console.log('%c- num2name', 'font-weight: bold;');
-                tester(_canvas_.library.audio.num2name(24),'0C');
-                tester(_canvas_.library.audio.num2name(25),'0C#');
-                tester(_canvas_.library.audio.num2name(36),'1C');
-                tester(_canvas_.library.audio.num2name(72),'4C');
-                tester(_canvas_.library.audio.num2name(81),'4A');
-                tester(_canvas_.library.audio.num2name(120),'8C');
-                tester(_canvas_.library.audio.num2name(131),'8B');
-                console.log('');
-            
-            //num2freq
-                console.log('%c- num2freq', 'font-weight: bold;');
-                tester(_canvas_.library.audio.num2freq(24),16.35);
-                tester(_canvas_.library.audio.num2freq(25),17.32);
-                tester(_canvas_.library.audio.num2freq(36),32.7);
-                tester(_canvas_.library.audio.num2freq(72),261.6);
-                tester(_canvas_.library.audio.num2freq(81),440);
-                tester(_canvas_.library.audio.num2freq(120),4186);
-                tester(_canvas_.library.audio.num2freq(131),7902);
-                console.log('');
-            
-            //name2num
-                console.log('%c- name2num', 'font-weight: bold;');
-                tester(_canvas_.library.audio.name2num('0C'),24);
-                tester(_canvas_.library.audio.name2num('0C#'),25);
-                tester(_canvas_.library.audio.name2num('1C'),36);
-                tester(_canvas_.library.audio.name2num('4C'),72);
-                tester(_canvas_.library.audio.name2num('4A'),81);
-                tester(_canvas_.library.audio.name2num('8C'),120);
-                tester(_canvas_.library.audio.name2num('8B'),131);
-                console.log('');
-            //name2freq
-                console.log('%c- name2freq', 'font-weight: bold;');
-                tester(_canvas_.library.audio.name2freq('0C'),16.35);
-                tester(_canvas_.library.audio.name2freq('0C#'),17.32);
-                tester(_canvas_.library.audio.name2freq('1C'),32.7);
-                tester(_canvas_.library.audio.name2freq('4C'),261.6);
-                tester(_canvas_.library.audio.name2freq('4A'),440);
-                tester(_canvas_.library.audio.name2freq('8C'),4186);
-                tester(_canvas_.library.audio.name2freq('8B'),7902);
-                console.log('');
-            
-            //freq2num
-                console.log('%c- freq2num', 'font-weight: bold;');
-                tester(_canvas_.library.audio.freq2num(16.35),24);
-                tester(_canvas_.library.audio.freq2num(17.32),25);
-                tester(_canvas_.library.audio.freq2num(32.7),36);
-                tester(_canvas_.library.audio.freq2num(261.6),72);
-                tester(_canvas_.library.audio.freq2num(440),81);
-                tester(_canvas_.library.audio.freq2num(4186),120);
-                tester(_canvas_.library.audio.freq2num(7902),131);
-                console.log('');
-            //freq2name
-                console.log('%c- freq2name', 'font-weight: bold;');
-                tester(_canvas_.library.audio.freq2name(16.35),'0C');
-                tester(_canvas_.library.audio.freq2name(17.32),'0C#');
-                tester(_canvas_.library.audio.freq2name(32.7),'1C');
-                tester(_canvas_.library.audio.freq2name(261.6),'4C');
-                tester(_canvas_.library.audio.freq2name(440),'4A');
-                tester(_canvas_.library.audio.freq2name(4186),'8C');
-                tester(_canvas_.library.audio.freq2name(7902),'8B');
-                console.log('');
-        }
-        {
+                const countActive = !false;
+                const countMemory = {};
+                this.count = function(commandTag){
+                    if(!countActive){return;}
+                    if(commandTag in countMemory){ countMemory[commandTag]++; }
+                    else{ countMemory[commandTag] = 1; }
+                };
+                this.countResults = function(){return countMemory;};
+            };
 
-        }
-        {
-            console.log('%cTesting - library.misc', 'font-size:15px; font-weight:bold;');
+            let elementRegistry = [];
+            const elementLibrary = new function(){
+                const genericElementProxy = function(_type, _name){
+                    const self = this;
+                
+                    //type
+                        const type = _type;
+                        this.getType = function(){return type;};
+                        dev.log.elementLibrary[type](' - new '+type+'(',_name); //#development
+                
+                    //id
+                        let id = -1;
+                        this.getId = function(){return id;};
+                        this.__idReceived = function(){};
+                        this.__id = function(a,updateIdOnly=false){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].__id(',a); //#development
+                            id = a;
+                            if(updateIdOnly){return;}
+                
+                            //repush
+                                _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[cashedAttributes]);
+                                Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(this,entry[0],entry[1]); });
+                                if(this.__repush != undefined){this.__repush();}
+                
+                            if(this.__idReceived){this.__idReceived();}
+                        };
+                
+                    //name
+                        let name = _name;
+                        this.getName = function(){return name;};
+                        // this.setName = function(a){
+                        //     dev.log.elementLibrary[type]('['+this.getAddress+'].setName(',a); //#development
+                        //     name = a;
+                        // };
+                
+                    //hierarchy
+                        this.parent = undefined;
+                        this.getAddress = function(){
+                            return (this.parent != undefined && this.parent.getId() != 0 ? this.parent.getAddress() : '') + '/' + name;
+                        };
+                        this.getOffset = function(){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
+                
+                            let output = {x:0,y:0,scale:1,angle:0};
+                
+                            if(this.parent){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset() -> parent found'); //#development
+                                const offset = this.parent.getOffset();
+                                const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
+                                output = { 
+                                    x: point.x*offset.scale + offset.x,
+                                    y: point.y*offset.scale + offset.y,
+                                    scale: offset.scale * cashedAttributes.scale,
+                                    angle: offset.angle + cashedAttributes.angle,
+                                };
+                            }else{
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> no parent found'); //#development
+                                output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
+                            }
+                
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> output: '+JSON.stringify(output)); //#development
+                            return output;
+                        };
+                
+                    //attributes
+                        const cashedAttributes = {};
+                        this.setupSimpleAttribute = function(name,defaultValue){
+                            cashedAttributes[name] = defaultValue;
+                            this[name] = function(a){
+                                if(a == undefined){ return cashedAttributes[name]; }
+                                if(a == cashedAttributes[name]){ return; } //no need to set things to what they already are
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress+'].'+name+'(',...arguments); //#development
+                                cashedAttributes[name] = a;
+                                if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),name,[...arguments]); }
+                            };
+                        }
+                        Object.entries({
+                            ignored: false,
+                            scale: 1,
+                        }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                        this.unifiedAttribute = function(attributes){
+                            if(attributes == undefined){ return cashedAttributes; }
+                            dev.log.elementLibrary[type]('['+this.getAddress+'].unifiedAttribute(',attributes); //#development
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            if(id != -1){ _canvas_.core.element.__executeMethod(id,'unifiedAttribute',[attributes]); }
+                        };
+                
+                    //callbacks
+                        const cashedCallbacks = {};
+                        this.getCallback = function(callbackType){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].getCallback(',callbackType); //#development
+                            return cashedCallbacks[callbackType];
+                        };
+                        this.attachCallback = function(callbackType, callback){
+                            dev.log.elementLibrary[type]('['+this.getAddress+'].attachCallback(',callbackType,callback); //#development
+                            cashedCallbacks[callbackType] = callback;
+                            if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
+                        }
+                        this.removeCallback = function(callbackType){
+                            dev.log.elementLibrary[type]('['+this.getAddress+'].removeCallback(',callbackType); //#development
+                            delete cashedCallbacks[callbackType];
+                            if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
+                        }
+                
+                    //info dump
+                        this._dump = function(){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']._dump()'); //#development
+                            _canvas_.core.element.__executeMethod(id,'_dump',[]);
+                        };
+                };
+                
+                // this.getType
+                // this.getId
+                // this.__idReceived
+                // this.__id
+                // this.__repush
+                // this.getName
+                // this.setName
+                // this.parent
+                // this.getAddress
+                // this.getOffset
+                // this.setupSimpleAttribute
+                // this.unifiedAttribute
+                // this.getCallback
+                // this.attachCallback
+                // this.removeCallback
+                // this._dump
+                
+                this.group = function(_name){
+                    genericElementProxy.call(this,'group',_name);
+                
+                    Object.entries({
+                        heedCamera: false,
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        clipActive: false,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                
+                
+                    const self = this;
+                
+                    let children = [];
+                    let childRegistry = {};
+                    let stencilElement = undefined;
+                
+                    let clearingLock = false;
+                    function lockClearingLock(){
+                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::lockClearingLock()'); //#development
+                        clearingLock = true;
+                    }
+                    function unlockClearingLock(){
+                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::unlockClearingLock()'); //#development
+                        self.__repush();
+                        clearingLock = false;
+                    }
+                
+                    function checkForName(name){ return childRegistry[name] != undefined; }
+                    function isValidElement(elementToCheck){
+                        dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::isValidElement(',elementToCheck); //#development
+                        if( elementToCheck == undefined ){ return false; }
+                        if( elementToCheck.getName() == undefined || elementToCheck.getName().length == 0 ){
+                            console.warn('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
+                            return false;
+                        }
+                        if( checkForName(elementToCheck.getName()) ){
+                            console.warn('group error: element with name "'+elementToCheck.getName()+'" already exists in group "'+self.getAddress()+'", therefore; the element will not be added');
+                            return false;
+                        }
+                
+                        return true;
+                    }
+                
+                    this.__repush = function(){
+                        if(stencilElement != undefined){
+                            function readdStencil(){
+                                if( stencilElement.getId() == -1 ){ setTimeout(readdStencil,1); }
+                                else{ _canvas_.core.element.__executeMethod(self.getId(),'stencil',[stencilElement.getId()]); }
+                            }
+                            readdStencil();
+                        }
+                
+                        communicationModule.run('element.executeMethod',[self.getId(),'clear'],() => {
+                            function readdChildren(){
+                                dev.log.elementLibrary[self.getType()]('['+self.getAddress()+']::repush::readdChildren -> children:',children); //#development
+                                const childIds = children.map(child => child.getId());
+                                if( childIds.indexOf(-1) != -1 ){ setTimeout(readdChildren,1); }
+                                else{ _canvas_.core.element.__executeMethod(self.getId(),'syncChildren',[childIds]); }
+                            }
+                            readdChildren();
+                        });
+                    };
+                    
+                    this.getChildren = function(){ 
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildren()'); //#development
+                        return children;
+                    };
+                    this.getChildByName = function(name){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildByName(',name); //#development
+                        return childRegistry[name];
+                    };
+                    this.getChildIndexByName = function(name){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getChildIndexByName(',name); //#development
+                        return children.indexOf(childRegistry[name]);
+                    };
+                    this.contains = function(elementToCheck){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].contains(',elementToCheck); //#development
+                        return children.indexOf(elementToCheck) != -1;
+                    };
+                    this.append = function(newElement){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append(',newElement,'(',newElement.getName(),')'); //#development
+                
+                        if( !isValidElement(newElement) ){ return false; }
+                        newElement.parent = this;
+                        children.push(newElement);
+                        childRegistry[newElement.getName()] = newElement;
+                        if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
+                
+                        if(clearingLock){ return; }
+                
+                        if(newElement.getId() == -1){
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> newElement\'s id missing; setting up "__idReceived" callback..'); //#development
+                            newElement.__calledBy = this.getAddress();
+                            newElement.__idReceived = function(){
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> newElement\'s "__idReceived" callback, called by '+newElement.__calledBy+', id is: '+newElement.getId()+' ()'); //#development
+                                if(self.getId() != -1){ 
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id:',self.getId()); //#development
+                                    if(children.indexOf(newElement) != -1){
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> element position:',children.indexOf(newElement)); //#development
+                                        _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
+                                    }else{
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this element doesn\'t seem to be relevant anymore; not sending message'); //#development
+                                    }
+                                }else{
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
+                                }
+                            };
+                        }else{
+                            if(self.getId() != -1){
+                                _canvas_.core.element.__executeMethod(self.getId(),'append', [newElement.getId()]);
+                            }else{
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
+                            }
+                        }
+                    };
+                    this.prepend = function(newElement){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend(',newElement,'(',newElement.getName(),')'); //#development
+                
+                        if( !isValidElement(newElement) ){ return false; }
+                
+                        //add element
+                            newElement.parent = this;
+                            children.unshift(newElement);
+                            childRegistry[newElement.getName()] = newElement;
+                
+                        //perform addition callback
+                            if(newElement.getCallback('onadd')){newElement.getCallback('onadd')();}
+                
+                        //communicate with engine for removal
+                            if(clearingLock){ return; }
+                
+                            if(newElement.getId() == -1){
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> newElement\'s id missing; setting up "__idReceived" callback..'); //#development
+                                newElement.__idReceived = function(){
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> newElement\'s "__idReceived" callback ->'); //#development
+                                    if(children.indexOf(newElement) != -1 && self.getId() != -1){ 
+                                        _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
+                                    }else{
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].prepend -> this group\'s id missing; will not send message'); //#development
+                                    }
+                                };
+                            }else{
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'prepend', [newElement.getId()]);
+                                }else{
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
+                                }
+                            }
+                    };
+                    this.remove = function(elementToRemove){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove(',elementToRemove,'(',elementToRemove.getName(),')'); //#development
+                
+                        //ensure that removing elements is actually a child of this group
+                            if( !children.includes(elementToRemove) ){ return; }
+                
+                        //clear out children of removing element (if it is a group)
+                            if(elementToRemove.getType() == 'group'){ elementToRemove.clear(); }
+                        
+                        //perform removal callback
+                            if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
+                
+                        //remove element
+                            children.splice(children.indexOf(elementToRemove), 1);
+                            delete childRegistry[elementToRemove.getName()];
+                            elementToRemove.parent = undefined;
+                
+                        //communicate with engine for removal
+                            if(clearingLock){ return; }
+                
+                            if(elementToRemove.getId() == -1){
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s id missing'); //#development
+                                elementToRemove.__idReceived = function(){
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s "__idReceived" callback ->'); //#development
+                                    if(children.indexOf(elementToRemove) == -1 && self.getId() != -1){ 
+                                        _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                                    }else{
+                                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
+                                    }
+                                };
+                            }else{
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> elementToRemove\'s id:',elementToRemove.getId()); //#development
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'remove', [elementToRemove.getId()]);
+                                }else{
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].remove -> this group\'s id missing; will not send message'); //#development
+                                }
+                            }
+                    };
+                    this.clear = function(){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].clear()'); //#development
+                        children.forEach(child => {if(child.getCallback('onremove')){child.getCallback('onremove')();}});
+                        children = [];
+                        childRegistry = {};
+                        if(self.getId() != -1){ 
+                            lockClearingLock();
+                            communicationModule.run('element.executeMethod',[self.getId(),'clear',[]],unlockClearingLock);
+                        }else{
+                            dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].append -> this group\'s id missing; will not send message'); //#development
+                        }
+                    };
+                    this.shift = function(elementToShift,newPosition){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift(',elementToShift,newPosition); //#development
+                
+                        //ensure that removing elements is actually a child of this group
+                            if( !children.includes(elementToShift) ){ return; }
+                
+                        //shift element
+                            children.splice(children.indexOf(elementToShift), 1);
+                            children.splice(newPosition,0,elementToShift);
+                
+                        //perform removal callback
+                            if(elementToShift.getCallback('onshift')){elementToShift.getCallback('onshift')(children.indexOf(elementToShift));}
+                
+                        //communicate with engine for shifting
+                            if(clearingLock){ return; }
+                
+                            if(elementToShift.getId() == -1){
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> elementToShift\'s id missing'); //#development
+                                // elementToShift.__idReceived = function(){
+                                //     dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> elementToShift\'s "__idReceived" callback ->'); //#development
+                                //     if(children.indexOf(elementToShift) != -1 && self.getId() != -1){ 
+                                //         _canvas_.core.element.__executeMethod(self.getId(),'shift', [elementToShift.getId(),newPosition]);
+                                //     }else{
+                                //         dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> this group\'s id missing; will not send message'); //#development
+                                //     }
+                                // };
+                            }else{
+                                dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> elementToShift\'s id:',elementToShift.getId()); //#development
+                                if(self.getId() != -1){
+                                    _canvas_.core.element.__executeMethod(self.getId(),'shift', [elementToShift.getId(),newPosition]);
+                                }else{
+                                    dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].shift -> this group\'s id missing; will not send message'); //#development
+                                }
+                            }
+                    };
+                    this.getElementsUnderPoint = function(x,y){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getElementsUnderPoint(',x,y); //#development
+                        if(self.getId() != -1){
+                            return new Promise((resolve, reject) => {
+                                _canvas_.core.element.__executeMethod(self.getId(),'getElementsUnderPoint',[x,y],result => resolve(result.map(elementId => elementRegistry[elementId])) );
+                            });
+                        }
+                    };
+                    this.getTree = function(){
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].getTree()'); //#development
+                
+                        const result = {name:this.getName(), type:this.getType(), id:this.getId(), children:[]};
+                        children.forEach(function(a){
+                            if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
+                            else{ result.children.push({ type:a.getType(), name:a.getName(), id:a.getId() }); }
+                        });
+                        return result;
+                    };
+                    this.stencil = function(newStencilElement){
+                        if(newStencilElement == undefined){ return stencilElement; }
+                        dev.log.elementLibrary[this.getType()]('['+this.getAddress()+'].stencil(',newStencilElement); //#development
+                        stencilElement = newStencilElement;
+                
+                        if(newStencilElement.getId() == -1){
+                            newStencilElement.__idReceived = function(){
+                                if(self.getId() != -1){ _canvas_.core.element.__executeMethod(self.getId(),'stencil', [newStencilElement.getId()]); }
+                            };
+                        }else{
+                            if(self.getId() != -1){ _canvas_.core.element.__executeMethod(self.getId(),'stencil', [newStencilElement.getId()]); }
+                        }
+                    };
+                };
+                
+                this.rectangle = function(_name){
+                    genericElementProxy.call(this,'rectangle',_name);
+                
+                    Object.entries({
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        colour: {r:1,g:0,b:0,a:1},
+                        anchor: {x:0,y:0},
+                        width: 10,
+                        height: 10,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                };
+                this.rectangleWithOutline = function(_name){
+                    genericElementProxy.call(this,'rectangleWithOutline',_name);
+                
+                    Object.entries({
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        colour: {r:1,g:0,b:0,a:1},
+                        lineColour: {r:1,g:0,b:0,a:1},
+                        anchor: {x:0,y:0},
+                        width: 10,
+                        height: 10,
+                        thickness: 0,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                };
+                this.circle = function(_name){
+                    genericElementProxy.call(this,'circle',_name);
+                
+                    Object.entries({
+                        x: 0,
+                        y: 0,
+                        colour: {r:1,g:0,b:0,a:1},
+                        radius: 10,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                };
+                this.circleWithOutline = function(_name){
+                    genericElementProxy.call(this,'circleWithOutline',_name);
+                
+                    Object.entries({
+                        x: 0,
+                        y: 0,
+                        colour: {r:1,g:0,b:0,a:1},
+                        lineColour: {r:1,g:0,b:0,a:1},
+                        radius: 10,
+                        thickness: 0,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                };
+                this.polygon = function(_name){
+                    genericElementProxy.call(this,'polygon',_name);
+                
+                    Object.entries({
+                        colour: {r:1,g:0,b:0,a:1},
+                        points: [], 
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                
+                    function XYArrayToPoints(XYArrray){
+                        return XYArrray.flatMap(i => [i.x,i.y]);
+                    }
+                    function pointsToXYArray(points){ 
+                        const output = [];
+                        for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                        return output;
+                    }
+                
+                    this.pointsAsXYArray = function(XYArrray){
+                        if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                        this.points(XYArrayToPoints(XYArrray));
+                    };
+                
+                    const __unifiedAttribute = this.unifiedAttribute;
+                    this.unifiedAttribute = function(attributes){
+                        __unifiedAttribute(attributes);
+                        if(attributes.points != undefined){
+                            attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                            return attributes;
+                        }
+                        if(attributes.pointsAsXYArray != undefined){
+                            attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                            return attributes;
+                        }
+                    };
+                };
+                this.polygonWithOutline = function(_name){
+                    genericElementProxy.call(this,'polygonWithOutline',_name);
+                
+                    Object.entries({
+                        colour: {r:1,g:0,b:0,a:1},
+                        lineColour: {r:1,g:0,b:0,a:1},
+                        points: [],
+                        thickness: 0,
+                        jointDetail: 25,
+                        jointType: 'sharp',
+                        sharpLimit: 4,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                
+                    function XYArrayToPoints(XYArrray){
+                        return XYArrray.flatMap(i => [i.x,i.y]);
+                    }
+                    function pointsToXYArray(points){ 
+                        const output = [];
+                        for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                        return output;
+                    }
+                
+                    this.pointsAsXYArray = function(XYArrray){
+                        if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                        this.points(XYArrayToPoints(XYArrray));
+                    };
+                
+                    const __unifiedAttribute = this.unifiedAttribute;
+                    this.unifiedAttribute = function(attributes){
+                        __unifiedAttribute(attributes);
+                        if(attributes.points != undefined){
+                            attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                            return attributes;
+                        }
+                        if(attributes.pointsAsXYArray != undefined){
+                            attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                            return attributes;
+                        }
+                    };
+                };
+                
+                this.path = function(_name){
+                    genericElementProxy.call(this,'path',_name);
+                
+                    Object.entries({
+                        colour: {r:1,g:0,b:0,a:1},
+                        points: [], 
+                        thickness: 0,
+                        capType: 'none',
+                        jointDetail: 25,
+                        jointType: 'sharp',
+                        sharpLimit: 4,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                
+                    function XYArrayToPoints(XYArrray){
+                        return XYArrray.flatMap(i => [i.x,i.y]);
+                    }
+                    function pointsToXYArray(points){ 
+                        const output = [];
+                        for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                        return output;
+                    }
+                
+                    this.pointsAsXYArray = function(XYArrray){
+                        if(XYArrray == undefined){ return pointsToXYArray(this.points()); }
+                        this.points(XYArrayToPoints(XYArrray));
+                    };
+                
+                    const __unifiedAttribute = this.unifiedAttribute;
+                    this.unifiedAttribute = function(attributes){
+                        __unifiedAttribute(attributes);
+                        if(attributes.points != undefined){
+                            attributes.pointsAsXYArray = pointsToXYArray(attributes.points);
+                            return attributes;
+                        }
+                        if(attributes.pointsAsXYArray != undefined){
+                            attributes.points = XYArrayToPoints(attributes.pointsAsXYArray);
+                            return attributes;
+                        }
+                    };
+                };
+                
+                this.image = function(_name){
+                    genericElementProxy.call(this,'image',_name);
+                
+                    Object.entries({
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        anchor: {x:0,y:0},
+                        width: 10,
+                        height: 10,
+                        url:undefined,
+                        bitmap: undefined,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                };
+                this.canvas = function(_name){
+                    genericElementProxy.call(this,'canvas',_name);
+                
+                    Object.entries({
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        anchor: {x:0,y:0},
+                        width: 10,
+                        height: 10,
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                
+                    //subCanvas
+                        const subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1 };
+                        subCanvas.context = subCanvas.object.getContext('2d');
+                
+                        function updateDimentions(self){
+                            subCanvas.object.setAttribute('width',self.width()*subCanvas.resolution);
+                            subCanvas.object.setAttribute('height',self.height()*subCanvas.resolution);
+                        }
+                        updateDimentions(this);
+                
+                        this._ = subCanvas.context;
+                        this.$ = function(a){return a*subCanvas.resolution;};
+                        this.resolution = function(a){
+                            if(a == undefined){return subCanvas.resolution;}
+                            subCanvas.resolution = a;
+                            updateDimentions(this);
+                        };
+                        this.requestUpdate = function(){
+                            createImageBitmap(subCanvas.object).then(bitmap => {
+                                if(this.getId() != -1){ _canvas_.core.element.__executeMethod(this.getId(),'imageBitmap',[bitmap],undefined,[bitmap]); }
+                            });
+                        };
+                        this.requestUpdate();
+                        this.__repush = function(){ this.requestUpdate(); };
+                
+                
+                    const __unifiedAttribute = this.unifiedAttribute;
+                    this.unifiedAttribute = function(attributes){
+                        if(attributes.resolution != undefined){
+                            this.resolution(attributes.resolution);
+                            delete attributes.resolution;
+                        }
+                        __unifiedAttribute(attributes);
+                        updateDimentions(this);
+                    };
+                };
+                
+                this.character = function(_name){
+                    genericElementProxy.call(this,'character',_name);
+                
+                    Object.entries({
+                        colour: {r:1,g:0,b:0,a:1},
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        anchor: {x:0,y:0},
+                        width: 10,
+                        height: 10,
+                        font: 'defaultThin',
+                        character: '',
+                        printingMode: { horizontal:'left', vertical:'bottom' },
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                };
+                this.characterString = function(_name){
+                    genericElementProxy.call(this,'characterString',_name);
+                
+                    Object.entries({
+                        colour: {r:1,g:0,b:0,a:1},
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        width: 10,
+                        height: 10,
+                        font: 'defaultThin',
+                        string: '',
+                        spacing: 0.5,
+                        interCharacterSpacing: 0,
+                        printingMode: { widthCalculation:'absolute', horizontal:'left', vertical:'bottom' },
+                    }).forEach(([name,defaultValue]) => this.setupSimpleAttribute(name,defaultValue) );
+                
+                    const cashedAttributes_presentationOnly = {
+                        resultingWidth: 0, 
+                    };
+                    const cashedCallbacks_elementSpecific = {
+                        onFontUpdateCallback:function(){},
+                    };
+                    this.__updateValues = function(data){
+                        Object.keys(data).forEach(key => { cashedAttributes_presentationOnly[key] = data[key]; });
+                    };
+                    this.__runCallback = function(data){
+                        Object.entries(data).forEach(([name,values]) => {
+                            if(name in cashedCallbacks_elementSpecific){ cashedCallbacks_elementSpecific[name](values); }
+                        });
+                    };
+                    this.resultingWidth = function(){
+                        return cashedAttributes_presentationOnly.resultingWidth;
+                    };
+                
+                    const __getCallback = this.getCallback;
+                    this.getCallback = function(callbackType){
+                        if(callbackType in cashedCallbacks_elementSpecific){
+                            return cashedCallbacks_elementSpecific[callbackType];
+                        }
+                        __getCallback(callbackType);
+                    };
+                    const __attachCallback = this.attachCallback;
+                    this.attachCallback = function(callbackType, callback){
+                        if(callbackType in cashedCallbacks_elementSpecific){
+                            cashedCallbacks_elementSpecific[callbackType] = callback;
+                            return;
+                        }
+                        __attachCallback(callbackType);
+                    }
+                    const __removeCallback = this.removeCallback;
+                    this.removeCallback = function(callbackType){
+                        if(callbackType in cashedCallbacks_elementSpecific){
+                            delete cashedCallbacks_elementSpecific[callbackType];
+                            return;
+                        }
+                        __removeCallback(callbackType);
+                    }
+                };
+
+            };
             
-            //serialize / unserialize
-                console.log('%c- serialize/unserialize (no compression)', 'font-weight: bold;');
-                    function doBoth(data,ser_data,un_data){
-                        var s_data = _canvas_.library.misc.serialize(data,false);
-                        tester(s_data,ser_data);
-                        var u_data = _canvas_.library.misc.unserialize(s_data,false);
-                        tester(u_data,un_data);
+            this.meta = new function(){
+                this.areYouReady = function(){
+                    dev.log.interface('.meta.areYouReady()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('areYouReady',[],resolve);
+                    });
+                };
+                this.refresh = function(){
+                    dev.log.interface('.meta.refresh()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('refresh',[],resolve);
+                    });
+                };
+                this.getElementFromId = function(id){
+                    dev.log.interface('.meta.getElementFromId('+id+')'); //#development
+                    return elementRegistry[id];
+                };
+            };
+            
+            this._dump = new function(){
+                this.elememt = function(){
+                    dev.log.interface('._dump.elememt()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('_dump.element',[],resolve);
+                    });
+                };
+                this.arrangement = function(){
+                    dev.log.interface('._dump.arrangement()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('_dump.arrangement',[],resolve);
+                    });
+                };
+                this.render = function(){
+                    dev.log.interface('._dump.render()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('_dump.render',[],resolve);
+                    });
+                };
+                this.viewport = function(){
+                    dev.log.interface('._dump.viewport()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('_dump.viewport',[],resolve);
+                    });
+                };
+                this.callback = function(){
+                    dev.log.interface('._dump.callback()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('_dump.callback',[],resolve);
+                    });
+                };
+            };
+            
+            this.element = new function(){
+                this.getAvailableElements = function(){
+                    dev.log.interface('.element.getAvailableElements()'); //#development
+                    return Object.keys(elementLibrary);
+                };
+            
+                this.create = function(type,name,forceId,updateIdOnly){
+                    dev.log.interface('.element.create(',type,name,forceId,updateIdOnly); //#development
+            
+                    if(elementLibrary[type] == undefined){
+                        console.warn('interface.element.create - unknown element type "'+type+'"');
+                        return;
                     }
             
-                    var org_data;
-                    var ser_data;
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = 1;
-                    var ser_data = '1';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = 5;
-                    var ser_data = '5';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = 546544494849;
-                    var ser_data = '546544494849';
-                    doBoth(org_data,ser_data,org_data);
+                    const newElementProxy = new elementLibrary[type](name);
+                    if(forceId == undefined){
+                        communicationModule.run('element.create', [type,name], id => {
+                            newElementProxy.__id(id);
+                            elementRegistry[id] = newElementProxy;
+                        });
+                    }else{
+                        newElementProxy.__id(forceId,updateIdOnly);
+                        elementRegistry[forceId] = newElementProxy;
+                    }
+                    return newElementProxy;
+                };
+                this.delete = function(ele){
+                    dev.log.interface('.element.delete(',ele); //#development
+                    communicationModule.run('element.delete',[ele.getId()]);
+                    elementRegistry[element.getId()] = undefined;
+                };
+                this.deleteAllCreated = function(){
+                    dev.log.interface('.element.deleteAllCreated()'); //#development
+                    communicationModule.run('element.deleteAllCreated',[]);
+                    elementRegistry = [];
+                };
             
-                    var org_data = '';
-                    var ser_data = '""';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = 'hello\n';
-                    var ser_data = JSON.stringify('hello\n');
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = '546544494849';
-                    var ser_data = '"546544494849"';
-                    doBoth(org_data,ser_data,org_data);
+                this.__executeMethod = function(id,attribute,argumentList,callback,transferables){
+                    dev.log.interface('.element.__executeMethod(',id,attribute,argumentList,callback,transferables); //#development
+                    communicationModule.run('element.executeMethod',[id,attribute,argumentList],callback,transferables);
+                };
+            };
+            this.arrangement = new function(){
+                const design = self.element.create('group','root',0,true)
             
-                    var org_data = [1,2,3];
-                    var ser_data = '[1,2,3]';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = [1,2,3];
-                    var ser_data = '[1,2,3]';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = ['hello','there','my','friend'];
-                    var ser_data = JSON.stringify(['hello','there','my','friend']);
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = ['hello',1,'my',76];
-                    var ser_data = JSON.stringify(['hello',1,'my',76]);
-                    doBoth(org_data,ser_data,org_data);
-            
-                    var org_data = {item:0,thing:'hello',null:null};
-                    var ser_data = JSON.stringify({item:0,thing:'hello',null:null});
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = {item:0,thing:function(){console.log('hello');},null:null};
-                    var ser_data = JSON.stringify({"item":0,"thing":{"__uniqueType":"function","__value":"function(){console.log('hello');}","__name":"thing"},"null":null});
-                    doBoth(org_data,ser_data,org_data);
-            
-                    var org_data = new ArrayBuffer(8);
-                    var ser_data = JSON.stringify({"__uniqueType":"arraybuffer","__value":"AA=="});
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = [new ArrayBuffer(8),new ArrayBuffer(8),new ArrayBuffer(8)]
-                    var ser_data = JSON.stringify([{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="}]);
-                    doBoth(org_data,ser_data,org_data);
-            
-            // //openFile
-            //     _canvas_.library.misc.openFile(function(response){
-            //         console.log('%c- openFile', 'font-weight: bold;');
-            //         tester(response,'curve.metasophiea.com\n');
-            //     });
-            
-            //removeThisFromThatArray
-                console.log('%c- removeThisFromThatArray', 'font-weight: bold;');
-                {
-                    const testArray_1 = [0,1,2,3,4,5,6,7,8,9];
-                    _canvas_.library.misc.removeThisFromThatArray(3,testArray_1);
-                    tester(testArray_1,[0,1,2,4,5,6,7,8,9]);
+                this.new = function(){
+                    dev.log.interface('.arrangement.new()'); //#development
+                    communicationModule.run('arrangement.new');
+                    design.clear();
+                    design.unifiedAttribute({
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        scale: 1,
+                        heedCamera: false,
+                        // static: false,
+                    });
+                };
+                this.get = function(){
+                    dev.log.interface('.arrangement.get()'); //#development
+                    return design;
+                };
+                this.prepend = function(element){
+                    dev.log.interface('.arrangement.prepend()'); //#development
+                    return design.prepend(element);
+                };
+                this.append = function(element){
+                    dev.log.interface('.arrangement.append()'); //#development
+                    return design.append(element);
+                };
+                this.remove = function(element){
+                    dev.log.interface('.arrangement.remove()'); //#development
+                    return design.remove(element);
+                };
+                this.clear = function(){
+                    dev.log.interface('.arrangement.clear()'); //#development
+                    return design.clear();
+                };
+                this.getElementByAddress = function(address){
+                    dev.log.interface('.arrangement.getElementByAddress(',address); //#development
                     
-                    const testArray_2 = ['0','1','2','3','4','5','6','7','8','9'];
-                    _canvas_.library.misc.removeThisFromThatArray('3',testArray_2);
-                    tester(testArray_2,['0','1','2','4','5','6','7','8','9']);
+                    const route = address.split('/');
+                    route.shift();
+            
+                    let currentObject = design;
+                    route.forEach((a) => {
+                        currentObject = currentObject.getChildByName(a);
+                    });
+            
+                    return currentObject;
+                };
+                this.getElementsUnderPoint = function(x,y){
+                    dev.log.interface('.arrangement.getElementsUnderPoint(',x,y); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('arrangement.getElementsUnderPoint',[x,y],results => {
+                            resolve(results.map(result => elementRegistry[result]));
+                        });
+                    });
+                };
+                this.getElementsUnderArea = function(points){
+                    dev.log.interface('.arrangement.getElementsUnderArea(',points); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('arrangement.getElementsUnderArea',[points],results => {
+                            resolve(results.map(result => elementRegistry[result]));
+                        });
+                    });
+                };
+                this.printTree = function(mode='spaced',local=false,includeTypes=false){
+                    dev.log.interface('.arrangement.printTree(',mode,local); //#development
+            
+                    if(local){
+                        function recursivePrint(grouping,prefix=''){
+                            grouping.children.forEach(function(a){
+                                const data = '('+a.id + (includeTypes ? ' : '+a.type : '') +')';
+            
+                                if(mode == 'spaced'){
+                                    console.log(prefix+' -  '+a.name+' '+data);
+                                    if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
+                                }else if(mode == 'tabular'){
+                                    console.log(prefix+'\t-\t\t'+a.name+' '+data);
+                                    if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
+                                }else if(mode == 'address'){
+                                    console.log(prefix+'/'+a.name+' '+data);
+                                    if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
+                                }
+                            });
+                        }
+                
+                        if(design.getChildren().length == 0){console.log('-empty-');}
+                        console.log(design.getName()+' ('+design.getId()+')');
+                        recursivePrint(design.getTree(), '');
+                    }else{
+                        communicationModule.run('arrangement.printTree',[mode,includeTypes]);
+                    }
+                };
+                this.printSurvey = function(local=true){
+                    if(local){
+                        const results = {};
+            
+                        function recursiveSearch(grouping){
+                            grouping.children.forEach(child => {
+                                results[child.type] = results[child.type] == undefined ? 1 : results[child.type]+1;
+                                if(child.type == 'group'){
+                                    recursiveSearch(child)
+                                }
+                            });
+                        }
+            
+                        recursiveSearch(design.getTree());
+                        return results;
+                    }else{
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.printSurvey',[],results => {
+                                resolve(results);
+                            });
+                        });
+                    }
+                };
+                this.areParents = function(element,potentialParents=[]){
+                    dev.log.interface('.arrangement.areParents(',element,potentialParents); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('arrangement.areParents',[element.getId(),potentialParents.map(parent => parent.getId())],resolve);
+                    });
+                };
+                this._dump = function(local=true,engine=true){
+                    dev.log.interface('.arrangement._dump(',local,engine); //#development
+            
+                    if(local){
+                        console.log(design.getAddress(),'._dump()');
+                        console.log(design.getAddress(),'._dump -> id: '+design.getId());
+                        console.log(design.getAddress(),'._dump -> type: '+design.getType());
+                        console.log(design.getAddress(),'._dump -> name: '+design.getName());
+                        console.log(design.getAddress(),'._dump -> address: '+design.getAddress());
+                        console.log(design.getAddress(),'._dump -> parent: ',design.parent);
+                        console.log(design.getAddress(),'._dump -> ignored: '+design.ignored());
+                        console.log(design.getAddress(),'._dump -> x: '+design.x());
+                        console.log(design.getAddress(),'._dump -> y: '+design.y());
+                        console.log(design.getAddress(),'._dump -> angle: '+design.angle());
+                        console.log(design.getAddress(),'._dump -> scale: '+design.scale());
+                        console.log(design.getAddress(),'._dump -> heedCamera: '+design.heedCamera());
+                        // console.log(design.getAddress(),'._dump -> static: '+design.static());
+                        console.log(design.getAddress(),'._dump -> children.length: '+design.getChildren().length);
+                        console.log(design.getAddress(),'._dump -> children: ',design.getChildren());
+                        console.log(design.getAddress(),'._dump -> clipActive: '+design.clipActive());
+                    }
+                    if(engine){
+                        _canvas_.core.element.__executeMethod(design.getId(),'_dump',[]);
+                    }
+                };
+            };
+            this.render = new function(){
+                const cachedValues = {
+                    clearColour:{r:1,g:1,b:1,a:1},
+                    frameRateLimit:30,
+                    allowFrameSkipping:true,
+                    active:false,
+                    activeLimitToFrameRate:false,
+                };
+            
+                this.refresh = function(){
+                    dev.log.interface('.render.refresh()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('render.refresh',[],resolve);
+                    });
+                };
+                this.clearColour = function(colour){
+                    dev.log.interface('.render.clearColour(',colour); //#development
+                    if(colour == undefined){return cachedValues.clearColour;}
+                    cachedValues.clearColour = colour;
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('render.clearColour',[colour],resolve);
+                    });
+                };
+                this.adjustCanvasSize = function(newWidth, newHeight){
+                    dev.log.interface('.render.adjustCanvasSize(',newWidth, newHeight); //#development
+                    communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
+                };
+                this.getCanvasSize = function(){
+                    dev.log.interface('.render.getCanvasSize()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('render.getCanvasSize',[],resolve);
+                    });
+                };
+                this.activeLimitToFrameRate = function(active){
+                    dev.log.interface('.render.activeLimitToFrameRate(',active); //#development
+                    if(active == undefined){return cachedValues.activeLimitToFrameRate;}
+                    cachedValues.activeLimitToFrameRate = active;
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
+                    });
+                };
+                this.frameRateLimit = function(rate){
+                    dev.log.interface('.render.frameRateLimit(',rate); //#development
+                    if(rate == undefined){return cachedValues.frameRateLimit;}
+                    cachedValues.frameRateLimit = rate;
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('render.frameRateLimit',[rate],resolve);
+                    });
+                };
+                this.allowFrameSkipping = function(active){
+                    dev.log.interface('.render.allowFrameSkipping(',active); //#development
+                    if(active == undefined){return cachedValues.allowFrameSkipping;}
+                    cachedValues.allowFrameSkipping = active;
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('render.allowFrameSkipping',[active],resolve);
+                    });
+                };
+                this.fra
+                this.frame = function(){
+                    dev.log.interface('.render.frame()'); //#development
+                    communicationModule.run('render.frame',[]);
+                };
+                this.active = function(active){
+                    dev.log.interface('.render.active(',active); //#development
+                    if(active == undefined){return cachedValues.active;}
+                    cachedValues.active = active;
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('render.active',[active],resolve);
+                    });
+                };
+            };
+
+            this.viewport = new function(){
+                const cachedValues = {
+                    position:{x:0,y:0},
+                    scale:1,
+                    angle:0,
+                    stopMouseScroll:false,
+                };
+                const mouseData = { 
+                    x:undefined, 
+                    y:undefined, 
+                };
+            
+                //adapter
+                    this.adapter = new function(){
+                        this.windowPoint2workspacePoint = function(x,y){
+                            dev.log.interface('.viewport.adapter.windowPoint2workspacePoint(',x,y); //#development
+                            const position = cachedValues.position;
+                            const scale = cachedValues.scale;
+                            const angle = cachedValues.angle;
+            
+                            let tmp = {x:x, y:y};
+                            tmp.x = (tmp.x - position.x)/scale;
+                            tmp.y = (tmp.y - position.y)/scale;
+                            tmp = _canvas_.library.math.cartesianAngleAdjust(tmp.x,tmp.y,-angle);
+            
+                            return tmp;
+                        };
+                        // this.workspacePoint2windowPoint = function(x,y){
+                            // const position = cachedValues.position;
+                            // const scale = cachedValues.scale;
+                            // const angle = cachedValues.angle;
+            
+                        //     let point = _canvas_.library.math.cartesianAngleAdjust(x,y,angle);
+            
+                        //     return {
+                        //         x: (point.x+position.x) * scale,
+                        //         y: (point.y+position.y) * scale
+                        //     };
+                        // };
+                    };
+            
+                this.refresh = function(){
+                    dev.log.interface('.viewport.refresh()'); //#development
+                    communicationModule.run('viewport.refresh',[]);
+                };
+                this.position = function(x,y){
+                    if(x==undefined || y==undefined){ return cachedValues.position; }
+                    cachedValues.position = {x:x,y:y};
+                    dev.log.interface('.viewport.position(',x,y); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('viewport.position',[x,y],resolve);
+                    });
+                };
+                this.scale = function(s){
+                    if(s==undefined){ return cachedValues.scale; }
+                    if(s == 0){console.error('cannot set scale to zero');}
+                    cachedValues.scale = s;
+                    dev.log.interface('.viewport.scale(',s); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('viewport.scale',[s],resolve);
+                    });
+                };
+                this.angle = function(a){
+                    if(a==undefined){ return cachedValues.angle; }
+                    cachedValues.angle = a;
+                    dev.log.interface('.viewport.angle(',a); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('viewport.angle',[a],resolve);
+                    });
+                };
+                this.getElementsUnderPoint = function(x,y){
+                    dev.log.interface('.viewport.getElementsUnderPoint(',x,y); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
+                    });
+                };
+                this.getElementsUnderArea = function(points){
+                    dev.log.interface('.viewport.getElementsUnderArea(',points); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
+                    });
+                };
+                this.getMousePosition = function(x,y){
+                    dev.log.interface('.viewport.getMousePosition(',x,y); //#development
+                    if(x == undefined || y == undefined){ return mouseData; }
+                    mouseData.x = x;
+                    mouseData.y = y;
+                    communicationModule.run('viewport.getMousePosition',[x,y]);
+                };
+                this.getBoundingBox = function(){
+                    dev.log.interface('.viewport.getBoundingBox()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('viewport.getBoundingBox',[],resolve);
+                    });
+                };
+                this.stopMouseScroll = function(bool){
+                    if(bool==undefined){ return cachedValues.stopMouseScroll; }
+                    cachedValues.stopMouseScroll = bool;
+                    dev.log.interface('.viewport.stopMouseScroll(',bool); //#development
+                    communicationModule.run('viewport.stopMouseScroll',[bool]);
+                };
+            
+                this.cursor = function(type){
+                    //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
+                    if(type == undefined){return document.body.style.cursor;}
+                    document.body.style.cursor = type;
+                };
+            };
+            this.stats = new function(){
+                this.active = function(active){
+                    dev.log.interface('.stats.active(',active); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('stats.active',[active],resolve);
+                    });
+                };
+                this.getReport = function(){
+                    dev.log.interface('.stats.getReport()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('stats.getReport',[],resolve);
+                    });
+                };
+            
+                let autoPrintActive = false;
+                let autoPrintIntervalId = undefined;
+                this.autoPrint = function(bool){
+                    if(bool == undefined){ return autoPrintActive; }
+                    autoPrintActive = bool;
+            
+                    if(autoPrintActive){
+                        autoPrintIntervalId = setInterval(() => {
+                            _canvas_.core.stats.getReport().then(console.log)
+                        }, 500);
+                    }else{
+                        clearInterval(autoPrintIntervalId);
+                    }
+                };
+            
+                let onScreenAutoPrint_active = false;
+                let onScreenAutoPrint_intervalId = false;
+                let onScreenAutoPrint_section = undefined;
+                this.onScreenAutoPrint = function(bool){
+                    if(bool == undefined){ return onScreenAutoPrint_active; }
+                    onScreenAutoPrint_active = bool;
+            
+                    _canvas_.core.stats.active(bool);
+            
+                    if(onScreenAutoPrint_active){
+                        onScreenAutoPrint_section = document.createElement('section');
+                            onScreenAutoPrint_section.style = 'position:fixed; z-index:1; margin:0; font-family:Helvetica;';
+                            document.body.prepend(onScreenAutoPrint_section);
+                            
+                        onScreenAutoPrint_intervalId = setInterval(() => {
+                            onScreenAutoPrint_section.style.top = (window.innerHeight-onScreenAutoPrint_section.offsetHeight)+'px';
+                            _canvas_.core.stats.getReport().then(data => {
+                                const position = _canvas_.core.viewport.position();
+            
+                                const potentialFPS = data.secondsPerFrameOverTheLastThirtyFrames != 0 ? (1/data.secondsPerFrameOverTheLastThirtyFrames).toFixed(2) : 'infinite ';
                     
-                    const testArray_3 = [[1,2,3],[4,5,6],[7,8,9],[8,5,2],[1,5,9]];
-                    _canvas_.library.misc.removeThisFromThatArray([1,5,9],testArray_3);
-                    tester(testArray_3,[[1,2,3],[4,5,6],[7,8,9],[8,5,2]]);
-                }
-                console.log('');
+                                onScreenAutoPrint_section.innerHTML = ''+
+                                    '<p style="margin:1px"> position: x:'+ position.x + ' y:' + position.y +'</p>' +
+                                    '<p style="margin:1px"> scale:'+ _canvas_.core.viewport.scale() +'</p>' +
+                                    '<p style="margin:1px"> angle:'+ _canvas_.core.viewport.angle()+'</p>' +
+                                    '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond.toFixed(2) +'</p>' +
+                                    '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(5) +' (potentially '+ potentialFPS +'fps)</p>' +
+                                    '<p style="margin:1px"> renderNonRenderSplitOverTheLastThirtyFrames: '+ data.renderNonRenderSplitOverTheLastThirtyFrames.toFixed(2) +'</p>' +
+                                '';
+                            });
+                        }, 100);
+                    }else{
+                        clearInterval(onScreenAutoPrint_intervalId);
+                        if(onScreenAutoPrint_section != undefined){ onScreenAutoPrint_section.remove(); }
+                        onScreenAutoPrint_section = undefined;
+                    }
+                };
+            };
+            this.callback = new function(){
+                this.listCallbackTypes = function(){
+                    dev.log.interface('.callback.listCallbackTypes()'); //#development
+                    return new Promise((resolve, reject) => {
+                        communicationModule.run('callback.listCallbackTypes',[],resolve);
+                    });
+                };
             
-            //removeTheseElementsFromThatArray
-                console.log('%c- removeTheseElementsFromThatArray', 'font-weight: bold;');
-                tester( _canvas_.library.misc.removeTheseElementsFromThatArray([],[]),[] );
-                tester( _canvas_.library.misc.removeTheseElementsFromThatArray([1,2,3,4],[1,2,3,4]),[] );
-                tester( _canvas_.library.misc.removeTheseElementsFromThatArray([1,2],[1,2,3,4]),[3,4] );
-                tester( _canvas_.library.misc.removeTheseElementsFromThatArray([],[1,2,3,4]),[1,2,3,4] );
-                tester( _canvas_.library.misc.removeTheseElementsFromThatArray([1,2,3,4],[]),[] );
-                console.log('');
+                const callbackRegistry = new function(){
+                    const registeredShapes = {};
             
-            //getDifferenceOfArrays
-                console.log('%c- getDifferenceOfArrays', 'font-weight: bold;');
-                tester( _canvas_.library.misc.getDifferenceOfArrays([1,2,3,4],[3,4,5,6]),{a:[1,2],b:[5,6]} );
-                tester( _canvas_.library.misc.getDifferenceOfArrays([],[3,4,5,6]),{a:[],b:[3,4,5,6]} );
-                tester( _canvas_.library.misc.getDifferenceOfArrays([1,2,3,4],[]),{a:[1,2,3,4],b:[]} );
-                tester( _canvas_.library.misc.getDifferenceOfArrays([],[]),{a:[],b:[]} );
-                tester( _canvas_.library.misc.getDifferenceOfArrays([5,9,4,1,8,0,4,0,65],[14,85,960,1,8,40,0,0,0,0]),{a:[5,9,4,4,65],b:[14,85,960,40,0,0]} );
-                console.log('');
+                    this.getCallback = function(id,callbackType){
+                        if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
+                        return registeredShapes[id][callbackType];
+                    };
+                    this.register = function(id,callbackType,callback){
+                        if(!(id in registeredShapes)){ registeredShapes[id] = {}; }
+                        registeredShapes[id][callbackType] = callback;
+                    };
+                    this.remove = function(id,callbackType){
+                        registeredShapes[id][callbackType] = undefined;
+                        delete registeredShapes[id][callbackType];
+                    };
+                    this.call = function(id,callbackType,x,y,event){
+                        if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return false;}
+                        registeredShapes[id][callbackType](x,y,event);
+                        return true;
+                    };
+                };
+                this.getCallback = function(element, callbackType){
+                    dev.log.interface('.callback.getCallback(',element,callbackType); //#development
+                    callbackRegistry.getCallback(element.getId(), callbackType);
+                };
+                this.attachCallback = function(element, callbackType, callback){
+                    dev.log.interface('.callback.attachCallback(',element,callbackType,callback); //#development
+                    callbackRegistry.register(element.getId(), callbackType, callback);
+                    communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
+                };
+                this.removeCallback = function(element, callbackType){
+                    dev.log.interface('.callback.removeCallback(',element,callbackType); //#development
+                    callbackRegistry.remove(element.getId(), callbackType);
+                    communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
+                };
             
-            //loadFileFromURL
-                //(the results of this are dependent on when the response is received, so, they could arrive out of order with the rest)
-                _canvas_.library.misc.loadFileFromURL(
-                    'http://localhost:8000/CNAME', 
-                    function(response){
-                        console.log('%c- loadFileFromURL', 'font-weight: bold;');
-                        tester(response.response,'curve.metasophiea.com\n');
-                    }, 
-                    function(){},
-                    'text'
-                );
-        }
+                let callbackActivationMode = 'firstMatch'; //topMostOnly / firstMatch / allMatches
+                this.callbackActivationMode = function(mode){
+                    if(mode==undefined){return callbackActivationMode;}
+                    dev.log.interface('.callback.callbackActivationMode(',mode); //#development
+                    callbackActivationMode = mode;
+                };
+            
+                this.functions = {};
+                this.listCallbackTypes().then(callbackNames => {
+                    callbackNames.forEach(callbackName => {
+                        _canvas_[callbackName] = function(event){
+                            let sudoEvent = {};
+                            if(event instanceof KeyboardEvent){
+                                sudoEvent = {
+                                    key: event.key,
+                                    code: event.code,
+                                    keyCode: event.keyCode,
+                                    altKey: event.altKey,
+                                    ctrlKey: event.ctrlKey,
+                                    metaKey: event.metaKey,
+                                    shiftKey: event.shiftKey,
+                                };
+                            }else if(event instanceof WheelEvent){
+                                sudoEvent = { 
+                                    X: event.offsetX,
+                                    Y: event.offsetY,
+                                    wheelDelta: event.wheelDelta,
+                                    wheelDeltaX: event.wheelDeltaX,
+                                    wheelDeltaY: event.wheelDeltaY,
+                                    altKey: event.altKey,
+                                    ctrlKey: event.ctrlKey,
+                                    metaKey: event.metaKey,
+                                    shiftKey: event.shiftKey,
+                                };
+                            }else if(event instanceof MouseEvent){
+                                sudoEvent = { 
+                                    X: event.offsetX, 
+                                    Y: event.offsetY,
+                                    altKey: event.altKey,
+                                    ctrlKey: event.ctrlKey,
+                                    metaKey: event.metaKey,
+                                    shiftKey: event.shiftKey,
+                                    buttons: event.buttons,
+                                };
+                                if(callbackName == 'onmousemove'){
+                                    _canvas_.core.viewport.getMousePosition(sudoEvent.X,sudoEvent.Y);
+                                }
+                            }else{
+                                console.warn('unknown event type: ',event);
+                            }
+                            
+                            communicationModule.run('callback.coupling_in.'+callbackName,[sudoEvent]);
+                        };
+            
+                        //service
+                            communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
+                                if(self.callback.functions[callbackName]){
+                                    self.callback.functions[callbackName](x,y,event,{
+                                        all: elements.all.map(id => elementRegistry[id]),
+                                        relevant: elements.relevant ? elements.relevant.map(id => elementRegistry[id]) : undefined,
+                                    });
+                                }
+            
+                                elements.relevant.forEach(id => callbackRegistry.call(id,callbackName,x,y,event) );
+                            };
+            
+                    });
+                });
+            };
+
+            communicationModule.function.go = function(){
+                dev.log.service('.go()'); //#development
+                _canvas_.layers.declareLayerAsLoaded("core");
+            };
+            communicationModule.function.printToScreen = function(imageData){
+                dev.log.service('.printToScreen(',imageData); //#development
+                _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
+            };
+            // communicationModule.function.onViewportAdjust = function(state){
+            //     dev.log.service('.onViewportAdjust('+JSON.stringify(state)+')'); //#development
+            //     console.log('onViewportAdjust -> ',state); /* callback */
+            // };
+            
+            communicationModule.function.updateElement = function(elem, data={}){
+                dev.log.service('.updateElement(',elem,data); //#development
+                const proxyElement = _canvas_.core.meta.getElementFromId(elem);
+                if(proxyElement.__updateValues != undefined){ proxyElement.__updateValues(data); }
+            };
+            communicationModule.function.runElementCallback = function(elem, data={}){
+                dev.log.service('.runElementCallback(',elem,data); //#development
+                const proxyElement = _canvas_.core.meta.getElementFromId(elem);
+                if(proxyElement.__runCallback != undefined){ proxyElement.__runCallback(data); }
+            };
+            
+            communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                dev.log.service('.getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
+                return attributeNames.map((name,index) => {
+                    return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
+                });    
+            };
+            communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
+                dev.log.service('.setCanvasAttributes(',attributes,prefixActiveArray); //#development
+                attributes.map((attribute,index) => {
+                    _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
+                });
+            };
+            communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                dev.log.service('.getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
+                return attributeNames.map((name,index) => {
+                    return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
+                });
+            };
+            
+            communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
+                dev.log.service('.getDocumentAttributes(',attributeNames); //#development
+                return attributeNames.map(attribute => {
+                    return eval('document.'+attribute);
+                });
+            };
+            communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
+                dev.log.service('.setDocumentAttributes(',attributeNames,values); //#development
+                return attributeNames.map((attribute,index) => {
+                    eval('document.'+attribute+' = "'+values[index]+'"');
+                });
+            };
+            communicationModule.function.getWindowAttributes = function(attributeNames=[]){
+                dev.log.service('.getWindowAttributes(',attributeNames); //#development
+                return attributeNames.map(attribute => {
+                    return eval('window.'+attribute);
+                });
+            };
+            communicationModule.function.setWindowAttributes = function(attributes=[]){
+                dev.log.service('.setWindowAttributes(',attributes); //#development
+                attributes.map((attribute,index) => {
+                    eval('window.'+attribute.name+' = "'+attribute.value+'"');
+                });
+            };
+
+        };
+        
+        _canvas_.layers.registerLayer("core", _canvas_.core);
+        
+        var elements = {};
+        
+        _canvas_.layers.registerFunctionForLayer("core", function(){
+            
+            //rectangle
+                elements.rectangle_1 = _canvas_.core.element.create('rectangle','test_rectangle_1');
+                elements.rectangle_1.unifiedAttribute({ 
+                    x:10, y:10, width:60, height:60, 
+                    colour:{r:0.732,g:0.756,b:0.859,a:1}
+                });
+                _canvas_.core.arrangement.append(elements.rectangle_1);
+            //rectangleWithOutline
+                elements.rectangleWithOutline_1 = _canvas_.core.element.create('rectangleWithOutline','test_rectangleWithOutline_1');
+                elements.rectangleWithOutline_1.unifiedAttribute({ 
+                    x:80, y:10, width:60, height:60, thickness:5,
+                    colour:{r:0.732,g:0.756,b:0.859,a:1},
+                    lineColour:{r:0.5,g:0.5,b:0.859,a:1}  });
+                _canvas_.core.arrangement.append(elements.rectangleWithOutline_1);
+        
+            //circle
+                elements.circle_1 = _canvas_.core.element.create('circle','test_circle_1');
+                elements.circle_1.unifiedAttribute({
+                    x:180, y:40, radius:30,
+                    colour:{r:0.5,g:0.859,b:0.5,a:1}
+                });
+                _canvas_.core.arrangement.append(elements.circle_1);
+            //circleWithOutline
+                elements.circleWithOutline_1 = _canvas_.core.element.create('circleWithOutline','test_circleWithOutline_1');
+                elements.circleWithOutline_1.unifiedAttribute({
+                    x:250, y:40, radius:30, thickness:5,
+                    colour:{r:0.5,g:0.859,b:0.5,a:1},
+                    lineColour:{r:0.456,g:0.732,b:0.259,a:1},
+                });
+                _canvas_.core.arrangement.append(elements.circleWithOutline_1);
+        
+            //polygon
+                elements.polygon_1 = _canvas_.core.element.create('polygon','test_polygon_1');
+                elements.polygon_1.unifiedAttribute({
+                    pointsAsXYArray:[ {x:290,y:10}, {x:340,y:10}, {x:350,y:20}, {x:350,y:70}, {x:290,y:70} ],
+                    colour:{r:0.859,g:0.732,b:0.756,a:1}
+                });
+                _canvas_.core.arrangement.append(elements.polygon_1);
+            //polygonWithOutline
+                elements.polygonWithOutline_1 = _canvas_.core.element.create('polygonWithOutline','test_polygonWithOutline_1');
+                elements.polygonWithOutline_1.unifiedAttribute({
+                    pointsAsXYArray:[ {x:360,y:10}, {x:410,y:10}, {x:420,y:20}, {x:420,y:70}, {x:360,y:70} ],
+                    thickness:5,
+                    colour:{r:0.859,g:0.732,b:0.756,a:1},
+                    lineColour:{r:0.859,g:0.5,b:0.5,a:1}
+                });
+                _canvas_.core.arrangement.append(elements.polygonWithOutline_1);
+        
+            //path
+                elements.path_1 = _canvas_.core.element.create('path','test_path_1');
+                elements.path_1.unifiedAttribute({
+                    pointsAsXYArray:[ {x:80,y:80}, {x:130,y:80}, {x:140,y:90}, {x:140,y:140}, {x:80,y:140} ],
+                    thickness:5,
+                    capType:'round',
+                    colour:{r:0.859,g:0.2,b:0.756,a:1} 
+                });
+                _canvas_.core.arrangement.append(elements.path_1);
+        
+            //character
+                elements.character_1 = _canvas_.core.element.create('character','test_character_1');
+                elements.character_1.unifiedAttribute({
+                    character:'a',
+                    x:150, y:140, width:60, height:60, 
+                    colour:{r:0.859,g:0.5,b:0.756,a:1} 
+                });
+                _canvas_.core.arrangement.append(elements.character_1);
+            //characterString
+                elements.characterString_1 = _canvas_.core.element.create('characterString','test_characterString_1');
+                elements.characterString_1.unifiedAttribute({
+                    string:'Hello',
+                    x:220, y:140, width:60, height:60, 
+                    colour:{r:0.5,g:0.5,b:0.8,a:1} 
+                });
+                _canvas_.core.arrangement.append(elements.characterString_1);
+        
+            //image
+                elements.image_1 = _canvas_.core.element.create('image','test_image_1');
+                elements.image_1.unifiedAttribute({ 
+                    x:10, y:150, width:60, height:60, url:'/images/testImages/Dore-munchausen-illustration.jpg',
+                });
+                _canvas_.core.arrangement.append(elements.image_1);
+                elements.image_2 = _canvas_.core.element.create('image','test_image_2');
+                elements.image_2.unifiedAttribute({ 
+                    x:10, y:220, width:60, height:60, url:'/images/testImages/opacityTestImage.png',
+                });
+                _canvas_.core.arrangement.append(elements.image_2);
+        
+            //canvas
+                //this is a method of using the image element as a destination for canvas data
+                    elements.canvasImage_1 = _canvas_.core.element.create('image','test_canvasImage_1');
+                    elements.canvasImage_1.unifiedAttribute({ x:80, y:150, width:60, height:60 });
+                    _canvas_.core.arrangement.append(elements.canvasImage_1);
+                        let canvas = document.createElement('canvas');
+                        canvas.width = 60;
+                        canvas.height = 60;
+                        let canvasContext = canvas.getContext("2d");
+                        canvasContext.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.732,g:0.756,b:0.892,a:1});
+                        canvasContext.fillRect(5,5,60,60);
+                        canvasContext.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.107,g:0.722,b:0.945,a:1});
+                        canvasContext.fillRect(0,0,20,20);
+                        canvasContext.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.859,g:0.573,b:0.754,a:1});
+                        canvasContext.fillRect(0,15,40,20);
+                        createImageBitmap(canvas).then(bitmap => {
+                            elements.canvasImage_1.bitmap(bitmap);
+                        });
+        
+                elements.canvas_1 = _canvas_.core.element.create('canvas','test_canvas_1');
+                elements.canvas_1.unifiedAttribute({ x:150, y:150, width:60, height:60 });
+                _canvas_.core.arrangement.append(elements.canvas_1);
+                    elements.canvas_1._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.732,g:0.756,b:0.892,a:1});
+                    elements.canvas_1._.fillRect(elements.canvas_1.$(5),elements.canvas_1.$(5),elements.canvas_1.$(60),elements.canvas_1.$(60));
+                    elements.canvas_1._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.107,g:0.722,b:0.945,a:1});
+                    elements.canvas_1._.fillRect(elements.canvas_1.$(0),elements.canvas_1.$(0),elements.canvas_1.$(20),elements.canvas_1.$(20));
+                    elements.canvas_1._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.859,g:0.573,b:0.754,a:1});
+                    elements.canvas_1._.fillRect(elements.canvas_1.$(0),elements.canvas_1.$(15),elements.canvas_1.$(40),elements.canvas_1.$(20));
+                    elements.canvas_1.requestUpdate();
+        
+            //clipping
+                elements.clippingGroup = _canvas_.core.element.create('group','test_clippingGroup_1');
+                elements.clippingGroup.unifiedAttribute({ x:10, y:80, clipActive:true });
+                _canvas_.core.arrangement.append(elements.clippingGroup);
+        
+                    elements.test_clippingGroup_rectangle_1 = _canvas_.core.element.create('rectangle','test_clippingGroup_rectangle_1');
+                    elements.test_clippingGroup_rectangle_1.unifiedAttribute({ x:0, y:0, width:60, height:60, colour:{r:0.732,g:0.756,b:0.892,a:1} });
+                    elements.clippingGroup.append(elements.test_clippingGroup_rectangle_1);
+        
+                    elements.test_clippingGroup_rectangle_2 = _canvas_.core.element.create('rectangle','test_clippingGroup_rectangle_2');
+                    elements.test_clippingGroup_rectangle_2.unifiedAttribute({ x:30, y:30, width:60, height:60, colour:{r:0.107,g:0.722,b:0.945,a:1} });
+                    elements.clippingGroup.append(elements.test_clippingGroup_rectangle_2);
+        
+                    elements.test_clippingGroup_rectangle_3 = _canvas_.core.element.create('rectangle','test_clippingGroup_rectangle_3');
+                    elements.test_clippingGroup_rectangle_3.unifiedAttribute({ x:40, y:-10, width:60, height:60, colour:{r:0.859,g:0.573,b:0.754,a:1} });
+                    elements.clippingGroup.append(elements.test_clippingGroup_rectangle_3);
+        
+                    elements.test_clippingGroup_rectangle_stencil = _canvas_.core.element.create('rectangle','test_clippingGroup_rectangle_stencil');
+                    elements.test_clippingGroup_rectangle_stencil.unifiedAttribute({ width:60, height:60 });
+                    elements.clippingGroup.stencil(elements.test_clippingGroup_rectangle_stencil);
+        
+            //transparency test
+                elements.rectangle_2 = _canvas_.core.element.create('rectangle','test_rectangle_2');
+                elements.rectangle_2.unifiedAttribute({ 
+                    x:40, y:40, width:60, height:60, 
+                    colour:{r:1,g:0,b:0,a:0}
+                });
+                _canvas_.core.arrangement.append(elements.rectangle_2);
         
         
         
         
         
-        
+            setTimeout(_canvas_.core.render.frame,100);
+            setTimeout(_canvas_.core.render.frame,1100);
+            // _canvas_.core.render.activeLimitToFrameRate(true);
+            // _canvas_.core.render.frameRateLimit(20);
+            // _canvas_.core.render.active(true);
+            // _canvas_.core.stats.active(true);
+            // setInterval(() => {
+            //     _canvas_.core.stats.getReport().then(console.log)
+            // }, 500);
+        } );
         
         
 

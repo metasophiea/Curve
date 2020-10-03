@@ -57,3 +57,5 @@ In this same idea, rewriting the custom oscillator with webASM might allow it to
 - [Curve Demo 4](https://curve.metasophiea.com?demo=4)
 - [Curve Demo 5](https://curve.metasophiea.com?demo=5)
 - [Curve Demo 6](https://curve.metasophiea.com?demo=6)
+
+you ready for this?

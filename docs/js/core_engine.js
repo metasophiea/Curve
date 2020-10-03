@@ -41,6 +41,8 @@ const library = new function(){
     
     this.math = new function(){
         this.averageArray = function(array){
+            dev.log.math('.averageArray(',array); //#development
+            dev.count('.math.averageArray'); //#development
         
             // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
         
@@ -50,11 +52,15 @@ const library = new function(){
             return sum/array.length;
         };
         this.averagePoint = function(points){
+            dev.log.math('.averagePoint(',points); //#development
+            dev.count('.math.averagePoint'); //#development
         
             const sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
             return {x:sum.x/points.length,y:sum.y/points.length};
         };
         this.boundingBoxFromPoints = function(points){
+            dev.log.math('.boundingBoxFromPoints(',points); //#development
+            dev.count('.math.boundingBoxFromPoints'); //#development
         
             if(points.length == 0){
                 return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
@@ -109,6 +115,8 @@ const library = new function(){
             };
         };
         this.cartesianAngleAdjust = function(x,y,angle){
+            dev.log.math('.cartesianAngleAdjust(',x,y,angle); //#development
+            dev.count('.math.cartesianAngleAdjust'); //#development
         
             // //v1    
             //     if(angle == 0){ return {x:x,y:y}; }
@@ -126,10 +134,14 @@ const library = new function(){
         };
         this.convertColour = new function(){
             this.obj2rgba = function(obj){
+                dev.log.math('.convertColour.obj2rgbacartesianAngleAdjust(',obj); //#development
+                dev.count('.math.convertColour.obj2rgba'); //#development
         
                 return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
             };
             this.rgba2obj = function(rgba){
+                dev.log.math('.convertColour.rgba2obj(',rgba); //#development
+                dev.count('.convertColour.rgba2obj'); //#development
         
                 rgba = rgba.split(',');
                 rgba[0] = rgba[0].replace('rgba(', '');
@@ -140,6 +152,8 @@ const library = new function(){
         };
         this.curveGenerator = new function(){
             this.linear = function(stepCount=2, start=0, end=1){
+                dev.log.math('.curveGenerator.linear(',stepCount,start,end); //#development
+                dev.count('.math.curveGenerator.linear'); //#development
         
                 stepCount = Math.abs(stepCount)-1;
                 const outputArray = [0];
@@ -156,6 +170,8 @@ const library = new function(){
                 return outputArray;
             };
             this.sin = function(stepCount=2, start=0, end=1){
+                dev.log.math('.curveGenerator.sin(',stepCount,start,end); //#development
+                dev.count('.math.curveGenerator.sin'); //#development
         
                 stepCount = Math.abs(stepCount) -1;
                 let outputArray = [0];
@@ -174,6 +190,8 @@ const library = new function(){
                 return outputArray;		
             };
             this.cos = function(stepCount=2, start=0, end=1){
+                dev.log.math('.curveGenerator.cos(',stepCount,start,end); //#development
+                dev.count('.math.curveGenerator.cos'); //#development
         
                 stepCount = Math.abs(stepCount) -1;
                 let outputArray = [0];
@@ -192,6 +210,8 @@ const library = new function(){
                 return outputArray;	
             };
             this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+                dev.log.math('.curveGenerator.s(',stepCount,start,end,sharpness); //#development
+                dev.count('.math.curveGenerator.s'); //#development
         
                 if(sharpness == 0){sharpness = 1/1000000;}
         
@@ -212,6 +232,8 @@ const library = new function(){
                 return outputArray;
             };
             this.sigmoid = function(stepCount=2, start=0, end=1, sharpness=0.5){
+                dev.log.math('.curveGenerator.sigmoid(',stepCount,start,end,sharpness); //#development
+                dev.count('.math.curveGenerator.sigmoid'); //#development
                 if(sharpness < 0){sharpness = 0;}
                 if(sharpness > 1){sharpness = 1;}
         
@@ -233,6 +255,8 @@ const library = new function(){
                 return curve;
             };
             this.halfSigmoid_up = function(stepCount=2, start=0, end=1, sharpness=0.5){
+                dev.log.math('.curveGenerator.halfSigmoid_up(',stepCount,start,end,sharpness); //#development
+                dev.count('.math.curveGenerator.halfSigmoid_up'); //#development
                 if(sharpness < 0){sharpness = 0;}
                 if(sharpness > 1){sharpness = 1;}
         
@@ -247,6 +271,8 @@ const library = new function(){
                 return curve;
             };
             this.halfSigmoid_down = function(stepCount=2, start=0, end=1, sharpness=0.5){
+                dev.log.math('.curveGenerator.halfSigmoid_down(',stepCount,start,end,sharpness); //#development
+                dev.count('.math.curveGenerator.halfSigmoid_down'); //#development
                 if(sharpness < 0){sharpness = 0;}
                 if(sharpness > 1){sharpness = 1;}
         
@@ -261,6 +287,8 @@ const library = new function(){
                 return curve;
             };
             this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
+                dev.log.math('.curveGenerator.exponential(',stepCount,start,end,sharpness); //#development
+                dev.count('.math.curveGenerator.exponential'); //#development
         
                 stepCount = stepCount-1;
                 let outputArray = [];
@@ -281,18 +309,26 @@ const library = new function(){
         };
         this.curvePoint = new function(){
             this.linear = function(x=0.5, start=0, end=1){
+                dev.log.math('.curvePoint.linear(',x,start,end); //#development
+                dev.count('.math.curvePoint.linear'); //#development
         
                 return x *(end-start)+start;
             };
             this.sin = function(x=0.5, start=0, end=1){
+                dev.log.math('.curvePoint.sin(',x,start,end); //#development
+                dev.count('.math.curvePoint.sin'); //#development
         
                 return Math.sin(Math.PI/2*x) *(end-start)+start;
             };
             this.cos = function(x=0.5, start=0, end=1){
+                dev.log.math('.curvePoint.cos(',x,start,end); //#development
+                dev.count('.math.curvePoint.cos'); //#development
         
                 return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
             };
             this.s = function(x=0.5, start=0, end=1, sharpness=8){
+                dev.log.math('.curvePoint.s(',x,start,end,sharpness); //#development
+                dev.count('.math.curvePoint.s'); //#development
         
                 const temp = library.math.normalizeStretchArray([
                     1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
@@ -302,18 +338,26 @@ const library = new function(){
                 return temp[1] *(end-start)+start;
             };
             this.sigmoid = function(x=0.5, start=0, end=1, sharpness=0.5){
+                dev.log.math('.curvePoint.sigmoid(',x,start,end,sharpness); //#development
+                dev.count('.math.curvePoint.sigmoid'); //#development
         
                 return ( 0.5 + ( ((2*x) - 1) / ( 1 - sharpness + sharpness*Math.abs((2*x) - 1) ) )/2 ) *(end-start)+start;
             };
             this.halfSigmoid_up = function(x=0.5, start=0, end=1, sharpness=0.5){
+                dev.log.math('.curvePoint.halfSigmoid_up(',x,start,end,sharpness); //#development
+                dev.count('.math.curvePoint.halfSigmoid_up'); //#development
         
                 return (x / ( 1 - sharpness + sharpness*Math.abs(x))) *(end-start)+start;
             };
             this.halfSigmoid_down = function(x=0.5, start=0, end=1, sharpness=0.5){
+                dev.log.math('.curvePoint.halfSigmoid_down(',x,start,end,sharpness); //#development
+                dev.count('.math.curvePoint.halfSigmoid_down'); //#development
         
                 return library.math.curvePoint.halfSigmoid_up(1-x,end,start,sharpness);
             };
             this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+                dev.log.math('.curvePoint.exponential(',x,start,end,sharpness); //#development
+                dev.count('.math.curvePoint.exponential'); //#development
         
                 const temp = library.math.normalizeStretchArray([
                     (Math.exp(sharpness*0)-1)/(Math.E-1),
@@ -324,6 +368,8 @@ const library = new function(){
             };
         };
         this.getAngleOfTwoPoints = function(point_1,point_2){
+            dev.log.math('.getAngleOfTwoPoints(',point_1,point_2); //#development
+            dev.count('.math.getAngleOfTwoPoints'); //#development
         
             if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
         
@@ -337,6 +383,8 @@ const library = new function(){
             return angle;
         };
         this.getIndexOfSequence = function(array,sequence){ 
+            dev.log.math('.getIndexOfSequence(',array,sequence); //#development
+            dev.count('.math.getIndexOfSequence'); //#development
         
             function comp(thing_A,thing_B){
                 const keys = Object.keys(thing_A);
@@ -368,6 +416,8 @@ const library = new function(){
             return undefined;
         };
         this.largestValueFound = function(array){
+            dev.log.math('.largestValueFound(',array); //#development
+            dev.count('.math.largestValueFound'); //#development
         
             if(array.length == 0){return undefined;}
             return array.reduce(function(max,current){
@@ -375,6 +425,8 @@ const library = new function(){
             });
         };
         this.normalizeStretchArray = function(array){
+            dev.log.math('.normalizeStretchArray(',array); //#development
+            dev.count('.math.normalizeStretchArray'); //#development
         
             //discover the largest number
                 const biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
@@ -391,12 +443,16 @@ const library = new function(){
             return array;
         };
         this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+            dev.log.math('.relativeDistance(',realLength,start,end,d,allowOverflow); //#development
+            dev.count('.math.relativeDistance'); //#development
         
             const mux = (d - start)/(end - start);
             if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
             return mux*realLength;
         };
         this.seconds2time = function(seconds){
+            dev.log.math('.seconds2time(',seconds); //#development
+            dev.count('.math.seconds2time'); //#development
         
             const result = {h:0, m:0, s:0, ms:0, µs:0, ns:0, ps:0, fs:0};
             
@@ -434,9 +490,13 @@ const library = new function(){
         };
         
         this.distanceBetweenTwoPoints = function(point_a,point_b){
+            dev.log.math('.distanceBetweenTwoPoints(',point_a,point_b); //#development
+            dev.count('.math.distanceBetweenTwoPoints'); //#development
             return Math.hypot(point_b.x-point_a.x, point_b.y-point_a.y);
         };
         this.cartesian2polar = function(x,y){
+            dev.log.math('.cartesian2polar(',x,y); //#development
+            dev.count('.math.cartesian2polar'); //#development
         
             const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5);
             let ang = 0;
@@ -455,11 +515,15 @@ const library = new function(){
             return {'dis':dis,'ang':ang};
         };
         this.polar2cartesian = function(angle,distance){
+            dev.log.math('.polar2cartesian(',angle,distance); //#development
+            dev.count('.math.polar2cartesian'); //#development
         
             return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
         };
         
         this.blendColours = function(rgba_1,rgba_2,ratio){
+            dev.log.math('.blendColours(',rgba_1,rgba_2,ratio); //#development
+            dev.count('.math.blendColours'); //#development
         
             return {
                 r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
@@ -469,6 +533,8 @@ const library = new function(){
             };           
         };
         this.multiBlendColours = function(rgbaList,ratio){
+            dev.log.math('.multiBlendColours(',rgbaList,ratio); //#development
+            dev.count('.math.multiBlendColours'); //#development
         
             //special cases
                 if(ratio == 0){return rgbaList[0];}
@@ -481,6 +547,8 @@ const library = new function(){
         
         
         this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+            dev.log.math('.polygonToSubTriangles(',regions,inputFormat); //#development
+            dev.count('.math.polygonToSubTriangles'); //#development
         
             if(inputFormat == 'flatArray'){
                 const tmp = [];
@@ -495,6 +563,8 @@ const library = new function(){
             return _thirdparty.earcut2(regions.flat().map(item => [item.x,item.y]).flat(),holes);
         };
         this.unionPolygons = function(polygon1,polygon2){
+            dev.log.math('.unionPolygons(',polygon1,polygon2); //#development
+            dev.count('.math.unionPolygons'); //#development
         
             //PolyBool
             return _thirdparty.PolyBool.union(
@@ -532,6 +602,8 @@ const library = new function(){
         };
         this.detectIntersect = new function(){
             this.boundingBoxes = function(box_a, box_b){
+                dev.log.math('.detectIntersect.boundingBoxes(',box_a,box_b); //#development
+                dev.count('.math.detectIntersect.boundingBoxes'); //#development
         
                 return box_a.bottomRight.y >= box_b.topLeft.y && 
                     box_a.bottomRight.x >= box_b.topLeft.x && 
@@ -540,12 +612,16 @@ const library = new function(){
             };
         
             this.pointWithinBoundingBox = function(point,box){
+                dev.log.math('.detectIntersect.pointWithinBoundingBox(',point,box); //#development
+                dev.count('.math.detectIntersect.pointWithinBoundingBox'); //#development
                 return !(
                     point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
                     point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
                 );
             };
             this.pointOnLine = function(point,line){
+                dev.log.math('.detectIntersect.pointOnLine(',point,line); //#development
+                dev.count('.math.detectIntersect.pointOnLine'); //#development
                 
                 if( 
                     point.x < line[0].x && point.x < line[1].x ||
@@ -566,6 +642,8 @@ const library = new function(){
                 return ((line[1].y - line[0].y) / (line[1].x - line[0].x))*(point.x - line[0].x) + line[0].y - point.y == 0;
             }
             this.pointWithinPoly = function(point,poly){
+                dev.log.math('.detectIntersect.pointWithinPoly(',point,poly.points); //#development
+                dev.count('.math.detectIntersect.pointWithinPoly'); //#development
         
                 if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
                 if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints([point]), poly.boundingBox ) ){ return 'outside'; }
@@ -575,24 +653,29 @@ const library = new function(){
                 //check if the point is on a point of the poly; bail and return 'onPoint'
                 for(let a = 0; a < poly.points.length; a++){
                     if( point.x == poly.points[a].x && point.y == poly.points[a].y ){
+                        dev.log.math('.detectIntersect.pointWithinPoly -> point on a poly ',a,':',poly.points[a]); //#development
                         return 'onPoint';
                     }
                 }
         
                 function pointLevelWithPolyPointChecker(poly,point,a,b){
+                    dev.log.math('.detectIntersect.pointWithinPoly::pointLevelWithPolyPointChecker(',poly,point,a,b); //#development
                     //only flip, if the point is not perfectly level with point a of the line 
                     //or if you can prove that the a's two adjacent points are higher and lower than the matching point's level
                     //(the system will come round to having this same point be point b)
                     if( poly.points[a].y != point.y && poly.points[b].y != point.y ){
                         return true;
                     }else if(poly.points[a].y == point.y){
+                        dev.log.math('.detectIntersect.pointWithinPoly -> point is perfectly level with a point on the poly (line point a)'); //#development
                         const pointInFront = a+1 >= poly.points.length ? 0 : a+1;
                         const pointBehind = a-1 <= 0 ? poly.points.length-1 : a-1;
                         if(
                             poly.points[pointBehind].y <= poly.points[a].y && poly.points[pointInFront].y <= poly.points[a].y ||
                             poly.points[pointBehind].y >= poly.points[a].y && poly.points[pointInFront].y >= poly.points[a].y
                         ){
+                            dev.log.math('.detectIntersect.pointWithinPoly -> all above or all below; no need for a flip'); //#development
                         }else{
+                            dev.log.math('.detectIntersect.pointWithinPoly -> crossing fround; time for a flip'); //#development
                             return true;
                         }
                     }
@@ -603,20 +686,24 @@ const library = new function(){
                 //Ray casting algorithm
                 let inside = false;
                 for(let a = 0, b = poly.points.length - 1; a < poly.points.length; b = a++){
+                    dev.log.math('.detectIntersect.pointWithinPoly -> point:',point,'poly.points[a]:',poly.points[a],'poly.points[b]:',poly.points[b]); //#development
         
                     //point must be on the same level of the line
                     if( (poly.points[b].y >= point.y && poly.points[a].y <= point.y) || (poly.points[a].y >= point.y && poly.points[b].y <= point.y) ){
                         //discover if the point is on the far right of the line
                         if( poly.points[a].x < point.x && poly.points[b].x < point.x ){
+                            dev.log.math('.detectIntersect.pointWithinPoly -> point is on far right of line'); //#development
                             //only flip if the line is not perfectly level (which would make the ray skirt the line)
                             if( poly.points[a].y != poly.points[b].y ){
                                 if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
                                     inside = !inside;
+                                    dev.log.math('.detectIntersect.pointWithinPoly -> flip (',inside,')'); //#development
                                 }
                             }
         
                         //discover if the point is on the far left of the line, skip it if so
                         }else if( poly.points[a].x > point.x && poly.points[b].x > point.x ){
+                            dev.log.math('.detectIntersect.pointWithinPoly -> point is on far left of line'); //#development
                             continue;
                         }else{
                             //calculate what side of the line this point is
@@ -632,22 +719,28 @@ const library = new function(){
                                 }
         
                             //if its on the line, return 'onEdge' immediately, if it's above 1 do a flip
+                                dev.log.math('.detectIntersect.pointWithinPoly -> areaLocation:',areaLocation); //#development
                                 if( areaLocation == 1 || isNaN(areaLocation) ){
                                     return 'onEdge';
                                 }else if(areaLocation > 1){
                                     if( pointLevelWithPolyPointChecker(poly,point,a,b) ){
                                         inside = !inside;
+                                        dev.log.math('.detectIntersect.pointWithinPoly -> flip (',inside,')'); //#development
                                     }
                                 }
                         }
                     }else{
+                        dev.log.math('.detectIntersect.pointWithinPoly -> point is not on the same level as the line'); //#development
                     }
                 }
         
+                dev.log.math('.detectIntersect.pointWithinPoly -> inside:',inside); //#development
                 return inside ? 'inside' : 'outside';
             };
         
             this.lineOnLine = function(segment1,segment2){
+                dev.log.math('.detectIntersect.lineOnLine(',segment1,segment2); //#development
+                dev.count('.math.detectIntersect.lineOnLine'); //#development
         
                 if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(segment1), library.math.boundingBoxFromPoints(segment2) ) ){
                     return {x:undefined, y:undefined, intersect:false, contact:false};
@@ -658,19 +751,23 @@ const library = new function(){
                     (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) && (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ||
                     (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) && (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y)
                 ){
+                    dev.log.math('.detectIntersect.lineOnLine -> identical segments'); //#development
                     return {x:undefined, y:undefined, intersect:false, contact:true};
                 }
                     
                 //point on point
                 if( (segment1[0].x == segment2[0].x && segment1[0].y == segment2[0].y) || (segment1[0].x == segment2[1].x && segment1[0].y == segment2[1].y) ){
+                    dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[0]:',segment1[0]); //#development
                     return {x:segment1[0].x, y:segment1[0].y, intersect:false, contact:true};
                 }
                 if( (segment1[1].x == segment2[0].x && segment1[1].y == segment2[0].y) || (segment1[1].x == segment2[1].x && segment1[1].y == segment2[1].y) ){
+                    dev.log.math('.detectIntersect.lineOnLine -> point on point : segment1[1]:',segment1[1]); //#development
                     return {x:segment1[1].x, y:segment1[1].y, intersect:false, contact:true};
                 }
         
                 //calculate denominator
                 const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+                dev.log.math('.detectIntersect.lineOnLine -> denominator:',denominator); //#development
                 if(denominator == 0){
                     const points = [];
                     const output = {x1:undefined, y1:undefined, x2:undefined, y2:undefined, intersect:false, contact:true};
@@ -730,6 +827,8 @@ const library = new function(){
                 };
             };
             this.lineOnPoly = function(line,poly){
+                dev.log.math('.detectIntersect.lineOnPoly(',line,poly); //#development
+                dev.count('.math.detectIntersect.lineOnPoly'); //#development
         
                 if(poly.boundingBox == undefined){ poly.boundingBox = library.math.boundingBoxFromPoints(poly.points); }
                 if( !library.math.detectIntersect.boundingBoxes( library.math.boundingBoxFromPoints(line), poly.boundingBox ) ){
@@ -742,8 +841,11 @@ const library = new function(){
                     return 0;
                 }
                 function huntForIntersection(line,polyPoints){
+                    dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection(',line,polyPoints); //#development
                     for(let a = polyPoints.length-1, b = 0; b < polyPoints.length; a = b++){
+                        dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> line:',line,'polyPoints[a]:',polyPoints[a],'polyPoints[b]:',polyPoints[b]); //#development
                         const result = library.math.detectIntersect.lineOnLine(line,[polyPoints[a],polyPoints[b]]);
+                        dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> result:',result); //#development
                         if(result.contact){
                             output.contact = true;
                             if(result.intersect){
@@ -751,6 +853,7 @@ const library = new function(){
                             }
         
                             if( result.x != undefined && (result.x != line[0].x && result.x != line[1].x) ){
+                                dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> odd contact'); //#development
                                 output.intersect = true;
                             }
         
@@ -773,6 +876,7 @@ const library = new function(){
                     }
         
                     //situation where the line passes perfectly through a point on the poly
+                    dev.log.math('.detectIntersect.lineOnPoly::huntForIntersection -> output.points.length:',output.points.length); //#development
                     if(output.points.length == 0){
                         for(let a = 0; a < poly.points.length; a++){
                             if( poly.points[a].x != line[0].x && poly.points[a].y != line[0].y && poly.points[a].x != line[1].x && poly.points[a].y != line[1].y){
@@ -788,6 +892,7 @@ const library = new function(){
                 const output = { points:[], contact:false, intersect:false };
                 const point_a = library.math.detectIntersect.pointWithinPoly(line[0],poly);
                 const point_b = library.math.detectIntersect.pointWithinPoly(line[1],poly);
+                dev.log.math('.detectIntersect.lineOnPoly -> point_a:',point_a,'point_b:',point_b); //#development
         
                 let dir = 0;
                 if( oneWhileTheOtherIs(point_a,point_b,'outside','outside') ){
@@ -845,21 +950,28 @@ const library = new function(){
                     output.contact = false;
                 }
                 
+                dev.log.math('.detectIntersect.lineOnPoly -> output:',output); //#development
                 return output;
             };
         
             this.polyOnPoly = function(poly_a,poly_b){
+                dev.log.math('.detectIntersect.polyOnPoly(',poly_a,poly_b); //#development
+                dev.count('.math.detectIntersect.polyOnPoly'); //#development
         
                 if(poly_a.boundingBox == undefined){ 
+                    dev.log.math('.detectIntersect.polyOnPoly -> poly_a boundingBox not found, generating...'); //#development
                     poly_a.boundingBox = library.math.boundingBoxFromPoints(poly_a.points);
                 }
                 if(poly_b.boundingBox == undefined){ 
+                    dev.log.math('.detectIntersect.polyOnPoly -> poly_b boundingBox not found, generating...'); //#development
                     poly_b.boundingBox = library.math.boundingBoxFromPoints(poly_b.points);
                 }
                 if( !library.math.detectIntersect.boundingBoxes( poly_a.boundingBox, poly_b.boundingBox ) ){
+                    dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s are totally seperate!'); //#development
                     return { points:[], intersect:false, contact:false };
                 }
         
+                dev.log.math('.detectIntersect.polyOnPoly -> boundingBox\'s do collide, proceeding with search'); //#development
         
                 const results = {
                     points:[],
@@ -874,16 +986,20 @@ const library = new function(){
                         if(index != -1){sudo_poly_a_points.splice(index, 1);}
                     });
                     if(sudo_poly_a_points.length == 0){
+                        dev.log.math('.detectIntersect.polyOnPoly -> these two polys are exactly the same'); //#development
                         return {
                             points:Object.assign([],poly_a.points),
                             contact:true,
                             intersect:true,
                         };
                     }
+                    dev.log.math('.detectIntersect.polyOnPoly -> these two polys are not exactly the same (though they do share '+(poly_a.points.length-sudo_poly_a_points.length)+' of the same points)'); //#development
         
                 //find all side intersection points
                     for(let a_a = poly_a.points.length-1, a_b = 0; a_b < poly_a.points.length; a_a = a_b++){
+                        dev.log.math('.detectIntersect.polyOnPoly -> testing line on poly:',[poly_a.points[a_a],poly_a.points[a_b]],poly_b); //#development
                         const tmp = library.math.detectIntersect.lineOnPoly([poly_a.points[a_a],poly_a.points[a_b]],poly_b);
+                        dev.log.math('.detectIntersect.polyOnPoly -> lineOnPoly-results:',tmp); //#development
         
                         results.points = results.points.concat(
                             tmp.points.filter(point => results.points.find(item => item.x == point.x && item.y == point.y ) == undefined )
@@ -892,6 +1008,7 @@ const library = new function(){
                         results.contact = results.contact || tmp.contact;
                         results.intersect = results.intersect || tmp.intersect;
                     }
+                    dev.log.math('.detectIntersect.polyOnPoly -> results:',results); //#development
             
                 //check if poly_a is totally inside poly_b (if necessary)
                     for(let a = 0; a < poly_b.points.length; a++){
@@ -906,9 +1023,11 @@ const library = new function(){
         };
         this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
             dev.log.math('.pathExtrapolation(',path,thickness,capType,joinType,loopPath,detail,sharpLimit);
+            dev.count('.math.pathExtrapolation'); //#development
         
             function loopThisPath(path){
                 dev.log.math('.pathExtrapolation::loopThisPath(',path);
+                dev.count('.math.pathExtrapolation::loopThisPath'); //#development
             
                 const joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
                 let loopingPath = [];
@@ -924,6 +1043,7 @@ const library = new function(){
             }
             function calculateJointData(path,thickness){
                 dev.log.math('.pathExtrapolation::calculateJointData(',path,thickness);
+                dev.count('.math.pathExtrapolation::calculateJointData'); //#development
             
                 const jointData = [];
                 //parse path
@@ -954,6 +1074,7 @@ const library = new function(){
             }
             function path_to_rectangleSeries(path,thickness){
                 dev.log.math('.pathExtrapolation::path_to_rectangleSeries(',path,thickness);
+                dev.count('.math.pathExtrapolation::path_to_rectangleSeries'); //#development
             
                 let outputPoints = [];
                 for(let a = 1; a < path.length/2; a++){
@@ -973,6 +1094,8 @@ const library = new function(){
             }
         
             function flatJoints(jointData,thickness){
+                dev.log.math('.pathExtrapolation::flatJoints(',jointData,thickness); //#development
+                dev.count('.math.pathExtrapolation::flatJoints'); //#development
             
                 const polygons = [];
         
@@ -1004,6 +1127,8 @@ const library = new function(){
                 return polygons;
             }
             function roundJoints(jointData,thickness,detail=5){
+                dev.log.math('.pathExtrapolation::roundJoints(',jointData,thickness,detail); //#development
+                dev.count('.math.pathExtrapolation::roundJoints'); //#development
             
                 const polygons = [];
                 if(detail < 1){detail = 1;}
@@ -1053,6 +1178,8 @@ const library = new function(){
                 return polygons;
             }
             function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
+                dev.log.math('.pathExtrapolation::sharpJoints(',jointData,thickness,sharpLimit); //#development
+                dev.count('.math.pathExtrapolation::sharpJoints'); //#development
             
                 const polygons = [];
         
@@ -1112,6 +1239,8 @@ const library = new function(){
             }
         
             function roundCaps(jointData,thickness,detail=5){
+                dev.log.math('.pathExtrapolation::roundCaps(',jointData,thickness,detail); //#development
+                dev.count('.math.pathExtrapolation::roundCaps'); //#development
             
                 if(detail < 1){detail = 1;}
         
@@ -1157,12 +1286,17 @@ const library = new function(){
 
         this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},returnPathData=false){
             dev.log.math('.fitPolyIn(',freshPoly,environmentPolys,snapping);
+            dev.count('.math.fitPolyIn'); //#development
         
             function applyOffsetToPoints(offset,points){
+                dev.log.math('.fitPolyIn::applyOffsetToPoints(',offset,points); //#development
+                dev.count('.math.fitPolyIn::applyOffsetToPoints'); //#development
             
                 return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
             };
             function applyOffsetToPolygon(offset,poly){
+                dev.log.math('.fitPolyIn::applyOffsetToPolygon(',offset,poly); //#development
+                dev.count('.math.fitPolyIn::applyOffsetToPolygon'); //#development
             
                 const newPolygon = { points: applyOffsetToPoints(offset,poly.points), boundingBox:{} };
                 newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
@@ -1305,6 +1439,7 @@ const library = new function(){
             return returnPathData ? {offset:offset,paths:paths} : offset;
         };
         this.polygonsToVisibilityGraph = function(polys){
+            dev.log.math('.polygonsToVisibilityGraph(',polys); //#development
             const graph = polys.flatMap((poly,polyIndex) => {
                 return poly.points.map((point,pointIndex) => ({
                     polyIndex:polyIndex,
@@ -1329,11 +1464,14 @@ const library = new function(){
                     //convert for convenience
                     const point_source = polys[graphPoint_source.polyIndex].points[graphPoint_source.pointIndex];
                     const point_destination = polys[graphPoint_destination.polyIndex].points[graphPoint_destination.pointIndex];
+                    dev.log.math('.polygonsToVisibilityGraph -> point_source:',point_source,'point_destination:',point_destination); //#development
         
                     //scan route
                     let addRoute = true;
                     for(let a = 0; a < polys.length; a++){
+                        dev.log.math('.polygonsToVisibilityGraph -> testing polygon:',a,':',polys[a]); //#development
                         const result = library.math.detectIntersect.lineOnPoly( [point_source,point_destination], polys[a] );
+                        dev.log.math('.polygonsToVisibilityGraph -> result:',result); //#development
                         if( result.intersect ){
                             addRoute = false;
                             break;
@@ -1341,6 +1479,7 @@ const library = new function(){
                     }
         
                     //if route is valid, add to graph
+                    dev.log.math('.polygonsToVisibilityGraph -> addRoute:',addRoute); //#development
                     if(addRoute){
                         const distance = library.math.distanceBetweenTwoPoints(point_source,point_destination);
         
@@ -1370,6 +1509,7 @@ const library = new function(){
             return graph;
         };
         this.shortestRouteFromVisibilityGraph = function(visibilityGraph,start,end){
+            dev.log.math('.shortestRouteFromVisibilityGraph(',visibilityGraph,start,end); //#development
         
             //if the starting location or ending location are totally inaccessible, bail on this whole thing
             //though return the point (if any) that was ok
@@ -1398,6 +1538,7 @@ const library = new function(){
             //(don't forget to set the current location's distance to zero)
                 const locationSet = Object.keys(visibilityGraph).map( () => ({ distance:Infinity, visited:false, route:'' }) );
                 locationSet[current].distance = 0;
+                dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#developments
         
             //loop through locations, until the end location has been visited
                 let limit = 100;
@@ -1405,6 +1546,7 @@ const library = new function(){
                     if(limit <= 0){console.error('.shortestRouteFromVisibilityGraph has encountered an overflow'); break;}
                     limit--;
         
+                    dev.log.math('.shortestRouteFromVisibilityGraph -> current:',current); //#development
         
                     //update unvisited distance values
                         for(let a = 0; a < visibilityGraph[current].destination.length; a++){
@@ -1432,6 +1574,7 @@ const library = new function(){
                             }
                         });
                 }while( !locationSet[end].visited )
+                dev.log.math('.shortestRouteFromVisibilityGraph ->',locationSet); //#development
             
             //go back through the location set to discover the shortest route
                 let route = [];
@@ -1486,15 +1629,21 @@ const library = new function(){
     };
     this.font = new function(){
         this.listAllAvailableGlyphs = function(fontFileData){
+            dev.log.font('.listAllAvailableGlyphs(',fontFileData); //#development
+            dev.count('.font.listAllAvailableGlyphs'); //#development
         
             const font = this.decodeFont(fontFileData);
             return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
         };
         this.decodeFont = function(fontFileData){
+            dev.log.font('.decodeFont(',fontFileData); //#development
+            dev.count('.font.decodeFont'); //#development
         
             return _thirdparty.opentype2.parse(fontFileData);
         };
         this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
+            dev.log.font('.getAllAvailableGlyphDrawingPaths(',font,reducedGlyphSet); //#development
+            dev.count('.font.getAllAvailableGlyphDrawingPaths'); //#development
         
             const glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
             const paths = glyphs.map( a => font.getPath(a,0,0,1) );
@@ -1507,6 +1656,8 @@ const library = new function(){
             return outputData;
         };
         this.convertPathToPoints = function(path,detail=2){
+            dev.log.font('.convertPathToPoints(',path,detail); //#development
+            dev.count('.font.convertPathToPoints'); //#development
         
             let output = [];
             let currentPoints = [];
@@ -1550,6 +1701,8 @@ const library = new function(){
             return output;
         };
         this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
+            dev.log.font('.getTrianglesFromGlyphPath(',glyphPath,detail); //#development
+            dev.count('.font.getTrianglesFromGlyphPath'); //#development
         
             //input checking
                 if(glyphPath.length == 0){return [];}
@@ -1600,6 +1753,8 @@ const library = new function(){
                 return segments.flatMap(segment => library.math.polygonToSubTriangles(segment.regions) );
         };
         this.extractGlyphs = function(fontFileData,reducedGlyphSet){
+            dev.log.font('.extractGlyphs(',fontFileData,reducedGlyphSet); //#development
+            dev.count('.font.extractGlyphs'); //#development
         
             //decode font data
                 const font = library.font.decodeFont(fontFileData);
@@ -2697,12 +2852,16 @@ const library = new function(){
         
         
         this.getLoadableFonts = function(){ 
+            dev.log.font('.getLoadableFonts()'); //#development
+            dev.count('.font.getLoadableFonts'); //#development
         
             const defaultFontNames = ['defaultThick','defaultThin'];
             const loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
             return defaultFontNames.concat(loadableFontNames);
         };
         this.getLoadedFonts = function(){
+            dev.log.font('.getLoadedFonts()'); //#development
+            dev.count('.font.getLoadedFonts'); //#development
         
             const defaultFontNames = ['defaultThick','defaultThin'];
             const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
@@ -2710,20 +2869,28 @@ const library = new function(){
         };
         
         this.isApprovedFont = function(fontName){
+            dev.log.font('.isApprovedFont(',fontName); //#development
+            dev.count('.font.isApprovedFont'); //#development
         
             return vectorLibrary[fontName] != undefined;
         };
         this.isFontLoaded = function(fontName){
+            dev.log.font('.isFontLoaded(',fontName); //#development
+            dev.count('.font.isFontLoaded'); //#development
         
             if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
             return vectorLibrary[fontName].isLoaded;
         }
         this.fontLoadAttempted = function(fontName){
+            dev.log.font('.fontLoadAttempted(',fontName); //#development
+            dev.count('.font.fontLoadAttempted'); //#development
         
             if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
             return vectorLibrary[fontName].loadAttempted;
         }
         this.loadFont = function(fontName,onLoaded=()=>{}){
+            dev.log.font('.loadFont(',fontName,onLoaded); //#development
+            dev.count('.font.loadFont'); //#development
         
             if(vectorLibrary[fontName] == undefined){ console.warn('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
         
@@ -2761,6 +2928,8 @@ const library = new function(){
     };
     this.misc = new function(){
         this.padString = function(string,length,padding=' ',paddingSide='l'){
+            dev.log.misc('.padString(',string,length,padding,paddingSide); //#development
+            dev.count('.misc.padString'); //#development
         
             if(padding.length<1){return string;}
             string = ''+string;
@@ -2774,14 +2943,20 @@ const library = new function(){
             return string;
         };
         this.compressString = function(string){
+            dev.log.misc('.compressString(',string); //#development
+            dev.count('.misc.compressString'); //#development
         
             return _thirdparty.lzString.compress(string);
         };
         this.decompressString = function(string){
+            dev.log.misc('.decompressString(',string); //#development
+            dev.count('.misc.decompressString'); //#development
         
             return _thirdparty.lzString.decompress(string);
         };
         this.serialize = function(data,compress=true){
+            dev.log.misc('.serialize(',data,compress); //#development
+            dev.count('.misc.serialize'); //#development
         
             function getType(obj){
                 return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -2818,6 +2993,8 @@ const library = new function(){
             return data;
         };
         this.unserialize = function(data,compressed=true){
+            dev.log.misc('.unserialize(',data,compressed); //#development
+            dev.count('.misc.unserialize'); //#development
         
             if(data === undefined){return undefined;}
         
@@ -2860,12 +3037,16 @@ const library = new function(){
             });
         };
         this.packData = function(data,compress=true){
+            dev.log.misc('.packData(',data,compress); //#development
+            dev.count('.misc.packData'); //#development
             return library.misc.serialize({ 
                 compressed:compress, 
                 data:library.misc.serialize(data,compress)
             },false);
         };
         this.unpackData = function(data){
+            dev.log.misc('.unpackData(',data); //#development
+            dev.count('.misc.unpackData'); //#development
         
             //deserialize first layer
                 try{
@@ -2891,17 +3072,21 @@ const library = new function(){
             return data;
         };
         this.openFile = function(callback,readAsType='readAsBinaryString',fileType){
+            dev.log.misc('.openFile(',callback,readAsType); //#development
+            dev.count('.misc.openFile'); //#development
         
             const i = document.createElement('input');
             i.type = 'file';
             i.accept = fileType;
             i.onchange = function(){
+                dev.log.misc('.openFile::onchange()'); //#development
                 const f = new FileReader();
                 switch(readAsType){
                     case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
                     case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
                 }
                 f.onloadend = function(){ 
+                    dev.log.misc('.openFile::onloadend()'); //#development
                     if(callback){callback(f.result,i.files[0]);}
                 }
             };
@@ -2911,6 +3096,8 @@ const library = new function(){
             setTimeout(() => {document.body.removeChild(i);},1000);
         };
         this.printFile = function(filename,data){
+            dev.log.misc('.printFile(',filename,data); //#development
+            dev.count('.misc.printFile'); //#development
         
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([data]));
@@ -2918,6 +3105,8 @@ const library = new function(){
             a.click();
         };
         this.argumentsToArray = function(argumentsObject){
+            dev.log.misc('.argumentsToArray(',argumentsObject); //#development
+            dev.count('.misc.argumentsToArray'); //#development
             const outputArray = [];
             for(let a = 0; a < argumentsObject.length; a++){
                 outputArray.push( argumentsObject[a] );
@@ -2925,6 +3114,8 @@ const library = new function(){
             return outputArray;
         };
         this.comparer = function(item1,item2){
+            dev.log.misc('.comparer(',item1,item2); //#development
+            dev.count('.misc.comparer'); //#development
             function getType(obj){
                 return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
             }
@@ -2965,16 +3156,22 @@ const library = new function(){
             return false;
         };
         this.removeThisFromThatArray = function(item,array){
+            dev.log.misc('.removeThisFromThatArray(',item,array); //#development
+            dev.count('.misc.removeThisFromThatArray'); //#development
             const index = array.findIndex(a => library.misc.comparer(a,item))
             if(index == -1){return;}
             return array.splice(index,1);
         };
         this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+            dev.log.misc('.removeTheseElementsFromThatArray(',theseElements,thatArray); //#development
+            dev.count('.misc.removeTheseElementsFromThatArray'); //#development
         
             theseElements.forEach(a => library.misc.removeThisFromThatArray(a,thatArray) );
             return thatArray;
         };
         this.getDifferenceOfArrays = function(array_a,array_b){
+            dev.log.misc('.getDifferenceOfArrays(',array_a,array_b); //#development
+            dev.count('.misc.getDifferenceOfArrays'); //#development
         
             if(array_a.length == 0 && array_b.length == 0){
                 return {a:[],b:[]};
@@ -3000,6 +3197,8 @@ const library = new function(){
             };
         };
         this.loadFileFromURL = function(url,callback,errorCallback,responseType='blob'){
+            dev.log.misc('.loadFileFromURL(',url,callback,responseType,errorCallback); //#development
+            dev.count('.misc.loadFileFromURL'); //#development
         
             //responseType: text / arraybuffer / blob / document / json 
         
@@ -3024,42 +3223,53 @@ const library = new function(){
             xhttp.send();
         };
         this.loadImageFromURL = function(url,callback,errorCallback,forceUpdate=false,scale=1){
+            dev.log.misc('.loadImageFromURL(',url,callback,errorCallback,forceUpdate,scale); //#development
+            dev.count('.misc.loadImageFromURL'); //#development
         
             const dataStore = this.loadImageFromURL.loadedImageData;
         
             function getImageFromDataStoreByUrlWithScale(url,scale=1){
+                dev.log.misc('.loadImageFromURL::getImageFromdataStoreByUrl(',url,scale); //#development
                 global = dataStore[url];
                 return dataStore[url].mipmap[1];
             }
         
             if(dataStore[url] == undefined || forceUpdate && dataStore[url].state != 'requested' ){
+                dev.log.misc('.loadImageFromURL -> no previously requested image bitmap for this URL, requesting now...'); //#development
                 dataStore[url] = { state:'requested', mipmap:{}, callbacks:[{success:callback,failure:errorCallback,scale:scale}], timestamp:undefined };
         
                 library.misc.loadFileFromURL(
                     url,
                     response => {
+                        dev.log.misc('.loadImageFromURL -> response:',response); //#development
                         dataStore[url].response = response.response;
                         createImageBitmap(response.response).then(bitmap => {
+                            dev.log.misc('.loadImageFromURL -> bitmap:',bitmap); //#development
                             dataStore[url].mipmap[1] = bitmap;
                             dataStore[url].state = 'ready';
                             dataStore[url].timestamp = Date.now();
                             dataStore[url].callbacks.forEach(callbackBlock => {
+                                dev.log.misc('.loadImageFromURL -> running success callback from callbackBlock:',callbackBlock); //#development
                                 if(callbackBlock.success != undefined){callbackBlock.success( getImageFromDataStoreByUrlWithScale(url,callbackBlock.scale) );}
                             } );
                             dataStore[url].callbacks = [];
                         }).catch(error => {
+                            dev.log.misc('.loadImageFromURL -> image decoding error:',error); //#development
                             dataStore[url].state = 'failed';
                             dataStore[url].timestamp = Date.now();
                             dataStore[url].callbacks.forEach(callbackBlock => {
+                                dev.log.misc('.loadImageFromURL -> running failure callback from callbackBlock:',callbackBlock); //#development
                                 if(callbackBlock.failure != undefined){ callbackBlock.failure('imageDecodingError',response,error); }
                             } );
                             dataStore[url].callbacks = [];
                         });
                     },
                     response => {
+                        dev.log.misc('.loadImageFromURL -> image was not found at url: '+url); //#development
                         dataStore[url].state = 'failed';
                         dataStore[url].timestamp = Date.now();
                         dataStore[url].callbacks.forEach(callbackBlock => {
+                            dev.log.misc('.loadImageFromURL -> running failure callback from callbackBlock:',callbackBlock); //#development
                             if(callbackBlock.failure != undefined){ callbackBlock.failure('badURL',response); }
                         } );
                         dataStore[url].callbacks = [];
@@ -3067,10 +3277,13 @@ const library = new function(){
                 );
         
             }else if( dataStore[url].state == 'ready' ){
+                dev.log.misc('.loadImageFromURL -> found a previously loaded image bitmap for this URL'); //#development
                 if(callback != undefined){ callback( getImageFromDataStoreByUrlWithScale(url,scale) ); }
             }else if( dataStore[url].state == 'requested' ){
+                dev.log.misc('.loadImageFromURL -> bitmap is being loaded, adding callbacks to list'); //#development
                 dataStore[url].callbacks.push({success:callback,failure:errorCallback,scale:scale});
             }else if( dataStore[url].state == 'failed' ){
+                dev.log.misc('.loadImageFromURL -> previous attempt to load from the URL has failed'); //#development
                 if(errorCallback != undefined){ errorCallback('previousFailure'); }
             }
         };
@@ -3078,6 +3291,1622 @@ const library = new function(){
     };
     const _thirdparty = new function(){
         const thirdparty = this;
+        (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+        
+        	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+        	// @license MIT
+        	// @preserve Project Home: https://github.com/voidqk/polybooljs
+        	
+            // Modified by Metasophiea <metasophiea@gmail.com>
+        
+        	var BuildLog = require('./lib/build-log');
+        	var Epsilon = require('./lib/epsilon');
+        	var Intersecter = require('./lib/intersecter');
+        	var SegmentChainer = require('./lib/segment-chainer');
+        	var SegmentSelector = require('./lib/segment-selector');
+        	var GeoJSON = require('./lib/geojson');
+        	
+        	var buildLog = false;
+        	var epsilon = Epsilon();
+        	
+        	var PolyBool;
+        	PolyBool = {
+        		// getter/setter for buildLog
+        		buildLog: function(bl){
+        			if (bl === true)
+        				buildLog = BuildLog();
+        			else if (bl === false)
+        				buildLog = false;
+        			return buildLog === false ? false : buildLog.list;
+        		},
+        		// getter/setter for epsilon
+        		epsilon: function(v){
+        			return epsilon.epsilon(v);
+        		},
+        	
+        		// core API
+        		segments: function(poly){
+        			var i = Intersecter(true, epsilon, buildLog);
+        			poly.regions.forEach(i.addRegion);
+        			return {
+        				segments: i.calculate(poly.inverted),
+        				inverted: poly.inverted
+        			};
+        		},
+        		combine: function(segments1, segments2){
+        			var i3 = Intersecter(false, epsilon, buildLog);
+        			return {
+        				combined: i3.calculate(
+        					segments1.segments, segments1.inverted,
+        					segments2.segments, segments2.inverted
+        				),
+        				inverted1: segments1.inverted,
+        				inverted2: segments2.inverted
+        			};
+        		},
+        		selectUnion: function(combined){
+        			return {
+        				segments: SegmentSelector.union(combined.combined, buildLog),
+        				inverted: combined.inverted1 || combined.inverted2
+        			}
+        		},
+        		selectIntersect: function(combined){
+        			return {
+        				segments: SegmentSelector.intersect(combined.combined, buildLog),
+        				inverted: combined.inverted1 && combined.inverted2
+        			}
+        		},
+        		selectDifference: function(combined){
+        			return {
+        				segments: SegmentSelector.difference(combined.combined, buildLog),
+        				inverted: combined.inverted1 && !combined.inverted2
+        			}
+        		},
+        		selectDifferenceRev: function(combined){
+        			return {
+        				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
+        				inverted: !combined.inverted1 && combined.inverted2
+        			}
+        		},
+        		selectXor: function(combined){
+        			return {
+        				segments: SegmentSelector.xor(combined.combined, buildLog),
+        				inverted: combined.inverted1 !== combined.inverted2
+        			}
+        		},
+        		polygon: function(segments){
+        			return {
+        				regions: SegmentChainer(segments.segments, epsilon, buildLog),
+        				inverted: segments.inverted
+        			};
+        		},
+        	
+        		// GeoJSON converters
+        		polygonFromGeoJSON: function(geojson){
+        			return GeoJSON.toPolygon(PolyBool, geojson);
+        		},
+        		polygonToGeoJSON: function(poly){
+        			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
+        		},
+        	
+        		// helper functions for common operations
+        		union: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectUnion);
+        		},
+        		intersect: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectIntersect);
+        		},
+        		difference: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectDifference);
+        		},
+        		differenceRev: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
+        		},
+        		xor: function(poly1, poly2){
+        			return operate(poly1, poly2, PolyBool.selectXor);
+        		}
+        	};
+        
+        	thirdparty.PolyBool = PolyBool;
+        	
+        	function operate(poly1, poly2, selector){
+        		var seg1 = PolyBool.segments(poly1);
+        		var seg2 = PolyBool.segments(poly2);
+        		var comb = PolyBool.combine(seg1, seg2);
+        		var seg3 = selector(comb);
+        		return PolyBool.polygon(seg3);
+        	}
+        		
+        	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// used strictly for logging the processing of the algorithm... only useful if you intend on
+        	// looking under the covers (for pretty UI's or debugging)
+        	//
+        	
+        	function BuildLog(){
+        		var my;
+        		var nextSegmentId = 0;
+        		var curVert = false;
+        	
+        		function push(type, data){
+        			my.list.push({
+        				type: type,
+        				data: data ? JSON.parse(JSON.stringify(data)) : void 0
+        			});
+        			return my;
+        		}
+        	
+        		my = {
+        			list: [],
+        			segmentId: function(){
+        				return nextSegmentId++;
+        			},
+        			checkIntersection: function(seg1, seg2){
+        				return push('check', { seg1: seg1, seg2: seg2 });
+        			},
+        			segmentChop: function(seg, end){
+        				push('div_seg', { seg: seg, pt: end });
+        				return push('chop', { seg: seg, pt: end });
+        			},
+        			statusRemove: function(seg){
+        				return push('pop_seg', { seg: seg });
+        			},
+        			segmentUpdate: function(seg){
+        				return push('seg_update', { seg: seg });
+        			},
+        			segmentNew: function(seg, primary){
+        				return push('new_seg', { seg: seg, primary: primary });
+        			},
+        			segmentRemove: function(seg){
+        				return push('rem_seg', { seg: seg });
+        			},
+        			tempStatus: function(seg, above, below){
+        				return push('temp_status', { seg: seg, above: above, below: below });
+        			},
+        			rewind: function(seg){
+        				return push('rewind', { seg: seg });
+        			},
+        			status: function(seg, above, below){
+        				return push('status', { seg: seg, above: above, below: below });
+        			},
+        			vert: function(x){
+        				if (x === curVert)
+        					return my;
+        				curVert = x;
+        				return push('vert', { x: x });
+        			},
+        			log: function(data){
+        				if (typeof data !== 'string')
+        					data = JSON.stringify(data, false, '  ');
+        				return push('log', { txt: data });
+        			},
+        			reset: function(){
+        				return push('reset');
+        			},
+        			selected: function(segs){
+        				return push('selected', { segs: segs });
+        			},
+        			chainStart: function(seg){
+        				return push('chain_start', { seg: seg });
+        			},
+        			chainRemoveHead: function(index, pt){
+        				return push('chain_rem_head', { index: index, pt: pt });
+        			},
+        			chainRemoveTail: function(index, pt){
+        				return push('chain_rem_tail', { index: index, pt: pt });
+        			},
+        			chainNew: function(pt1, pt2){
+        				return push('chain_new', { pt1: pt1, pt2: pt2 });
+        			},
+        			chainMatch: function(index){
+        				return push('chain_match', { index: index });
+        			},
+        			chainClose: function(index){
+        				return push('chain_close', { index: index });
+        			},
+        			chainAddHead: function(index, pt){
+        				return push('chain_add_head', { index: index, pt: pt });
+        			},
+        			chainAddTail: function(index, pt){
+        				return push('chain_add_tail', { index: index, pt: pt, });
+        			},
+        			chainConnect: function(index1, index2){
+        				return push('chain_con', { index1: index1, index2: index2 });
+        			},
+        			chainReverse: function(index){
+        				return push('chain_rev', { index: index });
+        			},
+        			chainJoin: function(index1, index2){
+        				return push('chain_join', { index1: index1, index2: index2 });
+        			},
+        			done: function(){
+        				return push('done');
+        			}
+        		};
+        		return my;
+        	}
+        	
+        	module.exports = BuildLog;
+        	
+        	},{}],3:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// provides the raw computation functions that takes epsilon into account
+        	//
+        	// zero is defined to be between (-epsilon, epsilon) exclusive
+        	//
+        	
+        	function Epsilon(eps){
+        		if (typeof eps !== 'number')
+        			eps = 0.0000000001; // sane default? sure why not
+        		var my = {
+        			epsilon: function(v){
+        				if (typeof v === 'number')
+        					eps = v;
+        				return eps;
+        			},
+        			pointAboveOrOnLine: function(pt, left, right){
+        				var Ax = left[0];
+        				var Ay = left[1];
+        				var Bx = right[0];
+        				var By = right[1];
+        				var Cx = pt[0];
+        				var Cy = pt[1];
+        				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
+        			},
+        			pointBetween: function(p, left, right){
+        				// p must be collinear with left->right
+        				// returns false if p == left, p == right, or left == right
+        				var d_py_ly = p[1] - left[1];
+        				var d_rx_lx = right[0] - left[0];
+        				var d_px_lx = p[0] - left[0];
+        				var d_ry_ly = right[1] - left[1];
+        	
+        				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
+        				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
+        				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
+        				if (dot < eps)
+        					return false;
+        	
+        				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
+        				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
+        				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
+        				if (dot - sqlen > -eps)
+        					return false;
+        	
+        				return true;
+        			},
+        			pointsSameX: function(p1, p2){
+        				return Math.abs(p1[0] - p2[0]) < eps;
+        			},
+        			pointsSameY: function(p1, p2){
+        				return Math.abs(p1[1] - p2[1]) < eps;
+        			},
+        			pointsSame: function(p1, p2){
+        				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
+        			},
+        			pointsCompare: function(p1, p2){
+        				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
+        				if (my.pointsSameX(p1, p2))
+        					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
+        				return p1[0] < p2[0] ? -1 : 1;
+        			},
+        			pointsCollinear: function(pt1, pt2, pt3){
+        				// does pt1->pt2->pt3 make a straight line?
+        				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
+        				// if slopes are equal, then they must be collinear, because they share pt2
+        				var dx1 = pt1[0] - pt2[0];
+        				var dy1 = pt1[1] - pt2[1];
+        				var dx2 = pt2[0] - pt3[0];
+        				var dy2 = pt2[1] - pt3[1];
+        				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
+        			},
+        			linesIntersect: function(a0, a1, b0, b1){
+        				// returns false if the lines are coincident (e.g., parallel or on top of each other)
+        				//
+        				// returns an object if the lines intersect:
+        				//   {
+        				//     pt: [x, y],    where the intersection point is at
+        				//     alongA: where intersection point is along A,
+        				//     alongB: where intersection point is along B
+        				//   }
+        				//
+        				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
+        				//
+        				//  with the following meaning:
+        				//
+        				//    -2   intersection point is before segment's first point
+        				//    -1   intersection point is directly on segment's first point
+        				//     0   intersection point is between segment's first and second points (exclusive)
+        				//     1   intersection point is directly on segment's second point
+        				//     2   intersection point is after segment's second point
+        				var adx = a1[0] - a0[0];
+        				var ady = a1[1] - a0[1];
+        				var bdx = b1[0] - b0[0];
+        				var bdy = b1[1] - b0[1];
+        	
+        				var axb = adx * bdy - ady * bdx;
+        				if (Math.abs(axb) < eps)
+        					return false; // lines are coincident
+        	
+        				var dx = a0[0] - b0[0];
+        				var dy = a0[1] - b0[1];
+        	
+        				var A = (bdx * dy - bdy * dx) / axb;
+        				var B = (adx * dy - ady * dx) / axb;
+        	
+        				var ret = {
+        					alongA: 0,
+        					alongB: 0,
+        					pt: [
+        						a0[0] + A * adx,
+        						a0[1] + A * ady
+        					]
+        				};
+        	
+        				// categorize where intersection point is along A and B
+        	
+        				if (A <= -eps)
+        					ret.alongA = -2;
+        				else if (A < eps)
+        					ret.alongA = -1;
+        				else if (A - 1 <= -eps)
+        					ret.alongA = 0;
+        				else if (A - 1 < eps)
+        					ret.alongA = 1;
+        				else
+        					ret.alongA = 2;
+        	
+        				if (B <= -eps)
+        					ret.alongB = -2;
+        				else if (B < eps)
+        					ret.alongB = -1;
+        				else if (B - 1 <= -eps)
+        					ret.alongB = 0;
+        				else if (B - 1 < eps)
+        					ret.alongB = 1;
+        				else
+        					ret.alongB = 2;
+        	
+        				return ret;
+        			},
+        			pointInsideRegion: function(pt, region){
+        				var x = pt[0];
+        				var y = pt[1];
+        				var last_x = region[region.length - 1][0];
+        				var last_y = region[region.length - 1][1];
+        				var inside = false;
+        				for (var i = 0; i < region.length; i++){
+        					var curr_x = region[i][0];
+        					var curr_y = region[i][1];
+        	
+        					// if y is between curr_y and last_y, and
+        					// x is to the right of the boundary created by the line
+        					if ((curr_y - y > eps) != (last_y - y > eps) &&
+        						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
+        						inside = !inside
+        	
+        					last_x = curr_x;
+        					last_y = curr_y;
+        				}
+        				return inside;
+        			}
+        		};
+        		return my;
+        	}
+        	
+        	module.exports = Epsilon;
+        	
+        	},{}],4:[function(require,module,exports){
+        	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
+        	//
+        	
+        	var GeoJSON = {
+        		// convert a GeoJSON object to a PolyBool polygon
+        		toPolygon: function(PolyBool, geojson){
+        	
+        			// converts list of LineString's to segments
+        			function GeoPoly(coords){
+        				// check for empty coords
+        				if (coords.length <= 0)
+        					return PolyBool.segments({ inverted: false, regions: [] });
+        	
+        				// convert LineString to segments
+        				function LineString(ls){
+        					// remove tail which should be the same as head
+        					var reg = ls.slice(0, ls.length - 1);
+        					return PolyBool.segments({ inverted: false, regions: [reg] });
+        				}
+        	
+        				// the first LineString is considered the outside
+        				var out = LineString(coords[0]);
+        	
+        				// the rest of the LineStrings are considered interior holes, so subtract them from the
+        				// current result
+        				for (var i = 1; i < coords.length; i++)
+        					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
+        	
+        				return out;
+        			}
+        	
+        			if (geojson.type === 'Polygon'){
+        				// single polygon, so just convert it and we're done
+        				return PolyBool.polygon(GeoPoly(geojson.coordinates));
+        			}
+        			else if (geojson.type === 'MultiPolygon'){
+        				// multiple polygons, so union all the polygons together
+        				var out = PolyBool.segments({ inverted: false, regions: [] });
+        				for (var i = 0; i < geojson.coordinates.length; i++)
+        					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
+        				return PolyBool.polygon(out);
+        			}
+        			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
+        		},
+        	
+        		// convert a PolyBool polygon to a GeoJSON object
+        		fromPolygon: function(PolyBool, eps, poly){
+        			// make sure out polygon is clean
+        			poly = PolyBool.polygon(PolyBool.segments(poly));
+        	
+        			// test if r1 is inside r2
+        			function regionInsideRegion(r1, r2){
+        				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
+        				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
+        				// edge of the first line, which cannot be on an edge
+        				return eps.pointInsideRegion([
+        					(r1[0][0] + r1[1][0]) * 0.5,
+        					(r1[0][1] + r1[1][1]) * 0.5
+        				], r2);
+        			}
+        	
+        			// calculate inside heirarchy
+        			//
+        			//  _____________________   _______    roots -> A       -> F
+        			// |          A          | |   F   |            |          |
+        			// |  _______   _______  | |  ___  |            +-- B      +-- G
+        			// | |   B   | |   C   | | | |   | |            |   |
+        			// | |  ___  | |  ___  | | | |   | |            |   +-- D
+        			// | | | D | | | | E | | | | | G | |            |
+        			// | | |___| | | |___| | | | |   | |            +-- C
+        			// | |_______| |_______| | | |___| |                |
+        			// |_____________________| |_______|                +-- E
+        	
+        			function newNode(region){
+        				return {
+        					region: region,
+        					children: []
+        				};
+        			}
+        	
+        			var roots = newNode(null);
+        	
+        			function addChild(root, region){
+        				// first check if we're inside any children
+        				for (var i = 0; i < root.children.length; i++){
+        					var child = root.children[i];
+        					if (regionInsideRegion(region, child.region)){
+        						// we are, so insert inside them instead
+        						addChild(child, region);
+        						return;
+        					}
+        				}
+        	
+        				// not inside any children, so check to see if any children are inside us
+        				var node = newNode(region);
+        				for (var i = 0; i < root.children.length; i++){
+        					var child = root.children[i];
+        					if (regionInsideRegion(child.region, region)){
+        						// oops... move the child beneath us, and remove them from root
+        						node.children.push(child);
+        						root.children.splice(i, 1);
+        						i--;
+        					}
+        				}
+        	
+        				// now we can add ourselves
+        				root.children.push(node);
+        			}
+        	
+        			// add all regions to the root
+        			for (var i = 0; i < poly.regions.length; i++){
+        				var region = poly.regions[i];
+        				if (region.length < 3) // regions must have at least 3 points (sanity check)
+        					continue;
+        				addChild(roots, region);
+        			}
+        	
+        			// with our heirarchy, we can distinguish between exterior borders, and interior holes
+        			// the root nodes are exterior, children are interior, children's children are exterior,
+        			// children's children's children are interior, etc
+        	
+        			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
+        	
+        			function forceWinding(region, clockwise){
+        				// first, see if we're clockwise or counter-clockwise
+        				// https://en.wikipedia.org/wiki/Shoelace_formula
+        				var winding = 0;
+        				var last_x = region[region.length - 1][0];
+        				var last_y = region[region.length - 1][1];
+        				var copy = [];
+        				for (var i = 0; i < region.length; i++){
+        					var curr_x = region[i][0];
+        					var curr_y = region[i][1];
+        					copy.push([curr_x, curr_y]); // create a copy while we're at it
+        					winding += curr_y * last_x - curr_x * last_y;
+        					last_x = curr_x;
+        					last_y = curr_y;
+        				}
+        				// this assumes Cartesian coordinates (Y is positive going up)
+        				var isclockwise = winding < 0;
+        				if (isclockwise !== clockwise)
+        					copy.reverse();
+        				// while we're here, the last point must be the first point...
+        				copy.push([copy[0][0], copy[0][1]]);
+        				return copy;
+        			}
+        	
+        			var geopolys = [];
+        	
+        			function addExterior(node){
+        				var poly = [forceWinding(node.region, false)];
+        				geopolys.push(poly);
+        				// children of exteriors are interior
+        				for (var i = 0; i < node.children.length; i++)
+        					poly.push(getInterior(node.children[i]));
+        			}
+        	
+        			function getInterior(node){
+        				// children of interiors are exterior
+        				for (var i = 0; i < node.children.length; i++)
+        					addExterior(node.children[i]);
+        				// return the clockwise interior
+        				return forceWinding(node.region, true);
+        			}
+        	
+        			// root nodes are exterior
+        			for (var i = 0; i < roots.children.length; i++)
+        				addExterior(roots.children[i]);
+        	
+        			// lastly, construct the approrpriate GeoJSON object
+        	
+        			if (geopolys.length <= 0) // empty GeoJSON Polygon
+        				return { type: 'Polygon', coordinates: [] };
+        			if (geopolys.length == 1) // use a GeoJSON Polygon
+        				return { type: 'Polygon', coordinates: geopolys[0] };
+        			return { // otherwise, use a GeoJSON MultiPolygon
+        				type: 'MultiPolygon',
+        				coordinates: geopolys
+        			};
+        		}
+        	};
+        	
+        	module.exports = GeoJSON;
+        	
+        	},{}],5:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// this is the core work-horse
+        	//
+        	
+        	var LinkedList = require('./linked-list');
+        	
+        	function Intersecter(selfIntersection, eps, buildLog){
+        		// selfIntersection is true/false depending on the phase of the overall algorithm
+        	
+        		//
+        		// segment creation
+        		//
+        	
+        		function segmentNew(start, end){
+        			return {
+        				id: buildLog ? buildLog.segmentId() : -1,
+        				start: start,
+        				end: end,
+        				myFill: {
+        					above: null, // is there fill above us?
+        					below: null  // is there fill below us?
+        				},
+        				otherFill: null
+        			};
+        		}
+        	
+        		function segmentCopy(start, end, seg){
+        			return {
+        				id: buildLog ? buildLog.segmentId() : -1,
+        				start: start,
+        				end: end,
+        				myFill: {
+        					above: seg.myFill.above,
+        					below: seg.myFill.below
+        				},
+        				otherFill: null
+        			};
+        		}
+        	
+        		//
+        		// event logic
+        		//
+        	
+        		var event_root = LinkedList.create();
+        	
+        		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
+        			// compare the selected points first
+        			var comp = eps.pointsCompare(p1_1, p2_1);
+        			if (comp !== 0)
+        				return comp;
+        			// the selected points are the same
+        	
+        			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
+        				return 0; // then the segments are equal
+        	
+        			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
+        				return p1_isStart ? 1 : -1; // favor the one that isn't the start
+        	
+        			// otherwise, we'll have to calculate which one is below the other manually
+        			return eps.pointAboveOrOnLine(p1_2,
+        				p2_isStart ? p2_1 : p2_2, // order matters
+        				p2_isStart ? p2_2 : p2_1
+        			) ? 1 : -1;
+        		}
+        	
+        		function eventAdd(ev, other_pt){
+        			event_root.insertBefore(ev, function(here){
+        				// should ev be inserted before here?
+        				var comp = eventCompare(
+        					ev  .isStart, ev  .pt,      other_pt,
+        					here.isStart, here.pt, here.other.pt
+        				);
+        				return comp < 0;
+        			});
+        		}
+        	
+        		function eventAddSegmentStart(seg, primary){
+        			var ev_start = LinkedList.node({
+        				isStart: true,
+        				pt: seg.start,
+        				seg: seg,
+        				primary: primary,
+        				other: null,
+        				status: null
+        			});
+        			eventAdd(ev_start, seg.end);
+        			return ev_start;
+        		}
+        	
+        		function eventAddSegmentEnd(ev_start, seg, primary){
+        			var ev_end = LinkedList.node({
+        				isStart: false,
+        				pt: seg.end,
+        				seg: seg,
+        				primary: primary,
+        				other: ev_start,
+        				status: null
+        			});
+        			ev_start.other = ev_end;
+        			eventAdd(ev_end, ev_start.pt);
+        		}
+        	
+        		function eventAddSegment(seg, primary){
+        			var ev_start = eventAddSegmentStart(seg, primary);
+        			eventAddSegmentEnd(ev_start, seg, primary);
+        			return ev_start;
+        		}
+        	
+        		function eventUpdateEnd(ev, end){
+        			// slides an end backwards
+        			//   (start)------------(end)    to:
+        			//   (start)---(end)
+        	
+        			if (buildLog)
+        				buildLog.segmentChop(ev.seg, end);
+        	
+        			ev.other.remove();
+        			ev.seg.end = end;
+        			ev.other.pt = end;
+        			eventAdd(ev.other, ev.pt);
+        		}
+        	
+        		function eventDivide(ev, pt){
+        			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
+        			eventUpdateEnd(ev, pt);
+        			return eventAddSegment(ns, ev.primary);
+        		}
+        	
+        		function calculate(primaryPolyInverted, secondaryPolyInverted){
+        			// if selfIntersection is true then there is no secondary polygon, so that isn't used
+        	
+        			//
+        			// status logic
+        			//
+        	
+        			var status_root = LinkedList.create();
+        	
+        			function statusCompare(ev1, ev2){
+        				var a1 = ev1.seg.start;
+        				var a2 = ev1.seg.end;
+        				var b1 = ev2.seg.start;
+        				var b2 = ev2.seg.end;
+        	
+        				if (eps.pointsCollinear(a1, b1, b2)){
+        					if (eps.pointsCollinear(a2, b1, b2))
+        						return 1;//eventCompare(true, a1, a2, true, b1, b2);
+        					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
+        				}
+        				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
+        			}
+        	
+        			function statusFindSurrounding(ev){
+        				return status_root.findTransition(function(here){
+        					var comp = statusCompare(ev, here.ev);
+        					return comp > 0;
+        				});
+        			}
+        	
+        			function checkIntersection(ev1, ev2){
+        				// returns the segment equal to ev1, or false if nothing equal
+        	
+        				var seg1 = ev1.seg;
+        				var seg2 = ev2.seg;
+        				var a1 = seg1.start;
+        				var a2 = seg1.end;
+        				var b1 = seg2.start;
+        				var b2 = seg2.end;
+        	
+        				if (buildLog)
+        					buildLog.checkIntersection(seg1, seg2);
+        	
+        				var i = eps.linesIntersect(a1, a2, b1, b2);
+        	
+        				if (i === false){
+        					// segments are parallel or coincident
+        	
+        					// if points aren't collinear, then the segments are parallel, so no intersections
+        					if (!eps.pointsCollinear(a1, a2, b1))
+        						return false;
+        					// otherwise, segments are on top of each other somehow (aka coincident)
+        	
+        					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
+        						return false; // segments touch at endpoints... no intersection
+        	
+        					var a1_equ_b1 = eps.pointsSame(a1, b1);
+        					var a2_equ_b2 = eps.pointsSame(a2, b2);
+        	
+        					if (a1_equ_b1 && a2_equ_b2)
+        						return ev2; // segments are exactly equal
+        	
+        					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
+        					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
+        	
+        					// handy for debugging:
+        					// buildLog.log({
+        					//	a1_equ_b1: a1_equ_b1,
+        					//	a2_equ_b2: a2_equ_b2,
+        					//	a1_between: a1_between,
+        					//	a2_between: a2_between
+        					// });
+        	
+        					if (a1_equ_b1){
+        						if (a2_between){
+        							//  (a1)---(a2)
+        							//  (b1)----------(b2)
+        							eventDivide(ev2, a2);
+        						}
+        						else{
+        							//  (a1)----------(a2)
+        							//  (b1)---(b2)
+        							eventDivide(ev1, b2);
+        						}
+        						return ev2;
+        					}
+        					else if (a1_between){
+        						if (!a2_equ_b2){
+        							// make a2 equal to b2
+        							if (a2_between){
+        								//         (a1)---(a2)
+        								//  (b1)-----------------(b2)
+        								eventDivide(ev2, a2);
+        							}
+        							else{
+        								//         (a1)----------(a2)
+        								//  (b1)----------(b2)
+        								eventDivide(ev1, b2);
+        							}
+        						}
+        	
+        						//         (a1)---(a2)
+        						//  (b1)----------(b2)
+        						eventDivide(ev2, a1);
+        					}
+        				}
+        				else{
+        					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
+        	
+        					// is A divided between its endpoints? (exclusive)
+        					if (i.alongA === 0){
+        						if (i.alongB === -1) // yes, at exactly b1
+        							eventDivide(ev1, b1);
+        						else if (i.alongB === 0) // yes, somewhere between B's endpoints
+        							eventDivide(ev1, i.pt);
+        						else if (i.alongB === 1) // yes, at exactly b2
+        							eventDivide(ev1, b2);
+        					}
+        	
+        					// is B divided between its endpoints? (exclusive)
+        					if (i.alongB === 0){
+        						if (i.alongA === -1) // yes, at exactly a1
+        							eventDivide(ev2, a1);
+        						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
+        							eventDivide(ev2, i.pt);
+        						else if (i.alongA === 1) // yes, at exactly a2
+        							eventDivide(ev2, a2);
+        					}
+        				}
+        				return false;
+        			}
+        	
+        			//
+        			// main event loop
+        			//
+        			var segments = [];
+        			while (!event_root.isEmpty()){
+        				var ev = event_root.getHead();
+        	
+        				if (buildLog)
+        					buildLog.vert(ev.pt[0]);
+        	
+        				if (ev.isStart){
+        	
+        					if (buildLog)
+        						buildLog.segmentNew(ev.seg, ev.primary);
+        	
+        					var surrounding = statusFindSurrounding(ev);
+        					var above = surrounding.before ? surrounding.before.ev : null;
+        					var below = surrounding.after ? surrounding.after.ev : null;
+        	
+        					if (buildLog){
+        						buildLog.tempStatus(
+        							ev.seg,
+        							above ? above.seg : false,
+        							below ? below.seg : false
+        						);
+        					}
+        	
+        					function checkBothIntersections(){
+        						if (above){
+        							var eve = checkIntersection(ev, above);
+        							if (eve)
+        								return eve;
+        						}
+        						if (below)
+        							return checkIntersection(ev, below);
+        						return false;
+        					}
+        	
+        					var eve = checkBothIntersections();
+        					if (eve){
+        						// ev and eve are equal
+        						// we'll keep eve and throw away ev
+        	
+        						// merge ev.seg's fill information into eve.seg
+        	
+        						if (selfIntersection){
+        							var toggle; // are we a toggling edge?
+        							if (ev.seg.myFill.below === null)
+        								toggle = true;
+        							else
+        								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
+        	
+        							// merge two segments that belong to the same polygon
+        							// think of this as sandwiching two segments together, where `eve.seg` is
+        							// the bottom -- this will cause the above fill flag to toggle
+        							if (toggle)
+        								eve.seg.myFill.above = !eve.seg.myFill.above;
+        						}
+        						else{
+        							// merge two segments that belong to different polygons
+        							// each segment has distinct knowledge, so no special logic is needed
+        							// note that this can only happen once per segment in this phase, because we
+        							// are guaranteed that all self-intersections are gone
+        							eve.seg.otherFill = ev.seg.myFill;
+        						}
+        	
+        						if (buildLog)
+        							buildLog.segmentUpdate(eve.seg);
+        	
+        						ev.other.remove();
+        						ev.remove();
+        					}
+        	
+        					if (event_root.getHead() !== ev){
+        						// something was inserted before us in the event queue, so loop back around and
+        						// process it before continuing
+        						if (buildLog)
+        							buildLog.rewind(ev.seg);
+        						continue;
+        					}
+        	
+        					//
+        					// calculate fill flags
+        					//
+        					if (selfIntersection){
+        						var toggle; // are we a toggling edge?
+        						if (ev.seg.myFill.below === null) // if we are a new segment...
+        							toggle = true; // then we toggle
+        						else // we are a segment that has previous knowledge from a division
+        							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
+        	
+        						// next, calculate whether we are filled below us
+        						if (!below){ // if nothing is below us...
+        							// we are filled below us if the polygon is inverted
+        							ev.seg.myFill.below = primaryPolyInverted;
+        						}
+        						else{
+        							// otherwise, we know the answer -- it's the same if whatever is below
+        							// us is filled above it
+        							ev.seg.myFill.below = below.seg.myFill.above;
+        						}
+        	
+        						// since now we know if we're filled below us, we can calculate whether
+        						// we're filled above us by applying toggle to whatever is below us
+        						if (toggle)
+        							ev.seg.myFill.above = !ev.seg.myFill.below;
+        						else
+        							ev.seg.myFill.above = ev.seg.myFill.below;
+        					}
+        					else{
+        						// now we fill in any missing transition information, since we are all-knowing
+        						// at this point
+        	
+        						if (ev.seg.otherFill === null){
+        							// if we don't have other information, then we need to figure out if we're
+        							// inside the other polygon
+        							var inside;
+        							if (!below){
+        								// if nothing is below us, then we're inside if the other polygon is
+        								// inverted
+        								inside =
+        									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
+        							}
+        							else{ // otherwise, something is below us
+        								// so copy the below segment's other polygon's above
+        								if (ev.primary === below.primary)
+        									inside = below.seg.otherFill.above;
+        								else
+        									inside = below.seg.myFill.above;
+        							}
+        							ev.seg.otherFill = {
+        								above: inside,
+        								below: inside
+        							};
+        						}
+        					}
+        	
+        					if (buildLog){
+        						buildLog.status(
+        							ev.seg,
+        							above ? above.seg : false,
+        							below ? below.seg : false
+        						);
+        					}
+        	
+        					// insert the status and remember it for later removal
+        					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
+        				}
+        				else{
+        					var st = ev.status;
+        	
+        					if (st === null){
+        						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
+        							'probably too small or too large');
+        					}
+        	
+        					// removing the status will create two new adjacent edges, so we'll need to check
+        					// for those
+        					if (status_root.exists(st.prev) && status_root.exists(st.next))
+        						checkIntersection(st.prev.ev, st.next.ev);
+        	
+        					if (buildLog)
+        						buildLog.statusRemove(st.ev.seg);
+        	
+        					// remove the status
+        					st.remove();
+        	
+        					// if we've reached this point, we've calculated everything there is to know, so
+        					// save the segment for reporting
+        					if (!ev.primary){
+        						// make sure `seg.myFill` actually points to the primary polygon though
+        						var s = ev.seg.myFill;
+        						ev.seg.myFill = ev.seg.otherFill;
+        						ev.seg.otherFill = s;
+        					}
+        					segments.push(ev.seg);
+        				}
+        	
+        				// remove the event and continue
+        				event_root.getHead().remove();
+        			}
+        	
+        			if (buildLog)
+        				buildLog.done();
+        	
+        			return segments;
+        		}
+        	
+        		// return the appropriate API depending on what we're doing
+        		if (!selfIntersection){
+        			// performing combination of polygons, so only deal with already-processed segments
+        			return {
+        				calculate: function(segments1, inverted1, segments2, inverted2){
+        					// segmentsX come from the self-intersection API, or this API
+        					// invertedX is whether we treat that list of segments as an inverted polygon or not
+        					// returns segments that can be used for further operations
+        					segments1.forEach(function(seg){
+        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
+        					});
+        					segments2.forEach(function(seg){
+        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
+        					});
+        					return calculate(inverted1, inverted2);
+        				}
+        			};
+        		}
+        	
+        		// otherwise, performing self-intersection, so deal with regions
+        		return {
+        			addRegion: function(region){
+        				// regions are a list of points:
+        				//  [ [0, 0], [100, 0], [50, 100] ]
+        				// you can add multiple regions before running calculate
+        				var pt1;
+        				var pt2 = region[region.length - 1];
+        				for (var i = 0; i < region.length; i++){
+        					pt1 = pt2;
+        					pt2 = region[i];
+        	
+        					var forward = eps.pointsCompare(pt1, pt2);
+        					if (forward === 0) // points are equal, so we have a zero-length segment
+        						continue; // just skip it
+        	
+        					eventAddSegment(
+        						segmentNew(
+        							forward < 0 ? pt1 : pt2,
+        							forward < 0 ? pt2 : pt1
+        						),
+        						true
+        					);
+        				}
+        			},
+        			calculate: function(inverted){
+        				// is the polygon inverted?
+        				// returns segments
+        				return calculate(inverted, false);
+        			}
+        		};
+        	}
+        	
+        	module.exports = Intersecter;
+        	
+        	},{"./linked-list":6}],6:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// simple linked list implementation that allows you to traverse down nodes and save positions
+        	//
+        	
+        	var LinkedList = {
+        		create: function(){
+        			var my = {
+        				root: { root: true, next: null },
+        				exists: function(node){
+        					if (node === null || node === my.root)
+        						return false;
+        					return true;
+        				},
+        				isEmpty: function(){
+        					return my.root.next === null;
+        				},
+        				getHead: function(){
+        					return my.root.next;
+        				},
+        				insertBefore: function(node, check){
+        					var last = my.root;
+        					var here = my.root.next;
+        					while (here !== null){
+        						if (check(here)){
+        							node.prev = here.prev;
+        							node.next = here;
+        							here.prev.next = node;
+        							here.prev = node;
+        							return;
+        						}
+        						last = here;
+        						here = here.next;
+        					}
+        					last.next = node;
+        					node.prev = last;
+        					node.next = null;
+        				},
+        				findTransition: function(check){
+        					var prev = my.root;
+        					var here = my.root.next;
+        					while (here !== null){
+        						if (check(here))
+        							break;
+        						prev = here;
+        						here = here.next;
+        					}
+        					return {
+        						before: prev === my.root ? null : prev,
+        						after: here,
+        						insert: function(node){
+        							node.prev = prev;
+        							node.next = here;
+        							prev.next = node;
+        							if (here !== null)
+        								here.prev = node;
+        							return node;
+        						}
+        					};
+        				}
+        			};
+        			return my;
+        		},
+        		node: function(data){
+        			data.prev = null;
+        			data.next = null;
+        			data.remove = function(){
+        				data.prev.next = data.next;
+        				if (data.next)
+        					data.next.prev = data.prev;
+        				data.prev = null;
+        				data.next = null;
+        			};
+        			return data;
+        		}
+        	};
+        	
+        	module.exports = LinkedList;
+        	
+        	},{}],7:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// converts a list of segments into a list of regions, while also removing unnecessary verticies
+        	//
+        	
+        	function SegmentChainer(segments, eps, buildLog){
+        		var chains = [];
+        		var regions = [];
+        	
+        		segments.forEach(function(seg){
+        			var pt1 = seg.start;
+        			var pt2 = seg.end;
+        			if (eps.pointsSame(pt1, pt2)){
+        				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
+        					'probably too small or too large');
+        				return;
+        			}
+        	
+        			if (buildLog)
+        				buildLog.chainStart(seg);
+        	
+        			// search for two chains that this segment matches
+        			var first_match = {
+        				index: 0,
+        				matches_head: false,
+        				matches_pt1: false
+        			};
+        			var second_match = {
+        				index: 0,
+        				matches_head: false,
+        				matches_pt1: false
+        			};
+        			var next_match = first_match;
+        			function setMatch(index, matches_head, matches_pt1){
+        				// return true if we've matched twice
+        				next_match.index = index;
+        				next_match.matches_head = matches_head;
+        				next_match.matches_pt1 = matches_pt1;
+        				if (next_match === first_match){
+        					next_match = second_match;
+        					return false;
+        				}
+        				next_match = null;
+        				return true; // we've matched twice, we're done here
+        			}
+        			for (var i = 0; i < chains.length; i++){
+        				var chain = chains[i];
+        				var head  = chain[0];
+        				var head2 = chain[1];
+        				var tail  = chain[chain.length - 1];
+        				var tail2 = chain[chain.length - 2];
+        				if (eps.pointsSame(head, pt1)){
+        					if (setMatch(i, true, true))
+        						break;
+        				}
+        				else if (eps.pointsSame(head, pt2)){
+        					if (setMatch(i, true, false))
+        						break;
+        				}
+        				else if (eps.pointsSame(tail, pt1)){
+        					if (setMatch(i, false, true))
+        						break;
+        				}
+        				else if (eps.pointsSame(tail, pt2)){
+        					if (setMatch(i, false, false))
+        						break;
+        				}
+        			}
+        	
+        			if (next_match === first_match){
+        				// we didn't match anything, so create a new chain
+        				chains.push([ pt1, pt2 ]);
+        				if (buildLog)
+        					buildLog.chainNew(pt1, pt2);
+        				return;
+        			}
+        	
+        			if (next_match === second_match){
+        				// we matched a single chain
+        	
+        				if (buildLog)
+        					buildLog.chainMatch(first_match.index);
+        	
+        				// add the other point to the apporpriate end, and check to see if we've closed the
+        				// chain into a loop
+        	
+        				var index = first_match.index;
+        				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
+        				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
+        	
+        				var chain = chains[index];
+        				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
+        				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
+        				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
+        				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
+        	
+        				if (eps.pointsCollinear(grow2, grow, pt)){
+        					// grow isn't needed because it's directly between grow2 and pt:
+        					// grow2 ---grow---> pt
+        					if (addToHead){
+        						if (buildLog)
+        							buildLog.chainRemoveHead(first_match.index, pt);
+        						chain.shift();
+        					}
+        					else{
+        						if (buildLog)
+        							buildLog.chainRemoveTail(first_match.index, pt);
+        						chain.pop();
+        					}
+        					grow = grow2; // old grow is gone... new grow is what grow2 was
+        				}
+        	
+        				if (eps.pointsSame(oppo, pt)){
+        					// we're closing the loop, so remove chain from chains
+        					chains.splice(index, 1);
+        	
+        					if (eps.pointsCollinear(oppo2, oppo, grow)){
+        						// oppo isn't needed because it's directly between oppo2 and grow:
+        						// oppo2 ---oppo--->grow
+        						if (addToHead){
+        							if (buildLog)
+        								buildLog.chainRemoveTail(first_match.index, grow);
+        							chain.pop();
+        						}
+        						else{
+        							if (buildLog)
+        								buildLog.chainRemoveHead(first_match.index, grow);
+        							chain.shift();
+        						}
+        					}
+        	
+        					if (buildLog)
+        						buildLog.chainClose(first_match.index);
+        	
+        					// we have a closed chain!
+        					regions.push(chain);
+        					return;
+        				}
+        	
+        				// not closing a loop, so just add it to the apporpriate side
+        				if (addToHead){
+        					if (buildLog)
+        						buildLog.chainAddHead(first_match.index, pt);
+        					chain.unshift(pt);
+        				}
+        				else{
+        					if (buildLog)
+        						buildLog.chainAddTail(first_match.index, pt);
+        					chain.push(pt);
+        				}
+        				return;
+        			}
+        	
+        			// otherwise, we matched two chains, so we need to combine those chains together
+        	
+        			function reverseChain(index){
+        				if (buildLog)
+        					buildLog.chainReverse(index);
+        				chains[index].reverse(); // gee, that's easy
+        			}
+        	
+        			function appendChain(index1, index2){
+        				// index1 gets index2 appended to it, and index2 is removed
+        				var chain1 = chains[index1];
+        				var chain2 = chains[index2];
+        				var tail  = chain1[chain1.length - 1];
+        				var tail2 = chain1[chain1.length - 2];
+        				var head  = chain2[0];
+        				var head2 = chain2[1];
+        	
+        				if (eps.pointsCollinear(tail2, tail, head)){
+        					// tail isn't needed because it's directly between tail2 and head
+        					// tail2 ---tail---> head
+        					if (buildLog)
+        						buildLog.chainRemoveTail(index1, tail);
+        					chain1.pop();
+        					tail = tail2; // old tail is gone... new tail is what tail2 was
+        				}
+        	
+        				if (eps.pointsCollinear(tail, head, head2)){
+        					// head isn't needed because it's directly between tail and head2
+        					// tail ---head---> head2
+        					if (buildLog)
+        						buildLog.chainRemoveHead(index2, head);
+        					chain2.shift();
+        				}
+        	
+        				if (buildLog)
+        					buildLog.chainJoin(index1, index2);
+        				chains[index1] = chain1.concat(chain2);
+        				chains.splice(index2, 1);
+        			}
+        	
+        			var F = first_match.index;
+        			var S = second_match.index;
+        	
+        			if (buildLog)
+        				buildLog.chainConnect(F, S);
+        	
+        			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
+        			if (first_match.matches_head){
+        				if (second_match.matches_head){
+        					if (reverseF){
+        						// <<<< F <<<< --- >>>> S >>>>
+        						reverseChain(F);
+        						// >>>> F >>>> --- >>>> S >>>>
+        						appendChain(F, S);
+        					}
+        					else{
+        						// <<<< F <<<< --- >>>> S >>>>
+        						reverseChain(S);
+        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+        						// >>>> S >>>> --- >>>> F >>>>
+        						appendChain(S, F);
+        					}
+        				}
+        				else{
+        					// <<<< F <<<< --- <<<< S <<<<   logically same as:
+        					// >>>> S >>>> --- >>>> F >>>>
+        					appendChain(S, F);
+        				}
+        			}
+        			else{
+        				if (second_match.matches_head){
+        					// >>>> F >>>> --- >>>> S >>>>
+        					appendChain(F, S);
+        				}
+        				else{
+        					if (reverseF){
+        						// >>>> F >>>> --- <<<< S <<<<
+        						reverseChain(F);
+        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+        						// >>>> S >>>> --- >>>> F >>>>
+        						appendChain(S, F);
+        					}
+        					else{
+        						// >>>> F >>>> --- <<<< S <<<<
+        						reverseChain(S);
+        						// >>>> F >>>> --- >>>> S >>>>
+        						appendChain(F, S);
+        					}
+        				}
+        			}
+        		});
+        	
+        		return regions;
+        	}
+        	
+        	module.exports = SegmentChainer;
+        	
+        	},{}],8:[function(require,module,exports){
+        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+        	// MIT License
+        	// Project Home: https://github.com/voidqk/polybooljs
+        	
+        	//
+        	// filter a list of segments based on boolean operations
+        	//
+        	
+        	function select(segments, selection, buildLog){
+        		var result = [];
+        		segments.forEach(function(seg){
+        			var index =
+        				(seg.myFill.above ? 8 : 0) +
+        				(seg.myFill.below ? 4 : 0) +
+        				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
+        				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
+        			if (selection[index] !== 0){
+        				// copy the segment to the results, while also calculating the fill status
+        				result.push({
+        					id: buildLog ? buildLog.segmentId() : -1,
+        					start: seg.start,
+        					end: seg.end,
+        					myFill: {
+        						above: selection[index] === 1, // 1 if filled above
+        						below: selection[index] === 2  // 2 if filled below
+        					},
+        					otherFill: null
+        				});
+        			}
+        		});
+        	
+        		if (buildLog)
+        			buildLog.selected(result);
+        	
+        		return result;
+        	}
+        	
+        	var SegmentSelector = {
+        		union: function(segments, buildLog){ // primary | secondary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   yes filled below    2
+        			//    0      0      1      0   =>   yes filled above    1
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   yes filled below    2
+        			//    0      1      0      1   =>   yes filled below    2
+        			//    0      1      1      0   =>   no                  0
+        			//    0      1      1      1   =>   no                  0
+        			//    1      0      0      0   =>   yes filled above    1
+        			//    1      0      0      1   =>   no                  0
+        			//    1      0      1      0   =>   yes filled above    1
+        			//    1      0      1      1   =>   no                  0
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   no                  0
+        			//    1      1      1      0   =>   no                  0
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 2, 1, 0,
+        				2, 2, 0, 0,
+        				1, 0, 1, 0,
+        				0, 0, 0, 0
+        			], buildLog);
+        		},
+        		intersect: function(segments, buildLog){ // primary & secondary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   no                  0
+        			//    0      0      1      0   =>   no                  0
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   no                  0
+        			//    0      1      0      1   =>   yes filled below    2
+        			//    0      1      1      0   =>   no                  0
+        			//    0      1      1      1   =>   yes filled below    2
+        			//    1      0      0      0   =>   no                  0
+        			//    1      0      0      1   =>   no                  0
+        			//    1      0      1      0   =>   yes filled above    1
+        			//    1      0      1      1   =>   yes filled above    1
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   yes filled below    2
+        			//    1      1      1      0   =>   yes filled above    1
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 0, 0, 0,
+        				0, 2, 0, 2,
+        				0, 0, 1, 1,
+        				0, 2, 1, 0
+        			], buildLog);
+        		},
+        		difference: function(segments, buildLog){ // primary - secondary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   no                  0
+        			//    0      0      1      0   =>   no                  0
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   yes filled below    2
+        			//    0      1      0      1   =>   no                  0
+        			//    0      1      1      0   =>   yes filled below    2
+        			//    0      1      1      1   =>   no                  0
+        			//    1      0      0      0   =>   yes filled above    1
+        			//    1      0      0      1   =>   yes filled above    1
+        			//    1      0      1      0   =>   no                  0
+        			//    1      0      1      1   =>   no                  0
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   yes filled above    1
+        			//    1      1      1      0   =>   yes filled below    2
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 0, 0, 0,
+        				2, 0, 2, 0,
+        				1, 1, 0, 0,
+        				0, 1, 2, 0
+        			], buildLog);
+        		},
+        		differenceRev: function(segments, buildLog){ // secondary - primary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   yes filled below    2
+        			//    0      0      1      0   =>   yes filled above    1
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   no                  0
+        			//    0      1      0      1   =>   no                  0
+        			//    0      1      1      0   =>   yes filled above    1
+        			//    0      1      1      1   =>   yes filled above    1
+        			//    1      0      0      0   =>   no                  0
+        			//    1      0      0      1   =>   yes filled below    2
+        			//    1      0      1      0   =>   no                  0
+        			//    1      0      1      1   =>   yes filled below    2
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   no                  0
+        			//    1      1      1      0   =>   no                  0
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 2, 1, 0,
+        				0, 0, 1, 1,
+        				0, 2, 0, 2,
+        				0, 0, 0, 0
+        			], buildLog);
+        		},
+        		xor: function(segments, buildLog){ // primary ^ secondary
+        			// above1 below1 above2 below2    Keep?               Value
+        			//    0      0      0      0   =>   no                  0
+        			//    0      0      0      1   =>   yes filled below    2
+        			//    0      0      1      0   =>   yes filled above    1
+        			//    0      0      1      1   =>   no                  0
+        			//    0      1      0      0   =>   yes filled below    2
+        			//    0      1      0      1   =>   no                  0
+        			//    0      1      1      0   =>   no                  0
+        			//    0      1      1      1   =>   yes filled above    1
+        			//    1      0      0      0   =>   yes filled above    1
+        			//    1      0      0      1   =>   no                  0
+        			//    1      0      1      0   =>   no                  0
+        			//    1      0      1      1   =>   yes filled below    2
+        			//    1      1      0      0   =>   no                  0
+        			//    1      1      0      1   =>   yes filled above    1
+        			//    1      1      1      0   =>   yes filled below    2
+        			//    1      1      1      1   =>   no                  0
+        			return select(segments, [
+        				0, 2, 1, 0,
+        				2, 0, 0, 1,
+        				1, 0, 0, 2,
+        				0, 1, 2, 0
+        			], buildLog);
+        		}
+        	};
+        	
+        	module.exports = SegmentSelector;
+        	
+        },{}]},{},[1]);
         this.lzString = (function(){
             // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
             // This work is free. You can redistribute it and/or modify it
@@ -19187,1622 +21016,6 @@ const library = new function(){
             //     return result;
             // };
         };
-        (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-        
-        	// @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
-        	// @license MIT
-        	// @preserve Project Home: https://github.com/voidqk/polybooljs
-        	
-            // Modified by Metasophiea <metasophiea@gmail.com>
-        
-        	var BuildLog = require('./lib/build-log');
-        	var Epsilon = require('./lib/epsilon');
-        	var Intersecter = require('./lib/intersecter');
-        	var SegmentChainer = require('./lib/segment-chainer');
-        	var SegmentSelector = require('./lib/segment-selector');
-        	var GeoJSON = require('./lib/geojson');
-        	
-        	var buildLog = false;
-        	var epsilon = Epsilon();
-        	
-        	var PolyBool;
-        	PolyBool = {
-        		// getter/setter for buildLog
-        		buildLog: function(bl){
-        			if (bl === true)
-        				buildLog = BuildLog();
-        			else if (bl === false)
-        				buildLog = false;
-        			return buildLog === false ? false : buildLog.list;
-        		},
-        		// getter/setter for epsilon
-        		epsilon: function(v){
-        			return epsilon.epsilon(v);
-        		},
-        	
-        		// core API
-        		segments: function(poly){
-        			var i = Intersecter(true, epsilon, buildLog);
-        			poly.regions.forEach(i.addRegion);
-        			return {
-        				segments: i.calculate(poly.inverted),
-        				inverted: poly.inverted
-        			};
-        		},
-        		combine: function(segments1, segments2){
-        			var i3 = Intersecter(false, epsilon, buildLog);
-        			return {
-        				combined: i3.calculate(
-        					segments1.segments, segments1.inverted,
-        					segments2.segments, segments2.inverted
-        				),
-        				inverted1: segments1.inverted,
-        				inverted2: segments2.inverted
-        			};
-        		},
-        		selectUnion: function(combined){
-        			return {
-        				segments: SegmentSelector.union(combined.combined, buildLog),
-        				inverted: combined.inverted1 || combined.inverted2
-        			}
-        		},
-        		selectIntersect: function(combined){
-        			return {
-        				segments: SegmentSelector.intersect(combined.combined, buildLog),
-        				inverted: combined.inverted1 && combined.inverted2
-        			}
-        		},
-        		selectDifference: function(combined){
-        			return {
-        				segments: SegmentSelector.difference(combined.combined, buildLog),
-        				inverted: combined.inverted1 && !combined.inverted2
-        			}
-        		},
-        		selectDifferenceRev: function(combined){
-        			return {
-        				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
-        				inverted: !combined.inverted1 && combined.inverted2
-        			}
-        		},
-        		selectXor: function(combined){
-        			return {
-        				segments: SegmentSelector.xor(combined.combined, buildLog),
-        				inverted: combined.inverted1 !== combined.inverted2
-        			}
-        		},
-        		polygon: function(segments){
-        			return {
-        				regions: SegmentChainer(segments.segments, epsilon, buildLog),
-        				inverted: segments.inverted
-        			};
-        		},
-        	
-        		// GeoJSON converters
-        		polygonFromGeoJSON: function(geojson){
-        			return GeoJSON.toPolygon(PolyBool, geojson);
-        		},
-        		polygonToGeoJSON: function(poly){
-        			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
-        		},
-        	
-        		// helper functions for common operations
-        		union: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectUnion);
-        		},
-        		intersect: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectIntersect);
-        		},
-        		difference: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectDifference);
-        		},
-        		differenceRev: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
-        		},
-        		xor: function(poly1, poly2){
-        			return operate(poly1, poly2, PolyBool.selectXor);
-        		}
-        	};
-        
-        	thirdparty.PolyBool = PolyBool;
-        	
-        	function operate(poly1, poly2, selector){
-        		var seg1 = PolyBool.segments(poly1);
-        		var seg2 = PolyBool.segments(poly2);
-        		var comb = PolyBool.combine(seg1, seg2);
-        		var seg3 = selector(comb);
-        		return PolyBool.polygon(seg3);
-        	}
-        		
-        	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// used strictly for logging the processing of the algorithm... only useful if you intend on
-        	// looking under the covers (for pretty UI's or debugging)
-        	//
-        	
-        	function BuildLog(){
-        		var my;
-        		var nextSegmentId = 0;
-        		var curVert = false;
-        	
-        		function push(type, data){
-        			my.list.push({
-        				type: type,
-        				data: data ? JSON.parse(JSON.stringify(data)) : void 0
-        			});
-        			return my;
-        		}
-        	
-        		my = {
-        			list: [],
-        			segmentId: function(){
-        				return nextSegmentId++;
-        			},
-        			checkIntersection: function(seg1, seg2){
-        				return push('check', { seg1: seg1, seg2: seg2 });
-        			},
-        			segmentChop: function(seg, end){
-        				push('div_seg', { seg: seg, pt: end });
-        				return push('chop', { seg: seg, pt: end });
-        			},
-        			statusRemove: function(seg){
-        				return push('pop_seg', { seg: seg });
-        			},
-        			segmentUpdate: function(seg){
-        				return push('seg_update', { seg: seg });
-        			},
-        			segmentNew: function(seg, primary){
-        				return push('new_seg', { seg: seg, primary: primary });
-        			},
-        			segmentRemove: function(seg){
-        				return push('rem_seg', { seg: seg });
-        			},
-        			tempStatus: function(seg, above, below){
-        				return push('temp_status', { seg: seg, above: above, below: below });
-        			},
-        			rewind: function(seg){
-        				return push('rewind', { seg: seg });
-        			},
-        			status: function(seg, above, below){
-        				return push('status', { seg: seg, above: above, below: below });
-        			},
-        			vert: function(x){
-        				if (x === curVert)
-        					return my;
-        				curVert = x;
-        				return push('vert', { x: x });
-        			},
-        			log: function(data){
-        				if (typeof data !== 'string')
-        					data = JSON.stringify(data, false, '  ');
-        				return push('log', { txt: data });
-        			},
-        			reset: function(){
-        				return push('reset');
-        			},
-        			selected: function(segs){
-        				return push('selected', { segs: segs });
-        			},
-        			chainStart: function(seg){
-        				return push('chain_start', { seg: seg });
-        			},
-        			chainRemoveHead: function(index, pt){
-        				return push('chain_rem_head', { index: index, pt: pt });
-        			},
-        			chainRemoveTail: function(index, pt){
-        				return push('chain_rem_tail', { index: index, pt: pt });
-        			},
-        			chainNew: function(pt1, pt2){
-        				return push('chain_new', { pt1: pt1, pt2: pt2 });
-        			},
-        			chainMatch: function(index){
-        				return push('chain_match', { index: index });
-        			},
-        			chainClose: function(index){
-        				return push('chain_close', { index: index });
-        			},
-        			chainAddHead: function(index, pt){
-        				return push('chain_add_head', { index: index, pt: pt });
-        			},
-        			chainAddTail: function(index, pt){
-        				return push('chain_add_tail', { index: index, pt: pt, });
-        			},
-        			chainConnect: function(index1, index2){
-        				return push('chain_con', { index1: index1, index2: index2 });
-        			},
-        			chainReverse: function(index){
-        				return push('chain_rev', { index: index });
-        			},
-        			chainJoin: function(index1, index2){
-        				return push('chain_join', { index1: index1, index2: index2 });
-        			},
-        			done: function(){
-        				return push('done');
-        			}
-        		};
-        		return my;
-        	}
-        	
-        	module.exports = BuildLog;
-        	
-        	},{}],3:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// provides the raw computation functions that takes epsilon into account
-        	//
-        	// zero is defined to be between (-epsilon, epsilon) exclusive
-        	//
-        	
-        	function Epsilon(eps){
-        		if (typeof eps !== 'number')
-        			eps = 0.0000000001; // sane default? sure why not
-        		var my = {
-        			epsilon: function(v){
-        				if (typeof v === 'number')
-        					eps = v;
-        				return eps;
-        			},
-        			pointAboveOrOnLine: function(pt, left, right){
-        				var Ax = left[0];
-        				var Ay = left[1];
-        				var Bx = right[0];
-        				var By = right[1];
-        				var Cx = pt[0];
-        				var Cy = pt[1];
-        				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
-        			},
-        			pointBetween: function(p, left, right){
-        				// p must be collinear with left->right
-        				// returns false if p == left, p == right, or left == right
-        				var d_py_ly = p[1] - left[1];
-        				var d_rx_lx = right[0] - left[0];
-        				var d_px_lx = p[0] - left[0];
-        				var d_ry_ly = right[1] - left[1];
-        	
-        				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
-        				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
-        				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
-        				if (dot < eps)
-        					return false;
-        	
-        				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
-        				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
-        				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
-        				if (dot - sqlen > -eps)
-        					return false;
-        	
-        				return true;
-        			},
-        			pointsSameX: function(p1, p2){
-        				return Math.abs(p1[0] - p2[0]) < eps;
-        			},
-        			pointsSameY: function(p1, p2){
-        				return Math.abs(p1[1] - p2[1]) < eps;
-        			},
-        			pointsSame: function(p1, p2){
-        				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
-        			},
-        			pointsCompare: function(p1, p2){
-        				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
-        				if (my.pointsSameX(p1, p2))
-        					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
-        				return p1[0] < p2[0] ? -1 : 1;
-        			},
-        			pointsCollinear: function(pt1, pt2, pt3){
-        				// does pt1->pt2->pt3 make a straight line?
-        				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
-        				// if slopes are equal, then they must be collinear, because they share pt2
-        				var dx1 = pt1[0] - pt2[0];
-        				var dy1 = pt1[1] - pt2[1];
-        				var dx2 = pt2[0] - pt3[0];
-        				var dy2 = pt2[1] - pt3[1];
-        				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
-        			},
-        			linesIntersect: function(a0, a1, b0, b1){
-        				// returns false if the lines are coincident (e.g., parallel or on top of each other)
-        				//
-        				// returns an object if the lines intersect:
-        				//   {
-        				//     pt: [x, y],    where the intersection point is at
-        				//     alongA: where intersection point is along A,
-        				//     alongB: where intersection point is along B
-        				//   }
-        				//
-        				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
-        				//
-        				//  with the following meaning:
-        				//
-        				//    -2   intersection point is before segment's first point
-        				//    -1   intersection point is directly on segment's first point
-        				//     0   intersection point is between segment's first and second points (exclusive)
-        				//     1   intersection point is directly on segment's second point
-        				//     2   intersection point is after segment's second point
-        				var adx = a1[0] - a0[0];
-        				var ady = a1[1] - a0[1];
-        				var bdx = b1[0] - b0[0];
-        				var bdy = b1[1] - b0[1];
-        	
-        				var axb = adx * bdy - ady * bdx;
-        				if (Math.abs(axb) < eps)
-        					return false; // lines are coincident
-        	
-        				var dx = a0[0] - b0[0];
-        				var dy = a0[1] - b0[1];
-        	
-        				var A = (bdx * dy - bdy * dx) / axb;
-        				var B = (adx * dy - ady * dx) / axb;
-        	
-        				var ret = {
-        					alongA: 0,
-        					alongB: 0,
-        					pt: [
-        						a0[0] + A * adx,
-        						a0[1] + A * ady
-        					]
-        				};
-        	
-        				// categorize where intersection point is along A and B
-        	
-        				if (A <= -eps)
-        					ret.alongA = -2;
-        				else if (A < eps)
-        					ret.alongA = -1;
-        				else if (A - 1 <= -eps)
-        					ret.alongA = 0;
-        				else if (A - 1 < eps)
-        					ret.alongA = 1;
-        				else
-        					ret.alongA = 2;
-        	
-        				if (B <= -eps)
-        					ret.alongB = -2;
-        				else if (B < eps)
-        					ret.alongB = -1;
-        				else if (B - 1 <= -eps)
-        					ret.alongB = 0;
-        				else if (B - 1 < eps)
-        					ret.alongB = 1;
-        				else
-        					ret.alongB = 2;
-        	
-        				return ret;
-        			},
-        			pointInsideRegion: function(pt, region){
-        				var x = pt[0];
-        				var y = pt[1];
-        				var last_x = region[region.length - 1][0];
-        				var last_y = region[region.length - 1][1];
-        				var inside = false;
-        				for (var i = 0; i < region.length; i++){
-        					var curr_x = region[i][0];
-        					var curr_y = region[i][1];
-        	
-        					// if y is between curr_y and last_y, and
-        					// x is to the right of the boundary created by the line
-        					if ((curr_y - y > eps) != (last_y - y > eps) &&
-        						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
-        						inside = !inside
-        	
-        					last_x = curr_x;
-        					last_y = curr_y;
-        				}
-        				return inside;
-        			}
-        		};
-        		return my;
-        	}
-        	
-        	module.exports = Epsilon;
-        	
-        	},{}],4:[function(require,module,exports){
-        	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
-        	//
-        	
-        	var GeoJSON = {
-        		// convert a GeoJSON object to a PolyBool polygon
-        		toPolygon: function(PolyBool, geojson){
-        	
-        			// converts list of LineString's to segments
-        			function GeoPoly(coords){
-        				// check for empty coords
-        				if (coords.length <= 0)
-        					return PolyBool.segments({ inverted: false, regions: [] });
-        	
-        				// convert LineString to segments
-        				function LineString(ls){
-        					// remove tail which should be the same as head
-        					var reg = ls.slice(0, ls.length - 1);
-        					return PolyBool.segments({ inverted: false, regions: [reg] });
-        				}
-        	
-        				// the first LineString is considered the outside
-        				var out = LineString(coords[0]);
-        	
-        				// the rest of the LineStrings are considered interior holes, so subtract them from the
-        				// current result
-        				for (var i = 1; i < coords.length; i++)
-        					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
-        	
-        				return out;
-        			}
-        	
-        			if (geojson.type === 'Polygon'){
-        				// single polygon, so just convert it and we're done
-        				return PolyBool.polygon(GeoPoly(geojson.coordinates));
-        			}
-        			else if (geojson.type === 'MultiPolygon'){
-        				// multiple polygons, so union all the polygons together
-        				var out = PolyBool.segments({ inverted: false, regions: [] });
-        				for (var i = 0; i < geojson.coordinates.length; i++)
-        					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
-        				return PolyBool.polygon(out);
-        			}
-        			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
-        		},
-        	
-        		// convert a PolyBool polygon to a GeoJSON object
-        		fromPolygon: function(PolyBool, eps, poly){
-        			// make sure out polygon is clean
-        			poly = PolyBool.polygon(PolyBool.segments(poly));
-        	
-        			// test if r1 is inside r2
-        			function regionInsideRegion(r1, r2){
-        				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
-        				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
-        				// edge of the first line, which cannot be on an edge
-        				return eps.pointInsideRegion([
-        					(r1[0][0] + r1[1][0]) * 0.5,
-        					(r1[0][1] + r1[1][1]) * 0.5
-        				], r2);
-        			}
-        	
-        			// calculate inside heirarchy
-        			//
-        			//  _____________________   _______    roots -> A       -> F
-        			// |          A          | |   F   |            |          |
-        			// |  _______   _______  | |  ___  |            +-- B      +-- G
-        			// | |   B   | |   C   | | | |   | |            |   |
-        			// | |  ___  | |  ___  | | | |   | |            |   +-- D
-        			// | | | D | | | | E | | | | | G | |            |
-        			// | | |___| | | |___| | | | |   | |            +-- C
-        			// | |_______| |_______| | | |___| |                |
-        			// |_____________________| |_______|                +-- E
-        	
-        			function newNode(region){
-        				return {
-        					region: region,
-        					children: []
-        				};
-        			}
-        	
-        			var roots = newNode(null);
-        	
-        			function addChild(root, region){
-        				// first check if we're inside any children
-        				for (var i = 0; i < root.children.length; i++){
-        					var child = root.children[i];
-        					if (regionInsideRegion(region, child.region)){
-        						// we are, so insert inside them instead
-        						addChild(child, region);
-        						return;
-        					}
-        				}
-        	
-        				// not inside any children, so check to see if any children are inside us
-        				var node = newNode(region);
-        				for (var i = 0; i < root.children.length; i++){
-        					var child = root.children[i];
-        					if (regionInsideRegion(child.region, region)){
-        						// oops... move the child beneath us, and remove them from root
-        						node.children.push(child);
-        						root.children.splice(i, 1);
-        						i--;
-        					}
-        				}
-        	
-        				// now we can add ourselves
-        				root.children.push(node);
-        			}
-        	
-        			// add all regions to the root
-        			for (var i = 0; i < poly.regions.length; i++){
-        				var region = poly.regions[i];
-        				if (region.length < 3) // regions must have at least 3 points (sanity check)
-        					continue;
-        				addChild(roots, region);
-        			}
-        	
-        			// with our heirarchy, we can distinguish between exterior borders, and interior holes
-        			// the root nodes are exterior, children are interior, children's children are exterior,
-        			// children's children's children are interior, etc
-        	
-        			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
-        	
-        			function forceWinding(region, clockwise){
-        				// first, see if we're clockwise or counter-clockwise
-        				// https://en.wikipedia.org/wiki/Shoelace_formula
-        				var winding = 0;
-        				var last_x = region[region.length - 1][0];
-        				var last_y = region[region.length - 1][1];
-        				var copy = [];
-        				for (var i = 0; i < region.length; i++){
-        					var curr_x = region[i][0];
-        					var curr_y = region[i][1];
-        					copy.push([curr_x, curr_y]); // create a copy while we're at it
-        					winding += curr_y * last_x - curr_x * last_y;
-        					last_x = curr_x;
-        					last_y = curr_y;
-        				}
-        				// this assumes Cartesian coordinates (Y is positive going up)
-        				var isclockwise = winding < 0;
-        				if (isclockwise !== clockwise)
-        					copy.reverse();
-        				// while we're here, the last point must be the first point...
-        				copy.push([copy[0][0], copy[0][1]]);
-        				return copy;
-        			}
-        	
-        			var geopolys = [];
-        	
-        			function addExterior(node){
-        				var poly = [forceWinding(node.region, false)];
-        				geopolys.push(poly);
-        				// children of exteriors are interior
-        				for (var i = 0; i < node.children.length; i++)
-        					poly.push(getInterior(node.children[i]));
-        			}
-        	
-        			function getInterior(node){
-        				// children of interiors are exterior
-        				for (var i = 0; i < node.children.length; i++)
-        					addExterior(node.children[i]);
-        				// return the clockwise interior
-        				return forceWinding(node.region, true);
-        			}
-        	
-        			// root nodes are exterior
-        			for (var i = 0; i < roots.children.length; i++)
-        				addExterior(roots.children[i]);
-        	
-        			// lastly, construct the approrpriate GeoJSON object
-        	
-        			if (geopolys.length <= 0) // empty GeoJSON Polygon
-        				return { type: 'Polygon', coordinates: [] };
-        			if (geopolys.length == 1) // use a GeoJSON Polygon
-        				return { type: 'Polygon', coordinates: geopolys[0] };
-        			return { // otherwise, use a GeoJSON MultiPolygon
-        				type: 'MultiPolygon',
-        				coordinates: geopolys
-        			};
-        		}
-        	};
-        	
-        	module.exports = GeoJSON;
-        	
-        	},{}],5:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// this is the core work-horse
-        	//
-        	
-        	var LinkedList = require('./linked-list');
-        	
-        	function Intersecter(selfIntersection, eps, buildLog){
-        		// selfIntersection is true/false depending on the phase of the overall algorithm
-        	
-        		//
-        		// segment creation
-        		//
-        	
-        		function segmentNew(start, end){
-        			return {
-        				id: buildLog ? buildLog.segmentId() : -1,
-        				start: start,
-        				end: end,
-        				myFill: {
-        					above: null, // is there fill above us?
-        					below: null  // is there fill below us?
-        				},
-        				otherFill: null
-        			};
-        		}
-        	
-        		function segmentCopy(start, end, seg){
-        			return {
-        				id: buildLog ? buildLog.segmentId() : -1,
-        				start: start,
-        				end: end,
-        				myFill: {
-        					above: seg.myFill.above,
-        					below: seg.myFill.below
-        				},
-        				otherFill: null
-        			};
-        		}
-        	
-        		//
-        		// event logic
-        		//
-        	
-        		var event_root = LinkedList.create();
-        	
-        		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
-        			// compare the selected points first
-        			var comp = eps.pointsCompare(p1_1, p2_1);
-        			if (comp !== 0)
-        				return comp;
-        			// the selected points are the same
-        	
-        			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
-        				return 0; // then the segments are equal
-        	
-        			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
-        				return p1_isStart ? 1 : -1; // favor the one that isn't the start
-        	
-        			// otherwise, we'll have to calculate which one is below the other manually
-        			return eps.pointAboveOrOnLine(p1_2,
-        				p2_isStart ? p2_1 : p2_2, // order matters
-        				p2_isStart ? p2_2 : p2_1
-        			) ? 1 : -1;
-        		}
-        	
-        		function eventAdd(ev, other_pt){
-        			event_root.insertBefore(ev, function(here){
-        				// should ev be inserted before here?
-        				var comp = eventCompare(
-        					ev  .isStart, ev  .pt,      other_pt,
-        					here.isStart, here.pt, here.other.pt
-        				);
-        				return comp < 0;
-        			});
-        		}
-        	
-        		function eventAddSegmentStart(seg, primary){
-        			var ev_start = LinkedList.node({
-        				isStart: true,
-        				pt: seg.start,
-        				seg: seg,
-        				primary: primary,
-        				other: null,
-        				status: null
-        			});
-        			eventAdd(ev_start, seg.end);
-        			return ev_start;
-        		}
-        	
-        		function eventAddSegmentEnd(ev_start, seg, primary){
-        			var ev_end = LinkedList.node({
-        				isStart: false,
-        				pt: seg.end,
-        				seg: seg,
-        				primary: primary,
-        				other: ev_start,
-        				status: null
-        			});
-        			ev_start.other = ev_end;
-        			eventAdd(ev_end, ev_start.pt);
-        		}
-        	
-        		function eventAddSegment(seg, primary){
-        			var ev_start = eventAddSegmentStart(seg, primary);
-        			eventAddSegmentEnd(ev_start, seg, primary);
-        			return ev_start;
-        		}
-        	
-        		function eventUpdateEnd(ev, end){
-        			// slides an end backwards
-        			//   (start)------------(end)    to:
-        			//   (start)---(end)
-        	
-        			if (buildLog)
-        				buildLog.segmentChop(ev.seg, end);
-        	
-        			ev.other.remove();
-        			ev.seg.end = end;
-        			ev.other.pt = end;
-        			eventAdd(ev.other, ev.pt);
-        		}
-        	
-        		function eventDivide(ev, pt){
-        			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
-        			eventUpdateEnd(ev, pt);
-        			return eventAddSegment(ns, ev.primary);
-        		}
-        	
-        		function calculate(primaryPolyInverted, secondaryPolyInverted){
-        			// if selfIntersection is true then there is no secondary polygon, so that isn't used
-        	
-        			//
-        			// status logic
-        			//
-        	
-        			var status_root = LinkedList.create();
-        	
-        			function statusCompare(ev1, ev2){
-        				var a1 = ev1.seg.start;
-        				var a2 = ev1.seg.end;
-        				var b1 = ev2.seg.start;
-        				var b2 = ev2.seg.end;
-        	
-        				if (eps.pointsCollinear(a1, b1, b2)){
-        					if (eps.pointsCollinear(a2, b1, b2))
-        						return 1;//eventCompare(true, a1, a2, true, b1, b2);
-        					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
-        				}
-        				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
-        			}
-        	
-        			function statusFindSurrounding(ev){
-        				return status_root.findTransition(function(here){
-        					var comp = statusCompare(ev, here.ev);
-        					return comp > 0;
-        				});
-        			}
-        	
-        			function checkIntersection(ev1, ev2){
-        				// returns the segment equal to ev1, or false if nothing equal
-        	
-        				var seg1 = ev1.seg;
-        				var seg2 = ev2.seg;
-        				var a1 = seg1.start;
-        				var a2 = seg1.end;
-        				var b1 = seg2.start;
-        				var b2 = seg2.end;
-        	
-        				if (buildLog)
-        					buildLog.checkIntersection(seg1, seg2);
-        	
-        				var i = eps.linesIntersect(a1, a2, b1, b2);
-        	
-        				if (i === false){
-        					// segments are parallel or coincident
-        	
-        					// if points aren't collinear, then the segments are parallel, so no intersections
-        					if (!eps.pointsCollinear(a1, a2, b1))
-        						return false;
-        					// otherwise, segments are on top of each other somehow (aka coincident)
-        	
-        					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
-        						return false; // segments touch at endpoints... no intersection
-        	
-        					var a1_equ_b1 = eps.pointsSame(a1, b1);
-        					var a2_equ_b2 = eps.pointsSame(a2, b2);
-        	
-        					if (a1_equ_b1 && a2_equ_b2)
-        						return ev2; // segments are exactly equal
-        	
-        					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
-        					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
-        	
-        					// handy for debugging:
-        					// buildLog.log({
-        					//	a1_equ_b1: a1_equ_b1,
-        					//	a2_equ_b2: a2_equ_b2,
-        					//	a1_between: a1_between,
-        					//	a2_between: a2_between
-        					// });
-        	
-        					if (a1_equ_b1){
-        						if (a2_between){
-        							//  (a1)---(a2)
-        							//  (b1)----------(b2)
-        							eventDivide(ev2, a2);
-        						}
-        						else{
-        							//  (a1)----------(a2)
-        							//  (b1)---(b2)
-        							eventDivide(ev1, b2);
-        						}
-        						return ev2;
-        					}
-        					else if (a1_between){
-        						if (!a2_equ_b2){
-        							// make a2 equal to b2
-        							if (a2_between){
-        								//         (a1)---(a2)
-        								//  (b1)-----------------(b2)
-        								eventDivide(ev2, a2);
-        							}
-        							else{
-        								//         (a1)----------(a2)
-        								//  (b1)----------(b2)
-        								eventDivide(ev1, b2);
-        							}
-        						}
-        	
-        						//         (a1)---(a2)
-        						//  (b1)----------(b2)
-        						eventDivide(ev2, a1);
-        					}
-        				}
-        				else{
-        					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
-        	
-        					// is A divided between its endpoints? (exclusive)
-        					if (i.alongA === 0){
-        						if (i.alongB === -1) // yes, at exactly b1
-        							eventDivide(ev1, b1);
-        						else if (i.alongB === 0) // yes, somewhere between B's endpoints
-        							eventDivide(ev1, i.pt);
-        						else if (i.alongB === 1) // yes, at exactly b2
-        							eventDivide(ev1, b2);
-        					}
-        	
-        					// is B divided between its endpoints? (exclusive)
-        					if (i.alongB === 0){
-        						if (i.alongA === -1) // yes, at exactly a1
-        							eventDivide(ev2, a1);
-        						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
-        							eventDivide(ev2, i.pt);
-        						else if (i.alongA === 1) // yes, at exactly a2
-        							eventDivide(ev2, a2);
-        					}
-        				}
-        				return false;
-        			}
-        	
-        			//
-        			// main event loop
-        			//
-        			var segments = [];
-        			while (!event_root.isEmpty()){
-        				var ev = event_root.getHead();
-        	
-        				if (buildLog)
-        					buildLog.vert(ev.pt[0]);
-        	
-        				if (ev.isStart){
-        	
-        					if (buildLog)
-        						buildLog.segmentNew(ev.seg, ev.primary);
-        	
-        					var surrounding = statusFindSurrounding(ev);
-        					var above = surrounding.before ? surrounding.before.ev : null;
-        					var below = surrounding.after ? surrounding.after.ev : null;
-        	
-        					if (buildLog){
-        						buildLog.tempStatus(
-        							ev.seg,
-        							above ? above.seg : false,
-        							below ? below.seg : false
-        						);
-        					}
-        	
-        					function checkBothIntersections(){
-        						if (above){
-        							var eve = checkIntersection(ev, above);
-        							if (eve)
-        								return eve;
-        						}
-        						if (below)
-        							return checkIntersection(ev, below);
-        						return false;
-        					}
-        	
-        					var eve = checkBothIntersections();
-        					if (eve){
-        						// ev and eve are equal
-        						// we'll keep eve and throw away ev
-        	
-        						// merge ev.seg's fill information into eve.seg
-        	
-        						if (selfIntersection){
-        							var toggle; // are we a toggling edge?
-        							if (ev.seg.myFill.below === null)
-        								toggle = true;
-        							else
-        								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
-        	
-        							// merge two segments that belong to the same polygon
-        							// think of this as sandwiching two segments together, where `eve.seg` is
-        							// the bottom -- this will cause the above fill flag to toggle
-        							if (toggle)
-        								eve.seg.myFill.above = !eve.seg.myFill.above;
-        						}
-        						else{
-        							// merge two segments that belong to different polygons
-        							// each segment has distinct knowledge, so no special logic is needed
-        							// note that this can only happen once per segment in this phase, because we
-        							// are guaranteed that all self-intersections are gone
-        							eve.seg.otherFill = ev.seg.myFill;
-        						}
-        	
-        						if (buildLog)
-        							buildLog.segmentUpdate(eve.seg);
-        	
-        						ev.other.remove();
-        						ev.remove();
-        					}
-        	
-        					if (event_root.getHead() !== ev){
-        						// something was inserted before us in the event queue, so loop back around and
-        						// process it before continuing
-        						if (buildLog)
-        							buildLog.rewind(ev.seg);
-        						continue;
-        					}
-        	
-        					//
-        					// calculate fill flags
-        					//
-        					if (selfIntersection){
-        						var toggle; // are we a toggling edge?
-        						if (ev.seg.myFill.below === null) // if we are a new segment...
-        							toggle = true; // then we toggle
-        						else // we are a segment that has previous knowledge from a division
-        							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
-        	
-        						// next, calculate whether we are filled below us
-        						if (!below){ // if nothing is below us...
-        							// we are filled below us if the polygon is inverted
-        							ev.seg.myFill.below = primaryPolyInverted;
-        						}
-        						else{
-        							// otherwise, we know the answer -- it's the same if whatever is below
-        							// us is filled above it
-        							ev.seg.myFill.below = below.seg.myFill.above;
-        						}
-        	
-        						// since now we know if we're filled below us, we can calculate whether
-        						// we're filled above us by applying toggle to whatever is below us
-        						if (toggle)
-        							ev.seg.myFill.above = !ev.seg.myFill.below;
-        						else
-        							ev.seg.myFill.above = ev.seg.myFill.below;
-        					}
-        					else{
-        						// now we fill in any missing transition information, since we are all-knowing
-        						// at this point
-        	
-        						if (ev.seg.otherFill === null){
-        							// if we don't have other information, then we need to figure out if we're
-        							// inside the other polygon
-        							var inside;
-        							if (!below){
-        								// if nothing is below us, then we're inside if the other polygon is
-        								// inverted
-        								inside =
-        									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
-        							}
-        							else{ // otherwise, something is below us
-        								// so copy the below segment's other polygon's above
-        								if (ev.primary === below.primary)
-        									inside = below.seg.otherFill.above;
-        								else
-        									inside = below.seg.myFill.above;
-        							}
-        							ev.seg.otherFill = {
-        								above: inside,
-        								below: inside
-        							};
-        						}
-        					}
-        	
-        					if (buildLog){
-        						buildLog.status(
-        							ev.seg,
-        							above ? above.seg : false,
-        							below ? below.seg : false
-        						);
-        					}
-        	
-        					// insert the status and remember it for later removal
-        					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
-        				}
-        				else{
-        					var st = ev.status;
-        	
-        					if (st === null){
-        						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
-        							'probably too small or too large');
-        					}
-        	
-        					// removing the status will create two new adjacent edges, so we'll need to check
-        					// for those
-        					if (status_root.exists(st.prev) && status_root.exists(st.next))
-        						checkIntersection(st.prev.ev, st.next.ev);
-        	
-        					if (buildLog)
-        						buildLog.statusRemove(st.ev.seg);
-        	
-        					// remove the status
-        					st.remove();
-        	
-        					// if we've reached this point, we've calculated everything there is to know, so
-        					// save the segment for reporting
-        					if (!ev.primary){
-        						// make sure `seg.myFill` actually points to the primary polygon though
-        						var s = ev.seg.myFill;
-        						ev.seg.myFill = ev.seg.otherFill;
-        						ev.seg.otherFill = s;
-        					}
-        					segments.push(ev.seg);
-        				}
-        	
-        				// remove the event and continue
-        				event_root.getHead().remove();
-        			}
-        	
-        			if (buildLog)
-        				buildLog.done();
-        	
-        			return segments;
-        		}
-        	
-        		// return the appropriate API depending on what we're doing
-        		if (!selfIntersection){
-        			// performing combination of polygons, so only deal with already-processed segments
-        			return {
-        				calculate: function(segments1, inverted1, segments2, inverted2){
-        					// segmentsX come from the self-intersection API, or this API
-        					// invertedX is whether we treat that list of segments as an inverted polygon or not
-        					// returns segments that can be used for further operations
-        					segments1.forEach(function(seg){
-        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
-        					});
-        					segments2.forEach(function(seg){
-        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
-        					});
-        					return calculate(inverted1, inverted2);
-        				}
-        			};
-        		}
-        	
-        		// otherwise, performing self-intersection, so deal with regions
-        		return {
-        			addRegion: function(region){
-        				// regions are a list of points:
-        				//  [ [0, 0], [100, 0], [50, 100] ]
-        				// you can add multiple regions before running calculate
-        				var pt1;
-        				var pt2 = region[region.length - 1];
-        				for (var i = 0; i < region.length; i++){
-        					pt1 = pt2;
-        					pt2 = region[i];
-        	
-        					var forward = eps.pointsCompare(pt1, pt2);
-        					if (forward === 0) // points are equal, so we have a zero-length segment
-        						continue; // just skip it
-        	
-        					eventAddSegment(
-        						segmentNew(
-        							forward < 0 ? pt1 : pt2,
-        							forward < 0 ? pt2 : pt1
-        						),
-        						true
-        					);
-        				}
-        			},
-        			calculate: function(inverted){
-        				// is the polygon inverted?
-        				// returns segments
-        				return calculate(inverted, false);
-        			}
-        		};
-        	}
-        	
-        	module.exports = Intersecter;
-        	
-        	},{"./linked-list":6}],6:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// simple linked list implementation that allows you to traverse down nodes and save positions
-        	//
-        	
-        	var LinkedList = {
-        		create: function(){
-        			var my = {
-        				root: { root: true, next: null },
-        				exists: function(node){
-        					if (node === null || node === my.root)
-        						return false;
-        					return true;
-        				},
-        				isEmpty: function(){
-        					return my.root.next === null;
-        				},
-        				getHead: function(){
-        					return my.root.next;
-        				},
-        				insertBefore: function(node, check){
-        					var last = my.root;
-        					var here = my.root.next;
-        					while (here !== null){
-        						if (check(here)){
-        							node.prev = here.prev;
-        							node.next = here;
-        							here.prev.next = node;
-        							here.prev = node;
-        							return;
-        						}
-        						last = here;
-        						here = here.next;
-        					}
-        					last.next = node;
-        					node.prev = last;
-        					node.next = null;
-        				},
-        				findTransition: function(check){
-        					var prev = my.root;
-        					var here = my.root.next;
-        					while (here !== null){
-        						if (check(here))
-        							break;
-        						prev = here;
-        						here = here.next;
-        					}
-        					return {
-        						before: prev === my.root ? null : prev,
-        						after: here,
-        						insert: function(node){
-        							node.prev = prev;
-        							node.next = here;
-        							prev.next = node;
-        							if (here !== null)
-        								here.prev = node;
-        							return node;
-        						}
-        					};
-        				}
-        			};
-        			return my;
-        		},
-        		node: function(data){
-        			data.prev = null;
-        			data.next = null;
-        			data.remove = function(){
-        				data.prev.next = data.next;
-        				if (data.next)
-        					data.next.prev = data.prev;
-        				data.prev = null;
-        				data.next = null;
-        			};
-        			return data;
-        		}
-        	};
-        	
-        	module.exports = LinkedList;
-        	
-        	},{}],7:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// converts a list of segments into a list of regions, while also removing unnecessary verticies
-        	//
-        	
-        	function SegmentChainer(segments, eps, buildLog){
-        		var chains = [];
-        		var regions = [];
-        	
-        		segments.forEach(function(seg){
-        			var pt1 = seg.start;
-        			var pt2 = seg.end;
-        			if (eps.pointsSame(pt1, pt2)){
-        				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
-        					'probably too small or too large');
-        				return;
-        			}
-        	
-        			if (buildLog)
-        				buildLog.chainStart(seg);
-        	
-        			// search for two chains that this segment matches
-        			var first_match = {
-        				index: 0,
-        				matches_head: false,
-        				matches_pt1: false
-        			};
-        			var second_match = {
-        				index: 0,
-        				matches_head: false,
-        				matches_pt1: false
-        			};
-        			var next_match = first_match;
-        			function setMatch(index, matches_head, matches_pt1){
-        				// return true if we've matched twice
-        				next_match.index = index;
-        				next_match.matches_head = matches_head;
-        				next_match.matches_pt1 = matches_pt1;
-        				if (next_match === first_match){
-        					next_match = second_match;
-        					return false;
-        				}
-        				next_match = null;
-        				return true; // we've matched twice, we're done here
-        			}
-        			for (var i = 0; i < chains.length; i++){
-        				var chain = chains[i];
-        				var head  = chain[0];
-        				var head2 = chain[1];
-        				var tail  = chain[chain.length - 1];
-        				var tail2 = chain[chain.length - 2];
-        				if (eps.pointsSame(head, pt1)){
-        					if (setMatch(i, true, true))
-        						break;
-        				}
-        				else if (eps.pointsSame(head, pt2)){
-        					if (setMatch(i, true, false))
-        						break;
-        				}
-        				else if (eps.pointsSame(tail, pt1)){
-        					if (setMatch(i, false, true))
-        						break;
-        				}
-        				else if (eps.pointsSame(tail, pt2)){
-        					if (setMatch(i, false, false))
-        						break;
-        				}
-        			}
-        	
-        			if (next_match === first_match){
-        				// we didn't match anything, so create a new chain
-        				chains.push([ pt1, pt2 ]);
-        				if (buildLog)
-        					buildLog.chainNew(pt1, pt2);
-        				return;
-        			}
-        	
-        			if (next_match === second_match){
-        				// we matched a single chain
-        	
-        				if (buildLog)
-        					buildLog.chainMatch(first_match.index);
-        	
-        				// add the other point to the apporpriate end, and check to see if we've closed the
-        				// chain into a loop
-        	
-        				var index = first_match.index;
-        				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
-        				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
-        	
-        				var chain = chains[index];
-        				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
-        				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
-        				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
-        				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
-        	
-        				if (eps.pointsCollinear(grow2, grow, pt)){
-        					// grow isn't needed because it's directly between grow2 and pt:
-        					// grow2 ---grow---> pt
-        					if (addToHead){
-        						if (buildLog)
-        							buildLog.chainRemoveHead(first_match.index, pt);
-        						chain.shift();
-        					}
-        					else{
-        						if (buildLog)
-        							buildLog.chainRemoveTail(first_match.index, pt);
-        						chain.pop();
-        					}
-        					grow = grow2; // old grow is gone... new grow is what grow2 was
-        				}
-        	
-        				if (eps.pointsSame(oppo, pt)){
-        					// we're closing the loop, so remove chain from chains
-        					chains.splice(index, 1);
-        	
-        					if (eps.pointsCollinear(oppo2, oppo, grow)){
-        						// oppo isn't needed because it's directly between oppo2 and grow:
-        						// oppo2 ---oppo--->grow
-        						if (addToHead){
-        							if (buildLog)
-        								buildLog.chainRemoveTail(first_match.index, grow);
-        							chain.pop();
-        						}
-        						else{
-        							if (buildLog)
-        								buildLog.chainRemoveHead(first_match.index, grow);
-        							chain.shift();
-        						}
-        					}
-        	
-        					if (buildLog)
-        						buildLog.chainClose(first_match.index);
-        	
-        					// we have a closed chain!
-        					regions.push(chain);
-        					return;
-        				}
-        	
-        				// not closing a loop, so just add it to the apporpriate side
-        				if (addToHead){
-        					if (buildLog)
-        						buildLog.chainAddHead(first_match.index, pt);
-        					chain.unshift(pt);
-        				}
-        				else{
-        					if (buildLog)
-        						buildLog.chainAddTail(first_match.index, pt);
-        					chain.push(pt);
-        				}
-        				return;
-        			}
-        	
-        			// otherwise, we matched two chains, so we need to combine those chains together
-        	
-        			function reverseChain(index){
-        				if (buildLog)
-        					buildLog.chainReverse(index);
-        				chains[index].reverse(); // gee, that's easy
-        			}
-        	
-        			function appendChain(index1, index2){
-        				// index1 gets index2 appended to it, and index2 is removed
-        				var chain1 = chains[index1];
-        				var chain2 = chains[index2];
-        				var tail  = chain1[chain1.length - 1];
-        				var tail2 = chain1[chain1.length - 2];
-        				var head  = chain2[0];
-        				var head2 = chain2[1];
-        	
-        				if (eps.pointsCollinear(tail2, tail, head)){
-        					// tail isn't needed because it's directly between tail2 and head
-        					// tail2 ---tail---> head
-        					if (buildLog)
-        						buildLog.chainRemoveTail(index1, tail);
-        					chain1.pop();
-        					tail = tail2; // old tail is gone... new tail is what tail2 was
-        				}
-        	
-        				if (eps.pointsCollinear(tail, head, head2)){
-        					// head isn't needed because it's directly between tail and head2
-        					// tail ---head---> head2
-        					if (buildLog)
-        						buildLog.chainRemoveHead(index2, head);
-        					chain2.shift();
-        				}
-        	
-        				if (buildLog)
-        					buildLog.chainJoin(index1, index2);
-        				chains[index1] = chain1.concat(chain2);
-        				chains.splice(index2, 1);
-        			}
-        	
-        			var F = first_match.index;
-        			var S = second_match.index;
-        	
-        			if (buildLog)
-        				buildLog.chainConnect(F, S);
-        	
-        			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
-        			if (first_match.matches_head){
-        				if (second_match.matches_head){
-        					if (reverseF){
-        						// <<<< F <<<< --- >>>> S >>>>
-        						reverseChain(F);
-        						// >>>> F >>>> --- >>>> S >>>>
-        						appendChain(F, S);
-        					}
-        					else{
-        						// <<<< F <<<< --- >>>> S >>>>
-        						reverseChain(S);
-        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
-        						// >>>> S >>>> --- >>>> F >>>>
-        						appendChain(S, F);
-        					}
-        				}
-        				else{
-        					// <<<< F <<<< --- <<<< S <<<<   logically same as:
-        					// >>>> S >>>> --- >>>> F >>>>
-        					appendChain(S, F);
-        				}
-        			}
-        			else{
-        				if (second_match.matches_head){
-        					// >>>> F >>>> --- >>>> S >>>>
-        					appendChain(F, S);
-        				}
-        				else{
-        					if (reverseF){
-        						// >>>> F >>>> --- <<<< S <<<<
-        						reverseChain(F);
-        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
-        						// >>>> S >>>> --- >>>> F >>>>
-        						appendChain(S, F);
-        					}
-        					else{
-        						// >>>> F >>>> --- <<<< S <<<<
-        						reverseChain(S);
-        						// >>>> F >>>> --- >>>> S >>>>
-        						appendChain(F, S);
-        					}
-        				}
-        			}
-        		});
-        	
-        		return regions;
-        	}
-        	
-        	module.exports = SegmentChainer;
-        	
-        	},{}],8:[function(require,module,exports){
-        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
-        	// MIT License
-        	// Project Home: https://github.com/voidqk/polybooljs
-        	
-        	//
-        	// filter a list of segments based on boolean operations
-        	//
-        	
-        	function select(segments, selection, buildLog){
-        		var result = [];
-        		segments.forEach(function(seg){
-        			var index =
-        				(seg.myFill.above ? 8 : 0) +
-        				(seg.myFill.below ? 4 : 0) +
-        				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
-        				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
-        			if (selection[index] !== 0){
-        				// copy the segment to the results, while also calculating the fill status
-        				result.push({
-        					id: buildLog ? buildLog.segmentId() : -1,
-        					start: seg.start,
-        					end: seg.end,
-        					myFill: {
-        						above: selection[index] === 1, // 1 if filled above
-        						below: selection[index] === 2  // 2 if filled below
-        					},
-        					otherFill: null
-        				});
-        			}
-        		});
-        	
-        		if (buildLog)
-        			buildLog.selected(result);
-        	
-        		return result;
-        	}
-        	
-        	var SegmentSelector = {
-        		union: function(segments, buildLog){ // primary | secondary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   yes filled below    2
-        			//    0      0      1      0   =>   yes filled above    1
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   yes filled below    2
-        			//    0      1      0      1   =>   yes filled below    2
-        			//    0      1      1      0   =>   no                  0
-        			//    0      1      1      1   =>   no                  0
-        			//    1      0      0      0   =>   yes filled above    1
-        			//    1      0      0      1   =>   no                  0
-        			//    1      0      1      0   =>   yes filled above    1
-        			//    1      0      1      1   =>   no                  0
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   no                  0
-        			//    1      1      1      0   =>   no                  0
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 2, 1, 0,
-        				2, 2, 0, 0,
-        				1, 0, 1, 0,
-        				0, 0, 0, 0
-        			], buildLog);
-        		},
-        		intersect: function(segments, buildLog){ // primary & secondary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   no                  0
-        			//    0      0      1      0   =>   no                  0
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   no                  0
-        			//    0      1      0      1   =>   yes filled below    2
-        			//    0      1      1      0   =>   no                  0
-        			//    0      1      1      1   =>   yes filled below    2
-        			//    1      0      0      0   =>   no                  0
-        			//    1      0      0      1   =>   no                  0
-        			//    1      0      1      0   =>   yes filled above    1
-        			//    1      0      1      1   =>   yes filled above    1
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   yes filled below    2
-        			//    1      1      1      0   =>   yes filled above    1
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 0, 0, 0,
-        				0, 2, 0, 2,
-        				0, 0, 1, 1,
-        				0, 2, 1, 0
-        			], buildLog);
-        		},
-        		difference: function(segments, buildLog){ // primary - secondary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   no                  0
-        			//    0      0      1      0   =>   no                  0
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   yes filled below    2
-        			//    0      1      0      1   =>   no                  0
-        			//    0      1      1      0   =>   yes filled below    2
-        			//    0      1      1      1   =>   no                  0
-        			//    1      0      0      0   =>   yes filled above    1
-        			//    1      0      0      1   =>   yes filled above    1
-        			//    1      0      1      0   =>   no                  0
-        			//    1      0      1      1   =>   no                  0
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   yes filled above    1
-        			//    1      1      1      0   =>   yes filled below    2
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 0, 0, 0,
-        				2, 0, 2, 0,
-        				1, 1, 0, 0,
-        				0, 1, 2, 0
-        			], buildLog);
-        		},
-        		differenceRev: function(segments, buildLog){ // secondary - primary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   yes filled below    2
-        			//    0      0      1      0   =>   yes filled above    1
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   no                  0
-        			//    0      1      0      1   =>   no                  0
-        			//    0      1      1      0   =>   yes filled above    1
-        			//    0      1      1      1   =>   yes filled above    1
-        			//    1      0      0      0   =>   no                  0
-        			//    1      0      0      1   =>   yes filled below    2
-        			//    1      0      1      0   =>   no                  0
-        			//    1      0      1      1   =>   yes filled below    2
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   no                  0
-        			//    1      1      1      0   =>   no                  0
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 2, 1, 0,
-        				0, 0, 1, 1,
-        				0, 2, 0, 2,
-        				0, 0, 0, 0
-        			], buildLog);
-        		},
-        		xor: function(segments, buildLog){ // primary ^ secondary
-        			// above1 below1 above2 below2    Keep?               Value
-        			//    0      0      0      0   =>   no                  0
-        			//    0      0      0      1   =>   yes filled below    2
-        			//    0      0      1      0   =>   yes filled above    1
-        			//    0      0      1      1   =>   no                  0
-        			//    0      1      0      0   =>   yes filled below    2
-        			//    0      1      0      1   =>   no                  0
-        			//    0      1      1      0   =>   no                  0
-        			//    0      1      1      1   =>   yes filled above    1
-        			//    1      0      0      0   =>   yes filled above    1
-        			//    1      0      0      1   =>   no                  0
-        			//    1      0      1      0   =>   no                  0
-        			//    1      0      1      1   =>   yes filled below    2
-        			//    1      1      0      0   =>   no                  0
-        			//    1      1      0      1   =>   yes filled above    1
-        			//    1      1      1      0   =>   yes filled below    2
-        			//    1      1      1      1   =>   no                  0
-        			return select(segments, [
-        				0, 2, 1, 0,
-        				2, 0, 0, 1,
-        				1, 0, 0, 2,
-        				0, 1, 2, 0
-        			], buildLog);
-        		}
-        	};
-        	
-        	module.exports = SegmentSelector;
-        	
-        },{}]},{},[1]);
     };
 };
 
@@ -20821,18 +21034,25 @@ const communicationModuleMaker = function(communicationObject,callerName){
     const messagingCallbacks = {};
 
     function generateMessageID(){
+        self.log('::generateMessageID()'); //#development
         return messageId++;
     }
 
     communicationObject.onmessage = function(encodedPacket){
+        self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
         let message = encodedPacket.data;
 
         if(message.outgoing){
+            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
             if(message.cargo.function in self.function){
+                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
+                self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                 if(message.id == null){
+                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                     self.function[message.cargo.function](...message.cargo.arguments);
                 }else{
+                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                     communicationObject.postMessage({
                         id:message.id,
                         outgoing:false,
@@ -20840,25 +21060,35 @@ const communicationModuleMaker = function(communicationObject,callerName){
                     });
                 }
             }else if(message.cargo.function in self.delayedFunction){
+                self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
+                self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                 if(message.id == null){
+                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                 }else{
+                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                     cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
                         communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
                     }].concat(message.cargo.arguments));
                 }
             }else{
+                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
             }
         }else{
+            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
+            self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
             messagingCallbacks[message.id](message.cargo);
             delete messagingCallbacks[message.id];
         }
     };
     this.run = function(functionName,argumentList=[],callback,transferables){
+        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
         let id = null;
         if(callback != undefined){
+            self.log('.run -> callback was defined; generating message ID'); //#development
             id = generateMessageID();
+            self.log('.run -> message ID:',id); //#development
             messagingCallbacks[id] = callback;
         }
         communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
@@ -20947,6 +21177,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -20966,30 +21197,35 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.heedCamera = function(a){
                             if(a==undefined){return heedCamera;}     
                             heedCamera = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].heedCamera(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -20997,9 +21233,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to ',attributes[key]); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -21035,16 +21273,22 @@ const element = new function(){
             
                     this.children = function(){return children;};
                     this.syncChildren = function(foreignChildren){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren(',foreignChildren); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
                         this.clear();
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
                         foreignChildren.forEach(child => {
                             this.append(child);
                         });
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].syncChildren -> children:',children); //#development
                         activateShouldRenderFrame();
                     };
                     this.getChildByName = function(name){return getChildByName(name);};
                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
                     this.contains = function(element){ return checkForElement(element) != undefined; };
                     this.append = function(newElement){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].append(',newElement); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].append -> children:',children,'newElement.name:',newElement); //#development
             
                         if( !isValidElement(newElement) ){ return false; } 
             
@@ -21058,6 +21302,7 @@ const element = new function(){
                         return true;
                     };
                     this.prepend = function(newElement){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].prepend(',newElement); //#development
             
                         if( !isValidElement(newElement) ){ return false; }
             
@@ -21071,6 +21316,7 @@ const element = new function(){
                         return true;
                     };
                     this.remove = function(elementToRemove){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].remove(',elementToRemove); //#development
                         if(elementToRemove == undefined){return;}
                         if(!children.includes(elementToRemove)){return;}
             
@@ -21085,12 +21331,14 @@ const element = new function(){
                         activateShouldRenderFrame();
                     };
                     this.clear = function(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].clear()'); //#development
                         children = [];
                         childRegistry = {};
                         activateShouldRenderFrame();
                         return true;
                     };
                     this.shift = function(elementToShift,newPosition){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].shift(',elementToShift,newPosition); //#development
                         if(elementToShift == undefined){return;}
                         if(!children.includes(elementToShift)){return;}
             
@@ -21100,6 +21348,7 @@ const element = new function(){
                         activateShouldRenderFrame();
                     };
                     this.getElementsUnderPoint = function(x,y){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getElementsUnderPoint(',x,y); //#development
             
                         let returnList = [];
             
@@ -21121,6 +21370,7 @@ const element = new function(){
                         return returnList;
                     };
                     this.getElementsUnderArea = function(points){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getElementsUnderArea(',points); //#development
             
                         let returnList = [];
             
@@ -21156,6 +21406,7 @@ const element = new function(){
                     const clipping = { stencil:undefined, active:false };
                     this.stencil = function(element){
                         if(element == undefined){return clipping.stencil;}
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].stencil(',element); //#development
                         clipping.stencil = element;
                         clipping.stencil.parent = this;
                         if(clipping.active){ computeExtremities(); }
@@ -21163,6 +21414,7 @@ const element = new function(){
                     };
                     this.clipActive = function(bool){
                         if(bool == undefined){return clipping.active;}
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].clipActive(',bool); //#development
                         clipping.active = bool;
                         computeExtremities();
                         activateShouldRenderFrame();
@@ -21170,16 +21422,21 @@ const element = new function(){
             
                 //extremities
                     function calculateExtremitiesBox(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox()'); //#development
             
                         let limits = {left:undefined,right:undefined,top:undefined,bottom:undefined};
                         if(children.length == 0){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> no children'); //#development
                             limits = {left:x,right:x,top:y,bottom:y};
                         }else{
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> children.length: '+children.length); //#development
                             const firstChild = children[0].extremities.boundingBox;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> firstChild:',firstChild); //#development
                             limits = { left:firstChild.topLeft.x, right:firstChild.bottomRight.x, top:firstChild.bottomRight.y, bottom:firstChild.topLeft.y }
             
                             children.slice(1).forEach(child => {
                                 const tmp = child.extremities.boundingBox;
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> child:',tmp); //#development
                                 if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
                                 if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
                                 if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
@@ -21188,8 +21445,10 @@ const element = new function(){
                         }
             
                         self.extremities.points = [ {x:limits.left,y:limits.top}, {x:limits.right,y:limits.top}, {x:limits.right,y:limits.bottom}, {x:limits.left,y:limits.bottom} ];
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::calculateExtremitiesBox -> self.extremities.points:',self.extremities.points); //#development
                     }
                     function updateExtremities(informParent=true){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities(',informParent); //#development
                        
                         //generate extremity points
                             self.extremities.points = [];
@@ -21201,14 +21460,17 @@ const element = new function(){
                             }else{
                                 calculateExtremitiesBox();
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> extremities.points.length:',self.extremities.points.length); //#development
             
                         //generate bounding box from points
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
             
                         //update parent
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                     }
                     function augmentExtremities(element){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities(',element); //#development
             
                         //get offset from parent
                             const offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
@@ -21224,12 +21486,14 @@ const element = new function(){
                             element.computeExtremities(false,newOffset);
                         //augment points list
                             calculateExtremitiesBox();
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities -> extremities.points.length:',self.extremities.points.length); //#development
                         //recalculate bounding box
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
                         //inform parent of change
                             if(self.parent){self.parent.updateExtremities();}
                     }
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -21249,9 +21513,11 @@ const element = new function(){
                             updateExtremities(informParent,offset);
                     }
                     function augmentExtremities_add(element){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add(',element); //#development
             
                         //get offset from parent
                             const offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add -> generated offset:',offset); //#development
                         //combine offset with group's position, angle and scale to produce new offset for children
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const newOffset = { 
@@ -21272,10 +21538,12 @@ const element = new function(){
                                 { x:self.extremities.boundingBox.topLeft.x, y:self.extremities.boundingBox.bottomRight.y },
                             ];
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_add -> extremities.points.length:',self.extremities.points.length); //#development
                         //inform parent of change
                             if(self.parent){self.parent.updateExtremities();}
                     }
                     function augmentExtremities_remove(element){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove(',element); //#development
                         //this function assumes that the element has already been removed from the 'children' variable)
                         //is the element's bounding box within the bounding box of the group; if so, no recalculation need be done
                         //otherwise the element is touching the boundary, in which case search through the children for another 
@@ -21292,11 +21560,13 @@ const element = new function(){
                             }
                         };
                         if( data.topLeft.x != 0 && data.topLeft.y != 0 && data.bottomRight.x != 0 && data.bottomRight.y != 0 ){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> easy remove: no changes to the group\'s bounding box required'); //#development
                             return;
                         }else{
                             ['topLeft','bottomRight'].forEach(cornerName => {
                                 ['x','y'].forEach(axisName => {
                                     if(data[cornerName][axisName] == 0){
+                                        dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> '+cornerName+'_'+axisName+' is at boundary'); //#development
             
                                         let boundaryToucherFound = false;
                                         let closestToBoundary = {distance:undefined, position:undefined};
@@ -21309,6 +21579,7 @@ const element = new function(){
                                         }
             
                                         if(!boundaryToucherFound){
+                                            dev.log.elementLibrary[type]('['+self.getAddress()+']::augmentExtremities_remove -> need to adjust the bounding box'); //#development
                                             self.extremities.boundingBox[cornerName][axisName] = closestToBoundary.position;
                                         }
                                     }
@@ -21318,10 +21589,12 @@ const element = new function(){
                     }
             
                     this.getOffset = function(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
             
                         let output = {x:0,y:0,scale:1,angle:0};
             
                         if(this.parent){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> parent found'); //#development
                             const offset = this.parent.getOffset();
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             output = { 
@@ -21331,9 +21604,11 @@ const element = new function(){
                                 angle: offset.angle + angle,
                             };
                         }else{
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> no parent found'); //#development
                             output = {x:x ,y:y ,scale:scale ,angle:angle};
                         }
             
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset -> output:',output); //#development
                         return output;
                     };
                     this.computeExtremities = computeExtremities;
@@ -21346,12 +21621,15 @@ const element = new function(){
                         render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
                     }
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -21361,6 +21639,7 @@ const element = new function(){
                         );
                     }
                     this.render = function(context, offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //if there's no children anyway, then don't worry about it
                             if(children.length == 0){
@@ -21369,8 +21648,10 @@ const element = new function(){
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //combine offset with group's position, angle and scale to produce new offset for children
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -21484,6 +21765,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -21491,6 +21773,7 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         
@@ -21511,42 +21794,49 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -21554,9 +21844,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to ',attributes[key]); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -21613,10 +21905,12 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -21624,12 +21918,14 @@ const element = new function(){
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
                         
                         //uniforms
                             if(uniformLocations == undefined){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -21641,6 +21937,13 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor:',anchor); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -21651,6 +21954,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                 
                         context.useProgram(program);
@@ -21660,17 +21964,20 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
                             const adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
                                 scale: offset.scale*scale,
                                 angle: -(offset.angle + angle),
                             };
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> adjusted',adjusted); //#development
                         //calculate points based on the adjusted offset
                             self.extremities.points = [];
                             for(let a = 0; a < points.length; a+=2){
@@ -21685,6 +21992,8 @@ const element = new function(){
                                 });
                             }
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
                     
                         //if told to do so, inform parent (if there is one) that extremities have changed
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -21700,12 +22009,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -21715,11 +22027,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -21793,6 +22108,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -21800,12 +22116,14 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         
@@ -21828,48 +22146,56 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.thickness = function(a){ 
                             if(a==undefined){return thickness;} 
                             thickness = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -21877,9 +22203,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                         if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, thickness:thickness }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -21994,10 +22322,12 @@ const element = new function(){
                     const index = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -22005,11 +22335,13 @@ const element = new function(){
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
                             //index
                                 if(index.buffer == undefined){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating index.buffer...'); //#development
                                     index.attributeLocation = context.getAttribLocation(program, "index");
                                     index.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(index.attributeLocation);
@@ -22017,12 +22349,14 @@ const element = new function(){
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating index.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                 }
                             
                         //uniforms
                             if(uniformLocations == undefined){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -22036,6 +22370,15 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> thickness:'+thickness); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor:',anchor); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> lineColour:',lineColour); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -22048,6 +22391,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                 
                         context.useProgram(program);
@@ -22057,17 +22401,20 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                                     
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
                             const adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
                                 scale: offset.scale*scale,
                                 angle: -(offset.angle + angle),
                             };
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> adjusted',adjusted); //#development
                         //calculate points based on the adjusted offset
                             self.extremities.points = [];
                             for(let a = 0; a < points.length; a+=2){
@@ -22082,6 +22429,8 @@ const element = new function(){
                                 });
                             }
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
                     
                         //if told to do so, inform parent (if there is one) that extremities have changed
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -22097,12 +22446,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -22112,11 +22464,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -22194,6 +22549,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -22201,6 +22557,7 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         
@@ -22220,24 +22577,28 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.radius = function(a){ 
                             if(a==undefined){return radius;} 
                             radius = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].radius(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.detail = function(a){ 
                             if(a==undefined){return detail;}
                             detail = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].detail(',a); //#development
                             calculateCirclePoints();
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
@@ -22245,6 +22606,7 @@ const element = new function(){
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -22252,9 +22614,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -22320,10 +22684,12 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -22332,12 +22698,14 @@ const element = new function(){
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                     pointsChanged = false;
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                         //uniforms
                             if(uniformLocations == undefined){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -22348,6 +22716,12 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> radius:'+radius); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -22357,6 +22731,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram('circle', vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -22366,6 +22741,7 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -22400,12 +22776,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
                     };
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -22415,11 +22794,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){    
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
                     
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -22488,6 +22870,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -22495,12 +22878,14 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
                             activateShouldRenderFrame();
                         };
                     
@@ -22521,24 +22906,28 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.radius = function(a){ 
                             if(a==undefined){return radius;} 
                             radius = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].radius(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.detail = function(a){ 
                             if(a==undefined){return detail;}
                             detail = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].detail(',a); //#development
                             calculateCirclePoints();
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
@@ -22546,12 +22935,14 @@ const element = new function(){
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.thickness = function(a){ 
                             if(a==undefined){return thickness;} 
                             thickness = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -22559,9 +22950,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                         if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, radius:radius, detail:detail, scale:scale, thickness:thickness }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -22647,10 +23040,12 @@ const element = new function(){
                     const index = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -22659,11 +23054,13 @@ const element = new function(){
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                     pointsChanged = false;
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                             }
                             //index
                                 if(index.buffer == undefined || pointsChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating index.buffer...'); //#development
                                     index.attributeLocation = context.getAttribLocation(program, "index");
                                     index.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(index.attributeLocation);
@@ -22671,12 +23068,14 @@ const element = new function(){
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating index.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                 }
             
                         //uniforms
                             if(uniformLocations == undefined){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -22690,6 +23089,15 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> radius:'+radius); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> thickness:'+thickness); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> lineColour:',lineColour); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> indexParting:'+points.length/4); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -22702,6 +23110,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -22711,6 +23120,7 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -22745,12 +23155,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
                     };
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -22760,11 +23173,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -22837,6 +23253,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -22844,6 +23261,7 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         
@@ -22860,6 +23278,7 @@ const element = new function(){
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].points(',points); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                             activateShouldRenderFrame();
@@ -22872,6 +23291,7 @@ const element = new function(){
                             }
             
                             if(a==undefined){ return pointsToXYArray(); }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
                             activateShouldRenderFrame();
@@ -22879,6 +23299,7 @@ const element = new function(){
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -22886,9 +23307,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, points:points, pointsChanged:pointsChanged, scale:scale }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -22936,24 +23359,30 @@ const element = new function(){
                     let drawingPoints = [];
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = library.math.polygonToSubTriangles(points,'flatArray')), context.STATIC_DRAW);
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> points:',points); //#development
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> drawingPoints:',points); //#development
                                     pointsChanged = false;
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -22963,6 +23392,11 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -22971,6 +23405,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -22981,6 +23416,7 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -23005,12 +23441,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -23020,11 +23459,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -23081,6 +23523,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -23088,12 +23531,14 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         let lineColour = {r:1,g:0,b:0,a:1};
                         this.lineColour = function(a){
                             if(a==undefined){return lineColour;}     
                             lineColour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].lineColour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         
@@ -23114,6 +23559,7 @@ const element = new function(){
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].points(',points); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             pointsChanged = true;
                             activateShouldRenderFrame();
@@ -23126,6 +23572,7 @@ const element = new function(){
                             }
             
                             if(a==undefined){ return pointsToXYArray(); }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
                             activateShouldRenderFrame();
@@ -23133,12 +23580,14 @@ const element = new function(){
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.thickness = function(a){
                             if(thickness==undefined){return thickness;}     
                             thickness = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness('+thickness+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                             pointsChanged = true;
@@ -23146,6 +23595,7 @@ const element = new function(){
                         this.jointDetail = function(a){
                             if(jointDetail==undefined){return jointDetail;}     
                             jointDetail = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].jointDetail('+jointDetail+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                             pointsChanged = true;
@@ -23153,6 +23603,7 @@ const element = new function(){
                         this.jointType = function(a){
                             if(jointType==undefined){return jointType;}     
                             jointType = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].jointType('+jointType+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                             pointsChanged = true;
@@ -23160,6 +23611,7 @@ const element = new function(){
                         this.sharpLimit = function(a){
                             if(sharpLimit==undefined){return sharpLimit;}     
                             sharpLimit = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].sharpLimit('+sharpLimit+')'); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                             pointsChanged = true;
@@ -23168,9 +23620,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                         if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -23233,10 +23687,12 @@ const element = new function(){
                     let drawingPoints = [];
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){            
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
                 
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     point.triangles = library.math.polygonToSubTriangles(points,'flatArray');
@@ -23244,12 +23700,16 @@ const element = new function(){
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = point.triangles.concat(loopedLineGenerator())), context.STATIC_DRAW);
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> points:',points); //#development
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> drawingPoints:',drawingPoints); //#development
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
                             //index
                                 if(index.buffer == undefined || pointsChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating index.buffer...'); //#development
                                     index.attributeLocation = context.getAttribLocation(program, "index");
                                     index.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(index.attributeLocation);
@@ -23258,12 +23718,14 @@ const element = new function(){
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:point.triangles.length/2 + loopedLineGenerator().length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                                     pointsChanged = false;
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating index.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
                                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -23275,6 +23737,13 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> lineColour:',lineColour); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> indexParting:'+point.triangles.length/2); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -23285,6 +23754,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -23295,6 +23765,7 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                          
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
@@ -23319,12 +23790,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -23334,11 +23808,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -23405,6 +23882,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -23412,6 +23890,7 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         
@@ -23434,6 +23913,7 @@ const element = new function(){
                         this.points = function(a){
                             if(points==undefined){return points;}     
                             points = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].points('+JSON.stringify(points)+')'); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23447,6 +23927,7 @@ const element = new function(){
                             }
             
                             if(a==undefined){ return pointsToXYArray(); }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].pointsAsXYArray(',a); //#development
             
                             this.points( a.map((point) => [point.x,point.y]).flat() );
                             activateShouldRenderFrame();
@@ -23454,12 +23935,14 @@ const element = new function(){
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.thickness = function(a){
                             if(thickness==undefined){return thickness;}     
                             thickness = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].thickness(',thickness); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23468,6 +23951,7 @@ const element = new function(){
                         this.looping = function(a){
                             if(looping==undefined){return looping;}     
                             looping = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].looping(',looping); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23476,6 +23960,7 @@ const element = new function(){
                         this.capType = function(a){
                             if(capType==undefined){return capType;}     
                             capType = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].capType(',capType); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23484,6 +23969,7 @@ const element = new function(){
                         this.jointType = function(a){
                             if(jointType==undefined){return jointType;}     
                             jointType = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].jointType(',jointType); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23492,6 +23978,7 @@ const element = new function(){
                         this.jointDetail = function(a){
                             if(jointDetail==undefined){return jointDetail;}     
                             jointDetail = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].jointDetail(',jointDetail); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23500,6 +23987,7 @@ const element = new function(){
                         this.sharpLimit = function(a){
                             if(sharpLimit==undefined){return sharpLimit;}     
                             sharpLimit = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].sharpLimit(',sharpLimit); //#development
                             generatedPathPolygon = lineGenerator();
                             pointsChanged = true;
                             if(allowComputeExtremities){computeExtremities();}
@@ -23509,9 +23997,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                         if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, points:points, pointsChanged:pointsChanged, scale:scale, thickness:thickness, jointDetail:jointDetail, jointType:jointType, sharpLimit:sharpLimit }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -23527,6 +24017,8 @@ const element = new function(){
                 //webGL rendering functions
                     let generatedPathPolygon = [];
                     function lineGenerator(){ 
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::lineGenerator()'); //#development
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::lineGenerator -> '+'['+points+'],'+thickness+','+capType+','+jointType+','+looping+','+jointDetail+','+sharpLimit); //#development
                         return library.math.pathExtrapolation(points,thickness/2,capType,jointType,looping,jointDetail,sharpLimit);
                     }
                     const vertexShaderSource = 
@@ -23562,24 +24054,29 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){        
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
                 
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(generatedPathPolygon), context.STATIC_DRAW);
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> generatedPathPolygon:',generatedPathPolygon); //#development
                                     pointsChanged = false;
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                         //uniforms
                             if(uniformLocations == undefined){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -23589,6 +24086,11 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:',colour); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -23597,6 +24099,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -23606,6 +24109,7 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
@@ -23630,12 +24134,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -23645,11 +24152,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //activate shape render code
                             activateGLRender(context,offset);
@@ -23720,6 +24230,7 @@ const element = new function(){
             //             this.ignored = function(a){
             //                 if(a==undefined){return ignored;}     
             //                 ignored = a;
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
             //                 if(allowComputeExtremities){computeExtremities();}
             //                 activateShouldRenderFrame();
             //             };
@@ -23741,42 +24252,49 @@ const element = new function(){
             //             this.x = function(a){ 
             //                 if(a==undefined){return x;}     
             //                 x = a;     
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
             //                 if(allowComputeExtremities){computeExtremities();}
             //                 activateShouldRenderFrame();
             //             };
             //             this.y = function(a){ 
             //                 if(a==undefined){return y;}     
             //                 y = a;
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
             //                 if(allowComputeExtremities){computeExtremities();}
             //                 activateShouldRenderFrame();
             //             };
             //             this.angle = function(a){ 
             //                 if(a==undefined){return angle;} 
             //                 angle = a;
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
             //                 if(allowComputeExtremities){computeExtremities();}
             //                 activateShouldRenderFrame();
             //             };
             //             this.anchor = function(a){
             //                 if(a==undefined){return anchor;} 
             //                 anchor = a; 
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
             //                 if(allowComputeExtremities){computeExtremities();}
             //                 activateShouldRenderFrame();
             //             };
             //             this.width = function(a){
             //                 if(a==undefined){return width;}  
             //                 width = a;  
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
             //                 if(allowComputeExtremities){computeExtremities();}
             //                 activateShouldRenderFrame();
             //             };
             //             this.height = function(a){
             //                 if(a==undefined){return height;} 
             //                 height = a; 
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
             //                 if(allowComputeExtremities){computeExtremities();}
             //                 activateShouldRenderFrame();
             //             };
             //             this.scale = function(a){ 
             //                 if(a==undefined){return scale;} 
             //                 scale = a;
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
             //                 if(allowComputeExtremities){computeExtremities();}
             //                 activateShouldRenderFrame();
             //             };
@@ -23791,6 +24309,7 @@ const element = new function(){
             //                 defaultURL:'/images/noimageimage.png'
             //             };
             //             function loadImage(url,forceUpdate=false){
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url,forceUpdate); //#development
                             
             //                 if(url == ''){
             //                     image.url = image.defaultURL;
@@ -23803,6 +24322,7 @@ const element = new function(){
             //                     url, 
             //                     bitmap => {
             //                         if(url != image.url){
+            //                             dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> URL has changed since this request started; re-requesting...'); //#development
             //                             loadImage(image.url);
             //                             return;
             //                         }
@@ -23835,6 +24355,7 @@ const element = new function(){
             //             setTimeout(()=>{ if(image.url == ''){ loadImage(image.defaultURL); } },1000);
             
             //             this.url = function(a,forceUpdate=false){
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a,forceUpdate); //#development
             
             //                 if(a==undefined){return image.url;}
             //                 if(a==image.url){return;} //no need to reload the same image
@@ -23845,6 +24366,7 @@ const element = new function(){
             //                 loadImage(image.url,forceUpdate);
             //             };
             //             this.bitmap = function(a){
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].bitmap(',a); //#development
             
             //                 if(a==undefined){return image.bitmap;}
             //                 image.bitmap = a;
@@ -23858,9 +24380,11 @@ const element = new function(){
             //         //unifiedAttribute
             //             this.unifiedAttribute = function(attributes){
             //                 if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, url:image.url }; } 
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
             //                 allowComputeExtremities = false;
             //                 Object.keys(attributes).forEach(key => {
+            //                     dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
             //                     try{
             //                         self[key](attributes[key]);
             //                     }catch(err){
@@ -23924,10 +24448,12 @@ const element = new function(){
             //         const point = { buffer:undefined, attributeLocation:undefined };
             //         let uniformLocations;
             //         function updateGLAttributes(context,adjust){
+            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
             
             //             //buffers
             //                 //points
             //                     if(point.buffer == undefined){
+            //                         dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
             //                         point.attributeLocation = context.getAttribLocation(program, "point");
             //                         point.buffer = context.createBuffer();
             //                         context.enableVertexAttribArray(point.attributeLocation);
@@ -23935,12 +24461,14 @@ const element = new function(){
             //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
             //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
             //                     }else{
+            //                         dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
             //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
             //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
             //                     }
             
             //                 //texture
             //                     if(image.isChanged){
+            //                         dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating image.textureData...'); //#development
             //                         image.isChanged = false;
             //                         image.textureData = context.createTexture();
             //                         context.bindTexture(context.TEXTURE_2D, image.textureData);
@@ -23950,11 +24478,13 @@ const element = new function(){
             //                         context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
             //                         context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
             //                     }else{
+            //                         dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating image.textureData...'); //#development
             //                         context.bindTexture(context.TEXTURE_2D, image.textureData);
             //                     }
             
             //             //uniforms
             //                 if( uniformLocations == undefined ){
+            //                     dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
             //                     uniformLocations = {
             //                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
             //                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -23965,6 +24495,12 @@ const element = new function(){
             //                     };
             //                 }
             
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
             //                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
             //                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
             //                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -23974,6 +24510,7 @@ const element = new function(){
             //         }
             //         let program;
             //         function activateGLRender(context,adjust){
+            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
             //             if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                         
             //             if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
@@ -23985,11 +24522,13 @@ const element = new function(){
                     
             //     //extremities
             //         function computeExtremities(informParent=true,offset){
+            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
             //             //get offset from parent, if one isn't provided
             //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //             //calculate adjusted offset based on the offset
             //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
             //                 const adjusted = { 
             //                     x: point.x*offset.scale + offset.x,
             //                     y: point.y*offset.scale + offset.y,
@@ -24010,6 +24549,8 @@ const element = new function(){
             //                     });
             //                 }
             //                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
                     
             //             //if told to do so, inform parent (if there is one) that extremities have changed
             //                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -24025,12 +24566,15 @@ const element = new function(){
             //                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
             //         };
             //         function activateShouldRenderFrame(){
+            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
             //             if(render.shouldRenderFrame){
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
             //                 return;
             //             }
             //             render.shouldRenderFrame = shouldThisElementRender();
             //         }
             //         function shouldThisElementRender(){
+            //             dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
             //             if( self.parent == undefined || self.parent.clipActive == undefined ){
             //                 return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
             //             }
@@ -24040,11 +24584,14 @@ const element = new function(){
             //             );
             //         }
             //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            //             dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
             //             //judge whether element should be rendered
             //                 if( !shouldThisElementRender() ){
+            //                     dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
             //                     return;
             //                 }
+            //                 dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
             //             //combine offset with shape's position, angle and scale to produce adjust value for render
             //                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -24122,6 +24669,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -24143,42 +24691,49 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -24195,6 +24750,7 @@ const element = new function(){
                             isProcessed: false,
                         };
                         function loadImage(url,forceUpdate=false){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url,forceUpdate); //#development
                             
                             if(url == ''){
                                 state.url = state.defaultURL;
@@ -24220,6 +24776,7 @@ const element = new function(){
                                     elementLibrary.image.webglDataStore[url].isProcessed = false;
             
                                     if(url != state.url){
+                                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> URL has changed since this request started; re-requesting...'); //#development
                                         loadImage(state.url);
                                         return;
                                     }
@@ -24252,6 +24809,7 @@ const element = new function(){
                         } },1000);
             
                         this.url = function(a,forceUpdate=false){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].url(',a,forceUpdate); //#development
             
                             if(a==undefined){return state.url;}
                             if(a==state.url){return;} //no need to reload the same image
@@ -24262,6 +24820,7 @@ const element = new function(){
                             loadImage(state.url,forceUpdate);
                         };
                         this.bitmap = function(a){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].bitmap(',a); //#development
             
                             if(a==undefined){
                                 return elementLibrary.image.webglDataStore[state.url] != undefined ? elementLibrary.image.webglDataStore[state.url].bitmap : undefined;
@@ -24280,9 +24839,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, url:image.url }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -24346,10 +24907,12 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray( point.attributeLocation );
@@ -24357,12 +24920,14 @@ const element = new function(){
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData( context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW );
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer( context.ARRAY_BUFFER, point.buffer ); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                             //texture
                                 if( !elementLibrary.image.webglDataStore[state.url].isProcessed ){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> generating new textureData...'); //#development
                                     elementLibrary.image.webglDataStore[state.url].textureData = context.createTexture();
                                     context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[state.url].textureData );
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
@@ -24371,17 +24936,21 @@ const element = new function(){
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
                                     context.texImage2D( context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, elementLibrary.image.webglDataStore[state.url].bitmap );
             
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> mipmap generation...'); //#development
                                     context.generateMipmap( context.TEXTURE_2D );
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST_MIPMAP_LINEAR );
             
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> texture processing complete'); //#development
                                     elementLibrary.image.webglDataStore[state.url].isProcessed = true;
                                     activateShouldRenderFrame();
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> this texture has been found in image\'s webglDataStore, using that data instead as new textureData...'); //#development
                                     context.bindTexture( context.TEXTURE_2D, elementLibrary.image.webglDataStore[state.url].textureData );
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -24392,6 +24961,12 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -24401,6 +24976,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                         
                         if(!elementLibrary.image.webglDataStore[state.url].isLoaded){return;} //do not render, if the image has not yet been loaded and processed
@@ -24412,11 +24988,13 @@ const element = new function(){
                     
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point',point); //#development
                             const adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
@@ -24437,6 +25015,8 @@ const element = new function(){
                                 });
                             }
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
                     
                         //if told to do so, inform parent (if there is one) that extremities have changed
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -24452,12 +25032,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     };
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -24467,11 +25050,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -24551,6 +25137,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -24572,42 +25159,49 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.anchor = function(a){
                             if(a==undefined){return anchor;} 
                             anchor = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -24622,15 +25216,20 @@ const element = new function(){
                             defaultURL:'/images/noimageimage.png'
                         };
                         function loadImage(url){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage(',url); //#development
                             image.url = url;
                             fetch(url).then( response => {
                                 if(response.status != 200){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> image was not found at url: '+url); //#development
                                     console.warn(type,id,self.getAddress(),'cound not find image at: '+url);
                                     return;
                                 }
             
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> response:',response); //#development
                                 response.blob().then(data => {
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> data:',data); //#development
                                     createImageBitmap(data).then(bitmap => {
+                                        dev.log.elementLibrary[type]('['+self.getAddress()+']::loadImage -> bitmap:',bitmap); //#development
                                         image.bitmap = bitmap;
                                         image.isLoaded = true;
                                         image.isChanged = true;
@@ -24643,6 +25242,7 @@ const element = new function(){
                         setTimeout(()=>{ if(image.bitmap == undefined){ loadImage(image.defaultURL); } },1000);
             
                         this.imageURL = function(a){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].imageURL(',a); //#development
             
                             if(a==undefined){return image.url;}
                             if(a==image.url){return;} //no need to reload the same image
@@ -24653,6 +25253,7 @@ const element = new function(){
                             loadImage(image.url);
                         };
                         this.imageBitmap = function(a){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].imageBitmap(',a); //#development
             
                             if(a==undefined){return image.bitmap;}
                             image.bitmap = a;
@@ -24666,9 +25267,11 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -24733,10 +25336,12 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
             
                         //buffers
                             //points
                                 if(point.buffer == undefined){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -24744,12 +25349,14 @@ const element = new function(){
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                             //texture
                                 if(image.isChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating image.textureData...'); //#development
                                     image.isChanged = false;
                                     image.textureData = context.createTexture();
                                     context.bindTexture(context.TEXTURE_2D, image.textureData);
@@ -24759,11 +25366,13 @@ const element = new function(){
                                     context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
                                     context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.bitmap);
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating image.textureData...'); //#development
                                     context.bindTexture(context.TEXTURE_2D, image.textureData);
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -24774,6 +25383,12 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> width:'+width+' height:'+height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -24783,6 +25398,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
                         
                         if(!image.isLoaded){return;} //do not render, if the image has not yet been loaded
@@ -24794,11 +25410,13 @@ const element = new function(){
                     
                 //extremities
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> point:',point); //#development
                             const adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
@@ -24819,6 +25437,8 @@ const element = new function(){
                                 });
                             }
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.points:',self.extremities.points); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
                     
                         //if told to do so, inform parent (if there is one) that extremities have changed
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -24834,12 +25454,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     };
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -24849,11 +25472,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -24930,6 +25556,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].ignored(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
@@ -24937,6 +25564,7 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             activateShouldRenderFrame();
                         };
                         
@@ -24964,56 +25592,67 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;} 
                             x = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].x(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;} 
                             y = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].y(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].angle(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.anchor = function(a){ 
                             if(a==undefined){return anchor;} 
                             anchor = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].anchor(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].scale(',a); //#development
                             if(allowComputeExtremities){computeExtremities();}
                             activateShouldRenderFrame();
                         };
                         this.font = function(newFont){
                             if(newFont==undefined){return font;}
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
             
                             if( library.font.isApprovedFont(newFont) ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+library.font.fontLoadAttempted(newFont)); //#development
                                 if( !library.font.fontLoadAttempted(newFont) ){ library.font.loadFont(newFont); }
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+library.font.isFontLoaded(newFont)); //#development
                                 if( !library.font.isFontLoaded(newFont) ){
                                     setTimeout(function(){ self.font(newFont); },500,newFont);
                                     return;
                                 }
             
                                 font = !library.font.isFontLoaded(newFont) ? defaultFontName : newFont;
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> font set to: "'+font+'"'); //#development
                             }else{
                                 console.warn('library.font : error : unknown font:',newFont);
                                 font = defaultFontName;
@@ -25025,6 +25664,7 @@ const element = new function(){
                         };
                         this.character = function(a){
                             if(a==undefined){return character;} 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].character(',a); //#development
                             character = a; 
                             if(allowProducePoints){producePoints();}
                             if(allowComputeExtremities){computeExtremities();} 
@@ -25036,6 +25676,7 @@ const element = new function(){
                                 horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
                                 vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
                             };
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].printingMode(',printingMode); //#development
             
                             if(allowProducePoints){producePoints();}
                             if(allowComputeExtremities){computeExtremities();} 
@@ -25045,10 +25686,12 @@ const element = new function(){
                     //unifiedAttribute
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale }; } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowProducePoints = false;
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                 try{
                                     self[key](attributes[key]);
                                 }catch(err){
@@ -25069,7 +25712,9 @@ const element = new function(){
                     this.left = function(){ return library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).left; };
                     this.right = function(){ return library.font.getVector(font,character) == undefined ? 1 : library.font.getVector(font,character).right; };
                     function producePoints(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints()'); //#development
                         points = (library.font.getVector(font,character) == undefined ? library.font.getVector(font,'default').vector : library.font.getVector(font,character).vector).concat([]); //the concat, differentiates the point data
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::producePoints -> library.font.getVector['+font+']['+character+']:',library.font.getVector(font,character)); //#development
             
                         //adjust for vertical printingMode
                             let horizontalAdjust = library.font.getVector(font,character) == undefined ? 0 : library.font.getVector(font,character).right;
@@ -25133,10 +25778,12 @@ const element = new function(){
                     const point = { buffer:undefined, attributeLocation:undefined };
                     let uniformLocations;
                     function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes(',context,adjust); //#development
                 
                         //buffers
                             //points
                                 if(point.buffer == undefined || pointsChanged){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> creating point.buffer...'); //#development
                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                     point.buffer = context.createBuffer();
                                     context.enableVertexAttribArray(point.attributeLocation);
@@ -25145,12 +25792,14 @@ const element = new function(){
                                     context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                     pointsChanged = false;
                                 }else{
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> updating point.buffer...'); //#development
                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                 }
             
                         //uniforms
                             if( uniformLocations == undefined ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> defining uniformLocations...'); //#development
                                 uniformLocations = {
                                     "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                                     "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
@@ -25162,6 +25811,13 @@ const element = new function(){
                                 };
                             }
             
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> canvas.width:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> dimensions:'+width+' canvas.height:'+height); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> anchor:'+JSON.stringify(anchor)); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
                             context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                             context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                             context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
@@ -25172,6 +25828,7 @@ const element = new function(){
                     }
                     let program;
                     function activateGLRender(context,adjust){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateGLRender(',context,adjust); //#development
                         if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
             
                         context.useProgram(program);
@@ -25182,11 +25839,14 @@ const element = new function(){
             
                 //extremities
                     function computeExtremities(informParent=true,offset){ 
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){
                                 offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                                dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> no offset provided; generated offset:',offset); //#development
                             }
+                            else{ dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities -> offset provided:',offset); }//#development
                         //calculate adjusted offset based on the offset
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             const adjusted = { 
@@ -25231,12 +25891,15 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                     }
                     function activateShouldRenderFrame(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame()'); //#development
                         if(render.shouldRenderFrame){
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::activateShouldRenderFrame -> render.shouldRenderFrame is already true'); //#development
                             return;
                         }
                         render.shouldRenderFrame = shouldThisElementRender();
                     }
                     function shouldThisElementRender(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::shouldThisElementRender()'); //#development
                         if( self.parent == undefined || self.parent.clipActive == undefined ){
                             return library.math.detectIntersect.boundingBoxes( viewport.getBoundingBox(), self.extremities.boundingBox );
                         }
@@ -25246,11 +25909,14 @@ const element = new function(){
                         );
                     }
                     this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].render(',context,offset); //#development
             
                         //judge whether element should be rendered
                             if( !shouldThisElementRender() ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> not rendering'); //#development
                                 return;
                             }
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].render -> rendering'); //#development
             
                         //combine offset with shape's position, angle and scale to produce adjust value for render
                             const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
@@ -25365,27 +26031,35 @@ const element = new function(){
                         this.colour = function(a){
                             if(a==undefined){return colour;}     
                             colour = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].colour(',a); //#development
                             recolourCharacters();
                         };
                         this.width = function(a){
                             if(a==undefined){return width;}  
                             width = a;  
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].width(',a); //#development
                             if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.height = function(a){
                             if(a==undefined){return height;} 
                             height = a; 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].height(',a); //#development
                             if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.font = function(newFont){
                             if(newFont==undefined){return font;}
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].font('+newFont+')'); //#development
             
                             if( library.font.isApprovedFont(newFont) ){
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> fontLoadAttempted: '+library.font.fontLoadAttempted(newFont)); //#development
                                 if( !library.font.fontLoadAttempted(newFont) ){ library.font.loadFont(newFont); }
+                                dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> isLoaded: '+library.font.isFontLoaded(newFont)); //#development
                                 if( !library.font.isFontLoaded(newFont) ){ 
                                     const timeoutId = setTimeout(function(){ 
+                                        dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun < '+timeoutId); //#development
                                         self.font(newFont);
                                     }, 100, newFont);
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].font() -> internal rerun > '+timeoutId); //#development
                                     return;
                                 }
             
@@ -25401,16 +26075,19 @@ const element = new function(){
                         this.string = function(a){ 
                             if(a==undefined){return string;} 
                             string = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].string(',a); //#development
                             if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.spacing = function(a){ 
                             if(a==undefined){return spacing;} 
                             spacing = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].spacing(',a); //#development
                             if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.interCharacterSpacing = function(a){
                             if(a==undefined){return interCharacterSpacing;}
                             interCharacterSpacing = a;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].interCharacterSpacing(',a); //#development
                             if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
                         this.printingMode = function(a){
@@ -25420,6 +26097,7 @@ const element = new function(){
                                 horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
                                 vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
                             };
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].printingMode(',printingMode); //#development
             
                             if(allowGenerateStringCharacters){generateStringCharacters();}
                         };
@@ -25440,10 +26118,12 @@ const element = new function(){
                                     innerGroup.unifiedAttribute()
                                 );
                             } 
+                            dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute(',attributes); //#development
             
                             allowGenerateStringCharacters = false;
                             ['colour', 'width', 'height', 'font', 'string', 'spacing', 'interCharacterSpacing', 'printingMode' ].forEach(key => {
                                 if(key in attributes){
+                                    dev.log.elementLibrary[type]('['+self.getAddress()+'].unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
                                     try{
                                         self[key](attributes[key]);
                                     }catch(err){
@@ -25465,6 +26145,7 @@ const element = new function(){
                         innerGroup.children().forEach(ele => ele.colour(colour));
                     }
                     function generateStringCharacters(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::generateStringCharacters()'); //#development
                         innerGroup.clear();
                         const tmpString = String(string).split('');
                         let characterWidth = width;
@@ -25533,6 +26214,7 @@ const element = new function(){
                     this.getElementsUnderPoint = innerGroup.getElementsUnderPoint;
                     this.getElementsUnderArea = innerGroup.getElementsUnderArea;
                     this.computeExtremities = function(informParent=true,offset){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::computeExtremities(',informParent,offset); //#development
             
                         //run computeExtremities on inner group, passing the offset values through
                             innerGroup.computeExtremities(false,offset);
@@ -25540,14 +26222,18 @@ const element = new function(){
                             this.updateExtremities(informParent,offset);
                     }
                     this.updateExtremities = function(informParent=true){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities(',informParent); //#development
                        
                         //grab extremity points and bounding box from inner group
                             self.extremities.points = innerGroup.extremities.points;
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> extremities.points.length:',self.extremities.points.length); //#development
+                            dev.log.elementLibrary[type]('['+self.getAddress()+']::updateExtremities -> self.extremities.boundingBox:',self.extremities.boundingBox); //#development
             
                         //update parent
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                     }
                     this.getOffset = function(){
+                        dev.log.elementLibrary[type]('['+self.getAddress()+'].getOffset()'); //#development
                         return this.parent ? this.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                     };
                 //render
@@ -25579,11 +26265,14 @@ const element = new function(){
         };
         this.__ = elementLibrary;
         this.getAvailableElements = function(){ 
+            dev.log.element('.getAvailableElements()'); //#development
             return Object.keys(elementLibrary);
         };
         this.installElement = function(elementName, creatorMethod, allowOverwrite=false){
+            dev.log.element('.installElement(',elementName,creatorMethod,allowOverwrite); //#development
 
             if(!allowOverwrite && elementName in elementLibrary){
+                dev.log.element('.installElement -> element "'+elementName+'" is already in the elementLibrary'); //#development
                 return false
             }
             elementLibrary[elementName] = creatorMethod;
@@ -25609,14 +26298,17 @@ const element = new function(){
             this.getElementFromId = getElementFromId;
             this.getIdFromElement = getIdFromElement;
             this.getCreatedElements = function(){ 
+                dev.log.element('.getCreatedElements()'); //#development
                 return createdElements;
             };
 
         //creation
             this.create_skipDatabase = function(type,name){
+                dev.log.element('.create_skipDatabase(',type,name); //#development
                 return new elementLibrary[type](-1,name);
             };
             this.create = function(type,name){
+                dev.log.element('.create(',type,name); //#development
 
                 if(type == undefined){ console.error('elememt.createElement: type argument not provided - element will not be produced'); return; }
                 if(name == undefined){ console.error('elememt.createElement: name argument not provided - element will not be produced'); return; }
@@ -25629,14 +26321,17 @@ const element = new function(){
 
         //deletion
             this.delete = function(element){ 
+                dev.log.element('.delete(',element); //#development
                 createdElements[getIdFromElement(element)] = undefined;
             };
             this.deleteAllCreated = function(){ 
+                dev.log.element('.deleteAllCreated()'); //#development
                 for(let a = 0; a < createdElements.length; a++){this.delete(getElementFromId(a));}
             };
 
         //other
             this.getTypeById = function(element){ 
+                dev.log.element('.getTypeById(',element); //#development
                 return element.getType();
             };
             this._dump = function(){
@@ -25654,6 +26349,7 @@ const arrangement = new function(){
     let design = element.create('group','root');
 
     this.new = function(){ 
+        dev.log.arrangement('.new()'); //#development
         design.clear(); 
 
         design.unifiedAttribute({
@@ -25666,25 +26362,32 @@ const arrangement = new function(){
         });
     };
     this.get = function(){
+        dev.log.arrangement('.get()'); //#development
         return design; 
     };
     this.set = function(arrangement){ 
+        dev.log.arrangement('.set(',arrangement); //#development
         design = arrangement;
     };
     this.prepend = function(element){
+        dev.log.arrangement('.prepend(',element); //#development
         design.prepend(element);
     };
     this.append = function(element){
+        dev.log.arrangement('.append(',element); //#development
         design.append(element);
     };
     this.remove = function(element){ 
+        dev.log.arrangement('.remove(',element); //#development
         design.remove(element); 
     };
     this.clear = function(){ 
+        dev.log.arrangement('.clear()'); //#development
         design.clear(); 
     };
 
     this.getElementByAddress = function(address){
+        dev.log.arrangement('.getElementByAddress(',address); //#development
 
         const route = address.split('/'); 
         route.shift();
@@ -25697,9 +26400,11 @@ const arrangement = new function(){
         return currentObject;
     };
     this.getElementsUnderPoint = function(x,y){
+        dev.log.arrangement('.getElementsUnderPoint(',x,y); //#development
         return design.getElementsUnderPoint(x,y);
     };
     this.getElementsUnderArea = function(points){ 
+        dev.log.arrangement('.getElementByAddress(',points); //#development
         return design.getElementsUnderArea(points); 
     };
         
@@ -25741,6 +26446,7 @@ const arrangement = new function(){
         return results;
     };
     this.areParents = function(elementId,potentialParents=[]){
+        dev.log.arrangement('.areParents(',elementId,potentialParents); //#development
 
         let count = 0;
         let workingElement = element.getElementFromId(elementId);
@@ -25782,6 +26488,7 @@ const render = new function(){
     //webGL program production
         const storedPrograms = {};
         this.produceProgram = function(name, vertexShaderSource, fragmentShaderSource){
+            dev.log.render('.produceProgram(',name,vertexShaderSource,fragmentShaderSource); //#development
             function compileProgram(vertexShaderSource, fragmentShaderSource){
                 function createShader(type, source){
                     let shader = context.createShader(type);
@@ -25808,9 +26515,11 @@ const render = new function(){
             };
 
             if( !(name in storedPrograms) ){
+                dev.log.render('.produceProgram -> program not found; will be compiled and stored as "'+name+'"'); //#development
                 storedPrograms[name] = compileProgram(vertexShaderSource, fragmentShaderSource);
                 context.useProgram(storedPrograms[name]);
             }else{
+                dev.log.render('.produceProgram -> program found; using stored program'); //#development
             }
 
             return storedPrograms[name];
@@ -25818,15 +26527,18 @@ const render = new function(){
 
     //canvas and webGL context adjustment
         this.clearColour = function(colour){
+            dev.log.render('.clearColour(',colour); //#development
             if(colour == undefined){ return clearColour; }
             clearColour = colour;
             context.clearColor(clearColour.r, clearColour.g, clearColour.b, 1);
         };
         this.adjustCanvasSize = function(newWidth, newHeight){
+            dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
             let adjustCanvasSize_isBusy = {width:false,height:false};
             isBusy = true;
 
             function updateInternalCanvasSize(direction,newValue){
+                dev.log.render('.adjustCanvasSize::updateInternalCanvasSize(',direction,newValue); //#development
                 newValue *= pageData.devicePixelRatio;
                 if(newValue != undefined){
                     if(pageData.currentCanvasSize[direction] != newValue){
@@ -25848,50 +26560,65 @@ const render = new function(){
             //request canvas data from the console, if none is provided in arguments
             // -> argument data > requested data > default data
             function updateSize_arguments(){
+                dev.log.render('.adjustCanvasSize::updateSize_arguments()'); //#development
                 adjustCanvasSize_isBusy = {width:true,height:true};
 
                 if(newWidth != undefined){
                     updateInternalCanvasSize('width',newWidth*pageData.devicePixelRatio);
                 }else{
+                    dev.log.render('.adjustCanvasSize -> argument "newWidth" undefined; trying request...'); //#development
                     updateSize_dataRequest('width');
                 }
                 if(newHeight != undefined){
                     updateInternalCanvasSize('height',newHeight*pageData.devicePixelRatio);
                 }else{
+                    dev.log.render('.adjustCanvasSize -> argument "newHeight" undefined; trying request...'); //#development
                     updateSize_dataRequest('height');
                 }
             }
             function updateSize_dataRequest(direction){
+                dev.log.render('.adjustCanvasSize::updateSize_dataRequest(',direction); //#development
                 const capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
 
                 interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
                     pageData.selectedCanvasSize[direction] = sizes[0];
+                    dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> '+capitalizedDirection+':'+pageData.selectedCanvasSize[direction]); //#development
                     const attribute = pageData.selectedCanvasSize[direction];
 
                     function unparseableErrorMessage(direction,attribute){
                         report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> unparseable format: '+attribute+', will use default instead'); //#development
                         updateSize_usingDefault(direction);
                     }
 
                     if( attribute.indexOf('%') == (attribute.length-1) ){ //percentage
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a percentage'); //#development
                         interface.getCanvasParentAttributes(['offset'+capitalizedDirection]).then(sizes => {
+                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parent'+capitalizedDirection+':'+sizes[0]); //#development
                             const parentSize = sizes[0];
                             const percent = parseFloat(attribute.slice(0,-1)) / 100;
+                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parsed percent: '+percent*100); //#development
                             if( isNaN(percent) ){ unparseableErrorMessage(direction,attribute); return; }
+                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+parentSize*percent); //#development
                             updateInternalCanvasSize(direction,parentSize*percent);
                         });
                     }else if( attribute.indexOf('px') != -1 ){ //px value
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a pixel number'); //#development
                         const val = parseFloat(attribute.slice(0,-2));
                         if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
                         updateInternalCanvasSize(direction,val);
                     }else{ //flat value
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a flat number'); //#development
                         const val = parseFloat(attribute);
                         if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
                         updateInternalCanvasSize(direction,val);
                     }
                 });
             }
             function updateSize_usingDefault(direction){
+                dev.log.render('.adjustCanvasSize::updateSize_usingDefault('+direction+')'); //#development
                 updateInternalCanvasSize(direction,pageData.defaultCanvasSize[direction]);
             }
 
@@ -25901,8 +26628,11 @@ const render = new function(){
             });
         };
         this.refreshCoordinates = function(){
+            dev.log.render('.refreshCoordinates()'); //#development
+            dev.log.render('.refreshCoordinates: -> pageData.devicePixelRatio: '+pageData.devicePixelRatio); //#development
             let w = context.canvas.width;
             let h = context.canvas.height;
+            dev.log.render('.refreshCoordinates: -> w:'+w+' h:'+h); //#development
 
             let x, y, width, height = 0;
             if(pageData.devicePixelRatio == 1){
@@ -25917,11 +26647,13 @@ const render = new function(){
                 height = h*2;
             }
 
+            dev.log.render('.refreshCoordinates: -> context.viewport('+x+', '+y+', '+width+', '+height+')'); //#development
             context.viewport(x, y, width, height);
 
             interface.setCanvasAttributes([{name:'width',value:w/pageData.devicePixelRatio},{name:'height',value:h/pageData.devicePixelRatio}]);
         };
         this.refresh = function(allDoneCallback){
+            dev.log.render('.refresh()'); //#development
             this.clearColour(clearColour);
             this.frameRateLimit(this.frameRateLimit());
             this.adjustCanvasSize();
@@ -25937,10 +26669,12 @@ const render = new function(){
     //frame rate control
         const frameRateControl = {active:false, previousRenderTime:Date.now(), limit:30, interval:0};
         this.activeLimitToFrameRate = function(a){
+            dev.log.render('.activeLimitToFrameRate(',a); //#development
             if(a==undefined){return frameRateControl.active;}
             frameRateControl.active=a
         };
         this.frameRateLimit = function(a){
+            dev.log.render('.frameRateLimit(',a); //#development
             if(a==undefined){ return frameRateControl.limit; }
             frameRateControl.limit=a;
             frameRateControl.interval=1000/frameRateControl.limit;
@@ -25950,15 +26684,18 @@ const render = new function(){
         this.shouldRenderFrame = false;
         let allowFrameSkipping = true;
         this.allowFrameSkipping = function(bool){
+            dev.log.render('.allowFrameSkipping(',bool); //#development
             if(bool == undefined){return allowFrameSkipping;}
             allowFrameSkipping = bool;
         };
         function renderFrame(noClear=false,force=false){
+            dev.log.render('::renderFrame(',noClear,force); //#development
 
             function func(){
                 stats.collectFrameDecision( !allowFrameSkipping || (self.shouldRenderFrame || force) );
 
                 if(allowFrameSkipping && (!self.shouldRenderFrame && !force)){
+                    dev.log.render('::renderFrame::func -> not actually rendering frame'); //#development
                     return;
                 }
                 self.shouldRenderFrame = false;
@@ -25979,6 +26716,7 @@ const render = new function(){
             }
         }
         function animate(timestamp){
+            dev.log.render('::animate(',timestamp); //#development
             animationRequestId = requestAnimationFrame(animate);
 
             //limit frame rate
@@ -26002,9 +26740,11 @@ const render = new function(){
                 stats.collectFrameTimestamp(timestamp);
         }
         this.frame = function(noClear=false,force=false){
+            dev.log.render('.frame(',noClear,force); //#development
             renderFrame(noClear,force);
         };
         this.active = function(bool){
+            dev.log.render('.active(',bool); //#development
             if(bool == undefined){return animationRequestId!=undefined;}
 
             if(bool){
@@ -26053,6 +26793,7 @@ const viewport = new function(){
     //adapter
         this.adapter = new function(){
             this.windowPoint2workspacePoint = function(x,y){
+                dev.log.viewport('.adapter.windowPoint2workspacePoint(',x,y); //#development
                 const position = viewport.position();
                 const scale = viewport.scale();
                 const angle = viewport.angle();
@@ -26080,12 +26821,14 @@ const viewport = new function(){
 
     //camera position
         this.position = function(x,y){
+            dev.log.viewport('.position(',x,y); //#development
             if(x == undefined || y == undefined){return {x:state.position.x,y:state.position.y};}
             state.position.x = x;
             state.position.y = y;
 
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera && item.heedCamera()){ 
+                    dev.log.viewport('.position -> adjusting:',item); //#development
                     item.unifiedAttribute({x:state.position.x,y:state.position.y});
                 }
             });
@@ -26095,10 +26838,12 @@ const viewport = new function(){
             self.onCameraAdjust( Object.assign({},state) );
         };
         this.scale = function(s){
+            dev.log.viewport('.scale(',s); //#development
             if(s == undefined){return state.scale;}
             state.scale = s <= 0 ? 1 : s;
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera && item.heedCamera()){ 
+                    dev.log.viewport('.scale -> adjusting:',item); //#development
                     item.scale(state.scale);
                 }
             });
@@ -26107,10 +26852,12 @@ const viewport = new function(){
             self.onCameraAdjust( Object.assign({},state) );
         };
         this.angle = function(a){
+            dev.log.viewport('.angle(',a); //#development
             if(a == undefined){return state.angle;}
             state.angle = a;
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera && item.heedCamera()){ 
+                    dev.log.viewport('.angle -> adjusting:',item); //#development
                     item.angle(state.angle);
                 }
             });
@@ -26121,15 +26868,18 @@ const viewport = new function(){
 
     //mouse interaction
         this.getElementsUnderPoint = function(x,y){
+            dev.log.viewport('.getElementsUnderPoint(',x,y); //#development
             let xy = this.adapter.windowPoint2canvasPoint(x,y);
             return arrangement.getElementUnderPoint(xy.x,xy.y);
         };
         this.getElementsUnderArea = function(points){
+            dev.log.viewport('.getElementsUnderArea(',points); //#development
             return arrangement.getElementsUnderArea(points.map(a => this.adapter.windowPoint2canvasPoint(a.x,a.y)));
         };
  
     //misc
         function calculateViewportExtremities(){
+            dev.log.viewport('::calculateViewportExtremities()'); //#development
             const canvasDimensions = render.getCanvasSize();
 
             //for each corner of the viewport; find out where they lie on the canvas
@@ -26139,20 +26889,25 @@ const viewport = new function(){
                 viewbox.points.br = {x:canvasDimensions.width, y:canvasDimensions.height};
             //calculate a bounding box for the viewport from these points
                 viewbox.boundingBox = library.math.boundingBoxFromPoints([viewbox.points.tl, viewbox.points.tr, viewbox.points.br, viewbox.points.bl]);
+                dev.log.viewport('::calculateViewportExtremities -> viewbox.boundingBox:',viewbox.boundingBox); //#development
         }
         this.calculateViewportExtremities = calculateViewportExtremities;
         this.refresh = function(){
+            dev.log.viewport('.refresh()'); //#development
             calculateViewportExtremities();
         };
         this.getBoundingBox = function(){ 
+            dev.log.viewport('.getBoundingBox()'); //#development
             return viewbox.boundingBox;
         };
         this.mousePosition = function(x,y){
+            dev.log.viewport('.mousePosition(',x,y); //#development
             if(x == undefined || y == undefined){return {x:mouseData.x, y:mouseData.y};}
             mouseData.x = x;
             mouseData.y = y;
         };
         this.stopMouseScroll = function(bool){
+            dev.log.viewport('.stopMouseScroll(',bool); //#development
             if(bool == undefined){return mouseData.stopScrollActive;}
             mouseData.stopScrollActive = bool;
     
@@ -26178,6 +26933,7 @@ const stats = new function(){
 
     const framesPerSecond = {
         compute:function(timestamp){
+            dev.log.stats('::framesPerSecond.compute(',timestamp); //#development
 
             this.frameTimeArray.push( 1000/(timestamp-lastTimestamp) );
             if( this.frameTimeArray.length > average){ this.frameTimeArray.shift(); }
@@ -26192,6 +26948,7 @@ const stats = new function(){
     };
     const timePerFrame = {
         compute:function(time){
+            dev.log.stats('::timePerFrame.compute(',time); //#development
             this.timePerFrameArray.push( time );
             if( this.timePerFrameArray.length > average){ this.timePerFrameArray.shift(); }
             this.time = library.math.averageArray( this.timePerFrameArray )/1000;
@@ -26201,6 +26958,7 @@ const stats = new function(){
     };
     const frameDecision = {
         compute:function(bool){
+            dev.log.stats('::frameDecision.compute(',bool); //#development
 
             this.frameDecisionArray.push( bool );
             if( this.frameDecisionArray.length > average){ this.frameDecisionArray.shift(); }
@@ -26212,18 +26970,21 @@ const stats = new function(){
     };
 
     this.collectFrameTimestamp = function(timestamp){
+        dev.log.stats('.collectFrameTimestamp(',timestamp); //#development
         //if stats are turned off, just bail
             if(!active){return;}
 
         framesPerSecond.compute(timestamp);
     };
     this.collectFrameTime = function(time){
+        dev.log.stats('.collectFrameTime(',time); //#development
         //if stats are turned off, just bail
             if(!active){return;}
 
         timePerFrame.compute(time);
     };
     this.collectFrameDecision = function(bool){
+        dev.log.stats('.collectFrameDecision(',bool); //#development
         //if stats are turned off, just bail
             if(!active){return;}
 
@@ -26233,10 +26994,12 @@ const stats = new function(){
 
     this._active = function(){ return active; };
     this.active = function(bool){
+        dev.log.stats('.active(',bool); //#development
         if(bool==undefined){return active;} 
         active=bool;
     };
     this.getReport = function(){
+        dev.log.stats('.getReport()'); //#development
         return {
             framesPerSecond: framesPerSecond.rate,
             secondsPerFrameOverTheLastThirtyFrames: timePerFrame.time,
@@ -26254,6 +27017,7 @@ const callback = new function(){
         'onkeydown', 'onkeyup',
     ];
     function gatherDetails(event){
+        dev.log.callback('::gatherDetails(',event); //#development
         return {
             point: viewport.adapter.windowPoint2workspacePoint(event.X,event.Y),
             elements: arrangement.getElementsUnderPoint(event.X,event.Y)
@@ -26316,13 +27080,16 @@ const callback = new function(){
         return callbacks;
     };
     this.attachCallback = function(element,callbackType){
+        dev.log.callback('.attachCallback(',element,callbackType+')'); //#development
         element[callbackType] = true;
     };
     this.removeCallback = function(element,callbackType){
+        dev.log.callback('.removeCallback(',element,callbackType+')'); //#development
         element[callbackType] = undefined;
         delete element[callbackType];
     };
     this.callbackActivationMode = function(mode){
+        dev.log.interface('.callback.callbackActivationMode('+mode+')'); //#development
         if(mode==undefined){return callbackActivationMode;}
         callbackActivationMode = mode;
 
@@ -26338,6 +27105,7 @@ const callback = new function(){
             for(let a = 0; a < callbacks.length; a++){
                 this.coupling_in[callbacks[a]] = function(callbackName){
                     return function(event){
+                        dev.log.callback('.coupling_in.'+callbackName+'(',event); //#development
                         const data = gatherDetails(event);
                         activateElementCallback(callbackName, data.point.x, data.point.y, event, data.elements);
                     }
@@ -26362,8 +27130,11 @@ const callback = new function(){
             //onmousemove / onmouseenter / onmouseleave
                 const elementMouseoverList = [];
                 this.coupling_in.onmousemove = function(event){
+                    dev.log.callback('.coupling_in.onmousemove(',event); //#development
                     viewport.mousePosition(event.X,event.Y);
                     const data = gatherDetails(event);
+                    dev.log.callback('.coupling_in.onmousemove -> data.elements.length:',data.elements.length); //#development
+                    dev.log.callback('.coupling_in.onmousemove -> workspace point:',data.point); //#development
 
                     //check for onmouseenter / onmouseleave
                         //go through the elementsUnderPoint list, comparing to the element transition list
@@ -26382,6 +27153,7 @@ const callback = new function(){
 
             //onwheel
                 this.coupling_in.onwheel = function(event){
+                    dev.log.callback('.coupling_in.onwheel(',event); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('onwheel', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onwheel != undefined) ) );
                 };
@@ -26390,8 +27162,10 @@ const callback = new function(){
                 ['onkeydown', 'onkeyup'].forEach(callbackName => {
                     this.coupling_in[callbackName] = function(callback){
                         return function(event){
+                            dev.log.callback('.coupling_in.'+callbackName+'(',event); //#development
                             const p = viewport.mousePosition(); event.X = p.x; event.Y = p.y;
                             const data = gatherDetails(event);
+                            dev.log.callback('.coupling_in.'+callbackName+' -> guessed mouse point:',data.point); //#development
                             activateElementCallback(callback, data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element[callbackName] != undefined) ) );
 
                         }
@@ -26401,21 +27175,25 @@ const callback = new function(){
             //onmousedown / onmouseup / onclick / ondblclick
                 let elementMouseClickList = [];
                 this.coupling_in.onmousedown = function(event){
+                    dev.log.callback('.coupling_in.onmousedown(',event); //#development
                     const data = gatherDetails(event);
                     elementMouseClickList = data.elements; //save current elements for use in the onclick callback
                     activateElementCallback('onmousedown', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmousedown != undefined) ) );
                 };
                 this.coupling_in.onmouseup = function(event){
+                    dev.log.callback('.coupling_in.onmouseup(',event); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('onmouseup', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onmouseup != undefined) ) );
                 };
                 let recentlyClickedDoubleClickableElementList = [];
                 this.coupling_in.onclick = function(event){
+                    dev.log.callback('.coupling_in.onclick(',event); //#development
                     const data = gatherDetails(event);
                     recentlyClickedDoubleClickableElementList = data.elements.filter( element => (element.ondblclick != undefined && elementMouseClickList.includes(element)) );
                     activateElementCallback('onclick', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.onclick != undefined && elementMouseClickList.includes(element)) ) );
                 };
                 this.coupling_in.ondblclick = function(event){
+                    dev.log.callback('.coupling_in.ondblclick(',event); //#development
                     const data = gatherDetails(event);
                     activateElementCallback('ondblclick', data.point.x, data.point.y, event, data.elements, data.elements.filter( element => (element.ondblclick != undefined && recentlyClickedDoubleClickableElementList.includes(element)) ) );
                 };
@@ -26431,15 +27209,21 @@ const callback = new function(){
 
 //meta
     communicationModule.function['areYouReady'] = function(){
+        dev.log.service('.areYouReady()'); //#development
+        dev.count('service-areYouReady'); //#development
         return true;
     };
     communicationModule.delayedFunction['refresh'] = function(responseFunction){
+        dev.log.service('.refresh(',responseFunction); //#development
+        dev.count('service-refresh'); //#development
         render.refresh(() => {
             viewport.refresh();
             responseFunction();
         });
     };
     communicationModule.function['createSetAppend'] = function(type,name,setList,appendingGroup){
+        dev.log.service('.createSetAppend(',type,name,setList,appendingGroup); //#development
+        dev.count('service-createSetAppend'); //#development
 
         const newElement = element.create(type,name);
         const elementId = element.getIdFromElement(newElement);
@@ -26451,23 +27235,35 @@ const callback = new function(){
 
 //_dump
     communicationModule.function['_dump.element'] = function(){
+        dev.log.service('._dump.element()'); //#development
+        dev.count('service-element'); //#development
         element._dump();
     };
     communicationModule.function['_dump.arrangement'] = function(){
+        dev.log.service('._dump.arrangement()'); //#development
+        dev.count('service-arrangement'); //#development
         arrangement._dump();
     };
     communicationModule.function['_dump.render'] = function(){
+        dev.log.service('._dump.render()'); //#development
+        dev.count('service-render'); //#development
         render._dump();
     };
     communicationModule.function['_dump.viewport'] = function(){
+        dev.log.service('._dump.viewport()'); //#development
+        dev.count('service-viewport'); //#development
         viewport._dump();
     };
     communicationModule.function['_dump.callback'] = function(){
+        dev.log.service('._dump.callback()'); //#development
+        dev.count('service-callback'); //#development
         callback._dump();
     };
 
 //boatload
     communicationModule.function['boatload.element.executeMethod'] = function(containers){
+        dev.log.service('.boatload.element.executeMethod(',containers); //#development
+        dev.count('service-boatload.element.executeMethod'); //#development
         containers.forEach(container => { 
             communicationModule.function['element.executeMethod'](container.id,container.method,container.argumentList); 
         });
@@ -26475,29 +27271,46 @@ const callback = new function(){
 
 //element
     communicationModule.function['element.getAvailableElements'] = function(){
+        dev.log.service('.element.getAvailableElements()'); //#development
+        dev.count('service-element.getAvailableElements'); //#development
         return element.getAvailableElements();
     };
     communicationModule.function['element.installElement'] = function(elementName,serializedCreatorMethod){
+        dev.log.service('.element.installElement()'); //#development
+        dev.count('service-element.installElement'); //#development
         return element.installElement(elementName,library.misc.unserialize(serializedCreatorMethod));
     };
     communicationModule.function['element.getCreatedElements'] = function(){
+        dev.log.service('.element.getCreatedElements()'); //#development
+        dev.count('service-element.getCreatedElements'); //#development
         return element.getCreatedElements().map(ele => element.getIdFromElement(ele));
     };
     communicationModule.function['element.create'] = function(type,name){
+        dev.log.service('.element.create(',type,name); //#development
+        dev.count('service-element.create'); //#development
         return element.getIdFromElement(element.create(type,name));
     };
     communicationModule.function['element.delete'] = function(id){
+        dev.log.service('.element.delete(',id); //#development
+        dev.count('service-element.delete'); //#development
         element.delete(element.getElementFromId(id));
     };
     communicationModule.function['element.deleteAllCreated'] = function(){
+        dev.log.service('.element.deleteAllCreated()'); //#development
+        dev.count('service-element.deleteAllCreated'); //#development
         element.deleteAllCreated();
     };
     communicationModule.function['element.getTypeById'] = function(id){
+        dev.log.service('.element.getTypeById(',id); //#development
+        dev.count('service-element.getTypeById'); //#development
         return element.getTypeById(element.getElementFromId(id));
     };
     communicationModule.function['element.executeMethod'] = function(id,method,argumentList=[]){
+        dev.log.service('.element.executeMethod(',id,method,argumentList); //#development
+        dev.count('service-element.executeMethod'); //#development
 
         if(id == -1 || id == undefined){
+            dev.log.service('.element.executeMethod -> id was '+id+', no action will be attempted'); //#development
             return null;
         }
         try{
@@ -26511,182 +27324,281 @@ const callback = new function(){
 
 //arrangement
     communicationModule.function['arrangement.new'] = function(){
+        dev.log.service('.arrangement.new()'); //#development
+        dev.count('service-arrangement.new'); //#development
         arrangement.new();
     };
     communicationModule.function['arrangement.get'] = function(){
+        dev.log.service('.arrangement.get()'); //#development
+        dev.count('service-arrangement.get'); //#development
         return arrangement.get().children().map(element.getIdFromElement);
     };
     communicationModule.function['arrangement.prepend'] = function(id){
+        dev.log.service('.arrangement.prepend(',id); //#development
+        dev.count('service-arrangement.prepend'); //#development
         arrangement.prepend(element.getElementFromId(id));
     };
     communicationModule.function['arrangement.append'] = function(id){
+        dev.log.service('.arrangement.append(',id); //#development
+        dev.count('service-arrangement.append'); //#development
         arrangement.append(element.getElementFromId(id));
     };
     communicationModule.function['arrangement.remove'] = function(id){
+        dev.log.service('.arrangement.remove(',id); //#development
+        dev.count('service-arrangement.remove'); //#development
         arrangement.remove(element.getElementFromId(id));
     };
     communicationModule.function['arrangement.clear'] = function(){
+        dev.log.service('.arrangement.clear()'); //#development
+        dev.count('service-arrangement.clear'); //#development
         arrangement.clear();
     };
     communicationModule.function['arrangement.getElementAddress'] = function(id){
+        dev.log.service('.arrangement.getElementAddress(',id); //#development
+        dev.count('service-arrangement.getElementAddress'); //#development
         return element.getElementFromId(id).getAddress();
     };
     communicationModule.function['arrangement.getElementByAddress'] = function(address){
+        dev.log.service('.arrangement.getElementByAddress(',address); //#development
+        dev.count('service-arrangement.getElementByAddress'); //#development
         return element.getIdFromElement(arrangement.getElementByAddress(address));
     };
     communicationModule.function['arrangement.getElementsUnderPoint'] = function(x,y){
+        dev.log.service('.arrangement.getElementsUnderPoint(',x,y); //#development
+        dev.count('service-arrangement.getElementsUnderPoint'); //#development
         return arrangement.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele));
     };
     communicationModule.function['arrangement.getElementsUnderArea'] = function(points){
+        dev.log.service('.arrangement.getElementsUnderArea(',points); //#development
+        dev.count('service-arrangement.getElementsUnderArea'); //#development
         return arrangement.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele));
     };
     communicationModule.function['arrangement.printTree'] = function(mode,includeTypes){
+        dev.log.service('.arrangement.printTree(',mode,includeTypes); //#development
+        dev.count('service-arrangement.printTree'); //#development
         arrangement.printTree(mode,includeTypes);
     };
     communicationModule.function['arrangement.printSurvey'] = function(mode){
+        dev.log.service('.arrangement.printSurvey()'); //#development
+        dev.count('service-arrangement.printSurvey'); //#development
         return arrangement.printSurvey();
     };
     communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
+        dev.log.service('.arrangement.areParents('+elementId+','+potentialParents+')'); //#development
+        dev.count('service-arrangement.areParents'); //#development
         return arrangement.areParents(elementId,potentialParents);
     };
 
 //render
     communicationModule.delayedFunction['render.refresh'] = function(responseFunction){
+        dev.log.service('.render.refresh(',responseFunction); //#development
+        dev.count('service-render.refresh'); //#development
         render.refresh(responseFunction);
     };
     communicationModule.function['render.clearColour'] = function(colour){
+        dev.log.service('.render.clearColour(',colour); //#development
+        dev.count('service-render.clearColour'); //#development
         return render.clearColour(colour);
     };
     communicationModule.function['render.adjustCanvasSize'] = function(newWidth, newHeight){
+        dev.log.service('.render.adjustCanvasSize(',newWidth,newHeight); //#development
+        dev.count('service-render.adjustCanvasSize'); //#development
         render.adjustCanvasSize(newWidth, newHeight);
     };
     communicationModule.function['render.getCanvasSize'] = function(){
+        dev.log.service('.render.getCanvasSize()'); //#development
+        dev.count('service-render.getCanvasSize'); //#development
         return render.getCanvasSize();
     };
     communicationModule.function['render.activeLimitToFrameRate'] = function(active){
+        dev.log.service('.render.activeLimitToFrameRate(',active); //#development
+        dev.count('service-render.activeLimitToFrameRate'); //#development
         return render.activeLimitToFrameRate(active);
     };
     communicationModule.function['render.frameRateLimit'] = function(rate){
+        dev.log.service('.render.frameRateLimit(',rate); //#development
+        dev.count('service-render.frameRateLimit'); //#development
         return render.frameRateLimit(rate);
     };
     communicationModule.function['render.allowFrameSkipping'] = function(active){
+        dev.log.service('.render.allowFrameSkipping(',active); //#development
+        dev.count('service-render.allowFrameSkipping'); //#development
         return render.allowFrameSkipping(active);
     };
     communicationModule.function['render.frame'] = function(){
+        dev.log.service('.render.frame()'); //#development
+        dev.count('service-render.frame'); //#development
         render.frame();
     };
     communicationModule.function['render.active'] = function(active){
+        dev.log.service('.render.active(',active); //#development
+        dev.count('service-render.active'); //#development
         return render.active(active);
     };
 
 //viewport
     communicationModule.function['viewport.refresh'] = function(){
+        dev.log.service('.viewport.refresh()'); //#development
+        dev.count('service-viewport.refresh'); //#development
         viewport.refresh();
     };
     communicationModule.function['viewport.position'] = function(x,y){
+        dev.log.service('.viewport.position(',x,y); //#development
+        dev.count('service-viewport.position'); //#development
         return viewport.position(x,y);
     };
     communicationModule.function['viewport.scale'] = function(s){
+        dev.log.service('.viewport.scale(',s); //#development
+        dev.count('service-viewport.scale'); //#development
         return viewport.scale(s);
     };
     communicationModule.function['viewport.angle'] = function(a){
+        dev.log.service('.viewport.angle(',a); //#development
+        dev.count('service-viewport.angle'); //#development
         return viewport.angle(a);
     };
     communicationModule.function['viewport.getElementsUnderPoint'] = function(x,y){
+        dev.log.service('.viewport.getElementsUnderPoint(',x,y); //#development
+        dev.count('service-viewport.getElementsUnderPoint'); //#development
         return viewport.getElementsUnderPoint(x,y);
     };
     communicationModule.function['viewport.getElementsUnderArea'] = function(points){
+        dev.log.service('.viewport.getElementsUnderArea(',points); //#development
+        dev.count('service-viewport.getElementsUnderArea'); //#development
         return viewport.getElementsUnderArea(points);
     };
     communicationModule.function['viewport.getMousePosition'] = function(){
+        dev.log.service('.viewport.getMousePosition()'); //#development
+        dev.count('service-viewport.getMousePosition'); //#development
         return viewport.mousePosition();
     };
     communicationModule.function['viewport.getBoundingBox'] = function(){
+        dev.log.service('.viewport.getBoundingBox()'); //#development
+        dev.count('service-viewport.getBoundingBox'); //#development
         return viewport.getBoundingBox();
     };
     communicationModule.function['viewport.stopMouseScroll'] = function(bool){
+        dev.log.service('.viewport.stopMouseScroll(',bool); //#development
+        dev.count('service-viewport.stopMouseScroll'); //#development
         return viewport.stopMouseScroll(bool);
     };
 
 //stats
     communicationModule.function['stats.active'] = function(active){
+        dev.log.service('.stats.active(',active); //#development
+        dev.count('service-stats.active'); //#development
         return stats.active(active);
     };
     communicationModule.function['stats.getReport'] = function(){
+        dev.log.service('.stats.getReport()'); //#development
+        dev.count('service-stats.getReport'); //#development
         return stats.getReport();
     };
 
 //callback
     communicationModule.function['callback.listCallbackTypes'] = function(){
+        dev.log.service('.callback.listCallbackTypes()'); //#development
+        dev.count('service-callback.listCallbackTypes'); //#development
         return callback.listCallbackTypes();
     };
     communicationModule.function['callback.attachCallback'] = function(id, callbackType){
+        dev.log.service('.callback.attachCallback(',id,callbackType); //#development
+        dev.count('service-callback.attachCallback'); //#development
         callback.attachCallback(element.getElementFromId(id),callbackType);
     };
     communicationModule.function['callback.removeCallback'] = function(id, callbackType){
+        dev.log.service('.callback.removeCallback(',id,callbackType); //#development
+        dev.count('service-callback.removeCallback'); //#development
         callback.removeCallback(element.getElementFromId(id),callbackType);
     };
     callback.listCallbackTypes().forEach(callbackName => {
         //for accepting the callback signals from the window's canvas
         communicationModule.function['callback.coupling_in.'+callbackName] = function(event){
+            dev.log.service('.callback.coupling_in.'+callbackName+'(',event); //#development
+            dev.count('service-callback.coupling_in'); //#development
             callback.coupling_in[callbackName](event);
         };
     });
 const interface = new function(){
     this.go = function(){
+        dev.log.interface('.go()'); //#development
+        dev.count('interface.go'); //#development
         communicationModule.run('go');
     };
     this.printToScreen = function(imageData){
+        dev.log.interface('.printToScreen(',imageData); //#development
+        dev.count('interface.printToScreen'); //#development
         communicationModule.run('printToScreen',[imageData],undefined,[imageData]);
     };
 
     // this.onViewportAdjust = function(state){
+    //     dev.log.interface('.onViewportAdjust(',state); //#development
     //     communicationModule.run('onViewportAdjust',[state]);
     // };
 
     this.updateElement = function(elem, data={}){
+        dev.log.interface('.updateElement(',elem,data); //#development
+        dev.count('interface.updateElement'); //#development
         communicationModule.run('updateElement',[element.getIdFromElement(elem), data]);
     };
     this.runElementCallback = function(elem, data={}){
+        dev.log.interface('.runElementCallback(',elem,data); //#development
+        dev.count('interface.runElementCallback'); //#development
         communicationModule.run('runElementCallback',[element.getIdFromElement(elem), data]);
     };
 
     this.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+        dev.log.interface('.getCanvasAttributes(',attributeNames,prefixActiveArray); //#development
+        dev.count('interface.getCanvasAttributes'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('getCanvasAttributes',[attributeNames,prefixActiveArray],resolve);
         });
     };
     this.setCanvasAttributes = function(attributeNames=[],values=[],prefixActiveArray=[]){
+        dev.log.interface('.setCanvasAttributes(',attributeNames,values,prefixActiveArray); //#development
+        dev.count('interface.setCanvasAttributes'); //#development
         communicationModule.run('setCanvasAttributes',[attributeNames,values,prefixActiveArray]);
     };
 
     this.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+        dev.log.interface('.getCanvasParentAttributes(',attributeNames,prefixActiveArray); //#development
+        dev.count('interface.getCanvasParentAttributes'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('getCanvasParentAttributes',[attributeNames,prefixActiveArray],resolve);
         });
     };
 
     this.getDocumentAttributes = function(attributeNames=[]){
+        dev.log.interface('.getDocumentAttributes(',attributeNames); //#development
+        dev.count('interface.getDocumentAttributes'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('getDocumentAttributes',[attributeNames],resolve);
         });
     };
     this.setDocumentAttributes = function(attributeNames=[],values=[]){
+        dev.log.interface('.setDocumentAttributes(',attributeNames,values); //#development
+        dev.count('interface.setDocumentAttributes'); //#development
         communicationModule.run('setDocumentAttributes',[attributeNames,values]);
     };
 
     this.getWindowAttributes = function(attributeNames=[]){
+        dev.log.interface('.getWindowAttributes(',attributeNames); //#development
+        dev.count('interface.getWindowAttributes'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('getWindowAttributes',[attributeNames],resolve);
         });
     };
     this.setWindowAttributes = function(attributeNames=[],values=[]){
+        dev.log.interface('.setWindowAttributes(',attributeNames,values); //#development
+        dev.count('interface.setWindowAttributes'); //#development
         communicationModule.run('setWindowAttributes',[attributeNames,values]);
     };
 };
 callback.listCallbackTypes().forEach(callbackName => {
     //for sending core's callbacks back out
     callback.coupling_out[callbackName] = function(x, y, event, elements){
+        dev.log.interface('.callback.coupling_out.'+callbackName+'(',x,y,event,elements); //#development
+        dev.count('interface.callback.coupling_out.'+callbackName); //#development
         communicationModule.run('callback.'+callbackName,[x, y, event, {
             all: elements.all.map(ele => element.getIdFromElement(ele)),
             relevant: elements.relevant ? elements.relevant.map(ele => element.getIdFromElement(ele)) : undefined,

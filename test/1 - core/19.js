@@ -35,8 +35,8 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
     // setTimeout(_canvas_.core.render.frame,100);
     // setTimeout(_canvas_.core.render.frame,1100);
 
-    // _canvas_.core.render.activeLimitToFrameRate(true);
-    // _canvas_.core.render.frameRateLimit(20);
+     _canvas_.core.render.activeLimitToFrameRate(true);
+     _canvas_.core.render.frameRateLimit(1);
 
     _canvas_.core.render.active(true);
     _canvas_.core.render.allowFrameSkipping(false);
