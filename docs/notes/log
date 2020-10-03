@@ -3,6 +3,8 @@
   - replaced the old gravity with the new, fresh, sophisticated, educated,
     elegant and rather attractive Rust based one (which now has its own github
     repo https://github.com/metasophiea/gravity)
+  - all the demos needed re-saving to account for the changes in viewport
+    positioning
 
 
 2020-09-30
