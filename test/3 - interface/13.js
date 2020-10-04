@@ -27,7 +27,7 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
 
 
 
-    synth_1 = new _canvas_.interface.circuit.synthesizer_2(_canvas_.library.audio.context);
+    synth_1 = new _canvas_.interface.circuit.synthesizer_3(_canvas_.library.audio.context);
     gain_1 = new GainNode(_canvas_.library.audio.context);
     gain_1.gain.setTargetAtTime(0.1, _canvas_.library.audio.context.currentTime, 0);
     synth_1.out().connect(gain_1).connect(_canvas_.library.audio.destination);

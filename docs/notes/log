@@ -1,10 +1,31 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-10-04
+  - fixed issue where the connection nodes of units wouldn't be interactable
+    sometimes. Turned out there was an issue with the group element's
+    augment_extremities__remove function, which wasn't calculating the new
+    extremities correctly. Seemed I'd forgotten (again) what the arguments
+    were for BoundingBox::new, which was confusing the rest of the code
+  - fixed Alpha's basicSynthesizer so that it can do gain and detune wobbling
+    again. Detune was never implemented in synthesizer_2, so I've puled over
+    the old method from synthesizer_1. Gain wasn't working because the gain
+    node within synthesizer_2 wasn't set to the mode to have its value
+    controlled by another audio stream.
+      I've also adjusted the interface a little, to match what the 
+    synthesizer_2 can actually do. Now, periods are only between 1 and 10 a
+    second (it is the basicSynthesizer after all)
+  - restructured things a tiny bit in the interface circuits. Now the
+    synthesizer_2 is actually called synthesizer_2 instead of being
+    referred to as synthesizer_2 but called synthesizer
+  - Accoustic Research's MomentaryAmplitudeMeter wasn't working, because the 
+    momentaryAmplitudeMeter audio worklet was getting into trouble. Seems
+    the input sample array can be empty, which confused things. I've put a
+    check in so that the length has to not be zero before anything is done
+
+
 2020-10-03
   - replaced the old gravity with the new, fresh, sophisticated, educated,
     elegant and rather attractive Rust based one (which now has its own github
     repo https://github.com/metasophiea/gravity)
-  - all the demos needed re-saving to account for the changes in viewport
-    positioning
 
 
 2020-09-30

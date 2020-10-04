@@ -14,6 +14,7 @@
             -productionWasm) productionWasm=true; ((a--)); ;;
             -compileJS) compileJS=true; ((a--)); ;;
             -productionJS) productionJS=true; ((a--)); ;;
+            -testOnly) nameArray=('test'); ((a--)); ;;
             -report) report=true; ((a--)); ;;
             -heavy) 
                 compileWasm=true;

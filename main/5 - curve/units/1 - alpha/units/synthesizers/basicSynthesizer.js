@@ -141,7 +141,7 @@ this.basic_synthesizer = function(name,x,y,angle){
 
     //circuitry
         const detuneLimits = {min:-100, max:100};
-        const synthesizerCircuit = new _canvas_.interface.circuit.synthesizer_1(_canvas_.library.audio.context);
+        const synthesizerCircuit = new _canvas_.interface.circuit.synthesizer_2(_canvas_.library.audio.context);
 
     //wiring
         //hid
@@ -151,9 +151,9 @@ this.basic_synthesizer = function(name,x,y,angle){
             object.elements.dial_2_continuous.detune_note.onchange = function(value){ synthesizerCircuit.detune( value*(detuneLimits.max-detuneLimits.min) + detuneLimits.min ); };
             object.elements.dial_2_discrete.detune_octave.onchange = function(value){ synthesizerCircuit.octave( value-3 ); };
             object.elements.dial_2_discrete.periodicWaveType.onchange = function(value){ synthesizerCircuit.waveType( ['sine','triangle','square','sawtooth','custom'][value] ); };
-            object.elements.dial_2_continuous.gainWobblePeriod.onchange = function(value){ synthesizerCircuit.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
-            object.elements.dial_2_continuous.gainWobbleDepth.onchange = function(value){ synthesizerCircuit.gainWobbleDepth(value);};
-            object.elements.dial_2_continuous.detuneWobblePeriod.onchange = function(value){ synthesizerCircuit.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+            object.elements.dial_2_continuous.gainWobblePeriod.onchange = function(value){ synthesizerCircuit.gainWobblePeriod( 1/(value*9 + 1) ) };
+            object.elements.dial_2_continuous.gainWobbleDepth.onchange = function(value){ synthesizerCircuit.gainWobbleActive(value != 0); synthesizerCircuit.gainWobbleDepth(value); };
+            object.elements.dial_2_continuous.detuneWobblePeriod.onchange = function(value){ synthesizerCircuit.detuneWobblePeriod( 1/(value*9 + 1)  ); };
             object.elements.dial_2_continuous.detuneWobbleDepth.onchange = function(value){ synthesizerCircuit.detuneWobbleDepth( value*100 ); };
             object.elements.button_circle.panicButton.onpress = function(){ synthesizerCircuit.panic(); };
         //io

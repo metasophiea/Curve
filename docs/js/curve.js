@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:29} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
                 const library = this;
                 
                 const dev = {
@@ -4124,6 +4124,8 @@
                                     
                                         process(inputs, outputs, parameters){
                                             const input = inputs[0];
+                                            if(input.length == 0){ return true; }
+                                    
                                             const fullSample = parameters.fullSample[0];
                                             const updateDelay = parameters.updateDelay[0];
                                             const calculationMode = parameters.calculationMode[0];
@@ -23969,7 +23971,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:30} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
             
                 const core = this;
             
@@ -26078,7 +26080,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:29} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
                 const interface = this;
             
                 const dev = {
@@ -26274,16 +26276,16 @@
                         
                     // replacement for prior synthesizer; this system reuses oscillators
                     //  oscillators generated on demand
-                    //  conservitive use of oscillators
+                    //  conservative use of oscillators
                     //  gainWobble provided by internal LFO
-                    //  detuneWobble not implemented
+                    //  detuneWobble implemented the old way, with an interval
                     
-                    this.synthesizer_1 = function(
+                    this.synthesizer_2 = function(
                         context,
                         waveType='sine', periodicWave={'sin':[0,1,0], 'cos':[0,0,1]}, 
                         gain=1, octave=0, detune=0,
                         attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-                        gainWobble={depth:0, period:1, periodMin:0.01, periodMax:1},
+                        gainWobble={active:false, depth:0, period:1, periodMin:0.01, periodMax:1},
                         detuneWobble={depth:0, period:1, periodMin:0.01, periodMax:1},
                     ){
                         function createOscillator(){
@@ -26296,12 +26298,18 @@
                             data.oscillator.connect(data.gain);
                             data.oscillator.start(0);
                             _canvas_.library.audio.changeAudioParam(context, data.gain.gain, 0, 0, 'instant');
+                    
+                            data.detune = function(target,time,curve){
+                                _canvas_.library.audio.changeAudioParam(context, data.oscillator.detune, target ,time, curve);
+                            };
+                    
                             return data;
                         }
                     
                         //flow chain
                             const flow = {
                                 oscillators: [],
+                                wobbler_detune: {},
                                 aggregator: {},
                                 LFO: {},
                                 amplitudeModifier: {},
@@ -26310,6 +26318,27 @@
                     
                         //flow
                             flow.oscillators[0] = createOscillator();
+                    
+                            flow.wobbler_detune.phase = true;
+                            flow.wobbler_detune.wave = 's';
+                            flow.wobbler_detune.interval = null;
+                            flow.wobbler_detune.start = function(){
+                                if(detuneWobble.period < detuneWobble.periodMin || detuneWobble.period >= detuneWobble.periodMax){ return; }
+                                flow.wobbler_detune.interval = setInterval(function(){
+                                    const OSCs = Object.keys(flow.oscillators);
+                                    if(flow.wobbler_detune.phase){
+                                        for(let b = 0; b < OSCs.length; b++){ 
+                                            flow.oscillators[OSCs[b]].detune(detuneWobble.depth + detune, 0.9*detuneWobble.period, flow.wobbler_detune.wave);
+                                        }
+                                    }else{
+                                        for(let b = 0; b < OSCs.length; b++){ 
+                                            flow.oscillators[OSCs[b]].detune(-detuneWobble.depth + detune,0.9*detuneWobble.period,flow.wobbler_detune.wave);
+                                        }
+                                    }
+                                    flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
+                                }, 1000*detuneWobble.period);
+                            };
+                            flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
                     
                             flow.aggregator.node = context.createGain();    
                             flow.aggregator.node.gain.setTargetAtTime(gain, context.currentTime, 0);
@@ -26381,7 +26410,7 @@
                                             }
                                             oscillatorToUse.oscillator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(note.num+12*octave), context.currentTime, 0);
                                             oscillatorToUse.noteNumber = note.num;
-                                            oscillatorToUse.oscillator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                            // oscillatorToUse.oscillator.detune.setTargetAtTime(detune, context.currentTime, 0);
                                             _canvas_.library.audio.changeAudioParam(context, oscillatorToUse.gain.gain, note.velocity, attack.time, attack.curve, !freshOscillator);
                                     }
                             };
@@ -26427,6 +26456,7 @@
                                 if(target == null){return detune;}
                                 detune = target;
                                 flow.oscillators.forEach(oscillator => {
+                                    oscillator.oscillator.detune.cancelScheduledValues(0);
                                     oscillator.oscillator.detune.setTargetAtTime(target, context.currentTime, 0);
                                 });
                             };
@@ -26441,6 +26471,11 @@
                                 if(curve != undefined){ release.curve = curve; }
                             };
                     
+                            this.gainWobbleActive = function(value){
+                                if(value == null){return gainWobble.active; }
+                                gainWobble.active = value;
+                                flow.gain.node.mode = value;
+                            };
                             this.gainWobbleDepth = function(value){
                                 if(value == null){return gainWobble.depth; }
                                 if(value < 0){ value = 0; }
@@ -26456,19 +26491,22 @@
                                 gainWobble.period = value;
                                 flow.LFO.oscillator.frequency.setTargetAtTime(1/value, context.currentTime, 0);
                             };
+                    
                             this.detuneWobbleDepth = function(value){
                                 if(value == null){return detuneWobble.depth; }
                                 if(value < 0){ value = 0; }
-                                else if(value > 1){ value = 1; }
+                                else if(value > 100){ value = 100; }
                                 detuneWobble.depth = value;
-                                // to do //
+                                flow.wobbler_detune.stop();
+                                flow.wobbler_detune.start();
                             };
                             this.detuneWobblePeriod = function(value){
                                 if(value == null){return detuneWobble.period; }
                                 if(value < detuneWobble.periodMin){ value = detuneWobble.periodMin; }
                                 else if(value > detuneWobble.periodMax){ value = detuneWobble.periodMax; }
                                 detuneWobble.period = value;
-                                // to do //
+                                flow.wobbler_detune.stop();
+                                flow.wobbler_detune.start();
                             };
                     
                             this._dump = function(){
@@ -26482,7 +26520,11 @@
                                     console.log( 'flow.oscillators['+index+']', oscillator );
                                 });
                                 console.log( 'flow.aggregator:', flow.aggregator );
+                                console.log( 'flow.LFO:', flow.LFO );
+                                console.log( 'flow.amplitudeModifier:', flow.amplitudeModifier );
+                                console.log( 'flow.gain:', flow.gain );
                             };
+                            this._flow = function(){ return flow; };
                     };
                     //replacement for prior synthesizer; this system uses the custom oscillators and implements an ADSR envelope
                     //  oscillators generated on demand
@@ -26493,7 +26535,7 @@
                     //  detuneWobble provided by internal LFO, or external input
                     //  dutyCycleWobble provided by internal LFO, or external input
                     
-                    this.synthesizer_2 = function(
+                    this.synthesizer_3 = function(
                         context,
                         waveType='sine',
                         masterGain=1,
@@ -26937,234 +26979,234 @@
                     };
                     //  oscillators generated on demand
                     
-                    // this.synthesizer = function(
-                    //     context,
-                    //     waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
-                    //     gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
-                    //     attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-                    //     octave=0,
-                    //     detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
-                    // ){
-                    //     //flow chain
-                    //         const flow = {
-                    //             OSCmaker:{},
-                    //             liveOscillators: {},
-                    //             wobbler_detune: {},
-                    //             aggregator: {},
-                    //             wobbler_gain: {},
-                    //             mainOut: {}
-                    //         };
+                    this.synthesizer_1 = function(
+                        context,
+                        waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+                        gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
+                        attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                        octave=0,
+                        detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
+                    ){
+                        //flow chain
+                            const flow = {
+                                OSCmaker:{},
+                                liveOscillators: {},
+                                wobbler_detune: {},
+                                aggregator: {},
+                                wobbler_gain: {},
+                                mainOut: {}
+                            };
                     
                     
-                    //         flow.OSCmaker.waveType = waveType;
-                    //         flow.OSCmaker.periodicWave = periodicWave;
-                    //         flow.OSCmaker.attack = attack;
-                    //         flow.OSCmaker.release = release;
-                    //         flow.OSCmaker.octave  = octave;
-                    //         flow.OSCmaker.detune  = detune;
-                    //         flow.OSCmaker.func = function(
-                    //             context, connection, midinumber,
-                    //             type, periodicWave, 
-                    //             gain, attack, release,
-                    //             detune, octave
-                    //         ){
-                    //             return new function(){
-                    //                 this.generator = context.createOscillator();
-                    //                     if(type == 'custom'){ 
-                    //                         this.generator.setPeriodicWave(
-                    //                             context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
-                    //                         ); 
-                    //                     }else{ this.generator.type = type; }
-                    //                     this.generator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
-                    //                     this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
-                    //                     this.generator.start(0);
+                            flow.OSCmaker.waveType = waveType;
+                            flow.OSCmaker.periodicWave = periodicWave;
+                            flow.OSCmaker.attack = attack;
+                            flow.OSCmaker.release = release;
+                            flow.OSCmaker.octave  = octave;
+                            flow.OSCmaker.detune  = detune;
+                            flow.OSCmaker.func = function(
+                                context, connection, midinumber,
+                                type, periodicWave, 
+                                gain, attack, release,
+                                detune, octave
+                            ){
+                                return new function(){
+                                    this.generator = context.createOscillator();
+                                        if(type == 'custom'){ 
+                                            this.generator.setPeriodicWave(
+                                                context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                            ); 
+                                        }else{ this.generator.type = type; }
+                                        this.generator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
+                                        this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                        this.generator.start(0);
                     
-                    //                 this.gain = context.createGain();
-                    //                 this.generator.connect(this.gain);
-                    //                 this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                    //                 _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
-                    //                 this.gain.connect(connection);
+                                    this.gain = context.createGain();
+                                    this.generator.connect(this.gain);
+                                    this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                    _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                                    this.gain.connect(connection);
                     
-                    //                 this.detune = function(target,time,curve){
-                    //                     _canvas_.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
-                    //                 };
-                    //                 this.changeVelocity = function(a){
-                    //                     _canvas_.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
-                    //                 };
-                    //                 this.stop = function(){
-                    //                     _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve);
-                    //                     setTimeout(function(that){
-                    //                         that.gain.disconnect(); 
-                    //                         that.generator.stop(); 
-                    //                         that.generator.disconnect(); 
-                    //                         that.gain=null; 
-                    //                         that.generator=null; 
-                    //                         that=null;
-                    //                     }, release.time*1000, this);
-                    //                 };
-                    //             };
-                    //         };
-                    
-                    
-                    //         flow.wobbler_detune.depth = detuneWobbleDepth;
-                    //         flow.wobbler_detune.period = detuneWobblePeriod;
-                    //         flow.wobbler_detune.phase = true;
-                    //         flow.wobbler_detune.wave = 's';
-                    //         flow.wobbler_detune.interval = null;
-                    //         flow.wobbler_detune.start = function(){
-                    //             if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
-                    //             flow.wobbler_detune.interval = setInterval(function(){
-                    //                 const OSCs = Object.keys(flow.liveOscillators);
-                    //                 if(flow.wobbler_detune.phase){
-                    //                     for(let b = 0; b < OSCs.length; b++){ 
-                    //                         flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
-                    //                     }
-                    //                 }else{
-                    //                     for(let b = 0; b < OSCs.length; b++){ 
-                    //                         flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
-                    //                     }
-                    //                 }
-                    //                 flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
-                    //             }, 1000*flow.wobbler_detune.period);
-                    //         };
-                    //         flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
+                                    this.detune = function(target,time,curve){
+                                        _canvas_.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
+                                    };
+                                    this.changeVelocity = function(a){
+                                        _canvas_.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
+                                    };
+                                    this.stop = function(){
+                                        _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve);
+                                        setTimeout(function(that){
+                                            that.gain.disconnect(); 
+                                            that.generator.stop(); 
+                                            that.generator.disconnect(); 
+                                            that.gain=null; 
+                                            that.generator=null; 
+                                            that=null;
+                                        }, release.time*1000, this);
+                                    };
+                                };
+                            };
                     
                     
-                    //         flow.aggregator.node = context.createGain();    
-                    //         flow.aggregator.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                            flow.wobbler_detune.depth = detuneWobbleDepth;
+                            flow.wobbler_detune.period = detuneWobblePeriod;
+                            flow.wobbler_detune.phase = true;
+                            flow.wobbler_detune.wave = 's';
+                            flow.wobbler_detune.interval = null;
+                            flow.wobbler_detune.start = function(){
+                                if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
+                                flow.wobbler_detune.interval = setInterval(function(){
+                                    const OSCs = Object.keys(flow.liveOscillators);
+                                    if(flow.wobbler_detune.phase){
+                                        for(let b = 0; b < OSCs.length; b++){ 
+                                            flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                                        }
+                                    }else{
+                                        for(let b = 0; b < OSCs.length; b++){ 
+                                            flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                                        }
+                                    }
+                                    flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
+                                }, 1000*flow.wobbler_detune.period);
+                            };
+                            flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
                     
                     
-                    //         flow.wobbler_gain.depth = gainWobbleDepth;
-                    //         flow.wobbler_gain.period = gainWobblePeriod;
-                    //         flow.wobbler_gain.phase = true;
-                    //         flow.wobbler_gain.wave = 's';
-                    //         flow.wobbler_gain.interval = null;
-                    //         flow.wobbler_gain.start = function(){
-                    //             if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
-                    //                 _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
-                    //                 return;
-                    //             }
-                    //             flow.wobbler_gain.interval = setInterval(function(){
-                    //                 if(flow.wobbler_gain.phase){ _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
-                    //                 else{                        _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
-                    //                 flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
-                    //             }, 1000*flow.wobbler_gain.period);
-                    //         };
-                    //         flow.wobbler_gain.stop = function(){clearInterval(flow.wobbler_gain.interval);};
-                    //         flow.wobbler_gain.node = context.createGain();
-                    //         flow.wobbler_gain.node.gain.setTargetAtTime(1, context.currentTime, 0);
-                    //         flow.aggregator.node.connect(flow.wobbler_gain.node);
+                            flow.aggregator.node = context.createGain();    
+                            flow.aggregator.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                    
+                    
+                            flow.wobbler_gain.depth = gainWobbleDepth;
+                            flow.wobbler_gain.period = gainWobblePeriod;
+                            flow.wobbler_gain.phase = true;
+                            flow.wobbler_gain.wave = 's';
+                            flow.wobbler_gain.interval = null;
+                            flow.wobbler_gain.start = function(){
+                                if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
+                                    _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
+                                    return;
+                                }
+                                flow.wobbler_gain.interval = setInterval(function(){
+                                    if(flow.wobbler_gain.phase){ _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                                    else{                        _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                                    flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
+                                }, 1000*flow.wobbler_gain.period);
+                            };
+                            flow.wobbler_gain.stop = function(){clearInterval(flow.wobbler_gain.interval);};
+                            flow.wobbler_gain.node = context.createGain();
+                            flow.wobbler_gain.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                            flow.aggregator.node.connect(flow.wobbler_gain.node);
                     
                             
-                    //         flow.mainOut.gain = gain;
-                    //         flow.mainOut.node = context.createGain();
-                    //         flow.mainOut.node.gain.setTargetAtTime(gain, context.currentTime, 0);
-                    //         flow.wobbler_gain.node.connect(flow.mainOut.node);
+                            flow.mainOut.gain = gain;
+                            flow.mainOut.node = context.createGain();
+                            flow.mainOut.node.gain.setTargetAtTime(gain, context.currentTime, 0);
+                            flow.wobbler_gain.node.connect(flow.mainOut.node);
                     
-                    //     //output node
-                    //         this.out = function(){return flow.mainOut.node;}
+                        //output node
+                            this.out = function(){return flow.mainOut.node;}
                     
-                    //     //controls
-                    //         this.perform = function(note){
-                    //             if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-                    //             else if( !flow.liveOscillators[note.num] && note.velocity != 0 ){ 
-                    //                 //create new tone
-                    //                 flow.liveOscillators[note.num] = flow.OSCmaker.func(
-                    //                     context, 
-                    //                     flow.aggregator.node, 
-                    //                     note.num, 
-                    //                     flow.OSCmaker.waveType, 
-                    //                     flow.OSCmaker.periodicWave, 
-                    //                     note.velocity, 
-                    //                     flow.OSCmaker.attack, 
-                    //                     flow.OSCmaker.release, 
-                    //                     flow.OSCmaker.detune, 
-                    //                     flow.OSCmaker.octave
-                    //                 );
-                    //             }
-                    //             else if( note.velocity == 0 ){ 
-                    //                 //stop and destroy tone
-                    //                 flow.liveOscillators[note.num].stop();
-                    //                 delete flow.liveOscillators[note.num];
-                    //             }
-                    //             else{
-                    //                 //adjust tone
-                    //                 flow.liveOscillators[note.num].changeVelocity(note.velocity);
-                    //             }
-                    //         };
-                    //         this.panic = function(){
-                    //             const OSCs = Object.keys(flow.liveOscillators);
-                    //             for(let a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
-                    //         };
-                    //         this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
-                    //         this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
-                    //         this.gain = function(target,time,curve){ return _canvas_.library.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
-                    //         this.attack = function(time,curve){
-                    //             if(time==null&&curve==null){return flow.OSCmaker.attack;}
-                    //             flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;
-                    //             flow.OSCmaker.attack.curve = curve ? curve : flow.OSCmaker.attack.curve;
-                    //         };
-                    //         this.release = function(time,curve){
-                    //             if(time==null&&curve==null){return flow.OSCmaker.release;}
-                    //             flow.OSCmaker.release.time = time ? time : flow.OSCmaker.release.time;
-                    //             flow.OSCmaker.release.curve = curve ? curve : flow.OSCmaker.release.curve;
-                    //         };
-                    //         this.octave = function(a){if(a==null){return flow.OSCmaker.octave;}flow.OSCmaker.octave=a;};
-                    //         this.detune = function(target,time,curve){
-                    //             if(target==null){return flow.OSCmaker.detune;}
+                        //controls
+                            this.perform = function(note){
+                                if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+                                else if( !flow.liveOscillators[note.num] && note.velocity != 0 ){ 
+                                    //create new tone
+                                    flow.liveOscillators[note.num] = flow.OSCmaker.func(
+                                        context, 
+                                        flow.aggregator.node, 
+                                        note.num, 
+                                        flow.OSCmaker.waveType, 
+                                        flow.OSCmaker.periodicWave, 
+                                        note.velocity, 
+                                        flow.OSCmaker.attack, 
+                                        flow.OSCmaker.release, 
+                                        flow.OSCmaker.detune, 
+                                        flow.OSCmaker.octave
+                                    );
+                                }
+                                else if( note.velocity == 0 ){ 
+                                    //stop and destroy tone
+                                    flow.liveOscillators[note.num].stop();
+                                    delete flow.liveOscillators[note.num];
+                                }
+                                else{
+                                    //adjust tone
+                                    flow.liveOscillators[note.num].changeVelocity(note.velocity);
+                                }
+                            };
+                            this.panic = function(){
+                                const OSCs = Object.keys(flow.liveOscillators);
+                                for(let a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                            };
+                            this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
+                            this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
+                            this.gain = function(target,time,curve){ return _canvas_.library.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
+                            this.attack = function(time,curve){
+                                if(time==null&&curve==null){return flow.OSCmaker.attack;}
+                                flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;
+                                flow.OSCmaker.attack.curve = curve ? curve : flow.OSCmaker.attack.curve;
+                            };
+                            this.release = function(time,curve){
+                                if(time==null&&curve==null){return flow.OSCmaker.release;}
+                                flow.OSCmaker.release.time = time ? time : flow.OSCmaker.release.time;
+                                flow.OSCmaker.release.curve = curve ? curve : flow.OSCmaker.release.curve;
+                            };
+                            this.octave = function(a){if(a==null){return flow.OSCmaker.octave;}flow.OSCmaker.octave=a;};
+                            this.detune = function(target,time,curve){
+                                if(target==null){return flow.OSCmaker.detune;}
                     
-                    //             //change stored value for any new oscillators that are made
-                    //                 const start = flow.OSCmaker.detune;
-                    //                 const mux = target-start;
-                    //                 const stepsPerSecond = Math.round(Math.abs(mux));
-                    //                 const totalSteps = stepsPerSecond*time;
+                                //change stored value for any new oscillators that are made
+                                    const start = flow.OSCmaker.detune;
+                                    const mux = target-start;
+                                    const stepsPerSecond = Math.round(Math.abs(mux));
+                                    const totalSteps = stepsPerSecond*time;
                     
-                    //                 let steps = [1];
-                    //                 switch(curve){
-                    //                     case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
-                    //                     case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
-                    //                     case 's': steps = system.utility.math.curveGenerator.s(totalSteps,8); break;
-                    //                     case 'instant': default: break;
-                    //                 }
+                                    let steps = [1];
+                                    switch(curve){
+                                        case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
+                                        case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
+                                        case 's': steps = system.utility.math.curveGenerator.s(totalSteps,8); break;
+                                        case 'instant': default: break;
+                                    }
                                     
-                    //                 if(steps.length != 0){
-                    //                     const interval = setInterval(function(){
-                    //                         flow.OSCmaker.detune = start+(steps.shift()*mux);
-                    //                         if(steps.length == 0){clearInterval(interval);}
-                    //                     },1000/stepsPerSecond);
-                    //                 }
+                                    if(steps.length != 0){
+                                        const interval = setInterval(function(){
+                                            flow.OSCmaker.detune = start+(steps.shift()*mux);
+                                            if(steps.length == 0){clearInterval(interval);}
+                                        },1000/stepsPerSecond);
+                                    }
                     
-                    //             //instruct liveOscillators to adjust their values
-                    //                 const OSCs = Object.keys(flow.liveOscillators);
-                    //                 for(let b = 0; b < OSCs.length; b++){ 
-                    //                     flow.liveOscillators[OSCs[b]].detune(target,time,curve);
-                    //                 }
-                    //         };
-                    //         this.gainWobbleDepth = function(value){
-                    //             if(value==null){return flow.wobbler_gain.depth; }
-                    //             flow.wobbler_gain.depth = value;
-                    //             flow.wobbler_gain.stop();
-                    //             flow.wobbler_gain.start();
-                    //         };
-                    //         this.gainWobblePeriod = function(value){
-                    //             if(value==null){return flow.wobbler_gain.period; }
-                    //             flow.wobbler_gain.period = value;
-                    //             flow.wobbler_gain.stop();
-                    //             flow.wobbler_gain.start();
-                    //         };
-                    //         this.detuneWobbleDepth = function(value){
-                    //             if(value==null){return flow.wobbler_detune.depth; }
-                    //             flow.wobbler_detune.depth = value;
-                    //             flow.wobbler_detune.stop();
-                    //             flow.wobbler_detune.start();
-                    //         };
-                    //         this.detuneWobblePeriod = function(value){
-                    //             if(value==null){return flow.wobbler_detune.period; }
-                    //             flow.wobbler_detune.period = value;
-                    //             flow.wobbler_detune.stop();
-                    //             flow.wobbler_detune.start();
-                    //         };
-                    // };
+                                //instruct liveOscillators to adjust their values
+                                    const OSCs = Object.keys(flow.liveOscillators);
+                                    for(let b = 0; b < OSCs.length; b++){ 
+                                        flow.liveOscillators[OSCs[b]].detune(target,time,curve);
+                                    }
+                            };
+                            this.gainWobbleDepth = function(value){
+                                if(value==null){return flow.wobbler_gain.depth; }
+                                flow.wobbler_gain.depth = value;
+                                flow.wobbler_gain.stop();
+                                flow.wobbler_gain.start();
+                            };
+                            this.gainWobblePeriod = function(value){
+                                if(value==null){return flow.wobbler_gain.period; }
+                                flow.wobbler_gain.period = value;
+                                flow.wobbler_gain.stop();
+                                flow.wobbler_gain.start();
+                            };
+                            this.detuneWobbleDepth = function(value){
+                                if(value==null){return flow.wobbler_detune.depth; }
+                                flow.wobbler_detune.depth = value;
+                                flow.wobbler_detune.stop();
+                                flow.wobbler_detune.start();
+                            };
+                            this.detuneWobblePeriod = function(value){
+                                if(value==null){return flow.wobbler_detune.period; }
+                                flow.wobbler_detune.period = value;
+                                flow.wobbler_detune.stop();
+                                flow.wobbler_detune.start();
+                            };
+                    };
                     this.audio2percentage = function(){
                         return new function(){
                             const analyser = {
@@ -43977,7 +44019,7 @@
                 _canvas_.layers.declareLayerAsLoaded("control");
             } );
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:30} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
             };
             
             _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -45499,7 +45541,7 @@
                     
                         //circuitry
                             const detuneLimits = {min:-100, max:100};
-                            const synthesizerCircuit = new _canvas_.interface.circuit.synthesizer_1(_canvas_.library.audio.context);
+                            const synthesizerCircuit = new _canvas_.interface.circuit.synthesizer_2(_canvas_.library.audio.context);
                     
                         //wiring
                             //hid
@@ -45509,9 +45551,9 @@
                                 object.elements.dial_2_continuous.detune_note.onchange = function(value){ synthesizerCircuit.detune( value*(detuneLimits.max-detuneLimits.min) + detuneLimits.min ); };
                                 object.elements.dial_2_discrete.detune_octave.onchange = function(value){ synthesizerCircuit.octave( value-3 ); };
                                 object.elements.dial_2_discrete.periodicWaveType.onchange = function(value){ synthesizerCircuit.waveType( ['sine','triangle','square','sawtooth','custom'][value] ); };
-                                object.elements.dial_2_continuous.gainWobblePeriod.onchange = function(value){ synthesizerCircuit.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
-                                object.elements.dial_2_continuous.gainWobbleDepth.onchange = function(value){ synthesizerCircuit.gainWobbleDepth(value);};
-                                object.elements.dial_2_continuous.detuneWobblePeriod.onchange = function(value){ synthesizerCircuit.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                                object.elements.dial_2_continuous.gainWobblePeriod.onchange = function(value){ synthesizerCircuit.gainWobblePeriod( 1/(value*9 + 1) ) };
+                                object.elements.dial_2_continuous.gainWobbleDepth.onchange = function(value){ synthesizerCircuit.gainWobbleActive(value != 0); synthesizerCircuit.gainWobbleDepth(value); };
+                                object.elements.dial_2_continuous.detuneWobblePeriod.onchange = function(value){ synthesizerCircuit.detuneWobblePeriod( 1/(value*9 + 1)  ); };
                                 object.elements.dial_2_continuous.detuneWobbleDepth.onchange = function(value){ synthesizerCircuit.detuneWobbleDepth( value*100 ); };
                                 object.elements.button_circle.panicButton.onpress = function(){ synthesizerCircuit.panic(); };
                             //io

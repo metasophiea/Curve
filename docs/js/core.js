@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:29} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
                 const library = this;
                 
                 const dev = {
@@ -4124,6 +4124,8 @@
                                     
                                         process(inputs, outputs, parameters){
                                             const input = inputs[0];
+                                            if(input.length == 0){ return true; }
+                                    
                                             const fullSample = parameters.fullSample[0];
                                             const updateDelay = parameters.updateDelay[0];
                                             const calculationMode = parameters.calculationMode[0];
@@ -23969,7 +23971,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:30} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
             
                 const core = this;
             

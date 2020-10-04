@@ -1,8 +1,6 @@
 [2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
     (possibly fixed in 2020-03-21? I've deleted the unit that showed this behaviour, but I believe that fixes made to the onremove code should cover this issue)
 [2019-08-26:1] (?) connection nodes can work across panes (is it really an issue though?) 
-[2019-09-15:1] something is up with webGl on windows, that isn't present on mac or linux..I think only with clipping
-    it's something to do with GUI scaling, where the user has theirs set to something that isn't 100%
 [2019-09-26:2] sometimes the camera panning gets stuck on
 [2019-10-06:1] sometimes the scene loader doesn't do anything
     it's caused by the browser not loading any file, and so the scene loader code is never being run
@@ -58,3 +56,5 @@ fixed:
         (log:2020-01-22) the synthesizer circuit just wasn't doing its job right
     [XXXX-XX-XX:2] sometimes, connections can be made to nothing. Like there are invisible units
         (log:2020-03-21) turns out, the connection nodes of units were not being removed correctly
+    [2020-10-04:1] something is up with webGl on windows, that isn't present on mac or linux..I think only with clipping
+        (log:2020-09-30) it was to do with GUI scaling, where the user has theirs set to something that isn't 100%. I had assumed that the devicePixelRatio value would only ever be 1 or 2, but it can actually be any number. Tested on windows

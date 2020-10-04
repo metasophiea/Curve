@@ -10,7 +10,7 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
     // },1000);
 
 
-    synth_2 = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
+    synth_2 = new _canvas_.interface.circuit.synthesizer_2(_canvas_.library.audio.context);
     synth_2.out().connect(_canvas_.library.audio.destination);
     synth_2.gain(0.5);
     // synth_2.attack(1);
@@ -29,13 +29,23 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
 
 
 
-    synth_2.release(1);
-    setInterval(() => {
-        console.log('click');
-        synth_2.perform({num:70,velocity:0});
-        synth_2.perform({num:70,velocity:0.5});
-    },500);
+    // synth_2.release(1);
+    // setInterval(() => {
+    //     console.log('click');
+    //     synth_2.perform({num:70,velocity:0});
+    //     synth_2.perform({num:70,velocity:0.5});
+    // },500);
 
+
+    synth_2.gainWobblePeriod(0.1);
+    synth_2.gainWobbleDepth(1);
+    synth_2.gainWobbleActive(true);
+    setInterval(() => {
+        synth_2.perform({num:70,velocity:0.5});
+        setTimeout(() => {
+            synth_2.perform({num:70,velocity:0});
+        }, 500);
+    },1000);
 });
 
 

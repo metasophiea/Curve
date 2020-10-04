@@ -56,6 +56,8 @@ class momentaryAmplitudeMeter extends AudioWorkletProcessor{
 
     process(inputs, outputs, parameters){
         const input = inputs[0];
+        if(input.length == 0){ return true; }
+
         const fullSample = parameters.fullSample[0];
         const updateDelay = parameters.updateDelay[0];
         const calculationMode = parameters.calculationMode[0];

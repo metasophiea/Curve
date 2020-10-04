@@ -617,10 +617,10 @@ impl Group {
             let de_bb = de_borrow.get_extremities().get_bounding_box();
 
             let data = BoundingBox::new(
-                self_bb.get_top_left().get_y() - de_bb.get_top_left().get_y(),
                 self_bb.get_top_left().get_x() - de_bb.get_top_left().get_x(),
-                de_bb.get_bottom_right().get_y() - self_bb.get_bottom_right().get_y(),
+                self_bb.get_top_left().get_y() - de_bb.get_top_left().get_y(),
                 de_bb.get_bottom_right().get_x() - self_bb.get_bottom_right().get_x(),
+                de_bb.get_bottom_right().get_y() - self_bb.get_bottom_right().get_y(),
             );
 
             if 

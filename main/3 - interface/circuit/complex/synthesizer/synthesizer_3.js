@@ -7,7 +7,7 @@
 //  detuneWobble provided by internal LFO, or external input
 //  dutyCycleWobble provided by internal LFO, or external input
 
-this.synthesizer_2 = function(
+this.synthesizer_3 = function(
     context,
     waveType='sine',
     masterGain=1,

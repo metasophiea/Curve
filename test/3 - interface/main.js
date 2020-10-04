@@ -8,7 +8,7 @@
 // {{include:2.js}} //test of basic parts
 // {{include:3.js}} //test of display parts
 // {{include:4.js}} //test of control parts
-{{include:5.js}} //test of dynamic parts
+// {{include:5.js}} //test of dynamic parts
 // {{include:6.js}} //automatic connection node test
 // {{include:7.js}} //test of unit builder
 // {{include:8.js}} //secondary test of unit builder, with collection/test units
@@ -16,4 +16,4 @@
 // {{include:10.js}} //rapidAmplitudeModulator circuit test 
 // {{include:11.js}} //test of the synthesizer_2 circuit
 // {{include:12.js}} //test of frequencyResponseMeasure circuit 
-// {{include:13.js}} //test of synthesizer_3 circuit
+{{include:13.js}} //test of synthesizer_3 circuit

@@ -1,15 +1,15 @@
 // replacement for prior synthesizer; this system reuses oscillators
 //  oscillators generated on demand
-//  conservitive use of oscillators
+//  conservative use of oscillators
 //  gainWobble provided by internal LFO
-//  detuneWobble not implemented
+//  detuneWobble implemented the old way, with an interval
 
-this.synthesizer_1 = function(
+this.synthesizer_2 = function(
     context,
     waveType='sine', periodicWave={'sin':[0,1,0], 'cos':[0,0,1]}, 
     gain=1, octave=0, detune=0,
     attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
-    gainWobble={depth:0, period:1, periodMin:0.01, periodMax:1},
+    gainWobble={active:false, depth:0, period:1, periodMin:0.01, periodMax:1},
     detuneWobble={depth:0, period:1, periodMin:0.01, periodMax:1},
 ){
     function createOscillator(){
@@ -22,12 +22,18 @@ this.synthesizer_1 = function(
         data.oscillator.connect(data.gain);
         data.oscillator.start(0);
         _canvas_.library.audio.changeAudioParam(context, data.gain.gain, 0, 0, 'instant');
+
+        data.detune = function(target,time,curve){
+            _canvas_.library.audio.changeAudioParam(context, data.oscillator.detune, target ,time, curve);
+        };
+
         return data;
     }
 
     //flow chain
         const flow = {
             oscillators: [],
+            wobbler_detune: {},
             aggregator: {},
             LFO: {},
             amplitudeModifier: {},
@@ -36,6 +42,27 @@ this.synthesizer_1 = function(
 
     //flow
         flow.oscillators[0] = createOscillator();
+
+        flow.wobbler_detune.phase = true;
+        flow.wobbler_detune.wave = 's';
+        flow.wobbler_detune.interval = null;
+        flow.wobbler_detune.start = function(){
+            if(detuneWobble.period < detuneWobble.periodMin || detuneWobble.period >= detuneWobble.periodMax){ return; }
+            flow.wobbler_detune.interval = setInterval(function(){
+                const OSCs = Object.keys(flow.oscillators);
+                if(flow.wobbler_detune.phase){
+                    for(let b = 0; b < OSCs.length; b++){ 
+                        flow.oscillators[OSCs[b]].detune(detuneWobble.depth + detune, 0.9*detuneWobble.period, flow.wobbler_detune.wave);
+                    }
+                }else{
+                    for(let b = 0; b < OSCs.length; b++){ 
+                        flow.oscillators[OSCs[b]].detune(-detuneWobble.depth + detune,0.9*detuneWobble.period,flow.wobbler_detune.wave);
+                    }
+                }
+                flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
+            }, 1000*detuneWobble.period);
+        };
+        flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
 
         flow.aggregator.node = context.createGain();    
         flow.aggregator.node.gain.setTargetAtTime(gain, context.currentTime, 0);
@@ -107,7 +134,7 @@ this.synthesizer_1 = function(
                         }
                         oscillatorToUse.oscillator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(note.num+12*octave), context.currentTime, 0);
                         oscillatorToUse.noteNumber = note.num;
-                        oscillatorToUse.oscillator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                        // oscillatorToUse.oscillator.detune.setTargetAtTime(detune, context.currentTime, 0);
                         _canvas_.library.audio.changeAudioParam(context, oscillatorToUse.gain.gain, note.velocity, attack.time, attack.curve, !freshOscillator);
                 }
         };
@@ -153,6 +180,7 @@ this.synthesizer_1 = function(
             if(target == null){return detune;}
             detune = target;
             flow.oscillators.forEach(oscillator => {
+                oscillator.oscillator.detune.cancelScheduledValues(0);
                 oscillator.oscillator.detune.setTargetAtTime(target, context.currentTime, 0);
             });
         };
@@ -167,6 +195,11 @@ this.synthesizer_1 = function(
             if(curve != undefined){ release.curve = curve; }
         };
 
+        this.gainWobbleActive = function(value){
+            if(value == null){return gainWobble.active; }
+            gainWobble.active = value;
+            flow.gain.node.mode = value;
+        };
         this.gainWobbleDepth = function(value){
             if(value == null){return gainWobble.depth; }
             if(value < 0){ value = 0; }
@@ -182,19 +215,22 @@ this.synthesizer_1 = function(
             gainWobble.period = value;
             flow.LFO.oscillator.frequency.setTargetAtTime(1/value, context.currentTime, 0);
         };
+
         this.detuneWobbleDepth = function(value){
             if(value == null){return detuneWobble.depth; }
             if(value < 0){ value = 0; }
-            else if(value > 1){ value = 1; }
+            else if(value > 100){ value = 100; }
             detuneWobble.depth = value;
-            // to do //
+            flow.wobbler_detune.stop();
+            flow.wobbler_detune.start();
         };
         this.detuneWobblePeriod = function(value){
             if(value == null){return detuneWobble.period; }
             if(value < detuneWobble.periodMin){ value = detuneWobble.periodMin; }
             else if(value > detuneWobble.periodMax){ value = detuneWobble.periodMax; }
             detuneWobble.period = value;
-            // to do //
+            flow.wobbler_detune.stop();
+            flow.wobbler_detune.start();
         };
 
         this._dump = function(){
@@ -208,5 +244,9 @@ this.synthesizer_1 = function(
                 console.log( 'flow.oscillators['+index+']', oscillator );
             });
             console.log( 'flow.aggregator:', flow.aggregator );
+            console.log( 'flow.LFO:', flow.LFO );
+            console.log( 'flow.amplitudeModifier:', flow.amplitudeModifier );
+            console.log( 'flow.gain:', flow.gain );
         };
+        this._flow = function(){ return flow; };
 };
