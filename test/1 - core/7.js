@@ -117,82 +117,82 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
 
 
 
-    let polygon_1 = _canvas_.core.element.create('Polygon','test_polygon_1');
-    _canvas_.core.arrangement.append(polygon_1);
-    polygon_1.unifiedAttribute({
-        pointsAsXYArray:[
-            {x:300,y:100}, 
-            {x:330,y:100}, 
-            {x:330,y:130}, 
-            {x:300,y:130},
-            {x:280,y:115},
-        ],
-        colour:{r:1,g:0,b:1,a:1}
-    });
-    polygon_1.attachCallback(
-        'onmouseenterelement',
-        () => {
-            polygon_1.colour({r:1,g:0.75,b:1,a:1});
-            _canvas_.core.render.frame();
-        }
-    );
-    polygon_1.attachCallback(
-        'onmouseleaveelement',
-        () => {
-            polygon_1.colour({r:1,g:0,b:1,a:1});
-            _canvas_.core.render.frame();
-        }
-    );
+    // let polygon_1 = _canvas_.core.element.create('Polygon','test_polygon_1');
+    // _canvas_.core.arrangement.append(polygon_1);
+    // polygon_1.unifiedAttribute({
+    //     pointsAsXYArray:[
+    //         {x:300,y:100}, 
+    //         {x:330,y:100}, 
+    //         {x:330,y:130}, 
+    //         {x:300,y:130},
+    //         {x:280,y:115},
+    //     ],
+    //     colour:{r:1,g:0,b:1,a:1}
+    // });
+    // polygon_1.attachCallback(
+    //     'onmouseenterelement',
+    //     () => {
+    //         polygon_1.colour({r:1,g:0.75,b:1,a:1});
+    //         _canvas_.core.render.frame();
+    //     }
+    // );
+    // polygon_1.attachCallback(
+    //     'onmouseleaveelement',
+    //     () => {
+    //         polygon_1.colour({r:1,g:0,b:1,a:1});
+    //         _canvas_.core.render.frame();
+    //     }
+    // );
 
 
 
 
-    let circle_1 = _canvas_.core.element.create('Circle','test_circle_1');
-    _canvas_.core.arrangement.append(circle_1);
-    circle_1.unifiedAttribute({
-        x:400, y:200, radius:40,
-        colour:{r:1,g:0,b:1,a:1}
-    });
-    circle_1.attachCallback(
-        'onmouseenterelement',
-        () => {
-            circle_1.colour({r:1,g:0.75,b:1,a:1});
-            _canvas_.core.render.frame();
-        }
-    );
-    circle_1.attachCallback(
-        'onmouseleaveelement',
-        () => {
-            circle_1.colour({r:1,g:0,b:1,a:1});
-            _canvas_.core.render.frame();
-        }
-    );
+    // let circle_1 = _canvas_.core.element.create('Circle','test_circle_1');
+    // _canvas_.core.arrangement.append(circle_1);
+    // circle_1.unifiedAttribute({
+    //     x:400, y:200, radius:40,
+    //     colour:{r:1,g:0,b:1,a:1}
+    // });
+    // circle_1.attachCallback(
+    //     'onmouseenterelement',
+    //     () => {
+    //         circle_1.colour({r:1,g:0.75,b:1,a:1});
+    //         _canvas_.core.render.frame();
+    //     }
+    // );
+    // circle_1.attachCallback(
+    //     'onmouseleaveelement',
+    //     () => {
+    //         circle_1.colour({r:1,g:0,b:1,a:1});
+    //         _canvas_.core.render.frame();
+    //     }
+    // );
 
 
 
 
-    let path_1 = _canvas_.core.element.create('Path','test_path_1');
-    path_1.unifiedAttribute({
-        pointsAsXYArray:[ {x:80+300,y:60}, {x:130+300,y:60}, {x:140+300,y:70}, {x:140+300,y:120}, {x:80+300,y:120} ],
-        thickness:5,
-        capType:'round',
-        colour:{r:0.859,g:0.2,b:0.756,a:1} 
-    });
-    path_1.attachCallback(
-        'onmouseenterelement',
-        () => {
-            path_1.colour({r:1,g:0.8,b:1,a:1} );
-            _canvas_.core.render.frame();
-        }
-    );
-    path_1.attachCallback(
-        'onmouseleaveelement',
-        () => {
-            path_1.colour({r:0.859,g:0.2,b:0.756,a:1} );
-            _canvas_.core.render.frame();
-        }
-    );
-    _canvas_.core.arrangement.append(path_1);
+    // let path_1 = _canvas_.core.element.create('Path','test_path_1');
+    // path_1.unifiedAttribute({
+    //     pointsAsXYArray:[ {x:80+300,y:60}, {x:130+300,y:60}, {x:140+300,y:70}, {x:140+300,y:120}, {x:80+300,y:120} ],
+    //     thickness:5,
+    //     capType:'round',
+    //     colour:{r:0.859,g:0.2,b:0.756,a:1} 
+    // });
+    // path_1.attachCallback(
+    //     'onmouseenterelement',
+    //     () => {
+    //         path_1.colour({r:1,g:0.8,b:1,a:1} );
+    //         _canvas_.core.render.frame();
+    //     }
+    // );
+    // path_1.attachCallback(
+    //     'onmouseleaveelement',
+    //     () => {
+    //         path_1.colour({r:0.859,g:0.2,b:0.756,a:1} );
+    //         _canvas_.core.render.frame();
+    //     }
+    // );
+    // _canvas_.core.arrangement.append(path_1);
 
 
 

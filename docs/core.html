@@ -24,7 +24,7 @@
 
 <script>
     const _canvas_ = document.getElementById('coreCanvas');
-    // _canvas_.core.go.add( function(){ 
+
     _canvas_.layers.registerFunctionForLayer("core", function(){
         let rectangleCount = 16;
         let canvasSize = {width:0,height:0};
@@ -33,7 +33,7 @@
             let upper_band = {
                 elements:[],
                 tick:0,
-                tickStep:0.02*rectangleCount,
+                tickStep:0.01*rectangleCount,
                 wavelength:3,
                 colour:{
                     current:{r:1,g:1,b:1,a:1},
@@ -50,7 +50,7 @@
             let middle_band = {
                 elements:[],
                 tick:0,
-                tickStep:0.02*rectangleCount,
+                tickStep:0.01*rectangleCount,
                 wavelength:2,
                 colour:{
                     current:{r:1,g:1,b:1,a:1},
@@ -67,7 +67,7 @@
             let lower_band = {
                 elements:[],
                 tick:0,
-                tickStep:0.02*rectangleCount,
+                tickStep:0.01*rectangleCount,
                 wavelength:1,
                 colour:{
                     current:{r:1,g:1,b:1,a:1},
@@ -83,7 +83,7 @@
 
             function produceRectangle(a,x,y,namePrefix,grouping){
                 let rectangle = _canvas_.core.element.create('Rectangle',namePrefix+a);
-                rectangle.unifiedAttribute({ x:(x - a*30), y:y, width:30, height:30, colour:{r:0,g:0,b:0,a:0} });
+                rectangle.unifiedAttribute({ x:(x - a*30), y:y, width:30, height:30, colour:{r:0, g:0, b:0, a:0} });
                 _canvas_.core.arrangement.append(rectangle);
                 grouping.push(rectangle);
             };
@@ -159,11 +159,17 @@
                 upper_band.tick+=upper_band.tickStep;
                 middle_band.tick+=middle_band.tickStep;
                 lower_band.tick+=lower_band.tickStep;
-            },1000/40);
+            // },1000/1);
+            },1000/60);
 
         //rendering controls
-            _canvas_.core.render.active(true);
             // _canvas_.core.render.activeLimitToFrameRate(true);
-            // _canvas_.core.render.frameRateLimit(40);
-    });
+            // _canvas_.core.render.frameRateLimit(10);
+
+            _canvas_.core.render.active(true);
+            _canvas_.core.stats.active(true);
+            setInterval(() => {
+                _canvas_.core.stats.getReport().then(console.log)
+            }, 500);
+    } );
 </script>

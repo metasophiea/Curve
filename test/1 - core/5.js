@@ -6,7 +6,7 @@ let rectangle_3;
 
 _canvas_.layers.registerFunctionForLayer("core", function(){
     group_1 = _canvas_.core.element.create('Group','group_1');
-    group_1.unifiedAttribute({ x:100, y:100 });
+    group_1.unifiedAttribute({ x:100, y:100, heedCamera:true, heedCameraActive:true });
     _canvas_.core.arrangement.append(group_1);
 
     group_2 = _canvas_.core.element.create('Group','group_2');

@@ -3,7 +3,7 @@
 
 // {{include:1.js}} //every shape
 // {{include:2.js}} //lots of random boxes
-// {{include:3.js}} //wavy boxes
+{{include:3.js}} //wavy boxes
 // {{include:4.js}} //four corners test
 // {{include:5.js}} //angle and scale adjustment on groups with children
 // {{include:6.js}} //viewport adjustment
@@ -22,5 +22,6 @@
 // {{include:19.js}} //stress test
 // {{include:20.js}} //deep removal / shifting test
 // {{include:21.js}} //heedCamera test
+// {{include:22.js}} //framebuffers
 
-{{include:bugs.js}}
+// {{include:bugs.js}}

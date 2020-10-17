@@ -1,4 +1,21 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-10-16
+  - updated core-engine
+    - Alot of offset calculation is now done when the arrangement is modified
+      instead of at render time.
+    - All render judgement has also been moved to not be performed at render
+      time, which has resulted in a noticeable boost to frame render speed.
+    - In addition the "heedCamera" status of a group has been expanded from
+      true/false to true/false/dontCare, which has allowed a more elegant
+      computation of camera heeding at all levels of an arrangement.
+    There's also a sort of master/beta/alpha file structure in the rust section,
+    just so I'm not irreversibly breaking everything
+
+    Noticed some issues with looping paths however. The system doesn't seem
+    to be able to understand them at all in-fact, instead producing a
+    regular polygon. Luckily this kind of shape doesn't come up that often 
+
+
 2020-10-04
   - fixed issue where the connection nodes of units wouldn't be interactable
     sometimes. Turned out there was an issue with the group element's
@@ -16,7 +33,7 @@
   - restructured things a tiny bit in the interface circuits. Now the
     synthesizer_2 is actually called synthesizer_2 instead of being
     referred to as synthesizer_2 but called synthesizer
-  - Accoustic Research's MomentaryAmplitudeMeter wasn't working, because the 
+  - Acoustic Research's MomentaryAmplitudeMeter wasn't working, because the 
     momentaryAmplitudeMeter audio worklet was getting into trouble. Seems
     the input sample array can be empty, which confused things. I've put a
     check in so that the length has to not be zero before anything is done

@@ -49,6 +49,7 @@ this.stats = new function(){
             framesPerSecond: framesPerSecond.rate,
             // timeTakenByMostRecentFrame: timePerFrame.timePerFrameArray[timePerFrame.timePerFrameArray.length-1]/1000,
             secondsPerFrameOverTheLastThirtyFrames: timePerFrame.time,
+            potentialFPS: 1/timePerFrame.time,
         };
     };
 };

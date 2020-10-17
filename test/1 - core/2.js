@@ -1,4 +1,4 @@
-const randomRectangleCount = 10_000/10;
+const randomRectangleCount = 50_000;
 
 _canvas_.layers.registerFunctionForLayer("core", function(){
 
@@ -36,4 +36,12 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         setTimeout(_canvas_.core.render.frame,2000);
     });
 
+
+    // _canvas_.core.render.activeLimitToFrameRate(true);
+    // _canvas_.core.render.frameRateLimit(1);
+    // _canvas_.core.render.active(true);
+    // _canvas_.core.stats.active(true);
+    // setInterval(() => {
+    //     _canvas_.core.stats.getReport().then(console.log)
+    // }, 500);
 } );

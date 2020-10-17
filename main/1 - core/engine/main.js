@@ -1,4 +1,4 @@
-{{include:rust/pkg/core_engine.js}}
+{{include:rust/main.js}}
 
 {{include:library.js}}
 

@@ -9,6 +9,7 @@
 [2020-01-27:1] regarding the selector buttons on Harbinger rhythm designer units; the lights are quite difficult to distinguish. Particularly the yellow ones
 [2020-02-05:1] the active area of image-based dials, stretches beyond the circle to the entire square image of the handle. Same problem with round buttons, probably could be solved with covers, though also a new round image element.
 [2020-03-01:1] sometimes the mouse pointer doesn't change back to normal after leaving the waveform workspace pin thing
+[2020-10-16:1] looping paths just don't work 
 
 fixed:
     [XXXX-XX-XX:1] moving groups of units around, doesn't work how you think it should when one of them collides with something (sorta?)

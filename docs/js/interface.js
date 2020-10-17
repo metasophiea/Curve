@@ -23971,7 +23971,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:16} };
             
                 const core = this;
             
@@ -24743,7 +24743,9 @@
                         
                             Object.entries({
                                 heedCamera: false,
+                                heedCameraActive: false,
                                 clipActive: false,
+                                framebufferActive: false,
                             }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
                         
                             const self = this;
@@ -26030,6 +26032,7 @@
                 //middleground
                     _canvas_.system.pane.middleground = _canvas_.core.element.create('Group','middleground');
                     _canvas_.system.pane.middleground.heedCamera(true);
+                    _canvas_.system.pane.middleground.heedCameraActive(true);
                     _canvas_.core.arrangement.append( _canvas_.system.pane.middleground );
                     //back
                         _canvas_.system.pane.middleground_back = _canvas_.core.element.create('Group','back');

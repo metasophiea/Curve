@@ -150,6 +150,22 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             elements.test_clippingGroup_rectangle_3.unifiedAttribute({ x:40, y:-10, width:60, height:60, colour:{r:0.859,g:0.573,b:0.754,a:1} });
             elements.clippingGroup.append(elements.test_clippingGroup_rectangle_3);
 
+            elements.test_clippingGroup_rectangle_4 = _canvas_.core.element.create('Rectangle','test_clippingGroup_rectangle_4');
+            elements.test_clippingGroup_rectangle_4.unifiedAttribute({ x:120, y:0, width:60, height:60, colour:{r:0.859,g:0.573,b:0.573,a:1} });
+            elements.clippingGroup.append(elements.test_clippingGroup_rectangle_4);
+
+            elements.test_clippingGroup_group_1 = _canvas_.core.element.create('Group','test_clippingGroup_group_1');
+            elements.test_clippingGroup_group_1.unifiedAttribute({ x:0, y:0 });
+            elements.clippingGroup.append(elements.test_clippingGroup_group_1);
+                
+                elements.test_clippingGroup_group_1_rectangle_1 = _canvas_.core.element.create('Rectangle','test_clippingGroup_group_1_rectangle_1');
+                elements.test_clippingGroup_group_1_rectangle_1.unifiedAttribute({ x:0, y:0, width:10, height:10, colour:{r:0.732,g:0.892,b:0.892,a:1} });
+                elements.test_clippingGroup_group_1.append(elements.test_clippingGroup_group_1_rectangle_1);
+
+                elements.test_clippingGroup_group_1_rectangle_2 = _canvas_.core.element.create('Rectangle','test_clippingGroup_group_1_rectangle_2');
+                elements.test_clippingGroup_group_1_rectangle_2.unifiedAttribute({ x:120, y:120, width:60, height:60, colour:{r:0.107,g:0.892,b:0.892,a:1} });
+                elements.clippingGroup.append(elements.test_clippingGroup_group_1_rectangle_2);
+    
             elements.test_clippingGroup_rectangle_stencil = _canvas_.core.element.create('Rectangle','test_clippingGroup_rectangle_stencil');
             elements.test_clippingGroup_rectangle_stencil.unifiedAttribute({ width:60, height:60 });
             elements.clippingGroup.stencil(elements.test_clippingGroup_rectangle_stencil);

@@ -8,6 +8,8 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
     const yCount = 75;
     const xCount = 75;
 
+    const items = [];
+
     for(let y = 0; y < yCount; y++){
         for(let x = 0; x < xCount; x++){
 
@@ -22,6 +24,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
                 x:10 + (size+1)*x, y:10 + (size+1)*y, width:size, height:size, url:'/images/testImages/mikeandbrian.png',
             });
             group.append(test_image);
+            items.push(test_image);
         }
     }
 
@@ -36,4 +39,10 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
     setInterval(() => {
         _canvas_.core.stats.getReport().then(console.log)
     }, 500);
+
+
+    setInterval(() => {
+        items[0].angle( Math.random() );
+    }, 100);
+
 });

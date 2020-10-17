@@ -1,6 +1,7 @@
 #arguments
     compileWasm=false
     productionWasm=false
+    wasmEditionName=master
     compileJS=false
     productionJS=false
     report=false
@@ -12,9 +13,11 @@
         case ${!a} in
             -compileWasm) compileWasm=true; ((a--)); ;;
             -productionWasm) productionWasm=true; ((a--)); ;;
+            -wasmEditionName) wasmEditionName=${!b}; ;;
             -compileJS) compileJS=true; ((a--)); ;;
             -productionJS) productionJS=true; ((a--)); ;;
             -testOnly) nameArray=('test'); ((a--)); ;;
+            -testAndCoreOnly) nameArray=('core_engine' 'test'); ((a--)); ;;
             -report) report=true; ((a--)); ;;
             -heavy) 
                 compileWasm=true;
@@ -40,7 +43,7 @@
     if $compileWasm; then
         echo ": compiling WASM"
 
-        cd "$dir"/../main/1\ -\ core/engine/rust
+        cd "$dir"/../main/1\ -\ core/engine/rust/$wasmEditionName
         if $productionWasm; then
             echo ":: compiling optimised version"
             wasm-pack build --no-typescript --target no-modules

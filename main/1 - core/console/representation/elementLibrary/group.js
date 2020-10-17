@@ -3,7 +3,9 @@ this.Group = function(_name){
 
     Object.entries({
         heedCamera: false,
+        heedCameraActive: false,
         clipActive: false,
+        framebufferActive: false,
     }).forEach(([name,defaultValue]) => this.__setupSimpleAttribute(name,defaultValue) );
 
     const self = this;

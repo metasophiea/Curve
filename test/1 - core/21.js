@@ -27,10 +27,10 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         //     group_2.append(rect_4);
 
     let group_2 = _canvas_.core.element.create('Group','group_2');
-    group_2.unifiedAttribute({heedCamera:true});
+    group_2.unifiedAttribute({heedCamera:true, heedCameraActive:true});
     _canvas_.core.arrangement.append(group_2);
         let group_3 = _canvas_.core.element.create('Group','group_3');
-        group_3.unifiedAttribute({heedCamera:true});
+        // group_3.unifiedAttribute({heedCamera:true});
         group_2.append(group_3);
             let rect_3 = _canvas_.core.element.create('Rectangle','rect_3');
             rect_3.unifiedAttribute({x:200, width:50, height:50});

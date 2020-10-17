@@ -6,7 +6,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         let upper_band = {
             elements:[],
             tick:0,
-            tickStep:0.02*rectangleCount,
+            tickStep:0.01*rectangleCount,
             wavelength:3,
             colour:{
                 current:{r:1,g:1,b:1,a:1},
@@ -23,7 +23,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         let middle_band = {
             elements:[],
             tick:0,
-            tickStep:0.02*rectangleCount,
+            tickStep:0.01*rectangleCount,
             wavelength:2,
             colour:{
                 current:{r:1,g:1,b:1,a:1},
@@ -40,7 +40,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         let lower_band = {
             elements:[],
             tick:0,
-            tickStep:0.02*rectangleCount,
+            tickStep:0.01*rectangleCount,
             wavelength:1,
             colour:{
                 current:{r:1,g:1,b:1,a:1},
@@ -132,12 +132,12 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             upper_band.tick+=upper_band.tickStep;
             middle_band.tick+=middle_band.tickStep;
             lower_band.tick+=lower_band.tickStep;
-        },1000/40);
+        // },1000/1);
+        },1000/60);
 
     //rendering controls
-        // _canvas_.core.render.active(true);
         // _canvas_.core.render.activeLimitToFrameRate(true);
-        // _canvas_.core.render.frameRateLimit(40);
+        // _canvas_.core.render.frameRateLimit(10);
 
         _canvas_.core.render.active(true);
         _canvas_.core.stats.active(true);

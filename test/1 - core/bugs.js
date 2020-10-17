@@ -1,149 +1,34 @@
-/*
-│ 0 | {element_type:Group, id:0, name:"root", parent_id:-none-, parent_name:"-none-", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[1,2,6], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:1100,y:0},{x:1100,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:1100,y:65}}}}
-│ 1 | {element_type:Group, id:1, name:"background", parent_id:0, parent_name:"root", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:0,y:0}}}}
-│ 2 | {element_type:Group, id:2, name:"middleground", parent_id:0, parent_name:"root", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:true, children:[3,4,5], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:0,y:0}}}}
-│ 3 | {element_type:Group, id:3, name:"back", parent_id:2, parent_name:"middleground", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:0,y:0}}}}
-│ 4 | {element_type:Group, id:4, name:"middle", parent_id:2, parent_name:"middleground", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:0,y:0}}}}
-│ 5 | {element_type:Group, id:5, name:"front", parent_id:2, parent_name:"middleground", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:0,y:0}}}}
-│ 6 | {element_type:Group, id:6, name:"foreground", parent_id:0, parent_name:"root", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[7], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:1100,y:0},{x:1100,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:1100,y:65}}}}
-│ 7 | {element_type:Group, id:7, name:"menubar", parent_id:6, parent_name:"foreground", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[8,15,16], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:1100,y:0},{x:1100,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:1100,y:65}}}}
-│ 8 | {element_type:Rectangle, id:8, name:"barBacking", parent_id:7, parent_name:"menubar", x:0, y:0, angle:0, scale:1, ignored:false, width:1100, height:20, anchor:{x:0,y:0}, colour:{r:0.9411765, g:0.9411765, b:0.9411765, a:1 (premultiplied_r:0.9411765 premultiplied_g:0.9411765 premultiplied_b:0.9411765)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:1100,y:0},{x:1100,y:20},{x:0,y:20}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:1100,y:20}}}}
-│ 9 | {element_type:Group, id:9, name:"dropdownButton_0__subGroup", parent_id:15, parent_name:"dropdownButton_0", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[10,11,12,13,14], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:45,y:0},{x:45,y:20},{x:0,y:20}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:45,y:20}}}}
-│ 10 | {element_type:RectangleWithOutline, id:10, name:"backing", parent_id:9, parent_name:"dropdownButton_0__subGroup", x:0, y:0, angle:0, scale:1, ignored:false, width:45, height:20, anchor:{x:0,y:0}, thickness:0, colour:{r:0.8627451, g:0.8627451, b:0.8627451, a:1 (premultiplied_r:0.8627451 premultiplied_g:0.8627451 premultiplied_b:0.8627451)}, line_colour:{r:0, g:0, b:0, a:0 (premultiplied_r:0 premultiplied_g:0 premultiplied_b:0)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:45,y:0},{x:45,y:20},{x:0,y:0},{x:45,y:20},{x:0,y:20},{x:0,y:0},{x:45,y:0},{x:45,y:20},{x:0,y:0},{x:45,y:20},{x:0,y:20},{x:0,y:0},{x:45,y:0},{x:45,y:20},{x:0,y:0},{x:45,y:20},{x:0,y:20},{x:0,y:0},{x:45,y:0},{x:45,y:20},{x:0,y:0},{x:45,y:20},{x:0,y:20},{x:0,y:0},{x:45,y:0},{x:45,y:20},{x:0,y:0},{x:45,y:20},{x:0,y:20}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:45,y:20}}}}
-│ 11 | {element_type:CharacterString, id:11, name:"centre", parent_id:9, parent_name:"dropdownButton_0__subGroup", x:22.5, y:10, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"file", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Middle, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:11, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:22.5, y:10, angle:0, scale:1, ignored:false, heed_camera:false, children:[11,11,11,11], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:13.282034,y:14.414348},{x:31.367815,y:14.414348},{x:31.367815,y:3.119915},{x:13.282034,y:3.119915}]], boundingBox:{topLeft:{x:13.282034,y:3.119915}, bottomRight:{x:31.367815,y:14.414348}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:13.282034,y:14.414348},{x:31.367815,y:14.414348},{x:31.367815,y:3.119915},{x:13.282034,y:3.119915}]], boundingBox:{topLeft:{x:13.282034,y:3.119915}, bottomRight:{x:31.367815,y:14.414348}}}}
-│ 12 | {element_type:CharacterString, id:12, name:"left", parent_id:9, parent_name:"dropdownButton_0__subGroup", x:2.25, y:10, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Left, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:12, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:2.25, y:10, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:2.25,y:10}]], boundingBox:{topLeft:{x:2.25,y:10}, bottomRight:{x:2.25,y:10}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:2.25,y:10}]], boundingBox:{topLeft:{x:2.25,y:10}, bottomRight:{x:2.25,y:10}}}}
-│ 13 | {element_type:CharacterString, id:13, name:"right", parent_id:9, parent_name:"dropdownButton_0__subGroup", x:42.75, y:10, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Right, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:13, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:42.75, y:10, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:42.75,y:10}]], boundingBox:{topLeft:{x:42.75,y:10}, bottomRight:{x:42.75,y:10}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:42.75,y:10}]], boundingBox:{topLeft:{x:42.75,y:10}, bottomRight:{x:42.75,y:10}}}}
-│ 14 | {element_type:Rectangle, id:14, name:"cover", parent_id:9, parent_name:"dropdownButton_0__subGroup", x:0, y:0, angle:0, scale:1, ignored:false, width:45, height:20, anchor:{x:0,y:0}, colour:{r:0, g:0, b:0, a:0 (premultiplied_r:0 premultiplied_g:0 premultiplied_b:0)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:45,y:0},{x:45,y:20},{x:0,y:20}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:45,y:20}}}}
-│ 15 | {element_type:Group, id:15, name:"dropdownButton_0", parent_id:7, parent_name:"menubar", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[9], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:0},{x:45,y:0},{x:45,y:20},{x:0,y:20}]], boundingBox:{topLeft:{x:0,y:0}, bottomRight:{x:45,y:20}}}}
-│ 16 | {element_type:Group, id:16, name:"dropdown", parent_id:7, parent_name:"menubar", x:0, y:20, angle:0, scale:1, ignored:false, heed_camera:false, children:[17,18,19], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20},{x:150,y:20},{x:150,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:65}}}}
-│ 17 | {element_type:Rectangle, id:17, name:"backing", parent_id:16, parent_name:"dropdown", x:0, y:0, angle:0, scale:1, ignored:false, width:150, height:45, anchor:{x:0,y:0}, colour:{r:0.9411765, g:0.9411765, b:0.9411765, a:1 (premultiplied_r:0.9411765 premultiplied_g:0.9411765 premultiplied_b:0.9411765)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20},{x:150,y:20},{x:150,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:65}}}}
-│ 18 | {element_type:Group, id:18, name:"stenciledGroup", parent_id:16, parent_name:"dropdown", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[20,21], clipping_stencil_id:22, clipping_stencil_name:stencil, clipping_active:true, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20},{x:150,y:20},{x:150,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:65}}}}
-│ 19 | {element_type:Group, id:19, name:"subListGroup", parent_id:16, parent_name:"dropdown", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:0,y:20}}}}
-│ 20 | {element_type:Group, id:20, name:"itemCollection", parent_id:18, parent_name:"stenciledGroup", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[29,36], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:65},{x:150,y:65},{x:150,y:42.5},{x:0,y:42.5}]], boundingBox:{topLeft:{x:0,y:42.5}, bottomRight:{x:150,y:65}}}}
-│ 21 | {element_type:Rectangle, id:21, name:"cover", parent_id:18, parent_name:"stenciledGroup", x:0, y:0, angle:0, scale:1, ignored:false, width:150, height:45, anchor:{x:0,y:0}, colour:{r:0, g:0, b:0, a:0 (premultiplied_r:0 premultiplied_g:0 premultiplied_b:0)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20},{x:150,y:20},{x:150,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:65}}}}
-│ 22 | {element_type:Rectangle, id:22, name:"stencil", parent_id:18, parent_name:"stenciledGroup", x:0, y:0, angle:0, scale:1, ignored:false, width:150, height:45, anchor:{x:0,y:0}, colour:{r:1, g:0, b:1, a:1 (premultiplied_r:1 premultiplied_g:0 premultiplied_b:1)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20},{x:150,y:20},{x:150,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:65}}}}
-│ 23 | {element_type:Group, id:23, name:"0_button__subGroup", parent_id:29, parent_name:"0_button", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[24,25,26,27,28], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:42.5},{x:150,y:42.5},{x:150,y:20},{x:0,y:20}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:42.5}}}}
-│ 24 | {element_type:RectangleWithOutline, id:24, name:"backing", parent_id:23, parent_name:"0_button__subGroup", x:0, y:0, angle:0, scale:1, ignored:false, width:150, height:22.5, anchor:{x:0,y:0}, thickness:0, colour:{r:0.9411765, g:0.9411765, b:0.9411765, a:1 (premultiplied_r:0.9411765 premultiplied_g:0.9411765 premultiplied_b:0.9411765)}, line_colour:{r:0, g:0, b:0, a:0 (premultiplied_r:0 premultiplied_g:0 premultiplied_b:0)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20},{x:150,y:20},{x:150,y:42.5},{x:0,y:20},{x:150,y:42.5},{x:0,y:42.5},{x:0,y:20},{x:150,y:20},{x:150,y:42.5},{x:0,y:20},{x:150,y:42.5},{x:0,y:42.5},{x:0,y:20},{x:150,y:20},{x:150,y:42.5},{x:0,y:20},{x:150,y:42.5},{x:0,y:42.5},{x:0,y:20},{x:150,y:20},{x:150,y:42.5},{x:0,y:20},{x:150,y:42.5},{x:0,y:42.5},{x:0,y:20},{x:150,y:20},{x:150,y:42.5},{x:0,y:20},{x:150,y:42.5},{x:0,y:42.5}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:42.5}}}}
-│ 25 | {element_type:CharacterString, id:25, name:"centre", parent_id:23, parent_name:"0_button__subGroup", x:75, y:11.25, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Middle, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:25, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:75, y:11.25, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:75,y:31.25}]], boundingBox:{topLeft:{x:75,y:31.25}, bottomRight:{x:75,y:31.25}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:75,y:31.25}]], boundingBox:{topLeft:{x:75,y:31.25}, bottomRight:{x:75,y:31.25}}}}
-│ 26 | {element_type:CharacterString, id:26, name:"left", parent_id:23, parent_name:"0_button__subGroup", x:10, y:11.25, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"New Scene", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Left, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:26, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:10, y:11.25, angle:0, scale:1, ignored:false, heed_camera:false, children:[26,26,26,26,26,26,26,26], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:11.169165,y:35.70182},{x:86.80094,y:35.70182},{x:86.80094,y:24.092613},{x:11.169165,y:24.092613}]], boundingBox:{topLeft:{x:11.169165,y:24.092613}, bottomRight:{x:86.80094,y:35.70182}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:11.169165,y:35.70182},{x:86.80094,y:35.70182},{x:86.80094,y:24.092613},{x:11.169165,y:24.092613}]], boundingBox:{topLeft:{x:11.169165,y:24.092613}, bottomRight:{x:86.80094,y:35.70182}}}}
-│ 27 | {element_type:CharacterString, id:27, name:"right", parent_id:23, parent_name:"0_button__subGroup", x:140, y:11.25, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Right, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:27, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:140, y:11.25, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:140,y:31.25}]], boundingBox:{topLeft:{x:140,y:31.25}, bottomRight:{x:140,y:31.25}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:140,y:31.25}]], boundingBox:{topLeft:{x:140,y:31.25}, bottomRight:{x:140,y:31.25}}}}
-│ 28 | {element_type:Rectangle, id:28, name:"cover", parent_id:23, parent_name:"0_button__subGroup", x:0, y:0, angle:0, scale:1, ignored:false, width:150, height:22.5, anchor:{x:0,y:0}, colour:{r:0, g:0, b:0, a:0 (premultiplied_r:0 premultiplied_g:0 premultiplied_b:0)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20},{x:150,y:20},{x:150,y:42.5},{x:0,y:42.5}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:42.5}}}}
-│ 29 | {element_type:Group, id:29, name:"0_button", parent_id:20, parent_name:"itemCollection", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[23], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:20},{x:150,y:20},{x:150,y:42.5},{x:0,y:42.5}]], boundingBox:{topLeft:{x:0,y:20}, bottomRight:{x:150,y:42.5}}}}
-│ 30 | {element_type:Group, id:30, name:"1_button__subGroup", parent_id:36, parent_name:"1_button", x:0, y:0, angle:0, scale:1, ignored:false, heed_camera:false, children:[31,32,33,34,35], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:65},{x:150,y:65},{x:150,y:42.5},{x:0,y:42.5}]], boundingBox:{topLeft:{x:0,y:42.5}, bottomRight:{x:150,y:65}}}}
-│ 31 | {element_type:RectangleWithOutline, id:31, name:"backing", parent_id:30, parent_name:"1_button__subGroup", x:0, y:0, angle:0, scale:1, ignored:false, width:150, height:22.5, anchor:{x:0,y:0}, thickness:0, colour:{r:0.9411765, g:0.9411765, b:0.9411765, a:1 (premultiplied_r:0.9411765 premultiplied_g:0.9411765 premultiplied_b:0.9411765)}, line_colour:{r:0, g:0, b:0, a:0 (premultiplied_r:0 premultiplied_g:0 premultiplied_b:0)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:42.5},{x:150,y:42.5},{x:150,y:65},{x:0,y:42.5},{x:150,y:65},{x:0,y:65},{x:0,y:42.5},{x:150,y:42.5},{x:150,y:65},{x:0,y:42.5},{x:150,y:65},{x:0,y:65},{x:0,y:42.5},{x:150,y:42.5},{x:150,y:65},{x:0,y:42.5},{x:150,y:65},{x:0,y:65},{x:0,y:42.5},{x:150,y:42.5},{x:150,y:65},{x:0,y:42.5},{x:150,y:65},{x:0,y:65},{x:0,y:42.5},{x:150,y:42.5},{x:150,y:65},{x:0,y:42.5},{x:150,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:42.5}, bottomRight:{x:150,y:65}}}}
-│ 32 | {element_type:CharacterString, id:32, name:"centre", parent_id:30, parent_name:"1_button__subGroup", x:75, y:11.25, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Middle, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:32, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:75, y:11.25, angle:0, scale:1, ignored:false, heed_camera:false, children:[], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:75,y:53.75}]], boundingBox:{topLeft:{x:75,y:53.75}, bottomRight:{x:75,y:53.75}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:75,y:53.75}]], boundingBox:{topLeft:{x:75,y:53.75}, bottomRight:{x:75,y:53.75}}}}
-│ 33 | {element_type:CharacterString, id:33, name:"left", parent_id:30, parent_name:"1_button__subGroup", x:10, y:11.25, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"Open Scene", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Left, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:33, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:10, y:11.25, angle:0, scale:1, ignored:false, heed_camera:false, children:[33,33,33,33,33,33,33,33,33], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:10.599571,y:61.079765},{x:93.46908,y:61.079765},{x:93.46908,y:46.592613},{x:10.599571,y:46.592613}]], boundingBox:{topLeft:{x:10.599571,y:46.592613}, bottomRight:{x:93.46908,y:61.079765}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:10.599571,y:61.079765},{x:93.46908,y:61.079765},{x:93.46908,y:46.592613},{x:10.599571,y:46.592613}]], boundingBox:{topLeft:{x:10.599571,y:46.592613}, bottomRight:{x:93.46908,y:61.079765}}}}
-│ 34 | {element_type:CharacterString, id:34, name:"right", parent_id:30, parent_name:"1_button__subGroup", x:140, y:11.25, angle:0, scale:1, ignored:false, width:14, height:14, font_name:Helvetica, string:"ctrl-f2", spacing:0.3, inter_character_spacing:0.04, printing_mode_horizontal:Right, printing_mode_vertical:Middle, printing_mode_width_calculation:Absolute, colour:{r:0.2, g:0.2, b:0.2, a:1 (premultiplied_r:0.2 premultiplied_g:0.2 premultiplied_b:0.2)}, inner_group:{element_type:Group, id:34, name:"inner_group", parent_id:-none-, parent_name:"-none-", x:140, y:11.25, angle:0, scale:1, ignored:false, heed_camera:false, children:[34,34,34,34,34,34,34], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:101.68707,y:58.006958},{x:139.44,y:58.006958},{x:139.44,y:46.71253},{x:101.68707,y:46.71253}]], boundingBox:{topLeft:{x:101.68707,y:46.71253}, bottomRight:{x:139.44,y:58.006958}}}}}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:101.68707,y:58.006958},{x:139.44,y:58.006958},{x:139.44,y:46.71253},{x:101.68707,y:46.71253}]], boundingBox:{topLeft:{x:101.68707,y:46.71253}, bottomRight:{x:139.44,y:58.006958}}}}
-│ 35 | {element_type:Rectangle, id:35, name:"cover", parent_id:30, parent_name:"1_button__subGroup", x:0, y:0, angle:0, scale:1, ignored:false, width:150, height:22.5, anchor:{x:0,y:0}, colour:{r:0, g:0, b:0, a:0 (premultiplied_r:0 premultiplied_g:0 premultiplied_b:0)}, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:42.5},{x:150,y:42.5},{x:150,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:42.5}, bottomRight:{x:150,y:65}}}}
-│ 36 | {element_type:Group, id:36, name:"1_button", parent_id:20, parent_name:"itemCollection", x:0, y:22.5, angle:0, scale:1, ignored:false, heed_camera:false, children:[30], clipping_stencil_id:-none-, clipping_stencil_name:-none-, clipping_active:false, dot_frame:false, allow_compute_extremities:true, extremities:{points:[[{x:0,y:42.5},{x:150,y:42.5},{x:150,y:65},{x:0,y:65}]], boundingBox:{topLeft:{x:0,y:42.5}, bottomRight:{x:150,y:65}}}}
-
-root (id:0, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- background (id:1, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:false)
-- middleground (id:2, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:true)
-- - back (id:3, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - middle (id:4, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - front (id:5, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- foreground (id:6, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:false)
-- - menubar (id:7, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - barBacking (id:8, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - dropdownButton_0 (id:15, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - dropdownButton_0__subGroup (id:9, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - backing (id:10, type:RectangleWithOutline, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - centre (id:11, type:CharacterString, x:22.5, y:10, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - left (id:12, type:CharacterString, x:2.25, y:10, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - right (id:13, type:CharacterString, x:42.75, y:10, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - cover (id:14, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - dropdown (id:16, type:Group, x:0, y:20, angle:0, scale:1, heed_camera:-n/a-)
-- - - - backing (id:17, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - stenciledGroup (id:18, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - itemCollection (id:20, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - 0_button (id:29, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - 0_button__subGroup (id:23, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - backing (id:24, type:RectangleWithOutline, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - centre (id:25, type:CharacterString, x:75, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - left (id:26, type:CharacterString, x:10, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - right (id:27, type:CharacterString, x:140, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - cover (id:28, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - 1_button (id:36, type:Group, x:0, y:22.5, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - 1_button__subGroup (id:30, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - backing (id:31, type:RectangleWithOutline, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - centre (id:32, type:CharacterString, x:75, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - left (id:33, type:CharacterString, x:10, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - right (id:34, type:CharacterString, x:140, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - - - - cover (id:35, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - - cover (id:21, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-- - - - subListGroup (id:19, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-*/
-
-
 _canvas_.layers.registerFunctionForLayer("core", function(){
 
-    let background = _canvas_.core.element.create('Group','background');
-    _canvas_.core.arrangement.append(background);
-
-    let middleground = _canvas_.core.element.create('Group','middleground');
-    middleground.unifiedAttribute({heedCamera:true});
+    middleground = _canvas_.core.element.create('Group','middleground');
+    middleground.unifiedAttribute({heedCamera:true, heedCameraActive:true});
     _canvas_.core.arrangement.append(middleground);
-        let back = _canvas_.core.element.create('Group','back');
-        middleground.append(back);
-        let middle = _canvas_.core.element.create('Group','middle');
+
+        middle = _canvas_.core.element.create('Group','middle');
         middleground.append(middle);
-        let front = _canvas_.core.element.create('Group','front');
-        middleground.append(front);
 
-    let foreground = _canvas_.core.element.create('Group','foreground');
-    _canvas_.core.arrangement.append(foreground);
-        let menubar = _canvas_.core.element.create('Group','menubar');
-        foreground.append(menubar);
-            let barBacking = _canvas_.core.element.create('Rectangle','barBacking');
-            barBacking.unifiedAttribute({width:1100, height:20, colour:{r:0.9411765, g:0.9411765, b:0.9411765, a:1}});
-            menubar.append(barBacking);
+            controlGroup = _canvas_.core.element.create('Group','controlGroup');
+            middle.append(controlGroup);
 
-            let dropdownButton_0 = _canvas_.core.element.create('Group','dropdownButton_0');
-            menubar.append(dropdownButton_0);
-                let dropdownButton_0__subGroup = _canvas_.core.element.create('Group','dropdownButton_0__subGroup');
-                dropdownButton_0.append(dropdownButton_0__subGroup);
-                    let backing = _canvas_.core.element.create('RectangleWithOutline','backing');
-                    backing.unifiedAttribute({width:45, height:20, colour:{r:0.8627451, g:0.8627451, b:0.8627451, a:1}});
-                    dropdownButton_0.append(backing);
-                    let cover = _canvas_.core.element.create('Rectangle','cover');
-                    cover.unifiedAttribute({width:45, height:20, colour:{r:0, g:0, b:0, a:0}});
-                    dropdownButton_0.append(cover);
+                test_dial_1_continuous = _canvas_.core.element.create('Group','test_dial_1_continuous');
+                controlGroup.append(test_dial_1_continuous);
 
-            let dropdown = _canvas_.core.element.create('Group','dropdown');
-            menubar.append(dropdown);
-                let backing = _canvas_.core.element.create('Rectangle','backing');
-                backing.unifiedAttribute({width:150, height:45, colour:{r:0.9411765, g:0.9411765, b:0.9411765, a:1}});
-                dropdown.append(backing);
-                let stenciledGroup = _canvas_.core.element.create('Group','stenciledGroup');
-                dropdown.append(stenciledGroup);
+                    needleGroup = _canvas_.core.element.create('Group','needleGroup');
+                    needleGroup.unifiedAttribute({ x:50, y:10, angle:2.3561945 });
+                    test_dial_1_continuous.append(needleGroup);
+
+                        needle = _canvas_.core.element.create('Rectangle','needle');
+                        needle.unifiedAttribute({ x:3.3333333, y:-1, width:10, height:2 });
+                        needleGroup.append(needle);
 
 
+    // setTimeout( () => {
+    //     _canvas_.core.render.frame();
+    // }, 1000);
 
-
-
-    // - - - - backing (id:17, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - stenciledGroup (id:18, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - itemCollection (id:20, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - 0_button (id:29, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - 0_button__subGroup (id:23, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - backing (id:24, type:RectangleWithOutline, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - centre (id:25, type:CharacterString, x:75, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - left (id:26, type:CharacterString, x:10, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - right (id:27, type:CharacterString, x:140, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - cover (id:28, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - 1_button (id:36, type:Group, x:0, y:22.5, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - 1_button__subGroup (id:30, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - backing (id:31, type:RectangleWithOutline, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - centre (id:32, type:CharacterString, x:75, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - left (id:33, type:CharacterString, x:10, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - right (id:34, type:CharacterString, x:140, y:11.25, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - - - - cover (id:35, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - - cover (id:21, type:Rectangle, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-    // - - - - subListGroup (id:19, type:Group, x:0, y:0, angle:0, scale:1, heed_camera:-n/a-)
-
-
-    setTimeout( () => {
-        _canvas_.core.render.frame();
-    }, 1000);
+    tick = 0;
+    setInterval( () => {
+        needleGroup.angle(tick+=0.1);
+        _canvas_.core.render.frame()
+    }, 100);
 });
