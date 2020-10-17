@@ -1,3 +1,5 @@
+#!/bin/sh
+
 #arguments
     compileWasm=false
     productionWasm=false
@@ -11,13 +13,26 @@
     for ((a = 1; a <= $#; a+=2)); do
         b=$(($a + 1))
         case ${!a} in
-            -compileWasm) compileWasm=true; ((a--)); ;;
-            -productionWasm) productionWasm=true; ((a--)); ;;
-            -wasmEditionName) wasmEditionName=${!b}; ;;
+            -nameArray) 
+                for i in ${nameArray[@]}; do
+                    echo $i; 
+                done
+                exit;
+            ;;
             -compileJS) compileJS=true; ((a--)); ;;
             -productionJS) productionJS=true; ((a--)); ;;
+
             -testOnly) nameArray=('test'); ((a--)); ;;
             -testAndCoreOnly) nameArray=('core_engine' 'test'); ((a--)); ;;
+
+            -wasmEditionNames) 
+                ls main/1\ -\ core/engine/rust | grep -v "main.js"
+                exit;
+            ;;
+            -wasmEditionName) wasmEditionName=${!b}; ;;
+            -compileWasm) compileWasm=true; ((a--)); ;;
+            -productionWasm) productionWasm=true; ((a--)); ;;
+
             -report) report=true; ((a--)); ;;
             -heavy) 
                 compileWasm=true;
@@ -26,11 +41,38 @@
                 productionJS=true;
                 report=true;
             ;;
+            --help) 
+                echo "-nameArray : print js list"
+                echo "-compileJS : compile the full list of Js files"
+                echo "-productionJS : produce production version of Js code"
+                echo ""
+                echo "-testOnly : only compile the js for test.js"
+                echo "-testAndCoreEngineOnly : only compile the js for test.js and core-engine.js"
+                echo ""
+                echo "-wasmEditionNames : print available wasm edition names"
+                echo "-wasmEditionName : select specific wasm version"
+                echo "-compileWasm : compile the wasm code"
+                echo "-productionWasm : compile the wasm code in release mode"
+                echo ""
+                echo "-report : print out report"
+                echo "-heavy : produce production version of all code"
+                exit;
+            ;;
         esac
     done
 
 #get location of script
     dir=$(cd "$(dirname "$0")" && pwd)
+    cd "$dir"
+
+
+
+
+#check that select wasmEditionName exists
+    if [ ! -d "../main/1 - core/engine/rust/$wasmEditionName" ]; then
+        echo "! could not find wasmEditionName:\"$wasmEditionName\" (\"main/1\ -\ core/engine/rust/$wasmEditionName\" doesn't exist)"
+        exit;
+    fi
 
 
 
@@ -69,6 +111,10 @@
 #js code
     if $compileJS; then
         echo ": compiling JS"
+
+        #select correct wasmEditionName
+            echo ":: select JS wasmEditionName file ($wasmEditionName)"
+            echo "{{include:$wasmEditionName/pkg/core_engine.js}}" > ../main/1\ -\ core/engine/rust/main.js
 
         #assemble master JS files
             echo ":: assembling master JS files"

@@ -1,4 +1,13 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-10-17
+  - modified updateGravity.sh to have a help argument and the ability to list
+    what versions are available
+  - modified comp.sh to have a help argument. There's a way of listing out what
+    wasm editions are available, and it now automatically gets the appropriate
+    js files for the selected wasm edition (and can tell you when an edition
+    doesn't exist)
+
+
 2020-10-16
   - updated core-engine
     - Alot of offset calculation is now done when the arrangement is modified
