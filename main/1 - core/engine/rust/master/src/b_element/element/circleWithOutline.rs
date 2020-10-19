@@ -150,6 +150,7 @@ pub struct CircleWithOutline {
 
     //render
         is_visible: bool,
+        previous_is_visible: bool,
 }
 impl CircleWithOutline {
     pub fn new(id:usize, name:String) -> CircleWithOutline {
@@ -183,6 +184,7 @@ impl CircleWithOutline {
             points_changed: false,
 
             is_visible: false,
+            previous_is_visible: false,
         }
     }
 
@@ -194,6 +196,7 @@ impl CircleWithOutline {
                     self.radius = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //detail
                 pub fn get_detail(&self) -> &u32 { &self.detail }
@@ -202,6 +205,7 @@ impl CircleWithOutline {
                     self.calculate_circle_points();
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //thickness
                 pub fn get_thickness(&self) -> &f32 { &self.thickness }
@@ -209,15 +213,18 @@ impl CircleWithOutline {
                     self.thickness = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
         //other
             pub fn get_colour(&self) -> &Colour { &self.colour }
             pub fn set_colour(&mut self, new:Colour, _viewbox:&Viewbox) { 
                 self.colour = new;
+                self.request_render();
             }
             pub fn get_line_colour(&self) -> &Colour { &self.line_colour }
             pub fn set_line_colour(&mut self, new:Colour, _viewbox:&Viewbox) { 
                 self.line_colour = new;
+                self.request_render();
             }
         //unified attribute
             pub fn set_unified_attribute(
@@ -244,6 +251,7 @@ impl CircleWithOutline {
                 if let Some(line_colour) = line_colour { self.line_colour = line_colour; }
                 self.compute_extremities(true, None, None);
                 self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                self.request_render();
             }
 
     //webGL rendering functions
@@ -294,6 +302,7 @@ impl ElementTrait for CircleWithOutline {
                     self.x = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //y
                 fn get_y(&self) -> f32 { self.y }
@@ -301,6 +310,7 @@ impl ElementTrait for CircleWithOutline {
                     self.y = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //angle
                 fn get_angle(&self) -> f32 { self.angle }
@@ -308,6 +318,7 @@ impl ElementTrait for CircleWithOutline {
                     self.angle = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //scale
                 fn get_scale(&self) -> f32 { self.scale }
@@ -315,6 +326,7 @@ impl ElementTrait for CircleWithOutline {
                     self.scale = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
 
         //other
@@ -335,10 +347,16 @@ impl ElementTrait for CircleWithOutline {
             fn __set_extremities(&mut self, new:Polygon) { self.extremities = new; }
 
         //render
-            fn is_visible(&self) -> bool { self.is_visible }
-            fn set_is_visible(&mut self, new:bool) { self.is_visible = new; }
-            fn get_dot_frame(&self) -> bool { self.dot_frame }
-            fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
+            //visibility
+                fn is_visible(&self) -> bool { self.is_visible }
+                fn set_is_visible(&mut self, new:bool) { 
+                    self.previous_is_visible = self.is_visible;
+                    self.is_visible = new;
+                }
+                fn previous_is_visible(&self) -> bool { self.previous_is_visible }
+            //dot frame
+                fn get_dot_frame(&self) -> bool { self.dot_frame }
+                fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
 
     //element specific
         //casting
@@ -390,7 +408,7 @@ impl ElementTrait for CircleWithOutline {
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                 _image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
-            ) {
+            ) -> bool {
                 //vao
                     if self.vao_id.is_none() {
                         self.vao_id = Some( web_gl2_program_conglomerate_manager.generate_new_VAO_id(&self.element_type) );
@@ -444,6 +462,8 @@ impl ElementTrait for CircleWithOutline {
 
                 //activate draw
                     context.draw_arrays(WebGl2RenderingContext::TRIANGLES, 0, (self.vao_points.len()/2) as i32);
+
+                false
             }
 
         //info/dump

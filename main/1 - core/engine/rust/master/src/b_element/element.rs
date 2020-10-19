@@ -44,6 +44,7 @@
         },
         structure::{
             WebGl2programConglomerateManager,
+            WebGl2framebufferManager,
             ImageRequester,
             FontRequester,
         },
@@ -76,9 +77,9 @@
     //image
         mod image;
         pub use image::Image;
-    //canvas -> the Image element is used instead
-        // mod canvas;
-        // pub use canvas::Canvas;
+    // //canvas -> the Image element is used instead
+    //     // mod canvas;
+    //     // pub use canvas::Canvas;
     //character
         mod character;
         pub use character::Character;
@@ -289,58 +290,72 @@ pub trait ElementTrait {
         }
 
     //render
-        fn is_visible(&self) -> bool;
-        fn set_is_visible(&mut self, new:bool);
-        fn bubble_visibility(&mut self, viewbox:&Viewbox) {
-            match &self.get_parent() {
-                None => {},
-                Some(parent) => {
-                    if !(self.is_visible() ^ parent.upgrade().unwrap().borrow().is_visible()) {
-                        //this element's visibility is not different to the parent's, so don't bother
-                        return;
+        //visibility
+            fn is_visible(&self) -> bool;
+            fn previous_is_visible(&self) -> bool;
+            fn set_is_visible(&mut self, new:bool);
+            fn bubble_visibility(&mut self, viewbox:&Viewbox) {
+                match &self.get_parent() {
+                    None => {},
+                    Some(parent) => {
+                        let new_visibility = if self.is_visible() { //positive visibility is easy to bubble
+                            true
+                        } else { //loss of visibility requires the parent to look over their children for other visible children
+                            parent.upgrade().unwrap().borrow().check_is_visible( 
+                                parent.upgrade().unwrap().borrow().get_parent_clipping_polygon().as_ref(), //clipping polygon of parent's parent
+                                viewbox
+                            )
+                        };
+
+                        parent.upgrade().unwrap().borrow_mut().set_is_visible(new_visibility);
+                        parent.upgrade().unwrap().borrow_mut().bubble_visibility(viewbox);
+                    },
+                }
+            }
+            fn check_is_visible(&self, parent_clipping_polygon:Option<&data_type::Polygon>, viewbox:&Viewbox) -> bool {
+                //compares bounding box to the viewbox extremities (element render culling)
+                //or to the parent's bounding box if clipping is active there
+
+                //elements which don't have extremities can not be rendered
+                    if self.get_extremities().get_points_length() == 0 {
+                        return false;
                     }
 
-                    let new_visibility = if self.is_visible() { //positive visibility is easy to bubble
-                        true
-                    } else { //loss of visibility requires the parent to look over their children for other visible children
-                        parent.upgrade().unwrap().borrow().check_is_visible( 
-                            parent.upgrade().unwrap().borrow().get_parent_clipping_polygon().as_ref(), //clipping polygon of parent's parent
-                            viewbox
+                match parent_clipping_polygon {
+                    Some(data) => detect_intersect::poly_on_poly( &data, &self.get_extremities() ),
+                    None => {
+                        detect_intersect::poly_on_poly(
+                            if self.get_cached_heed_camera() { &viewbox.get_polygon() } else { &viewbox.get_static_polygon() },
+                            &self.get_extremities()
                         )
-                    };
-
-                    parent.upgrade().unwrap().borrow_mut().set_is_visible(new_visibility);
-                    parent.upgrade().unwrap().borrow_mut().bubble_visibility(viewbox);
-                },
+                    },
+                }.intersect
             }
-        }
-        fn check_is_visible(&self, parent_clipping_polygon:Option<&data_type::Polygon>, viewbox:&Viewbox) -> bool {
-            //compares bounding box to the viewbox extremities (element render culling)
-            //or to the parent's bounding box if clipping is active there
-
-            //elements which don't have extremities can not be rendered
-                if self.get_extremities().get_points_length() == 0 {
-                    return false;
+            fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&data_type::Polygon>, viewbox:&Viewbox, bubble_up:bool) {
+                self.set_is_visible( self.check_is_visible(parent_clipping_polygon, viewbox) );
+                
+                //inform parent, if requested to do so
+                    if bubble_up {
+                        self.bubble_visibility(viewbox);
+                    }
+            }
+        
+        //render request
+            fn request_render(&mut self) {
+                if self.get_element_type() == ElementType::Group {
+                    self.as_group_mut().unwrap().set_render_required(true);
                 }
 
-            match parent_clipping_polygon {
-                Some(data) => detect_intersect::poly_on_poly( &data, &self.get_extremities() ),
-                None => {
-                    detect_intersect::poly_on_poly(
-                        if self.get_cached_heed_camera() { &viewbox.get_polygon() } else { &viewbox.get_static_polygon() },
-                        &self.get_extremities()
-                    )
-                },
-            }.intersect
-        }
-        fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&data_type::Polygon>, viewbox:&Viewbox, bubble_up:bool) {
-            self.set_is_visible( self.check_is_visible(parent_clipping_polygon, viewbox) );
-
-            //inform parent, if requested to do so
-                if bubble_up {
-                    self.bubble_visibility(viewbox);
+                match self.get_parent() {
+                    None => {},
+                    Some(parent) => {
+                        if self.is_visible() || self.previous_is_visible() {
+                            parent.upgrade().unwrap().borrow_mut().as_group_mut().unwrap().set_render_required(true);
+                            parent.upgrade().unwrap().borrow_mut().as_group_mut().unwrap().request_render();
+                        }
+                    },
                 }
-        }
+            }
 
         //actual render
             fn render(
@@ -350,13 +365,14 @@ pub trait ElementTrait {
                 viewbox: &Viewbox,
                 context: &WebGl2RenderingContext, 
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
+                web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
                 force: bool,
-            ) {
+            ) -> bool { //true/false - I need to / do not need to be rendered again
                 //judge whether this element should be allowed to render
                     if !force && !self.is_visible() {
-                        return;
+                        return false;
                     }
 
                 //calculate offset for this element
@@ -372,7 +388,7 @@ pub trait ElementTrait {
                     };
 
                 //activate shape render code
-                    self.activate_webGL_render(
+                    let re_render = self.activate_webGL_render(
                         working_offset.as_ref(),
                         context, 
                         web_gl2_program_conglomerate_manager,
@@ -388,10 +404,13 @@ pub trait ElementTrait {
                             viewbox,
                             context,
                             web_gl2_program_conglomerate_manager,
+                            web_gl2_framebuffer_manager,
                             image_requester,
                             resolution,
                         );
                     }
+
+                re_render
             }
             fn activate_webGL_render(
                 &mut self, 
@@ -400,7 +419,9 @@ pub trait ElementTrait {
                 _web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                 _image_requester: &mut ImageRequester,
                 _resolution: &(u32, u32),
-            ) {}
+            ) -> bool { //true/false - I need to / do not need to be rendered again
+                false
+            }
 
         //dot frame
             fn get_dot_frame(&self) -> bool;
@@ -412,6 +433,7 @@ pub trait ElementTrait {
                 viewbox: &Viewbox,
                 context: &WebGl2RenderingContext, 
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
+                web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
             ) {
@@ -421,17 +443,17 @@ pub trait ElementTrait {
                     for point in self.get_extremities().get_points() {
                         ElementManager::draw_dot(
                             &point, 4.0 * mux, &Colour::new(1.0,0.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
                         );
                     }
                 //draw bounding box top left and bottom right points
                     ElementManager::draw_dot(
                         &self.get_extremities().get_bounding_box().get_top_left(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                        parent_clipping_polygon, heed_camera,viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution
+                        parent_clipping_polygon, heed_camera,viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
                     );
                     ElementManager::draw_dot(
                         &self.get_extremities().get_bounding_box().get_bottom_right(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                        parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution
+                        parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
                     );
             }
 
@@ -439,7 +461,7 @@ pub trait ElementTrait {
         fn _specific_info(&self) -> String { String::new() }
         fn _info(&self) -> String {
             format!(
-                "{{element_type:{}, id:{}, name:\"{}\", parent_id:{}, parent_name:\"{}\", x:{}, y:{}, angle:{}, scale:{}, ignored:{}, cached_offset:{}, cached_heed_camera:{}, {}, is_visible:{}, dot_frame:{}, extremities:{}}}",
+                "{{element_type:{}, id:{}, name:\"{}\", parent_id:{}, parent_name:\"{}\", x:{}, y:{}, angle:{}, scale:{}, ignored:{}, cached_offset:{}, cached_heed_camera:{}, {}, is_visible:{}, (previous:{}), dot_frame:{}, extremities:{}}}",
                 self.get_element_type(), 
                 self.get_id(), 
                 self.get_name(), 
@@ -459,6 +481,7 @@ pub trait ElementTrait {
                 self._specific_info(),
 
                 self.is_visible(),
+                self.previous_is_visible(),
                 self.get_dot_frame(), 
                 self.get_extremities(),
             )

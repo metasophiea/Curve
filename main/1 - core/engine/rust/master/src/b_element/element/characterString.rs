@@ -30,6 +30,7 @@
         },
         structure::{
             WebGl2programConglomerateManager,
+            WebGl2framebufferManager,
             ImageRequester,
             FontRequester,
         },
@@ -158,6 +159,7 @@ impl CharacterString {
                 self.compute_extremities(true, Some(&self.get_parent_offset()), None);
             }
             self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+            self.request_render();
         }
 
     //string
@@ -336,10 +338,13 @@ impl ElementTrait for CharacterString {
             fn __set_extremities(&mut self, new:Polygon) { self.inner_group.__set_extremities(new); }
 
         //render
-            fn is_visible(&self) -> bool { self.inner_group.is_visible() }
-            fn set_is_visible(&mut self, new:bool) { self.inner_group.set_is_visible(new); }
-            fn get_dot_frame(&self) -> bool { self.dot_frame }
-            fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
+            //visibility
+                fn is_visible(&self) -> bool { self.inner_group.is_visible() }
+                fn set_is_visible(&mut self, new:bool) { self.inner_group.set_is_visible(new); }
+                fn previous_is_visible(&self) -> bool { self.inner_group.get_dot_frame() }
+            //dot frame
+                fn get_dot_frame(&self) -> bool { self.dot_frame }
+                fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
 
     //element specific
         //casting
@@ -392,6 +397,7 @@ impl ElementTrait for CharacterString {
         //point calculation
             fn calculate_points(&mut self, font_requester:&RefCell<FontRequester>, worker:&web_sys::Worker, viewbox:&Viewbox) {
                 self.generate_string_characters(font_requester, worker, viewbox);
+                self.request_render();
             }
 
         //extremities
@@ -425,16 +431,18 @@ impl ElementTrait for CharacterString {
                 viewbox: &Viewbox,
                 context: &WebGl2RenderingContext, 
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
+                web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
                 force: bool,
-            ) {
-                self.inner_group.render(
+            ) -> bool {
+                let re_render = self.inner_group.render(
                     parent_clipping_polygon,
                     heed_camera,
                     viewbox,
                     context,
                     web_gl2_program_conglomerate_manager,
+                    web_gl2_framebuffer_manager,
                     image_requester,
                     resolution,
                     force,
@@ -447,10 +455,13 @@ impl ElementTrait for CharacterString {
                         viewbox,
                         context,
                         web_gl2_program_conglomerate_manager,
+                        web_gl2_framebuffer_manager,
                         image_requester,
                         resolution,
                     );
                 }
+
+                re_render
             }
             fn draw_dot_frame(
                 &self,
@@ -459,6 +470,7 @@ impl ElementTrait for CharacterString {
                 viewbox: &Viewbox,
                 context: &WebGl2RenderingContext, 
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
+                web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
             ) {
@@ -468,6 +480,7 @@ impl ElementTrait for CharacterString {
                     viewbox,
                     context,
                     web_gl2_program_conglomerate_manager,
+                    web_gl2_framebuffer_manager,
                     image_requester,
                     resolution,
                 );
@@ -493,6 +506,7 @@ impl ElementTrait for CharacterString {
             }
             fn _dump(&self) {
                 console_log!("{}", self._info());
+                self.inner_group._dump();
                 for child in &self.children {
                     child.borrow()._dump();
                 }

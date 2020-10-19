@@ -88,6 +88,10 @@ this.render = new function(){
             dev.log.render('.adjustCanvasSize(',newWidth,newHeight,devicePixelRatio); //#development
             ENGINE.render__adjust_canvas_size(newWidth, newHeight, devicePixelRatio);
         };
+        this.adjustCanvasSampleCount = function(newSampleCount){
+            dev.log.render('.adjustCanvasSampleCount(',newSampleCount); //#development
+            ENGINE.render__adjust_canvas_sample_count(newSampleCount);
+        }
         this.refreshCoordinates = function(){
             ENGINE.render__refresh_coordinates();
         };

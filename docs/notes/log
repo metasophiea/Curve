@@ -1,4 +1,54 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-10-19
+  - further work on full-frame render culling Seems to be working rather well
+    now. I also have it multisampling to deal with the aliasing. You can also
+    adjust the number of samples from the dev menu
+  - fixed issue with list radio items not being able to display the number zero
+  - updated comp.sh to use printf instead of echo for the report, as there was
+    some issue switching between bash and zsh (I was using the -e argument
+    with echo, which was fine on bash, but zsh was just printing it out like
+    it was just another part of the test to be displayed)
+  - fixed incorrect decimal point sizing on readout_sixteenSegmentDisplay
+  - fixed jumping numbers on the readout of the audio_recorder unit (padding
+    was set up wrong)
+
+  : results
+    -> core_engine
+          core_engine.js 1052kb
+          core_engine.min.js 346kb
+          reduced to 32.94% of original size
+    -> test
+          test.js 3601kb
+          test.min.js 1199kb
+          reduced to 33.32% of original size
+    -> core
+          core.js 1568kb
+          core.min.js 510kb
+          reduced to 32.54% of original size
+    -> system
+          system.js 1579kb
+          system.min.js 515kb
+          reduced to 32.63% of original size
+    -> interface
+          interface.js 2768kb
+          interface.min.js 824kb
+          reduced to 29.79% of original size
+    -> control
+          control.js 2911kb
+          control.min.js 874kb
+          reduced to 30.03% of original size
+    -> curve
+          curve.js 3817kb
+          curve.min.js 1207kb
+          reduced to 31.62% of original size
+        
+
+  2020-10-18
+  - work on full-frame render culling (adding sections to determine whether
+    group's require a rendering, or if they haven't changed since the last
+    render)
+
+
 2020-10-17
   - modified updateGravity.sh to have a help argument and the ability to list
     what versions are available
@@ -6,6 +56,8 @@
     wasm editions are available, and it now automatically gets the appropriate
     js files for the selected wasm edition (and can tell you when an edition
     doesn't exist)
+  - fixed mistake in how child visibility is determined when added to a group
+    (I was using the wrong value for parent_clipping_polygon)
 
 
 2020-10-16

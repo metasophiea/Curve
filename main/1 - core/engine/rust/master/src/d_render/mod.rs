@@ -30,6 +30,7 @@
     };
     use crate::a_library::structure::{
         WebGl2programConglomerateManager,
+        WebGl2framebufferManager,
         ImageRequester,
     };
     use crate::b_element::ElementManager;
@@ -44,6 +45,7 @@
 
 pub struct Render {
     web_gl2_program_conglomerate_manager: WebGl2programConglomerateManager,
+    web_gl2_framebuffer_manager: WebGl2framebufferManager,
     image_requester: ImageRequester,
 
     canvas: OffscreenCanvas,
@@ -64,8 +66,9 @@ impl Render {
             "webgl2",
             &js_sys::JSON::parse("{
                 \"alpha\":false, 
-                \"preserveDrawingBuffer\":true, 
-                \"stencil\":true
+                \"preserveDrawingBuffer\":false, 
+                \"stencil\":false,
+                \"antialias\":false
             }").unwrap()
         ).unwrap().unwrap().dyn_into::<WebGl2RenderingContext>().unwrap();
 
@@ -74,6 +77,7 @@ impl Render {
 
         Render {
             web_gl2_program_conglomerate_manager: WebGl2programConglomerateManager::new(),
+            web_gl2_framebuffer_manager: WebGl2framebufferManager::new(800,600,8),
             image_requester: ImageRequester::new(),
 
             canvas: canvas,
@@ -107,8 +111,12 @@ impl Render {
 
             self.canvas.set_width( self.currentCanvasSize_width );
             self.canvas.set_height( self.currentCanvasSize_height );
+            self.web_gl2_framebuffer_manager.update_dimensions(self.currentCanvasSize_width, self.currentCanvasSize_height);
 
             self.refresh_coordinates(worker);
+        }
+        pub fn adjust_canvas_sample_count(&mut self, sample_count:u32) {
+            self.web_gl2_framebuffer_manager.update_samples(sample_count);
         }
         pub fn get_canvas_size(&self) -> (u32,u32) {
             (
@@ -165,6 +173,7 @@ impl Render {
                     viewbox,
                     &self.context,
                     &mut self.web_gl2_program_conglomerate_manager,
+                    &mut self.web_gl2_framebuffer_manager,
                     &mut self.image_requester,
                     &(self.currentCanvasSize_width, self.currentCanvasSize_height),
                     false,
@@ -207,6 +216,8 @@ impl Render {
         console_log!("│ currentCanvasSize_height: {} (apparent: {})", self.currentCanvasSize_height, h);
         console_log!("│");
         self.web_gl2_program_conglomerate_manager._dump( Some("│ ") );
+        console_log!("│");
+        self.web_gl2_framebuffer_manager._dump( Some("│ ") );
         console_log!("└────────────────────");
     }
 }
@@ -232,6 +243,9 @@ impl Render {
             }
             pub fn render__adjust_canvas_size(&mut self, width:u32, height:u32, devicePixelRatio:f32) {
                 self.render.adjust_canvas_size( &self.worker, Some(width),Some(height),Some(devicePixelRatio) );
+            }
+            pub fn render__adjust_canvas_sample_count(&mut self, sample_count:u32) {
+                self.render.adjust_canvas_sample_count(sample_count);
             }
             pub fn render__get_canvas_size(&self) -> js_sys::Object {
                 let tmp = self.render.get_canvas_size();

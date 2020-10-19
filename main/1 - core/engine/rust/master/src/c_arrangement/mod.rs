@@ -43,8 +43,11 @@ pub struct Arrangement {
 }
 impl Arrangement {
     pub fn new(element_manager:&mut ElementManager) -> Arrangement {
+        let root_element_id = element_manager.create(ElementType::Group,"root".to_string());
+        element_manager.get_element_by_id_mut(root_element_id).unwrap().as_group_mut().unwrap().set_framebuffer_active(true);
+
         Arrangement {
-            root_element_id: element_manager.create(ElementType::Group,"root".to_string()),
+            root_element_id: root_element_id,
         }
     }
 
@@ -66,6 +69,7 @@ impl Arrangement {
         }
         pub fn calculate_visibility(&self, element_manager:&mut ElementManager, viewbox:&Viewbox) {
             element_manager.get_element_by_id_mut(self.root_element_id).unwrap().as_group_mut().unwrap().determine_if_visible(None, viewbox, false);
+            element_manager.get_element_by_id_mut(self.root_element_id).unwrap().as_group_mut().unwrap().determine_render_required();
         }
 
     //discovery
@@ -106,7 +110,7 @@ impl Arrangement {
 
             fn get_the_facts(element:&Ref<dyn ElementTrait>) -> String {
                 format!(
-                    "{} (id:{}, type:{}, x:{}, y:{}, angle:{}, scale:{}, heed_camera:{}, is_visible:{})",
+                    "{} (id:{}, type:{}, x:{}, y:{}, angle:{}, scale:{}, heed_camera:{}, is_visible:{}, render_required:{})",
                     element.get_name(),
                     element.get_id(),
                     element.get_element_type(),
@@ -125,6 +129,12 @@ impl Arrangement {
                     },
 
                     element.is_visible(),
+
+                    if element.get_element_type() != ElementType::Group { 
+                        "-n/a-"
+                    } else { 
+                        if element.as_group().unwrap().get_render_required() { "true" } else { "false" }
+                    },
                 )
             }
 

@@ -41,21 +41,23 @@
 
 struct WebGl2framebuffer {
     id: usize,
-    dimensions_changed: bool,
+    dimensions_or_samples_changed: bool,
     width: u32,
     height: u32,
+    samples: u32,
     renderbuffer_colour: WebGlRenderbuffer,
     renderbuffer_stencil: WebGlRenderbuffer,
     framebuffer: WebGlFramebuffer,
     is_bound: bool,
 }
 impl WebGl2framebuffer {
-    fn produce_and_bind_renderbuffers(context:&WebGl2RenderingContext, width:u32, hight:u32) -> (WebGlRenderbuffer, WebGlRenderbuffer) {
+    fn produce_and_bind_renderbuffers(context:&WebGl2RenderingContext, width:u32, hight:u32, samples:u32) -> (WebGlRenderbuffer, WebGlRenderbuffer) {
         let renderbuffer_colour = context.create_renderbuffer().unwrap();
         context.bind_renderbuffer(WebGl2RenderingContext::RENDERBUFFER, Some(&renderbuffer_colour));
-        context.renderbuffer_storage(
+        context.renderbuffer_storage_multisample(
             WebGl2RenderingContext::RENDERBUFFER,
-            WebGl2RenderingContext::RGBA8,
+            samples as i32,
+            WebGl2RenderingContext::RGB8,
             width as i32,
             hight as i32,
         );
@@ -68,8 +70,9 @@ impl WebGl2framebuffer {
 
         let renderbuffer_stencil = context.create_renderbuffer().unwrap();
         context.bind_renderbuffer(WebGl2RenderingContext::RENDERBUFFER, Some(&renderbuffer_stencil));
-        context.renderbuffer_storage(
+        context.renderbuffer_storage_multisample(
             WebGl2RenderingContext::RENDERBUFFER,
+            samples as i32,
             WebGl2RenderingContext::STENCIL_INDEX8,
             width as i32,
             hight as i32,
@@ -83,18 +86,19 @@ impl WebGl2framebuffer {
 
         (renderbuffer_colour, renderbuffer_stencil)
     }
-    pub fn new(context:&WebGl2RenderingContext, id:usize, width:u32, height:u32) -> WebGl2framebuffer {
+    pub fn new(context:&WebGl2RenderingContext, id:usize, width:u32, height:u32, samples:u32) -> WebGl2framebuffer {
         let framebuffer = context.create_framebuffer().unwrap();
         context.bind_framebuffer(WebGl2RenderingContext::FRAMEBUFFER, Some(&framebuffer));
-        let (renderbuffer_colour, renderbuffer_stencil) = WebGl2framebuffer::produce_and_bind_renderbuffers(context, width, height);
+        let (renderbuffer_colour, renderbuffer_stencil) = WebGl2framebuffer::produce_and_bind_renderbuffers(context, width, height, samples);
 
         WebGl2framebuffer {
             id: id,
-            dimensions_changed: false,
+            dimensions_or_samples_changed: false,
             width: width,
             height: height,
+            samples: samples,
             renderbuffer_colour: renderbuffer_colour,
-            renderbuffer_stencil: renderbuffer_stencil,
+            renderbuffer_stencil: renderbuffer_stencil,  
             framebuffer: framebuffer,
             is_bound: true,
         }
@@ -104,7 +108,11 @@ impl WebGl2framebuffer {
     pub fn update_dimensions(&mut self, width:u32, height:u32) {
         self.width = width;
         self.height = height;
-        self.dimensions_changed = true;
+        self.dimensions_or_samples_changed = true;
+    }
+    pub fn update_samples(&mut self, samples:u32) {
+        self.samples = samples;
+        self.dimensions_or_samples_changed = true;
     }
     pub fn bind(&mut self, context:&WebGl2RenderingContext) {
         if self.is_bound {
@@ -114,17 +122,19 @@ impl WebGl2framebuffer {
         context.bind_framebuffer(WebGl2RenderingContext::FRAMEBUFFER, Some(&self.framebuffer));
         self.is_bound = true;
 
-        if self.dimensions_changed {
+        if self.dimensions_or_samples_changed {
             context.bind_renderbuffer(WebGl2RenderingContext::RENDERBUFFER, Some(&self.renderbuffer_colour));
-            context.renderbuffer_storage(
+            context.renderbuffer_storage_multisample(
                 WebGl2RenderingContext::RENDERBUFFER,
-                WebGl2RenderingContext::RGBA8,
+                self.samples as i32,
+                WebGl2RenderingContext::RGB8,
                 self.width as i32, 
                 self.height as i32,
             );
             context.bind_renderbuffer(WebGl2RenderingContext::RENDERBUFFER, Some(&self.renderbuffer_stencil));
-            context.renderbuffer_storage(
+            context.renderbuffer_storage_multisample(
                 WebGl2RenderingContext::RENDERBUFFER,
+                self.samples as i32,
                 WebGl2RenderingContext::STENCIL_INDEX8,
                 self.width as i32, 
                 self.height as i32,
@@ -174,9 +184,10 @@ impl WebGl2framebuffer {
         let prefix = prefix.unwrap_or("");
 
         console_log!("{}│ id: {}", prefix, self.id);
-        console_log!("{}│ dimensions_changed: {}", prefix, self.dimensions_changed);
+        console_log!("{}│ dimensions_or_samples_changed: {}", prefix, self.dimensions_or_samples_changed);
         console_log!("{}│ width: {}", prefix, self.width);
         console_log!("{}│ height: {}", prefix, self.height);
+        console_log!("{}│ samples: {}", prefix, self.samples);
         console_log!("{}│ renderbuffer_colour: {:?}", prefix, self.renderbuffer_colour);
         console_log!("{}│ renderbuffer_stencil: {:?}", prefix, self.renderbuffer_stencil);
         console_log!("{}│ framebuffer: {:?}", prefix, self.framebuffer);
@@ -190,14 +201,16 @@ impl WebGl2framebuffer {
 pub struct WebGl2framebufferManager {
     width: u32,
     height: u32,
+    samples: u32,
     framebuffer_store: Vec<WebGl2framebuffer>,
     framebuffer_id_stack: Vec<usize>,
 }
 impl WebGl2framebufferManager {
-    pub fn new(width:u32, height:u32) -> WebGl2framebufferManager {
+    pub fn new(width:u32, height:u32, samples:u32) -> WebGl2framebufferManager {
         WebGl2framebufferManager {
             width: width,
             height: height,
+            samples: samples,
             framebuffer_store: vec![],
             framebuffer_id_stack: vec![],
         }
@@ -210,6 +223,12 @@ impl WebGl2framebufferManager {
             framebuffer.update_dimensions(width, height);
         }
     }
+    pub fn update_samples(&mut self, samples:u32) {
+        self.samples = samples;
+        for framebuffer in &mut self.framebuffer_store {
+            framebuffer.update_samples(samples);
+        }
+    }
 
     pub fn generate_framebuffer(&mut self, context:&WebGl2RenderingContext) -> usize {
         //unbind last framebuffer
@@ -217,7 +236,7 @@ impl WebGl2framebufferManager {
 
         //generation
             let id = self.framebuffer_store.len();
-            let framebuffer = WebGl2framebuffer::new(context, id, self.width, self.height);
+            let framebuffer = WebGl2framebuffer::new(context, id, self.width, self.height, self.samples);
             self.framebuffer_store.push(framebuffer);
             self.framebuffer_id_stack.push(id);
             id
@@ -328,6 +347,7 @@ impl WebGl2framebufferManager {
         console_log!("{}┌─WebGl2framebufferManager Dump─", prefix);
         console_log!("{}│ width: {}", prefix, self.width);
         console_log!("{}│ height: {}", prefix, self.height);
+        console_log!("{}│ samples: {}", prefix, self.samples);
         console_log!("{}│ framebuffer_id_stack: {:?}", prefix, self.framebuffer_id_stack);        
         console_log!("{}│ framebuffer_store (count:{})", prefix, self.framebuffer_store.len());
         for (key, item) in self.framebuffer_store.iter().enumerate() {

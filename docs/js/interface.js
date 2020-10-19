@@ -23971,7 +23971,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:16} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:19} };
             
                 const core = this;
             
@@ -24474,6 +24474,10 @@
                                 this.adjustCanvasSize = function(newWidth, newHeight){
                                     dev.log.interface('.operator.render.adjustCanvasSize(',newWidth, newHeight); //#development
                                     communicationModule.run_withoutPromise('operator__render__adjustCanvasSize', [newWidth, newHeight]);
+                                };
+                                this.adjustCanvasSampleCount = function(newSampleCount){
+                                    dev.log.interface('.operator.render.adjustCanvasSampleCount(',newSampleCount); //#development
+                                    communicationModule.run_withoutPromise('operator__render__adjustCanvasSampleCount', [newSampleCount]);
                                 };
                                 this.refreshCoordinates = function(){
                                     dev.log.interface('.operator.render.refreshCoordinates()'); //#development
@@ -25503,6 +25507,7 @@
                         clearColour:{r:1,g:1,b:1,a:1},
                         activeLimitToFrameRate:false,
                         frameRateLimit:30,
+                        canvasSampleCount:8,
                         active:false,
                     };
                 
@@ -25520,6 +25525,12 @@
                         this.adjustCanvasSize = function(newWidth, newHeight){
                             dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
                             interface.operator.render.adjustCanvasSize(newWidth, newHeight);
+                        };
+                        this.adjustCanvasSampleCount = function(newSampleCount){
+                            dev.log.render('.adjustCanvasSampleCount(',newSampleCount); //#development
+                            if(newSampleCount==undefined){ return cachedValues.canvasSampleCount; }
+                            cachedValues.canvasSampleCount = newSampleCount;
+                            interface.operator.render.adjustCanvasSampleCount(newSampleCount);
                         };
                         this.refreshCoordinates = function(){
                             dev.log.render('.refreshCoordinates()'); //#development
@@ -26083,7 +26094,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:19} };
                 const interface = this;
             
                 const dev = {
@@ -30539,7 +30550,7 @@
                                         object.text = function(a){
                                             if(a==null){return text;}
                                             dev.log.partDisplay('.readout_sevenSegmentDisplay.text('+a+')'); //#development
-                                            text = a;
+                                            text = String(a);
                                         };
                                         object.print = function(style){
                                             dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+')'); //#development
@@ -30620,7 +30631,7 @@
                                         object.text = function(a){
                                             if(a==null){return text;}
                                             dev.log.partDisplay('.readout_sevenSegmentDisplay.text('+a+')'); //#development
-                                            text = a;
+                                            text = String(a);
                                         };
                                         object.print = function(style){
                                             dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+')'); //#development
@@ -32452,7 +32463,7 @@
                                     //values
                                         const stamps = (new Array(count)).fill().map(() => [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
                                         const decimalPoints = (new Array(count-1)).fill().map(() => false);
-                                        const decimalPointRadius = 1.5;
+                                        const decimalPointRadius = height*0.05;
                             
                                     //elements 
                                         const canvas = interfacePart.builder('basic','canvas','backing',{ width:width, height:height, colour:backgroundStyle,resolution:resolution });
@@ -32557,7 +32568,7 @@
                                         object.text = function(a){
                                             if(a==null){return text;}
                                             dev.log.partDisplay('.readout_sixteenSegmentDisplay.text('+a+')'); //#development
-                                            text = a;
+                                            text = String(a);
                                         };
                                         object.print = function(style){
                                             dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development
@@ -32638,7 +32649,7 @@
                                         object.text = function(a){
                                             if(a==null){return text;}
                                             dev.log.partDisplay('.readout_sixteenSegmentDisplay.text('+a+')'); //#development
-                                            text = a;
+                                            text = String(a);
                                         };
                                         object.print = function(style){
                                             dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development
@@ -37008,7 +37019,7 @@
                                             if(item.type == 'text'){
                                                 newItem = self.list.itemTypes.text(
                                                     index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
-                                                    (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                                                    (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                                                     def(item,'fontSize'), def(item,'font'), def(item,'text_colour__up'), def(item,'spacing'),
                                                     def(item,'interCharacterSpacing'), def(item,'item__up__colour'),
                                                 );
@@ -37028,7 +37039,7 @@
                                             }else if(item.type == 'checkbox'){
                                                 newItem = self.list.itemTypes.checkbox(
                                                     index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
-                                                    (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                                                    (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                                                     def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'),
                                                     item.active != undefined ? item.active : active, 
                                                     item.hoverable != undefined ? item.hoverable : hoverable, 
@@ -37110,7 +37121,7 @@
                                             }else if(item.type == 'button'){
                                                 newItem = self.list.itemTypes.button(
                                                     index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
-                                                    (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                                                    (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                                                     def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'),
                                                     item.active != undefined ? item.active : active, 
                                                     item.hoverable != undefined ? item.hoverable : hoverable, 
@@ -37211,7 +37222,7 @@
                                                         def(item,'width'), def(item,'height'), 
                                                 
                                                         def(item,'itemHorizontalPadding'),
-                                                        (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                                                        (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                                                         def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'), def(item,'arrowMux'),
                                                         item.active != undefined ? item.active : active, 
                                                         item.hoverable != undefined ? item.hoverable : hoverable, 
@@ -37316,7 +37327,7 @@
                                                         def(item,'width'), def(item,'height'), 
                                                 
                                                         def(item,'itemHorizontalPadding'),
-                                                        (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                                                        (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                                                         def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'), def(item,'arrowMux'),
                                                         item.active != undefined ? item.active : active, 
                                                         item.hoverable != undefined ? item.hoverable : hoverable, 

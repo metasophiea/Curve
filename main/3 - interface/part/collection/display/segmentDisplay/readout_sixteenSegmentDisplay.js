@@ -719,7 +719,7 @@ this.readout_sixteenSegmentDisplay = function(
         //values
             const stamps = (new Array(count)).fill().map(() => [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
             const decimalPoints = (new Array(count-1)).fill().map(() => false);
-            const decimalPointRadius = 1.5;
+            const decimalPointRadius = height*0.05;
 
         //elements 
             const canvas = interfacePart.builder('basic','canvas','backing',{ width:width, height:height, colour:backgroundStyle,resolution:resolution });
@@ -824,7 +824,7 @@ this.readout_sixteenSegmentDisplay = function(
             object.text = function(a){
                 if(a==null){return text;}
                 dev.log.partDisplay('.readout_sixteenSegmentDisplay.text('+a+')'); //#development
-                text = a;
+                text = String(a);
             };
             object.print = function(style){
                 dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development
@@ -905,7 +905,7 @@ this.readout_sixteenSegmentDisplay = function(
             object.text = function(a){
                 if(a==null){return text;}
                 dev.log.partDisplay('.readout_sixteenSegmentDisplay.text('+a+')'); //#development
-                text = a;
+                text = String(a);
             };
             object.print = function(style){
                 dev.log.partDisplay('.readout_sixteenSegmentDisplay::print('+style+')'); //#development

@@ -75,6 +75,7 @@
         communicationModule.function.operator__render__clearColour = self.operator.render.clearColour;
         communicationModule.function.operator__render__getCanvasSize = self.operator.render.getCanvasSize;
         communicationModule.function.operator__render__adjustCanvasSize = self.operator.render.adjustCanvasSize;
+        communicationModule.function.operator__render__adjustCanvasSampleCount = self.operator.render.adjustCanvasSampleCount;
         communicationModule.function.operator__render__refreshCoordinates = self.operator.render.refreshCoordinates;
         communicationModule.function.operator__render__refresh = self.operator.render.refresh;
     //frame rate control

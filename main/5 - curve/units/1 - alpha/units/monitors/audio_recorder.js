@@ -103,7 +103,7 @@ this.audio_recorder = function(name,x,y,angle){
                         _canvas_.library.misc.padString(time.h,2,'0')+':'+
                         _canvas_.library.misc.padString(time.m,2,'0')+':'+
                         _canvas_.library.misc.padString(time.s,2,'0')+'.'+
-                        _canvas_.library.misc.padString(time.ms,2,'0'),
+                        _canvas_.library.misc.padString(time.ms,3,'0','r'),
                         13
                     )
                 );

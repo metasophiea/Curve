@@ -259,7 +259,7 @@ this.list = function(
                 if(item.type == 'text'){
                     newItem = self.list.itemTypes.text(
                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
-                        (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                        (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                         def(item,'fontSize'), def(item,'font'), def(item,'text_colour__up'), def(item,'spacing'),
                         def(item,'interCharacterSpacing'), def(item,'item__up__colour'),
                     );
@@ -279,7 +279,7 @@ this.list = function(
                 }else if(item.type == 'checkbox'){
                     newItem = self.list.itemTypes.checkbox(
                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
-                        (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                        (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                         def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'),
                         item.active != undefined ? item.active : active, 
                         item.hoverable != undefined ? item.hoverable : hoverable, 
@@ -361,7 +361,7 @@ this.list = function(
                 }else if(item.type == 'button'){
                     newItem = self.list.itemTypes.button(
                         index, xOffset, output.calculatedListHeight, def(item,'width'), def(item,'height'), def(item,'itemHorizontalPadding'),
-                        (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                        (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                         def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'),
                         item.active != undefined ? item.active : active, 
                         item.hoverable != undefined ? item.hoverable : hoverable, 
@@ -462,7 +462,7 @@ this.list = function(
                             def(item,'width'), def(item,'height'), 
                     
                             def(item,'itemHorizontalPadding'),
-                            (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                            (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                             def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'), def(item,'arrowMux'),
                             item.active != undefined ? item.active : active, 
                             item.hoverable != undefined ? item.hoverable : hoverable, 
@@ -567,7 +567,7 @@ this.list = function(
                             def(item,'width'), def(item,'height'), 
                     
                             def(item,'itemHorizontalPadding'),
-                            (item.text?item.text:item.text_left), item.text_centre, item.text_right,
+                            (item.text != undefined?item.text:item.text_left), item.text_centre, item.text_right,
                             def(item,'fontSize'), def(item,'font'), def(item,'spacing'), def(item,'interCharacterSpacing'), def(item,'arrowMux'),
                             item.active != undefined ? item.active : active, 
                             item.hoverable != undefined ? item.hoverable : hoverable, 

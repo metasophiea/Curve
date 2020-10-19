@@ -42,6 +42,7 @@
         },
         structure::{
             WebGl2programConglomerateManager,
+            WebGl2framebufferManager,
             ImageRequester,
             FontRequester,
         },
@@ -99,6 +100,10 @@ pub struct Group {
 
     //render
         is_visible: bool,
+        previous_is_visible: bool,
+        render_required: bool,
+        framebuffer_active: bool,
+        web_gl2_framebuffer_id: Option<usize>,
 }
 impl Group {
     pub fn new(id:usize, name:String) -> Group {
@@ -131,6 +136,10 @@ impl Group {
             clipping_active: false,
 
             is_visible: false,
+            previous_is_visible: false,
+            render_required: true,
+            framebuffer_active: false,
+            web_gl2_framebuffer_id: None,
         }
     }
 
@@ -142,7 +151,11 @@ impl Group {
                     self.heed_camera = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
+            //framebuffer_active
+                pub fn get_framebuffer_active(&self) -> bool { self.framebuffer_active }
+                pub fn set_framebuffer_active(&mut self, new:bool) { self.framebuffer_active = new; }
             //unified attribute
                 pub fn set_unified_attribute(
                     &mut self,
@@ -152,6 +165,7 @@ impl Group {
                     scale: Option<f32>,
                     heed_camera: Option<Option<bool>>,
                     clipping_active: Option<bool>,
+                    framebuffer_active: Option<bool>,
                     viewbox:&Viewbox,
                 ) {
                     if let Some(x) = x { self.x = x; }
@@ -160,8 +174,10 @@ impl Group {
                     if let Some(scale) = scale { self.scale = scale; }
                     if let Some(heed_camera) = heed_camera { self.heed_camera = heed_camera; }
                     if let Some(clipping_active) = clipping_active { self.clipping_active = clipping_active; }
+                    if let Some(framebuffer_active) = framebuffer_active { self.framebuffer_active = framebuffer_active; }
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
 
     //group functions
@@ -234,9 +250,9 @@ impl Group {
                 self.augment_extremities__add(&ele, viewbox);
 
             //determine visibility
-                ele.upgrade().unwrap().borrow_mut().determine_if_visible(Some(self.get_extremities()), viewbox, false);
+                ele.upgrade().unwrap().borrow_mut().determine_if_visible(self.get_clipping_polygon(), viewbox, false);
                 if ele.upgrade().unwrap().borrow().is_visible() {
-                    self.set_is_visible( true );
+                    self.set_is_visible(true);
                     self.bubble_visibility(viewbox);
                 }
 
@@ -245,13 +261,16 @@ impl Group {
                 let name = ele.upgrade().unwrap().borrow().get_name().to_string();
                 self.child_registry.insert( name.clone(), ele );
                 self.child_id_registry.insert(new_element, name);
+
+            //request render
+                self.request_render();
         }
         pub fn __direct_append(&mut self, new_element:Weak<RefCell<dyn ElementTrait>>, viewbox:&Viewbox) {
             //augment extremities
                 self.augment_extremities__add(&new_element, viewbox);
 
             //determine visibility
-                new_element.upgrade().unwrap().borrow_mut().determine_if_visible(Some(self.get_extremities()), viewbox, false);
+                new_element.upgrade().unwrap().borrow_mut().determine_if_visible(self.get_clipping_polygon(), viewbox, false);
                 if new_element.upgrade().unwrap().borrow().is_visible() {
                     self.set_is_visible( true );
                     self.bubble_visibility(viewbox);
@@ -261,6 +280,9 @@ impl Group {
                 self.children.push( ElementManager::clone_weak_reference( &new_element ) );
                 let name = new_element.upgrade().unwrap().borrow().get_name().to_string();
                 self.child_registry.insert( name.clone(), new_element );
+
+            //request render
+                self.request_render();
         }
         pub fn prepend(&mut self, em:&ElementManager, new_element:usize, viewbox:&Viewbox) {
             //validate
@@ -281,7 +303,7 @@ impl Group {
                 self.augment_extremities__add(&ele, viewbox);
 
             //determine visibility
-                ele.upgrade().unwrap().borrow_mut().determine_if_visible(Some(self.get_extremities()), viewbox, false);
+                ele.upgrade().unwrap().borrow_mut().determine_if_visible(self.get_clipping_polygon(), viewbox, false);
                 if ele.upgrade().unwrap().borrow().is_visible() {
                     self.set_is_visible( true );
                     self.bubble_visibility(viewbox);
@@ -292,8 +314,11 @@ impl Group {
                 let name = ele.upgrade().unwrap().borrow().get_name().to_string();
                 self.child_registry.insert( name.clone(), ele );
                 self.child_id_registry.insert(new_element, name);
+
+            //request render
+                self.request_render();
         }
-        pub fn remove(&mut self, em:&ElementManager, departing_element:usize, viewbox:&Viewbox){
+        pub fn remove(&mut self, em:&ElementManager, departing_element:usize, viewbox:&Viewbox) {
             //validate
                 if !self.check_for_id(departing_element) {
                     //check if it's actually the stencil
@@ -349,6 +374,9 @@ impl Group {
                         self.bubble_visibility(viewbox);
                     }
                 }
+
+            //request render
+                self.request_render();
         }
         pub fn clear(&mut self, viewbox:&Viewbox) {
             self.children.clear();
@@ -358,6 +386,9 @@ impl Group {
 
             //determine visibility
                 self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+
+            //request render
+                self.request_render();
         }
         pub fn shift(&mut self, element_to_shift:usize, mut new_position:usize, _viewbox:&Viewbox) {
             //check if this element is actually a child
@@ -371,6 +402,9 @@ impl Group {
             //classic shift
                 let temp = self.children.remove( self.get_child_index_by_id(element_to_shift).unwrap() );
                 self.children.insert( new_position, temp );
+
+            //request render
+                self.request_render();
         }
         pub fn replace_with_these_children(&mut self, em:&ElementManager, new_elements:Vec<usize>, viewbox:&Viewbox) {
             self.clear(viewbox);
@@ -411,6 +445,9 @@ impl Group {
 
             //determine visibility
                 self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+
+            //request render
+                self.request_render();
         }
 
         pub fn get_elements_under_point(&self, window_point:&Point, point:&Point) -> Vec<usize> {
@@ -534,6 +571,7 @@ impl Group {
             self.clipping_stencil = Some( em.get_element_weak(element).unwrap() );
             self.compute_extremities(true, None, None);
             self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+            self.request_render();
         }
         pub fn get_clip_active(&self) -> bool {
             self.clipping_active
@@ -542,6 +580,7 @@ impl Group {
             self.clipping_active = new;
             self.compute_extremities(true, None, None);
             self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+            self.request_render();
         }
 
     //extremity calculation
@@ -821,6 +860,33 @@ impl Group {
                     }
                 }
         }
+        pub fn get_clipping_polygon(&self) -> Option<&Polygon> {
+            if self.clipping_active { Some(self.get_extremities()) } else { None }
+        }
+
+    //render
+        pub fn get_render_required(&self) -> bool { self.render_required }
+        pub fn set_render_required(&mut self, new:bool) {
+            self.render_required = new;
+        }
+        pub fn determine_render_required(&mut self) -> bool {
+            let mut render_required = false;
+
+            for child in self.children.iter() {
+                if (child.upgrade().unwrap().borrow().is_visible() || child.upgrade().unwrap().borrow().previous_is_visible()) && self.cached_heed_camera {
+                    render_required = true;
+                }
+                match child.upgrade().unwrap().borrow_mut().as_group_mut() {
+                    Some(child_group) => {
+                        render_required |= child_group.determine_render_required();
+                    },
+                    None => {},
+                }
+            }
+
+            self.set_render_required(render_required);
+            self.get_render_required()
+        }
 }
 impl ElementTrait for Group {
     //trait requirements
@@ -841,6 +907,7 @@ impl ElementTrait for Group {
                     self.x = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //y
                 fn get_y(&self) -> f32 { self.y }
@@ -848,6 +915,7 @@ impl ElementTrait for Group {
                     self.y = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //angle
                 fn get_angle(&self) -> f32 { self.angle }
@@ -855,6 +923,7 @@ impl ElementTrait for Group {
                     self.angle = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //scale
                 fn get_scale(&self) -> f32 { self.scale }
@@ -862,6 +931,7 @@ impl ElementTrait for Group {
                     self.scale = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
 
         //other
@@ -882,10 +952,17 @@ impl ElementTrait for Group {
             fn __set_extremities(&mut self, new:Polygon) { self.extremities = new; }
 
         //render
-            fn is_visible(&self) -> bool { self.is_visible }
-            fn set_is_visible(&mut self, new:bool) { self.is_visible = new; }
-            fn get_dot_frame(&self) -> bool { self.dot_frame }
-            fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
+            //visibility
+                fn is_visible(&self) -> bool { self.is_visible }
+                fn set_is_visible(&mut self, new:bool) {
+                    // console_log!("id:{} set_is_visible -> {}", self.id, new);
+                    self.previous_is_visible = self.is_visible;
+                    self.is_visible = new;
+                }
+                fn previous_is_visible(&self) -> bool { self.previous_is_visible }
+            //dot frame
+                fn get_dot_frame(&self) -> bool { self.dot_frame }
+                fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
 
     //element specific
         //casting
@@ -907,6 +984,7 @@ impl ElementTrait for Group {
                     get_value_from_object__f32( "scale", &unified_attribute, true ),
                     if get_value_from_object__bool( "heedCameraActive", &unified_attribute, true ).unwrap_or(false) { Some(get_value_from_object__bool( "heedCamera", &unified_attribute, true )) } else { None },
                     get_value_from_object__bool( "clipActive", &unified_attribute, true ),
+                    get_value_from_object__bool( "framebufferActive", &unified_attribute, true ),
                     viewbox,
                 );
             }
@@ -957,31 +1035,32 @@ impl ElementTrait for Group {
             }
 
         //render
-            fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&Polygon>, viewbox:&Viewbox, bubble_up:bool) {
-                //run for self
-                    self.set_is_visible( self.check_is_visible(parent_clipping_polygon, viewbox) );
+            //visibility
+                fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&Polygon>, viewbox:&Viewbox, bubble_up:bool) {
+                    //run for self
+                        self.set_is_visible( self.check_is_visible(parent_clipping_polygon, viewbox) );
 
-                //if this group is not visible, then don't bother with any of its children
-                    if !self.is_visible() { return; }
+                    //if this group is not visible, then don't bother with any of its children
+                        if !self.is_visible() { return; }
 
-                //determine visibility on all children
-                    for child in self.children.iter() {
-                        child.upgrade().unwrap().borrow_mut().determine_if_visible(if self.clipping_active { Some(self.get_extremities()) } else { None }, viewbox, false);
-                    }
-                    
-                //determine visibility on stencil (if applicable)
-                    match &self.clipping_stencil {
-                        None => {},
-                        Some(stencil) => {
-                            stencil.upgrade().unwrap().borrow_mut().determine_if_visible(if self.clipping_active { Some(self.get_extremities()) } else { None }, viewbox, false);
-                        },
-                    }
+                    //determine visibility on all children
+                        for child in self.children.iter() {
+                            child.upgrade().unwrap().borrow_mut().determine_if_visible(if self.clipping_active { Some(self.get_extremities()) } else { None }, viewbox, false);
+                        }
+                        
+                    //determine visibility on stencil (if applicable)
+                        match &self.clipping_stencil {
+                            None => {},
+                            Some(stencil) => {
+                                stencil.upgrade().unwrap().borrow_mut().determine_if_visible(if self.clipping_active { Some(self.get_extremities()) } else { None }, viewbox, false);
+                            },
+                        }
 
-                //inform parent, if requested to do so
-                    if bubble_up {
-                        self.bubble_visibility(viewbox);
-                    }
-            }
+                    //inform parent, if requested to do so
+                        if bubble_up {
+                            self.bubble_visibility(viewbox);
+                        }
+                }
 
             //actual render
                 fn render(
@@ -991,19 +1070,40 @@ impl ElementTrait for Group {
                     viewbox: &Viewbox,
                     context: &WebGl2RenderingContext, 
                     web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
+                    web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                     image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
                     force: bool,
-                ) {
+                ) -> bool {
                     //if there's no children, then don't worry about it
                         if self.children.len() == 0 {
-                            return;
+                            return false;
                         }
 
                     //judge whether this element should be allowed to render
-                        // if !force && self.get_id() != 0 && !self.should_this_element_render(parent_clipping_polygon, viewbox, self.cached_heed_camera) {
                         if !force && !self.is_visible() {
-                            return;
+                            return false;
+                        }
+
+                    //framebuffer - head
+                        if self.framebuffer_active {
+                            if self.id == 0 { //only if this is root; activate framebuffer
+                                if !self.render_required && !force {
+                                    let had_to_bind = self.web_gl2_framebuffer_id.is_none();
+                                    if had_to_bind { self.web_gl2_framebuffer_id = Some(web_gl2_framebuffer_manager.generate_framebuffer(context)); }
+                                    web_gl2_framebuffer_manager.copy_framebuffer_to_framebuffer(context, self.web_gl2_framebuffer_id.unwrap(), None);
+                                    if had_to_bind { web_gl2_framebuffer_manager.unbind_last_framebuffer(context); }
+                                    return false;
+                                }
+
+                                if self.web_gl2_framebuffer_id.is_none() {
+                                    self.web_gl2_framebuffer_id = Some(web_gl2_framebuffer_manager.generate_framebuffer(context));
+                                } else {
+                                    web_gl2_framebuffer_manager.bind_framebuffer(context, self.web_gl2_framebuffer_id);
+                                }
+
+                                context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT | WebGl2RenderingContext::STENCIL_BUFFER_BIT);
+                            }
                         }
 
                     //activate clipping (if requested, and is possible)
@@ -1021,6 +1121,7 @@ impl ElementTrait for Group {
                                     viewbox,
                                     context,
                                     web_gl2_program_conglomerate_manager,
+                                    web_gl2_framebuffer_manager,
                                     image_requester,
                                     resolution,
                                     force,
@@ -1032,13 +1133,15 @@ impl ElementTrait for Group {
 
                     //render children
                         let parent_bounding_box__argument = if self.clipping_active { Some(&self.extremities) } else { None };
+                        let mut re_render = false;
                         for child in self.children.iter() {
-                            child.upgrade().unwrap().borrow_mut().render(
+                            re_render |= child.upgrade().unwrap().borrow_mut().render(
                                 parent_bounding_box__argument,
                                 self.cached_heed_camera,
                                 viewbox,
                                 context,
                                 web_gl2_program_conglomerate_manager,
+                                web_gl2_framebuffer_manager,
                                 image_requester,
                                 resolution,
                                 force,
@@ -1050,6 +1153,15 @@ impl ElementTrait for Group {
                             context.disable(WebGl2RenderingContext::STENCIL_TEST); 
                             context.clear(WebGl2RenderingContext::STENCIL_BUFFER_BIT);
                         }
+                    
+                    //framebuffer - tail
+                        if self.framebuffer_active {
+                            if self.id == 0 {//only if this is root; copy the data to the window and de-activate framebuffer
+                                web_gl2_framebuffer_manager.copy_current_framebuffer_to_upper_framebuffer(context);
+                                web_gl2_framebuffer_manager.unbind_last_framebuffer(context);
+                            }
+                        }
+                        self.set_render_required(re_render);
 
                     //if requested; draw dot frame
                         if self.dot_frame {
@@ -1059,10 +1171,13 @@ impl ElementTrait for Group {
                                 viewbox,
                                 context,
                                 web_gl2_program_conglomerate_manager,
+                                web_gl2_framebuffer_manager,
                                 image_requester,
                                 resolution,
                             );
                         }
+
+                    re_render
                 }
 
             //dot frame
@@ -1073,6 +1188,7 @@ impl ElementTrait for Group {
                     viewbox: &Viewbox,
                     context: &WebGl2RenderingContext, 
                     web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
+                    web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                     image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
                 ) {
@@ -1081,11 +1197,11 @@ impl ElementTrait for Group {
                     //draw bounding box top left and bottom right points
                         ElementManager::draw_dot(
                             &self.extremities.get_bounding_box().get_top_left(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
                         );
                         ElementManager::draw_dot(
                             &self.extremities.get_bounding_box().get_bottom_right(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
                         );
                 }
 
@@ -1099,16 +1215,18 @@ impl ElementTrait for Group {
                 children = format!("{}]", children);
 
                 format!(
-                    "heed_camera:{:?} (cached_heed_camera:{}), children:{}, clipping_stencil_id:{}, clipping_stencil_name:{}, clipping_active:{}",
+                    "heed_camera:{:?}, children:{}, clipping_stencil_id:{}, clipping_stencil_name:{}, clipping_active:{}, render_required:{}, framebuffer_active:{}",
 
                     self.heed_camera,
-                    self.cached_heed_camera,
 
                     children,
 
                     match &self.clipping_stencil { Some(a) => a.upgrade().unwrap().borrow().get_id().to_string(), None => "-none-".to_string() },
                     match &self.clipping_stencil { Some(a) => a.upgrade().unwrap().borrow().get_name().to_string(), None => "-none-".to_string() },
                     self.clipping_active,
+
+                    self.render_required,
+                    self.framebuffer_active,
                 )
             }
 }
@@ -1138,10 +1256,11 @@ impl ElementManager {
         scale: Option<f32>,
         heed_camera: Option<Option<bool>>,
         clipping_active: Option<bool>,
+        framebuffer_active: Option<bool>,
         viewbox: &Viewbox,
     ) {
         if !self.check_is_group(id, "execute_method__Group__set_unified_attribute") { return; }
-        self.get_element_by_id_mut(id).unwrap().as_group_mut().unwrap().set_unified_attribute( x, y, angle, scale, heed_camera, clipping_active, viewbox );
+        self.get_element_by_id_mut(id).unwrap().as_group_mut().unwrap().set_unified_attribute( x, y, angle, scale, heed_camera, clipping_active, framebuffer_active, viewbox );
     }
 
     pub fn execute_method__Group__children(&self, id:usize) -> Option<Vec<usize>> {
@@ -1211,6 +1330,7 @@ impl Engine {
         heed_camera_active: Option<bool>,
         heed_camera: Option<bool>,
         clipping_active: Option<bool>,
+        framebuffer_active: Option<bool>,
     ) {
         self.element_manager.execute_method__Group__set_unified_attribute(
             id,
@@ -1219,6 +1339,7 @@ impl Engine {
             scale,
             if heed_camera_active.unwrap_or(false) { Some(heed_camera) } else { None },
             clipping_active,
+            framebuffer_active,
             self.viewport.get_viewbox(),
         );
     }

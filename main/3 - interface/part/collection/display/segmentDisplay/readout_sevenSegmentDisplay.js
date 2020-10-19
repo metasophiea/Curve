@@ -251,7 +251,7 @@ this.readout_sevenSegmentDisplay = function(
             object.text = function(a){
                 if(a==null){return text;}
                 dev.log.partDisplay('.readout_sevenSegmentDisplay.text('+a+')'); //#development
-                text = a;
+                text = String(a);
             };
             object.print = function(style){
                 dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+')'); //#development
@@ -332,7 +332,7 @@ this.readout_sevenSegmentDisplay = function(
             object.text = function(a){
                 if(a==null){return text;}
                 dev.log.partDisplay('.readout_sevenSegmentDisplay.text('+a+')'); //#development
-                text = a;
+                text = String(a);
             };
             object.print = function(style){
                 dev.log.partDisplay('.readout_sevenSegmentDisplay::print('+style+')'); //#development

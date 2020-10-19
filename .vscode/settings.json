@@ -1,8 +1,10 @@
 {
     "cSpell.words": [
         "and",
+        "antialiasing",
         "bind",
         "framebuffer",
+        "multisampling",
         "produce",
         "produce and bind renderbuffers",
         "renderbuffer",

@@ -40,6 +40,7 @@
     };
     use crate::a_library::structure::{
         WebGl2programConglomerateManager,
+        WebGl2framebufferManager,
         ImageRequester,
         FontRequester,
     };
@@ -202,6 +203,7 @@ impl ElementManager {
         viewbox: &Viewbox,
         context: &WebGl2RenderingContext, 
         web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
+        web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
         image_requester: &mut ImageRequester,
         resolution: &(u32, u32),
     ) {
@@ -209,7 +211,7 @@ impl ElementManager {
         rect.set_dot_frame(false);
         rect.set_unified_attribute( Some(xy.get_x()), Some(xy.get_y()), None, None, Some(size), Some(size), Some(Point::new(0.5,0.5)), Some(*colour), viewbox );
 
-        rect.render( parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution, true );
+        rect.render( parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, true );
     }
     pub fn alert_font_loaded(
         &mut self, 

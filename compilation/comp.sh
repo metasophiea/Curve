@@ -4,8 +4,8 @@
     compileWasm=false
     productionWasm=false
     wasmEditionName=master
-    compileJS=false
-    productionJS=false
+    compileJs=false
+    productionJs=false
     report=false
     nameArray=('core_engine' 'test' 'core' 'system' 'interface' 'control' 'curve')
 
@@ -19,11 +19,11 @@
                 done
                 exit;
             ;;
-            -compileJS) compileJS=true; ((a--)); ;;
-            -productionJS) productionJS=true; ((a--)); ;;
+            -compileJs) compileJs=true; ((a--)); ;;
+            -productionJs) productionJs=true; ((a--)); ;;
 
             -testOnly) nameArray=('test'); ((a--)); ;;
-            -testAndCoreOnly) nameArray=('core_engine' 'test'); ((a--)); ;;
+            -testAndCoreEngineOnly) nameArray=('core_engine' 'test'); ((a--)); ;;
 
             -wasmEditionNames) 
                 ls main/1\ -\ core/engine/rust | grep -v "main.js"
@@ -37,14 +37,14 @@
             -heavy) 
                 compileWasm=true;
                 productionWasm=true;
-                compileJS=true;
-                productionJS=true;
+                compileJs=true;
+                productionJs=true;
                 report=true;
             ;;
             --help) 
                 echo "-nameArray : print js list"
-                echo "-compileJS : compile the full list of Js files"
-                echo "-productionJS : produce production version of Js code"
+                echo "-compileJs : compile the full list of Js files"
+                echo "-productionJs : produce production version of Js code"
                 echo ""
                 echo "-testOnly : only compile the js for test.js"
                 echo "-testAndCoreEngineOnly : only compile the js for test.js and core-engine.js"
@@ -96,7 +96,7 @@
         cp pkg/core_engine_bg.wasm "$dir"/../docs/wasm/
         cd "$dir"
 
-        if $compileJS || $report; then
+        if $compileJs || $report; then
             echo;
         fi
     fi
@@ -109,7 +109,7 @@
 
 
 #js code
-    if $compileJS; then
+    if $compileJs; then
         echo ": compiling JS"
 
         #select correct wasmEditionName
@@ -123,7 +123,7 @@
                 "$dir"/gravity -r "$dir"/../main/$name.js -o "$dir"/../docs/js/$name.js
             done
 
-        if $productionJS; then
+        if $productionJs; then
             #clean out development logging (if requested)
                 echo ":: stripping development lines"
                 for name in ${nameArray[@]}; do 
@@ -172,9 +172,10 @@
         for name in ${nameArray[@]}; do 
             fileSize=$(ls -l "$dir"/../docs/js/$name.js | awk '{ print $5}')
             closureFileSize=$(ls -l "$dir"/../docs/js/$name.min.js | awk '{ print $5}')
+
             echo "  -> $name"
-            echo -e "\t$name.js" $(( fileSize / 1000 ))"kb";
-            echo -e "\t$name.min.js" $(( closureFileSize / 1000 ))"kb";
-            echo -e "\treduced to" $(echo "print(\"{0:.2f}\".format(100*("$closureFileSize"/"$fileSize")))" | python3)"% of original size"
+            printf "\t$name.js %skb\n" "$(( fileSize / 1000 ))";
+            printf "\t$name.min.js %skb\n" "$(( closureFileSize / 1000 ))";
+            printf "\treduced to %s%% of original size\n" "$(echo "print(\"{0:.2f}\".format(100*("$closureFileSize"/"$fileSize")))" | python3)"
         done
     fi

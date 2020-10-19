@@ -3,6 +3,7 @@ this.render = new function(){
         clearColour:{r:1,g:1,b:1,a:1},
         activeLimitToFrameRate:false,
         frameRateLimit:30,
+        canvasSampleCount:8,
         active:false,
     };
 
@@ -20,6 +21,12 @@ this.render = new function(){
         this.adjustCanvasSize = function(newWidth, newHeight){
             dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
             interface.operator.render.adjustCanvasSize(newWidth, newHeight);
+        };
+        this.adjustCanvasSampleCount = function(newSampleCount){
+            dev.log.render('.adjustCanvasSampleCount(',newSampleCount); //#development
+            if(newSampleCount==undefined){ return cachedValues.canvasSampleCount; }
+            cachedValues.canvasSampleCount = newSampleCount;
+            interface.operator.render.adjustCanvasSampleCount(newSampleCount);
         };
         this.refreshCoordinates = function(){
             dev.log.render('.refreshCoordinates()'); //#development

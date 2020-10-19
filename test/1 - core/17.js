@@ -41,6 +41,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         if(index >= imageURLs.length){index = 0;}
         _canvas_.core.render.frame();
         // setTimeout(_canvas_.core.render.frame,100);
+        // _canvas_.core.arrangement.printTree();
     }, 1000);
 
     setTimeout(_canvas_.core.render.frame,500);

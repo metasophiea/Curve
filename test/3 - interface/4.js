@@ -8,7 +8,7 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
     _canvas_.core.viewport.stopMouseScroll(true);
 
     _canvas_.core.viewport.scale(5);
-    _canvas_.core.viewport.position(120,0);
+    _canvas_.core.viewport.position(545,0);
 
     partsCreated.control = {};
     partsCreated.control.controlGroup = _canvas_.interface.part.builder('basic', 'group', 'controlGroup', { x:10, y:10 } );
@@ -81,12 +81,12 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
     //         partsCreated.control.checkboxgrid = _canvas_.interface.part.builder('control', 'checkboxgrid', 'test_checkboxgrid', {x:60, y:0} );
     //         partsCreated.control.controlGroup.append(partsCreated.control.checkboxgrid);
 
-    //dial
-        //dial_continuous
-            partsCreated.control.dial_1_continuous = _canvas_.interface.part.builder('control', 'dial_1_continuous', 'test_dial_1_continuous', {x:160, y:10} );
-            partsCreated.control.controlGroup.append(partsCreated.control.dial_1_continuous);
-            // partsCreated.control.dial_2_continuous = _canvas_.interface.part.builder('control', 'dial_2_continuous', 'test_dial_2_continuous', {x:185, y:10} );
-            // partsCreated.control.controlGroup.append(partsCreated.control.dial_2_continuous);
+    // //dial
+    //     //dial_continuous
+    //         partsCreated.control.dial_1_continuous = _canvas_.interface.part.builder('control', 'dial_1_continuous', 'test_dial_1_continuous', {x:160, y:10} );
+    //         partsCreated.control.controlGroup.append(partsCreated.control.dial_1_continuous);
+    //         partsCreated.control.dial_2_continuous = _canvas_.interface.part.builder('control', 'dial_2_continuous', 'test_dial_2_continuous', {x:185, y:10} );
+    //         partsCreated.control.controlGroup.append(partsCreated.control.dial_2_continuous);
     //     //dial_discrete
     //         partsCreated.control.dial_1_discrete = _canvas_.interface.part.builder('control', 'dial_1_discrete', 'test_dial_1_discrete', {x:160, y:35} );
     //         partsCreated.control.controlGroup.append(partsCreated.control.dial_1_discrete);
@@ -388,22 +388,22 @@ _canvas_.layers.registerFunctionForLayer("interface", function(){
     //     //     } );
     //     //     partsCreated.control.controlGroup.append(partsCreated.control.list_image);
 
-    // //needleOverlay
-    //     //needleOverlay
-    //         partsCreated.control.needleOverlay = _canvas_.interface.part.builder('control', 'needleOverlay', 'test_needleOverlay', {x:545, y:0});
-    //         partsCreated.control.controlGroup.append(partsCreated.control.needleOverlay);
-    //         partsCreated.control.needleOverlay.select(0,0.25);
-    //         partsCreated.control.needleOverlay.area(0.5,0.75);
-    //         // partsCreated.control.needleOverlay.onchange = function(needle,value){console.log(needle,value);};
-    //         // partsCreated.control.needleOverlay.onrelease = function(needle,value){console.log(needle,value);};
-    //         // partsCreated.control.needleOverlay.selectionAreaToggle = function(bool){console.log(bool);};
+    //needleOverlay
+        //needleOverlay
+            partsCreated.control.needleOverlay = _canvas_.interface.part.builder('control', 'needleOverlay', 'test_needleOverlay', {x:545, y:0});
+            partsCreated.control.controlGroup.append(partsCreated.control.needleOverlay);
+            partsCreated.control.needleOverlay.select(0,0.25);
+            partsCreated.control.needleOverlay.area(0.5,0.75);
+            // partsCreated.control.needleOverlay.onchange = function(needle,value){console.log(needle,value);};
+            // partsCreated.control.needleOverlay.onrelease = function(needle,value){console.log(needle,value);};
+            // partsCreated.control.needleOverlay.selectionAreaToggle = function(bool){console.log(bool);};
 
-    // //grapherWaveWorkspace
-    //     //grapher_waveWorkspace
-    //         partsCreated.control.grapher_waveWorkspace = _canvas_.interface.part.builder('control', 'grapher_waveWorkspace', 'test_grapher_waveWorkspace', {x:670,y:0});
-    //         partsCreated.control.controlGroup.append(partsCreated.control.grapher_waveWorkspace);
-    //         partsCreated.control.grapher_waveWorkspace.select(0,0.2);
-    //         partsCreated.control.grapher_waveWorkspace.area(0.5,0.7);
+    //grapherWaveWorkspace
+        //grapher_waveWorkspace
+            partsCreated.control.grapher_waveWorkspace = _canvas_.interface.part.builder('control', 'grapher_waveWorkspace', 'test_grapher_waveWorkspace', {x:670,y:0});
+            partsCreated.control.controlGroup.append(partsCreated.control.grapher_waveWorkspace);
+            partsCreated.control.grapher_waveWorkspace.select(0,0.2);
+            partsCreated.control.grapher_waveWorkspace.area(0.5,0.7);
             
     // //sequencer
     //     //sequencer

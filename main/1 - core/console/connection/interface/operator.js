@@ -275,6 +275,10 @@ this.render = new function(){
             dev.log.interface('.operator.render.adjustCanvasSize(',newWidth, newHeight); //#development
             communicationModule.run_withoutPromise('operator__render__adjustCanvasSize', [newWidth, newHeight]);
         };
+        this.adjustCanvasSampleCount = function(newSampleCount){
+            dev.log.interface('.operator.render.adjustCanvasSampleCount(',newSampleCount); //#development
+            communicationModule.run_withoutPromise('operator__render__adjustCanvasSampleCount', [newSampleCount]);
+        };
         this.refreshCoordinates = function(){
             dev.log.interface('.operator.render.refreshCoordinates()'); //#development
             communicationModule.run_withoutPromise('operator__render__refreshCoordinates');

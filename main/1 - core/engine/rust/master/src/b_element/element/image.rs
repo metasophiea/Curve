@@ -136,6 +136,7 @@ pub struct Image {
 
     //render
         is_visible: bool,
+        previous_is_visible: bool,
 }
 impl Image {
     pub fn new(id:usize, name:String) -> Image {
@@ -168,6 +169,7 @@ impl Image {
             cached_heed_camera: false,
 
             is_visible: false,
+            previous_is_visible: false,
         }
     }
 
@@ -179,6 +181,7 @@ impl Image {
                     self.width = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //height
                 pub fn get_height(&self) -> &f32 { &self.height }
@@ -186,6 +189,7 @@ impl Image {
                     self.height = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //anchor
                 pub fn get_anchor(&self) -> &Point { &self.anchor }
@@ -193,17 +197,20 @@ impl Image {
                     self.anchor = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
         //other
             pub fn get_url(&self) -> &String { &self.url }
             pub fn set_url(&mut self, new:String, _viewbox:&Viewbox) {
                 self.url = new;
                 self.url_changed = true;
+                self.request_render();
             }
             pub fn get_bitmap(&self) -> &Option<ImageBitmap> { &self.bitmap }
             pub fn set_bitmap(&mut self, new:ImageBitmap, _viewbox:&Viewbox) { 
                 self.bitmap = Some(new);
                 self.bitmap_changed = true;
+                self.request_render();
             }
         //unified attribute
             pub fn set_unified_attribute(
@@ -230,6 +237,7 @@ impl Image {
                 if let Some(bitmap) = bitmap { self.bitmap = Some(bitmap); self.bitmap_changed = true; }
                 self.compute_extremities(true, None, None);
                 self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                self.request_render();
             }
 }
 impl ElementTrait for Image {
@@ -251,6 +259,7 @@ impl ElementTrait for Image {
                     self.x = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //y
                 fn get_y(&self) -> f32 { self.y }
@@ -258,6 +267,7 @@ impl ElementTrait for Image {
                     self.y = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //angle
                 fn get_angle(&self) -> f32 { self.angle }
@@ -265,6 +275,7 @@ impl ElementTrait for Image {
                     self.angle = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //scale
                 fn get_scale(&self) -> f32 { self.scale }
@@ -272,6 +283,7 @@ impl ElementTrait for Image {
                     self.scale = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
 
         //other
@@ -292,10 +304,13 @@ impl ElementTrait for Image {
             fn __set_extremities(&mut self, new:Polygon) { self.extremities = new; }
 
         //render
-            fn is_visible(&self) -> bool { self.is_visible }
-            fn set_is_visible(&mut self, new:bool) { self.is_visible = new; }
-            fn get_dot_frame(&self) -> bool { self.dot_frame }
-            fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
+            //visibility
+                fn is_visible(&self) -> bool { self.is_visible }
+                fn set_is_visible(&mut self, new:bool) { self.is_visible = new; }
+                fn previous_is_visible(&self) -> bool { self.previous_is_visible }
+            //dot frame
+                fn get_dot_frame(&self) -> bool { self.dot_frame }
+                fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
 
     //element specific
         //casting
@@ -347,7 +362,7 @@ impl ElementTrait for Image {
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
-            ) {
+            ) -> bool {
                 //load program
                     web_gl2_program_conglomerate_manager.load_program(
                         &context,
@@ -366,7 +381,7 @@ impl ElementTrait for Image {
                     if self.url_changed {
                         if !image_requester.is_image_loaded(&self.url) {
                             image_requester.request_image(&self.url, false);
-                            return;
+                            return true;
                         } else if web_gl2_program_conglomerate_manager.program_is_loaded(self.element_type) {
                             self.texture_index = web_gl2_program_conglomerate_manager.update_texture(
                                 &context,
@@ -406,6 +421,8 @@ impl ElementTrait for Image {
 
                 //activate draw
                     context.draw_arrays(WebGl2RenderingContext::TRIANGLE_FAN, 0, 4);
+
+                false
             }
 
         //info/dump

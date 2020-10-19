@@ -1,4 +1,4 @@
-const randomRectangleCount = 50_000;
+const randomRectangleCount = 1_000;
 
 _canvas_.layers.registerFunctionForLayer("core", function(){
 

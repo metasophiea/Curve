@@ -241,6 +241,15 @@ _canvas_.layers.registerFunctionForLayer("control", function(){
                             updateFunction:function(){return _canvas_.core.stats.onScreenAutoPrint(); }, 
                             onclickFunction:function(val){ _canvas_.core.stats.onScreenAutoPrint(val); }
                         },
+                        { type:'radio', text:'Rendering Sample Count', itemWidth:150, 
+                            options:[0, 1, 2, 3, 4, 5, 6, 7, 8],
+                            updateFunction:function(){
+                                return _canvas_.core.render.adjustCanvasSampleCount();
+                            },
+                            onclickFunction:function(value){
+                                _canvas_.core.render.adjustCanvasSampleCount(value);
+                            }
+                        },
                         {type:'break'}
                     ].concat(
                         _canvas_.layers.getVersionInformation().map(item => {

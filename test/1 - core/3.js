@@ -132,12 +132,13 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             upper_band.tick+=upper_band.tickStep;
             middle_band.tick+=middle_band.tickStep;
             lower_band.tick+=lower_band.tickStep;
-        // },1000/1);
-        },1000/60);
+        },1000/1);
+        // },1000/30);
+        // },1000/60);
 
     //rendering controls
-        // _canvas_.core.render.activeLimitToFrameRate(true);
-        // _canvas_.core.render.frameRateLimit(10);
+        _canvas_.core.render.activeLimitToFrameRate(true);
+        _canvas_.core.render.frameRateLimit(10);
 
         _canvas_.core.render.active(true);
         _canvas_.core.stats.active(true);

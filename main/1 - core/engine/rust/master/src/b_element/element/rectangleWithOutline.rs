@@ -217,6 +217,7 @@ pub struct RectangleWithOutline {
 
     //render
         is_visible: bool,
+        previous_is_visible: bool,
 }
 impl RectangleWithOutline {
     pub fn new(id:usize, name:String) -> RectangleWithOutline {
@@ -247,6 +248,7 @@ impl RectangleWithOutline {
             cached_heed_camera: false,
 
             is_visible: false,
+            previous_is_visible: false,
         }
     }
 
@@ -258,6 +260,7 @@ impl RectangleWithOutline {
                     self.width = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //height
                 pub fn get_height(&self) -> &f32 { &self.height }
@@ -265,6 +268,7 @@ impl RectangleWithOutline {
                     self.height = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //anchor
                 pub fn get_anchor(&self) -> &Point { &self.anchor }
@@ -272,6 +276,7 @@ impl RectangleWithOutline {
                     self.anchor = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //thickness
                 pub fn get_thickness(&self) -> &f32 { &self.thickness }
@@ -279,15 +284,18 @@ impl RectangleWithOutline {
                     self.thickness = new; 
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
         //other
             pub fn get_colour(&self) -> &Colour { &self.colour }
             pub fn set_colour(&mut self, new:Colour, _viewbox:&Viewbox) { 
                 self.colour = new;
+                self.request_render();
             }
             pub fn get_line_colour(&self) -> &Colour { &self.line_colour }
             pub fn set_line_colour(&mut self, new:Colour, _viewbox:&Viewbox) { 
                 self.line_colour = new;
+                self.request_render();
             }
         //unified attribute
             pub fn set_unified_attribute(
@@ -316,6 +324,7 @@ impl RectangleWithOutline {
                 if let Some(line_colour) = line_colour { self.line_colour = line_colour; }
                 self.compute_extremities(true, None, None);
                 self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                self.request_render();
             }
 }
 impl ElementTrait for RectangleWithOutline {
@@ -337,6 +346,7 @@ impl ElementTrait for RectangleWithOutline {
                     self.x = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //y
                 fn get_y(&self) -> f32 { self.y }
@@ -344,6 +354,7 @@ impl ElementTrait for RectangleWithOutline {
                     self.y = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //angle
                 fn get_angle(&self) -> f32 { self.angle }
@@ -351,6 +362,7 @@ impl ElementTrait for RectangleWithOutline {
                     self.angle = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
             //scale
                 fn get_scale(&self) -> f32 { self.scale }
@@ -358,6 +370,7 @@ impl ElementTrait for RectangleWithOutline {
                     self.scale = new;
                     self.compute_extremities(true, None, None);
                     self.determine_if_visible(self.get_parent_clipping_polygon().as_ref(), viewbox, true);
+                    self.request_render();
                 }
 
         //other
@@ -378,10 +391,16 @@ impl ElementTrait for RectangleWithOutline {
             fn __set_extremities(&mut self, new:Polygon) { self.extremities = new; }
 
         //render
-            fn is_visible(&self) -> bool { self.is_visible }
-            fn set_is_visible(&mut self, new:bool) { self.is_visible = new; }
-            fn get_dot_frame(&self) -> bool { self.dot_frame }
-            fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
+            //visibility
+                fn is_visible(&self) -> bool { self.is_visible }
+                fn set_is_visible(&mut self, new:bool) { 
+                    self.previous_is_visible = self.is_visible;
+                    self.is_visible = new;
+                }
+                fn previous_is_visible(&self) -> bool { self.previous_is_visible }
+            //dot frame
+                fn get_dot_frame(&self) -> bool { self.dot_frame }
+                fn set_dot_frame(&mut self, new:bool) { self.dot_frame = new; }
 
     //element specific
         //casting
@@ -434,7 +453,7 @@ impl ElementTrait for RectangleWithOutline {
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                 _image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
-            ) {
+            ) -> bool {
                 //load program
                     web_gl2_program_conglomerate_manager.load_program(
                         &context,
@@ -469,6 +488,8 @@ impl ElementTrait for RectangleWithOutline {
 
                 //activate draw
                     context.draw_arrays(WebGl2RenderingContext::TRIANGLES, 0, (VAO_POINTS.len()/2) as i32);
+
+                false
             }
 
         //info/dump

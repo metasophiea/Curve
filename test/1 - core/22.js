@@ -64,3 +64,36 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
         // items[2].angle( Math.random() );
     }, 1000/10);
 });
+
+
+
+
+// _canvas_.layers.registerFunctionForLayer("core", function(){
+//     group_1 = _canvas_.core.element.create('Group','group_1');
+//     _canvas_.core.arrangement.append(group_1);
+//     group_2 = _canvas_.core.element.create('Group','group_2');
+//     group_2.unifiedAttribute({ x:0, y:-100 });
+//     _canvas_.core.arrangement.append(group_2);
+//     group_3 = _canvas_.core.element.create('Group','group_3');
+//     group_3.unifiedAttribute({ x:100, y:0, heedCamera:true, heedCameraActive:true });
+//     _canvas_.core.arrangement.append(group_3);
+
+//     const rectangle_1 = _canvas_.core.element.create('Rectangle','rectangle_1');
+//     rectangle_1.unifiedAttribute({ x:10, y:10, width:30, height:30 });
+//     group_1.append(rectangle_1);
+
+//     const rectangle_2 = _canvas_.core.element.create('Rectangle','rectangle_2');
+//     rectangle_2.unifiedAttribute({ x:10, y:10, width:30, height:30 });
+//     group_2.append(rectangle_2);
+
+//     const rectangle_3 = _canvas_.core.element.create('Rectangle','rectangle_3');
+//     rectangle_3.unifiedAttribute({ x:10, y:10, width:30, height:30 });
+//     group_3.append(rectangle_3);
+//     const rectangle_4 = _canvas_.core.element.create('Rectangle','rectangle_4');
+//     rectangle_4.unifiedAttribute({ x:10, y:-40, width:30, height:30 });
+//     group_3.append(rectangle_4);
+
+//     setTimeout(_canvas_.core.render.frame, 1000);
+//     setTimeout(() => {console.log("");}, 1250);
+//     setTimeout(_canvas_.core.render.frame, 1500);
+// });

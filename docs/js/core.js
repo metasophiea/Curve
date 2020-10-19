@@ -23971,7 +23971,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:16} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:19} };
             
                 const core = this;
             
@@ -24474,6 +24474,10 @@
                                 this.adjustCanvasSize = function(newWidth, newHeight){
                                     dev.log.interface('.operator.render.adjustCanvasSize(',newWidth, newHeight); //#development
                                     communicationModule.run_withoutPromise('operator__render__adjustCanvasSize', [newWidth, newHeight]);
+                                };
+                                this.adjustCanvasSampleCount = function(newSampleCount){
+                                    dev.log.interface('.operator.render.adjustCanvasSampleCount(',newSampleCount); //#development
+                                    communicationModule.run_withoutPromise('operator__render__adjustCanvasSampleCount', [newSampleCount]);
                                 };
                                 this.refreshCoordinates = function(){
                                     dev.log.interface('.operator.render.refreshCoordinates()'); //#development
@@ -25503,6 +25507,7 @@
                         clearColour:{r:1,g:1,b:1,a:1},
                         activeLimitToFrameRate:false,
                         frameRateLimit:30,
+                        canvasSampleCount:8,
                         active:false,
                     };
                 
@@ -25520,6 +25525,12 @@
                         this.adjustCanvasSize = function(newWidth, newHeight){
                             dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
                             interface.operator.render.adjustCanvasSize(newWidth, newHeight);
+                        };
+                        this.adjustCanvasSampleCount = function(newSampleCount){
+                            dev.log.render('.adjustCanvasSampleCount(',newSampleCount); //#development
+                            if(newSampleCount==undefined){ return cachedValues.canvasSampleCount; }
+                            cachedValues.canvasSampleCount = newSampleCount;
+                            interface.operator.render.adjustCanvasSampleCount(newSampleCount);
                         };
                         this.refreshCoordinates = function(){
                             dev.log.render('.refreshCoordinates()'); //#development

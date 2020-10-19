@@ -1,9 +1,9 @@
 {{include:../../main/0 - library/main.js}}
 {{include:../../main/1 - core/main.js}}
 
-// {{include:1.js}} //every shape
+{{include:1.js}} //every shape
 // {{include:2.js}} //lots of random boxes
-{{include:3.js}} //wavy boxes
+// {{include:3.js}} //wavy boxes
 // {{include:4.js}} //four corners test
 // {{include:5.js}} //angle and scale adjustment on groups with children
 // {{include:6.js}} //viewport adjustment
