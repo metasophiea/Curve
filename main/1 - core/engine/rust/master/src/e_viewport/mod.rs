@@ -15,8 +15,6 @@
     }
 
 //core
-
-//self
     use crate::engine::Engine;
     use crate::a_library::data_type::{
         Point,

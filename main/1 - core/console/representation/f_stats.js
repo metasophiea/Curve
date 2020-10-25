@@ -59,14 +59,20 @@ this.stats = new function(){
                         '<p style="margin:1px"> angle:'+ core.viewport.angle()+'</p>' +
                         '<p style="margin:1px"> anchor: x:'+ anchor.x + ' y:' + anchor.y +'</p>' +
                         '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond.toFixed(2) +'</p>' +
-                        '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(5) +' (potentially '+ potentialFPS +'fps)</p>' +
+                        '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(15) +' (potentially '+ potentialFPS +'fps)</p>' +
+                        '<p style="margin:1px"> renderSplitOverTheLastThirtyFrames: '+ data.renderSplit+'</p>' +
                     '';
                 });
-            }, 100);
+            }, 250);
         }else{
             clearInterval(onScreenAutoPrint_intervalId);
             if(onScreenAutoPrint_section != undefined){ onScreenAutoPrint_section.remove(); }
             onScreenAutoPrint_section = undefined;
         }
+    };
+
+    this._dump = function(){
+        dev.log.callback('._dump()'); //#development
+        interface.operator.stats._dump();
     };
 };

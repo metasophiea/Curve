@@ -1,4 +1,65 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-10-25
+  - work on the subframe. Still under development unfortunately. Modifications
+    have been made to the way that the framebuffer for the root group is
+    generated however, and there are new methods for the 
+    WebGl2programConglomerate and WebGl2programConglomerateManager structures,
+    which need review...
+
+
+2020-10-24
+  - updated comp.sh and the way compilation is done, a little. Comp.sh now can
+    produce two versions of the core-engine wasm file, or more accurately, it
+    saves the optimised and non-optimised versions under different names in
+    docs/wasm; core_engine_development.wasm and core_engine_production.wasm.
+    It also now modifies the min.js files to use this core_engine_production
+    file instead of the default core_engine_development one. This was done to
+    avoid the mistakes I was making of producing production versions of the
+    program, then accidentally making a development version which would
+    overwrite the optimised wasm file. This could make it look like the
+    optimised version wasn't all that fast, where in reality the system was
+    using the development version with the production js code. The updated
+    comp.sh clears this all up by keeping the production and development code
+    and files separate.
+
+
+2020-10-22
+  - small modification to stop the arguments for a stats command from being
+    executed if stats is not active 
+  - added way of setting whether the stats section should be active or not
+  - added _dump method to stats
+
+
+2020-10-21
+  - updated the way timestamps are collected in the stats section, for better
+    accuracy (and no more infinite fps, unfortunately)
+  - added a stats section to core engine's wasm code, so it now can measure the
+    percentage of frame skipped. (I also made an attempt at calculating
+    something like this for all elements, but I think that might have been a
+    little close to the sun.. and a little unneeded)
+
+
+2020-10-20
+  - slight change to the "frame" method in the rendering section of 
+    core-engine's wasm code; which checks to see if the root group needs to be
+    rendered. If not, it bails out of the entire function. This in turn means
+    that no new frame is sent to the main thread, saving lots of time. This has
+    brought back the famous "potentially infinite fps" stat
+  - added "overscroll-behavior-x: contain;" to the same part of the engine that
+    deals with overflow, so it will automatically be added when the mouse enters
+    the canvas, though only when viewport.stopMouseScroll is active. This is to
+    stop accidental back/forward actions
+  - updated _canvas_.control.viewport.refresh so that it waits for the 
+    _canvas_.core.meta.refresh() function to finish before refreshing the gui
+  - fixed issue with player circuit which caused new audio buffer's to be
+    generated constantly, not deleting any of the old ones and leading to issues
+    with searching for buffers that could be reused, finding none. Causing the
+    search to take longer and longer each time... I'll probably need to review
+    this circuit. Maybe create a more specific one for the playback of short 
+    samples that don't need to be looped or to have the needle jump around 
+    within them. The Player circuit might be a little too general-purpose
+
+
 2020-10-19
   - further work on full-frame render culling Seems to be working rather well
     now. I also have it multisampling to deal with the aliasing. You can also
@@ -4511,7 +4572,7 @@
 2018-12-11
   - canvas experiment
     - more polishing with the sequencer cursor
-    - bug where if you held down both alt and space; an infinate loop would
+    - bug where if you held down both alt and space; an infinite loop would
       occur. Fixed it by not allowing interactionPlane_back.onmousedown to run
       if that was the case.
     - began work on object builder

@@ -64,8 +64,12 @@ this.player = function(context){
         }
         function generatePlayheadNumber(){
             dev.log.circuit('.player::generatePlayheadNumber()'); //#development
+
             let num = 0;
-            while( Object.keys(state.playhead).includes(String(num)) && state.playhead[num] != undefined ){num++;}
+            while( state.playhead[num] != undefined && state.playhead[num].playing ){
+                num++;
+            }
+
             return num;
         }
         function playheadCompute(playhead){
@@ -215,7 +219,12 @@ this.player = function(context){
                 if(state.playhead[playhead].position > state.area.actual_end){ state.playhead[playhead].position = state.area.actual_start; }
                 dev.log.circuit('.player.start -> state.playhead[playhead].position: '+state.playhead[playhead].position); //#development
             //load buffer, enter settings and start from playhead position
-                flow.bufferSource[playhead] = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, (function(playhead){ return function(){self.stop(playhead);};})(playhead));
+                flow.bufferSource[playhead] = _canvas_.library.audio.loadBuffer(
+                    context,
+                    flow.track.buffer,
+                    flow.channelSplitter,
+                    (function(playhead){ return function(){ self.stop(playhead); }; })(playhead)
+                );
                 flow.bufferSource[playhead].loop = state.loop.active;
                 flow.bufferSource[playhead].loopStart = state.area.actual_start;
                 flow.bufferSource[playhead].loopEnd = state.area.actual_end;

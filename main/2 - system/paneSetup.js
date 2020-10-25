@@ -5,12 +5,14 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
     //background
         _canvas_.system.pane.background = _canvas_.core.element.create('Group','background');
         _canvas_.system.pane.background.ignored(true);
+        _canvas_.system.pane.background.framebufferActive(true);
         _canvas_.core.arrangement.append( _canvas_.system.pane.background );
 
     //middleground
         _canvas_.system.pane.middleground = _canvas_.core.element.create('Group','middleground');
         _canvas_.system.pane.middleground.heedCamera(true);
         _canvas_.system.pane.middleground.heedCameraActive(true);
+        _canvas_.system.pane.middleground.framebufferActive(true);
         _canvas_.core.arrangement.append( _canvas_.system.pane.middleground );
         //back
             _canvas_.system.pane.middleground_back = _canvas_.core.element.create('Group','back');
@@ -24,6 +26,7 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
 
     //foreground
         _canvas_.system.pane.foreground = _canvas_.core.element.create('Group','foreground');
+        _canvas_.system.pane.foreground.framebufferActive(true);
         _canvas_.core.arrangement.append( _canvas_.system.pane.foreground );
 
     //shortcuts

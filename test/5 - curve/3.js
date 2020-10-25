@@ -2,8 +2,13 @@ _canvas_.layers.registerFunctionForLayer("curve", function(){
     _canvas_.core.render.frameRateLimit(10);
 
     const dsds = _canvas_.control.scene.addUnit(10,100,0,'dsds-8^3','harbinger');
-    const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
-    const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
+    const pg = _canvas_.control.scene.addUnit(10,300,0,'pulse_generator','alpha');
+    pg.io.signal.output.connectTo( dsds.io.signal.signal_in_0 );
+    pg.i.tempo(60)
+
+
+    // const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
+    // const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
 
     // setTimeout( () => {
     //     const rdp2 = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');

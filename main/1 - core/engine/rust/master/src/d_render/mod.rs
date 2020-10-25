@@ -20,8 +20,6 @@
     }
 
 //core
-
-//self
     use crate::engine::Engine;
     use crate::interface;
     use crate::a_library::data_type::{
@@ -35,7 +33,8 @@
     };
     use crate::b_element::ElementManager;
     use crate::c_arrangement::Arrangement;
-
+    use crate::f_stats::Stats;
+    
 
 
 
@@ -75,9 +74,12 @@ impl Render {
         context.enable(WebGl2RenderingContext::BLEND);
         context.blend_func(WebGl2RenderingContext::ONE, WebGl2RenderingContext::ONE_MINUS_SRC_ALPHA);
 
+        let mut web_gl2_program_conglomerate_manager = WebGl2programConglomerateManager::new();
+        let web_gl2_framebuffer_manager = WebGl2framebufferManager::new(800,600,8,&context,&mut web_gl2_program_conglomerate_manager);
+
         Render {
-            web_gl2_program_conglomerate_manager: WebGl2programConglomerateManager::new(),
-            web_gl2_framebuffer_manager: WebGl2framebufferManager::new(800,600,8),
+            web_gl2_program_conglomerate_manager: web_gl2_program_conglomerate_manager,
+            web_gl2_framebuffer_manager: web_gl2_framebuffer_manager,
             image_requester: ImageRequester::new(),
 
             canvas: canvas,
@@ -99,7 +101,6 @@ impl Render {
         }
         pub fn set_clear_colour(&mut self, colour:Colour){ 
             self.clear_colour = colour;
-            self.context.clear_color(self.clear_colour.r(), self.clear_colour.g(), self.clear_colour.b(), self.clear_colour.a());
         }
         pub fn adjust_canvas_size(&mut self, worker:&web_sys::Worker, arg_width:Option<u32>, arg_height:Option<u32>, arg_devicePixelRatio:Option<f32>) {
             self.currentCanvasSize_width = arg_width.unwrap_or( self.defaultCanvasSize_width );
@@ -152,14 +153,23 @@ impl Render {
     //actual render
         pub fn frame(
             &mut self, 
-            worker:&web_sys::Worker,
-            noClear:bool,
-            element_manager:&ElementManager,
-            arrangement:&Arrangement,
-            viewbox:&Viewbox,
+            worker: &web_sys::Worker,
+            noClear: bool,
+            element_manager: &ElementManager,
+            arrangement: &Arrangement,
+            viewbox: &Viewbox,
+            stats: &mut Stats,
         ) {
+            //check if frame needs to be rendered at all
+                if !element_manager.get_element_by_id_mut(arrangement.get_root_element_id()).unwrap().as_group().unwrap().get_render_required() {
+                    if stats.get_active() { stats.render_frame_register_skip(true); }
+                    return
+                }
+                stats.render_frame_register_skip(false);
+
             //clear frame
                 if !noClear {
+                    self.context.clear_color(self.clear_colour.r(), self.clear_colour.g(), self.clear_colour.b(), self.clear_colour.a());
                     self.context.clear(
                         WebGl2RenderingContext::COLOR_BUFFER_BIT | 
                         WebGl2RenderingContext::STENCIL_BUFFER_BIT
@@ -177,6 +187,7 @@ impl Render {
                     &mut self.image_requester,
                     &(self.currentCanvasSize_width, self.currentCanvasSize_height),
                     false,
+                    stats,
                 );
 
             // //optional draw of viewbox dot frame
@@ -269,6 +280,7 @@ impl Render {
                     &self.element_manager,
                     &self.arrangement,
                     &self.viewport.get_viewbox(),
+                    &mut self.stats,
                 );
             }
         //misc

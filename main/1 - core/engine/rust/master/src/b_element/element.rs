@@ -38,6 +38,7 @@
             Viewbox,
             ElementType,
             Colour,
+            RenderDecision,
         },
         math::{
             detect_intersect,
@@ -50,9 +51,10 @@
         },
     };
     use crate::b_element::ElementManager;
-
+    use crate::f_stats::Stats;
     use crate::engine::Engine;
     
+//self
     //group
         mod group;
         pub use group::Group;
@@ -120,7 +122,7 @@ pub trait ElementTrait {
         fn as_character_string_mut(&mut self) -> Option<&mut CharacterString> { None }
         
     //hierarchy and identity
-        fn get_element_type(&self) -> ElementType;
+        fn get_element_type(&self) -> &ElementType;
         fn get_id(&self) -> usize;
         fn get_name(&self) -> &String;
         fn set_name(&mut self, new:String);
@@ -342,7 +344,7 @@ pub trait ElementTrait {
         
         //render request
             fn request_render(&mut self) {
-                if self.get_element_type() == ElementType::Group {
+                if self.get_element_type() == &ElementType::Group {
                     self.as_group_mut().unwrap().set_render_required(true);
                 }
 
@@ -369,9 +371,11 @@ pub trait ElementTrait {
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
                 force: bool,
+                stats: &mut Stats,
             ) -> bool { //true/false - I need to / do not need to be rendered again
                 //judge whether this element should be allowed to render
                     if !force && !self.is_visible() {
+                        if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::NotVisible); }
                         return false;
                     }
 
@@ -394,6 +398,7 @@ pub trait ElementTrait {
                         web_gl2_program_conglomerate_manager,
                         image_requester,
                         resolution,
+                        stats,
                     );
 
                 //if requested; draw dot frame
@@ -407,6 +412,7 @@ pub trait ElementTrait {
                             web_gl2_framebuffer_manager,
                             image_requester,
                             resolution,
+                            stats,
                         );
                     }
 
@@ -419,6 +425,7 @@ pub trait ElementTrait {
                 _web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                 _image_requester: &mut ImageRequester,
                 _resolution: &(u32, u32),
+                _stats: &mut Stats,
             ) -> bool { //true/false - I need to / do not need to be rendered again
                 false
             }
@@ -436,6 +443,7 @@ pub trait ElementTrait {
                 web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
+                stats: &mut Stats,
             ) {
                 let mux:f32 = 1.0; //0.05;
 
@@ -443,17 +451,17 @@ pub trait ElementTrait {
                     for point in self.get_extremities().get_points() {
                         ElementManager::draw_dot(
                             &point, 4.0 * mux, &Colour::new(1.0,0.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, stats
                         );
                     }
                 //draw bounding box top left and bottom right points
                     ElementManager::draw_dot(
                         &self.get_extremities().get_bounding_box().get_top_left(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                        parent_clipping_polygon, heed_camera,viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
+                        parent_clipping_polygon, heed_camera,viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, stats
                     );
                     ElementManager::draw_dot(
                         &self.get_extremities().get_bounding_box().get_bottom_right(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                        parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
+                        parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, stats
                     );
             }
 

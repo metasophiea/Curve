@@ -21,8 +21,6 @@
     }
 
 //core
-
-//self
     use crate::engine::Engine;
     use crate::interface;
     use crate::a_library::data_type::{
@@ -330,6 +328,13 @@ impl Callback {
                     &vector_to_array__string(&vec![String::from("hidden")]),
                 ) 
             );
+            interface::send_message(
+                worker, "setDocumentAttributes",
+                &js_sys::Array::of2(
+                    &vector_to_array__string(&vec![String::from("body.style['overscroll-behavior-x']")]),
+                    &vector_to_array__string(&vec![String::from("contain")]),
+                ) 
+            );
         }
 
         self.activate_element_callback(
@@ -348,6 +353,13 @@ impl Callback {
                 worker, "setDocumentAttributes",
                 &js_sys::Array::of2(
                     &vector_to_array__string(&vec![String::from("body.style.overflow")]),
+                    &vector_to_array__string(&vec![String::from("")]),
+                ) 
+            );
+            interface::send_message(
+                worker, "setDocumentAttributes",
+                &js_sys::Array::of2(
+                    &vector_to_array__string(&vec![String::from("body.style['overscroll-behavior-x']")]),
                     &vector_to_array__string(&vec![String::from("")]),
                 ) 
             );

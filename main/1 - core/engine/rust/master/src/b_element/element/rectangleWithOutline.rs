@@ -14,6 +14,7 @@
             Point,
             Polygon,
             ElementType,
+            RenderDecision,
         },
         structure::{
             WebGl2programConglomerateManager,
@@ -27,6 +28,7 @@
         },
     };
     use super::super::element::ElementTrait;
+    use crate::f_stats::Stats;
 
 
 
@@ -330,7 +332,7 @@ impl RectangleWithOutline {
 impl ElementTrait for RectangleWithOutline {
     //trait requirements
         //hierarchy and identity
-            fn get_element_type(&self) -> ElementType { self.element_type }
+            fn get_element_type(&self) -> &ElementType { &self.element_type }
             fn get_id(&self) -> usize { self.id }
             fn get_name(&self) -> &String{ &self.name }
             fn set_name(&mut self, new:String) { self.name = new; }
@@ -453,11 +455,12 @@ impl ElementTrait for RectangleWithOutline {
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                 _image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
+                stats: &mut Stats,
             ) -> bool {
                 //load program
                     web_gl2_program_conglomerate_manager.load_program(
                         &context,
-                        self.element_type,
+                        Some(self.element_type),
                         &VERTEX_SHADER_SOURCE,
                         &FRAGMENT_SHADER_SOURCE,
                         0,
@@ -489,6 +492,7 @@ impl ElementTrait for RectangleWithOutline {
                 //activate draw
                     context.draw_arrays(WebGl2RenderingContext::TRIANGLES, 0, (VAO_POINTS.len()/2) as i32);
 
+                if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                 false
             }
 

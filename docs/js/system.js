@@ -23971,7 +23971,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:19} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:25} };
             
                 const core = this;
             
@@ -24568,6 +24568,10 @@
                             this.getReport = function(){
                                 dev.log.interface('.operator.stats.getReport()'); //#development
                                 return communicationModule.run_withPromise('operator__stats__getReport');
+                            };
+                            this._dump = function(){
+                                dev.log.interface('.operator.stats._dump()'); //#development
+                                communicationModule.run_withoutPromise('operator__stats___dump');
                             };
                         };
                         
@@ -25741,15 +25745,21 @@
                                         '<p style="margin:1px"> angle:'+ core.viewport.angle()+'</p>' +
                                         '<p style="margin:1px"> anchor: x:'+ anchor.x + ' y:' + anchor.y +'</p>' +
                                         '<p style="margin:1px"> framesPerSecond: '+ data.framesPerSecond.toFixed(2) +'</p>' +
-                                        '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(5) +' (potentially '+ potentialFPS +'fps)</p>' +
+                                        '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(15) +' (potentially '+ potentialFPS +'fps)</p>' +
+                                        '<p style="margin:1px"> renderSplitOverTheLastThirtyFrames: '+ data.renderSplit+'</p>' +
                                     '';
                                 });
-                            }, 100);
+                            }, 250);
                         }else{
                             clearInterval(onScreenAutoPrint_intervalId);
                             if(onScreenAutoPrint_section != undefined){ onScreenAutoPrint_section.remove(); }
                             onScreenAutoPrint_section = undefined;
                         }
+                    };
+                
+                    this._dump = function(){
+                        dev.log.callback('._dump()'); //#development
+                        interface.operator.stats._dump();
                     };
                 };
                 this.callback = new function(){
@@ -26038,12 +26048,14 @@
                 //background
                     _canvas_.system.pane.background = _canvas_.core.element.create('Group','background');
                     _canvas_.system.pane.background.ignored(true);
+                    _canvas_.system.pane.background.framebufferActive(true);
                     _canvas_.core.arrangement.append( _canvas_.system.pane.background );
             
                 //middleground
                     _canvas_.system.pane.middleground = _canvas_.core.element.create('Group','middleground');
                     _canvas_.system.pane.middleground.heedCamera(true);
                     _canvas_.system.pane.middleground.heedCameraActive(true);
+                    _canvas_.system.pane.middleground.framebufferActive(true);
                     _canvas_.core.arrangement.append( _canvas_.system.pane.middleground );
                     //back
                         _canvas_.system.pane.middleground_back = _canvas_.core.element.create('Group','back');
@@ -26057,6 +26069,7 @@
             
                 //foreground
                     _canvas_.system.pane.foreground = _canvas_.core.element.create('Group','foreground');
+                    _canvas_.system.pane.foreground.framebufferActive(true);
                     _canvas_.core.arrangement.append( _canvas_.system.pane.foreground );
             
                 //shortcuts

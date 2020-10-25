@@ -24,6 +24,7 @@
             Point,
             Polygon,
             ElementType,
+            RenderDecision,
         },
         structure::{
             WebGl2programConglomerateManager,
@@ -37,6 +38,7 @@
         },
     };
     use super::super::element::ElementTrait;
+    use crate::f_stats::Stats;
 
 
 
@@ -225,7 +227,7 @@ impl Rectangle {
 impl ElementTrait for Rectangle {
     //trait requirements
         //hierarchy and identity
-            fn get_element_type(&self) -> ElementType { self.element_type }
+            fn get_element_type(&self) -> &ElementType { &self.element_type }
             fn get_id(&self) -> usize { self.id }
             fn get_name(&self) -> &String{ &self.name }
             fn set_name(&mut self, new:String) { self.name = new; }
@@ -347,6 +349,7 @@ impl ElementTrait for Rectangle {
                     web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                     _image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
+                    stats: &mut Stats,
                 ) -> bool {
                     // //if element is not visible, then don't bother
                     //     if self.colour.a() == 0.0 {
@@ -356,7 +359,7 @@ impl ElementTrait for Rectangle {
                     //load program
                         web_gl2_program_conglomerate_manager.load_program(
                             &context,
-                            self.element_type,
+                            Some(self.element_type),
                             &VERTEX_SHADER_SOURCE,
                             &FRAGMENT_SHADER_SOURCE,
                             0,
@@ -386,6 +389,7 @@ impl ElementTrait for Rectangle {
                     //activate draw
                         context.draw_arrays(WebGl2RenderingContext::TRIANGLE_FAN, 0, 4);
 
+                    if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                     false
                 }
 

@@ -369,6 +369,10 @@ this.stats = new function(){
         dev.log.interface('.operator.stats.getReport()'); //#development
         return communicationModule.run_withPromise('operator__stats__getReport');
     };
+    this._dump = function(){
+        dev.log.interface('.operator.stats._dump()'); //#development
+        communicationModule.run_withoutPromise('operator__stats___dump');
+    };
 };
 
 this.callback = new function(){

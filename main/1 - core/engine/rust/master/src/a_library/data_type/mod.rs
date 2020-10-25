@@ -37,5 +37,8 @@ pub use polygon::{*};
 mod printing_mode_position;
 pub use printing_mode_position::{*};
 
+mod render_decision;
+pub use render_decision::{*};
+
 mod viewbox;
 pub use viewbox::{*};

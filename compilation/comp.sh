@@ -89,11 +89,12 @@
         if $productionWasm; then
             echo ":: compiling optimised version"
             wasm-pack build --no-typescript --target no-modules
+            cp pkg/core_engine_bg.wasm "$dir"/../docs/wasm/core_engine_production.wasm
         else
             echo ":: compiling regular version"
             wasm-pack build --dev --no-typescript --target no-modules
+            cp pkg/core_engine_bg.wasm "$dir"/../docs/wasm/core_engine_development.wasm
         fi
-        cp pkg/core_engine_bg.wasm "$dir"/../docs/wasm/
         cd "$dir"
 
         if $compileJs || $report; then
@@ -130,6 +131,13 @@
                     echo "  -> "$name".js"
                     awk '!/\/\/#development/' "$dir"/../docs/js/$name.js > "$dir"/../docs/js/$name.min.js
                 done
+            #tell core engine to use core_engine_production.wasm instead of core_engine_development.wasm (if its on the list)
+                if [[ " ${nameArray[@]} " =~ "core_engine" ]]; then
+                    echo ":: telling core_engine.min.js to use core_engine_production.wasm instead of core_engine_development.wasm"
+                    echo "  -> core_engine.min.js"
+                    awk '{gsub("core_engine_development.wasm", "core_engine_production.wasm", $0); print}' "$dir"/../docs/js/core_engine.min.js > "$dir"/../docs/js/core_engine.min.tmp.js
+                    mv "$dir"/../docs/js/core_engine.min.tmp.js "$dir"/../docs/js/core_engine.min.js
+                fi
             #tell core to use core_engine.min.js instead of core_engine.js
                 echo ":: telling core to use core_engine.min.js instead of core_engine.js"
                 for name in ${nameArray[@]/"core_engine"}; do 

@@ -25,6 +25,7 @@
             ElementType,
             PathCapType,
             PathJointType,
+            RenderDecision,
         },
         math::{
             path_extrapolation_get_triangles,
@@ -43,6 +44,7 @@
         },
     };
     use super::super::element::ElementTrait;
+    use crate::f_stats::Stats;
 
 
 
@@ -347,7 +349,7 @@ impl PolygonWithOutline {
 impl ElementTrait for PolygonWithOutline {
     //trait requirements
         //hierarchy and identity
-            fn get_element_type(&self) -> ElementType { self.element_type }
+            fn get_element_type(&self) -> &ElementType { &self.element_type }
             fn get_id(&self) -> usize { self.id }
             fn get_name(&self) -> &String{ &self.name }
             fn set_name(&mut self, new:String) { self.name = new; }
@@ -473,6 +475,7 @@ impl ElementTrait for PolygonWithOutline {
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                 _image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
+                stats: &mut Stats,
             ) -> bool {
                 //vao
                     if self.vao_id.is_none() {
@@ -496,7 +499,7 @@ impl ElementTrait for PolygonWithOutline {
                 //load program
                     web_gl2_program_conglomerate_manager.load_program(
                         &context,
-                        self.element_type,
+                        Some(self.element_type),
                         &VERTEX_SHADER_SOURCE,
                         &FRAGMENT_SHADER_SOURCE,
                         self.vao_id.unwrap(),
@@ -526,6 +529,7 @@ impl ElementTrait for PolygonWithOutline {
                 //activate draw
                     context.draw_arrays(WebGl2RenderingContext::TRIANGLES, 0, (self.vao_points.len()/2) as i32);
 
+                if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                 false
             }
 

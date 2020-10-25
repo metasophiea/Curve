@@ -19,8 +19,9 @@ this.angle = function(a){
 };
 this.refresh = function(){ 
     dev.log.interaction('.refresh()'); //#development
-    _canvas_.core.meta.refresh();
-    control.gui.refresh();
+    _canvas_.core.meta.refresh().then(() => {
+        control.gui.refresh();
+    });
 };
 this.stopMouseScroll = function(bool){ 
     dev.log.interaction('.stopMouseScroll(',bool); //#development

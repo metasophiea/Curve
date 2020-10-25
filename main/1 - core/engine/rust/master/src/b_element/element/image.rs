@@ -16,6 +16,7 @@
             Point,
             Polygon,
             ElementType,
+            RenderDecision,
         },
         structure::{
             WebGl2programConglomerateManager,
@@ -30,6 +31,7 @@
         },
     };
     use super::super::element::ElementTrait;
+    use crate::f_stats::Stats;
 
 
 
@@ -243,7 +245,7 @@ impl Image {
 impl ElementTrait for Image {
     //trait requirements
         //hierarchy and identity
-            fn get_element_type(&self) -> ElementType { self.element_type }
+            fn get_element_type(&self) -> &ElementType { &self.element_type }
             fn get_id(&self) -> usize { self.id }
             fn get_name(&self) -> &String{ &self.name }
             fn set_name(&mut self, new:String) { self.name = new; }
@@ -362,11 +364,12 @@ impl ElementTrait for Image {
                 web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
+                stats: &mut Stats,
             ) -> bool {
                 //load program
                     web_gl2_program_conglomerate_manager.load_program(
                         &context,
-                        self.element_type,
+                        Some(self.element_type),
                         &VERTEX_SHADER_SOURCE,
                         &FRAGMENT_SHADER_SOURCE,
                         0,
@@ -381,6 +384,7 @@ impl ElementTrait for Image {
                     if self.url_changed {
                         if !image_requester.is_image_loaded(&self.url) {
                             image_requester.request_image(&self.url, false);
+                            if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::ImageDataNotLoaded); }
                             return true;
                         } else if web_gl2_program_conglomerate_manager.program_is_loaded(self.element_type) {
                             self.texture_index = web_gl2_program_conglomerate_manager.update_texture(
@@ -406,8 +410,8 @@ impl ElementTrait for Image {
 
                 //determine which offset to use
                     let working_offset = match offset {
+                        Some(offset) => offset,
                         None => self.get_cached_offset(),
-                        Some(offset) => { offset },
                     };
                     
                 //load uniforms
@@ -422,6 +426,7 @@ impl ElementTrait for Image {
                 //activate draw
                     context.draw_arrays(WebGl2RenderingContext::TRIANGLE_FAN, 0, 4);
 
+                if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                 false
             }
 

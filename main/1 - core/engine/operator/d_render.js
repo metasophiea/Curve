@@ -137,10 +137,10 @@ this.render = new function(){
             //attempt to render frame, if there is a failure; stop animation loop and report the error
                 try{
                     if( operator.stats.active() ){
-                        const startTime = (new Date()).getTime();
+                        const startTime = performance.now();
                         ENGINE.render__frame(false);
-                        const endTime = (new Date()).getTime();
-                        operator.stats.collectFrameTime( endTime - startTime );
+                        const endTime = performance.now();
+                        operator.stats.collectFrameTime(endTime - startTime);
                     }else{
                         ENGINE.render__frame(false);
                     }

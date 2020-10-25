@@ -41,6 +41,9 @@
             get_value_from_object__colour,
         },
     };
+    use crate::f_stats::Stats;
+
+//self
     use super::super::element::ElementTrait;
 
     use super::Group;
@@ -297,7 +300,7 @@ impl CharacterString {
 impl ElementTrait for CharacterString {
     //trait requirements
         //hierarchy and identity
-            fn get_element_type(&self) -> ElementType { self.element_type }
+            fn get_element_type(&self) -> &ElementType { &self.element_type }
             fn get_id(&self) -> usize { self.id }
             fn get_name(&self) -> &String{ &self.name }
             fn set_name(&mut self, new:String) { self.name = new; }
@@ -435,6 +438,7 @@ impl ElementTrait for CharacterString {
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
                 force: bool,
+                stats: &mut Stats,
             ) -> bool {
                 let re_render = self.inner_group.render(
                     parent_clipping_polygon,
@@ -446,6 +450,7 @@ impl ElementTrait for CharacterString {
                     image_requester,
                     resolution,
                     force,
+                    stats,
                 );
 
                 if self.get_dot_frame() { 
@@ -458,6 +463,7 @@ impl ElementTrait for CharacterString {
                         web_gl2_framebuffer_manager,
                         image_requester,
                         resolution,
+                        stats,
                     );
                 }
 
@@ -473,6 +479,7 @@ impl ElementTrait for CharacterString {
                 web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                 image_requester: &mut ImageRequester,
                 resolution: &(u32, u32),
+                stats: &mut Stats,
             ) {
                 self.inner_group.draw_dot_frame(
                     parent_clipping_polygon,
@@ -483,6 +490,7 @@ impl ElementTrait for CharacterString {
                     web_gl2_framebuffer_manager,
                     image_requester,
                     resolution,
+                    stats,
                 );
             }
 

@@ -1,4 +1,5 @@
 use std::fmt;
+use std::slice::Iter;
     
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ElementType {
@@ -13,6 +14,23 @@ pub enum ElementType {
     Image,
     Character,
     CharacterString,
+}
+impl ElementType {
+    pub fn iterator() -> Iter<'static, ElementType> {
+        [
+            ElementType::Group,
+            ElementType::Rectangle,
+            ElementType::RectangleWithOutline,
+            ElementType::Circle,
+            ElementType::CircleWithOutline,
+            ElementType::Polygon,
+            ElementType::PolygonWithOutline,
+            ElementType::Path,
+            ElementType::Image,
+            ElementType::Character,
+            ElementType::CharacterString,
+        ].iter()
+    }
 }
 impl ElementType {
     pub fn from_str(type_string:&str) -> Option<ElementType> {
@@ -33,7 +51,7 @@ impl ElementType {
     }
 
     fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match self {
             ElementType::Group => write!(f, "Group"),
             ElementType::Rectangle => write!(f, "Rectangle"),
             ElementType::RectangleWithOutline => write!(f, "RectangleWithOutline"),

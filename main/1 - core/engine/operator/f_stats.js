@@ -43,13 +43,18 @@ this.stats = new function(){
     this.active = function(bool){
         if(bool==undefined){return active;} 
         active=bool;
+        ENGINE.stats__set_active(bool);
     };
     this.getReport = function(){
         return {
             framesPerSecond: framesPerSecond.rate,
-            // timeTakenByMostRecentFrame: timePerFrame.timePerFrameArray[timePerFrame.timePerFrameArray.length-1]/1000,
             secondsPerFrameOverTheLastThirtyFrames: timePerFrame.time,
             potentialFPS: 1/timePerFrame.time,
+            renderSplit: ENGINE.stats__render_frame_skip_get_average_split(),
         };
+    };
+
+    this._dump = function(){
+        ENGINE.stats__dump();
     };
 };

@@ -105,6 +105,7 @@
 //stats
     communicationModule.function.operator__stats__active = self.operator.stats.active;
     communicationModule.function.operator__stats__getReport = self.operator.stats.getReport;
+    communicationModule.function.operator__stats___dump = self.operator.stats._dump;
 
 //callback
     communicationModule.function.operator__callback__listCallbackTypes = self.operator.callback.listCallbackTypes;

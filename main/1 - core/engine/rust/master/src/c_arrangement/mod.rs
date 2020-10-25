@@ -17,8 +17,6 @@
     }
 
 //core
-
-//self
     use crate::engine::Engine;
     use crate::a_library::data_type::{
         Point,
@@ -110,7 +108,7 @@ impl Arrangement {
 
             fn get_the_facts(element:&Ref<dyn ElementTrait>) -> String {
                 format!(
-                    "{} (id:{}, type:{}, x:{}, y:{}, angle:{}, scale:{}, heed_camera:{}, is_visible:{}, render_required:{})",
+                    "{} (id:{}, type:{}, x:{}, y:{}, angle:{}, scale:{}, heed_camera:{}, is_visible:{}, render_required:{}, framebuffer_active:{})",
                     element.get_name(),
                     element.get_id(),
                     element.get_element_type(),
@@ -119,7 +117,7 @@ impl Arrangement {
                     element.get_angle(),
                     element.get_scale(),
 
-                    if element.get_parent_id() != Some(0) || element.get_element_type() != ElementType::Group { 
+                    if element.get_parent_id() != Some(0) || element.get_element_type() != &ElementType::Group { 
                         "-n/a-"
                     } else { 
                         match element.as_group().unwrap().get_heed_camera() {
@@ -130,10 +128,16 @@ impl Arrangement {
 
                     element.is_visible(),
 
-                    if element.get_element_type() != ElementType::Group { 
+                    if element.get_element_type() != &ElementType::Group { 
                         "-n/a-"
                     } else { 
                         if element.as_group().unwrap().get_render_required() { "true" } else { "false" }
+                    },
+
+                    if element.get_element_type() != &ElementType::Group { 
+                        "-n/a-"
+                    } else { 
+                        if element.as_group().unwrap().get_framebuffer_active() { "true" } else { "false" }
                     },
                 )
             }
@@ -170,7 +174,7 @@ impl Arrangement {
             fn recursive_survey(element:&Ref<dyn ElementTrait>, results:&mut HashMap<ElementType,u32>) {
                 match results.get_mut(&element.get_element_type()) {
                     Some(value) => { *value += 1; },
-                    None => { results.insert(element.get_element_type(), 1); },
+                    None => { results.insert(*element.get_element_type(), 1); },
                 }
 
                 if let Some(element) = element.as_group() {

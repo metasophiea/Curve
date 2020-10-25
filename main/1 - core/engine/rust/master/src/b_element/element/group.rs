@@ -36,6 +36,7 @@
             Viewbox,
             ElementType,
             Colour,
+            RenderDecision,
         },
         math::{
             detect_intersect,
@@ -51,11 +52,13 @@
             get_value_from_object__bool,
         },
     };
+    use crate::f_stats::Stats;
+    use crate::engine::Engine;
+
+//self
     use super::super::ElementManager;
     use super::super::element::ElementTrait;
     
-    use crate::engine::Engine;
-
 
 
 
@@ -464,7 +467,7 @@ impl Group {
 
                 //things are slightly different if this is the root group
                     if self.id == 0 {
-                        if child.borrow().get_element_type() == ElementType::Group {
+                        if child.borrow().get_element_type() == &ElementType::Group {
                             //if the child is not heeding the camera, use the window point
                                 let point_of_interest = if child.borrow().as_group().unwrap().get_heed_camera().unwrap_or(false) { point } else { window_point };
 
@@ -493,7 +496,7 @@ impl Group {
                                 continue;
                             }
 
-                        if child.borrow().get_element_type() == ElementType::Group {
+                        if child.borrow().get_element_type() == &ElementType::Group {
                             //pass this point to the child's "get_elements_under_point" function and collect the results
                                 return_list.append( &mut child.borrow().as_group().unwrap().get_elements_under_point(window_point, point) );
                         } else {
@@ -521,7 +524,7 @@ impl Group {
 
                 //things are slightly different if this is the root group
                     if self.id == 0 {
-                        if child.borrow().get_element_type() == ElementType::Group {
+                        if child.borrow().get_element_type() == &ElementType::Group {
                             //if the child is not heeding the camera, use the window polygon
                                 let poly_of_interest = if child.borrow().as_group().unwrap().get_heed_camera().unwrap_or(false) { polygon } else { window_polygon };
 
@@ -550,7 +553,7 @@ impl Group {
                                 continue;
                             }
 
-                        if child.borrow().get_element_type() == ElementType::Group {
+                        if child.borrow().get_element_type() == &ElementType::Group {
                             //pass this polygon to the child's "get_elements_under_area" function and collect the results
                                 return_list.append( &mut child.borrow().as_group().unwrap().get_elements_under_area(window_polygon, &polygon) );
                         } else {
@@ -891,7 +894,7 @@ impl Group {
 impl ElementTrait for Group {
     //trait requirements
         //hierarchy and identity
-            fn get_element_type(&self) -> ElementType { self.element_type }
+            fn get_element_type(&self) -> &ElementType { &self.element_type }
             fn get_id(&self) -> usize { self.id }
             fn get_name(&self) -> &String{ &self.name }
             fn set_name(&mut self, new:String) { self.name = new; }
@@ -955,7 +958,6 @@ impl ElementTrait for Group {
             //visibility
                 fn is_visible(&self) -> bool { self.is_visible }
                 fn set_is_visible(&mut self, new:bool) {
-                    // console_log!("id:{} set_is_visible -> {}", self.id, new);
                     self.previous_is_visible = self.is_visible;
                     self.is_visible = new;
                 }
@@ -1074,35 +1076,49 @@ impl ElementTrait for Group {
                     image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
                     force: bool,
+                    stats: &mut Stats,
                 ) -> bool {
                     //if there's no children, then don't worry about it
                         if self.children.len() == 0 {
+                            if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::NoChildren); }
                             return false;
                         }
 
                     //judge whether this element should be allowed to render
                         if !force && !self.is_visible() {
+                            if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::NotVisible); }
                             return false;
                         }
 
                     //framebuffer - head
                         if self.framebuffer_active {
-                            if self.id == 0 { //only if this is root; activate framebuffer
-                                if !self.render_required && !force {
-                                    let had_to_bind = self.web_gl2_framebuffer_id.is_none();
-                                    if had_to_bind { self.web_gl2_framebuffer_id = Some(web_gl2_framebuffer_manager.generate_framebuffer(context)); }
-                                    web_gl2_framebuffer_manager.copy_framebuffer_to_framebuffer(context, self.web_gl2_framebuffer_id.unwrap(), None);
-                                    if had_to_bind { web_gl2_framebuffer_manager.unbind_last_framebuffer(context); }
-                                    return false;
-                                }
+                            if self.id == 0 { //development: only really works for the root group, for now
 
-                                if self.web_gl2_framebuffer_id.is_none() {
-                                    self.web_gl2_framebuffer_id = Some(web_gl2_framebuffer_manager.generate_framebuffer(context));
-                                } else {
-                                    web_gl2_framebuffer_manager.bind_framebuffer(context, self.web_gl2_framebuffer_id);
-                                }
+                                //generate the framebuffer if necessary, or just bind the one we already have
+                                    if self.web_gl2_framebuffer_id.is_none() {
+                                        self.web_gl2_framebuffer_id = Some(web_gl2_framebuffer_manager.generate_framebuffer(context, self.id == 0));
+                                    } else {
+                                        web_gl2_framebuffer_manager.bind_framebuffer(context, self.web_gl2_framebuffer_id);
+                                    }
 
-                                context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT | WebGl2RenderingContext::STENCIL_BUFFER_BIT);
+                                //a render is not required, use the previous framebuffer instead
+                                    if !self.render_required && !force { 
+                                        ////potential for judging whether only an xy move has happened, thus no render is needed, only a shift in the saved sub-frame
+
+                                        //make the render into the parent framebuffer
+                                            web_gl2_framebuffer_manager.copy_current_framebuffer_to_upper_framebuffer(context, web_gl2_program_conglomerate_manager);
+                                        //unbind the framebuffer we just bound
+                                            web_gl2_framebuffer_manager.unbind_last_framebuffer(context);
+                                        //inform the stats department about this
+                                            if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::RenderedFromBuffer); }
+
+                                        return false;
+                                    }
+
+                                //a render is required
+                                    //clear the framebuffer
+                                    //// if self.id != 0 { context.clear_color(0.0, 0.0, 0.0, 0.0); } //development
+                                    context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT | WebGl2RenderingContext::STENCIL_BUFFER_BIT);
                             }
                         }
 
@@ -1125,6 +1141,7 @@ impl ElementTrait for Group {
                                     image_requester,
                                     resolution,
                                     force,
+                                    stats,
                                 );
                             //reactive regular rendering
                                 context.color_mask(true, true, true, true);
@@ -1145,6 +1162,7 @@ impl ElementTrait for Group {
                                 image_requester,
                                 resolution,
                                 force,
+                                stats,
                             );
                         }
 
@@ -1156,9 +1174,11 @@ impl ElementTrait for Group {
                     
                     //framebuffer - tail
                         if self.framebuffer_active {
-                            if self.id == 0 {//only if this is root; copy the data to the window and de-activate framebuffer
-                                web_gl2_framebuffer_manager.copy_current_framebuffer_to_upper_framebuffer(context);
-                                web_gl2_framebuffer_manager.unbind_last_framebuffer(context);
+                            if self.id == 0 {
+                                //copy the data we just rendered into our framebuffer, into the parent's
+                                    web_gl2_framebuffer_manager.copy_current_framebuffer_to_upper_framebuffer(context, web_gl2_program_conglomerate_manager);
+                                //unbind our framebuffer
+                                    web_gl2_framebuffer_manager.unbind_last_framebuffer(context);
                             }
                         }
                         self.set_render_required(re_render);
@@ -1174,9 +1194,11 @@ impl ElementTrait for Group {
                                 web_gl2_framebuffer_manager,
                                 image_requester,
                                 resolution,
+                                stats,
                             );
                         }
 
+                    if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                     re_render
                 }
 
@@ -1191,17 +1213,18 @@ impl ElementTrait for Group {
                     web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
                     image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
+                    stats: &mut Stats,
                 ) {
                     let mux:f32 = 1.0; //0.05;
 
                     //draw bounding box top left and bottom right points
                         ElementManager::draw_dot(
                             &self.extremities.get_bounding_box().get_top_left(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, stats
                         );
                         ElementManager::draw_dot(
                             &self.extremities.get_bounding_box().get_bottom_right(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, stats
                         );
                 }
 

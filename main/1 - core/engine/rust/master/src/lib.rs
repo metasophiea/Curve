@@ -11,6 +11,7 @@
     pub mod c_arrangement;
     pub mod d_render;
     pub mod e_viewport;
+    pub mod f_stats;
     pub mod g_callback;
     pub mod engine;
 

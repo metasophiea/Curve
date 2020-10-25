@@ -28,8 +28,6 @@
     }
 
 //core
-
-//self
     use crate::engine::Engine;
     use crate::a_library::data_type::{
         ElementType,
@@ -44,13 +42,19 @@
         ImageRequester,
         FontRequester,
     };
+    use crate::f_stats::Stats;
 
+//self
     pub mod element;
     pub use element::ElementTrait;
 
 
 
 
+
+
+
+    
 pub struct ElementManager {
     created_elements: Vec<Option<Rc<RefCell<dyn ElementTrait>>>>,
     font_requester: RefCell<FontRequester>,
@@ -133,7 +137,7 @@ impl ElementManager {
         }
 
         match self.get_element_by_id(id) {
-            Some(ele) => Some(ele.get_element_type()),
+            Some(ele) => Some(*ele.get_element_type()),
             None => None
         }
     }
@@ -206,12 +210,13 @@ impl ElementManager {
         web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
         image_requester: &mut ImageRequester,
         resolution: &(u32, u32),
+        stats: &mut Stats,
     ) {
         let mut rect = element::Rectangle::new(0, "dot".to_string());
         rect.set_dot_frame(false);
         rect.set_unified_attribute( Some(xy.get_x()), Some(xy.get_y()), None, None, Some(size), Some(size), Some(Point::new(0.5,0.5)), Some(*colour), viewbox );
 
-        rect.render( parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, true );
+        rect.render( parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, true, stats );
     }
     pub fn alert_font_loaded(
         &mut self, 

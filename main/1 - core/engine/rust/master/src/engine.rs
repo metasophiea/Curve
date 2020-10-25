@@ -22,6 +22,7 @@
     use crate::c_arrangement;
     use crate::d_render;
     use crate::e_viewport;
+    use crate::f_stats;
     use crate::g_callback;
 
 
@@ -34,6 +35,7 @@ pub struct Engine {
     pub(crate) arrangement: c_arrangement::Arrangement,
     pub(crate) render: d_render::Render,
     pub(crate) viewport: e_viewport::Viewport,
+    pub(crate) stats: f_stats::Stats,
     pub(crate) callback: g_callback::Callback,
 }
 #[wasm_bindgen]
@@ -43,6 +45,7 @@ impl Engine {
         let arrangement = c_arrangement::Arrangement::new(&mut element_manager);
         let render = d_render::Render::new();
         let viewport = e_viewport::Viewport::new();
+        let stats = f_stats::Stats::new();
         let callback = g_callback::Callback::new();
 
         Engine {
@@ -51,6 +54,7 @@ impl Engine {
             arrangement: arrangement,
             render: render,
             viewport: viewport,
+            stats: stats,
             callback: callback,
         }
     }
