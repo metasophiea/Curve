@@ -375,7 +375,7 @@ pub trait ElementTrait {
             ) -> bool { //true/false - I need to / do not need to be rendered again
                 //judge whether this element should be allowed to render
                     if !force && !self.is_visible() {
-                        if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::NotVisible); }
+                        if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::NotVisible); }
                         return false;
                     }
 

@@ -384,7 +384,7 @@ impl ElementTrait for Image {
                     if self.url_changed {
                         if !image_requester.is_image_loaded(&self.url) {
                             image_requester.request_image(&self.url, false);
-                            if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::ImageDataNotLoaded); }
+                            if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::ImageDataNotLoaded); }
                             return true;
                         } else if web_gl2_program_conglomerate_manager.program_is_loaded(self.element_type) {
                             self.texture_index = web_gl2_program_conglomerate_manager.update_texture(
@@ -426,7 +426,7 @@ impl ElementTrait for Image {
                 //activate draw
                     context.draw_arrays(WebGl2RenderingContext::TRIANGLE_FAN, 0, 4);
 
-                if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
+                if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                 false
             }
 

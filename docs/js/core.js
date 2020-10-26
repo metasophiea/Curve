@@ -23971,7 +23971,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:25} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:26} };
             
                 const core = this;
             
@@ -24568,6 +24568,10 @@
                             this.getReport = function(){
                                 dev.log.interface('.operator.stats.getReport()'); //#development
                                 return communicationModule.run_withPromise('operator__stats__getReport');
+                            };
+                            this.elementRenderDecision_clearData = function(){
+                                dev.log.interface('.operator.stats.elementRenderDecision_clearData()'); //#development
+                                return communicationModule.run_withPromise('operator__stats__elementRenderDecision_clearData');
                             };
                             this._dump = function(){
                                 dev.log.interface('.operator.stats._dump()'); //#development
@@ -25689,6 +25693,11 @@
                         active:false,
                     };
                 
+                    this.elementRenderDecision_clearData = function(){
+                        dev.log.stats('.elementRenderDecision_clearData()'); //#development
+                        interface.operator.stats.elementRenderDecision_clearData();
+                    };
+                
                     this.active = function(active){
                         dev.log.stats('.active(',active); //#development
                         if(active == undefined){ return cachedValues.active; }
@@ -25699,6 +25708,7 @@
                         dev.log.stats('.getReport()'); //#development
                         return interface.operator.stats.getReport();
                     };
+                
                 
                     let autoPrintActive = false;
                     let autoPrintIntervalId = undefined;
@@ -25714,6 +25724,32 @@
                         }else{
                             clearInterval(autoPrintIntervalId);
                         }
+                    };
+                    let autoPrintRenderDecisionReportActive = false;
+                    let autoPrintRenderDecisionReportIntervalId = undefined;
+                    this.autoPrintRenderDecisionReport = function(bool){
+                        dev.log.stats('.autoPrintRenderDecisionReport(',bool); //#development
+                        if(bool == undefined){ return autoPrintRenderDecisionReportActive; }
+                        autoPrintRenderDecisionReportActive = bool;
+                
+                        if(autoPrintRenderDecisionReportActive){
+                            autoPrintRenderDecisionReportIntervalId = setInterval(() => {
+                                core.stats.getReport().then(data => {
+                                    Object.keys(data.renderDecision).sort().forEach(key => {
+                                        let printingString = key + ': ';
+                                        Object.keys(data.renderDecision[key]).sort().forEach((innerDataKey, index, array) => {
+                                            printingString += innerDataKey + ':' + data.renderDecision[key][innerDataKey].percentage;
+                                            if(index < array.length-1){ printingString += ' - '; }
+                                        });
+                                        console.log(printingString);
+                                    });
+                                    console.log('');
+                                })
+                            }, 500);
+                        }else{
+                            clearInterval(autoPrintRenderDecisionReportIntervalId);
+                        }
+                
                     };
                 
                     let onScreenAutoPrint_active = false;
@@ -25738,7 +25774,7 @@
                                     const anchor = core.viewport.anchor();
                 
                                     const potentialFPS = data.secondsPerFrameOverTheLastThirtyFrames != 0 ? (1/data.secondsPerFrameOverTheLastThirtyFrames).toFixed(2) : 'infinite ';
-                        
+                
                                     onScreenAutoPrint_section.innerHTML = ''+
                                         '<p style="margin:1px"> position: x:'+ position.x + ' y:' + position.y +'</p>' +
                                         '<p style="margin:1px"> scale:'+ core.viewport.scale() +'</p>' +
@@ -25748,6 +25784,17 @@
                                         '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(15) +' (potentially '+ potentialFPS +'fps)</p>' +
                                         '<p style="margin:1px"> renderSplitOverTheLastThirtyFrames: '+ data.renderSplit+'</p>' +
                                     '';
+                
+                                    onScreenAutoPrint_section.innerHTML += '<p style="margin:1px">render decision</p>';
+                                    Object.keys(data.renderDecision).sort().forEach(key => {
+                                        let printingString = key + ': ';
+                                        Object.keys(data.renderDecision[key]).sort().forEach((innerDataKey, index, array) => {
+                                            printingString += innerDataKey + ':' + data.renderDecision[key][innerDataKey].percentage;
+                                            if(index < array.length-1){ printingString += ' - '; }
+                                        });
+                                        onScreenAutoPrint_section.innerHTML += '<p style="margin:1px"> - '+ printingString + '</p>';
+                                    });
+                        
                                 });
                             }, 250);
                         }else{

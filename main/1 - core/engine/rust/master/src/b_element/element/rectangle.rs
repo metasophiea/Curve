@@ -389,7 +389,7 @@ impl ElementTrait for Rectangle {
                     //activate draw
                         context.draw_arrays(WebGl2RenderingContext::TRIANGLE_FAN, 0, 4);
 
-                    if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
+                    if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                     false
                 }
 

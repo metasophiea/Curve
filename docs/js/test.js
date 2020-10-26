@@ -24027,7 +24027,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("library");
         };
         _canvas_.core = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:25} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:26} };
         
             const core = this;
         
@@ -24624,6 +24624,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         this.getReport = function(){
                             dev.log.interface('.operator.stats.getReport()'); //#development
                             return communicationModule.run_withPromise('operator__stats__getReport');
+                        };
+                        this.elementRenderDecision_clearData = function(){
+                            dev.log.interface('.operator.stats.elementRenderDecision_clearData()'); //#development
+                            return communicationModule.run_withPromise('operator__stats__elementRenderDecision_clearData');
                         };
                         this._dump = function(){
                             dev.log.interface('.operator.stats._dump()'); //#development
@@ -25745,6 +25749,11 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     active:false,
                 };
             
+                this.elementRenderDecision_clearData = function(){
+                    dev.log.stats('.elementRenderDecision_clearData()'); //#development
+                    interface.operator.stats.elementRenderDecision_clearData();
+                };
+            
                 this.active = function(active){
                     dev.log.stats('.active(',active); //#development
                     if(active == undefined){ return cachedValues.active; }
@@ -25755,6 +25764,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     dev.log.stats('.getReport()'); //#development
                     return interface.operator.stats.getReport();
                 };
+            
             
                 let autoPrintActive = false;
                 let autoPrintIntervalId = undefined;
@@ -25770,6 +25780,32 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     }else{
                         clearInterval(autoPrintIntervalId);
                     }
+                };
+                let autoPrintRenderDecisionReportActive = false;
+                let autoPrintRenderDecisionReportIntervalId = undefined;
+                this.autoPrintRenderDecisionReport = function(bool){
+                    dev.log.stats('.autoPrintRenderDecisionReport(',bool); //#development
+                    if(bool == undefined){ return autoPrintRenderDecisionReportActive; }
+                    autoPrintRenderDecisionReportActive = bool;
+            
+                    if(autoPrintRenderDecisionReportActive){
+                        autoPrintRenderDecisionReportIntervalId = setInterval(() => {
+                            core.stats.getReport().then(data => {
+                                Object.keys(data.renderDecision).sort().forEach(key => {
+                                    let printingString = key + ': ';
+                                    Object.keys(data.renderDecision[key]).sort().forEach((innerDataKey, index, array) => {
+                                        printingString += innerDataKey + ':' + data.renderDecision[key][innerDataKey].percentage;
+                                        if(index < array.length-1){ printingString += ' - '; }
+                                    });
+                                    console.log(printingString);
+                                });
+                                console.log('');
+                            })
+                        }, 500);
+                    }else{
+                        clearInterval(autoPrintRenderDecisionReportIntervalId);
+                    }
+            
                 };
             
                 let onScreenAutoPrint_active = false;
@@ -25794,7 +25830,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 const anchor = core.viewport.anchor();
             
                                 const potentialFPS = data.secondsPerFrameOverTheLastThirtyFrames != 0 ? (1/data.secondsPerFrameOverTheLastThirtyFrames).toFixed(2) : 'infinite ';
-                    
+            
                                 onScreenAutoPrint_section.innerHTML = ''+
                                     '<p style="margin:1px"> position: x:'+ position.x + ' y:' + position.y +'</p>' +
                                     '<p style="margin:1px"> scale:'+ core.viewport.scale() +'</p>' +
@@ -25804,6 +25840,17 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     '<p style="margin:1px"> secondsPerFrameOverTheLastThirtyFrames: '+ data.secondsPerFrameOverTheLastThirtyFrames.toFixed(15) +' (potentially '+ potentialFPS +'fps)</p>' +
                                     '<p style="margin:1px"> renderSplitOverTheLastThirtyFrames: '+ data.renderSplit+'</p>' +
                                 '';
+            
+                                onScreenAutoPrint_section.innerHTML += '<p style="margin:1px">render decision</p>';
+                                Object.keys(data.renderDecision).sort().forEach(key => {
+                                    let printingString = key + ': ';
+                                    Object.keys(data.renderDecision[key]).sort().forEach((innerDataKey, index, array) => {
+                                        printingString += innerDataKey + ':' + data.renderDecision[key][innerDataKey].percentage;
+                                        if(index < array.length-1){ printingString += ' - '; }
+                                    });
+                                    onScreenAutoPrint_section.innerHTML += '<p style="margin:1px"> - '+ printingString + '</p>';
+                                });
+                    
                             });
                         }, 250);
                     }else{
@@ -56397,6 +56444,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     updateFunction:function(){return _canvas_.core.stats.onScreenAutoPrint(); }, 
                                     onclickFunction:function(val){ _canvas_.core.stats.onScreenAutoPrint(val); }
                                 },
+                                {type:'button', text_left:'Clear Render Decision Data', function:function(){ 
+                                    _canvas_.core.stats.elementRenderDecision_clearData();
+                                } },
                                 { type:'radio', text:'Rendering Sample Count', itemWidth:50, 
                                     options:[0, 1, 2, 3, 4, 5, 6, 7, 8],
                                     updateFunction:function(){

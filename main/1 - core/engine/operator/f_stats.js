@@ -38,6 +38,12 @@ this.stats = new function(){
 
         timePerFrame.compute(time);
     };
+    this.elementRenderDecision_clearData = function(){
+        //if stats are turned off, just bail
+            if(!active){return;}
+
+        ENGINE.stats__element_render_decision_clear_data();
+    };
 
 
     this.active = function(bool){
@@ -51,6 +57,7 @@ this.stats = new function(){
             secondsPerFrameOverTheLastThirtyFrames: timePerFrame.time,
             potentialFPS: 1/timePerFrame.time,
             renderSplit: ENGINE.stats__render_frame_skip_get_average_split(),
+            renderDecision: ENGINE.stats__element_render_decision_get_decision_data(),
         };
     };
 

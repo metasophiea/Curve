@@ -529,7 +529,7 @@ impl ElementTrait for PolygonWithOutline {
                 //activate draw
                     context.draw_arrays(WebGl2RenderingContext::TRIANGLES, 0, (self.vao_points.len()/2) as i32);
 
-                if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
+                if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                 false
             }
 

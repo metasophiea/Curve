@@ -9,8 +9,8 @@
 
     #[wasm_bindgen]
     extern "C" {
-        // #[wasm_bindgen(js_namespace = console)]
-        // fn log(a:&str);
+        #[wasm_bindgen(js_namespace = console)]
+        fn log(a:&str);
         #[wasm_bindgen(js_namespace = console)]
         fn warn(a:&str);
         #[wasm_bindgen(js_namespace = console)]
@@ -1080,19 +1080,19 @@ impl ElementTrait for Group {
                 ) -> bool {
                     //if there's no children, then don't worry about it
                         if self.children.len() == 0 {
-                            if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::NoChildren); }
+                            if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::NoChildren); }
                             return false;
                         }
 
                     //judge whether this element should be allowed to render
                         if !force && !self.is_visible() {
-                            if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::NotVisible); }
+                            if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::NotVisible); }
                             return false;
                         }
 
                     //framebuffer - head
                         if self.framebuffer_active {
-                            if self.id == 0 { //development: only really works for the root group, for now
+                            // if self.id == 0 { //development: only really works for the root group, for now
 
                                 //generate the framebuffer if necessary, or just bind the one we already have
                                     if self.web_gl2_framebuffer_id.is_none() {
@@ -1110,16 +1110,16 @@ impl ElementTrait for Group {
                                         //unbind the framebuffer we just bound
                                             web_gl2_framebuffer_manager.unbind_last_framebuffer(context);
                                         //inform the stats department about this
-                                            if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::RenderedFromBuffer); }
+                                            if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::RenderedFromBuffer); }
 
                                         return false;
                                     }
 
                                 //a render is required
                                     //clear the framebuffer
-                                    //// if self.id != 0 { context.clear_color(0.0, 0.0, 0.0, 0.0); } //development
+                                    if self.id != 0 { context.clear_color(0.0, 0.0, 0.0, 0.0); } //development
                                     context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT | WebGl2RenderingContext::STENCIL_BUFFER_BIT);
-                            }
+                            // }
                         }
 
                     //activate clipping (if requested, and is possible)
@@ -1174,12 +1174,12 @@ impl ElementTrait for Group {
                     
                     //framebuffer - tail
                         if self.framebuffer_active {
-                            if self.id == 0 {
+                            // if self.id == 0 {
                                 //copy the data we just rendered into our framebuffer, into the parent's
                                     web_gl2_framebuffer_manager.copy_current_framebuffer_to_upper_framebuffer(context, web_gl2_program_conglomerate_manager);
                                 //unbind our framebuffer
                                     web_gl2_framebuffer_manager.unbind_last_framebuffer(context);
-                            }
+                            // }
                         }
                         self.set_render_required(re_render);
 
@@ -1198,7 +1198,7 @@ impl ElementTrait for Group {
                             );
                         }
 
-                    if stats.get_active() { stats.element_render_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
+                    if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
                     re_render
                 }
 

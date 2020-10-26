@@ -1,4 +1,12 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-10-26
+  - subframe working much better now, thanks to a few webGL tricks. However it
+    is a little slow and so cannot be used for unit-by-unit sunframes as I had
+    wanted.. more work needed. Also the whole system is working off the texture
+    one, where the root group should be using the renderbuffer-only one..
+    little things
+
+
 2020-10-25
   - work on the subframe. Still under development unfortunately. Modifications
     have been made to the way that the framebuffer for the root group is
