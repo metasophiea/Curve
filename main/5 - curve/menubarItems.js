@@ -233,10 +233,10 @@ _canvas_.layers.registerFunctionForLayer("control", function(){
                             updateFunction:function(){return !_canvas_.control.interaction.unloadWarning(); }, 
                             onclickFunction:function(val){ _canvas_.control.interaction.unloadWarning(!val); }
                         },
-                        // { type:'checkbox', text:'Frame Skipping', 
-                        //     updateFunction:function(){return _canvas_.core.render.allowFrameSkipping(); }, 
-                        //     onclickFunction:function(val){ _canvas_.core.render.allowFrameSkipping(val); }
-                        // },
+                        { type:'checkbox', text:'Frame Skipping', 
+                            updateFunction:function(){return _canvas_.core.render.allowFrameSkipping(); }, 
+                            onclickFunction:function(val){ _canvas_.core.render.allowFrameSkipping(val); }
+                        },
                         { type:'checkbox', text:'Stat Readout', 
                             updateFunction:function(){return _canvas_.core.stats.onScreenAutoPrint(); }, 
                             onclickFunction:function(val){ _canvas_.core.stats.onScreenAutoPrint(val); }
@@ -244,15 +244,6 @@ _canvas_.layers.registerFunctionForLayer("control", function(){
                         {type:'button', text_left:'Clear Render Decision Data', function:function(){ 
                             _canvas_.core.stats.elementRenderDecision_clearData();
                         } },
-                        { type:'radio', text:'Rendering Sample Count', itemWidth:50, 
-                            options:[0, 1, 2, 3, 4, 5, 6, 7, 8],
-                            updateFunction:function(){
-                                return _canvas_.core.render.adjustCanvasSampleCount();
-                            },
-                            onclickFunction:function(value){
-                                _canvas_.core.render.adjustCanvasSampleCount(value);
-                            }
-                        },
                         {type:'break'}
                     ].concat(
                         _canvas_.layers.getVersionInformation().map(item => {

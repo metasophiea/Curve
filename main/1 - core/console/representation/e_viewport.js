@@ -54,6 +54,15 @@ this.viewport = new function(){
             cachedValues.anchor = {x:x,y:y};
             interface.operator.viewport.anchor(x,y);
         };
+        this.scaleAroundWindowPoint = function(s,x,y){
+            dev.log.viewport('.scaleAroundWindowPoint(',s); //#development
+            if(s == undefined || x == undefined || y == undefined){ return; }
+            if(s == 0){ console.error('cannot set scale to zero'); }
+            cachedValues.scale = s;
+            interface.operator.viewport.scaleAroundWindowPoint(s,x,y).then(data => {
+                cachedValues.position = {x:data[0],y:data[1]};
+            });
+        };
     
     //mouse interaction
         this.getElementsUnderPoint = function(x,y){

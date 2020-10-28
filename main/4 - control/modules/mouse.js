@@ -108,30 +108,20 @@ _canvas_.system.mouse.functionList.onwheel.push(
             let delta = data.event.wheelDeltaY;
             switch(control.mouseWheelMode){
                 case 'magic':
-                    //already pefect
+                    //already perfect, xoxo
                 break;
                 case 'clickyWheel':
                     delta = 25*Math.sign(delta);
                 break;
             }
 
-            //perform scale and associated pan
-                //discover point under mouse
-                    const originalPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.event.x,data.event.y);
-                //perform actual scaling
-                    let scale = _canvas_.control.viewport.scale();
-                    scale += scale*(delta/100);
-                    if( scale > scaleLimits.max ){ scale = scaleLimits.max; }
-                    else if( scale < scaleLimits.min ){ scale = scaleLimits.min; }
-                    _canvas_.control.viewport.scale(scale);
-                //discover new point under mouse
-                    const newPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.event.x,data.event.y);
-                //pan so we're back at the old point (accounting for angle)
-                    const temp = _canvas_.control.viewport.position();
-                    _canvas_.control.viewport.position(
-                        temp.x + (originalPoint.x - newPoint.x), 
-                        temp.y + (originalPoint.y - newPoint.y)
-                    );
+            //perform scaling math
+                let scale = _canvas_.control.viewport.scale();
+                scale += scale*(delta/100);
+                if( scale > scaleLimits.max ){ scale = scaleLimits.max; }
+                else if( scale < scaleLimits.min ){ scale = scaleLimits.min; }
+            //actual scaling
+                _canvas_.core.viewport.scaleAroundWindowPoint(scale, data.event.x, data.event.y);
 
             //request that the function list stop here
                 return true;

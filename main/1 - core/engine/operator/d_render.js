@@ -88,10 +88,6 @@ this.render = new function(){
             dev.log.render('.adjustCanvasSize(',newWidth,newHeight,devicePixelRatio); //#development
             ENGINE.render__adjust_canvas_size(newWidth, newHeight, devicePixelRatio);
         };
-        this.adjustCanvasSampleCount = function(newSampleCount){
-            dev.log.render('.adjustCanvasSampleCount(',newSampleCount); //#development
-            ENGINE.render__adjust_canvas_sample_count(newSampleCount);
-        }
         this.refreshCoordinates = function(){
             ENGINE.render__refresh_coordinates();
         };
@@ -116,6 +112,13 @@ this.render = new function(){
             if(a==undefined){ return frameRateControl.limit; }
             frameRateControl.limit = a;
             frameRateControl.interval = 1000/frameRateControl.limit;
+        };
+        let allowFrameSkipping = true;
+        this.allowFrameSkipping = function(a){
+            dev.log.render('.allowFrameSkipping(',a); //#development
+            if(a==undefined){ return allowFrameSkipping; }
+            allowFrameSkipping = a;
+            ENGINE.allow_frame_skipping(allowFrameSkipping);
         };
 
     //actual render

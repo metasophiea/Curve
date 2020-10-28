@@ -23971,7 +23971,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:26} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:27} };
             
                 const core = this;
             
@@ -24475,10 +24475,6 @@
                                     dev.log.interface('.operator.render.adjustCanvasSize(',newWidth, newHeight); //#development
                                     communicationModule.run_withoutPromise('operator__render__adjustCanvasSize', [newWidth, newHeight]);
                                 };
-                                this.adjustCanvasSampleCount = function(newSampleCount){
-                                    dev.log.interface('.operator.render.adjustCanvasSampleCount(',newSampleCount); //#development
-                                    communicationModule.run_withoutPromise('operator__render__adjustCanvasSampleCount', [newSampleCount]);
-                                };
                                 this.refreshCoordinates = function(){
                                     dev.log.interface('.operator.render.refreshCoordinates()'); //#development
                                     communicationModule.run_withoutPromise('operator__render__refreshCoordinates');
@@ -24495,6 +24491,10 @@
                                 this.frameRateLimit = function(a){
                                     dev.log.interface('.operator.render.frameRateLimit(',a); //#development
                                     communicationModule.run_withoutPromise('operator__render__frameRateLimit', [a]);
+                                };
+                                this.allowFrameSkipping = function(a){
+                                    dev.log.interface('.operator.render.allowFrameSkipping(',a); //#development
+                                    communicationModule.run_withoutPromise('operator__render__allowFrameSkipping', [a]);
                                 };
                             //actual render
                                 this.frame = function(noClear){
@@ -24533,6 +24533,10 @@
                                 this.anchor = function(x,y){
                                     dev.log.interface('.operator.viewport.anchor(',x,y); //#development
                                     communicationModule.run_withoutPromise('operator__viewport__anchor', [x,y]);
+                                };
+                                this.scaleAroundWindowPoint = function(s,x,y){
+                                    dev.log.interface('.operator.viewport.scaleAroundWindowPoint(',s,x,y); //#development
+                                    return communicationModule.run_withPromise('operator__viewport__scaleAroundWindowPoint', [s,x,y]);
                                 };
                         
                             //mouse interaction
@@ -25515,8 +25519,8 @@
                         clearColour:{r:1,g:1,b:1,a:1},
                         activeLimitToFrameRate:false,
                         frameRateLimit:30,
-                        canvasSampleCount:8,
                         active:false,
+                        allowFrameSkipping:true,
                     };
                 
                     //canvas and webGL context
@@ -25533,12 +25537,6 @@
                         this.adjustCanvasSize = function(newWidth, newHeight){
                             dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
                             interface.operator.render.adjustCanvasSize(newWidth, newHeight);
-                        };
-                        this.adjustCanvasSampleCount = function(newSampleCount){
-                            dev.log.render('.adjustCanvasSampleCount(',newSampleCount); //#development
-                            if(newSampleCount==undefined){ return cachedValues.canvasSampleCount; }
-                            cachedValues.canvasSampleCount = newSampleCount;
-                            interface.operator.render.adjustCanvasSampleCount(newSampleCount);
                         };
                         this.refreshCoordinates = function(){
                             dev.log.render('.refreshCoordinates()'); //#development
@@ -25561,6 +25559,12 @@
                             if(a == undefined){ return cachedValues.frameRateLimit; }
                             cachedValues.frameRateLimit = a;
                             interface.operator.render.frameRateLimit(a);
+                        };
+                        this.allowFrameSkipping = function(a){
+                            dev.log.render('.allowFrameSkipping(',a); //#development
+                            if(a == undefined){ return cachedValues.allowFrameSkipping; }
+                            cachedValues.allowFrameSkipping = a;
+                            interface.operator.render.allowFrameSkipping(a);
                         };
                 
                     //actual render
@@ -25640,6 +25644,15 @@
                             if(x == undefined || y == undefined){ return cachedValues.anchor; }
                             cachedValues.anchor = {x:x,y:y};
                             interface.operator.viewport.anchor(x,y);
+                        };
+                        this.scaleAroundWindowPoint = function(s,x,y){
+                            dev.log.viewport('.scaleAroundWindowPoint(',s); //#development
+                            if(s == undefined || x == undefined || y == undefined){ return; }
+                            if(s == 0){ console.error('cannot set scale to zero'); }
+                            cachedValues.scale = s;
+                            interface.operator.viewport.scaleAroundWindowPoint(s,x,y).then(data => {
+                                cachedValues.position = {x:data[0],y:data[1]};
+                            });
                         };
                     
                     //mouse interaction

@@ -41,6 +41,8 @@ pub struct Engine {
 #[wasm_bindgen]
 impl Engine {
     pub fn new(worker:web_sys::Worker) -> Engine {
+        console_log!("Beta");
+
         let mut element_manager = b_element::ElementManager::new();
         let arrangement = c_arrangement::Arrangement::new(&mut element_manager);
         let render = d_render::Render::new();

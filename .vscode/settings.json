@@ -4,13 +4,17 @@
         "antialiasing",
         "bind",
         "clipspace",
+        "color",
         "framebuffer",
         "mediump",
         "multisampling",
+        "offscreen",
         "produce",
         "produce and bind renderbuffers",
         "renderbuffer",
-        "renderbuffers"
+        "renderbuffers",
+        "stats",
+        "xoxo"
     ],
     "git.ignoreLimitWarning": true
 }

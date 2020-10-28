@@ -1,7 +1,25 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-10-27
+  - removed all the usage of framebuffer code, simplifying things (I'm going to
+    give it another try)
+  - core/beta added "Frame Skipping" activation control
+  - modified the mouse zooming code. For a mouse zoom you have to discover the
+    workspace point under the window point, make the scale change, then get the
+    new workspace point under the window point and perform a position change to
+    get the workspace point under the window point to be the same as it was
+    before the scale happened. This used to all happen in the mouse code over
+    in the control layer, but I've mode all that into a new viewport method
+    within the engine. This is faster, as the math can all be done in wasm
+    but more importantly; there isn't a double viewport change, thus no double
+    visibility calculations.
+      This new viewport function has to report back to the viewport
+    representation what the new position is, however, which is done through a
+    promise. Hopefully that will be fine.
+
+
 2020-10-26
   - subframe working much better now, thanks to a few webGL tricks. However it
-    is a little slow and so cannot be used for unit-by-unit sunframes as I had
+    is a little slow and so cannot be used for unit-by-unit subframes as I had
     wanted.. more work needed. Also the whole system is working off the texture
     one, where the root group should be using the renderbuffer-only one..
     little things

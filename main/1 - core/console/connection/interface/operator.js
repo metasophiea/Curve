@@ -275,10 +275,6 @@ this.render = new function(){
             dev.log.interface('.operator.render.adjustCanvasSize(',newWidth, newHeight); //#development
             communicationModule.run_withoutPromise('operator__render__adjustCanvasSize', [newWidth, newHeight]);
         };
-        this.adjustCanvasSampleCount = function(newSampleCount){
-            dev.log.interface('.operator.render.adjustCanvasSampleCount(',newSampleCount); //#development
-            communicationModule.run_withoutPromise('operator__render__adjustCanvasSampleCount', [newSampleCount]);
-        };
         this.refreshCoordinates = function(){
             dev.log.interface('.operator.render.refreshCoordinates()'); //#development
             communicationModule.run_withoutPromise('operator__render__refreshCoordinates');
@@ -295,6 +291,10 @@ this.render = new function(){
         this.frameRateLimit = function(a){
             dev.log.interface('.operator.render.frameRateLimit(',a); //#development
             communicationModule.run_withoutPromise('operator__render__frameRateLimit', [a]);
+        };
+        this.allowFrameSkipping = function(a){
+            dev.log.interface('.operator.render.allowFrameSkipping(',a); //#development
+            communicationModule.run_withoutPromise('operator__render__allowFrameSkipping', [a]);
         };
     //actual render
         this.frame = function(noClear){
@@ -333,6 +333,10 @@ this.viewport = new function(){
         this.anchor = function(x,y){
             dev.log.interface('.operator.viewport.anchor(',x,y); //#development
             communicationModule.run_withoutPromise('operator__viewport__anchor', [x,y]);
+        };
+        this.scaleAroundWindowPoint = function(s,x,y){
+            dev.log.interface('.operator.viewport.scaleAroundWindowPoint(',s,x,y); //#development
+            return communicationModule.run_withPromise('operator__viewport__scaleAroundWindowPoint', [s,x,y]);
         };
 
     //mouse interaction

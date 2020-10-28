@@ -43,7 +43,7 @@
         },
         structure::{
             WebGl2programConglomerateManager,
-            WebGl2framebufferManager,
+            WebGl2textureFramebufferManager,
             ImageRequester,
             FontRequester,
         },
@@ -106,7 +106,6 @@ pub struct Group {
         previous_is_visible: bool,
         render_required: bool,
         framebuffer_active: bool,
-        web_gl2_framebuffer_id: Option<usize>,
 }
 impl Group {
     pub fn new(id:usize, name:String) -> Group {
@@ -142,7 +141,6 @@ impl Group {
             previous_is_visible: false,
             render_required: true,
             framebuffer_active: false,
-            web_gl2_framebuffer_id: None,
         }
     }
 
@@ -1072,7 +1070,7 @@ impl ElementTrait for Group {
                     viewbox: &Viewbox,
                     context: &WebGl2RenderingContext, 
                     web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
-                    web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
+                    web_gl2_texture_framebuffer_manager: &mut WebGl2textureFramebufferManager,
                     image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
                     force: bool,
@@ -1090,38 +1088,6 @@ impl ElementTrait for Group {
                             return false;
                         }
 
-                    //framebuffer - head
-                        if self.framebuffer_active {
-                            // if self.id == 0 { //development: only really works for the root group, for now
-
-                                //generate the framebuffer if necessary, or just bind the one we already have
-                                    if self.web_gl2_framebuffer_id.is_none() {
-                                        self.web_gl2_framebuffer_id = Some(web_gl2_framebuffer_manager.generate_framebuffer(context, self.id == 0));
-                                    } else {
-                                        web_gl2_framebuffer_manager.bind_framebuffer(context, self.web_gl2_framebuffer_id);
-                                    }
-
-                                //a render is not required, use the previous framebuffer instead
-                                    if !self.render_required && !force { 
-                                        ////potential for judging whether only an xy move has happened, thus no render is needed, only a shift in the saved sub-frame
-
-                                        //make the render into the parent framebuffer
-                                            web_gl2_framebuffer_manager.copy_current_framebuffer_to_upper_framebuffer(context, web_gl2_program_conglomerate_manager);
-                                        //unbind the framebuffer we just bound
-                                            web_gl2_framebuffer_manager.unbind_last_framebuffer(context);
-                                        //inform the stats department about this
-                                            if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::RenderedFromBuffer); }
-
-                                        return false;
-                                    }
-
-                                //a render is required
-                                    //clear the framebuffer
-                                    if self.id != 0 { context.clear_color(0.0, 0.0, 0.0, 0.0); } //development
-                                    context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT | WebGl2RenderingContext::STENCIL_BUFFER_BIT);
-                            // }
-                        }
-
                     //activate clipping (if requested, and is possible)
                         if self.clipping_active && self.clipping_stencil.is_some() {
                             //active stencil drawing mode
@@ -1137,7 +1103,7 @@ impl ElementTrait for Group {
                                     viewbox,
                                     context,
                                     web_gl2_program_conglomerate_manager,
-                                    web_gl2_framebuffer_manager,
+                                    web_gl2_texture_framebuffer_manager,
                                     image_requester,
                                     resolution,
                                     force,
@@ -1158,7 +1124,7 @@ impl ElementTrait for Group {
                                 viewbox,
                                 context,
                                 web_gl2_program_conglomerate_manager,
-                                web_gl2_framebuffer_manager,
+                                web_gl2_texture_framebuffer_manager,
                                 image_requester,
                                 resolution,
                                 force,
@@ -1171,17 +1137,6 @@ impl ElementTrait for Group {
                             context.disable(WebGl2RenderingContext::STENCIL_TEST); 
                             context.clear(WebGl2RenderingContext::STENCIL_BUFFER_BIT);
                         }
-                    
-                    //framebuffer - tail
-                        if self.framebuffer_active {
-                            // if self.id == 0 {
-                                //copy the data we just rendered into our framebuffer, into the parent's
-                                    web_gl2_framebuffer_manager.copy_current_framebuffer_to_upper_framebuffer(context, web_gl2_program_conglomerate_manager);
-                                //unbind our framebuffer
-                                    web_gl2_framebuffer_manager.unbind_last_framebuffer(context);
-                            // }
-                        }
-                        self.set_render_required(re_render);
 
                     //if requested; draw dot frame
                         if self.dot_frame {
@@ -1191,7 +1146,7 @@ impl ElementTrait for Group {
                                 viewbox,
                                 context,
                                 web_gl2_program_conglomerate_manager,
-                                web_gl2_framebuffer_manager,
+                                web_gl2_texture_framebuffer_manager,
                                 image_requester,
                                 resolution,
                                 stats,
@@ -1199,6 +1154,7 @@ impl ElementTrait for Group {
                         }
 
                     if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::Rendered); }
+                    self.set_render_required(re_render);
                     re_render
                 }
 
@@ -1210,7 +1166,7 @@ impl ElementTrait for Group {
                     viewbox: &Viewbox,
                     context: &WebGl2RenderingContext, 
                     web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
-                    web_gl2_framebuffer_manager: &mut WebGl2framebufferManager,
+                    web_gl2_texture_framebuffer_manager: &mut WebGl2textureFramebufferManager,
                     image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
                     stats: &mut Stats,
@@ -1220,11 +1176,11 @@ impl ElementTrait for Group {
                     //draw bounding box top left and bottom right points
                         ElementManager::draw_dot(
                             &self.extremities.get_bounding_box().get_top_left(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, stats
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_texture_framebuffer_manager, image_requester, resolution, stats
                         );
                         ElementManager::draw_dot(
                             &self.extremities.get_bounding_box().get_bottom_right(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_framebuffer_manager, image_requester, resolution, stats
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_texture_framebuffer_manager, image_requester, resolution, stats
                         );
                 }
 

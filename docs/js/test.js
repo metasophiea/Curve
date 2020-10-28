@@ -24027,7 +24027,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("library");
         };
         _canvas_.core = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:26} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:27} };
         
             const core = this;
         
@@ -24531,10 +24531,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 dev.log.interface('.operator.render.adjustCanvasSize(',newWidth, newHeight); //#development
                                 communicationModule.run_withoutPromise('operator__render__adjustCanvasSize', [newWidth, newHeight]);
                             };
-                            this.adjustCanvasSampleCount = function(newSampleCount){
-                                dev.log.interface('.operator.render.adjustCanvasSampleCount(',newSampleCount); //#development
-                                communicationModule.run_withoutPromise('operator__render__adjustCanvasSampleCount', [newSampleCount]);
-                            };
                             this.refreshCoordinates = function(){
                                 dev.log.interface('.operator.render.refreshCoordinates()'); //#development
                                 communicationModule.run_withoutPromise('operator__render__refreshCoordinates');
@@ -24551,6 +24547,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             this.frameRateLimit = function(a){
                                 dev.log.interface('.operator.render.frameRateLimit(',a); //#development
                                 communicationModule.run_withoutPromise('operator__render__frameRateLimit', [a]);
+                            };
+                            this.allowFrameSkipping = function(a){
+                                dev.log.interface('.operator.render.allowFrameSkipping(',a); //#development
+                                communicationModule.run_withoutPromise('operator__render__allowFrameSkipping', [a]);
                             };
                         //actual render
                             this.frame = function(noClear){
@@ -24589,6 +24589,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             this.anchor = function(x,y){
                                 dev.log.interface('.operator.viewport.anchor(',x,y); //#development
                                 communicationModule.run_withoutPromise('operator__viewport__anchor', [x,y]);
+                            };
+                            this.scaleAroundWindowPoint = function(s,x,y){
+                                dev.log.interface('.operator.viewport.scaleAroundWindowPoint(',s,x,y); //#development
+                                return communicationModule.run_withPromise('operator__viewport__scaleAroundWindowPoint', [s,x,y]);
                             };
                     
                         //mouse interaction
@@ -25571,8 +25575,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     clearColour:{r:1,g:1,b:1,a:1},
                     activeLimitToFrameRate:false,
                     frameRateLimit:30,
-                    canvasSampleCount:8,
                     active:false,
+                    allowFrameSkipping:true,
                 };
             
                 //canvas and webGL context
@@ -25589,12 +25593,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     this.adjustCanvasSize = function(newWidth, newHeight){
                         dev.log.render('.adjustCanvasSize(',newWidth,newHeight); //#development
                         interface.operator.render.adjustCanvasSize(newWidth, newHeight);
-                    };
-                    this.adjustCanvasSampleCount = function(newSampleCount){
-                        dev.log.render('.adjustCanvasSampleCount(',newSampleCount); //#development
-                        if(newSampleCount==undefined){ return cachedValues.canvasSampleCount; }
-                        cachedValues.canvasSampleCount = newSampleCount;
-                        interface.operator.render.adjustCanvasSampleCount(newSampleCount);
                     };
                     this.refreshCoordinates = function(){
                         dev.log.render('.refreshCoordinates()'); //#development
@@ -25617,6 +25615,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         if(a == undefined){ return cachedValues.frameRateLimit; }
                         cachedValues.frameRateLimit = a;
                         interface.operator.render.frameRateLimit(a);
+                    };
+                    this.allowFrameSkipping = function(a){
+                        dev.log.render('.allowFrameSkipping(',a); //#development
+                        if(a == undefined){ return cachedValues.allowFrameSkipping; }
+                        cachedValues.allowFrameSkipping = a;
+                        interface.operator.render.allowFrameSkipping(a);
                     };
             
                 //actual render
@@ -25696,6 +25700,15 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         if(x == undefined || y == undefined){ return cachedValues.anchor; }
                         cachedValues.anchor = {x:x,y:y};
                         interface.operator.viewport.anchor(x,y);
+                    };
+                    this.scaleAroundWindowPoint = function(s,x,y){
+                        dev.log.viewport('.scaleAroundWindowPoint(',s); //#development
+                        if(s == undefined || x == undefined || y == undefined){ return; }
+                        if(s == 0){ console.error('cannot set scale to zero'); }
+                        cachedValues.scale = s;
+                        interface.operator.viewport.scaleAroundWindowPoint(s,x,y).then(data => {
+                            cachedValues.position = {x:data[0],y:data[1]};
+                        });
                     };
                 
                 //mouse interaction
@@ -42069,7 +42082,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         });
             
         _canvas_.control = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:20} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:27} };
             const control = this;
         
             const dev = {
@@ -44000,30 +44013,20 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         let delta = data.event.wheelDeltaY;
                         switch(control.mouseWheelMode){
                             case 'magic':
-                                //already pefect
+                                //already perfect, xoxo
                             break;
                             case 'clickyWheel':
                                 delta = 25*Math.sign(delta);
                             break;
                         }
             
-                        //perform scale and associated pan
-                            //discover point under mouse
-                                const originalPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.event.x,data.event.y);
-                            //perform actual scaling
-                                let scale = _canvas_.control.viewport.scale();
-                                scale += scale*(delta/100);
-                                if( scale > scaleLimits.max ){ scale = scaleLimits.max; }
-                                else if( scale < scaleLimits.min ){ scale = scaleLimits.min; }
-                                _canvas_.control.viewport.scale(scale);
-                            //discover new point under mouse
-                                const newPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.event.x,data.event.y);
-                            //pan so we're back at the old point (accounting for angle)
-                                const temp = _canvas_.control.viewport.position();
-                                _canvas_.control.viewport.position(
-                                    temp.x + (originalPoint.x - newPoint.x), 
-                                    temp.y + (originalPoint.y - newPoint.y)
-                                );
+                        //perform scaling math
+                            let scale = _canvas_.control.viewport.scale();
+                            scale += scale*(delta/100);
+                            if( scale > scaleLimits.max ){ scale = scaleLimits.max; }
+                            else if( scale < scaleLimits.min ){ scale = scaleLimits.min; }
+                        //actual scaling
+                            _canvas_.core.viewport.scaleAroundWindowPoint(scale, data.event.x, data.event.y);
             
                         //request that the function list stop here
                             return true;
@@ -44159,7 +44162,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("control");
         } );
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:19} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:27} };
         };
         
         _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -56436,10 +56439,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     updateFunction:function(){return !_canvas_.control.interaction.unloadWarning(); }, 
                                     onclickFunction:function(val){ _canvas_.control.interaction.unloadWarning(!val); }
                                 },
-                                // { type:'checkbox', text:'Frame Skipping', 
-                                //     updateFunction:function(){return _canvas_.core.render.allowFrameSkipping(); }, 
-                                //     onclickFunction:function(val){ _canvas_.core.render.allowFrameSkipping(val); }
-                                // },
+                                { type:'checkbox', text:'Frame Skipping', 
+                                    updateFunction:function(){return _canvas_.core.render.allowFrameSkipping(); }, 
+                                    onclickFunction:function(val){ _canvas_.core.render.allowFrameSkipping(val); }
+                                },
                                 { type:'checkbox', text:'Stat Readout', 
                                     updateFunction:function(){return _canvas_.core.stats.onScreenAutoPrint(); }, 
                                     onclickFunction:function(val){ _canvas_.core.stats.onScreenAutoPrint(val); }
@@ -56447,15 +56450,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {type:'button', text_left:'Clear Render Decision Data', function:function(){ 
                                     _canvas_.core.stats.elementRenderDecision_clearData();
                                 } },
-                                { type:'radio', text:'Rendering Sample Count', itemWidth:50, 
-                                    options:[0, 1, 2, 3, 4, 5, 6, 7, 8],
-                                    updateFunction:function(){
-                                        return _canvas_.core.render.adjustCanvasSampleCount();
-                                    },
-                                    onclickFunction:function(value){
-                                        _canvas_.core.render.adjustCanvasSampleCount(value);
-                                    }
-                                },
                                 {type:'break'}
                             ].concat(
                                 _canvas_.layers.getVersionInformation().map(item => {
@@ -56480,7 +56474,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         // {{include:2.js}} //curveTech units
         // {{include:3.js}} //harbinger units
         _canvas_.layers.registerFunctionForLayer("curve", function(){
-            _canvas_.core.render.frameRateLimit(10);
+            // _canvas_.core.render.frameRateLimit(10);
         
             // const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
             // const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');

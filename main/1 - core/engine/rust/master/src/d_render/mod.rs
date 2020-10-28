@@ -28,7 +28,7 @@
     };
     use crate::a_library::structure::{
         WebGl2programConglomerateManager,
-        WebGl2framebufferManager,
+        WebGl2textureFramebufferManager,
         ImageRequester,
     };
     use crate::b_element::ElementManager;
@@ -43,13 +43,8 @@
 
 
 pub struct Render {
-    web_gl2_program_conglomerate_manager: WebGl2programConglomerateManager,
-    web_gl2_framebuffer_manager: WebGl2framebufferManager,
-    image_requester: ImageRequester,
-
     canvas: OffscreenCanvas,
     context: WebGl2RenderingContext,
-
     clear_colour: Colour,
 
     devicePixelRatio: f32,
@@ -57,6 +52,12 @@ pub struct Render {
     defaultCanvasSize_height: u32,
     currentCanvasSize_width: u32, 
     currentCanvasSize_height: u32,
+
+    allow_frame_skipping: bool,
+
+    web_gl2_program_conglomerate_manager: WebGl2programConglomerateManager,
+    web_gl2_texture_framebuffer_manager: WebGl2textureFramebufferManager,
+    image_requester: ImageRequester,
 }
 impl Render {
     pub fn new() -> Render {
@@ -66,8 +67,8 @@ impl Render {
             &js_sys::JSON::parse("{
                 \"alpha\":false, 
                 \"preserveDrawingBuffer\":false, 
-                \"stencil\":false,
-                \"antialias\":false
+                \"stencil\":true,
+                \"antialias\":true
             }").unwrap()
         ).unwrap().unwrap().dyn_into::<WebGl2RenderingContext>().unwrap();
 
@@ -75,16 +76,11 @@ impl Render {
         context.blend_func(WebGl2RenderingContext::ONE, WebGl2RenderingContext::ONE_MINUS_SRC_ALPHA);
 
         let mut web_gl2_program_conglomerate_manager = WebGl2programConglomerateManager::new();
-        let web_gl2_framebuffer_manager = WebGl2framebufferManager::new(800,600,8,&context,&mut web_gl2_program_conglomerate_manager);
+        let web_gl2_texture_framebuffer_manager = WebGl2textureFramebufferManager::new(800, 600, 8, &context, &mut web_gl2_program_conglomerate_manager);
 
         Render {
-            web_gl2_program_conglomerate_manager: web_gl2_program_conglomerate_manager,
-            web_gl2_framebuffer_manager: web_gl2_framebuffer_manager,
-            image_requester: ImageRequester::new(),
-
             canvas: canvas,
             context: context,
-
             clear_colour: Colour::new(1.0,1.0,1.0,1.0),
 
             devicePixelRatio: 1.0,
@@ -92,10 +88,16 @@ impl Render {
             defaultCanvasSize_height: 600,
             currentCanvasSize_width: 800, 
             currentCanvasSize_height: 600,
+
+            allow_frame_skipping: true,
+
+            web_gl2_program_conglomerate_manager: web_gl2_program_conglomerate_manager,
+            web_gl2_texture_framebuffer_manager: web_gl2_texture_framebuffer_manager,
+            image_requester: ImageRequester::new(),
         }
     }
 
-    //canvas and webGL context
+    //attributes
         pub fn get_clear_colour(&self) -> &Colour {
             &self.clear_colour
         }
@@ -112,12 +114,9 @@ impl Render {
 
             self.canvas.set_width( self.currentCanvasSize_width );
             self.canvas.set_height( self.currentCanvasSize_height );
-            self.web_gl2_framebuffer_manager.update_dimensions(self.currentCanvasSize_width, self.currentCanvasSize_height);
+            self.web_gl2_texture_framebuffer_manager.update_dimensions(self.currentCanvasSize_width, self.currentCanvasSize_height);
 
             self.refresh_coordinates(worker);
-        }
-        pub fn adjust_canvas_sample_count(&mut self, sample_count:u32) {
-            self.web_gl2_framebuffer_manager.update_samples(sample_count);
         }
         pub fn get_canvas_size(&self) -> (u32,u32) {
             (
@@ -125,6 +124,11 @@ impl Render {
                 (self.currentCanvasSize_height as f32 / self.devicePixelRatio) as u32
             )
         }
+        pub fn allow_frame_skipping(&mut self, new:bool) {
+            self.allow_frame_skipping = new;
+        }
+
+    //action
         pub fn refresh_coordinates(&mut self, worker:&web_sys::Worker) {
             let w = self.canvas.width() as f32;
             let h = self.canvas.height() as f32;
@@ -161,7 +165,7 @@ impl Render {
             stats: &mut Stats,
         ) {
             //check if frame needs to be rendered at all
-                if !element_manager.get_element_by_id_mut(arrangement.get_root_element_id()).unwrap().as_group().unwrap().get_render_required() {
+                if self.allow_frame_skipping && !element_manager.get_element_by_id_mut(arrangement.get_root_element_id()).unwrap().as_group().unwrap().get_render_required() {
                     if stats.get_active() { stats.render_frame_register_skip(true); }
                     return
                 }
@@ -183,7 +187,7 @@ impl Render {
                     viewbox,
                     &self.context,
                     &mut self.web_gl2_program_conglomerate_manager,
-                    &mut self.web_gl2_framebuffer_manager,
+                    &mut self.web_gl2_texture_framebuffer_manager,
                     &mut self.image_requester,
                     &(self.currentCanvasSize_width, self.currentCanvasSize_height),
                     false,
@@ -212,7 +216,8 @@ impl Render {
                     transferable_canvas_array,
                 );
         }
-
+}
+impl Render {
     pub fn _dump(&self) {
         console_log!("┌─Engine Render Dump─");
         console_log!("│ canvas: {:?}", self.canvas);
@@ -226,9 +231,11 @@ impl Render {
         console_log!("│ currentCanvasSize_width: {} (apparent: {})", self.currentCanvasSize_width, w);
         console_log!("│ currentCanvasSize_height: {} (apparent: {})", self.currentCanvasSize_height, h);
         console_log!("│");
+        console_log!("│ allow_frame_skipping: {}", self.allow_frame_skipping);
+        console_log!("│");
         self.web_gl2_program_conglomerate_manager._dump( Some("│ ") );
         console_log!("│");
-        self.web_gl2_framebuffer_manager._dump( Some("│ ") );
+        self.web_gl2_texture_framebuffer_manager._dump( Some("│ ") );
         console_log!("└────────────────────");
     }
 }
@@ -243,7 +250,7 @@ impl Render {
 //render
     #[wasm_bindgen]
     impl Engine {
-        //canvas and webGL context adjustment
+        //attributes
             pub fn render__get_clear_colour(&self) -> js_sys::Object {
                 Colour::to_js_sys_object(&self.render.get_clear_colour())
             }
@@ -255,9 +262,6 @@ impl Render {
             pub fn render__adjust_canvas_size(&mut self, width:u32, height:u32, devicePixelRatio:f32) {
                 self.render.adjust_canvas_size( &self.worker, Some(width),Some(height),Some(devicePixelRatio) );
             }
-            pub fn render__adjust_canvas_sample_count(&mut self, sample_count:u32) {
-                self.render.adjust_canvas_sample_count(sample_count);
-            }
             pub fn render__get_canvas_size(&self) -> js_sys::Object {
                 let tmp = self.render.get_canvas_size();
 
@@ -266,12 +270,18 @@ impl Render {
                 js_sys::Reflect::set( &output, &JsValue::from_str("height"), &JsValue::from_f64(tmp.1 as f64) ).unwrap();
                 output
             }
+            pub fn allow_frame_skipping(&mut self, new_argument:bool) {
+                self.render.allow_frame_skipping(new_argument);
+            }
+
+        //action
             pub fn render__refresh_coordinates(&mut self) {
                 self.render.refresh_coordinates( &self.worker );
             }
             pub fn render__refresh(&mut self, arg_width:Option<u32>, arg_height:Option<u32>, devicePixelRatio:Option<f32>) {
                 self.render.refresh( &self.worker, arg_width, arg_height, devicePixelRatio );
             }
+
         //actual render
             pub fn render__frame(&mut self, no_clear:bool) {
                 self.render.frame(
@@ -283,6 +293,7 @@ impl Render {
                     &mut self.stats,
                 );
             }
+
         //misc
             pub fn render__dump(&self) {
                 self.render._dump();

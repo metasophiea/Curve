@@ -75,12 +75,12 @@
         communicationModule.function.operator__render__clearColour = self.operator.render.clearColour;
         communicationModule.function.operator__render__getCanvasSize = self.operator.render.getCanvasSize;
         communicationModule.function.operator__render__adjustCanvasSize = self.operator.render.adjustCanvasSize;
-        communicationModule.function.operator__render__adjustCanvasSampleCount = self.operator.render.adjustCanvasSampleCount;
         communicationModule.function.operator__render__refreshCoordinates = self.operator.render.refreshCoordinates;
         communicationModule.function.operator__render__refresh = self.operator.render.refresh;
     //frame rate control
         communicationModule.function.operator__render__activeLimitToFrameRate = self.operator.render.activeLimitToFrameRate;
         communicationModule.function.operator__render__frameRateLimit = self.operator.render.frameRateLimit;
+        communicationModule.function.operator__render__allowFrameSkipping = self.operator.render.allowFrameSkipping;
     //actual render
         communicationModule.function.operator__render__frame = self.operator.render.frame;
         communicationModule.function.operator__render__active = self.operator.render.active;
@@ -94,6 +94,7 @@
         communicationModule.function.operator__viewport__scale = self.operator.viewport.scale;
         communicationModule.function.operator__viewport__angle = self.operator.viewport.angle;
         communicationModule.function.operator__viewport__anchor = self.operator.viewport.anchor;
+        communicationModule.function.operator__viewport__scaleAroundWindowPoint = self.operator.viewport.scaleAroundWindowPoint;
     //mouse interaction
         communicationModule.function.operator__viewport__getElementsUnderPoint = self.operator.viewport.getElementsUnderPoint;
         communicationModule.function.operator__viewport__getElementsUnderArea = self.operator.viewport.getElementsUnderArea;

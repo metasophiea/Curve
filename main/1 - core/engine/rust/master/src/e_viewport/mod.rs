@@ -80,6 +80,21 @@ impl Viewport {
             self.calculate_viewbox(canvas_size, element_manager, arrangement);
         }
 
+        pub fn scale_around_window_point(&mut self, s:f32, x:f32, y:f32, canvas_size:(u32,u32), element_manager:&mut ElementManager, arrangement:&Arrangement) -> (f32,f32) {
+            let starting_point = self.window_point_2_workspace_point(&Point::new(x,y));
+            self.scale = s;
+            let ending_point = self.window_point_2_workspace_point(&Point::new(x,y));
+
+            self.position.set(
+                self.position.get_x() + (starting_point.get_x() - ending_point.get_x()),
+                self.position.get_y() + (starting_point.get_y() - ending_point.get_y()),
+            );
+
+            self.calculate_viewbox(canvas_size, element_manager, arrangement);
+            
+            (self.position.get_x(),self.position.get_y())
+        }
+
     //mouse interaction
         pub fn get_elements_under_point(&self, element_manager:&ElementManager, arrangement:&Arrangement, point:Point) -> Vec<usize> {
             arrangement.get_elements_under_point(
@@ -177,6 +192,19 @@ impl Viewport {
                     &mut self.element_manager,
                     &self.arrangement,
                 );
+            }
+            pub fn viewport__scale_around_window_point(&mut self, s:f32, x:f32, y:f32) -> js_sys::Array {
+                let (x,y) = self.viewport.scale_around_window_point(
+                    s, x, y,
+                    self.render.get_canvas_size(),
+                    &mut self.element_manager,
+                    &self.arrangement,
+                );
+
+                js_sys::Array::of2(
+                    &JsValue::from_f64(x as f64),
+                    &JsValue::from_f64(y as f64),
+                )
             }
         //mouse interaction
             pub fn viewport__get_elements_under_point(&self, x:f32, y:f32) -> Vec<usize> {

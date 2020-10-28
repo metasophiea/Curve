@@ -16,6 +16,9 @@ this.viewport = new function(){
         this.anchor = function(x,y){
             ENGINE.viewport__anchor(x,y);
         };
+        this.scaleAroundWindowPoint = function(s,x,y){
+            return ENGINE.viewport__scale_around_window_point(s,x,y);
+        };
 
     //mouse interaction
         this.getElementsUnderPoint = function(x,y){
