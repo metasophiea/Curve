@@ -7,8 +7,8 @@
 
 //core
     use crate::a_library::{
-        data_type,
         data_type::{
+            SimplePolygon,
             Colour,
             Offset,
             Viewbox,
@@ -103,7 +103,7 @@ pub struct Polygon {
             y: f32,
             angle: f32,
             scale: f32,
-            points: data_type::Polygon,
+            points: SimplePolygon,
         //other
             ignored: bool,
             colour: Colour,
@@ -112,7 +112,7 @@ pub struct Polygon {
         dot_frame: bool,
 
     //computed values
-        extremities: data_type::Polygon,
+        extremities: SimplePolygon,
         cached_offset: Offset,
         cached_heed_camera: bool,
         vao_id: Option<usize>,
@@ -136,14 +136,14 @@ impl Polygon {
             y: 0.0,
             angle: 0.0,
             scale: 1.0,
-            points: data_type::Polygon::new_empty(),
+            points: SimplePolygon::new_default(),
 
             ignored: false,
             colour: Colour::new(1.0,0.0,0.0,1.0),
 
             dot_frame: false,
             
-            extremities: data_type::Polygon::new_empty(),
+            extremities: SimplePolygon::new_default(),
             cached_offset: Offset::new_default(),
             cached_heed_camera: false,
             vao_id: None,
@@ -158,8 +158,8 @@ impl Polygon {
     //attributes
         //pertinent to extremity calculation
             //points
-                pub fn get_points(&self) -> &data_type::Polygon { &self.points }
-                pub fn set_points(&mut self, new:data_type::Polygon, viewbox:&Viewbox) { 
+                pub fn get_points(&self) -> &SimplePolygon { &self.points }
+                pub fn set_points(&mut self, new:SimplePolygon, viewbox:&Viewbox) { 
                     self.points = new; 
                     self.calculate_points(); 
                     self.compute_extremities(true, None, None);
@@ -179,7 +179,7 @@ impl Polygon {
                 y: Option<f32>,
                 angle: Option<f32>,
                 scale: Option<f32>,
-                points: Option<data_type::Polygon>,
+                points: Option<SimplePolygon>,
                 colour: Option<Colour>,
                 viewbox:&Viewbox,
             ) {
@@ -195,10 +195,10 @@ impl Polygon {
             }
 
     //webGL rendering functions
-        fn compute_points(polygon:&data_type::Polygon) -> Vec<f32> {
+        fn compute_points(polygon:&SimplePolygon) -> Vec<f32> {
             let mut vao_points:Vec<f32> = vec![];
 
-            for triangle in polygon.to_sub_triangles() {
+            for triangle in polygon.to_sub_triangles_triangles() {
                 for points in triangle.get_points() {
                     vao_points.extend_from_slice(
                         &[
@@ -276,8 +276,8 @@ impl ElementTrait for Polygon {
             fn set_cached_heed_camera(&mut self, new:bool) { self.cached_heed_camera = new; }
 
         //extremities
-            fn get_extremities(&self) -> &data_type::Polygon { &self.extremities }
-            fn __set_extremities(&mut self, new:data_type::Polygon) { self.extremities = new; }
+            fn get_extremities(&self) -> &SimplePolygon { &self.extremities }
+            fn __set_extremities(&mut self, new:SimplePolygon) { self.extremities = new; }
 
         //render
             //visibility
@@ -311,7 +311,7 @@ impl ElementTrait for Polygon {
                     get_value_from_object__f32("scale", &unified_attribute, true),
                     match get_value_from_object__vector_of_f32("points", &unified_attribute, true){
                         None => None, 
-                        Some(a) => Some(data_type::Polygon::new_from_flat_array(a))
+                        Some(a) => Some(SimplePolygon::new_from_flat_array(a))
                     },
                     get_value_from_object__colour("colour", &unified_attribute, true),
                     viewbox,

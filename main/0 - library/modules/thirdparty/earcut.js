@@ -1,5 +1,5 @@
 this.earcut = function(points,holeIndices){
-	//https://github.com/mapbox/earcut (10/03/2020)
+    //https://github.com/mapbox/earcut (10/03/2020)
 
     var outputPoints = [];
     earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });

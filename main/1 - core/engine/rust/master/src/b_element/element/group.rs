@@ -29,17 +29,16 @@
 //core
     use crate::a_library::{
         data_type::{
-            Offset,
             Point,
             BoundingBox,
-            Polygon,
+            SimplePolygon,
+            PolySide,
+
+            Offset,
             Viewbox,
             ElementType,
             Colour,
             RenderDecision,
-        },
-        math::{
-            detect_intersect,
         },
         structure::{
             WebGl2programConglomerateManager,
@@ -88,7 +87,7 @@ pub struct Group {
         dot_frame: bool,
 
     //computed values
-        extremities: Polygon,
+        extremities: SimplePolygon,
         cached_offset: Offset,
         cached_heed_camera: bool,
 
@@ -126,7 +125,7 @@ impl Group {
 
             dot_frame: false,
             
-            extremities: Polygon::new_empty(),
+            extremities: SimplePolygon::new_default(),
             cached_offset: Offset::new_default(),
             cached_heed_camera: false,
 
@@ -470,7 +469,7 @@ impl Group {
                                 let point_of_interest = if child.borrow().as_group().unwrap().get_heed_camera().unwrap_or(false) { point } else { window_point };
 
                             //if the point is not within this child's bounding box, just move on to the next one
-                                if !detect_intersect::point_within_bounding_box(point_of_interest, child.borrow().get_extremities().get_bounding_box() ) {
+                                if !point_of_interest.intersect_with_bounding_box( &child.borrow().get_extremities().get_bounding_box() ) {
                                     continue;
                                 }
                             //pass this point to the child's "get_elements_under_point" function and collect the results
@@ -480,17 +479,17 @@ impl Group {
                             //logically they must not heed the camera also
 
                             //if the point is not within this child's bounding box, just move on to the next one
-                                if !detect_intersect::point_within_bounding_box(window_point, child.borrow().get_extremities().get_bounding_box() ) {
+                                if !window_point.intersect_with_bounding_box( &child.borrow().get_extremities().get_bounding_box() ) {
                                     continue;
                                 }
                             //if this point exists within the child; add it to the results list
-                                if detect_intersect::point_within_poly(window_point, child.borrow().get_extremities() ) != detect_intersect::PolySide::Outside {
+                                if window_point.intersect_with_simple_polygon( &child.borrow().get_extremities() ) != PolySide::Outside {
                                     return_list.push( child.borrow().get_id() );
                                 }
                         }
                     } else {
                         //if the point is not within this child's bounding box, just move on to the next one
-                            if !detect_intersect::point_within_bounding_box(point, child.borrow().get_extremities().get_bounding_box() ) {
+                            if !point.intersect_with_bounding_box( &child.borrow().get_extremities().get_bounding_box() ) {
                                 continue;
                             }
 
@@ -499,7 +498,7 @@ impl Group {
                                 return_list.append( &mut child.borrow().as_group().unwrap().get_elements_under_point(window_point, point) );
                         } else {
                             //if this point exists within the child; add it to the results list
-                                if detect_intersect::point_within_poly(point, child.borrow().get_extremities() ) != detect_intersect::PolySide::Outside {
+                                if point.intersect_with_simple_polygon( &child.borrow().get_extremities() ) != PolySide::Outside {
                                     return_list.push( child.borrow().get_id() );
                                 }
                         }
@@ -508,7 +507,7 @@ impl Group {
 
             return_list
         }
-        pub fn get_elements_under_area(&self, window_polygon:&Polygon, polygon:&Polygon) -> Vec<usize> {
+        pub fn get_elements_under_area(&self, window_polygon:&SimplePolygon, polygon:&SimplePolygon) -> Vec<usize> {
             let mut return_list:Vec<usize> = vec![];
 
             //run though children backwards (thus, front to back)
@@ -527,7 +526,7 @@ impl Group {
                                 let poly_of_interest = if child.borrow().as_group().unwrap().get_heed_camera().unwrap_or(false) { polygon } else { window_polygon };
 
                             //if the polygon bounding box does not overlap this child's bounding box, just move on to the next one
-                                if !detect_intersect::bounding_boxes(poly_of_interest.get_bounding_box(), child.borrow().get_extremities().get_bounding_box() ) {
+                                if !poly_of_interest.get_bounding_box().intersect_with_bounding_box( &child.borrow().get_extremities().get_bounding_box() ) {
                                     continue;
                                 }
                             //pass this polygon to the child's "get_elements_under_area" function and collect the results
@@ -537,17 +536,17 @@ impl Group {
                             //logically they must not heed the camera also
 
                             //if the polygon bounding box does not overlap this child's bounding box, just move on to the next one
-                                if !detect_intersect::bounding_boxes(window_polygon.get_bounding_box(), child.borrow().get_extremities().get_bounding_box() ) {
+                                if !window_polygon.get_bounding_box().intersect_with_bounding_box( &child.borrow().get_extremities().get_bounding_box() ) {
                                     continue;
                                 }
                             //if this polygon overlaps the child; add it to the results list
-                                if detect_intersect::poly_on_poly(window_polygon, child.borrow().get_extremities() ).intersect {
+                                if window_polygon.intersect_with_simple_polygon( &child.borrow().get_extremities() ).intersect {
                                     return_list.push( child.borrow().get_id() );
                                 }
                         }
                     } else {
                         //if the polygon bounding box does not overlap this child's bounding box, just move on to the next one
-                            if !detect_intersect::bounding_boxes(polygon.get_bounding_box(), child.borrow().get_extremities().get_bounding_box() ) {
+                            if !polygon.get_bounding_box().intersect_with_bounding_box( &child.borrow().get_extremities().get_bounding_box() ) {
                                 continue;
                             }
 
@@ -556,7 +555,7 @@ impl Group {
                                 return_list.append( &mut child.borrow().as_group().unwrap().get_elements_under_area(window_polygon, &polygon) );
                         } else {
                             //if this polygon overlaps the child; add it to the results list
-                                if detect_intersect::poly_on_poly(polygon, child.borrow().get_extremities() ).intersect {
+                                if polygon.intersect_with_simple_polygon( &child.borrow().get_extremities() ).intersect {
                                     return_list.push( child.borrow().get_id() );
                                 }
                         }
@@ -585,7 +584,7 @@ impl Group {
         }
 
     //extremity calculation
-        fn calculate_extremities_box(&mut self, extremities_of_calling_child:Option<&Polygon>, parent_offset:Option<&Offset>) {
+        fn calculate_extremities_box(&mut self, extremities_of_calling_child:Option<&SimplePolygon>, parent_offset:Option<&Offset>) {
             //some very delicate faffery happening here. When updating the values of an element, that element will
             //attempt to update its parent (which is a group element) This parent element will then attempt to update
             //its extremitiesBox. To do so it goes through all it's children collecting their extremitiesBoxes and
@@ -595,7 +594,7 @@ impl Group {
             //update. When the parent is collecting the extremitiesBoxes of its children, it will fail on the one that
             //called for the update, at which point it will use the passed extremitiesBox instead.
 
-            fn get_limits(extremities_of_calling_child:&Polygon, child:&Weak<RefCell<dyn ElementTrait>>) -> (f32, f32, f32, f32) {
+            fn get_limits(extremities_of_calling_child:&SimplePolygon, child:&Weak<RefCell<dyn ElementTrait>>) -> (f32, f32, f32, f32) {
                 let bounding_box_of_calling_child = extremities_of_calling_child.get_bounding_box();
 
                 match child.upgrade().unwrap().try_borrow() {
@@ -621,8 +620,8 @@ impl Group {
 
             self.extremities = if self.children.len() == 0 {
                 match parent_offset {
-                    Some(parent_offset) => Polygon::new_from_flat_array(vec![parent_offset.get_x(), parent_offset.get_y()]),
-                    None => Polygon::new_empty(),
+                    Some(parent_offset) => SimplePolygon::new_from_flat_array(vec![parent_offset.get_x(), parent_offset.get_y()]),
+                    None => SimplePolygon::new_default(),
                 }
             } else {
                 match extremities_of_calling_child {
@@ -652,7 +651,7 @@ impl Group {
                             if tmp_limit_bottom > limit_bottom { limit_bottom = tmp_limit_bottom; }
                         }
             
-                        Polygon::new_from_boundings(limit_left, limit_top, limit_right, limit_bottom, true)
+                        SimplePolygon::new_from_boundings(limit_left, limit_top, limit_right, limit_bottom, true)
                     },
                     Some(extremities_of_calling_child) => {
                         let (mut limit_left, mut limit_right, mut limit_top, mut limit_bottom) = get_limits(&extremities_of_calling_child, &self.children[0]);
@@ -666,7 +665,7 @@ impl Group {
                             if tmp_limit_bottom > limit_bottom { limit_bottom = tmp_limit_bottom; }
                         }
 
-                        Polygon::new_from_boundings(limit_left, limit_top, limit_right, limit_bottom, true)
+                        SimplePolygon::new_from_boundings(limit_left, limit_top, limit_right, limit_bottom, true)
                     },
                 }
             }
@@ -685,7 +684,7 @@ impl Group {
                     let b_element = new_element.upgrade().unwrap();
                     let b_borrow = b_element.borrow();
                     let b_bb = b_borrow.get_extremities().get_bounding_box();
-                    self.extremities = Polygon::new_from_bounding_box( *b_bb, true );
+                    self.extremities = SimplePolygon::new_from_bounding_box( b_bb.clone(), true );
                 } else {
                     let a_bb = self.extremities.get_bounding_box();
 
@@ -697,7 +696,7 @@ impl Group {
                         a_bb.get_top_left(), a_bb.get_bottom_right(),
                         b_bb.get_top_left(), b_bb.get_bottom_right(),
                     ]);
-                    self.extremities = Polygon::new_from_bounding_box( bounding_box, true );
+                    self.extremities = SimplePolygon::new_from_bounding_box( bounding_box, true );
                 }
 
             //inform parent of change
@@ -832,13 +831,13 @@ impl Group {
                     }
 
                 //assemble new values together
-                    self.extremities = Polygon::new_from_boundings(
+                    self.extremities = SimplePolygon::new_from_boundings(
                         new_topLeft_x, new_topLeft_y, new_bottomRight_x, new_bottomRight_y,
                         true
                     );
             }
         }
-        pub fn update_extremities(&mut self, inform_parent:bool, extremities_of_calling_child:Option<&Polygon>, parent_offset:Option<&Offset>) {
+        pub fn update_extremities(&mut self, inform_parent:bool, extremities_of_calling_child:Option<&SimplePolygon>, parent_offset:Option<&Offset>) {
             //if clipping is active and possible, the extremities of this group are limited to those of the clipping element
             //otherwise, gather extremities from children and calculate extremities here
             if self.clipping_active && self.clipping_stencil.is_some() {
@@ -861,7 +860,7 @@ impl Group {
                     }
                 }
         }
-        pub fn get_clipping_polygon(&self) -> Option<&Polygon> {
+        pub fn get_clipping_polygon(&self) -> Option<&SimplePolygon> {
             if self.clipping_active { Some(self.get_extremities()) } else { None }
         }
 
@@ -949,8 +948,8 @@ impl ElementTrait for Group {
             fn set_cached_heed_camera(&mut self, new:bool) { self.cached_heed_camera = new; }
 
         //extremities
-            fn get_extremities(&self) -> &Polygon { &self.extremities }
-            fn __set_extremities(&mut self, new:Polygon) { self.extremities = new; }
+            fn get_extremities(&self) -> &SimplePolygon { &self.extremities }
+            fn __set_extremities(&mut self, new:SimplePolygon) { self.extremities = new; }
 
         //render
             //visibility
@@ -1036,7 +1035,7 @@ impl ElementTrait for Group {
 
         //render
             //visibility
-                fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&Polygon>, viewbox:&Viewbox, bubble_up:bool) {
+                fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&SimplePolygon>, viewbox:&Viewbox, bubble_up:bool) {
                     //run for self
                         self.set_is_visible( self.check_is_visible(parent_clipping_polygon, viewbox) );
 
@@ -1065,7 +1064,7 @@ impl ElementTrait for Group {
             //actual render
                 fn render(
                     &mut self,
-                    parent_clipping_polygon: Option<&Polygon>,
+                    parent_clipping_polygon: Option<&SimplePolygon>,
                     _heed_camera: bool,
                     viewbox: &Viewbox,
                     context: &WebGl2RenderingContext, 
@@ -1161,7 +1160,7 @@ impl ElementTrait for Group {
             //dot frame
                 fn draw_dot_frame(
                     &self,
-                    parent_clipping_polygon: Option<&Polygon>,
+                    parent_clipping_polygon: Option<&SimplePolygon>,
                     heed_camera: bool,
                     viewbox: &Viewbox,
                     context: &WebGl2RenderingContext, 
@@ -1280,7 +1279,7 @@ impl ElementManager {
         if !self.check_is_group(id, "execute_method__Group__get_elements_under_point") { return vec![]; }
         self.get_element_by_id(id).unwrap().as_group().unwrap().get_elements_under_point(point, point)
     }
-    pub fn execute_method__Group__get_elements_under_area(&self, id:usize, polygon:&Polygon) -> Vec<usize> {
+    pub fn execute_method__Group__get_elements_under_area(&self, id:usize, polygon:&SimplePolygon) -> Vec<usize> {
         if !self.check_is_group(id, "execute_method__Group__get_elements_under_area") { return vec![]; }
         self.get_element_by_id(id).unwrap().as_group().unwrap().get_elements_under_area(polygon, polygon)
     }
@@ -1353,7 +1352,7 @@ impl Engine {
         self.element_manager.execute_method__Group__get_elements_under_point(id, &Point::new(x,y))
     }
     pub fn element__execute_method__Group__get_elements_under_area(&self, id:usize, polygon:Vec<f32>) -> Vec<usize> {
-        self.element_manager.execute_method__Group__get_elements_under_area(id, &Polygon::new_from_flat_array(polygon))
+        self.element_manager.execute_method__Group__get_elements_under_area(id, &SimplePolygon::new_from_flat_array(polygon))
     }
 
     pub fn element__execute_method__Group__stencil(&self, id:usize, new_stencil_id:usize) {

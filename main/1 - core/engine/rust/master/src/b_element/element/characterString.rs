@@ -21,7 +21,7 @@
         data_type::{
             Colour,
             Offset,
-            Polygon,
+            SimplePolygon,
             Viewbox,
             ElementType,
             PrintingModePositionHorizontal,
@@ -337,8 +337,8 @@ impl ElementTrait for CharacterString {
             fn set_cached_heed_camera(&mut self, new:bool) { self.inner_group.set_cached_heed_camera(new); }
 
         //extremities
-            fn get_extremities(&self) -> &Polygon { self.inner_group.get_extremities() }
-            fn __set_extremities(&mut self, new:Polygon) { self.inner_group.__set_extremities(new); }
+            fn get_extremities(&self) -> &SimplePolygon { self.inner_group.get_extremities() }
+            fn __set_extremities(&mut self, new:SimplePolygon) { self.inner_group.__set_extremities(new); }
 
         //render
             //visibility
@@ -419,7 +419,7 @@ impl ElementTrait for CharacterString {
             }
 
         //render
-            fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&Polygon>, viewbox:&Viewbox, bubble_up:bool) {
+            fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&SimplePolygon>, viewbox:&Viewbox, bubble_up:bool) {
                 self.inner_group.determine_if_visible(parent_clipping_polygon, viewbox, bubble_up);
 
                 //inform parent, if requested to do so
@@ -429,7 +429,7 @@ impl ElementTrait for CharacterString {
             }
             fn render(
                 &mut self,
-                parent_clipping_polygon: Option<&Polygon>,
+                parent_clipping_polygon: Option<&SimplePolygon>,
                 heed_camera: bool,
                 viewbox: &Viewbox,
                 context: &WebGl2RenderingContext, 
@@ -471,7 +471,7 @@ impl ElementTrait for CharacterString {
             }
             fn draw_dot_frame(
                 &self,
-                parent_clipping_polygon: Option<&Polygon>,
+                parent_clipping_polygon: Option<&SimplePolygon>,
                 heed_camera: bool,
                 viewbox: &Viewbox,
                 context: &WebGl2RenderingContext, 

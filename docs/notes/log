@@ -1,4 +1,32 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-11-06
+  - redid the core library's geometry shapes. Now, the detect_intersect code is
+    all included in the shape's struct (with cross-back so all comparison
+    directions are covered) I've also updated this code quite a lot, improving 
+    its accuracy and adding new information to the returned result.
+      Also the Polygon shape has been renamed to SimplePolygon, in preparation
+    of...
+  - added the Complex Polygon to core library's geometry shapes, which has
+    holes. The shape is defined as a "body" SimplePolygon with any number of 
+    "hole" SimplePolygons
+  - polygon shapes have also had the "convert to sub-triangles" included into
+    their structs
+  - the polygon shapes detect_intersect code was a little sluggish - probably
+    due to the amount of work it had to do to gather all the information for
+    the result - so there is also a reduced version of one of the shapes
+    methods (simple poly on simple poly) that only returns the "intersect" 
+    value, as in some cases this is all that is required
+
+  I need to get ComplexPolygon on ComplexPolygon comparison working, if I am
+  to get polygons with holes (or Swiss polygons) working (needed for looped
+  paths) I've spent a lot of time working on this new set of comparison methods
+  though, and it's honestly started to depress me with how difficult it is to
+  get working and how much detail and patience is required.. something I guess
+  I've ran out of after the last week. Luckily we can get away without this
+  shape for now and focus on other more exciting improvements and features.
+  In future I hope to make a return however, and finish this mess off
+
+
 2020-10-27
   - removed all the usage of framebuffer code, simplifying things (I'm going to
     give it another try)

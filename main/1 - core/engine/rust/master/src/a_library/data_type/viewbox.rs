@@ -7,7 +7,7 @@
     use crate::a_library::data_type::{
         Offset,
         BoundingBox,
-        Polygon,
+        SimplePolygon,
     };
     use crate::a_library::math::cartesian_angle_adjust;
 
@@ -28,8 +28,8 @@ pub struct Viewbox {
     width: u32,
     height: u32,
 
-    polygon: Polygon,
-    static_polygon: Polygon,
+    polygon: SimplePolygon,
+    static_polygon: SimplePolygon,
 
     cached_offset: Offset,
 }
@@ -89,7 +89,7 @@ impl Viewbox {
         )
     }
 
-    fn generate_viewbox(x:f32, y:f32, scale:f32, angle:f32, anchor_x:f32, anchor_y:f32, width:u32, height:u32) -> Polygon {
+    fn generate_viewbox(x:f32, y:f32, scale:f32, angle:f32, anchor_x:f32, anchor_y:f32, width:u32, height:u32) -> SimplePolygon {
         let frame = 0.0/scale;
 
         let width = (width as f32)/scale;
@@ -118,7 +118,7 @@ impl Viewbox {
             angle
         );
 
-        Polygon::new_from_flat_array(vec![
+        SimplePolygon::new_from_flat_array(vec![
             x + top_left_point.get_x(),     y + top_left_point.get_y(),
             x + top_right_point.get_x(),    y + top_right_point.get_y(),
             x + bottom_right_point.get_x(), y + bottom_right_point.get_y(),
@@ -197,12 +197,12 @@ impl Viewbox {
         &self.cached_offset
     }
     pub fn get_bounding_box(&self) -> &BoundingBox {
-        &self.polygon.get_bounding_box()
+        self.polygon.get_bounding_box()
     }
-    pub fn get_polygon(&self) -> &Polygon {
+    pub fn get_polygon(&self) -> &SimplePolygon {
         &self.polygon
     }
-    pub fn get_static_polygon(&self) -> &Polygon {
+    pub fn get_static_polygon(&self) -> &SimplePolygon {
         &self.static_polygon
     }
 }

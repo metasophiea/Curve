@@ -1,4 +1,5 @@
 #![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 //rust
 
@@ -15,13 +16,14 @@
     }
 
 //core
-    pub mod detect_intersect;
+    pub mod data_type__geometry;
     pub mod font_requester;
 
 
 
 pub fn all() {
     console_log!("Library Test");
-    detect_intersect::all();
+    data_type__geometry::all();
+    // detect_intersect::all();
     // font_requester::all();
 }

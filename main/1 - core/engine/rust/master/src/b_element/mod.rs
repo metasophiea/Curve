@@ -33,7 +33,7 @@
         ElementType,
         Point,
         Colour,
-        Polygon,
+        SimplePolygon,
         Viewbox,
     };
     use crate::a_library::structure::{
@@ -202,7 +202,7 @@ impl ElementManager {
     }
     pub fn draw_dot(
         xy: &Point, size: f32, colour: &Colour,
-        parent_clipping_polygon: Option<&Polygon>,
+        parent_clipping_polygon: Option<&SimplePolygon>,
         heed_camera: bool,
         viewbox: &Viewbox,
         context: &WebGl2RenderingContext, 

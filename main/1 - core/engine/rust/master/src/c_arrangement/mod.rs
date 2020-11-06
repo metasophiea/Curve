@@ -20,7 +20,7 @@
     use crate::engine::Engine;
     use crate::a_library::data_type::{
         Point,
-        Polygon,
+        SimplePolygon,
         Viewbox,
         ElementType,
     };
@@ -95,7 +95,7 @@ impl Arrangement {
         pub fn get_elements_under_point(&self, element_manager:&ElementManager, window_point:&Point, point:Point) -> Vec<usize> {
             element_manager.get_element_by_id(self.root_element_id).unwrap().as_group().unwrap().get_elements_under_point(window_point, &point)
         }
-        pub fn get_elements_under_area(&self, element_manager:&ElementManager, window_polygon:&Polygon, polygon:Polygon) -> Vec<usize> {
+        pub fn get_elements_under_area(&self, element_manager:&ElementManager, window_polygon:&SimplePolygon, polygon:SimplePolygon) -> Vec<usize> {
             element_manager.get_element_by_id(self.root_element_id).unwrap().as_group().unwrap().get_elements_under_area(window_polygon, &polygon)
         }
 
@@ -233,7 +233,7 @@ impl Arrangement {
                 self.arrangement.get_elements_under_point(&self.element_manager, &Point::new(x,y), Point::new(x,y))
             }
             pub fn arrangement__get_elements_under_area(&self, polygon:Vec<f32>) -> Vec<usize> {
-                self.arrangement.get_elements_under_area(&self.element_manager, &Polygon::new_from_flat_array_reference(&polygon), Polygon::new_from_flat_array(polygon))
+                self.arrangement.get_elements_under_area(&self.element_manager, &SimplePolygon::new_from_flat_array_reference(&polygon), SimplePolygon::new_from_flat_array(polygon))
             }
 
         //misc

@@ -31,17 +31,14 @@
 
 //core
     use crate::a_library::{
-        data_type,
         data_type::{
             Point,
+            SimplePolygon,
             Offset,
             Viewbox,
             ElementType,
             Colour,
             RenderDecision,
-        },
-        math::{
-            detect_intersect,
         },
         structure::{
             WebGl2programConglomerateManager,
@@ -207,11 +204,11 @@ pub trait ElementTrait {
         fn calculate_points(&mut self, _font_requester:&RefCell<FontRequester>, _worker:&web_sys::Worker, _viewbox:&Viewbox) {}
 
     //extremities
-        fn get_extremities(&self) -> &data_type::Polygon;
-        fn __set_extremities(&mut self, new:data_type::Polygon);
+        fn get_extremities(&self) -> &SimplePolygon;
+        fn __set_extremities(&mut self, new:SimplePolygon);
         fn get_length_of_points_for_extremity_calculation(&self) -> usize { 0 }
         fn get_point_for_extremity_calculation(&self, _index:usize) -> Option<(f32,f32)> { None }
-        fn get_parent_clipping_polygon(&self) -> Option<data_type::Polygon> {
+        fn get_parent_clipping_polygon(&self) -> Option<SimplePolygon> {
             match &self.get_parent() {
                 None => None,
                 Some(parent) => {
@@ -278,7 +275,7 @@ pub trait ElementTrait {
                         )
                     );
                 }
-                self.__set_extremities( data_type::Polygon::new_from_point_vector(calculated_points) );
+                self.__set_extremities( SimplePolygon::new_from_point_vector(calculated_points) );
                 
             //if told to do so - and if there is one - inform parent that extremities have changed
                 if inform_parent { 
@@ -314,7 +311,7 @@ pub trait ElementTrait {
                     },
                 }
             }
-            fn check_is_visible(&self, parent_clipping_polygon:Option<&data_type::Polygon>, viewbox:&Viewbox) -> bool {
+            fn check_is_visible(&self, parent_clipping_polygon:Option<&SimplePolygon>, viewbox:&Viewbox) -> bool {
                 //compares bounding box to the viewbox extremities (element render culling)
                 //or to the parent's bounding box if clipping is active there
 
@@ -322,18 +319,17 @@ pub trait ElementTrait {
                     if self.get_extremities().get_points_length() == 0 {
                         return false;
                     }
-
+                    
                 match parent_clipping_polygon {
-                    Some(data) => detect_intersect::poly_on_poly( &data, &self.get_extremities() ),
+                    Some(data) => data.intersect_with_simple_polygon__intersect_only( &self.get_extremities() ),
                     None => {
-                        detect_intersect::poly_on_poly(
-                            if self.get_cached_heed_camera() { &viewbox.get_polygon() } else { &viewbox.get_static_polygon() },
+                        (if self.get_cached_heed_camera() { viewbox.get_polygon() } else { viewbox.get_static_polygon() }).intersect_with_simple_polygon__intersect_only(
                             &self.get_extremities()
                         )
                     },
-                }.intersect
+                }
             }
-            fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&data_type::Polygon>, viewbox:&Viewbox, bubble_up:bool) {
+            fn determine_if_visible(&mut self, parent_clipping_polygon:Option<&SimplePolygon>, viewbox:&Viewbox, bubble_up:bool) {
                 self.set_is_visible( self.check_is_visible(parent_clipping_polygon, viewbox) );
                 
                 //inform parent, if requested to do so
@@ -362,7 +358,7 @@ pub trait ElementTrait {
         //actual render
             fn render(
                 &mut self,
-                parent_clipping_polygon: Option<&data_type::Polygon>,
+                parent_clipping_polygon: Option<&SimplePolygon>,
                 heed_camera: bool,
                 viewbox: &Viewbox,
                 context: &WebGl2RenderingContext, 
@@ -435,7 +431,7 @@ pub trait ElementTrait {
             fn set_dot_frame(&mut self, new:bool);
             fn draw_dot_frame(
                 &self,
-                parent_clipping_polygon: Option<&data_type::Polygon>,
+                parent_clipping_polygon: Option<&SimplePolygon>,
                 heed_camera: bool,
                 viewbox: &Viewbox,
                 context: &WebGl2RenderingContext, 

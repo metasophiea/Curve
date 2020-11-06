@@ -21722,7 +21722,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                 })));
                 this.earcut = function(points,holeIndices){
-                	//https://github.com/mapbox/earcut (10/03/2020)
+                    //https://github.com/mapbox/earcut (10/03/2020)
                 
                     var outputPoints = [];
                     earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
@@ -24027,7 +24027,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("library");
         };
         _canvas_.core = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:27} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:06} };
         
             const core = this;
         

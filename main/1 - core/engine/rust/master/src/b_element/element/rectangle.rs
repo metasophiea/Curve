@@ -22,7 +22,7 @@
             Offset,
             Viewbox,
             Point,
-            Polygon,
+            SimplePolygon,
             ElementType,
             RenderDecision,
         },
@@ -127,7 +127,7 @@ pub struct Rectangle {
         dot_frame: bool,
 
     //computed values
-        extremities: Polygon,
+        extremities: SimplePolygon,
         cached_offset: Offset,
         cached_heed_camera: bool,
 
@@ -157,7 +157,7 @@ impl Rectangle {
 
             dot_frame: false,
             
-            extremities: Polygon::new_empty(),
+            extremities: SimplePolygon::new_default(),
             cached_offset: Offset::new_default(),
             cached_heed_camera: false,
 
@@ -284,8 +284,8 @@ impl ElementTrait for Rectangle {
             fn set_cached_heed_camera(&mut self, new:bool) { self.cached_heed_camera = new; }
 
         //extremities
-            fn get_extremities(&self) -> &Polygon { &self.extremities }
-            fn __set_extremities(&mut self, new:Polygon) { self.extremities = new; }
+            fn get_extremities(&self) -> &SimplePolygon { &self.extremities }
+            fn __set_extremities(&mut self, new:SimplePolygon) { self.extremities = new; }
 
         //render
             //visibility

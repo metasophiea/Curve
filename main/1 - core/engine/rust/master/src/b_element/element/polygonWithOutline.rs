@@ -21,7 +21,7 @@
             Colour,
             Offset,
             Viewbox,
-            Polygon,
+            SimplePolygon,
             ElementType,
             PathCapType,
             PathJointType,
@@ -140,7 +140,7 @@ pub struct PolygonWithOutline {
             y: f32,
             angle: f32,
             scale: f32,
-            points: Polygon,
+            points: SimplePolygon,
             thickness: f32,
             joint_detail: u32,
             joint_type: PathJointType,
@@ -154,7 +154,7 @@ pub struct PolygonWithOutline {
         dot_frame: bool,
 
     //computed values
-        extremities: Polygon,
+        extremities: SimplePolygon,
         cached_offset: Offset,
         cached_heed_camera: bool,
         vao_id: Option<usize>,
@@ -180,7 +180,7 @@ impl PolygonWithOutline {
             y: 0.0,
             angle: 0.0,
             scale: 1.0,
-            points: Polygon::new_empty(),
+            points: SimplePolygon::new_default(),
             thickness: 5.0,
             joint_detail: 25,
             joint_type: PathJointType::sharp,
@@ -192,7 +192,7 @@ impl PolygonWithOutline {
 
             dot_frame: false,
             
-            extremities: Polygon::new_empty(),
+            extremities: SimplePolygon::new_default(),
             cached_offset: Offset::new_default(),
             cached_heed_camera: false,
             vao_id: None,
@@ -209,8 +209,8 @@ impl PolygonWithOutline {
     //attributes
         //pertinent to extremity calculation
             //points
-                pub fn get_points(&self) -> &Polygon { &self.points }
-                pub fn set_points(&mut self, new:Polygon, viewbox:&Viewbox) { 
+                pub fn get_points(&self) -> &SimplePolygon { &self.points }
+                pub fn set_points(&mut self, new:SimplePolygon, viewbox:&Viewbox) { 
                     self.points = new; 
                     self.calculate_points();
                     self.compute_extremities(true, None, None);
@@ -271,7 +271,7 @@ impl PolygonWithOutline {
                 y: Option<f32>,
                 angle: Option<f32>,
                 scale: Option<f32>,
-                points: Option<Polygon>,
+                points: Option<SimplePolygon>,
                 thickness: Option<f32>,
                 joint_detail: Option<u32>,
                 joint_type: Option<PathJointType>,
@@ -303,10 +303,10 @@ impl PolygonWithOutline {
             }
 
     //webGL rendering functions
-        fn compute_points(polygon:&Polygon, thickness:f32, joint_detail:u32, joint_type:PathJointType, sharp_limit:f32) -> (Vec<f32>, usize) {
+        fn compute_points(polygon:&SimplePolygon, thickness:f32, joint_detail:u32, joint_type:PathJointType, sharp_limit:f32) -> (Vec<f32>, usize) {
             let mut vao_points:Vec<f32> = vec![];
 
-            for triangle in polygon.to_sub_triangles() {
+            for triangle in polygon.to_sub_triangles_triangles() {
                 for points in triangle.get_points() {
                     vao_points.extend_from_slice(
                         &[
@@ -406,8 +406,8 @@ impl ElementTrait for PolygonWithOutline {
             fn set_cached_heed_camera(&mut self, new:bool) { self.cached_heed_camera = new; }
 
         //extremities
-            fn get_extremities(&self) -> &Polygon { &self.extremities }
-            fn __set_extremities(&mut self, new:Polygon) { self.extremities = new; }
+            fn get_extremities(&self) -> &SimplePolygon { &self.extremities }
+            fn __set_extremities(&mut self, new:SimplePolygon) { self.extremities = new; }
 
         //render
             //visibility
@@ -441,7 +441,7 @@ impl ElementTrait for PolygonWithOutline {
                     get_value_from_object__f32("scale", &unified_attribute, true),
                     match get_value_from_object__vector_of_f32("points", &unified_attribute, true){
                         None => None, 
-                        Some(a) => Some(Polygon::new_from_flat_array(a))
+                        Some(a) => Some(SimplePolygon::new_from_flat_array(a))
                     },
                     get_value_from_object__f32("thickness", &unified_attribute, true),
                     get_value_from_object__u32("joint_detail", &unified_attribute, true),

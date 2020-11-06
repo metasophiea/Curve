@@ -18,7 +18,7 @@
     use crate::engine::Engine;
     use crate::a_library::data_type::{
         Point,
-        Polygon,
+        SimplePolygon,
         Viewbox,
     };
     use crate::a_library::math::cartesian_angle_adjust;
@@ -103,11 +103,11 @@ impl Viewport {
                 self.window_point_2_workspace_point( &point )
             )
         }
-        pub fn get_elements_under_area(&self, element_manager:&ElementManager, arrangement:&Arrangement, polygon:Polygon) -> Vec<usize> {
+        pub fn get_elements_under_area(&self, element_manager:&ElementManager, arrangement:&Arrangement, polygon:SimplePolygon) -> Vec<usize> {
             arrangement.get_elements_under_area(
                 element_manager, 
                 &polygon,
-                Polygon::new_from_point_vector(
+                SimplePolygon::new_from_point_vector(
                     polygon.get_points().iter().map(|point| self.window_point_2_workspace_point( point ) ).collect()
                 )
             )
@@ -218,7 +218,7 @@ impl Viewport {
                 self.viewport.get_elements_under_area(
                     &self.element_manager,
                     &self.arrangement,
-                    Polygon::new_from_flat_array( points )
+                    SimplePolygon::new_from_flat_array( points )
                 )
             }
             pub fn viewport__set_stop_mouse_scroll(&mut self, active:bool) {

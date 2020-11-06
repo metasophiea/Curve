@@ -25,7 +25,7 @@ webASM
         http://chinedufn.com/3d-webgl-basic-water-tutorial/
 
     Building a Wavetable Synthesizer From Scratch with Rust, WebAssembly, and WebAudio
-        https://cprimozic.net/blog/buliding-a-wavetable-synthesizer-with-rust-wasm-and-webaudio/#conclusion
+        https://cprimozic.net/blog/buliding-a-wavetable-synthesizer-with-rust-wasm-and-webaudio
 
     Examples of using wasm-bindgen, js-sys, and web-sys
         https://rustwasm.github.io/docs/wasm-bindgen/examples/index.html
@@ -35,6 +35,11 @@ webASM
 
     Emscripting a C library to Wasm
         https://developers.google.com/web/updates/2018/03/emscripting-a-c-library
+
+    Synthesizer/Sequencer which uses Wasm in its audio worklets
+        https://github.com/the-drunk-coder/ruffbox
+        which is inspired by this
+        https://github.com/reprimande/wasm-audioworklet-synth
 
 webWorkers
     Web Workers Overview

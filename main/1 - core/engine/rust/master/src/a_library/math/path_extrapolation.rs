@@ -21,7 +21,7 @@
 //core
     use crate::a_library::data_type::{
         Point,
-        Polygon,
+        SimplePolygon,
         PathCapType,
         PathJointType,
     };
@@ -43,7 +43,7 @@ pub fn path_extrapolation_get_triangles(
     loop_path:bool,
     joint_detail:u32,
     sharp_limit:f32,
-) -> Option<Vec<Polygon>> {
+) -> Option<Vec<SimplePolygon>> {
     let mut flat_path:Vec<f32> = vec![];
     for point in path {
         flat_path.extend_from_slice(&[
@@ -67,10 +67,10 @@ pub fn path_extrapolation_get_triangles(
         Some(a) => a,
     };
 
-    let mut output:Vec<Polygon> = vec![];
+    let mut output:Vec<SimplePolygon> = vec![];
     for index in 0..(triangles.len()/6) {
         output.push(
-            Polygon::new_triangle_from_flat(
+            SimplePolygon::new_triangle(
                 triangles[6*index+0], triangles[6*index+1],
                 triangles[6*index+2], triangles[6*index+3],
                 triangles[6*index+4], triangles[6*index+5],
@@ -89,7 +89,7 @@ pub fn path_extrapolation(
     joint_detail:u32,
     sharp_limit:f32,
 // ) -> (Polygon, Vec<Polygon>) {
-) -> Polygon {
+) -> SimplePolygon {
     let mut flat_path:Vec<f32> = vec![];
     for point in path {
         flat_path.extend_from_slice(&[
@@ -136,6 +136,6 @@ pub fn path_extrapolation(
         &js_sys::Array::from(&js_sys::Array::from(&polygon).get(0))
     ).unwrap();
 
-    Polygon::new_from_flat_array(point_data)
+    SimplePolygon::new_from_flat_array(point_data)
 
 }
