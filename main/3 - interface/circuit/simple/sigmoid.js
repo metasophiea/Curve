@@ -11,7 +11,7 @@ this.sigmoid = function(
         flow.sigmoid = {
             gain: 1,
             sharpness: 0,
-            node: new _canvas_.library.audio.audioWorklet.sigmoid(context),
+            node: new _canvas_.library.audio.audioWorklet.production.only_js.sigmoid(context),
         };
 
     //input/output node

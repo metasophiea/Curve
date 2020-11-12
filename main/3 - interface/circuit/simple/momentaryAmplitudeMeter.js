@@ -3,7 +3,7 @@ this.momentaryAmplitudeMeter = function(
 ){
     const self = this;
 
-    const momentaryAmplitudeMeter = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(context);
+    const momentaryAmplitudeMeter = new _canvas_.library.audio.audioWorklet.production.only_js.momentaryAmplitudeMeter(context);
     
     //io
         this.in = function(){ return momentaryAmplitudeMeter; }

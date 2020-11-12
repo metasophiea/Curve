@@ -37,13 +37,13 @@ this.gain = function(
 
         //controlIn
             flow.controlIn = {
-                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
             };
         //gain
             flow.gain = {
                 mode: false,
                 gain: 1,
-                node: new _canvas_.library.audio.audioWorklet.gain(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.gain(context),
             };
 
         flow.controlIn.node.connect(flow.gain.node, undefined, 1);

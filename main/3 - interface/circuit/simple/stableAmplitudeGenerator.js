@@ -10,7 +10,7 @@ this.stableAmplitudeGenerator = function(
     //stableAmplitudeGenerator
         flow.stableAmplitudeGenerator = {
             amplitude: 0,
-            node: new _canvas_.library.audio.audioWorklet.stableAmplitudeGenerator(context),
+            node: new _canvas_.library.audio.audioWorklet.production.only_js.stableAmplitudeGenerator(context),
         };
         
     //input/output node

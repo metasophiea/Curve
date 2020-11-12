@@ -14,13 +14,13 @@ this.oscillator = function(
 
         //control streams
             flow.gainControl = {
-                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
             };
             flow.detuneControl = {
-                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
             };
             flow.dutyCycleControl = {
-                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
             };
 
         //oscillator
@@ -29,7 +29,7 @@ this.oscillator = function(
                 gain: 1,
                 detune: 0,
                 dutyCycle: 0.5,
-                node: new _canvas_.library.audio.audioWorklet.oscillator(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
             };
 
         flow.gainControl.node.connect(flow.oscillator.node, undefined, 0);

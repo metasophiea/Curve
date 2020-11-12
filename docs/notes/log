@@ -1,4 +1,19 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-11-12
+  - rearranged how the audio nodes section of the library is layed out, and
+    initialised on startup, all in prep for the new audio nodes that have wasm
+    elements.
+  - updated the comp.sh script to have options for compiling the new 
+    wasm-infused audio nodes. Also rearranged the "wasm" folder in "docs" to
+    have subfolders for "core" wasm files and the upcoming audio node wasm.
+    Also also updated the comp.sh script report section to give information on
+    the compiled wasm files including when they were created, what size they
+    are, and the first 10 lines of the twiggy output
+  - wrote up a new version of the bitcrusher audio node which uses wasm to
+    process the data
+  - swapped out the old bitcrusher for the new one, in the interface circuit
+
+
 2020-11-06
   - redid the core library's geometry shapes. Now, the detect_intersect code is
     all included in the shape's struct (with cross-back so all comparison

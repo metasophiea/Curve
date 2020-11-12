@@ -51,33 +51,33 @@ this.synthesizer_3 = function(
     //flow
         const flow = {
             controlIn:{
-                gain: new _canvas_.library.audio.audioWorklet.nothing(context),
-                detune: new _canvas_.library.audio.audioWorklet.nothing(context),
-                dutyCycle: new _canvas_.library.audio.audioWorklet.nothing(context),
+                gain: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                detune: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                dutyCycle: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
             },
 
             LFO:{
                 gain:{
-                    oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
-                    amplitudeModifier: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
+                    oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
+                    amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
                 },
                 detune:{
-                    oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
+                    oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
                 },
                 dutyCycle:{
-                    oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
-                    amplitudeModifier: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
+                    oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
+                    amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
                 },
             },
 
             controlMix:{
-                gain: new _canvas_.library.audio.audioWorklet.streamAdder(context),
-                detune: new _canvas_.library.audio.audioWorklet.streamAdder(context),
-                dutyCycle: new _canvas_.library.audio.audioWorklet.streamAdder(context),
+                gain: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                detune: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                dutyCycle: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
             },
 
             oscillators: [],
-            aggregator: new _canvas_.library.audio.audioWorklet.gain(context),
+            aggregator: new _canvas_.library.audio.audioWorklet.production.only_js.gain(context),
         };
 
         flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);
@@ -155,7 +155,7 @@ this.synthesizer_3 = function(
                         if(freeOscillators.length > 0){
                             oscillatorToUse = freeOscillators[0];
                         }else{
-                            oscillatorToUse = new _canvas_.library.audio.audioWorklet.oscillator(context);
+                            oscillatorToUse = new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context);
                             oscillatorToUse.connect(flow.aggregator);
                             oscillatorToUse.waveform = waveType;
                             oscillatorToUse.gain_envelope_reporting = true;

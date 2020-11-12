@@ -1,0 +1,8 @@
+[package]
+name = "square_wave_generator"
+version = "0.1.0"
+authors = ["brandon"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]

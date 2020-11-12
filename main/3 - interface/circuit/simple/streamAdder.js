@@ -12,22 +12,22 @@ this.streamAdder = function(
 
         //inputs
             flow.input_1 = {
-                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
             };
             flow.input_2 = {
-                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
             };
 
         //mixControl
             flow.mixControl = {
-                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
             };
             
         //gain
             flow.streamAdder = {
                 mode: false,
                 mix: 1,
-                node: new _canvas_.library.audio.audioWorklet.streamAdder(context),
+                node: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
             };
 
         flow.input_1.node.connect(flow.streamAdder.node, undefined, 0);

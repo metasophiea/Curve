@@ -41,6 +41,9 @@ webASM
         which is inspired by this
         https://github.com/reprimande/wasm-audioworklet-synth
 
+    Audio Worklet Design Pattern (includes stuff on WebAssembly)
+        https://developers.google.com/web/updates/2018/06/audio-worklet-design-pattern#recap_audio_worklet
+
 webWorkers
     Web Workers Overview
         https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers

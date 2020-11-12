@@ -77,12 +77,12 @@ this.synthesizer_2 = function(
         flow.LFO.gain.gain.setTargetAtTime(gainWobble.depth, context.currentTime, 0);
         flow.LFO.oscillator.connect(flow.LFO.gain);
 
-        flow.amplitudeModifier = new _canvas_.library.audio.audioWorklet.amplitudeModifier(_canvas_.library.audio.context);
+        flow.amplitudeModifier = new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(_canvas_.library.audio.context);
         flow.LFO.gain.connect(flow.amplitudeModifier);
         flow.amplitudeModifier.divisor.setTargetAtTime(2, context.currentTime, 0);
         flow.amplitudeModifier.offset.setTargetAtTime(1 - gainWobble.depth/2, context.currentTime, 0);
 
-        flow.gain.node = new _canvas_.library.audio.audioWorklet.gain(_canvas_.library.audio.context);
+        flow.gain.node = new _canvas_.library.audio.audioWorklet.production.only_js.gain(_canvas_.library.audio.context);
         flow.aggregator.node.connect(flow.gain.node,undefined,0);
         flow.amplitudeModifier.connect(flow.gain.node,undefined,1);
 

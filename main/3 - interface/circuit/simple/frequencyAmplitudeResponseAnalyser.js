@@ -2,7 +2,7 @@ this.frequencyAmplitudeResponseAnalyser = function(
     context
 ){
     const self = this;
-    const frequencyAmplitudeResponseAnalyser = new _canvas_.library.audio.audioWorklet.frequencyAmplitudeResponseAnalyser(context);
+    const frequencyAmplitudeResponseAnalyser = new _canvas_.library.audio.audioWorklet.production.only_js.frequencyAmplitudeResponseAnalyser(context);
 
     //input/output node
         this.producer = function(){ return frequencyAmplitudeResponseAnalyser; }

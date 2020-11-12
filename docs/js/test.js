@@ -116,7 +116,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:4} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:12} };
             const library = this;
             
             const dev = {
@@ -3926,3063 +3926,3419 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     return temp;
                 };
                 this.audioWorklet = new function(){
+                    const worklets = {
+                        production:{
+                            only_js:{
+                                list:[
+                                    {
+                                        name:'amplitudeModifier',
+                                        worklet:new Blob([`
+                                            class amplitudeModifier extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'invert',
+                                                            defaultValue: 0,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'offset',
+                                                            defaultValue: 0,
+                                                            minValue: -10,
+                                                            maxValue: 10,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'divisor',
+                                                            defaultValue: 1,
+                                                            minValue: 1,
+                                                            maxValue: 16,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'ceiling',
+                                                            defaultValue: 10,
+                                                            minValue: -10,
+                                                            maxValue: 10,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'floor',
+                                                            defaultValue: -10,
+                                                            minValue: -10,
+                                                            maxValue: 10,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                                    const sign = parameters.invert[0] == 1 ? -1 : 1;
+                                            
+                                                    const divisor_useFirstOnly = parameters.divisor.length == 1;
+                                                    const offset_useFirstOnly = parameters.offset.length == 1;
+                                                    const floor_useFirstOnly = parameters.floor.length == 1;
+                                                    const ceiling_useFirstOnly = parameters.ceiling.length == 1;
+                                            
+                                                    for(let channel = 0; channel < input.length; channel++){        
+                                                        for(let a = 0; a < input[channel].length; a++){
+                                                            const divisor = divisor_useFirstOnly ? parameters.divisor[0] : parameters.divisor[a];
+                                                            const offset = offset_useFirstOnly ? parameters.offset[0] : parameters.offset[a];
+                                                            const floor = floor_useFirstOnly ? parameters.floor[0] : parameters.floor[a];
+                                                            const ceiling = ceiling_useFirstOnly ? parameters.ceiling[0] : parameters.ceiling[a];
+                                            
+                                                            output[channel][a] = sign * (input[channel][a]/divisor) + offset;
+                                            
+                                                            if( output[channel][a] < floor ){
+                                                                output[channel][a] = floor;
+                                                            }else if( output[channel][a] > ceiling ){
+                                                                output[channel][a] = ceiling;
+                                                            }
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('amplitudeModifier', amplitudeModifier);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class amplitudeModifier extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'amplitudeModifier', options);
+                                            
+                                                    this._invert = false;
+                                                }
+                                            
+                                                get invert(){
+                                                    return this._invert;
+                                                }
+                                                set invert(value){
+                                                    this._invert = value;
+                                                    this.parameters.get('invert').setValueAtTime(this._invert?1:0,0);
+                                                }
+                                            
+                                                get offset(){
+                                                    return this.parameters.get('offset');
+                                                }
+                                                get divisor(){
+                                                    return this.parameters.get('divisor');
+                                                }
+                                                get ceiling(){
+                                                    return this.parameters.get('ceiling');
+                                                }
+                                                get floor(){
+                                                    return this.parameters.get('floor');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'bitcrusher',
+                                        worklet:new Blob([`
+                                            class bitcrusher extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'amplitudeResolution',
+                                                            defaultValue: 10,
+                                                            minValue: 1,
+                                                            maxValue: 128,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'sampleFrequency',
+                                                            defaultValue: 16,
+                                                            minValue: 1,
+                                                            maxValue: 128,
+                                                            automationRate: 'k-rate',
+                                                        }
+                                                    ];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                                    const amplitudeResolution = parameters.amplitudeResolution[0];
+                                                    const sampleFrequency = parameters.sampleFrequency[0];
+                                                
+                                                    for(let channel = 0; channel < input.length; channel++){    
+                                                        for(let a = 0; a < input[channel].length; a++){
+                                                            output[channel][a] = a%sampleFrequency == 0 ? Math.round(input[channel][a]*amplitudeResolution)/amplitudeResolution : output[channel][a-1];
+                                                        }
+                                                    }
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('bitcrusher', bitcrusher);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class bitcrusher extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'bitcrusher', options);
+                                                    
+                                                    this._amplitudeResolution = 10;
+                                                    this._sampleFrequency = 16;
+                                                }
+                                            
+                                                get amplitudeResolution(){
+                                                    return this._amplitudeResolution;
+                                                }
+                                                set amplitudeResolution(value){
+                                                    this._amplitudeResolution = value;
+                                                    this.parameters.get('amplitudeResolution').setValueAtTime(this._amplitudeResolution,0);
+                                                }
+                                            
+                                                get sampleFrequency(){
+                                                    return this._sampleFrequency;
+                                                }
+                                                set sampleFrequency(value){
+                                                    this._sampleFrequency = value;
+                                                    this.parameters.get('sampleFrequency').setValueAtTime(this._sampleFrequency,0);
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'momentaryAmplitudeMeter',
+                                        worklet:new Blob([`
+                                            class momentaryAmplitudeMeter extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'active',
+                                                            defaultValue: 1, // 0 - off / 1 - on
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'fullSample',
+                                                            defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame since the last time a value was returned
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'updateMode',
+                                                            defaultValue: 0, // 0 - by timer / 1 - by request
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'updateDelay',
+                                                            defaultValue: 100,
+                                                            minValue: 1,
+                                                            maxValue: 1000,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'calculationMode',
+                                                            defaultValue: 3, //max, min, average, absMax, absMin, absAverage
+                                                            minValue: 0,
+                                                            maxValue: 5,
+                                                            automationRate: 'k-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                    const self = this;
+                                                    this._lastUpdate = currentTime;
+                                                    this._dataArray = [];
+                                                    this._readingRequested = false;
+                                                    this._sync = false;
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        if(event.data == 'sync'){
+                                                            self._sync = true;
+                                                        }
+                                                        if(event.data == 'readingRequest'){
+                                                            self._readingRequested = true;
+                                                        }
+                                                    };
+                                                    this.port.start();
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input = inputs[0];
+                                                    if(input.length == 0){ return true; }
+                                            
+                                                    const fullSample = parameters.fullSample[0];
+                                                    const updateDelay = parameters.updateDelay[0];
+                                                    const calculationMode = parameters.calculationMode[0];
+                                            
+                                                    if( parameters.active[0] == 0 ){ return true; }
+                                            
+                                                    if(fullSample){
+                                                        this._dataArray.push(...input[0]);
+                                                    }else{
+                                                        this._dataArray = new Array(...input[0]);
+                                                    }
+                                            
+                                                    if( 
+                                                        this._sync ||
+                                                        (parameters.updateMode[0] == 0 && (currentTime - this._lastUpdate > updateDelay/1000)) ||
+                                                        (parameters.updateMode[0] == 1 && this._readingRequested)
+                                                    ){
+                                                        this._sync = false;
+                                                        this._readingRequested = false;
+                                                        this._lastUpdate = currentTime;
+                                            
+                                                        switch(calculationMode[0]){
+                                                            case 0: default:
+                                                                this.port.postMessage( Math.max(...this._dataArray) );
+                                                            break;
+                                                            case 1:
+                                                                this.port.postMessage( Math.min(...this._dataArray) );
+                                                            break;
+                                                            case 2:
+                                                                this.port.postMessage( this._dataArray.reduce((a,b) => a + b, 0) / this._dataArray.length );
+                                                            break;
+                                                            case 3:
+                                                                this.port.postMessage( Math.max(...(this._dataArray).map(a => Math.abs(a)) ) );
+                                                            break;
+                                                            case 4:
+                                                                this.port.postMessage( Math.min(...(this._dataArray).map(a => Math.abs(a)) ) );
+                                                            break;
+                                                            case 5:
+                                                                this.port.postMessage( this._dataArray.map(a => Math.abs(a)).reduce((a,b) => a + b, 0) / this._dataArray.length );
+                                                            break;
+                                                        }
+                                            
+                                                        if(fullSample){
+                                                            this._dataArray = [];
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('momentaryAmplitudeMeter', momentaryAmplitudeMeter);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class momentaryAmplitudeMeter extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 0;
+                                                    options.channelCount = 1;
+                                                    super(context, 'momentaryAmplitudeMeter', options);
+                                            
+                                                    const self = this;
+                                            
+                                                    this._active = true;
+                                                    this._fullSample = false;
+                                                    this._updateMode = 0;
+                                                    this._updateDelay = 100;
+                                                    this._calculationMode = 3;
+                                            
+                                                    this.reading = function(){};
+                                                    this.port.onmessage = function(event){
+                                                        try{
+                                                            self.reading(event.data);
+                                                        }catch(error){}
+                                                    };
+                                                    this.port.start();
+                                            
+                                                    this.requestReading = function(){
+                                                        this.port.postMessage('readingRequest');
+                                                    };
+                                                    this.sync = function(){
+                                                        this.port.postMessage('sync');
+                                                    };
+                                                }
+                                            
+                                            
+                                                get active(){
+                                                    return this._active;
+                                                }
+                                                set active(value){
+                                                    this._active = value;
+                                                    this.parameters.get('active').setValueAtTime(this._active?1:0,0);
+                                                }
+                                            
+                                                get fullSample(){
+                                                    return this._fullSample;
+                                                }
+                                                set fullSample(value){
+                                                    this._fullSample = value;
+                                                    this.parameters.get('fullSample').setValueAtTime(this._fullSample?1:0,0);
+                                                }
+                                            
+                                                get updateMode(){
+                                                    return this._updateMode;
+                                                }
+                                                set updateMode(value){
+                                                    this._updateMode = value;
+                                                    this.parameters.get('updateMode').setValueAtTime(this._updateMode,0);
+                                                }
+                                            
+                                                get updateDelay(){
+                                                    return this._updateDelay;
+                                                }
+                                                set updateDelay(value){
+                                                    this._updateDelay = value;
+                                                    this.parameters.get('updateDelay').setValueAtTime(this._updateDelay,0);
+                                                }
+                                            
+                                                get calculationMode(){
+                                                    return this._calculationMode;
+                                                }
+                                                set calculationMode(value){
+                                                    this._calculationMode = value;
+                                                    this.parameters.get('calculationMode').setValueAtTime(this._calculationMode,0);
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'whiteNoiseGenerator',
+                                        worklet:new Blob([`
+                                            class whiteNoiseGenerator extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const output = outputs[0];
+                                            
+                                                    for(let channel = 0; channel < output.length; channel++){
+                                                        for(let a = 0; a < output[channel].length; a++){
+                                                            output[channel][a] = Math.random()*2 - 1;
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('whiteNoiseGenerator', whiteNoiseGenerator);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class whiteNoiseGenerator extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 0;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'whiteNoiseGenerator', options);
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'sigmoid',
+                                        worklet:new Blob([`
+                                            class sigmoid extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },
+                                                        {
+                                                            name: 'sharpness',
+                                                            defaultValue: 0,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                                    const gain_useFirstOnly = parameters.gain.length == 1;
+                                                    const sharpness_useFirstOnly = parameters.sharpness.length == 1;
+                                                
+                                                    for(let channel = 0; channel < input.length; channel++){
+                                                        const inputChannel = input[channel];
+                                                        const outputChannel = output[channel];
+                                                
+                                                        for(let a = 0; a < inputChannel.length; a++){
+                                                            const gain = gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a];
+                                                            const sharpness = sharpness_useFirstOnly ? parameters.sharpness[0] : parameters.sharpness[a];
+                                                            outputChannel[a] = gain * ( inputChannel[a] / ( 1 - sharpness + sharpness*Math.abs(inputChannel[a]) ) );
+                                                        }
+                                                    }
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('sigmoid', sigmoid);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class sigmoid extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'sigmoid', options);
+                                                }
+                                            
+                                                get gain(){
+                                                    return this.parameters.get('gain');
+                                                }
+                                                get sharpness(){
+                                                    return this.parameters.get('sharpness');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'lagProcessor',
+                                        worklet:new Blob([`
+                                            class lagProcessor extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [{
+                                                            name: 'samples',
+                                                            defaultValue: 1,
+                                                            minValue: 1,
+                                                            maxValue: 100,
+                                                            automationRate: 'k-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                    this._dataArrayWorkingIndex = 0;
+                                                    this._dataArray = [];
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                                    const samples = parameters.samples[0];
+                                                    const _samplesMinusOne = samples-1;
+                                            
+                                                    if( samples != this._dataArray.length ){
+                                                        while( samples > this._dataArray.length ){
+                                                            this._dataArray.push(0);
+                                                        }
+                                                        while( samples < this._dataArray.length ){
+                                                            this._dataArray.pop();
+                                                        }
+                                                    }
+                                                    
+                                                    for(let channel = 0; channel < input.length; channel++){ 
+                                                        for(let a = 0; a < input[channel].length; a++){
+                                                            if(this._dataArrayWorkingIndex < _samplesMinusOne){
+                                                                this._dataArrayWorkingIndex++;
+                                                            }else{
+                                                                this._dataArrayWorkingIndex = 0;
+                                                            }
+                                            
+                                                            this._dataArray[this._dataArrayWorkingIndex] = input[channel][a];
+                                                            output[channel][a] = this._dataArray.reduce((a,b) => a + b) / samples;
+                                                            
+                                                        }
+                                                    }
+                                                    
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('lagProcessor', lagProcessor);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class lagProcessor extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'lagProcessor', options);
+                                            
+                                                    this._samples = 1;
+                                                }
+                                            
+                                                get samples(){
+                                                    return this._samples;
+                                                }
+                                                set samples(value){
+                                                    this._samples = Math.round(value);
+                                                    this.parameters.get('samples').setValueAtTime(this._samples,0);
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'stableAmplitudeGenerator',
+                                        worklet:new Blob([`
+                                            class stableAmplitudeGenerator extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'amplitude',
+                                                            defaultValue: 0,
+                                                            minValue: -1,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const output = outputs[0];
+                                            
+                                                    for(let channel = 0; channel < output.length; channel++){
+                                                        for(let a = 0; a < output[channel].length; a++){
+                                                            output[channel][a] = parameters.amplitude[0];
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('stableAmplitudeGenerator', stableAmplitudeGenerator);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class stableAmplitudeGenerator extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 0;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'stableAmplitudeGenerator', options);
+                                                }
+                                            
+                                                get amplitude(){
+                                                    return this.parameters.get('amplitude');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'gain',
+                                        worklet:new Blob([`
+                                            class gain extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'mode',
+                                                            defaultValue: 0,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: -100,
+                                                            maxValue: 100,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input_1 = inputs[0];
+                                                    const input_2 = inputs[1];
+                                                    const output_1 = outputs[0];
+                                            
+                                                    if( parameters.mode[0] == 1 ){
+                                                        //automatic
+                                                        for(let channel = 0; channel < input_1.length; channel++){    
+                                                            for(let a = 0; a < output_1[channel].length; a++){
+                                                                output_1[channel][a] = input_1[channel][a] * input_2[channel][a];
+                                                            }
+                                                        }
+                                                    }else{
+                                                        //manual
+                                                        if(parameters.gain.length == 1){
+                                                            for(let channel = 0; channel < input_1.length; channel++){        
+                                                                for(let a = 0; a < input_1[channel].length; a++){
+                                                                    output_1[channel][a] = input_1[channel][a] * parameters.gain[0];
+                                                                }
+                                                            }
+                                                        }else{
+                                                            for(let channel = 0; channel < input_1.length; channel++){        
+                                                                for(let a = 0; a < input_1[channel].length; a++){
+                                                                    output_1[channel][a] = input_1[channel][a] * parameters.gain[a];
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('gain', gain);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class gain extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 2;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'gain', options);
+                                            
+                                                    this._mode = false;
+                                                }
+                                            
+                                                get mode(){
+                                                    return this._mode;
+                                                }
+                                                set mode(value){
+                                                    this._mode = value;
+                                                    this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
+                                                }
+                                                get gain(){
+                                                    return this.parameters.get('gain');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'nothing',
+                                        worklet:new Blob([`
+                                            class nothing extends AudioWorkletProcessor{
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                            
+                                                    for(let channel = 0; channel < input.length; channel++){
+                                                        for(let a = 0; a < input[channel].length; a++){
+                                                            output[channel][a] = input[channel][a];
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('nothing', nothing);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class nothing extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'nothing', options);
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'oscillator',
+                                        worklet:new Blob([`
+                                            class oscillator extends AudioWorkletProcessor{
+                                                static halfPI = Math.PI/2;
+                                                static twoPI = Math.PI*2;
+                                                static starterFrequency = 440;
+                                                static maxFrequency = 20000;
+                                                static detuneMux = 0.1;
+                                                static detuneBounds = 1/oscillator.detuneMux;
+                                            
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'frequency',
+                                                            defaultValue: oscillator.starterFrequency,
+                                                            minValue: 0,
+                                                            maxValue: oscillator.maxFrequency,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: -1,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'detune',
+                                                            defaultValue: 0,
+                                                            minValue: -oscillator.detuneBounds,
+                                                            maxValue: oscillator.detuneBounds,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'dutyCycle',
+                                                            defaultValue: 0.5,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                    const self = this;
+                                                    this._wavePosition = 0;
+                                                    this._waveComplexityLength = 1;
+                                            
+                                                    this._state = {
+                                                        waveform:'sine',
+                                                        gain_useControl:false,
+                                                        detune_useControl:false,
+                                                        dutyCycle_useControl:false,
+                                                        waveformGeneratorFunction:oscillator.waveFunction['sine'],
+                                                    };
+                                                    this._envelope = {
+                                                        gain:{
+                                                            reporting:false,
+                                                            velocity:1,
+                                                            phase:'off', // front - wait - back - off
+                                                            requestedPhase:undefined,
+                                            
+                                                            step:0,
+                                                            previous:0,
+                                                            current:0,
+                                            
+                                                            procedure:{
+                                                                index:0,
+                                                                sample:0,
+                                                                front:[ {destination:1, elapse:0, _elapseSamples:1} ],
+                                                                back:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                            },
+                                                            defaultProcedurePoint:{
+                                                                front:{destination:1, elapse:0, _elapseSamples:1},
+                                                                back:{destination:0, elapse:0, _elapseSamples:1},
+                                                            },
+                                                        },
+                                                        detune:{
+                                                            reporting:false,
+                                                            velocity:1,
+                                                            phase:'off', // front - wait - back - off
+                                                            requestedPhase:undefined,
+                                            
+                                                            step:0,
+                                                            previous:0,
+                                                            current:0,
+                                            
+                                                            procedure:{
+                                                                index:0,
+                                                                sample:0,
+                                                                front:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                                back:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                            },
+                                                            defaultProcedurePoint:{
+                                                                front:{destination:0, elapse:0, _elapseSamples:1},
+                                                                back:{destination:0, elapse:0, _elapseSamples:1},
+                                                            },
+                                                        },
+                                                        dutyCycle:{
+                                                            reporting:false,
+                                                            velocity:1,
+                                                            phase:'off', // front - wait - back - off
+                                                            requestedPhase:undefined,
+                                            
+                                                            step:0,
+                                                            previous:0,
+                                                            current:0,
+                                            
+                                                            procedure:{
+                                                                index:0,
+                                                                sample:0,
+                                                                front:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                                back:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                            },
+                                                            defaultProcedurePoint:{
+                                                                front:{destination:0, elapse:0, _elapseSamples:1},
+                                                                back:{destination:0, elapse:0, _elapseSamples:1},
+                                                            },
+                                                        },
+                                                    };
+                                                    this._waveSettings = {
+                                                        additiveSynthesis:{
+                                                            sin:[1],
+                                                            cos:[]
+                                                        },
+                                                        phaseModulation:[
+                                                            {mux:2,power:1},
+                                                            {mux:3,power:1},
+                                                        ],
+                                                    };
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        Object.entries(event.data).forEach(([key,value]) => {
+                                                            switch(key){
+                                                                case 'start':
+                                                                    if(value != undefined){
+                                                                        self._envelope.gain.velocity = value;
+                                                                    }
+                                                                    Object.keys(self._envelope).forEach(aspect => {
+                                                                        if(self._envelope[aspect].requestedPhase == 'back' || self._envelope[aspect].phase == 'back' || self._envelope[aspect].phase == 'off'){
+                                                                            self._envelope[aspect].requestedPhase = 'front';
+                                                                        }
+                                                                    });
+                                                                break;
+                                                                case 'stop':
+                                                                    Object.keys(self._envelope).forEach(aspect => {
+                                                                        if(self._envelope[aspect].requestedPhase == 'front' || self._envelope[aspect].phase == 'front' || self._envelope[aspect].phase == 'wait'){
+                                                                            self._envelope[aspect].requestedPhase = 'back';
+                                                                        }
+                                                                    });
+                                                                break;
+                                                                case 'waveform': 
+                                                                    self._state.waveform = value;
+                                                                    self._state.waveformGeneratorFunction = oscillator.waveFunction[value];
+                                                                break;
+                                                                case 'gain_useControl': 
+                                                                    self._state.gain_useControl = value;
+                                                                break;
+                                                                case 'detune_useControl': 
+                                                                    self._state.detune_useControl = value;
+                                                                break;
+                                                                case 'dutyCycle_useControl': 
+                                                                    self._state.dutyCycle_useControl = value;
+                                                                break;
+                                                                case 'gain_envelope':
+                                                                    Object.entries(value).forEach(([phase,points]) => {
+                                                                        if( points != undefined && points.length != 0 ){
+                                                                            self._envelope.gain.procedure[phase] = points.map(point => {
+                                                                                return {
+                                                                                    destination:point.destination, 
+                                                                                    elapse:point.elapse, 
+                                                                                    _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
+                                                                                };
+                                                                            });
+                                                                        }else{
+                                                                            self._envelope.gain.procedure[phase] = [self._envelope.gain.defaultProcedurePoint[phase]];
+                                                                        }
+                                                                    });
+                                                                break;
+                                                                case 'detune_envelope':
+                                                                    Object.entries(value).forEach(([phase,points]) => {
+                                                                        if( points != undefined && points.length != 0 ){
+                                                                            self._envelope.detune.procedure[phase] = points.map(point => {
+                                                                                return {
+                                                                                    destination:point.destination, 
+                                                                                    elapse:point.elapse, 
+                                                                                    _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
+                                                                                };
+                                                                            });
+                                                                        }else{
+                                                                            self._envelope.detune.procedure[phase] = [self._envelope.detune.defaultProcedurePoint[phase]];
+                                                                        }
+                                                                    });
+                                                                break;
+                                                                case 'dutyCycle_envelope':
+                                                                    Object.entries(value).forEach(([phase,points]) => {
+                                                                        if( points != undefined && points.length != 0 ){
+                                                                            self._envelope.dutyCycle.procedure[phase] = points.map(point => {
+                                                                                return {
+                                                                                    destination:point.destination, 
+                                                                                    elapse:point.elapse, 
+                                                                                    _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
+                                                                                };
+                                                                            });
+                                                                        }else{
+                                                                            self._envelope.dutyCycle.procedure[phase] = [self._envelope.dutyCycle.defaultProcedurePoint[phase]];
+                                                                        }
+                                                                    });
+                                                                break;
+                                                                case 'gain_reporting': 
+                                                                    self._envelope.gain.reporting = value;
+                                                                break;
+                                                                case 'detune_reporting': 
+                                                                    self._envelope.detune.reporting = value;
+                                                                break;
+                                                                case 'dutyCycle_reporting': 
+                                                                    self._envelope.dutyCycle.reporting = value;
+                                                                break;
+                                                                case 'additiveSynthesis_sin':
+                                                                    self._waveSettings.additiveSynthesis.sin = value;
+                                                                break;
+                                                                case 'additiveSynthesis_cos':
+                                                                    self._waveSettings.additiveSynthesis.cos = value;
+                                                                break;
+                                                                case 'phaseModulation_settings':
+                                                                    self._waveSettings.phaseModulation = value;
+                                                                break;
+                                                            }
+                                                        });
+                                                    };
+                                                    this.port.start();
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    //envelope activation
+                                                        this.activatePhase();
+                                                        if( this._envelope.gain.phase == 'off'){ return true; }
+                                            
+                                                    //io
+                                                        const output = outputs[0];
+                                                        const gainControl = inputs[0]; 
+                                                        const detuneControl = inputs[1];
+                                                        const dutyCycleControl = inputs[2];
+                                            
+                                                    //oscillation generation
+                                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                        const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                                        const detune_useFirstOnly = parameters.detune.length == 1;
+                                                        const gain_useFirstOnly = parameters.gain.length == 1;
+                                            
+                                                    for(let channel = 0; channel < output.length; channel++){
+                                                        for(let a = 0; a < output[channel].length; a++){
+                                                            //envelope calculation
+                                                                //gain
+                                                                    if(this._envelope.gain.phase == 'front' || this._envelope.gain.phase == 'back'){
+                                                                        const procedure_phase = this._envelope.gain.procedure[this._envelope.gain.phase];
+                                                                        if( currentFrame+a - this._envelope.gain.procedure.sample >= procedure_phase[this._envelope.gain.procedure.index]._elapseSamples ){
+                                                                            this._envelope.gain.procedure.index++;
+                                                                            this._envelope.gain.procedure.sample = currentFrame+a;
+                                                                            if( this._envelope.gain.procedure.index >= procedure_phase.length ){
+                                                                                if(this._envelope.gain.phase == 'front'){
+                                                                                    this._envelope.gain.phase = 'wait';
+                                                                                    this.reportPhase_gain();
+                                                                                    this._envelope.gain.step = 0;
+                                                                                }else if(this._envelope.gain.phase == 'back'){
+                                                                                    this._envelope.gain.phase = 'off';
+                                                                                    this.reportPhase_gain();
+                                                                                    this._envelope.gain.step = 0;
+                                                                                }
+                                                                            }else{
+                                                                                this._envelope.gain.previous = this._envelope.gain.current;
+                                                                                // (velocity*destination - previousGain) / elapseSamples
+                                                                                this._envelope.gain.step = (this._envelope.gain.velocity*procedure_phase[this._envelope.gain.procedure.index].destination - this._envelope.gain.previous)/procedure_phase[this._envelope.gain.procedure.index]._elapseSamples;                    
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    this._envelope.gain.current += this._envelope.gain.step;
+                                                                //detune
+                                                                    if(this._envelope.detune.phase == 'front' || this._envelope.detune.phase == 'back'){
+                                                                        const procedure_phase = this._envelope.detune.procedure[this._envelope.detune.phase];
+                                                                        if( currentFrame+a - this._envelope.detune.procedure.sample >= procedure_phase[this._envelope.detune.procedure.index]._elapseSamples ){
+                                                                            this._envelope.detune.procedure.index++;
+                                                                            this._envelope.detune.procedure.sample = currentFrame+a;
+                                                                            if( this._envelope.detune.procedure.index >= procedure_phase.length ){
+                                                                                if(this._envelope.detune.phase == 'front'){
+                                                                                    this._envelope.detune.phase = 'wait';
+                                                                                    this.reportPhase_detune();
+                                                                                    this._envelope.detune.step = 0;
+                                                                                }else if(this._envelope.detune.phase == 'back'){
+                                                                                    this._envelope.detune.phase = 'off';
+                                                                                    this.reportPhase_detune();
+                                                                                    this._envelope.detune.step = 0;
+                                                                                }
+                                                                            }else{
+                                                                                this._envelope.detune.previous = this._envelope.detune.current;
+                                                                                // (velocity*destination - previousGain) / elapseSamples
+                                                                                this._envelope.detune.step = (this._envelope.detune.velocity*procedure_phase[this._envelope.detune.procedure.index].destination - this._envelope.detune.previous)/procedure_phase[this._envelope.detune.procedure.index]._elapseSamples;                    
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    this._envelope.detune.current += this._envelope.detune.step;
+                                                                //dutyCycle
+                                                                    if(this._envelope.dutyCycle.phase == 'front' || this._envelope.dutyCycle.phase == 'back'){
+                                                                        const procedure_phase = this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase];
+                                                                        if( currentFrame+a - this._envelope.dutyCycle.procedure.sample >= procedure_phase[this._envelope.dutyCycle.procedure.index]._elapseSamples ){
+                                                                            this._envelope.dutyCycle.procedure.index++;
+                                                                            this._envelope.dutyCycle.procedure.sample = currentFrame+a;
+                                                                            if( this._envelope.dutyCycle.procedure.index >= procedure_phase.length ){
+                                                                                if(this._envelope.dutyCycle.phase == 'front'){
+                                                                                    this._envelope.dutyCycle.phase = 'wait';
+                                                                                    this.reportPhase_dutyCycle();
+                                                                                    this._envelope.dutyCycle.step = 0;
+                                                                                }else if(this._envelope.dutyCycle.phase == 'back'){
+                                                                                    this._envelope.dutyCycle.phase = 'off';
+                                                                                    this.reportPhase_dutyCycle();
+                                                                                    this._envelope.dutyCycle.step = 0;
+                                                                                }
+                                                                            }else{
+                                                                                this._envelope.dutyCycle.previous = this._envelope.dutyCycle.current;
+                                                                                // (velocity*destination - previousGain) / elapseSamples
+                                                                                this._envelope.dutyCycle.step = (this._envelope.dutyCycle.velocity*procedure_phase[this._envelope.dutyCycle.procedure.index].destination - this._envelope.dutyCycle.previous)/procedure_phase[this._envelope.dutyCycle.procedure.index]._elapseSamples;                    
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    this._envelope.dutyCycle.current += this._envelope.dutyCycle.step;
+                                            
+                                                            //aspect calculation
+                                                                const gain = this._envelope.gain.current * (this._state.gain_useControl ? gainControl[channel][a] : (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]));
+                                                                const detune = this._envelope.detune.current + (this._state.detune_useControl ? detuneControl[channel][a] : (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]));
+                                                                const dutyCycle = this._envelope.dutyCycle.current + (this._state.dutyCycle_useControl ? dutyCycleControl[channel][a] : (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]));
+                                            
+                                                            //wave calculation
+                                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                                this._wavePosition += (frequency*(detune*oscillator.detuneMux + 1))/sampleRate;
+                                                                const localWavePosition = this._wavePosition - (Math.trunc(this._wavePosition) - (this._waveComplexityLength - 1));
+                                                                output[channel][a] = gain*this._state.waveformGeneratorFunction(localWavePosition,dutyCycle,this._waveSettings);
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            
+                                                activatePhase(){
+                                                    //gain
+                                                        if( this._envelope.gain.requestedPhase != undefined && this._envelope.gain.requestedPhase != this._envelope.gain.phase ){
+                                                            this._envelope.gain.phase = this._envelope.gain.requestedPhase;
+                                                            this.reportPhase_gain();
+                                                            this._envelope.gain.requestedPhase = undefined;
+                                                            this._envelope.gain.procedure.sample = currentFrame;
+                                                            this._envelope.gain.procedure.index = 0;
+                                                            this._envelope.gain.previous = this._envelope.gain.current;
+                                                            // (velocity*destination - previousGain) / elapseSamples
+                                                            this._envelope.gain.step = (this._envelope.gain.velocity*this._envelope.gain.procedure[this._envelope.gain.phase][this._envelope.gain.procedure.index].destination - this._envelope.gain.previous)/this._envelope.gain.procedure[this._envelope.gain.phase][this._envelope.gain.procedure.index]._elapseSamples;
+                                                            if( this._envelope.gain.phase == 'start' ){ this._wavePosition = 0; }
+                                                        }
+                                                    //detune
+                                                        if( this._envelope.detune.requestedPhase != undefined && this._envelope.detune.requestedPhase != this._envelope.detune.phase ){
+                                                            this._envelope.detune.phase = this._envelope.detune.requestedPhase;
+                                                            this.reportPhase_detune();
+                                                            this._envelope.detune.requestedPhase = undefined;
+                                                            this._envelope.detune.procedure.sample = currentFrame;
+                                                            this._envelope.detune.procedure.index = 0;
+                                                            this._envelope.detune.previous = this._envelope.detune.current;
+                                                            // (velocity*destination - previousGain) / elapseSamples
+                                                            this._envelope.detune.step = (this._envelope.detune.velocity*this._envelope.detune.procedure[this._envelope.detune.phase][this._envelope.detune.procedure.index].destination - this._envelope.detune.previous)/this._envelope.detune.procedure[this._envelope.detune.phase][this._envelope.detune.procedure.index]._elapseSamples;
+                                                        }
+                                                    //dutyCycle
+                                                        if( this._envelope.dutyCycle.requestedPhase != undefined && this._envelope.dutyCycle.requestedPhase != this._envelope.dutyCycle.phase ){
+                                                            this._envelope.dutyCycle.phase = this._envelope.dutyCycle.requestedPhase;
+                                                            this.reportPhase_dutyCycle();
+                                                            this._envelope.dutyCycle.requestedPhase = undefined;
+                                                            this._envelope.dutyCycle.procedure.sample = currentFrame;
+                                                            this._envelope.dutyCycle.procedure.index = 0;
+                                                            this._envelope.dutyCycle.previous = this._envelope.dutyCycle.current;
+                                                            // (velocity*destination - previousGain) / elapseSamples
+                                                            this._envelope.dutyCycle.step = (this._envelope.dutyCycle.velocity*this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase][this._envelope.dutyCycle.procedure.index].destination - this._envelope.dutyCycle.previous)/this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase][this._envelope.dutyCycle.procedure.index]._elapseSamples;
+                                                        }
+                                                }
+                                            
+                                                reportPhase_gain(){
+                                                    const self = this;
+                                                    if( !self._envelope.gain.reporting ){return;}
+                                                    this.port.postMessage( {gain:self._envelope.gain.phase} );
+                                                };
+                                                reportPhase_detune(){
+                                                    const self = this;
+                                                    if( !self._envelope.detune.reporting ){return;}
+                                                    this.port.postMessage( {detune:self._envelope.detune.phase} );
+                                                };
+                                                reportPhase_dutyCycle(){
+                                                    const self = this;
+                                                    if( !self._envelope.dutyCycle.reporting ){return;}
+                                                    this.port.postMessage( {dutyCycle:self._envelope.dutyCycle.phase} );
+                                                };
+                                            
+                                                static waveFunction = {
+                                                    sine:function(localWavePosition,dutyCycle,waveSettings){
+                                                        return Math.sin( localWavePosition * oscillator.twoPI );
+                                                    },
+                                                    square:function(localWavePosition,dutyCycle,waveSettings){
+                                                        return localWavePosition < dutyCycle ? 1 : -1;
+                                                    },
+                                                    triangle:function(localWavePosition,dutyCycle,waveSettings){
+                                                        if(localWavePosition < dutyCycle/2){
+                                                            return 2*localWavePosition / dutyCycle;
+                                                        }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                            return (2*localWavePosition - 2) / dutyCycle;
+                                                        }else{
+                                                            return (2*localWavePosition - 1) / (dutyCycle - 1);
+                                                        }
+                                                    },
+                                                    noise:function(localWavePosition,dutyCycle,waveSettings){
+                                                        return Math.random()*2 - 1;
+                                                    },
+                                                    additiveSynthesis:function(localWavePosition,dutyCycle,waveSettings){
+                                                        let output = 0;
+                                                        waveSettings.additiveSynthesis.sin.forEach((value,index) => {
+                                                            output += value*Math.sin( (index+1)*oscillator.twoPI*localWavePosition );
+                                                        });
+                                                        waveSettings.additiveSynthesis.cos.forEach((value,index) => {
+                                                            output += value*Math.sin( (index+1)*oscillator.twoPI*localWavePosition );
+                                                        });
+                                                        return output;
+                                                    },
+                                                    phaseModulation:function(localWavePosition,dutyCycle,waveSettings){
+                                                        const modulationSettings = waveSettings.phaseModulation;
+                                            
+                                                        let output = 0;
+                                                        for(let a = 0; a < modulationSettings.length; a++){
+                                                            output = modulationSettings[a].power*Math.sin(
+                                                                modulationSettings[a].mux*oscillator.twoPI*localWavePosition + oscillator.halfPI*output
+                                                            );
+                                                        }
+                                            
+                                                        return output;
+                                                    },
+                                                };
+                                            }
+                                            registerProcessor('oscillator', oscillator);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class oscillator extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 3;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'oscillator', options);
+                                                    const self = this;
+                                            
+                                                    this._state = {
+                                                        waveform:'sine',
+                                                        gain_useControl:false,
+                                                        detune_useControl:false,
+                                                        dutyCycle_useControl:false,
+                                                    };
+                                                    this._gain_envelope = {
+                                                        front:[ {destination:1, elapse:0} ],
+                                                        back:[ {destination:0, elapse:0} ],
+                                                    };
+                                                    this._detune_envelope = {
+                                                        reporting:false,
+                                                        front:[ {destination:0, elapse:0} ],
+                                                        back:[ {destination:0, elapse:0} ],
+                                                    };
+                                                    this._dutyCycle_envelope = {
+                                                        reporting:false,
+                                                        front:[ {destination:0.5, elapse:0} ],
+                                                        back:[ {destination:0.5, elapse:0} ],
+                                                    };
+                                                    this._reporting = {
+                                                        gain:false,
+                                                        detune:false,
+                                                        dutyCycle:false,
+                                                    };
+                                                    this._additiveSynthesisSettings = {
+                                                        sin:[1],
+                                                        cos:[]
+                                                    };
+                                                    this._phaseModulation_settings = [
+                                                        {mux:2,power:1},
+                                                        {mux:3,power:1},
+                                                    ];
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        if(self.onEnvelopeEvent == undefined){ return; }
+                                                        const event_deconstructed = Object.entries(event.data)[0];
+                                                        self.onEnvelopeEvent({aspect:event_deconstructed[0], phase:event_deconstructed[1]});
+                                                    };
+                                            
+                                                    this.start = function(velocity=1){
+                                                        this.port.postMessage({start:velocity});
+                                                    };
+                                                    this.stop = function(){
+                                                        this.port.postMessage({stop:undefined});
+                                                    };
+                                            
+                                                    this.onEnvelopeEvent = function(){};
+                                                }
+                                            
+                                            
+                                                get frequency(){
+                                                    return this.parameters.get('frequency');
+                                                }
+                                                get gain(){
+                                                    return this.parameters.get('gain');
+                                                }
+                                                get detune(){
+                                                    return this.parameters.get('detune');
+                                                }
+                                                get dutyCycle(){
+                                                    return this.parameters.get('dutyCycle');
+                                                }
+                                            
+                                            
+                                                get waveform(){
+                                                    return this._state.waveform;
+                                                }
+                                                set waveform(value){ // sine / square / triangle / noise / additiveSynthesis / phaseModulation
+                                                    this._state.waveform = value;
+                                                    this.port.postMessage({waveform:value});
+                                                }
+                                                get gain_useControl(){
+                                                    return this._state.gain_useControl;
+                                                }
+                                                set gain_useControl(bool){
+                                                    this._state.gain_useControl = bool;
+                                                    this.port.postMessage({gain_useControl:bool});
+                                                }
+                                                get detune_useControl(){
+                                                    return this._state.detune_useControl;
+                                                }
+                                                set detune_useControl(bool){
+                                                    this._state.detune_useControl = bool;
+                                                    this.port.postMessage({detune_useControl:bool});
+                                                }
+                                                get dutyCycle_useControl(){
+                                                    return this._state.dutyCycle_useControl;
+                                                }
+                                                set dutyCycle_useControl(bool){
+                                                    this._state.dutyCycle_useControl = bool;
+                                                    this.port.postMessage({dutyCycle_useControl:bool});
+                                                }
+                                            
+                                                
+                                                get gain_envelope(){
+                                                    return JSON.parse(JSON.stringify(this._gain_envelope));
+                                                }
+                                                set gain_envelope(newEnvelope){
+                                                    this._gain_envelope = newEnvelope;
+                                                    this.port.postMessage({gain_envelope:newEnvelope});
+                                                }
+                                                get detune_envelope(){
+                                                    return JSON.parse(JSON.stringify(this._detune_envelope));
+                                                }
+                                                set detune_envelope(newEnvelope){
+                                                    this._detune_envelope = newEnvelope;
+                                                    this.port.postMessage({detune_envelope:newEnvelope});
+                                                }
+                                                get dutyCycle_envelope(){
+                                                    return JSON.parse(JSON.stringify(this._dutyCycle_envelope));
+                                                }
+                                                set dutyCycle_envelope(newEnvelope){
+                                                    this._dutyCycle_envelope = newEnvelope;
+                                                    this.port.postMessage({dutyCycle_envelope:newEnvelope});
+                                                }
+                                            
+                                                get gain_envelope_reporting(){
+                                                    return this._reporting.gain;
+                                                }
+                                                set gain_envelope_reporting(bool){
+                                                    this._reporting.gain = bool;
+                                                    this.port.postMessage({gain_reporting:bool});
+                                                }
+                                                get detune_envelope_reporting(){
+                                                    return this._reporting.detune;
+                                                }
+                                                set detune_envelope_reporting(bool){
+                                                    this._reporting.detune = bool;
+                                                    this.port.postMessage({detune_reporting:bool});
+                                                }
+                                                get dutyCycle_envelope_reporting(){
+                                                    return this._reporting.dutyCycle;
+                                                }
+                                                set dutyCycle_envelope_reporting(bool){
+                                                    this._reporting.dutyCycle = bool;
+                                                    this.port.postMessage({dutyCycle_reporting:bool});
+                                                }
+                                            
+                                                get additiveSynthesis_sin(){
+                                                    return JSON.parse(JSON.stringify(this._additiveSynthesisSettings.sin));
+                                                }
+                                                set additiveSynthesis_sin(value){
+                                                    this._additiveSynthesisSettings.sin = value;
+                                                    this.port.postMessage({additiveSynthesis_sin:value});
+                                                }
+                                                get additiveSynthesis_cos(){
+                                                    return JSON.parse(JSON.stringify(this._additiveSynthesisSettings.cos));
+                                                }
+                                                set additiveSynthesis_cos(value){
+                                                    this._additiveSynthesisSettings.cos = value;
+                                                    this.port.postMessage({additiveSynthesis_cos:value});
+                                                }
+                                            
+                                                get phaseModulation_settings(){
+                                                    return JSON.parse(JSON.stringify(this._phaseModulation_settings));
+                                                }
+                                                set phaseModulation_settings(value){
+                                                    this._phaseModulation_settings = value;
+                                                    this.port.postMessage({_phaseModulation_settings:value});
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'streamAdder',
+                                        worklet:new Blob([`
+                                            class streamAdder extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'mode',
+                                                            defaultValue: 0, // 0 - manual / 1 - automatic
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'mix',
+                                                            defaultValue: 0,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input_1 = inputs[0];
+                                                    const input_2 = inputs[1];
+                                                    const mixControl = inputs[2];
+                                                    const output = outputs[0];
+                                            
+                                                    const mix_useFirstOnly = parameters.mix.length == 1;
+                                            
+                                                    for(let channel = 0; channel < output.length; channel++){
+                                                        for(let a = 0; a < output[channel].length; a++){
+                                                            const mix = parameters.mode[0] == 0 ? (mix_useFirstOnly ? parameters.mix[0] : parameters.mix[a]) : (mixControl[channel][a]+1)/2;
+                                                            output[channel][a] = input_1[channel][a]*(1-mix) + input_2[channel][a]*mix;
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('streamAdder', streamAdder);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class streamAdder extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 3;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'streamAdder', options);
+                                            
+                                                    this._mode = false;
+                                                }
+                                            
+                                                get mode(){
+                                                    return this._mode;
+                                                }
+                                                set mode(value){
+                                                    this._mode = value;
+                                                    this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
+                                                }
+                                                get mix(){
+                                                    return this.parameters.get('mix');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'frequencyAmplitudeResponseAnalyser',
+                                        worklet:new Blob([`
+                                            // class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
+                                            //     static twoPI = Math.PI*2;
+                                            
+                                            //     static get parameterDescriptors(){
+                                            //         return [];
+                                            //     }
+                                            
+                                            //     #state = {
+                                            //         signalGeneratorGain:1,
+                                            //         waveform:0,
+                                            //         dutyCycle:0.5,
+                                            //         frequency:{
+                                            //             current:100,
+                                            //             range:{ start:100, end:1000 },
+                                            //             stepSize:10,
+                                            //             timePerStep:0.005
+                                            //         },
+                                            //         responseData: [],
+                                            //     };
+                                            //     #wavePosition = 0;
+                                            //     #lastUpdate = 0;
+                                            //     #start = false;
+                                            //     #active = false;
+                                            //     #stepData = [];
+                                            
+                                            //     constructor(options){
+                                            //         super(options);
+                                            //         const self = this;
+                                            
+                                            //         this.port.onmessage = function(event){
+                                            //             if(event.data == 'stop'){
+                                            //                 self._active = false;
+                                            //                 return;
+                                            //             }
+                                            
+                                            //             if(self._active){ return; }
+                                            
+                                            //             if(event.data == 'start'){
+                                            //                 self._start = true;
+                                            //                 self._active = true;
+                                            //                 return;
+                                            //             }
+                                            //             if(event.data == 'clear'){
+                                            //                 this._state.responseData = [];
+                                            //                 this._stepData = [];
+                                            //                 this._wavePosition = 0;
+                                            //                 return;
+                                            //             }
+                                            
+                                            //             Object.entries(event.data).forEach(([key,value]) => {
+                                            //                 switch(key){
+                                            //                     case 'waveform': self._state.waveform = value; break;
+                                            //                     case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
+                                            //                     case 'dutyCycle': self._state.dutyCycle = value; break;
+                                            
+                                            //                     case 'range.start': self._state.frequency.range.start = value; break;
+                                            //                     case 'range.end': self._state.frequency.range.end = value; break;
+                                            //                     case 'stepSize': self._state.frequency.stepSize = value; break;
+                                            //                     case 'timePerStep': self._state.frequency.timePerStep = value; break;
+                                            //                 }
+                                            //             });
+                                            //         };
+                                            //         this.port.start();
+                                            //     }
+                                            
+                                            //     process(inputs, outputs, parameters){
+                                            //         if(!this._active){ return true; }
+                                            
+                                            //         if(this._start){
+                                            //             this._state.frequency.current = this._state.frequency.range.start;
+                                            //             this._start = false;
+                                            //             this._lastUpdate = currentTime;
+                                            //         }
+                                            
+                                                    
+                                            
+                                            //         //generator
+                                            //             const output = outputs[0];
+                                            
+                                            //             const gain = this._state.signalGeneratorGain;
+                                            //             const frequency = this._state.frequency.current;
+                                            //             const dutyCycle = this._state.frequency.dutyCycle;
+                                            
+                                            //             for(let channel = 0; channel < output.length; channel++){
+                                            //                 for(let a = 0; a < output[channel].length; a++){
+                                            
+                                            //                     this._wavePosition += frequency/sampleRate;
+                                            //                     const localWavePosition = this._wavePosition % 1;
+                                            
+                                            //                     switch(this._state.waveform){
+                                            //                         case 0: //sin
+                                            //                             output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
+                                            //                         break;
+                                            //                         case 1: //square
+                                            //                             output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                            //                         break;
+                                            //                         case 2: //triangle
+                                            //                             if(localWavePosition < dutyCycle/2){
+                                            //                                 output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                            //                             }else if(localWavePosition >= 1 - dutyCycle/2){
+                                            //                                 output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                            //                             }else{
+                                            //                                 output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                            //                             }
+                                            //                         break;
+                                            //                     }
+                                            //                 }
+                                            //             }
+                                            
+                                            //         //collector
+                                            //             const input = inputs[0];
+                                            //             this._stepData.push(...input[0]);
+                                                        
+                                            
+                                            
+                                            //         if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
+                                            //             this._lastUpdate = currentTime;
+                                            
+                                            //             const result = {
+                                            //                 frequency:this._state.frequency.current,
+                                            //                 response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
+                                            //             };
+                                            //             this.port.postMessage({ onValue:result });
+                                            //             this._state.responseData.push(result);
+                                            //             this._stepData = [];
+                                            
+                                            //             this._state.frequency.current += this._state.frequency.stepSize;
+                                            //             if( this._state.frequency.current > this._state.frequency.range.end ){
+                                            //                 this.port.postMessage({ onCompletion:this._state.responseData });
+                                            //                 this._active = false;
+                                            //             }
+                                            //         }
+                                            
+                                            //         return true;
+                                            //     }
+                                            // }
+                                            // registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
+                                                static twoPI = Math.PI*2;
+                                            
+                                                static get parameterDescriptors(){
+                                                    return [];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                    const self = this;
+                                            
+                                                    this._state = {
+                                                        signalGeneratorGain:1,
+                                                        waveform:'sine',
+                                                        dutyCycle:0.5,
+                                                        frequency:{
+                                                            current:100,
+                                                            range:{ start:100, end:1000 },
+                                                            stepSize:10,
+                                                            timePerStep:0.005
+                                                        },
+                                                        responseData: [],
+                                                    };
+                                                    this._wavePosition = 0;
+                                                    this._lastUpdate = 0;
+                                                    this._start = false;
+                                                    this._active = false;
+                                                    this._stepData = [];
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        if(event.data == 'stop'){
+                                                            self.port.postMessage({ onCompletion:self._state.responseData });
+                                                            self._active = false;
+                                                            return;
+                                                        }
+                                            
+                                                        if(self._active){ return; }
+                                            
+                                                        if(event.data == 'start'){
+                                                            self._start = true;
+                                                            self._active = true;
+                                                            return;
+                                                        }
+                                                        if(event.data == 'clear'){
+                                                            self._state.responseData = [];
+                                                            self._stepData = [];
+                                                            self._wavePosition = 0;
+                                                            return;
+                                                        }
+                                            
+                                                        Object.entries(event.data).forEach(([key,value]) => {
+                                                            switch(key){
+                                                                case 'waveform': self._state.waveform = value; break;
+                                                                case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
+                                                                case 'dutyCycle': self._state.dutyCycle = value; break;
+                                            
+                                                                case 'range.start': self._state.frequency.range.start = value; break;
+                                                                case 'range.end': self._state.frequency.range.end = value; break;
+                                                                case 'stepSize': self._state.frequency.stepSize = value; break;
+                                                                case 'timePerStep': self._state.frequency.timePerStep = value; break;
+                                                            }
+                                                        });
+                                                    };
+                                                    this.port.start();
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(!this._active){ return true; }
+                                            
+                                                    if(this._start){
+                                                        this._state.frequency.current = this._state.frequency.range.start;
+                                                        this._start = false;
+                                                        this._lastUpdate = currentTime;
+                                                    }
+                                            
+                                                    
+                                            
+                                                    //generator
+                                                        const output = outputs[0];
+                                            
+                                                        const gain = this._state.signalGeneratorGain;
+                                                        const frequency = this._state.frequency.current;
+                                                        const dutyCycle = this._state.dutyCycle;
+                                            
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            for(let a = 0; a < output[channel].length; a++){
+                                            
+                                                                this._wavePosition += frequency/sampleRate;
+                                                                const localWavePosition = this._wavePosition % 1;
+                                            
+                                                                switch(this._state.waveform){
+                                                                    case 'sine':
+                                                                        output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
+                                                                    break;
+                                                                    case 'square':
+                                                                        output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                                                    break;
+                                                                    case 'triangle':
+                                                                        if(localWavePosition < dutyCycle/2){
+                                                                            output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                                                        }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                                            output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                                                        }else{
+                                                                            output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                                                        }
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                            
+                                                    //collector
+                                                        const input = inputs[0];
+                                                        this._stepData.push(...input[0]);
+                                                        
+                                            
+                                            
+                                                    if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
+                                                        this._lastUpdate = currentTime;
+                                            
+                                                        const result = {
+                                                            frequency:this._state.frequency.current,
+                                                            response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
+                                                        };
+                                                        this.port.postMessage({ onValue:result });
+                                                        this._state.responseData.push(result);
+                                                        this._stepData = [];
+                                            
+                                                        this._state.frequency.current += this._state.frequency.stepSize;
+                                                        if( this._state.frequency.current > this._state.frequency.range.end ){
+                                                            this.port.postMessage({ onCompletion:this._state.responseData });
+                                                            this._active = false;
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            // class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
+                                            //     #state = {
+                                            //         waveform:0,
+                                            //         signalGeneratorGain:1,
+                                            //         dutyCycle:0.5,
+                                            //         frequency:{
+                                            //             range:{ start:100, end:1000 },
+                                            //             stepSize:10,
+                                            //             timePerStep:0.005,
+                                            //         },
+                                            //     };
+                                            
+                                            //     constructor(context, options={}){
+                                            //         options.numberOfInputs = 1;
+                                            //         options.numberOfOutputs = 1;
+                                            //         options.channelCount = 1;
+                                            //         super(context, 'frequencyAmplitudeResponseAnalyser', options);
+                                            //         const self = this;
+                                            
+                                            //         this.port.onmessage = function(event){
+                                            //             Object.entries(event.data).forEach(([key,value]) => {
+                                            //                 switch(key){
+                                            //                     case 'onValue':
+                                            //                         if(self.onValue != undefined){ self.onValue(value); }
+                                            //                     break;
+                                            //                     case 'onCompletion':
+                                            //                         if(self.onCompletion != undefined){ self.onCompletion(value); }
+                                            //                     break;
+                                            //                 }
+                                            //             });
+                                            //         };
+                                            
+                                            //         this.start = function(){
+                                            //             this.port.postMessage('start');
+                                            //         };
+                                            //         this.stop = function(){
+                                            //             this.port.postMessage('stop');
+                                            //         };
+                                            //         this.clear = function(){
+                                            //             this.port.postMessage('clear');
+                                            //         };
+                                            
+                                            //         this.onValue = function(){};
+                                            //         this.onCompletion = function(){};
+                                            //     }
+                                            
+                                            //     get waveform(){
+                                            //         return this._state.waveform;
+                                            //     }
+                                            //     set waveform(value){
+                                            //         this._state.waveform = value;
+                                            //         this.port.postMessage({waveform:value});
+                                            //     }
+                                            
+                                            //     get signalGeneratorGain(){
+                                            //         return this._state.signalGeneratorGain;
+                                            //     }
+                                            //     set signalGeneratorGain(value){
+                                            //         this._state.signalGeneratorGain = value;
+                                            //         this.port.postMessage({signalGeneratorGain:value});
+                                            //     }
+                                            
+                                            //     get dutyCycle(){
+                                            //         return this._state.dutyCycle;
+                                            //     }
+                                            //     set dutyCycle(value){
+                                            //         this._state.dutyCycle = value;
+                                            //         this.port.postMessage({dutyCycle:value});
+                                            //     }
+                                            
+                                            //     get range(){
+                                            //         return this._state.frequency.range;
+                                            //     }
+                                            //     set range(value){
+                                            //         if(value.start == undefined){
+                                            //             value.start = this._state.frequency.range.start;
+                                            //         }
+                                            //         if(value.end == undefined){
+                                            //             value.end = this._state.frequency.range.end;
+                                            //         }
+                                            
+                                            //         this._state.frequency.range = value;
+                                            //         this.port.postMessage({
+                                            //             'range.start':this._state.frequency.range.start,
+                                            //             'range.end':this._state.frequency.range.end,
+                                            //         });
+                                            //     }
+                                            
+                                            //     get stepSize(){ 
+                                            //         return this._state.frequency.stepSize;
+                                            //     }
+                                            //     set stepSize(value){
+                                            //         this._state.frequency.stepSize = value;
+                                            //         this.port.postMessage({stepSize:value});
+                                            //     }
+                                            
+                                            //     get timePerStep(){ 
+                                            //         return this._state.frequency.timePerStep;
+                                            //     }
+                                            //     set timePerStep(value){
+                                            //         this._state.frequency.timePerStep = value;
+                                            //         this.port.postMessage({timePerStep:value});
+                                            //     }
+                                            // }
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'frequencyAmplitudeResponseAnalyser', options);
+                                                    const self = this;
+                                            
+                                                    this._state = {
+                                                        waveform:'sine',
+                                                        signalGeneratorGain:1,
+                                                        dutyCycle:0.5,
+                                                        frequency:{
+                                                            range:{ start:100, end:1000 },
+                                                            stepSize:10,
+                                                            timePerStep:0.005,
+                                                        },
+                                                    };
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        Object.entries(event.data).forEach(([key,value]) => {
+                                                            switch(key){
+                                                                case 'onValue':
+                                                                    if(self.onValue != undefined){ self.onValue(value); }
+                                                                break;
+                                                                case 'onCompletion':
+                                                                    if(self.onCompletion != undefined){ self.onCompletion(value); }
+                                                                break;
+                                                            }
+                                                        });
+                                                    };
+                                            
+                                                    this.start = function(){
+                                                        this.port.postMessage('start');
+                                                    };
+                                                    this.stop = function(){
+                                                        this.port.postMessage('stop');
+                                                    };
+                                                    this.clear = function(){
+                                                        this.port.postMessage('clear');
+                                                    };
+                                            
+                                                    this.onValue = function(){};
+                                                    this.onCompletion = function(){};
+                                                }
+                                            
+                                                get waveform(){
+                                                    return this._state.waveform;
+                                                }
+                                                set waveform(value){
+                                                    this._state.waveform = value;
+                                                    this.port.postMessage({waveform:value});
+                                                }
+                                            
+                                                get signalGeneratorGain(){
+                                                    return this._state.signalGeneratorGain;
+                                                }
+                                                set signalGeneratorGain(value){
+                                                    this._state.signalGeneratorGain = value;
+                                                    this.port.postMessage({signalGeneratorGain:value});
+                                                }
+                                            
+                                                get dutyCycle(){
+                                                    return this._state.dutyCycle;
+                                                }
+                                                set dutyCycle(value){
+                                                    this._state.dutyCycle = value;
+                                                    this.port.postMessage({dutyCycle:value});
+                                                }
+                                            
+                                                get range(){
+                                                    return this._state.frequency.range;
+                                                }
+                                                set range(value){
+                                                    if(value.start == undefined){
+                                                        value.start = this._state.frequency.range.start;
+                                                    }
+                                                    if(value.end == undefined){
+                                                        value.end = this._state.frequency.range.end;
+                                                    }
+                                            
+                                                    this._state.frequency.range = value;
+                                                    this.port.postMessage({
+                                                        'range.start':this._state.frequency.range.start,
+                                                        'range.end':this._state.frequency.range.end,
+                                                    });
+                                                }
+                                            
+                                                get stepSize(){ 
+                                                    return this._state.frequency.stepSize;
+                                                }
+                                                set stepSize(value){
+                                                    this._state.frequency.stepSize = value;
+                                                    this.port.postMessage({stepSize:value});
+                                                }
+                                            
+                                                get timePerStep(){ 
+                                                    return this._state.frequency.timePerStep;
+                                                }
+                                                set timePerStep(value){
+                                                    this._state.frequency.timePerStep = value;
+                                                    this.port.postMessage({timePerStep:value});
+                                                }
+                                            }
+                                        ,
+                                    },
+                                ],
+                                readyCount:0,
+                            },
+                            wasm:{
+                                list:[
+                                    {
+                                        name:'bitcrusher',
+                                        worklet:new Blob([`
+                                            class bitcrusher_wasm extends AudioWorkletProcessor {
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'amplitudeResolution',
+                                                            defaultValue: 10,
+                                                            minValue: 1,
+                                                            maxValue: 128,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'sampleFrequency',
+                                                            defaultValue: 16,
+                                                            minValue: 1,
+                                                            maxValue: 128,
+                                                            automationRate: 'k-rate',
+                                                        }
+                                                    ];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                            		const self = this;
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        switch(event.data.command){
+                                                            case 'loadWasm':
+                                                                WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    self.wasm = result;
+                                            
+                                                                    self.inputFrame = {};
+                                                                    self.inputFrame.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                                                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                            
+                                                                    self.outputFrame = {};
+                                                                    self.outputFrame.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                });
+                                                            break;
+                                                        }
+                                                    };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.wasm == undefined){ return true; }
+                                            
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                            
+                                                    for(let channel = 0; channel < input.length; channel++){
+                                                        this.inputFrame.buffer.set(input[channel]);
+                                                        this.wasm.exports.process( 
+                                                            parameters.amplitudeResolution[0],
+                                                            parameters.sampleFrequency[0],
+                                                            this.inputFrame.pointer,
+                                                            this.outputFrame.pointer
+                                                        );
+                                                        output[channel].set(this.outputFrame.buffer);
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('bitcrusher_wasm', bitcrusher_wasm);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class bitcrusher_wasm extends AudioWorkletNode {
+                                                static wasm_url = 'wasm/audio_processing/bitcrusher_production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/bitcrusher_development.wasm';
+                                                static fetch_promise;
+                                                static raw_file;
+                                                static arrayBuffer_wasm;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'bitcrusher_wasm', options);
+                                                    
+                                                    this._amplitudeResolution = 10;
+                                                    this._sampleFrequency = 16;
+                                            
+                                                    if(bitcrusher_wasm.compiled_wasm != undefined){
+                                                        this.port.postMessage({command:'loadWasm', 'load':bitcrusher_wasm.compiled_wasm});
+                                                    } else if(bitcrusher_wasm.fetch_promise == undefined){
+                                                        bitcrusher_wasm.fetch_promise = fetch(bitcrusher_wasm.wasm_url)
+                                                            .then(response => {
+                                                                bitcrusher_wasm.raw_file = response;
+                                                                return response.arrayBuffer();
+                                                            }).then(arrayBuffer => {
+                                                                bitcrusher_wasm.arrayBuffer_wasm = arrayBuffer;
+                                                                return WebAssembly.compile(arrayBuffer);
+                                                            }).then(module => {
+                                                                bitcrusher_wasm.compiled_wasm = module;
+                                                                this.port.postMessage({command:'loadWasm', 'load':bitcrusher_wasm.compiled_wasm});
+                                                            });
+                                                    } else {
+                                                        this.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
+                                                            if(bitcrusher_wasm.compiled_wasm != undefined){
+                                                                clearInterval(this.attemptSecondaryWasmLoadIntervalId);
+                                                                this.port.postMessage({command:'loadWasm', 'load':bitcrusher_wasm.compiled_wasm});
+                                                            }
+                                                        }, 100);
+                                                    }
+                                                }
+                                            
+                                                get amplitudeResolution(){
+                                                    return this._amplitudeResolution;
+                                                }
+                                                set amplitudeResolution(value){
+                                                    this._amplitudeResolution = value;
+                                                    this.parameters.get('amplitudeResolution').setValueAtTime(this._amplitudeResolution,0);
+                                                }
+                                            
+                                                get sampleFrequency(){
+                                                    return this._sampleFrequency;
+                                                }
+                                                set sampleFrequency(value){
+                                                    this._sampleFrequency = value;
+                                                    this.parameters.get('sampleFrequency').setValueAtTime(this._sampleFrequency,0);
+                                                }
+                                            }
+                                        ,
+                                    },
+                                ],
+                                readyCount:0,
+                            },
+                        },
+                        workshop:{
+                            only_js:{
+                                list:[
+                                    {
+                                        name:'testWorklet',
+                                        worklet:new Blob([`
+                                            class testWorklet extends AudioWorkletProcessor{
+                                                static MinimumValue = -10;
+                                            
+                                                #privateValue = 100;
+                                            
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'valueA',
+                                                            defaultValue: 10,
+                                                            minValue: 1,
+                                                            maxValue: 100,
+                                                            automationRate: 'a-rate', //you should use the array, it's the same length as the block
+                                                        },{
+                                                            name: 'valueB',
+                                                            defaultValue: 10,
+                                                            minValue: 1,
+                                                            maxValue: 100,
+                                                            automationRate: 'k-rate', //you should use only the first value in the array
+                                                        }
+                                                    ];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                                    console.log('<<< constructor >>>');
+                                                    console.log('options:',options);
+                                            
+                                                    this._lastUpdate = currentTime;
+                                                    this._callCount = 0;
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        console.log('worklet.port.onmessage',event);
+                                                    };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    this._callCount++;
+                                                    if( currentTime - this._lastUpdate >= 1 ){
+                                                        console.log('<<< process >>>');
+                                                        console.log('currentTime:',currentTime);
+                                                        console.log('currentFrame:',currentFrame);
+                                                        console.log('calls since last printing:',this._callCount);
+                                                        console.log('samples since last printing:',this._callCount*outputs[0][0].length);
+                                                        console.log(' - number of inputs:',inputs.length);
+                                                        inputs.forEach((input,index) => {
+                                                            console.log('   '+index+' : streams:',input.length,': samples per stream:',input.map(a => a.length));
+                                                        });
+                                                        console.log(' - number of outputs:',outputs.length);
+                                                        outputs.forEach((output,index) => {
+                                                            console.log('   '+index+' : streams:',output.length,': samples per stream:',output.map(a => a.length));
+                                                        });
+                                            
+                                                        console.log( 'parameters:',parameters );
+                                                        console.log( 'parameters.valueA:',parameters.valueA );
+                                                        console.log( 'parameters.valueB:',parameters.valueB );
+                                            
+                                                        // console.log( testWorklet.MinimumValue );
+                                                        // console.log( this.#privateValue );
+                                            
+                                                        this._lastUpdate = currentTime;
+                                                        this._callCount = 0;
+                                                        return false;
+                                                    }
+                                            
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                                
+                                                    for(let channel = 0; channel < input.length; channel++){
+                                                        const inputChannel = input[channel];
+                                                        const outputChannel = output[channel];
+                                                
+                                                        for(let a = 0; a < inputChannel.length; a++){
+                                                            outputChannel[a] = inputChannel[a];
+                                                        }
+                                                    }
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('testWorklet', testWorklet);
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            // class squareWaveGenerator extends AudioWorkletProcessor{
+                                            //     static get parameterDescriptors(){
+                                            //         return [];
+                                            //     }
+                                            
+                                            //     constructor(options){
+                                            //         super(options);
+                                            //         this._frequency = 440;
+                                            //         this._phaseMux = (2*this._frequency) / sampleRate;
+                                            //     }
+                                            
+                                            //     process(inputs, outputs, parameters){
+                                            //         const output = outputs[0];
+                                                    
+                                            //         for(let channel = 0; channel < output.length; channel++){
+                                            //             for(let a = 0; a < output[channel].length; a++){
+                                            //                 output[channel][a] = Math.sin( Math.PI * this._phaseMux * (currentFrame+a) );
+                                            //             }
+                                            //         }
+                                            //         return true;
+                                            //     }
+                                            // }
+                                            // registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            // class squareWaveGenerator extends AudioWorkletProcessor{
+                                            //     static get parameterDescriptors(){
+                                            //         return [];
+                                            //     }
+                                            
+                                            //     constructor(options){
+                                            //         super(options);
+                                            
+                                            //         this._frequency = 440;
+                                            //         this._dutyCycle = 0.5;
+                                            //         this._frameCount = 0;
+                                            
+                                            //         this._flip = false;
+                                            
+                                            //         // this._data = [];
+                                            //     }
+                                            
+                                            //     process(inputs, outputs, parameters){
+                                            //         const samplingRate = sampleRate;
+                                            //         const output = outputs[0];
+                                                    
+                                            //         // for(let channel = 0; channel < output.length; channel++){
+                                            //         //     for(let a = 0; a < output[channel].length; a++){
+                                            //         //         if( this._sampleCount >= samplingRate / (this._frequency*2) ){
+                                            //         //             this._sampleCount = 0;
+                                            //         //             this._flip = !this._flip;
+                                            //         //         }else{
+                                            //         //             this._sampleCount++; 
+                                            //         //         }
+                                            //         //         output[channel][a] = (this._flip ? 1 : 0) * 0.25
+                                            //         //     }
+                                            //         // }
+                                            
+                                            
+                                            
+                                            //         const phaseMux = (2*this._frequency) / samplingRate;
+                                            //         function sineWave(sampleNumber){
+                                            //             return Math.sin( Math.PI * phaseMux * sampleNumber );
+                                            //         }
+                                            //         for(let channel = 0; channel < output.length; channel++){
+                                            //             for(let a = 0; a < output[channel].length; a++){
+                                            //                 output[channel][a] = sineWave(currentFrame+a);
+                                            //             }
+                                            //             // this._data.push(...output[channel]);
+                                            
+                                            //             // if( this._sampleCount >= samplingRate ){
+                                            //             //     this._sampleCount = 0;
+                                            //             //     // console.log(this._data);
+                                            //             //     // return false;
+                                            //             // }
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            //             // if( this._sampleCount >= 500 ){
+                                            //             //     console.log( JSON.stringify(this._data) );
+                                            //             //     return false;
+                                            //             // }
+                                            //         }
+                                            
+                                            
+                                            
+                                            
+                                            //         // // for(let a = 0; a < outputs[0][0].length; a++){
+                                            //         // //     this._sampleCount++;
+                                            //         // // }
+                                            //         // // if( this._sampleCount%44160 == 0 ){
+                                            //         // //     console.log( currentTime, this._sampleCount );
+                                            //         // // }
+                                            //         // if( this._frameCount%345 == 0 ){
+                                            //         //     console.log( currentTime, this._frameCount, samplingRate );
+                                            //         // }
+                                            
+                                            //         // for(let channel = 0; channel < output.length; channel++){
+                                            //         //     for(let a = 0; a < output[channel].length/2; a++){
+                                            //         //         output[channel][a] = 1;
+                                            //         //     }
+                                            //         //     for(let a = output[channel].length/2; a < output[channel].length; a++){
+                                            //         //         output[channel][a] = -1;
+                                            //         //     }
+                                            //         // }
+                                            
+                                            //         this._frameCount++;
+                                            //         return true;
+                                            //     }
+                                            // }
+                                            // registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            // samplingRate = 44160
+                                            //1hz = a complete waveform takes 44160 samples
+                                            //2hz = a complete waveform takes 22080 samples
+                                            //10hz = a complete waveform takes 4416 samples
+                                            //80hz = a complete waveform takes 552 samples
+                                            //100hz = a complete waveform takes 441.6 samples
+                                            //400hz = a complete waveform takes 110.4 samples
+                                            //440hz = a complete waveform takes 100.3636... samples
+                                            //480hz = a complete waveform takes 92 samples
+                                            
+                                            // samples that a complete waveform takes = samplingRate / frequency of wave
+                                            // frequency of wave = samplingRate / samples that a complete waveform takes
+                                            // frequency of wave * samples that a complete waveform takes = samplingRate
+                                            
+                                            // 441.6hz = a complete waveform takes 100 samples
+                                            // 437.2277227722772hz = a complete waveform takes 101 samples
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class testWorklet extends AudioWorkletNode {
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 6;
+                                                    options.numberOfOutputs = 6;
+                                                    options.channelCount = 1;
+                                                    super(context, 'testWorklet', options);
+                                            
+                                                    this._superImportantValue = 'farts';
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        console.log('worklet.node.onmessage',event);
+                                                    };
+                                                    this.port.start();
+                                                }
+                                            
+                                                get superImportantValue(){
+                                                    console.log('getting super important value, which happens to be "'+this._superImportantValue+'"');
+                                                    return this._superImportantValue;
+                                                }
+                                                set superImportantValue(newValue){
+                                                    console.log('the super important value is being changed to "'+newValue+'"');
+                                                    this._superImportantValue = newValue;
+                                                    this.port.postMessage({ superImportantValue: this._superImportantValue });
+                                                }
+                                                doubleTheSuperImportantValue(){
+                                                    console.log('doubling the super important value');
+                                                    this._superImportantValue = this._superImportantValue + this._superImportantValue ;
+                                                    this.port.postMessage({ superImportantValue: this._superImportantValue });
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'squareWaveGenerator',
+                                        worklet:new Blob([`
+                                            class squareWaveGenerator extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'frequency',
+                                                            defaultValue: 440,
+                                                            minValue: 0,
+                                                            maxValue: 20000,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'dutyCycle',
+                                                            defaultValue: 0.5,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const output = outputs[0];
+                                            
+                                                    const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                    const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                            
+                                                    for(let channel = 0; channel < output.length; channel++){
+                                                        for(let a = 0; a < output[channel].length; a++){
+                                                            const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                            const dutyCycle = dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a];
+                                            
+                                                            const overallWaveProgressPercentage = (frequency/sampleRate) * (currentFrame+a);
+                                                            const waveProgress = overallWaveProgressPercentage - Math.trunc(overallWaveProgressPercentage);
+                                                            output[channel][a] = waveProgress < dutyCycle ? 1 : -1;
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class squareWaveGenerator extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 0;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'squareWaveGenerator', options);
+                                                }
+                                            
+                                                get frequency(){
+                                                    return this.parameters.get('frequency');
+                                                }
+                                                get dutyCycle(){
+                                                    return this.parameters.get('dutyCycle');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    //oscillatorWithMultiLevelPhaseModulation
+                                    {
+                                        name:'osc_1',
+                                        worklet:new Blob([`
+                                            class osc_1 extends AudioWorkletProcessor{
+                                                static twoPI = Math.PI*2;
+                                                static starterFrequency = 440;
+                                                static maxFrequency = 20000;
+                                                static detuneMux = 0.1;
+                                                static detuneBounds = 1/osc_1.detuneMux;
+                                                static modulationSettings = [
+                                                    {pha:4,amp:1},
+                                                    {pha:3,amp:1},
+                                                    {pha:2,amp:1},
+                                                    {pha:1,amp:1},
+                                                ];
+                                            
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'frequency',
+                                                            defaultValue: osc_1.starterFrequency,
+                                                            minValue: 0,
+                                                            maxValue: osc_1.maxFrequency,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: -1,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'detune',
+                                                            defaultValue: 0,
+                                                            minValue: -osc_1.detuneBounds,
+                                                            maxValue: osc_1.detuneBounds,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'gain_mode',
+                                                            defaultValue: 0, // 0 - manual / 1 - automatic
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'detune_mode',
+                                                            defaultValue: 0, // 0 - manual / 1 - automatic
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                    this._wavePosition = 0;
+                                                    // this._modulationSettings = [
+                                                    //     {pha:4,amp:1},
+                                                    //     {pha:3,amp:1},
+                                                    //     {pha:2,amp:1},
+                                                    //     {pha:1,amp:1},
+                                                    // ];
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        osc_1.modulationSettings = event.data;
+                                                        console.log( event.data, osc_1.modulationSettings );
+                                                    };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const output = outputs[0];
+                                                    const gainControl = inputs[0];
+                                                    const detuneControl = inputs[1];
+                                            
+                                                    const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                    const detune_useFirstOnly = parameters.detune.length == 1;
+                                                    const gain_useFirstOnly = parameters.gain.length == 1;
+                                            
+                                                    for(let channel = 0; channel < output.length; channel++){
+                                                        for(let a = 0; a < output[channel].length; a++){
+                                                            const gain = parameters.gain_mode[0] == 0 ? (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]) : gainControl[channel][a];
+                                                            const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                            const detune = parameters.detune_mode[0] == 0 ? (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]) : detuneControl[channel][a];
+                                            
+                                                            this._wavePosition += (frequency*(detune*osc_1.detuneMux + 1))/sampleRate;
+                                                            const localWavePosition = this._wavePosition % 1;
+                                            
+                                                            osc_1.modulationSettings.forEach( setting => {
+                                                                output[channel][a] = Math.sin( osc_1.twoPI*localWavePosition*setting.pha + (Math.PI/2)*setting.amp*output[channel][a] );
+                                                            } );
+                                                            output[channel][a] = gain*output[channel][a];
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('osc_1', osc_1);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class osc_1 extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 2;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'osc_1', options);
+                                            
+                                                    this.data = function(value){
+                                                        this.port.postMessage(value);
+                                                    };
+                                                }
+                                            
+                                                get frequency(){
+                                                    return this.parameters.get('frequency');
+                                                }
+                                                get gain(){
+                                                    return this.parameters.get('gain');
+                                                }
+                                                get detune(){
+                                                    return this.parameters.get('detune');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    //oscillatorWithMultiLevelPhaseModulation
+                                    {
+                                        name:'osc_2',
+                                        worklet:new Blob([`
+                                            class osc_2 extends AudioWorkletProcessor{
+                                                static twoPI = Math.PI*2;
+                                                static starterFrequency = 440;
+                                                static maxFrequency = 20000;
+                                                static detuneMux = 0.1;
+                                                static detuneBounds = 1/osc_2.detuneMux;
+                                            
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'frequency',
+                                                            defaultValue: osc_2.starterFrequency,
+                                                            minValue: 0,
+                                                            maxValue: osc_2.maxFrequency,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: -1,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'detune',
+                                                            defaultValue: 0,
+                                                            minValue: -osc_2.detuneBounds,
+                                                            maxValue: osc_2.detuneBounds,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'gain_mode',
+                                                            defaultValue: 0, // 0 - manual / 1 - automatic
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'detune_mode',
+                                                            defaultValue: 0, // 0 - manual / 1 - automatic
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },
+                                            
+                                            
+                                            
+                                                        {
+                                                            name: 'harmonic_mux_1',
+                                                            defaultValue: 1,
+                                                            minValue: 0,
+                                                            maxValue: 32,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'harmonic_mux_2',
+                                                            defaultValue: 1,
+                                                            minValue: 0,
+                                                            maxValue: 32,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'harmonic_power_1',
+                                                            defaultValue: 1,
+                                                            minValue: 0,
+                                                            maxValue: 32,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'harmonic_power_2',
+                                                            defaultValue: 1,
+                                                            minValue: 0,
+                                                            maxValue: 32,
+                                                            automationRate: 'a-rate',
+                                                        },
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                    this._wavePosition = 0;
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const output = outputs[0];
+                                                    const gainControl = inputs[0];
+                                                    const detuneControl = inputs[1];
+                                            
+                                                    const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                    const detune_useFirstOnly = parameters.detune.length == 1;
+                                                    const gain_useFirstOnly = parameters.gain.length == 1;
+                                            
+                                                    for(let channel = 0; channel < output.length; channel++){
+                                                        for(let a = 0; a < output[channel].length; a++){
+                                                            const gain = parameters.gain_mode[0] == 0 ? (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]) : gainControl[channel][a];
+                                                            const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                            const detune = parameters.detune_mode[0] == 0 ? (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]) : detuneControl[channel][a];
+                                            
+                                                            this._wavePosition += (frequency*(detune*osc_2.detuneMux + 1))/sampleRate;
+                                                            const localWavePosition = this._wavePosition % 1;
+                                            
+                                                            output[channel][a] = gain*parameters.harmonic_power_1[0]*Math.sin(
+                                                                osc_2.twoPI*localWavePosition*parameters.harmonic_mux_1[0] + (Math.PI/2)*parameters.harmonic_power_2[0]*Math.sin(
+                                                                    osc_2.twoPI*localWavePosition*parameters.harmonic_mux_2[0]
+                                                                )
+                                                            );
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('osc_2', osc_2);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class osc_2 extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 2;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'osc_2', options);
+                                                }
+                                            
+                                                get frequency(){
+                                                    return this.parameters.get('frequency');
+                                                }
+                                                get gain(){
+                                                    return this.parameters.get('gain');
+                                                }
+                                                get detune(){
+                                                    return this.parameters.get('detune');
+                                                }
+                                            
+                                                get harmonic_mux_1(){
+                                                    return this.parameters.get('harmonic_mux_1');
+                                                }
+                                                get harmonic_mux_2(){
+                                                    return this.parameters.get('harmonic_mux_2');
+                                                }
+                                                get harmonic_power_1(){
+                                                    return this.parameters.get('harmonic_power_1');
+                                                }
+                                                get harmonic_power_2(){
+                                                    return this.parameters.get('harmonic_power_2');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    //oscillatorWithMultiLevelPhaseModulation
+                                    {
+                                        name:'osc_3',
+                                        worklet:new Blob([`
+                                            class osc_3 extends AudioWorkletProcessor{
+                                                static twoPI = Math.PI*2;
+                                                static starterFrequency = 440;
+                                                static maxFrequency = 20000;
+                                                static detuneMux = 0.1;
+                                                static detuneBounds = 1/osc_3.detuneMux;
+                                                static modulationSettings = [
+                                                    {mux:1,power:1},
+                                                    {mux:1,power:1},
+                                                ];
+                                            
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'frequency',
+                                                            defaultValue: osc_3.starterFrequency,
+                                                            minValue: 0,
+                                                            maxValue: osc_3.maxFrequency,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: -1,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'detune',
+                                                            defaultValue: 0,
+                                                            minValue: -osc_3.detuneBounds,
+                                                            maxValue: osc_3.detuneBounds,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'gain_mode',
+                                                            defaultValue: 0, // 0 - manual / 1 - automatic
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'detune_mode',
+                                                            defaultValue: 0, // 0 - manual / 1 - automatic
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                    this._wavePosition = 0;
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        osc_3.modulationSettings = event.data;
+                                                        // console.log( JSON.stringify(osc_3.modulationSettings) );
+                                                    };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const output = outputs[0];
+                                                    const gainControl = inputs[0];
+                                                    const detuneControl = inputs[1];
+                                            
+                                                    const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                    const detune_useFirstOnly = parameters.detune.length == 1;
+                                                    const gain_useFirstOnly = parameters.gain.length == 1;
+                                            
+                                                    for(let channel = 0; channel < output.length; channel++){
+                                                        for(let a = 0; a < output[channel].length; a++){
+                                                            const gain = parameters.gain_mode[0] == 0 ? (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]) : gainControl[channel][a];
+                                                            const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                            const detune = parameters.detune_mode[0] == 0 ? (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]) : detuneControl[channel][a];
+                                            
+                                                            this._wavePosition += (frequency*(detune*osc_3.detuneMux + 1))/sampleRate;
+                                                            const localWavePosition = this._wavePosition % 1;
+                                            
+                                                            for(let b = 0; b < osc_3.modulationSettings.length; b++){
+                                                                output[channel][a] = osc_3.modulationSettings[b].power*Math.sin(
+                                                                    osc_3.twoPI*localWavePosition*osc_3.modulationSettings[b].mux + (Math.PI/2)*output[channel][a]
+                                                                );
+                                                            }
+                                                            output[channel][a] = gain*output[channel][a];
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('osc_3', osc_3);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class osc_3 extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 3;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'osc_3', options);
+                                            
+                                                    this._modulationSettings = [
+                                                        {mux:1,power:1},
+                                                        {mux:1,power:1},
+                                                    ];
+                                            
+                                                    this.modulationSettings = function(value){
+                                                        if(value == undefined){ return this._modulationSettings; }
+                                                        this._modulationSettings = value;
+                                                        this.port.postMessage(value);
+                                                    };
+                                                }
+                                            
+                                                get frequency(){
+                                                    return this.parameters.get('frequency');
+                                                }
+                                                get gain(){
+                                                    return this.parameters.get('gain');
+                                                }
+                                                get detune(){
+                                                    return this.parameters.get('detune');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    //oscillator with ASR
+                                    {
+                                        name:'osc_4',
+                                        worklet:new Blob([`
+                                            class osc_4 extends AudioWorkletProcessor{
+                                                static twoPI = Math.PI*2;
+                                                static starterFrequency = 440;
+                                                static maxFrequency = 20000;
+                                                static detuneMux = 0.1;
+                                                static detuneBounds = 1/osc_4.detuneMux;
+                                            
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'frequency',
+                                                            defaultValue: osc_4.starterFrequency,
+                                                            minValue: 0,
+                                                            maxValue: osc_4.maxFrequency,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: -1,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'detune',
+                                                            defaultValue: 0,
+                                                            minValue: -osc_4.detuneBounds,
+                                                            maxValue: osc_4.detuneBounds,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'dutyCycle',
+                                                            defaultValue: 0.5,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                                    const self = this;
+                                                    this._wavePosition = 0;
+                                            
+                                                    this._state = {
+                                                        waveform:'sin',
+                                                        gain_useControl:false,
+                                                        detune_useControl:false,
+                                                        dutyCycle_useControl:false,
+                                                    };
+                                                    this._envelope = {
+                                                        phase:'off', // front - wait - back - off
+                                                        requestedPhase:undefined,
+                                            
+                                                        gainStep:0,
+                                                        previousGain:0,
+                                                        currentGain:0,
+                                            
+                                                        procedure:{
+                                                            index:0,
+                                                            sample:0,
+                                                            front:[ {destination:1, elapse:0, _elapseSamples:1} ],
+                                                            back:[ {destination:0, elapse:0, _elapseSamples:1} ],
+                                                        },
+                                                        defaultProcedurePoint:{
+                                                            front:{destination:1, elapse:0, _elapseSamples:1},
+                                                            back:{destination:0, elapse:0, _elapseSamples:1},
+                                                        },
+                                                    };
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        Object.entries(event.data).forEach(([key,value]) => {
+                                                            switch(key){
+                                                                case 'command':
+                                                                    switch(value){
+                                                                        case 'start':
+                                                                            if(self._envelope.requestedPhase == 'back' || self._envelope.phase == 'back' || self._envelope.phase == 'off'){
+                                                                                self._envelope.requestedPhase = 'front';
+                                                                            }
+                                                                        break;
+                                                                        case 'stop':
+                                                                            if(self._envelope.requestedPhase == 'front' || self._envelope.phase == 'front' || self._envelope.phase == 'wait'){
+                                                                                self._envelope.requestedPhase = 'back';
+                                                                            }
+                                                                        break;
+                                                                    }
+                                                                break;
+                                                                case 'waveform': 
+                                                                    self._state.waveform = value;
+                                                                break;
+                                                                case 'gain_useControl': 
+                                                                    self._state.gain_useControl = value;
+                                                                break;
+                                                                case 'detune_useControl': 
+                                                                    self._state.detune_useControl = value;
+                                                                break;
+                                                                case 'dutyCycle_useControl': 
+                                                                    self._state.dutyCycle_useControl = value;
+                                                                break;
+                                                                case 'envelope':
+                                                                    Object.entries(value).forEach(([phase,points]) => {
+                                                                        if( points != undefined && points.length != 0 ){
+                                                                            self._envelope.procedure[phase] = points.map(point => {
+                                                                                return {
+                                                                                    destination:point.destination, 
+                                                                                    elapse:point.elapse, 
+                                                                                    _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
+                                                                                };
+                                                                            });
+                                                                        }else{
+                                                                            self._envelope.procedure[phase] = [self._envelope.defaultProcedurePoint[phase]];
+                                                                        }
+                                                                    });
+                                                                break;
+                                                            }
+                                                        });
+                                                    };
+                                                    this.port.start();
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    //envelope calculation
+                                                        this.activatePhase();
+                                                        if( this._envelope.phase == 'off'){ return true; }
+                                            
+                                                    //io
+                                                        const output = outputs[0];
+                                                        const gainControl = inputs[0];
+                                                        const detuneControl = inputs[1];
+                                                        const dutyCycleControl = inputs[2];
+                                            
+                                                    //oscillation gerneration
+                                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                        const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                                        const detune_useFirstOnly = parameters.detune.length == 1;
+                                                        const gain_useFirstOnly = parameters.gain.length == 1;
+                                            
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            for(let a = 0; a < output[channel].length; a++){
+                                                                if(this._envelope.phase == 'front' || this._envelope.phase == 'back'){
+                                                                    if( currentFrame+a - this._envelope.procedure.sample >= this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples ){
+                                                                        this._envelope.procedure.index++;
+                                                                        this._envelope.procedure.sample = currentFrame+a;
+                                                                        if( this._envelope.procedure.index >= this._envelope.procedure[this._envelope.phase].length){
+                                                                            if(this._envelope.phase == 'front'){
+                                                                                this._envelope.phase = 'wait';
+                                                                                this.port.postMessage({phase:'wait'});
+                                                                                this._envelope.gainStep = 0;
+                                                                            }else if(this._envelope.phase == 'back'){
+                                                                                this._envelope.phase = 'off';
+                                                                                this.port.postMessage({phase:'off'});
+                                                                                this._envelope.gainStep = 0;
+                                                                            }
+                                                                        }else{
+                                                                            this._envelope.previousGain = this._envelope.currentGain;
+                                                                            this._envelope.gainStep = (this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index].destination - this._envelope.previousGain)/this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples;                    
+                                                                        }
+                                                                    }
+                                                                }
+                                            
+                                                                this._envelope.currentGain += this._envelope.gainStep;
+                                            
+                                                                const gain = this._envelope.currentGain * (this._state.gain_useControl ? gainControl[channel][a] : (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]));
+                                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                                const detune = this._state.detune_useControl ? detuneControl[channel][a] : (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]);
+                                                                const dutyCycle = this._state.dutyCycle_useControl ? dutyCycleControl[channel][a] : (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]);
+                                            
+                                                                this._wavePosition += (frequency*(detune*osc_4.detuneMux + 1))/sampleRate;
+                                                                const localWavePosition = this._wavePosition % 1;
+                                            
+                                                                switch(this._state.waveform){
+                                                                    case 'sin':
+                                                                        output[channel][a] = gain*Math.sin( localWavePosition * osc_4.twoPI );
+                                                                    break;
+                                                                    case 'square':
+                                                                        output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                                                    break;
+                                                                    case 'triangle':
+                                                                        if(localWavePosition < dutyCycle/2){
+                                                                            output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                                                        }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                                            output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                                                        }else{
+                                                                            output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                                                        }
+                                                                    break;
+                                                                    case 'noise': default: 
+                                                                        output[channel][a] = gain*(Math.random()*2 - 1);
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                            
+                                                    return true;
+                                                }
+                                            
+                                                activatePhase(){
+                                                    if( this._envelope.requestedPhase != undefined && this._envelope.requestedPhase != this._envelope.phase ){
+                                                        this._envelope.phase = this._envelope.requestedPhase;
+                                                        this.port.postMessage({phase:this._envelope.phase});
+                                                        this._envelope.requestedPhase = undefined;
+                                                        this._envelope.procedure.sample = currentFrame;
+                                                        this._envelope.procedure.index = 0;
+                                                        this._envelope.previousGain = this._envelope.currentGain;
+                                                        this._envelope.gainStep = (this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index].destination - this._envelope.previousGain)/this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples;
+                                                        if( this._envelope.phase == 'start' ){ this._wavePosition = 0; }
+                                                    }
+                                                }
+                                            }
+                                            registerProcessor('osc_4', osc_4);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class osc_4 extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 3;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'osc_4', options);
+                                                    const self = this;
+                                            
+                                                    this._state = {
+                                                        waveform:'sin',
+                                                        gain_useControl:false,
+                                                        detune_useControl:false,
+                                                        dutyCycle_useControl:false,
+                                                    };
+                                                    this._envelope = {
+                                                        front:[
+                                                            {elapse:0.5,gain:5},
+                                                            {elapse:0.5,gain:1},
+                                                        ],
+                                                        back:[
+                                                            {elapse:0.5,gain:5},
+                                                            {elapse:0.5,gain:0}
+                                                        ],
+                                                    };
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        if(self.onEnvelopeEvent == undefined){ return; }
+                                                        self.onEnvelopeEvent(event.data.phase);
+                                                    };
+                                            
+                                                    this.start = function(){
+                                                        this.port.postMessage({command:'start'});
+                                                    };
+                                                    this.stop = function(){
+                                                        this.port.postMessage({command:'stop'});
+                                                    };
+                                            
+                                                    this.onEnvelopeEvent = function(data){console.log(data);};
+                                                }
+                                            
+                                            
+                                            
+                                            
+                                                get frequency(){
+                                                    return this.parameters.get('frequency');
+                                                }
+                                                get gain(){
+                                                    return this.parameters.get('gain');
+                                                }
+                                                get detune(){
+                                                    return this.parameters.get('detune');
+                                                }
+                                                get dutyCycle(){
+                                                    return this.parameters.get('dutyCycle');
+                                                }
+                                            
+                                            
+                                            
+                                            
+                                                get waveform(){
+                                                    return this._waveform;
+                                                }
+                                                set waveform(value){
+                                                    this._state.waveform = value;
+                                                    this.port.postMessage({waveform:value});
+                                                }
+                                                get gain_useControl(){
+                                                    return this._state.gain_useControl;
+                                                }
+                                                set gain_useControl(bool){
+                                                    this._state.gain_useControl = bool;
+                                                    this.port.postMessage({gain_useControl:bool});
+                                                }
+                                                get detune_useControl(){
+                                                    return this._state.detune_useControl;
+                                                }
+                                                set detune_useControl(bool){
+                                                    this._state.detune_useControl = bool;
+                                                    this.port.postMessage({detune_useControl:bool});
+                                                }
+                                                get dutyCycle_useControl(){
+                                                    return this._state.dutyCycle_useControl;
+                                                }
+                                                set dutyCycle_useControl(bool){
+                                                    this._state.dutyCycle_useControl = bool;
+                                                    this.port.postMessage({dutyCycle_useControl:bool});
+                                                }
+                                            
+                                                get envelope(){
+                                                    return JSON.parse(JSON.stringify(this._envelope));
+                                                }
+                                                set envelope(newEnvelope){
+                                                    this._envelope = newEnvelope;
+                                                    this.port.postMessage({envelope:newEnvelope});
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'amplitudeControlledModulator',
+                                        worklet:new Blob([`
+                                            class amplitudeControlledModulator extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    const input_1 = inputs[0];
+                                                    const input_2 = inputs[1];
+                                                    const output_1 = outputs[0];
+                                            
+                                                    for(let channel = 0; channel < input_1.length; channel++){    
+                                                        for(let a = 0; a < output_1[channel].length; a++){
+                                                            output_1[channel][a] = input_1[channel][a] * input_2[channel][a];
+                                                        }
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('amplitudeControlledModulator', amplitudeControlledModulator);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class amplitudeControlledModulator extends AudioWorkletNode{
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 2;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'amplitudeControlledModulator', options);
+                                                }
+                                            }
+                                        ,
+                                    },
+                                ],
+                                readyCount:0,
+                            },
+                            wasm:{
+                                list:[
+                                    {
+                                        name:'squareWaveGenerator_wasm',
+                                        worklet:new Blob([`
+                                            class squareWaveGenerator_wasm extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'frequency',
+                                                            defaultValue: 440,
+                                                            minValue: 0,
+                                                            maxValue: 20000,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'dutyCycle',
+                                                            defaultValue: 0.5,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                            		const self = this;
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        switch(event.data.command){
+                                                            case 'loadWasm':
+                                                                WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    self.wasm = result;
+                                            
+                                                                    self.outputFrame = {};
+                                                                    self.outputFrame.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                            
+                                                                    self.frequency = {};
+                                                                    self.frequency.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                                                                    self.frequency.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.frequency.pointer, 128);
+                                            
+                                                                    self.dutyCycle = {};
+                                                                    self.dutyCycle.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                                                                    self.dutyCycle.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycle.pointer, 128);
+                                                                });
+                                                            break;
+                                                        }
+                                                    };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.wasm){
+                                                        const output = outputs[0];
+                                            
+                                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                        const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                            
+                                                        this.frequency.buffer.set(parameters.frequency);
+                                                        this.dutyCycle.buffer.set(parameters.dutyCycle);
+                                            
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            this.wasm.exports.process(
+                                                                sampleRate,
+                                                                currentFrame,
+                                                                frequency_useFirstOnly,
+                                                                this.frequency.pointer,
+                                                                dutyCycle_useFirstOnly,
+                                                                this.dutyCycle.pointer,
+                                                                this.outputFrame.pointer
+                                                            );
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
+                                                    }
+                                                    
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('squareWaveGenerator_wasm', squareWaveGenerator_wasm);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class squareWaveGenerator_wasm extends AudioWorkletNode{
+                                                static wasm_url = 'wasm/audio_processing/squareWaveGenerator_production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/squareWaveGenerator_development.wasm';
+                                                static fetch_promise;
+                                                static raw_file;
+                                                static arrayBuffer_wasm;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 0;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'squareWaveGenerator_wasm', options);
+                                            
+                                                    if(squareWaveGenerator_wasm.compiled_wasm != undefined){
+                                                        this.port.postMessage({command:'loadWasm', 'load':gain.compiled_wasm});
+                                                    } else if(squareWaveGenerator_wasm.fetch_promise == undefined){
+                                                        squareWaveGenerator_wasm.fetch_promise = fetch(squareWaveGenerator_wasm.wasm_url)
+                                                            .then(response => {
+                                                                squareWaveGenerator_wasm.raw_file = response;
+                                                                return response.arrayBuffer();
+                                                            }).then(arrayBuffer => {
+                                                                squareWaveGenerator_wasm.arrayBuffer_wasm = arrayBuffer;
+                                                                return WebAssembly.compile(arrayBuffer);
+                                                            }).then(module => {
+                                                                squareWaveGenerator_wasm.compiled_wasm = module;
+                                                                this.port.postMessage({command:'loadWasm', 'load':squareWaveGenerator_wasm.compiled_wasm});
+                                                            });
+                                                    } else {
+                                                        this.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
+                                                            if(squareWaveGenerator_wasm.compiled_wasm != undefined){
+                                                                clearInterval(this.attemptSecondaryWasmLoadIntervalId);
+                                                                this.port.postMessage({command:'loadWasm', 'load':squareWaveGenerator_wasm.compiled_wasm});
+                                                            }
+                                                        }, 100);
+                                                    }
+                                                }
+                                            
+                                                get frequency(){
+                                                    return this.parameters.get('frequency');
+                                                }
+                                                get dutyCycle(){
+                                                    return this.parameters.get('dutyCycle');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                ],
+                                readyCount:0,
+                            },
+                        },
+                    };
+                    this.production = { only_js:{}, wasm:{} };
+                    this.workshop = { only_js:{}, wasm:{} };
+                
+                
                     function checkIfReady(){
                         dev.log.audio('.AudioWorklet::checkIfReady()'); //#development
-                        dev.log.audio('.AudioWorklet::checkIfReady -> worklets.length:',worklets.length); //#development
-                        if(worklets.length == 0){return true;}
-                        dev.log.audio('.AudioWorklet::checkIfReady -> worklets.map(a => a.loaded):',worklets.map(a => a.loaded) ); //#development
-                        return worklets.map(a => a.loaded).reduce((rolling,current) => {return rolling && current;});
+                
+                        //check through and update un-ready sections
+                            dev.log.audio('.AudioWorklet::checkIfReady -> updating un-ready sections...'); //#development
+                            Object.keys(worklets).forEach(developmentMode => { //production / workshop
+                                Object.keys(worklets[developmentMode]).forEach(developmentType => { //only_js / wasm
+                                    worklets[developmentMode][developmentType].readyCount = 0;
+                
+                                    for(workletListingIndex in worklets[developmentMode][developmentType].list){
+                                        if(worklets[developmentMode][developmentType].readyCount == worklets[developmentMode][developmentType].list.length){
+                                            dev.log.audio('.AudioWorklet::checkIfReady:update "'+developmentMode+'.'+developmentType+'" -> all worklets loaded'); //#development
+                                            break;
+                                        }
+                                        dev.log.audio('.AudioWorklet::checkIfReady:update "'+developmentMode+'.'+developmentType+'" | ready status:', worklets[developmentMode][developmentType].readyCount, '-> loading', worklets[developmentMode][developmentType].list[workletListingIndex]); //#development
+                                        if(worklets[developmentMode][developmentType].list[workletListingIndex].loaded != undefined && worklets[developmentMode][developmentType].list[workletListingIndex].loaded){
+                                            worklets[developmentMode][developmentType].readyCount++;
+                                        }
+                                    }
+                                });
+                            });
+                
+                        //check if all sections are ready, and if so just report true
+                            dev.log.audio('.AudioWorklet::checkIfReady -> section lengths:'); //#development
+                            dev.log.audio('.AudioWorklet::checkIfReady -> production.only_js: readyCount:', worklets.production.only_js.readyCount, 'list length:', worklets.production.only_js.list.length); //#development
+                            dev.log.audio('.AudioWorklet::checkIfReady -> production.wasm readyCount::', worklets.production.wasm.readyCount, 'list length:', worklets.production.wasm.list.length); //#development
+                            dev.log.audio('.AudioWorklet::checkIfReady -> workshop.only_js: readyCount:', worklets.workshop.only_js.readyCount, 'list length:', worklets.workshop.only_js.list.length); //#development
+                            dev.log.audio('.AudioWorklet::checkIfReady -> workshop.wasm: readyCount:', worklets.workshop.wasm.readyCount, 'list length:', worklets.workshop.wasm.list.length); //#development
+                
+                            if(
+                                worklets.production.only_js.readyCount == worklets.production.only_js.list.length &&
+                                worklets.production.wasm.readyCount == worklets.production.wasm.list.length &&
+                                worklets.workshop.only_js.readyCount == worklets.workshop.only_js.list.length &&
+                                worklets.workshop.wasm.readyCount == worklets.workshop.wasm.list.length
+                            ){ return true; }
+                
+                        return false;
                     };
                     this.checkIfReady = function(){ return checkIfReady(); };
                     this.nowReady = function(){};
                 
-                    const worklets = [
-                        {
-                            name:'amplitudeModifier',
-                            worklet:new Blob([`
-                                class amplitudeModifier extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'invert',
-                                                defaultValue: 0,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'offset',
-                                                defaultValue: 0,
-                                                minValue: -10,
-                                                maxValue: 10,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'divisor',
-                                                defaultValue: 1,
-                                                minValue: 1,
-                                                maxValue: 16,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'ceiling',
-                                                defaultValue: 10,
-                                                minValue: -10,
-                                                maxValue: 10,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'floor',
-                                                defaultValue: -10,
-                                                minValue: -10,
-                                                maxValue: 10,
-                                                automationRate: 'a-rate',
-                                            }
-                                        ];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        const output = outputs[0];
-                                        const sign = parameters.invert[0] == 1 ? -1 : 1;
-                                
-                                        const divisor_useFirstOnly = parameters.divisor.length == 1;
-                                        const offset_useFirstOnly = parameters.offset.length == 1;
-                                        const floor_useFirstOnly = parameters.floor.length == 1;
-                                        const ceiling_useFirstOnly = parameters.ceiling.length == 1;
-                                
-                                        for(let channel = 0; channel < input.length; channel++){        
-                                            for(let a = 0; a < input[channel].length; a++){
-                                                const divisor = divisor_useFirstOnly ? parameters.divisor[0] : parameters.divisor[a];
-                                                const offset = offset_useFirstOnly ? parameters.offset[0] : parameters.offset[a];
-                                                const floor = floor_useFirstOnly ? parameters.floor[0] : parameters.floor[a];
-                                                const ceiling = ceiling_useFirstOnly ? parameters.ceiling[0] : parameters.ceiling[a];
-                                
-                                                output[channel][a] = sign * (input[channel][a]/divisor) + offset;
-                                
-                                                if( output[channel][a] < floor ){
-                                                    output[channel][a] = floor;
-                                                }else if( output[channel][a] > ceiling ){
-                                                    output[channel][a] = ceiling;
-                                                }
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('amplitudeModifier', amplitudeModifier);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class amplitudeModifier extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 1;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'amplitudeModifier', options);
-                                
-                                        this._invert = false;
-                                    }
-                                
-                                    get invert(){
-                                        return this._invert;
-                                    }
-                                    set invert(value){
-                                        this._invert = value;
-                                        this.parameters.get('invert').setValueAtTime(this._invert?1:0,0);
-                                    }
-                                
-                                    get offset(){
-                                        return this.parameters.get('offset');
-                                    }
-                                    get divisor(){
-                                        return this.parameters.get('divisor');
-                                    }
-                                    get ceiling(){
-                                        return this.parameters.get('ceiling');
-                                    }
-                                    get floor(){
-                                        return this.parameters.get('floor');
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'bitcrusher',
-                            worklet:new Blob([`
-                                class bitcrusher extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'amplitudeResolution',
-                                                defaultValue: 10,
-                                                minValue: 1,
-                                                maxValue: 128,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'sampleFrequency',
-                                                defaultValue: 16,
-                                                minValue: 1,
-                                                maxValue: 128,
-                                                automationRate: 'k-rate',
-                                            }
-                                        ];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        const output = outputs[0];
-                                        const amplitudeResolution = parameters.amplitudeResolution[0];
-                                        const sampleFrequency = parameters.sampleFrequency[0];
-                                    
-                                        for(let channel = 0; channel < input.length; channel++){    
-                                            for(let a = 0; a < input[channel].length; a++){
-                                                output[channel][a] = a%sampleFrequency == 0 ? Math.round(input[channel][a]*amplitudeResolution)/amplitudeResolution : output[channel][a-1];
-                                            }
-                                        }
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('bitcrusher', bitcrusher);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class bitcrusher extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 1;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'bitcrusher', options);
-                                        
-                                        this._amplitudeResolution = 10;
-                                        this._sampleFrequency = 16;
-                                    }
-                                
-                                    get amplitudeResolution(){
-                                        return this._amplitudeResolution;
-                                    }
-                                    set amplitudeResolution(value){
-                                        this._amplitudeResolution = value;
-                                        this.parameters.get('amplitudeResolution').setValueAtTime(this._amplitudeResolution,0);
-                                    }
-                                
-                                    get sampleFrequency(){
-                                        return this._sampleFrequency;
-                                    }
-                                    set sampleFrequency(value){
-                                        this._sampleFrequency = value;
-                                        this.parameters.get('sampleFrequency').setValueAtTime(this._sampleFrequency,0);
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'momentaryAmplitudeMeter',
-                            worklet:new Blob([`
-                                class momentaryAmplitudeMeter extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'active',
-                                                defaultValue: 1, // 0 - off / 1 - on
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'fullSample',
-                                                defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame since the last time a value was returned
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'updateMode',
-                                                defaultValue: 0, // 0 - by timer / 1 - by request
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'updateDelay',
-                                                defaultValue: 100,
-                                                minValue: 1,
-                                                maxValue: 1000,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'calculationMode',
-                                                defaultValue: 3, //max, min, average, absMax, absMin, absAverage
-                                                minValue: 0,
-                                                maxValue: 5,
-                                                automationRate: 'k-rate',
-                                            }
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                        const self = this;
-                                        this._lastUpdate = currentTime;
-                                        this._dataArray = [];
-                                        this._readingRequested = false;
-                                        this._sync = false;
-                                
-                                        this.port.onmessage = function(event){
-                                            if(event.data == 'sync'){
-                                                self._sync = true;
-                                            }
-                                            if(event.data == 'readingRequest'){
-                                                self._readingRequested = true;
-                                            }
-                                        };
-                                        this.port.start();
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        if(input.length == 0){ return true; }
-                                
-                                        const fullSample = parameters.fullSample[0];
-                                        const updateDelay = parameters.updateDelay[0];
-                                        const calculationMode = parameters.calculationMode[0];
-                                
-                                        if( parameters.active[0] == 0 ){ return true; }
-                                
-                                        if(fullSample){
-                                            this._dataArray.push(...input[0]);
-                                        }else{
-                                            this._dataArray = new Array(...input[0]);
-                                        }
-                                
-                                        if( 
-                                            this._sync ||
-                                            (parameters.updateMode[0] == 0 && (currentTime - this._lastUpdate > updateDelay/1000)) ||
-                                            (parameters.updateMode[0] == 1 && this._readingRequested)
-                                        ){
-                                            this._sync = false;
-                                            this._readingRequested = false;
-                                            this._lastUpdate = currentTime;
-                                
-                                            switch(calculationMode[0]){
-                                                case 0: default:
-                                                    this.port.postMessage( Math.max(...this._dataArray) );
-                                                break;
-                                                case 1:
-                                                    this.port.postMessage( Math.min(...this._dataArray) );
-                                                break;
-                                                case 2:
-                                                    this.port.postMessage( this._dataArray.reduce((a,b) => a + b, 0) / this._dataArray.length );
-                                                break;
-                                                case 3:
-                                                    this.port.postMessage( Math.max(...(this._dataArray).map(a => Math.abs(a)) ) );
-                                                break;
-                                                case 4:
-                                                    this.port.postMessage( Math.min(...(this._dataArray).map(a => Math.abs(a)) ) );
-                                                break;
-                                                case 5:
-                                                    this.port.postMessage( this._dataArray.map(a => Math.abs(a)).reduce((a,b) => a + b, 0) / this._dataArray.length );
-                                                break;
-                                            }
-                                
-                                            if(fullSample){
-                                                this._dataArray = [];
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('momentaryAmplitudeMeter', momentaryAmplitudeMeter);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class momentaryAmplitudeMeter extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 1;
-                                        options.numberOfOutputs = 0;
-                                        options.channelCount = 1;
-                                        super(context, 'momentaryAmplitudeMeter', options);
-                                
-                                        const self = this;
-                                
-                                        this._active = true;
-                                        this._fullSample = false;
-                                        this._updateMode = 0;
-                                        this._updateDelay = 100;
-                                        this._calculationMode = 3;
-                                
-                                        this.reading = function(){};
-                                        this.port.onmessage = function(event){
-                                            try{
-                                                self.reading(event.data);
-                                            }catch(error){}
-                                        };
-                                        this.port.start();
-                                
-                                        this.requestReading = function(){
-                                            this.port.postMessage('readingRequest');
-                                        };
-                                        this.sync = function(){
-                                            this.port.postMessage('sync');
-                                        };
-                                    }
-                                
-                                
-                                    get active(){
-                                        return this._active;
-                                    }
-                                    set active(value){
-                                        this._active = value;
-                                        this.parameters.get('active').setValueAtTime(this._active?1:0,0);
-                                    }
-                                
-                                    get fullSample(){
-                                        return this._fullSample;
-                                    }
-                                    set fullSample(value){
-                                        this._fullSample = value;
-                                        this.parameters.get('fullSample').setValueAtTime(this._fullSample?1:0,0);
-                                    }
-                                
-                                    get updateMode(){
-                                        return this._updateMode;
-                                    }
-                                    set updateMode(value){
-                                        this._updateMode = value;
-                                        this.parameters.get('updateMode').setValueAtTime(this._updateMode,0);
-                                    }
-                                
-                                    get updateDelay(){
-                                        return this._updateDelay;
-                                    }
-                                    set updateDelay(value){
-                                        this._updateDelay = value;
-                                        this.parameters.get('updateDelay').setValueAtTime(this._updateDelay,0);
-                                    }
-                                
-                                    get calculationMode(){
-                                        return this._calculationMode;
-                                    }
-                                    set calculationMode(value){
-                                        this._calculationMode = value;
-                                        this.parameters.get('calculationMode').setValueAtTime(this._calculationMode,0);
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'whiteNoiseGenerator',
-                            worklet:new Blob([`
-                                class whiteNoiseGenerator extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const output = outputs[0];
-                                
-                                        for(let channel = 0; channel < output.length; channel++){
-                                            for(let a = 0; a < output[channel].length; a++){
-                                                output[channel][a] = Math.random()*2 - 1;
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('whiteNoiseGenerator', whiteNoiseGenerator);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class whiteNoiseGenerator extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 0;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'whiteNoiseGenerator', options);
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'sigmoid',
-                            worklet:new Blob([`
-                                class sigmoid extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'gain',
-                                                defaultValue: 1,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            },
-                                            {
-                                                name: 'sharpness',
-                                                defaultValue: 0,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            }
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        const output = outputs[0];
-                                        const gain_useFirstOnly = parameters.gain.length == 1;
-                                        const sharpness_useFirstOnly = parameters.sharpness.length == 1;
-                                    
-                                        for(let channel = 0; channel < input.length; channel++){
-                                            const inputChannel = input[channel];
-                                            const outputChannel = output[channel];
-                                    
-                                            for(let a = 0; a < inputChannel.length; a++){
-                                                const gain = gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a];
-                                                const sharpness = sharpness_useFirstOnly ? parameters.sharpness[0] : parameters.sharpness[a];
-                                                outputChannel[a] = gain * ( inputChannel[a] / ( 1 - sharpness + sharpness*Math.abs(inputChannel[a]) ) );
-                                            }
-                                        }
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('sigmoid', sigmoid);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class sigmoid extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 1;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'sigmoid', options);
-                                    }
-                                
-                                    get gain(){
-                                        return this.parameters.get('gain');
-                                    }
-                                    get sharpness(){
-                                        return this.parameters.get('sharpness');
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'lagProcessor',
-                            worklet:new Blob([`
-                                class lagProcessor extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [{
-                                                name: 'samples',
-                                                defaultValue: 1,
-                                                minValue: 1,
-                                                maxValue: 100,
-                                                automationRate: 'k-rate',
-                                            }
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                        this._dataArrayWorkingIndex = 0;
-                                        this._dataArray = [];
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        const output = outputs[0];
-                                        const samples = parameters.samples[0];
-                                        const _samplesMinusOne = samples-1;
-                                
-                                        if( samples != this._dataArray.length ){
-                                            while( samples > this._dataArray.length ){
-                                                this._dataArray.push(0);
-                                            }
-                                            while( samples < this._dataArray.length ){
-                                                this._dataArray.pop();
-                                            }
-                                        }
-                                        
-                                        for(let channel = 0; channel < input.length; channel++){ 
-                                            for(let a = 0; a < input[channel].length; a++){
-                                                if(this._dataArrayWorkingIndex < _samplesMinusOne){
-                                                    this._dataArrayWorkingIndex++;
-                                                }else{
-                                                    this._dataArrayWorkingIndex = 0;
-                                                }
-                                
-                                                this._dataArray[this._dataArrayWorkingIndex] = input[channel][a];
-                                                output[channel][a] = this._dataArray.reduce((a,b) => a + b) / samples;
-                                                
-                                            }
-                                        }
-                                        
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('lagProcessor', lagProcessor);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class lagProcessor extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 1;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'lagProcessor', options);
-                                
-                                        this._samples = 1;
-                                    }
-                                
-                                    get samples(){
-                                        return this._samples;
-                                    }
-                                    set samples(value){
-                                        this._samples = Math.round(value);
-                                        this.parameters.get('samples').setValueAtTime(this._samples,0);
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'stableAmplitudeGenerator',
-                            worklet:new Blob([`
-                                class stableAmplitudeGenerator extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'amplitude',
-                                                defaultValue: 0,
-                                                minValue: -1,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            }
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const output = outputs[0];
-                                
-                                        for(let channel = 0; channel < output.length; channel++){
-                                            for(let a = 0; a < output[channel].length; a++){
-                                                output[channel][a] = parameters.amplitude[0];
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('stableAmplitudeGenerator', stableAmplitudeGenerator);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class stableAmplitudeGenerator extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 0;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'stableAmplitudeGenerator', options);
-                                    }
-                                
-                                    get amplitude(){
-                                        return this.parameters.get('amplitude');
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'gain',
-                            worklet:new Blob([`
-                                class gain extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'mode',
-                                                defaultValue: 0,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'gain',
-                                                defaultValue: 1,
-                                                minValue: -100,
-                                                maxValue: 100,
-                                                automationRate: 'a-rate',
-                                            }
-                                        ];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input_1 = inputs[0];
-                                        const input_2 = inputs[1];
-                                        const output_1 = outputs[0];
-                                
-                                        if( parameters.mode[0] == 1 ){
-                                            //automatic
-                                            for(let channel = 0; channel < input_1.length; channel++){    
-                                                for(let a = 0; a < output_1[channel].length; a++){
-                                                    output_1[channel][a] = input_1[channel][a] * input_2[channel][a];
-                                                }
-                                            }
-                                        }else{
-                                            //manual
-                                            if(parameters.gain.length == 1){
-                                                for(let channel = 0; channel < input_1.length; channel++){        
-                                                    for(let a = 0; a < input_1[channel].length; a++){
-                                                        output_1[channel][a] = input_1[channel][a] * parameters.gain[0];
-                                                    }
-                                                }
-                                            }else{
-                                                for(let channel = 0; channel < input_1.length; channel++){        
-                                                    for(let a = 0; a < input_1[channel].length; a++){
-                                                        output_1[channel][a] = input_1[channel][a] * parameters.gain[a];
-                                                    }
-                                                }
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('gain', gain);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class gain extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 2;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'gain', options);
-                                
-                                        this._mode = false;
-                                    }
-                                
-                                    get mode(){
-                                        return this._mode;
-                                    }
-                                    set mode(value){
-                                        this._mode = value;
-                                        this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
-                                    }
-                                    get gain(){
-                                        return this.parameters.get('gain');
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'nothing',
-                            worklet:new Blob([`
-                                class nothing extends AudioWorkletProcessor{
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input = inputs[0];
-                                        const output = outputs[0];
-                                
-                                        for(let channel = 0; channel < input.length; channel++){
-                                            for(let a = 0; a < input[channel].length; a++){
-                                                output[channel][a] = input[channel][a];
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('nothing', nothing);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class nothing extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 1;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'nothing', options);
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'oscillator',
-                            worklet:new Blob([`
-                                class oscillator extends AudioWorkletProcessor{
-                                    static halfPI = Math.PI/2;
-                                    static twoPI = Math.PI*2;
-                                    static starterFrequency = 440;
-                                    static maxFrequency = 20000;
-                                    static detuneMux = 0.1;
-                                    static detuneBounds = 1/oscillator.detuneMux;
-                                
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'frequency',
-                                                defaultValue: oscillator.starterFrequency,
-                                                minValue: 0,
-                                                maxValue: oscillator.maxFrequency,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'gain',
-                                                defaultValue: 1,
-                                                minValue: -1,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'detune',
-                                                defaultValue: 0,
-                                                minValue: -oscillator.detuneBounds,
-                                                maxValue: oscillator.detuneBounds,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'dutyCycle',
-                                                defaultValue: 0.5,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            },
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                        const self = this;
-                                        this._wavePosition = 0;
-                                        this._waveComplexityLength = 1;
-                                
-                                        this._state = {
-                                            waveform:'sine',
-                                            gain_useControl:false,
-                                            detune_useControl:false,
-                                            dutyCycle_useControl:false,
-                                            waveformGeneratorFunction:oscillator.waveFunction['sine'],
-                                        };
-                                        this._envelope = {
-                                            gain:{
-                                                reporting:false,
-                                                velocity:1,
-                                                phase:'off', // front - wait - back - off
-                                                requestedPhase:undefined,
-                                
-                                                step:0,
-                                                previous:0,
-                                                current:0,
-                                
-                                                procedure:{
-                                                    index:0,
-                                                    sample:0,
-                                                    front:[ {destination:1, elapse:0, _elapseSamples:1} ],
-                                                    back:[ {destination:0, elapse:0, _elapseSamples:1} ],
-                                                },
-                                                defaultProcedurePoint:{
-                                                    front:{destination:1, elapse:0, _elapseSamples:1},
-                                                    back:{destination:0, elapse:0, _elapseSamples:1},
-                                                },
-                                            },
-                                            detune:{
-                                                reporting:false,
-                                                velocity:1,
-                                                phase:'off', // front - wait - back - off
-                                                requestedPhase:undefined,
-                                
-                                                step:0,
-                                                previous:0,
-                                                current:0,
-                                
-                                                procedure:{
-                                                    index:0,
-                                                    sample:0,
-                                                    front:[ {destination:0, elapse:0, _elapseSamples:1} ],
-                                                    back:[ {destination:0, elapse:0, _elapseSamples:1} ],
-                                                },
-                                                defaultProcedurePoint:{
-                                                    front:{destination:0, elapse:0, _elapseSamples:1},
-                                                    back:{destination:0, elapse:0, _elapseSamples:1},
-                                                },
-                                            },
-                                            dutyCycle:{
-                                                reporting:false,
-                                                velocity:1,
-                                                phase:'off', // front - wait - back - off
-                                                requestedPhase:undefined,
-                                
-                                                step:0,
-                                                previous:0,
-                                                current:0,
-                                
-                                                procedure:{
-                                                    index:0,
-                                                    sample:0,
-                                                    front:[ {destination:0, elapse:0, _elapseSamples:1} ],
-                                                    back:[ {destination:0, elapse:0, _elapseSamples:1} ],
-                                                },
-                                                defaultProcedurePoint:{
-                                                    front:{destination:0, elapse:0, _elapseSamples:1},
-                                                    back:{destination:0, elapse:0, _elapseSamples:1},
-                                                },
-                                            },
-                                        };
-                                        this._waveSettings = {
-                                            additiveSynthesis:{
-                                                sin:[1],
-                                                cos:[]
-                                            },
-                                            phaseModulation:[
-                                                {mux:2,power:1},
-                                                {mux:3,power:1},
-                                            ],
-                                        };
-                                
-                                        this.port.onmessage = function(event){
-                                            Object.entries(event.data).forEach(([key,value]) => {
-                                                switch(key){
-                                                    case 'start':
-                                                        if(value != undefined){
-                                                            self._envelope.gain.velocity = value;
-                                                        }
-                                                        Object.keys(self._envelope).forEach(aspect => {
-                                                            if(self._envelope[aspect].requestedPhase == 'back' || self._envelope[aspect].phase == 'back' || self._envelope[aspect].phase == 'off'){
-                                                                self._envelope[aspect].requestedPhase = 'front';
-                                                            }
-                                                        });
-                                                    break;
-                                                    case 'stop':
-                                                        Object.keys(self._envelope).forEach(aspect => {
-                                                            if(self._envelope[aspect].requestedPhase == 'front' || self._envelope[aspect].phase == 'front' || self._envelope[aspect].phase == 'wait'){
-                                                                self._envelope[aspect].requestedPhase = 'back';
-                                                            }
-                                                        });
-                                                    break;
-                                                    case 'waveform': 
-                                                        self._state.waveform = value;
-                                                        self._state.waveformGeneratorFunction = oscillator.waveFunction[value];
-                                                    break;
-                                                    case 'gain_useControl': 
-                                                        self._state.gain_useControl = value;
-                                                    break;
-                                                    case 'detune_useControl': 
-                                                        self._state.detune_useControl = value;
-                                                    break;
-                                                    case 'dutyCycle_useControl': 
-                                                        self._state.dutyCycle_useControl = value;
-                                                    break;
-                                                    case 'gain_envelope':
-                                                        Object.entries(value).forEach(([phase,points]) => {
-                                                            if( points != undefined && points.length != 0 ){
-                                                                self._envelope.gain.procedure[phase] = points.map(point => {
-                                                                    return {
-                                                                        destination:point.destination, 
-                                                                        elapse:point.elapse, 
-                                                                        _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
-                                                                    };
-                                                                });
-                                                            }else{
-                                                                self._envelope.gain.procedure[phase] = [self._envelope.gain.defaultProcedurePoint[phase]];
-                                                            }
-                                                        });
-                                                    break;
-                                                    case 'detune_envelope':
-                                                        Object.entries(value).forEach(([phase,points]) => {
-                                                            if( points != undefined && points.length != 0 ){
-                                                                self._envelope.detune.procedure[phase] = points.map(point => {
-                                                                    return {
-                                                                        destination:point.destination, 
-                                                                        elapse:point.elapse, 
-                                                                        _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
-                                                                    };
-                                                                });
-                                                            }else{
-                                                                self._envelope.detune.procedure[phase] = [self._envelope.detune.defaultProcedurePoint[phase]];
-                                                            }
-                                                        });
-                                                    break;
-                                                    case 'dutyCycle_envelope':
-                                                        Object.entries(value).forEach(([phase,points]) => {
-                                                            if( points != undefined && points.length != 0 ){
-                                                                self._envelope.dutyCycle.procedure[phase] = points.map(point => {
-                                                                    return {
-                                                                        destination:point.destination, 
-                                                                        elapse:point.elapse, 
-                                                                        _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
-                                                                    };
-                                                                });
-                                                            }else{
-                                                                self._envelope.dutyCycle.procedure[phase] = [self._envelope.dutyCycle.defaultProcedurePoint[phase]];
-                                                            }
-                                                        });
-                                                    break;
-                                                    case 'gain_reporting': 
-                                                        self._envelope.gain.reporting = value;
-                                                    break;
-                                                    case 'detune_reporting': 
-                                                        self._envelope.detune.reporting = value;
-                                                    break;
-                                                    case 'dutyCycle_reporting': 
-                                                        self._envelope.dutyCycle.reporting = value;
-                                                    break;
-                                                    case 'additiveSynthesis_sin':
-                                                        self._waveSettings.additiveSynthesis.sin = value;
-                                                    break;
-                                                    case 'additiveSynthesis_cos':
-                                                        self._waveSettings.additiveSynthesis.cos = value;
-                                                    break;
-                                                    case 'phaseModulation_settings':
-                                                        self._waveSettings.phaseModulation = value;
-                                                    break;
-                                                }
-                                            });
-                                        };
-                                        this.port.start();
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        //envelope activation
-                                            this.activatePhase();
-                                            if( this._envelope.gain.phase == 'off'){ return true; }
-                                
-                                        //io
-                                            const output = outputs[0];
-                                            const gainControl = inputs[0]; 
-                                            const detuneControl = inputs[1];
-                                            const dutyCycleControl = inputs[2];
-                                
-                                        //oscillation generation
-                                            const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                            const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
-                                            const detune_useFirstOnly = parameters.detune.length == 1;
-                                            const gain_useFirstOnly = parameters.gain.length == 1;
-                                
-                                        for(let channel = 0; channel < output.length; channel++){
-                                            for(let a = 0; a < output[channel].length; a++){
-                                                //envelope calculation
-                                                    //gain
-                                                        if(this._envelope.gain.phase == 'front' || this._envelope.gain.phase == 'back'){
-                                                            const procedure_phase = this._envelope.gain.procedure[this._envelope.gain.phase];
-                                                            if( currentFrame+a - this._envelope.gain.procedure.sample >= procedure_phase[this._envelope.gain.procedure.index]._elapseSamples ){
-                                                                this._envelope.gain.procedure.index++;
-                                                                this._envelope.gain.procedure.sample = currentFrame+a;
-                                                                if( this._envelope.gain.procedure.index >= procedure_phase.length ){
-                                                                    if(this._envelope.gain.phase == 'front'){
-                                                                        this._envelope.gain.phase = 'wait';
-                                                                        this.reportPhase_gain();
-                                                                        this._envelope.gain.step = 0;
-                                                                    }else if(this._envelope.gain.phase == 'back'){
-                                                                        this._envelope.gain.phase = 'off';
-                                                                        this.reportPhase_gain();
-                                                                        this._envelope.gain.step = 0;
-                                                                    }
-                                                                }else{
-                                                                    this._envelope.gain.previous = this._envelope.gain.current;
-                                                                    // (velocity*destination - previousGain) / elapseSamples
-                                                                    this._envelope.gain.step = (this._envelope.gain.velocity*procedure_phase[this._envelope.gain.procedure.index].destination - this._envelope.gain.previous)/procedure_phase[this._envelope.gain.procedure.index]._elapseSamples;                    
-                                                                }
-                                                            }
-                                                        }
-                                                        this._envelope.gain.current += this._envelope.gain.step;
-                                                    //detune
-                                                        if(this._envelope.detune.phase == 'front' || this._envelope.detune.phase == 'back'){
-                                                            const procedure_phase = this._envelope.detune.procedure[this._envelope.detune.phase];
-                                                            if( currentFrame+a - this._envelope.detune.procedure.sample >= procedure_phase[this._envelope.detune.procedure.index]._elapseSamples ){
-                                                                this._envelope.detune.procedure.index++;
-                                                                this._envelope.detune.procedure.sample = currentFrame+a;
-                                                                if( this._envelope.detune.procedure.index >= procedure_phase.length ){
-                                                                    if(this._envelope.detune.phase == 'front'){
-                                                                        this._envelope.detune.phase = 'wait';
-                                                                        this.reportPhase_detune();
-                                                                        this._envelope.detune.step = 0;
-                                                                    }else if(this._envelope.detune.phase == 'back'){
-                                                                        this._envelope.detune.phase = 'off';
-                                                                        this.reportPhase_detune();
-                                                                        this._envelope.detune.step = 0;
-                                                                    }
-                                                                }else{
-                                                                    this._envelope.detune.previous = this._envelope.detune.current;
-                                                                    // (velocity*destination - previousGain) / elapseSamples
-                                                                    this._envelope.detune.step = (this._envelope.detune.velocity*procedure_phase[this._envelope.detune.procedure.index].destination - this._envelope.detune.previous)/procedure_phase[this._envelope.detune.procedure.index]._elapseSamples;                    
-                                                                }
-                                                            }
-                                                        }
-                                                        this._envelope.detune.current += this._envelope.detune.step;
-                                                    //dutyCycle
-                                                        if(this._envelope.dutyCycle.phase == 'front' || this._envelope.dutyCycle.phase == 'back'){
-                                                            const procedure_phase = this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase];
-                                                            if( currentFrame+a - this._envelope.dutyCycle.procedure.sample >= procedure_phase[this._envelope.dutyCycle.procedure.index]._elapseSamples ){
-                                                                this._envelope.dutyCycle.procedure.index++;
-                                                                this._envelope.dutyCycle.procedure.sample = currentFrame+a;
-                                                                if( this._envelope.dutyCycle.procedure.index >= procedure_phase.length ){
-                                                                    if(this._envelope.dutyCycle.phase == 'front'){
-                                                                        this._envelope.dutyCycle.phase = 'wait';
-                                                                        this.reportPhase_dutyCycle();
-                                                                        this._envelope.dutyCycle.step = 0;
-                                                                    }else if(this._envelope.dutyCycle.phase == 'back'){
-                                                                        this._envelope.dutyCycle.phase = 'off';
-                                                                        this.reportPhase_dutyCycle();
-                                                                        this._envelope.dutyCycle.step = 0;
-                                                                    }
-                                                                }else{
-                                                                    this._envelope.dutyCycle.previous = this._envelope.dutyCycle.current;
-                                                                    // (velocity*destination - previousGain) / elapseSamples
-                                                                    this._envelope.dutyCycle.step = (this._envelope.dutyCycle.velocity*procedure_phase[this._envelope.dutyCycle.procedure.index].destination - this._envelope.dutyCycle.previous)/procedure_phase[this._envelope.dutyCycle.procedure.index]._elapseSamples;                    
-                                                                }
-                                                            }
-                                                        }
-                                                        this._envelope.dutyCycle.current += this._envelope.dutyCycle.step;
-                                
-                                                //aspect calculation
-                                                    const gain = this._envelope.gain.current * (this._state.gain_useControl ? gainControl[channel][a] : (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]));
-                                                    const detune = this._envelope.detune.current + (this._state.detune_useControl ? detuneControl[channel][a] : (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]));
-                                                    const dutyCycle = this._envelope.dutyCycle.current + (this._state.dutyCycle_useControl ? dutyCycleControl[channel][a] : (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]));
-                                
-                                                //wave calculation
-                                                    const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                    this._wavePosition += (frequency*(detune*oscillator.detuneMux + 1))/sampleRate;
-                                                    const localWavePosition = this._wavePosition - (Math.trunc(this._wavePosition) - (this._waveComplexityLength - 1));
-                                                    output[channel][a] = gain*this._state.waveformGeneratorFunction(localWavePosition,dutyCycle,this._waveSettings);
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                
-                                    activatePhase(){
-                                        //gain
-                                            if( this._envelope.gain.requestedPhase != undefined && this._envelope.gain.requestedPhase != this._envelope.gain.phase ){
-                                                this._envelope.gain.phase = this._envelope.gain.requestedPhase;
-                                                this.reportPhase_gain();
-                                                this._envelope.gain.requestedPhase = undefined;
-                                                this._envelope.gain.procedure.sample = currentFrame;
-                                                this._envelope.gain.procedure.index = 0;
-                                                this._envelope.gain.previous = this._envelope.gain.current;
-                                                // (velocity*destination - previousGain) / elapseSamples
-                                                this._envelope.gain.step = (this._envelope.gain.velocity*this._envelope.gain.procedure[this._envelope.gain.phase][this._envelope.gain.procedure.index].destination - this._envelope.gain.previous)/this._envelope.gain.procedure[this._envelope.gain.phase][this._envelope.gain.procedure.index]._elapseSamples;
-                                                if( this._envelope.gain.phase == 'start' ){ this._wavePosition = 0; }
-                                            }
-                                        //detune
-                                            if( this._envelope.detune.requestedPhase != undefined && this._envelope.detune.requestedPhase != this._envelope.detune.phase ){
-                                                this._envelope.detune.phase = this._envelope.detune.requestedPhase;
-                                                this.reportPhase_detune();
-                                                this._envelope.detune.requestedPhase = undefined;
-                                                this._envelope.detune.procedure.sample = currentFrame;
-                                                this._envelope.detune.procedure.index = 0;
-                                                this._envelope.detune.previous = this._envelope.detune.current;
-                                                // (velocity*destination - previousGain) / elapseSamples
-                                                this._envelope.detune.step = (this._envelope.detune.velocity*this._envelope.detune.procedure[this._envelope.detune.phase][this._envelope.detune.procedure.index].destination - this._envelope.detune.previous)/this._envelope.detune.procedure[this._envelope.detune.phase][this._envelope.detune.procedure.index]._elapseSamples;
-                                            }
-                                        //dutyCycle
-                                            if( this._envelope.dutyCycle.requestedPhase != undefined && this._envelope.dutyCycle.requestedPhase != this._envelope.dutyCycle.phase ){
-                                                this._envelope.dutyCycle.phase = this._envelope.dutyCycle.requestedPhase;
-                                                this.reportPhase_dutyCycle();
-                                                this._envelope.dutyCycle.requestedPhase = undefined;
-                                                this._envelope.dutyCycle.procedure.sample = currentFrame;
-                                                this._envelope.dutyCycle.procedure.index = 0;
-                                                this._envelope.dutyCycle.previous = this._envelope.dutyCycle.current;
-                                                // (velocity*destination - previousGain) / elapseSamples
-                                                this._envelope.dutyCycle.step = (this._envelope.dutyCycle.velocity*this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase][this._envelope.dutyCycle.procedure.index].destination - this._envelope.dutyCycle.previous)/this._envelope.dutyCycle.procedure[this._envelope.dutyCycle.phase][this._envelope.dutyCycle.procedure.index]._elapseSamples;
-                                            }
-                                    }
-                                
-                                    reportPhase_gain(){
-                                        const self = this;
-                                        if( !self._envelope.gain.reporting ){return;}
-                                        this.port.postMessage( {gain:self._envelope.gain.phase} );
-                                    };
-                                    reportPhase_detune(){
-                                        const self = this;
-                                        if( !self._envelope.detune.reporting ){return;}
-                                        this.port.postMessage( {detune:self._envelope.detune.phase} );
-                                    };
-                                    reportPhase_dutyCycle(){
-                                        const self = this;
-                                        if( !self._envelope.dutyCycle.reporting ){return;}
-                                        this.port.postMessage( {dutyCycle:self._envelope.dutyCycle.phase} );
-                                    };
-                                
-                                    static waveFunction = {
-                                        sine:function(localWavePosition,dutyCycle,waveSettings){
-                                            return Math.sin( localWavePosition * oscillator.twoPI );
-                                        },
-                                        square:function(localWavePosition,dutyCycle,waveSettings){
-                                            return localWavePosition < dutyCycle ? 1 : -1;
-                                        },
-                                        triangle:function(localWavePosition,dutyCycle,waveSettings){
-                                            if(localWavePosition < dutyCycle/2){
-                                                return 2*localWavePosition / dutyCycle;
-                                            }else if(localWavePosition >= 1 - dutyCycle/2){
-                                                return (2*localWavePosition - 2) / dutyCycle;
-                                            }else{
-                                                return (2*localWavePosition - 1) / (dutyCycle - 1);
-                                            }
-                                        },
-                                        noise:function(localWavePosition,dutyCycle,waveSettings){
-                                            return Math.random()*2 - 1;
-                                        },
-                                        additiveSynthesis:function(localWavePosition,dutyCycle,waveSettings){
-                                            let output = 0;
-                                            waveSettings.additiveSynthesis.sin.forEach((value,index) => {
-                                                output += value*Math.sin( (index+1)*oscillator.twoPI*localWavePosition );
-                                            });
-                                            waveSettings.additiveSynthesis.cos.forEach((value,index) => {
-                                                output += value*Math.sin( (index+1)*oscillator.twoPI*localWavePosition );
-                                            });
-                                            return output;
-                                        },
-                                        phaseModulation:function(localWavePosition,dutyCycle,waveSettings){
-                                            const modulationSettings = waveSettings.phaseModulation;
-                                
-                                            let output = 0;
-                                            for(let a = 0; a < modulationSettings.length; a++){
-                                                output = modulationSettings[a].power*Math.sin(
-                                                    modulationSettings[a].mux*oscillator.twoPI*localWavePosition + oscillator.halfPI*output
-                                                );
-                                            }
-                                
-                                            return output;
-                                        },
-                                    };
-                                }
-                                registerProcessor('oscillator', oscillator);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class oscillator extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 3;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'oscillator', options);
-                                        const self = this;
-                                
-                                        this._state = {
-                                            waveform:'sine',
-                                            gain_useControl:false,
-                                            detune_useControl:false,
-                                            dutyCycle_useControl:false,
-                                        };
-                                        this._gain_envelope = {
-                                            front:[ {destination:1, elapse:0} ],
-                                            back:[ {destination:0, elapse:0} ],
-                                        };
-                                        this._detune_envelope = {
-                                            reporting:false,
-                                            front:[ {destination:0, elapse:0} ],
-                                            back:[ {destination:0, elapse:0} ],
-                                        };
-                                        this._dutyCycle_envelope = {
-                                            reporting:false,
-                                            front:[ {destination:0.5, elapse:0} ],
-                                            back:[ {destination:0.5, elapse:0} ],
-                                        };
-                                        this._reporting = {
-                                            gain:false,
-                                            detune:false,
-                                            dutyCycle:false,
-                                        };
-                                        this._additiveSynthesisSettings = {
-                                            sin:[1],
-                                            cos:[]
-                                        };
-                                        this._phaseModulation_settings = [
-                                            {mux:2,power:1},
-                                            {mux:3,power:1},
-                                        ];
-                                
-                                        this.port.onmessage = function(event){
-                                            if(self.onEnvelopeEvent == undefined){ return; }
-                                            const event_deconstructed = Object.entries(event.data)[0];
-                                            self.onEnvelopeEvent({aspect:event_deconstructed[0], phase:event_deconstructed[1]});
-                                        };
-                                
-                                        this.start = function(velocity=1){
-                                            this.port.postMessage({start:velocity});
-                                        };
-                                        this.stop = function(){
-                                            this.port.postMessage({stop:undefined});
-                                        };
-                                
-                                        this.onEnvelopeEvent = function(){};
-                                    }
-                                
-                                
-                                    get frequency(){
-                                        return this.parameters.get('frequency');
-                                    }
-                                    get gain(){
-                                        return this.parameters.get('gain');
-                                    }
-                                    get detune(){
-                                        return this.parameters.get('detune');
-                                    }
-                                    get dutyCycle(){
-                                        return this.parameters.get('dutyCycle');
-                                    }
-                                
-                                
-                                    get waveform(){
-                                        return this._state.waveform;
-                                    }
-                                    set waveform(value){ // sine / square / triangle / noise / additiveSynthesis / phaseModulation
-                                        this._state.waveform = value;
-                                        this.port.postMessage({waveform:value});
-                                    }
-                                    get gain_useControl(){
-                                        return this._state.gain_useControl;
-                                    }
-                                    set gain_useControl(bool){
-                                        this._state.gain_useControl = bool;
-                                        this.port.postMessage({gain_useControl:bool});
-                                    }
-                                    get detune_useControl(){
-                                        return this._state.detune_useControl;
-                                    }
-                                    set detune_useControl(bool){
-                                        this._state.detune_useControl = bool;
-                                        this.port.postMessage({detune_useControl:bool});
-                                    }
-                                    get dutyCycle_useControl(){
-                                        return this._state.dutyCycle_useControl;
-                                    }
-                                    set dutyCycle_useControl(bool){
-                                        this._state.dutyCycle_useControl = bool;
-                                        this.port.postMessage({dutyCycle_useControl:bool});
-                                    }
-                                
-                                    
-                                    get gain_envelope(){
-                                        return JSON.parse(JSON.stringify(this._gain_envelope));
-                                    }
-                                    set gain_envelope(newEnvelope){
-                                        this._gain_envelope = newEnvelope;
-                                        this.port.postMessage({gain_envelope:newEnvelope});
-                                    }
-                                    get detune_envelope(){
-                                        return JSON.parse(JSON.stringify(this._detune_envelope));
-                                    }
-                                    set detune_envelope(newEnvelope){
-                                        this._detune_envelope = newEnvelope;
-                                        this.port.postMessage({detune_envelope:newEnvelope});
-                                    }
-                                    get dutyCycle_envelope(){
-                                        return JSON.parse(JSON.stringify(this._dutyCycle_envelope));
-                                    }
-                                    set dutyCycle_envelope(newEnvelope){
-                                        this._dutyCycle_envelope = newEnvelope;
-                                        this.port.postMessage({dutyCycle_envelope:newEnvelope});
-                                    }
-                                
-                                    get gain_envelope_reporting(){
-                                        return this._reporting.gain;
-                                    }
-                                    set gain_envelope_reporting(bool){
-                                        this._reporting.gain = bool;
-                                        this.port.postMessage({gain_reporting:bool});
-                                    }
-                                    get detune_envelope_reporting(){
-                                        return this._reporting.detune;
-                                    }
-                                    set detune_envelope_reporting(bool){
-                                        this._reporting.detune = bool;
-                                        this.port.postMessage({detune_reporting:bool});
-                                    }
-                                    get dutyCycle_envelope_reporting(){
-                                        return this._reporting.dutyCycle;
-                                    }
-                                    set dutyCycle_envelope_reporting(bool){
-                                        this._reporting.dutyCycle = bool;
-                                        this.port.postMessage({dutyCycle_reporting:bool});
-                                    }
-                                
-                                    get additiveSynthesis_sin(){
-                                        return JSON.parse(JSON.stringify(this._additiveSynthesisSettings.sin));
-                                    }
-                                    set additiveSynthesis_sin(value){
-                                        this._additiveSynthesisSettings.sin = value;
-                                        this.port.postMessage({additiveSynthesis_sin:value});
-                                    }
-                                    get additiveSynthesis_cos(){
-                                        return JSON.parse(JSON.stringify(this._additiveSynthesisSettings.cos));
-                                    }
-                                    set additiveSynthesis_cos(value){
-                                        this._additiveSynthesisSettings.cos = value;
-                                        this.port.postMessage({additiveSynthesis_cos:value});
-                                    }
-                                
-                                    get phaseModulation_settings(){
-                                        return JSON.parse(JSON.stringify(this._phaseModulation_settings));
-                                    }
-                                    set phaseModulation_settings(value){
-                                        this._phaseModulation_settings = value;
-                                        this.port.postMessage({_phaseModulation_settings:value});
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'streamAdder',
-                            worklet:new Blob([`
-                                class streamAdder extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'mode',
-                                                defaultValue: 0, // 0 - manual / 1 - automatic
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'mix',
-                                                defaultValue: 0,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            }
-                                        ];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const input_1 = inputs[0];
-                                        const input_2 = inputs[1];
-                                        const mixControl = inputs[2];
-                                        const output = outputs[0];
-                                
-                                        const mix_useFirstOnly = parameters.mix.length == 1;
-                                
-                                        for(let channel = 0; channel < output.length; channel++){
-                                            for(let a = 0; a < output[channel].length; a++){
-                                                const mix = parameters.mode[0] == 0 ? (mix_useFirstOnly ? parameters.mix[0] : parameters.mix[a]) : (mixControl[channel][a]+1)/2;
-                                                output[channel][a] = input_1[channel][a]*(1-mix) + input_2[channel][a]*mix;
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('streamAdder', streamAdder);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class streamAdder extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 3;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'streamAdder', options);
-                                
-                                        this._mode = false;
-                                    }
-                                
-                                    get mode(){
-                                        return this._mode;
-                                    }
-                                    set mode(value){
-                                        this._mode = value;
-                                        this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
-                                    }
-                                    get mix(){
-                                        return this.parameters.get('mix');
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'frequencyAmplitudeResponseAnalyser',
-                            worklet:new Blob([`
-                                // class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
-                                //     static twoPI = Math.PI*2;
-                                
-                                //     static get parameterDescriptors(){
-                                //         return [];
-                                //     }
-                                
-                                //     #state = {
-                                //         signalGeneratorGain:1,
-                                //         waveform:0,
-                                //         dutyCycle:0.5,
-                                //         frequency:{
-                                //             current:100,
-                                //             range:{ start:100, end:1000 },
-                                //             stepSize:10,
-                                //             timePerStep:0.005
-                                //         },
-                                //         responseData: [],
-                                //     };
-                                //     #wavePosition = 0;
-                                //     #lastUpdate = 0;
-                                //     #start = false;
-                                //     #active = false;
-                                //     #stepData = [];
-                                
-                                //     constructor(options){
-                                //         super(options);
-                                //         const self = this;
-                                
-                                //         this.port.onmessage = function(event){
-                                //             if(event.data == 'stop'){
-                                //                 self._active = false;
-                                //                 return;
-                                //             }
-                                
-                                //             if(self._active){ return; }
-                                
-                                //             if(event.data == 'start'){
-                                //                 self._start = true;
-                                //                 self._active = true;
-                                //                 return;
-                                //             }
-                                //             if(event.data == 'clear'){
-                                //                 this._state.responseData = [];
-                                //                 this._stepData = [];
-                                //                 this._wavePosition = 0;
-                                //                 return;
-                                //             }
-                                
-                                //             Object.entries(event.data).forEach(([key,value]) => {
-                                //                 switch(key){
-                                //                     case 'waveform': self._state.waveform = value; break;
-                                //                     case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
-                                //                     case 'dutyCycle': self._state.dutyCycle = value; break;
-                                
-                                //                     case 'range.start': self._state.frequency.range.start = value; break;
-                                //                     case 'range.end': self._state.frequency.range.end = value; break;
-                                //                     case 'stepSize': self._state.frequency.stepSize = value; break;
-                                //                     case 'timePerStep': self._state.frequency.timePerStep = value; break;
-                                //                 }
-                                //             });
-                                //         };
-                                //         this.port.start();
-                                //     }
-                                
-                                //     process(inputs, outputs, parameters){
-                                //         if(!this._active){ return true; }
-                                
-                                //         if(this._start){
-                                //             this._state.frequency.current = this._state.frequency.range.start;
-                                //             this._start = false;
-                                //             this._lastUpdate = currentTime;
-                                //         }
-                                
-                                        
-                                
-                                //         //generator
-                                //             const output = outputs[0];
-                                
-                                //             const gain = this._state.signalGeneratorGain;
-                                //             const frequency = this._state.frequency.current;
-                                //             const dutyCycle = this._state.frequency.dutyCycle;
-                                
-                                //             for(let channel = 0; channel < output.length; channel++){
-                                //                 for(let a = 0; a < output[channel].length; a++){
-                                
-                                //                     this._wavePosition += frequency/sampleRate;
-                                //                     const localWavePosition = this._wavePosition % 1;
-                                
-                                //                     switch(this._state.waveform){
-                                //                         case 0: //sin
-                                //                             output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
-                                //                         break;
-                                //                         case 1: //square
-                                //                             output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
-                                //                         break;
-                                //                         case 2: //triangle
-                                //                             if(localWavePosition < dutyCycle/2){
-                                //                                 output[channel][a] = gain*(2*localWavePosition / dutyCycle);
-                                //                             }else if(localWavePosition >= 1 - dutyCycle/2){
-                                //                                 output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
-                                //                             }else{
-                                //                                 output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
-                                //                             }
-                                //                         break;
-                                //                     }
-                                //                 }
-                                //             }
-                                
-                                //         //collector
-                                //             const input = inputs[0];
-                                //             this._stepData.push(...input[0]);
-                                            
-                                
-                                
-                                //         if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
-                                //             this._lastUpdate = currentTime;
-                                
-                                //             const result = {
-                                //                 frequency:this._state.frequency.current,
-                                //                 response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
-                                //             };
-                                //             this.port.postMessage({ onValue:result });
-                                //             this._state.responseData.push(result);
-                                //             this._stepData = [];
-                                
-                                //             this._state.frequency.current += this._state.frequency.stepSize;
-                                //             if( this._state.frequency.current > this._state.frequency.range.end ){
-                                //                 this.port.postMessage({ onCompletion:this._state.responseData });
-                                //                 this._active = false;
-                                //             }
-                                //         }
-                                
-                                //         return true;
-                                //     }
-                                // }
-                                // registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
-                                    static twoPI = Math.PI*2;
-                                
-                                    static get parameterDescriptors(){
-                                        return [];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                        const self = this;
-                                
-                                        this._state = {
-                                            signalGeneratorGain:1,
-                                            waveform:'sine',
-                                            dutyCycle:0.5,
-                                            frequency:{
-                                                current:100,
-                                                range:{ start:100, end:1000 },
-                                                stepSize:10,
-                                                timePerStep:0.005
-                                            },
-                                            responseData: [],
-                                        };
-                                        this._wavePosition = 0;
-                                        this._lastUpdate = 0;
-                                        this._start = false;
-                                        this._active = false;
-                                        this._stepData = [];
-                                
-                                        this.port.onmessage = function(event){
-                                            if(event.data == 'stop'){
-                                                self.port.postMessage({ onCompletion:self._state.responseData });
-                                                self._active = false;
-                                                return;
-                                            }
-                                
-                                            if(self._active){ return; }
-                                
-                                            if(event.data == 'start'){
-                                                self._start = true;
-                                                self._active = true;
-                                                return;
-                                            }
-                                            if(event.data == 'clear'){
-                                                self._state.responseData = [];
-                                                self._stepData = [];
-                                                self._wavePosition = 0;
-                                                return;
-                                            }
-                                
-                                            Object.entries(event.data).forEach(([key,value]) => {
-                                                switch(key){
-                                                    case 'waveform': self._state.waveform = value; break;
-                                                    case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
-                                                    case 'dutyCycle': self._state.dutyCycle = value; break;
-                                
-                                                    case 'range.start': self._state.frequency.range.start = value; break;
-                                                    case 'range.end': self._state.frequency.range.end = value; break;
-                                                    case 'stepSize': self._state.frequency.stepSize = value; break;
-                                                    case 'timePerStep': self._state.frequency.timePerStep = value; break;
-                                                }
-                                            });
-                                        };
-                                        this.port.start();
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        if(!this._active){ return true; }
-                                
-                                        if(this._start){
-                                            this._state.frequency.current = this._state.frequency.range.start;
-                                            this._start = false;
-                                            this._lastUpdate = currentTime;
-                                        }
-                                
-                                        
-                                
-                                        //generator
-                                            const output = outputs[0];
-                                
-                                            const gain = this._state.signalGeneratorGain;
-                                            const frequency = this._state.frequency.current;
-                                            const dutyCycle = this._state.dutyCycle;
-                                
-                                            for(let channel = 0; channel < output.length; channel++){
-                                                for(let a = 0; a < output[channel].length; a++){
-                                
-                                                    this._wavePosition += frequency/sampleRate;
-                                                    const localWavePosition = this._wavePosition % 1;
-                                
-                                                    switch(this._state.waveform){
-                                                        case 'sine':
-                                                            output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
-                                                        break;
-                                                        case 'square':
-                                                            output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
-                                                        break;
-                                                        case 'triangle':
-                                                            if(localWavePosition < dutyCycle/2){
-                                                                output[channel][a] = gain*(2*localWavePosition / dutyCycle);
-                                                            }else if(localWavePosition >= 1 - dutyCycle/2){
-                                                                output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
-                                                            }else{
-                                                                output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
-                                                            }
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                
-                                        //collector
-                                            const input = inputs[0];
-                                            this._stepData.push(...input[0]);
-                                            
-                                
-                                
-                                        if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
-                                            this._lastUpdate = currentTime;
-                                
-                                            const result = {
-                                                frequency:this._state.frequency.current,
-                                                response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
-                                            };
-                                            this.port.postMessage({ onValue:result });
-                                            this._state.responseData.push(result);
-                                            this._stepData = [];
-                                
-                                            this._state.frequency.current += this._state.frequency.stepSize;
-                                            if( this._state.frequency.current > this._state.frequency.range.end ){
-                                                this.port.postMessage({ onCompletion:this._state.responseData });
-                                                this._active = false;
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
-                            `], { type: "text/javascript" }),
-                            class:
-                                // class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
-                                //     #state = {
-                                //         waveform:0,
-                                //         signalGeneratorGain:1,
-                                //         dutyCycle:0.5,
-                                //         frequency:{
-                                //             range:{ start:100, end:1000 },
-                                //             stepSize:10,
-                                //             timePerStep:0.005,
-                                //         },
-                                //     };
-                                
-                                //     constructor(context, options={}){
-                                //         options.numberOfInputs = 1;
-                                //         options.numberOfOutputs = 1;
-                                //         options.channelCount = 1;
-                                //         super(context, 'frequencyAmplitudeResponseAnalyser', options);
-                                //         const self = this;
-                                
-                                //         this.port.onmessage = function(event){
-                                //             Object.entries(event.data).forEach(([key,value]) => {
-                                //                 switch(key){
-                                //                     case 'onValue':
-                                //                         if(self.onValue != undefined){ self.onValue(value); }
-                                //                     break;
-                                //                     case 'onCompletion':
-                                //                         if(self.onCompletion != undefined){ self.onCompletion(value); }
-                                //                     break;
-                                //                 }
-                                //             });
-                                //         };
-                                
-                                //         this.start = function(){
-                                //             this.port.postMessage('start');
-                                //         };
-                                //         this.stop = function(){
-                                //             this.port.postMessage('stop');
-                                //         };
-                                //         this.clear = function(){
-                                //             this.port.postMessage('clear');
-                                //         };
-                                
-                                //         this.onValue = function(){};
-                                //         this.onCompletion = function(){};
-                                //     }
-                                
-                                //     get waveform(){
-                                //         return this._state.waveform;
-                                //     }
-                                //     set waveform(value){
-                                //         this._state.waveform = value;
-                                //         this.port.postMessage({waveform:value});
-                                //     }
-                                
-                                //     get signalGeneratorGain(){
-                                //         return this._state.signalGeneratorGain;
-                                //     }
-                                //     set signalGeneratorGain(value){
-                                //         this._state.signalGeneratorGain = value;
-                                //         this.port.postMessage({signalGeneratorGain:value});
-                                //     }
-                                
-                                //     get dutyCycle(){
-                                //         return this._state.dutyCycle;
-                                //     }
-                                //     set dutyCycle(value){
-                                //         this._state.dutyCycle = value;
-                                //         this.port.postMessage({dutyCycle:value});
-                                //     }
-                                
-                                //     get range(){
-                                //         return this._state.frequency.range;
-                                //     }
-                                //     set range(value){
-                                //         if(value.start == undefined){
-                                //             value.start = this._state.frequency.range.start;
-                                //         }
-                                //         if(value.end == undefined){
-                                //             value.end = this._state.frequency.range.end;
-                                //         }
-                                
-                                //         this._state.frequency.range = value;
-                                //         this.port.postMessage({
-                                //             'range.start':this._state.frequency.range.start,
-                                //             'range.end':this._state.frequency.range.end,
-                                //         });
-                                //     }
-                                
-                                //     get stepSize(){ 
-                                //         return this._state.frequency.stepSize;
-                                //     }
-                                //     set stepSize(value){
-                                //         this._state.frequency.stepSize = value;
-                                //         this.port.postMessage({stepSize:value});
-                                //     }
-                                
-                                //     get timePerStep(){ 
-                                //         return this._state.frequency.timePerStep;
-                                //     }
-                                //     set timePerStep(value){
-                                //         this._state.frequency.timePerStep = value;
-                                //         this.port.postMessage({timePerStep:value});
-                                //     }
-                                // }
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 1;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'frequencyAmplitudeResponseAnalyser', options);
-                                        const self = this;
-                                
-                                        this._state = {
-                                            waveform:'sine',
-                                            signalGeneratorGain:1,
-                                            dutyCycle:0.5,
-                                            frequency:{
-                                                range:{ start:100, end:1000 },
-                                                stepSize:10,
-                                                timePerStep:0.005,
-                                            },
-                                        };
-                                
-                                        this.port.onmessage = function(event){
-                                            Object.entries(event.data).forEach(([key,value]) => {
-                                                switch(key){
-                                                    case 'onValue':
-                                                        if(self.onValue != undefined){ self.onValue(value); }
-                                                    break;
-                                                    case 'onCompletion':
-                                                        if(self.onCompletion != undefined){ self.onCompletion(value); }
-                                                    break;
-                                                }
-                                            });
-                                        };
-                                
-                                        this.start = function(){
-                                            this.port.postMessage('start');
-                                        };
-                                        this.stop = function(){
-                                            this.port.postMessage('stop');
-                                        };
-                                        this.clear = function(){
-                                            this.port.postMessage('clear');
-                                        };
-                                
-                                        this.onValue = function(){};
-                                        this.onCompletion = function(){};
-                                    }
-                                
-                                    get waveform(){
-                                        return this._state.waveform;
-                                    }
-                                    set waveform(value){
-                                        this._state.waveform = value;
-                                        this.port.postMessage({waveform:value});
-                                    }
-                                
-                                    get signalGeneratorGain(){
-                                        return this._state.signalGeneratorGain;
-                                    }
-                                    set signalGeneratorGain(value){
-                                        this._state.signalGeneratorGain = value;
-                                        this.port.postMessage({signalGeneratorGain:value});
-                                    }
-                                
-                                    get dutyCycle(){
-                                        return this._state.dutyCycle;
-                                    }
-                                    set dutyCycle(value){
-                                        this._state.dutyCycle = value;
-                                        this.port.postMessage({dutyCycle:value});
-                                    }
-                                
-                                    get range(){
-                                        return this._state.frequency.range;
-                                    }
-                                    set range(value){
-                                        if(value.start == undefined){
-                                            value.start = this._state.frequency.range.start;
-                                        }
-                                        if(value.end == undefined){
-                                            value.end = this._state.frequency.range.end;
-                                        }
-                                
-                                        this._state.frequency.range = value;
-                                        this.port.postMessage({
-                                            'range.start':this._state.frequency.range.start,
-                                            'range.end':this._state.frequency.range.end,
-                                        });
-                                    }
-                                
-                                    get stepSize(){ 
-                                        return this._state.frequency.stepSize;
-                                    }
-                                    set stepSize(value){
-                                        this._state.frequency.stepSize = value;
-                                        this.port.postMessage({stepSize:value});
-                                    }
-                                
-                                    get timePerStep(){ 
-                                        return this._state.frequency.timePerStep;
-                                    }
-                                    set timePerStep(value){
-                                        this._state.frequency.timePerStep = value;
-                                        this.port.postMessage({timePerStep:value});
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'testWorkerNode',
-                            worklet:new Blob([`
-                                class testWorklet extends AudioWorkletProcessor{
-                                    static MinimumValue = -10;
-                                
-                                    #privateValue = 100;
-                                
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'valueA',
-                                                defaultValue: 10,
-                                                minValue: 1,
-                                                maxValue: 100,
-                                                automationRate: 'a-rate', //you should use the array, it's the same length as the block
-                                            },{
-                                                name: 'valueB',
-                                                defaultValue: 10,
-                                                minValue: 1,
-                                                maxValue: 100,
-                                                automationRate: 'k-rate', //you should use only the first value in the array
-                                            }
-                                        ];
-                                    }
-                                    
-                                    constructor(options){
-                                        super(options);
-                                        console.log('<<< constructor >>>');
-                                        console.log('options:',options);
-                                
-                                        this._lastUpdate = currentTime;
-                                        this._callCount = 0;
-                                
-                                        this.port.onmessage = function(event){
-                                            console.log('worklet.port.onmessage',event);
-                                        };
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        this._callCount++;
-                                        if( currentTime - this._lastUpdate >= 1 ){
-                                            console.log('<<< process >>>');
-                                            console.log('currentTime:',currentTime);
-                                            console.log('currentFrame:',currentFrame);
-                                            console.log('calls since last printing:',this._callCount);
-                                            console.log('samples since last printing:',this._callCount*outputs[0][0].length);
-                                            console.log(' - number of inputs:',inputs.length);
-                                            inputs.forEach((input,index) => {
-                                                console.log('   '+index+' : streams:',input.length,': samples per stream:',input.map(a => a.length));
-                                            });
-                                            console.log(' - number of outputs:',outputs.length);
-                                            outputs.forEach((output,index) => {
-                                                console.log('   '+index+' : streams:',output.length,': samples per stream:',output.map(a => a.length));
-                                            });
-                                
-                                            console.log( 'parameters:',parameters );
-                                            console.log( 'parameters.valueA:',parameters.valueA );
-                                            console.log( 'parameters.valueB:',parameters.valueB );
-                                
-                                            // console.log( testWorklet.MinimumValue );
-                                            // console.log( this.#privateValue );
-                                
-                                            this._lastUpdate = currentTime;
-                                            this._callCount = 0;
-                                            return false;
-                                        }
-                                
-                                        const input = inputs[0];
-                                        const output = outputs[0];
-                                    
-                                        for(let channel = 0; channel < input.length; channel++){
-                                            const inputChannel = input[channel];
-                                            const outputChannel = output[channel];
-                                    
-                                            for(let a = 0; a < inputChannel.length; a++){
-                                                outputChannel[a] = inputChannel[a];
-                                            }
-                                        }
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('testWorklet', testWorklet);
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                // class squareWaveGenerator extends AudioWorkletProcessor{
-                                //     static get parameterDescriptors(){
-                                //         return [];
-                                //     }
-                                
-                                //     constructor(options){
-                                //         super(options);
-                                //         this._frequency = 440;
-                                //         this._phaseMux = (2*this._frequency) / sampleRate;
-                                //     }
-                                
-                                //     process(inputs, outputs, parameters){
-                                //         const output = outputs[0];
-                                        
-                                //         for(let channel = 0; channel < output.length; channel++){
-                                //             for(let a = 0; a < output[channel].length; a++){
-                                //                 output[channel][a] = Math.sin( Math.PI * this._phaseMux * (currentFrame+a) );
-                                //             }
-                                //         }
-                                //         return true;
-                                //     }
-                                // }
-                                // registerProcessor('squareWaveGenerator', squareWaveGenerator);
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                // class squareWaveGenerator extends AudioWorkletProcessor{
-                                //     static get parameterDescriptors(){
-                                //         return [];
-                                //     }
-                                
-                                //     constructor(options){
-                                //         super(options);
-                                
-                                //         this._frequency = 440;
-                                //         this._dutyCycle = 0.5;
-                                //         this._frameCount = 0;
-                                
-                                //         this._flip = false;
-                                
-                                //         // this._data = [];
-                                //     }
-                                
-                                //     process(inputs, outputs, parameters){
-                                //         const samplingRate = sampleRate;
-                                //         const output = outputs[0];
-                                        
-                                //         // for(let channel = 0; channel < output.length; channel++){
-                                //         //     for(let a = 0; a < output[channel].length; a++){
-                                //         //         if( this._sampleCount >= samplingRate / (this._frequency*2) ){
-                                //         //             this._sampleCount = 0;
-                                //         //             this._flip = !this._flip;
-                                //         //         }else{
-                                //         //             this._sampleCount++; 
-                                //         //         }
-                                //         //         output[channel][a] = (this._flip ? 1 : 0) * 0.25
-                                //         //     }
-                                //         // }
-                                
-                                
-                                
-                                //         const phaseMux = (2*this._frequency) / samplingRate;
-                                //         function sineWave(sampleNumber){
-                                //             return Math.sin( Math.PI * phaseMux * sampleNumber );
-                                //         }
-                                //         for(let channel = 0; channel < output.length; channel++){
-                                //             for(let a = 0; a < output[channel].length; a++){
-                                //                 output[channel][a] = sineWave(currentFrame+a);
-                                //             }
-                                //             // this._data.push(...output[channel]);
-                                
-                                //             // if( this._sampleCount >= samplingRate ){
-                                //             //     this._sampleCount = 0;
-                                //             //     // console.log(this._data);
-                                //             //     // return false;
-                                //             // }
-                                
-                                
-                                
-                                
-                                
-                                //             // if( this._sampleCount >= 500 ){
-                                //             //     console.log( JSON.stringify(this._data) );
-                                //             //     return false;
-                                //             // }
-                                //         }
-                                
-                                
-                                
-                                
-                                //         // // for(let a = 0; a < outputs[0][0].length; a++){
-                                //         // //     this._sampleCount++;
-                                //         // // }
-                                //         // // if( this._sampleCount%44160 == 0 ){
-                                //         // //     console.log( currentTime, this._sampleCount );
-                                //         // // }
-                                //         // if( this._frameCount%345 == 0 ){
-                                //         //     console.log( currentTime, this._frameCount, samplingRate );
-                                //         // }
-                                
-                                //         // for(let channel = 0; channel < output.length; channel++){
-                                //         //     for(let a = 0; a < output[channel].length/2; a++){
-                                //         //         output[channel][a] = 1;
-                                //         //     }
-                                //         //     for(let a = output[channel].length/2; a < output[channel].length; a++){
-                                //         //         output[channel][a] = -1;
-                                //         //     }
-                                //         // }
-                                
-                                //         this._frameCount++;
-                                //         return true;
-                                //     }
-                                // }
-                                // registerProcessor('squareWaveGenerator', squareWaveGenerator);
-                                
-                                
-                                
-                                
-                                
-                                // samplingRate = 44160
-                                //1hz = a complete waveform takes 44160 samples
-                                //2hz = a complete waveform takes 22080 samples
-                                //10hz = a complete waveform takes 4416 samples
-                                //80hz = a complete waveform takes 552 samples
-                                //100hz = a complete waveform takes 441.6 samples
-                                //400hz = a complete waveform takes 110.4 samples
-                                //440hz = a complete waveform takes 100.3636... samples
-                                //480hz = a complete waveform takes 92 samples
-                                
-                                // samples that a complete waveform takes = samplingRate / frequency of wave
-                                // frequency of wave = samplingRate / samples that a complete waveform takes
-                                // frequency of wave * samples that a complete waveform takes = samplingRate
-                                
-                                // 441.6hz = a complete waveform takes 100 samples
-                                // 437.2277227722772hz = a complete waveform takes 101 samples
-                            `], { type: "text/javascript" }),
-                            class:
-                                class testWorkerNode extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 6;
-                                        options.numberOfOutputs = 6;
-                                        options.channelCount = 1;
-                                        super(context, 'testWorklet', options);
-                                
-                                        this._superImportantValue = 'farts';
-                                
-                                        this.port.onmessage = function(event){
-                                            console.log('worklet.node.onmessage',event);
-                                        };
-                                        this.port.start();
-                                    }
-                                
-                                    get superImportantValue(){
-                                        console.log('getting super important value, which happens to be "'+this._superImportantValue+'"');
-                                        return this._superImportantValue;
-                                    }
-                                    set superImportantValue(newValue){
-                                        console.log('the super important value is being changed to "'+newValue+'"');
-                                        this._superImportantValue = newValue;
-                                        this.port.postMessage({ superImportantValue: this._superImportantValue });
-                                    }
-                                    doubleTheSuperImportantValue(){
-                                        console.log('doubling the super important value');
-                                        this._superImportantValue = this._superImportantValue + this._superImportantValue ;
-                                        this.port.postMessage({ superImportantValue: this._superImportantValue });
-                                    }
-                                }
-                            ,
-                        },
-                        {
-                            name:'squareWaveGenerator',
-                            worklet:new Blob([`
-                                class squareWaveGenerator extends AudioWorkletProcessor{
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'frequency',
-                                                defaultValue: 440,
-                                                minValue: 0,
-                                                maxValue: 20000,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'dutyCycle',
-                                                defaultValue: 0.5,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            }
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const output = outputs[0];
-                                
-                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                        const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
-                                
-                                        for(let channel = 0; channel < output.length; channel++){
-                                            for(let a = 0; a < output[channel].length; a++){
-                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                const dutyCycle = dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a];
-                                
-                                                const overallWaveProgressPercentage = (frequency/sampleRate) * (currentFrame+a);
-                                                const waveProgress = overallWaveProgressPercentage - Math.trunc(overallWaveProgressPercentage);
-                                                output[channel][a] = waveProgress < dutyCycle ? 1 : -1;
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('squareWaveGenerator', squareWaveGenerator);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class squareWaveGenerator extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 0;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'squareWaveGenerator', options);
-                                    }
-                                
-                                    get frequency(){
-                                        return this.parameters.get('frequency');
-                                    }
-                                    get dutyCycle(){
-                                        return this.parameters.get('dutyCycle');
-                                    }
-                                }
-                            ,
-                        },
-                        //oscillatorWithMultiLevelPhaseModulation
-                        {
-                            name:'osc_1',
-                            worklet:new Blob([`
-                                class osc_1 extends AudioWorkletProcessor{
-                                    static twoPI = Math.PI*2;
-                                    static starterFrequency = 440;
-                                    static maxFrequency = 20000;
-                                    static detuneMux = 0.1;
-                                    static detuneBounds = 1/osc_1.detuneMux;
-                                    static modulationSettings = [
-                                        {pha:4,amp:1},
-                                        {pha:3,amp:1},
-                                        {pha:2,amp:1},
-                                        {pha:1,amp:1},
-                                    ];
-                                
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'frequency',
-                                                defaultValue: osc_1.starterFrequency,
-                                                minValue: 0,
-                                                maxValue: osc_1.maxFrequency,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'gain',
-                                                defaultValue: 1,
-                                                minValue: -1,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'detune',
-                                                defaultValue: 0,
-                                                minValue: -osc_1.detuneBounds,
-                                                maxValue: osc_1.detuneBounds,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'gain_mode',
-                                                defaultValue: 0, // 0 - manual / 1 - automatic
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'detune_mode',
-                                                defaultValue: 0, // 0 - manual / 1 - automatic
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            }
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                        this._wavePosition = 0;
-                                        // this._modulationSettings = [
-                                        //     {pha:4,amp:1},
-                                        //     {pha:3,amp:1},
-                                        //     {pha:2,amp:1},
-                                        //     {pha:1,amp:1},
-                                        // ];
-                                
-                                        this.port.onmessage = function(event){
-                                            osc_1.modulationSettings = event.data;
-                                            console.log( event.data, osc_1.modulationSettings );
-                                        };
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const output = outputs[0];
-                                        const gainControl = inputs[0];
-                                        const detuneControl = inputs[1];
-                                
-                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                        const detune_useFirstOnly = parameters.detune.length == 1;
-                                        const gain_useFirstOnly = parameters.gain.length == 1;
-                                
-                                        for(let channel = 0; channel < output.length; channel++){
-                                            for(let a = 0; a < output[channel].length; a++){
-                                                const gain = parameters.gain_mode[0] == 0 ? (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]) : gainControl[channel][a];
-                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                const detune = parameters.detune_mode[0] == 0 ? (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]) : detuneControl[channel][a];
-                                
-                                                this._wavePosition += (frequency*(detune*osc_1.detuneMux + 1))/sampleRate;
-                                                const localWavePosition = this._wavePosition % 1;
-                                
-                                                osc_1.modulationSettings.forEach( setting => {
-                                                    output[channel][a] = Math.sin( osc_1.twoPI*localWavePosition*setting.pha + (Math.PI/2)*setting.amp*output[channel][a] );
-                                                } );
-                                                output[channel][a] = gain*output[channel][a];
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('osc_1', osc_1);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class osc_1 extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 2;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'osc_1', options);
-                                
-                                        this.data = function(value){
-                                            this.port.postMessage(value);
-                                        };
-                                    }
-                                
-                                    get frequency(){
-                                        return this.parameters.get('frequency');
-                                    }
-                                    get gain(){
-                                        return this.parameters.get('gain');
-                                    }
-                                    get detune(){
-                                        return this.parameters.get('detune');
-                                    }
-                                }
-                            ,
-                        },
-                        //oscillatorWithMultiLevelPhaseModulation
-                        {
-                            name:'osc_2',
-                            worklet:new Blob([`
-                                class osc_2 extends AudioWorkletProcessor{
-                                    static twoPI = Math.PI*2;
-                                    static starterFrequency = 440;
-                                    static maxFrequency = 20000;
-                                    static detuneMux = 0.1;
-                                    static detuneBounds = 1/osc_2.detuneMux;
-                                
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'frequency',
-                                                defaultValue: osc_2.starterFrequency,
-                                                minValue: 0,
-                                                maxValue: osc_2.maxFrequency,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'gain',
-                                                defaultValue: 1,
-                                                minValue: -1,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'detune',
-                                                defaultValue: 0,
-                                                minValue: -osc_2.detuneBounds,
-                                                maxValue: osc_2.detuneBounds,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'gain_mode',
-                                                defaultValue: 0, // 0 - manual / 1 - automatic
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'detune_mode',
-                                                defaultValue: 0, // 0 - manual / 1 - automatic
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },
-                                
-                                
-                                
-                                            {
-                                                name: 'harmonic_mux_1',
-                                                defaultValue: 1,
-                                                minValue: 0,
-                                                maxValue: 32,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'harmonic_mux_2',
-                                                defaultValue: 1,
-                                                minValue: 0,
-                                                maxValue: 32,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'harmonic_power_1',
-                                                defaultValue: 1,
-                                                minValue: 0,
-                                                maxValue: 32,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'harmonic_power_2',
-                                                defaultValue: 1,
-                                                minValue: 0,
-                                                maxValue: 32,
-                                                automationRate: 'a-rate',
-                                            },
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                        this._wavePosition = 0;
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const output = outputs[0];
-                                        const gainControl = inputs[0];
-                                        const detuneControl = inputs[1];
-                                
-                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                        const detune_useFirstOnly = parameters.detune.length == 1;
-                                        const gain_useFirstOnly = parameters.gain.length == 1;
-                                
-                                        for(let channel = 0; channel < output.length; channel++){
-                                            for(let a = 0; a < output[channel].length; a++){
-                                                const gain = parameters.gain_mode[0] == 0 ? (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]) : gainControl[channel][a];
-                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                const detune = parameters.detune_mode[0] == 0 ? (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]) : detuneControl[channel][a];
-                                
-                                                this._wavePosition += (frequency*(detune*osc_2.detuneMux + 1))/sampleRate;
-                                                const localWavePosition = this._wavePosition % 1;
-                                
-                                                output[channel][a] = gain*parameters.harmonic_power_1[0]*Math.sin(
-                                                    osc_2.twoPI*localWavePosition*parameters.harmonic_mux_1[0] + (Math.PI/2)*parameters.harmonic_power_2[0]*Math.sin(
-                                                        osc_2.twoPI*localWavePosition*parameters.harmonic_mux_2[0]
-                                                    )
-                                                );
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('osc_2', osc_2);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class osc_2 extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 2;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'osc_2', options);
-                                    }
-                                
-                                    get frequency(){
-                                        return this.parameters.get('frequency');
-                                    }
-                                    get gain(){
-                                        return this.parameters.get('gain');
-                                    }
-                                    get detune(){
-                                        return this.parameters.get('detune');
-                                    }
-                                
-                                    get harmonic_mux_1(){
-                                        return this.parameters.get('harmonic_mux_1');
-                                    }
-                                    get harmonic_mux_2(){
-                                        return this.parameters.get('harmonic_mux_2');
-                                    }
-                                    get harmonic_power_1(){
-                                        return this.parameters.get('harmonic_power_1');
-                                    }
-                                    get harmonic_power_2(){
-                                        return this.parameters.get('harmonic_power_2');
-                                    }
-                                }
-                            ,
-                        },
-                        //oscillatorWithMultiLevelPhaseModulation
-                        {
-                            name:'osc_3',
-                            worklet:new Blob([`
-                                class osc_3 extends AudioWorkletProcessor{
-                                    static twoPI = Math.PI*2;
-                                    static starterFrequency = 440;
-                                    static maxFrequency = 20000;
-                                    static detuneMux = 0.1;
-                                    static detuneBounds = 1/osc_3.detuneMux;
-                                    static modulationSettings = [
-                                        {mux:1,power:1},
-                                        {mux:1,power:1},
-                                    ];
-                                
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'frequency',
-                                                defaultValue: osc_3.starterFrequency,
-                                                minValue: 0,
-                                                maxValue: osc_3.maxFrequency,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'gain',
-                                                defaultValue: 1,
-                                                minValue: -1,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'detune',
-                                                defaultValue: 0,
-                                                minValue: -osc_3.detuneBounds,
-                                                maxValue: osc_3.detuneBounds,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'gain_mode',
-                                                defaultValue: 0, // 0 - manual / 1 - automatic
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },{
-                                                name: 'detune_mode',
-                                                defaultValue: 0, // 0 - manual / 1 - automatic
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'k-rate',
-                                            },
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                        this._wavePosition = 0;
-                                
-                                        this.port.onmessage = function(event){
-                                            osc_3.modulationSettings = event.data;
-                                            // console.log( JSON.stringify(osc_3.modulationSettings) );
-                                        };
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        const output = outputs[0];
-                                        const gainControl = inputs[0];
-                                        const detuneControl = inputs[1];
-                                
-                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                        const detune_useFirstOnly = parameters.detune.length == 1;
-                                        const gain_useFirstOnly = parameters.gain.length == 1;
-                                
-                                        for(let channel = 0; channel < output.length; channel++){
-                                            for(let a = 0; a < output[channel].length; a++){
-                                                const gain = parameters.gain_mode[0] == 0 ? (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]) : gainControl[channel][a];
-                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                const detune = parameters.detune_mode[0] == 0 ? (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]) : detuneControl[channel][a];
-                                
-                                                this._wavePosition += (frequency*(detune*osc_3.detuneMux + 1))/sampleRate;
-                                                const localWavePosition = this._wavePosition % 1;
-                                
-                                                for(let b = 0; b < osc_3.modulationSettings.length; b++){
-                                                    output[channel][a] = osc_3.modulationSettings[b].power*Math.sin(
-                                                        osc_3.twoPI*localWavePosition*osc_3.modulationSettings[b].mux + (Math.PI/2)*output[channel][a]
-                                                    );
-                                                }
-                                                output[channel][a] = gain*output[channel][a];
-                                            }
-                                        }
-                                
-                                        return true;
-                                    }
-                                }
-                                registerProcessor('osc_3', osc_3);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class osc_3 extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 3;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'osc_3', options);
-                                
-                                        this._modulationSettings = [
-                                            {mux:1,power:1},
-                                            {mux:1,power:1},
-                                        ];
-                                
-                                        this.modulationSettings = function(value){
-                                            if(value == undefined){ return this._modulationSettings; }
-                                            this._modulationSettings = value;
-                                            this.port.postMessage(value);
-                                        };
-                                    }
-                                
-                                    get frequency(){
-                                        return this.parameters.get('frequency');
-                                    }
-                                    get gain(){
-                                        return this.parameters.get('gain');
-                                    }
-                                    get detune(){
-                                        return this.parameters.get('detune');
-                                    }
-                                }
-                            ,
-                        },
-                        //oscillator with ASR
-                        {
-                            name:'osc_4',
-                            worklet:new Blob([`
-                                class osc_4 extends AudioWorkletProcessor{
-                                    static twoPI = Math.PI*2;
-                                    static starterFrequency = 440;
-                                    static maxFrequency = 20000;
-                                    static detuneMux = 0.1;
-                                    static detuneBounds = 1/osc_4.detuneMux;
-                                
-                                    static get parameterDescriptors(){
-                                        return [
-                                            {
-                                                name: 'frequency',
-                                                defaultValue: osc_4.starterFrequency,
-                                                minValue: 0,
-                                                maxValue: osc_4.maxFrequency,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'gain',
-                                                defaultValue: 1,
-                                                minValue: -1,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'detune',
-                                                defaultValue: 0,
-                                                minValue: -osc_4.detuneBounds,
-                                                maxValue: osc_4.detuneBounds,
-                                                automationRate: 'a-rate',
-                                            },{
-                                                name: 'dutyCycle',
-                                                defaultValue: 0.5,
-                                                minValue: 0,
-                                                maxValue: 1,
-                                                automationRate: 'a-rate',
-                                            },
-                                        ];
-                                    }
-                                
-                                    constructor(options){
-                                        super(options);
-                                        const self = this;
-                                        this._wavePosition = 0;
-                                
-                                        this._state = {
-                                            waveform:'sin',
-                                            gain_useControl:false,
-                                            detune_useControl:false,
-                                            dutyCycle_useControl:false,
-                                        };
-                                        this._envelope = {
-                                            phase:'off', // front - wait - back - off
-                                            requestedPhase:undefined,
-                                
-                                            gainStep:0,
-                                            previousGain:0,
-                                            currentGain:0,
-                                
-                                            procedure:{
-                                                index:0,
-                                                sample:0,
-                                                front:[ {destination:1, elapse:0, _elapseSamples:1} ],
-                                                back:[ {destination:0, elapse:0, _elapseSamples:1} ],
-                                            },
-                                            defaultProcedurePoint:{
-                                                front:{destination:1, elapse:0, _elapseSamples:1},
-                                                back:{destination:0, elapse:0, _elapseSamples:1},
-                                            },
-                                        };
-                                
-                                        this.port.onmessage = function(event){
-                                            Object.entries(event.data).forEach(([key,value]) => {
-                                                switch(key){
-                                                    case 'command':
-                                                        switch(value){
-                                                            case 'start':
-                                                                if(self._envelope.requestedPhase == 'back' || self._envelope.phase == 'back' || self._envelope.phase == 'off'){
-                                                                    self._envelope.requestedPhase = 'front';
-                                                                }
-                                                            break;
-                                                            case 'stop':
-                                                                if(self._envelope.requestedPhase == 'front' || self._envelope.phase == 'front' || self._envelope.phase == 'wait'){
-                                                                    self._envelope.requestedPhase = 'back';
-                                                                }
-                                                            break;
-                                                        }
-                                                    break;
-                                                    case 'waveform': 
-                                                        self._state.waveform = value;
-                                                    break;
-                                                    case 'gain_useControl': 
-                                                        self._state.gain_useControl = value;
-                                                    break;
-                                                    case 'detune_useControl': 
-                                                        self._state.detune_useControl = value;
-                                                    break;
-                                                    case 'dutyCycle_useControl': 
-                                                        self._state.dutyCycle_useControl = value;
-                                                    break;
-                                                    case 'envelope':
-                                                        Object.entries(value).forEach(([phase,points]) => {
-                                                            if( points != undefined && points.length != 0 ){
-                                                                self._envelope.procedure[phase] = points.map(point => {
-                                                                    return {
-                                                                        destination:point.destination, 
-                                                                        elapse:point.elapse, 
-                                                                        _elapseSamples:point.elapse == 0 ? 1 : sampleRate*point.elapse
-                                                                    };
-                                                                });
-                                                            }else{
-                                                                self._envelope.procedure[phase] = [self._envelope.defaultProcedurePoint[phase]];
-                                                            }
-                                                        });
-                                                    break;
-                                                }
-                                            });
-                                        };
-                                        this.port.start();
-                                    }
-                                
-                                    process(inputs, outputs, parameters){
-                                        //envelope calculation
-                                            this.activatePhase();
-                                            if( this._envelope.phase == 'off'){ return true; }
-                                
-                                        //io
-                                            const output = outputs[0];
-                                            const gainControl = inputs[0];
-                                            const detuneControl = inputs[1];
-                                            const dutyCycleControl = inputs[2];
-                                
-                                        //oscillation gerneration
-                                            const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                            const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
-                                            const detune_useFirstOnly = parameters.detune.length == 1;
-                                            const gain_useFirstOnly = parameters.gain.length == 1;
-                                
-                                            for(let channel = 0; channel < output.length; channel++){
-                                                for(let a = 0; a < output[channel].length; a++){
-                                                    if(this._envelope.phase == 'front' || this._envelope.phase == 'back'){
-                                                        if( currentFrame+a - this._envelope.procedure.sample >= this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples ){
-                                                            this._envelope.procedure.index++;
-                                                            this._envelope.procedure.sample = currentFrame+a;
-                                                            if( this._envelope.procedure.index >= this._envelope.procedure[this._envelope.phase].length){
-                                                                if(this._envelope.phase == 'front'){
-                                                                    this._envelope.phase = 'wait';
-                                                                    this.port.postMessage({phase:'wait'});
-                                                                    this._envelope.gainStep = 0;
-                                                                }else if(this._envelope.phase == 'back'){
-                                                                    this._envelope.phase = 'off';
-                                                                    this.port.postMessage({phase:'off'});
-                                                                    this._envelope.gainStep = 0;
-                                                                }
-                                                            }else{
-                                                                this._envelope.previousGain = this._envelope.currentGain;
-                                                                this._envelope.gainStep = (this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index].destination - this._envelope.previousGain)/this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples;                    
-                                                            }
-                                                        }
-                                                    }
-                                
-                                                    this._envelope.currentGain += this._envelope.gainStep;
-                                
-                                                    const gain = this._envelope.currentGain * (this._state.gain_useControl ? gainControl[channel][a] : (gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a]));
-                                                    const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                    const detune = this._state.detune_useControl ? detuneControl[channel][a] : (detune_useFirstOnly ? parameters.detune[0] : parameters.detune[a]);
-                                                    const dutyCycle = this._state.dutyCycle_useControl ? dutyCycleControl[channel][a] : (dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a]);
-                                
-                                                    this._wavePosition += (frequency*(detune*osc_4.detuneMux + 1))/sampleRate;
-                                                    const localWavePosition = this._wavePosition % 1;
-                                
-                                                    switch(this._state.waveform){
-                                                        case 'sin':
-                                                            output[channel][a] = gain*Math.sin( localWavePosition * osc_4.twoPI );
-                                                        break;
-                                                        case 'square':
-                                                            output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
-                                                        break;
-                                                        case 'triangle':
-                                                            if(localWavePosition < dutyCycle/2){
-                                                                output[channel][a] = gain*(2*localWavePosition / dutyCycle);
-                                                            }else if(localWavePosition >= 1 - dutyCycle/2){
-                                                                output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
-                                                            }else{
-                                                                output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
-                                                            }
-                                                        break;
-                                                        case 'noise': default: 
-                                                            output[channel][a] = gain*(Math.random()*2 - 1);
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                
-                                        return true;
-                                    }
-                                
-                                    activatePhase(){
-                                        if( this._envelope.requestedPhase != undefined && this._envelope.requestedPhase != this._envelope.phase ){
-                                            this._envelope.phase = this._envelope.requestedPhase;
-                                            this.port.postMessage({phase:this._envelope.phase});
-                                            this._envelope.requestedPhase = undefined;
-                                            this._envelope.procedure.sample = currentFrame;
-                                            this._envelope.procedure.index = 0;
-                                            this._envelope.previousGain = this._envelope.currentGain;
-                                            this._envelope.gainStep = (this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index].destination - this._envelope.previousGain)/this._envelope.procedure[this._envelope.phase][this._envelope.procedure.index]._elapseSamples;
-                                            if( this._envelope.phase == 'start' ){ this._wavePosition = 0; }
-                                        }
-                                    }
-                                }
-                                registerProcessor('osc_4', osc_4);
-                            `], { type: "text/javascript" }),
-                            class:
-                                class osc_4 extends AudioWorkletNode{
-                                    constructor(context, options={}){
-                                        options.numberOfInputs = 3;
-                                        options.numberOfOutputs = 1;
-                                        options.channelCount = 1;
-                                        super(context, 'osc_4', options);
-                                        const self = this;
-                                
-                                        this._state = {
-                                            waveform:'sin',
-                                            gain_useControl:false,
-                                            detune_useControl:false,
-                                            dutyCycle_useControl:false,
-                                        };
-                                        this._envelope = {
-                                            front:[
-                                                {elapse:0.5,gain:5},
-                                                {elapse:0.5,gain:1},
-                                            ],
-                                            back:[
-                                                {elapse:0.5,gain:5},
-                                                {elapse:0.5,gain:0}
-                                            ],
-                                        };
-                                
-                                        this.port.onmessage = function(event){
-                                            if(self.onEnvelopeEvent == undefined){ return; }
-                                            self.onEnvelopeEvent(event.data.phase);
-                                        };
-                                
-                                        this.start = function(){
-                                            this.port.postMessage({command:'start'});
-                                        };
-                                        this.stop = function(){
-                                            this.port.postMessage({command:'stop'});
-                                        };
-                                
-                                        this.onEnvelopeEvent = function(data){console.log(data);};
-                                    }
-                                
-                                
-                                
-                                
-                                    get frequency(){
-                                        return this.parameters.get('frequency');
-                                    }
-                                    get gain(){
-                                        return this.parameters.get('gain');
-                                    }
-                                    get detune(){
-                                        return this.parameters.get('detune');
-                                    }
-                                    get dutyCycle(){
-                                        return this.parameters.get('dutyCycle');
-                                    }
-                                
-                                
-                                
-                                
-                                    get waveform(){
-                                        return this._waveform;
-                                    }
-                                    set waveform(value){
-                                        this._state.waveform = value;
-                                        this.port.postMessage({waveform:value});
-                                    }
-                                    get gain_useControl(){
-                                        return this._state.gain_useControl;
-                                    }
-                                    set gain_useControl(bool){
-                                        this._state.gain_useControl = bool;
-                                        this.port.postMessage({gain_useControl:bool});
-                                    }
-                                    get detune_useControl(){
-                                        return this._state.detune_useControl;
-                                    }
-                                    set detune_useControl(bool){
-                                        this._state.detune_useControl = bool;
-                                        this.port.postMessage({detune_useControl:bool});
-                                    }
-                                    get dutyCycle_useControl(){
-                                        return this._state.dutyCycle_useControl;
-                                    }
-                                    set dutyCycle_useControl(bool){
-                                        this._state.dutyCycle_useControl = bool;
-                                        this.port.postMessage({dutyCycle_useControl:bool});
-                                    }
-                                
-                                    get envelope(){
-                                        return JSON.parse(JSON.stringify(this._envelope));
-                                    }
-                                    set envelope(newEnvelope){
-                                        this._envelope = newEnvelope;
-                                        this.port.postMessage({envelope:newEnvelope});
-                                    }
-                                }
-                            ,
-                        },
-                    ];
+                    Object.keys(worklets).forEach(developmentMode => { //production / workshop
+                        Object.keys(worklets[developmentMode]).forEach(developmentType => { //only_js / wasm
+                            worklets[developmentMode][developmentType].list.forEach(worklet => {
+                                dev.log.audio('.AudioWorklet -> loading "'+[developmentMode]+'.'+[developmentType]+'" worklet:', worklet.name); //#development
+                                worklet.loaded = false;
                         
-                    worklets.forEach(worklet => {
-                        dev.log.audio('.AudioWorklet -> loading worklet:',worklet.name); //#development
-                        worklet.loaded = false;
+                                audio.context.audioWorklet.addModule(window.URL.createObjectURL(worklet.worklet)).then( () => {
+                                    dev.log.audio('.AudioWorklet "'+[developmentMode]+'.'+[developmentType]+'" ->', worklet.name, 'has been loaded'); //#development
+                                    worklet.loaded = true;
+                        
+                                    audio.audioWorklet[developmentMode][developmentType][worklet.name] = worklet.class; //fancy new way
+                                    // audio.audioWorklet[worklet.name] = worklet.class; //old fashioned way of doing things
                 
-                        audio.context.audioWorklet.addModule(window.URL.createObjectURL(worklet.worklet)).then( () => {
-                            dev.log.audio('.AudioWorklet ->',worklet.name,'has been loaded'); //#development
-                            worklet.loaded = true;
-                
-                            audio.audioWorklet[worklet.name] = worklet.class;
-                
-                            if( checkIfReady() && this.nowReady != undefined ){
-                                this.nowReady();
-                            }
-                        } );
+                                    if( checkIfReady() && this.nowReady != undefined ){
+                                        dev.log.audio('.AudioWorklet "'+[developmentMode]+'.'+[developmentType]+'" ->', worklet.name, 'running nowReady'); //#development
+                                        this.nowReady();
+                                    }
+                                } );
+                            });
+                        });
                     });
                 };
                 
@@ -26223,7 +26579,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:20} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:12} };
             const interface = this;
         
             const dev = {
@@ -26426,33 +26782,33 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //flow
                         const flow = {
                             controlIn:{
-                                gain: new _canvas_.library.audio.audioWorklet.nothing(context),
-                                detune: new _canvas_.library.audio.audioWorklet.nothing(context),
-                                dutyCycle: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                gain: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                                detune: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                                dutyCycle: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
                             },
                 
                             LFO:{
                                 gain:{
-                                    oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
-                                    amplitudeModifier: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
+                                    oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
+                                    amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
                                 },
                                 detune:{
-                                    oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
+                                    oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
                                 },
                                 dutyCycle:{
-                                    oscillator: new _canvas_.library.audio.audioWorklet.oscillator(context),
-                                    amplitudeModifier: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
+                                    oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
+                                    amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
                                 },
                             },
                 
                             controlMix:{
-                                gain: new _canvas_.library.audio.audioWorklet.streamAdder(context),
-                                detune: new _canvas_.library.audio.audioWorklet.streamAdder(context),
-                                dutyCycle: new _canvas_.library.audio.audioWorklet.streamAdder(context),
+                                gain: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                                detune: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                                dutyCycle: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
                             },
                 
                             oscillators: [],
-                            aggregator: new _canvas_.library.audio.audioWorklet.gain(context),
+                            aggregator: new _canvas_.library.audio.audioWorklet.production.only_js.gain(context),
                         };
                 
                         flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);
@@ -26530,7 +26886,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         if(freeOscillators.length > 0){
                                             oscillatorToUse = freeOscillators[0];
                                         }else{
-                                            oscillatorToUse = new _canvas_.library.audio.audioWorklet.oscillator(context);
+                                            oscillatorToUse = new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context);
                                             oscillatorToUse.connect(flow.aggregator);
                                             oscillatorToUse.waveform = waveType;
                                             oscillatorToUse.gain_envelope_reporting = true;
@@ -26903,12 +27259,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         flow.LFO.gain.gain.setTargetAtTime(gainWobble.depth, context.currentTime, 0);
                         flow.LFO.oscillator.connect(flow.LFO.gain);
                 
-                        flow.amplitudeModifier = new _canvas_.library.audio.audioWorklet.amplitudeModifier(_canvas_.library.audio.context);
+                        flow.amplitudeModifier = new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(_canvas_.library.audio.context);
                         flow.LFO.gain.connect(flow.amplitudeModifier);
                         flow.amplitudeModifier.divisor.setTargetAtTime(2, context.currentTime, 0);
                         flow.amplitudeModifier.offset.setTargetAtTime(1 - gainWobble.depth/2, context.currentTime, 0);
                 
-                        flow.gain.node = new _canvas_.library.audio.audioWorklet.gain(_canvas_.library.audio.context);
+                        flow.gain.node = new _canvas_.library.audio.audioWorklet.production.only_js.gain(_canvas_.library.audio.context);
                         flow.aggregator.node.connect(flow.gain.node,undefined,0);
                         flow.amplitudeModifier.connect(flow.gain.node,undefined,1);
                 
@@ -27885,13 +28241,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                         //control streams
                             flow.gainControl = {
-                                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
                             };
                             flow.detuneControl = {
-                                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
                             };
                             flow.dutyCycleControl = {
-                                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
                             };
                 
                         //oscillator
@@ -27900,7 +28256,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 gain: 1,
                                 detune: 0,
                                 dutyCycle: 0.5,
-                                node: new _canvas_.library.audio.audioWorklet.oscillator(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
                             };
                 
                         flow.gainControl.node.connect(flow.oscillator.node, undefined, 0);
@@ -28194,13 +28550,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                         //controlIn
                             flow.controlIn = {
-                                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
                             };
                         //gain
                             flow.gain = {
                                 mode: false,
                                 gain: 1,
-                                node: new _canvas_.library.audio.audioWorklet.gain(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.gain(context),
                             };
                 
                         flow.controlIn.node.connect(flow.gain.node, undefined, 1);
@@ -28238,7 +28594,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 divisor: 1,
                                 ceiling: 10,
                                 floor: -10,
-                                node: new _canvas_.library.audio.audioWorklet.amplitudeModifier(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
                             };
                 
                     //input/output node
@@ -28286,22 +28642,22 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                         //inputs
                             flow.input_1 = {
-                                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
                             };
                             flow.input_2 = {
-                                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
                             };
                 
                         //mixControl
                             flow.mixControl = {
-                                node: new _canvas_.library.audio.audioWorklet.nothing(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
                             };
                             
                         //gain
                             flow.streamAdder = {
                                 mode: false,
                                 mix: 1,
-                                node: new _canvas_.library.audio.audioWorklet.streamAdder(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
                             };
                 
                         flow.input_1.node.connect(flow.streamAdder.node, undefined, 0);
@@ -28339,7 +28695,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         flow.sigmoid = {
                             gain: 1,
                             sharpness: 0,
-                            node: new _canvas_.library.audio.audioWorklet.sigmoid(context),
+                            node: new _canvas_.library.audio.audioWorklet.production.only_js.sigmoid(context),
                         };
                 
                     //input/output node
@@ -28479,7 +28835,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 ){
                     const self = this;
                 
-                    const momentaryAmplitudeMeter = new _canvas_.library.audio.audioWorklet.momentaryAmplitudeMeter(context);
+                    const momentaryAmplitudeMeter = new _canvas_.library.audio.audioWorklet.production.only_js.momentaryAmplitudeMeter(context);
                     
                     //io
                         this.in = function(){ return momentaryAmplitudeMeter; }
@@ -28514,7 +28870,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     context
                 ){
                     //bitcrusherNode
-                        const bitcrusherNode = new _canvas_.library.audio.audioWorklet.bitcrusher(context);
+                        const bitcrusherNode = new _canvas_.library.audio.audioWorklet.production.wasm.bitcrusher(context);
                 
                     //input/output node
                         this.in = function(){return bitcrusherNode;}
@@ -28614,7 +28970,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //stableAmplitudeGenerator
                         flow.stableAmplitudeGenerator = {
                             amplitude: 0,
-                            node: new _canvas_.library.audio.audioWorklet.stableAmplitudeGenerator(context),
+                            node: new _canvas_.library.audio.audioWorklet.production.only_js.stableAmplitudeGenerator(context),
                         };
                         
                     //input/output node
@@ -28699,7 +29055,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     context
                 ){
                     //lagProcessorNode
-                        const lagProcessorNode = new _canvas_.library.audio.audioWorklet.lagProcessor(context);
+                        const lagProcessorNode = new _canvas_.library.audio.audioWorklet.production.only_js.lagProcessor(context);
                 
                     //input/output node
                         this.in = function(){return lagProcessorNode;}
@@ -28714,14 +29070,14 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 this.whiteNoiseGenerator = function(
                     context
                 ){
-                    const audioWorklet = new _canvas_.library.audio.audioWorklet.whiteNoiseGenerator(context);
+                    const audioWorklet = new _canvas_.library.audio.audioWorklet.production.only_js.whiteNoiseGenerator(context);
                     this.out = function(){ return audioWorklet; }
                 };
                 this.frequencyAmplitudeResponseAnalyser = function(
                     context
                 ){
                     const self = this;
-                    const frequencyAmplitudeResponseAnalyser = new _canvas_.library.audio.audioWorklet.frequencyAmplitudeResponseAnalyser(context);
+                    const frequencyAmplitudeResponseAnalyser = new _canvas_.library.audio.audioWorklet.production.only_js.frequencyAmplitudeResponseAnalyser(context);
                 
                     //input/output node
                         this.producer = function(){ return frequencyAmplitudeResponseAnalyser; }
@@ -56476,7 +56832,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         _canvas_.layers.registerFunctionForLayer("curve", function(){
             // _canvas_.core.render.frameRateLimit(10);
         
-            // const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
+            const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
             // const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
             // const sa = _canvas_.control.scene.addUnit(10,10,0,'sigmoids_affecter','acousticresearch');
             // const lp = _canvas_.control.scene.addUnit(10,10,0,'lag_processor','acousticresearch');
@@ -56484,7 +56840,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             // const sag = _canvas_.control.scene.addUnit(10,10,0,'stable_amplitude_generator','acousticresearch');
             // const sa2 = _canvas_.control.scene.addUnit(10,10,0,'stream_adder','acousticresearch');
             // const fg = _canvas_.control.scene.addUnit(10,10,0,'frequency_generator','acousticresearch');
-            const mam = _canvas_.control.scene.addUnit(10,10,0,'momentary_amplitude_meter','acousticresearch');
+            // const mam = _canvas_.control.scene.addUnit(10,10,0,'momentary_amplitude_meter','acousticresearch');
             // const farw = _canvas_.control.scene.addUnit(10,10,0,'frequency_amplitude_response_workstation','acousticresearch');
             
             

@@ -1,0 +1,1 @@
+/Users/metasophiea/Library/Mobile\ Documents/com~apple~CloudDocs/curve/main/0\ -\ library/modules/audio/audioWorklet/production\ -\ wasm/bitcrusher/rust/target/wasm32-unknown-unknown/debug/bitcrusher.wasm: /Users/metasophiea/Library/Mobile\ Documents/com~apple~CloudDocs/curve/main/0\ -\ library/modules/audio/audioWorklet/production\ -\ wasm/bitcrusher/rust/src/lib.rs
