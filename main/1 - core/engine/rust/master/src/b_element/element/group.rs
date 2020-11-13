@@ -42,7 +42,6 @@
         },
         structure::{
             WebGl2programConglomerateManager,
-            WebGl2textureFramebufferManager,
             ImageRequester,
             FontRequester,
         },
@@ -1069,7 +1068,6 @@ impl ElementTrait for Group {
                     viewbox: &Viewbox,
                     context: &WebGl2RenderingContext, 
                     web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
-                    web_gl2_texture_framebuffer_manager: &mut WebGl2textureFramebufferManager,
                     image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
                     force: bool,
@@ -1102,7 +1100,6 @@ impl ElementTrait for Group {
                                     viewbox,
                                     context,
                                     web_gl2_program_conglomerate_manager,
-                                    web_gl2_texture_framebuffer_manager,
                                     image_requester,
                                     resolution,
                                     force,
@@ -1123,7 +1120,6 @@ impl ElementTrait for Group {
                                 viewbox,
                                 context,
                                 web_gl2_program_conglomerate_manager,
-                                web_gl2_texture_framebuffer_manager,
                                 image_requester,
                                 resolution,
                                 force,
@@ -1145,7 +1141,6 @@ impl ElementTrait for Group {
                                 viewbox,
                                 context,
                                 web_gl2_program_conglomerate_manager,
-                                web_gl2_texture_framebuffer_manager,
                                 image_requester,
                                 resolution,
                                 stats,
@@ -1165,7 +1160,6 @@ impl ElementTrait for Group {
                     viewbox: &Viewbox,
                     context: &WebGl2RenderingContext, 
                     web_gl2_program_conglomerate_manager: &mut WebGl2programConglomerateManager,
-                    web_gl2_texture_framebuffer_manager: &mut WebGl2textureFramebufferManager,
                     image_requester: &mut ImageRequester,
                     resolution: &(u32, u32),
                     stats: &mut Stats,
@@ -1175,11 +1169,11 @@ impl ElementTrait for Group {
                     //draw bounding box top left and bottom right points
                         ElementManager::draw_dot(
                             &self.extremities.get_bounding_box().get_top_left(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_texture_framebuffer_manager, image_requester, resolution, stats
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution, stats
                         );
                         ElementManager::draw_dot(
                             &self.extremities.get_bounding_box().get_bottom_right(), 6.0 * mux, &Colour::new(0.0,1.0,1.0,0.5), 
-                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, web_gl2_texture_framebuffer_manager, image_requester, resolution, stats
+                            parent_clipping_polygon, heed_camera, viewbox, context, web_gl2_program_conglomerate_manager, image_requester, resolution, stats
                         );
                 }
 

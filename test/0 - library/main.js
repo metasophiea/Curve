@@ -42,14 +42,15 @@ _canvas_.layers.registerFunctionForLayer("library", function(){
                 // {{include:audioProcessing/audioWorket/7 - squareWaveGenerator.js}} //squareWaveGenerator
             //workshop - wasm
                 // {{include:audioProcessing/audioWorket/10 - squareWaveGenerator.js}} //squareWaveGenerator with wasm processor
-                {{include:audioProcessing/audioWorket/11 - bitcrusher.js}} //bitcrusher with wasm processor
+                // {{include:audioProcessing/audioWorket/3 - sigmoid.js}} //sigmoid with wasm processor
             //production - only_js
                 // {{include:audioProcessing/audioWorket/2 - amplitudeModifier.js}} //amplitudeModifier
-                // {{include:audioProcessing/audioWorket/3 - bitcrusher.js}} //bitcrusher
                 // {{include:audioProcessing/audioWorket/4 - momentaryAmplitudeMeter.js}} //momentaryAmplitudeMeter
                 // {{include:audioProcessing/audioWorket/6 - whiteNoiseGenerator.js}} //whiteNoiseGenerator
                 // {{include:audioProcessing/audioWorket/8 - lagProcessor.js}} //lagProcessor
                 // {{include:audioProcessing/audioWorket/9 - oscillator.js}} //oscillator
+            //production - wasm
+                // {{include:audioProcessing/audioWorket/11 - bitcrusher.js}} //bitcrusher with wasm processor
 
         // {{include:audioProcessing/1.js}} //frequency/amplitude measure rig
 

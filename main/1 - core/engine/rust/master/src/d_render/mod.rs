@@ -28,7 +28,6 @@
     };
     use crate::a_library::structure::{
         WebGl2programConglomerateManager,
-        WebGl2textureFramebufferManager,
         ImageRequester,
     };
     use crate::b_element::ElementManager;
@@ -56,7 +55,6 @@ pub struct Render {
     allow_frame_skipping: bool,
 
     web_gl2_program_conglomerate_manager: WebGl2programConglomerateManager,
-    web_gl2_texture_framebuffer_manager: WebGl2textureFramebufferManager,
     image_requester: ImageRequester,
 }
 impl Render {
@@ -75,9 +73,6 @@ impl Render {
         context.enable(WebGl2RenderingContext::BLEND);
         context.blend_func(WebGl2RenderingContext::ONE, WebGl2RenderingContext::ONE_MINUS_SRC_ALPHA);
 
-        let mut web_gl2_program_conglomerate_manager = WebGl2programConglomerateManager::new();
-        let web_gl2_texture_framebuffer_manager = WebGl2textureFramebufferManager::new(800, 600, 8, &context, &mut web_gl2_program_conglomerate_manager);
-
         Render {
             canvas: canvas,
             context: context,
@@ -91,8 +86,7 @@ impl Render {
 
             allow_frame_skipping: true,
 
-            web_gl2_program_conglomerate_manager: web_gl2_program_conglomerate_manager,
-            web_gl2_texture_framebuffer_manager: web_gl2_texture_framebuffer_manager,
+            web_gl2_program_conglomerate_manager: WebGl2programConglomerateManager::new(),
             image_requester: ImageRequester::new(),
         }
     }
@@ -114,7 +108,6 @@ impl Render {
 
             self.canvas.set_width( self.currentCanvasSize_width );
             self.canvas.set_height( self.currentCanvasSize_height );
-            self.web_gl2_texture_framebuffer_manager.update_dimensions(self.currentCanvasSize_width, self.currentCanvasSize_height);
 
             self.refresh_coordinates(worker);
         }
@@ -187,7 +180,6 @@ impl Render {
                     viewbox,
                     &self.context,
                     &mut self.web_gl2_program_conglomerate_manager,
-                    &mut self.web_gl2_texture_framebuffer_manager,
                     &mut self.image_requester,
                     &(self.currentCanvasSize_width, self.currentCanvasSize_height),
                     false,
@@ -234,8 +226,6 @@ impl Render {
         console_log!("│ allow_frame_skipping: {}", self.allow_frame_skipping);
         console_log!("│");
         self.web_gl2_program_conglomerate_manager._dump( Some("│ ") );
-        console_log!("│");
-        self.web_gl2_texture_framebuffer_manager._dump( Some("│ ") );
         console_log!("└────────────────────");
     }
 }

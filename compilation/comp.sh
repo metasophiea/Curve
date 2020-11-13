@@ -2,7 +2,7 @@
 
 #arguments
     compileLibraryAudioWasmList=()
-    productioncompileLibraryAudioWasmList=false
+    productionCompileLibraryAudioWasmList=false
 
     compileCoreWasm=false
     productionCoreWasm=false
@@ -39,7 +39,7 @@
                 compileLibraryAudioWasmList+=($(ls main/0\ -\ library/modules/audio/audioWorklet/workshop\ -\ wasm | grep -v "manifest.js"));
                  ((a--));
             ;;
-            -productioncompileLibraryAudioWasmList) productioncompileLibraryAudioWasmList=true; ((a--)); ;;
+            -productionCompileLibraryAudioWasmList) productionCompileLibraryAudioWasmList=true; ((a--)); ;;
 
             -compileCoreWasm) compileCoreWasm=true; ((a--)); ;;
             -productionCoreWasm) productionCoreWasm=true; ((a--)); ;;
@@ -62,9 +62,9 @@
             -testAndCoreEngineOnly) nameArray=('core_engine' 'test'); ((a--)); ;;
 
             -heavy) 
-                compileLibraryAudioWasmList=($(ls main/0\ -\ library/modules/audio/audioWorklet/production\ -\ wasm | grep -v "manifest.js"));
-                compileLibraryAudioWasmList+=($(ls main/0\ -\ library/modules/audio/audioWorklet/workshop\ -\ wasm | grep -v "manifest.js"));
-                productioncompileLibraryAudioWasmList=true;
+                compileLibraryAudioWasmList=($(ls main/0\ -\ library/modules/audio/audioWorklet/production\ -\ wasm | grep -v "manifest"));
+                compileLibraryAudioWasmList+=($(ls main/0\ -\ library/modules/audio/audioWorklet/workshop\ -\ wasm | grep -v "manifest"));
+                productionCompileLibraryAudioWasmList=true;
 
                 compileCoreWasm=true;
                 productionCoreWasm=true;
@@ -80,7 +80,7 @@
                 echo "-listLibraryAudioNames : print out all audio processing nodes that are available to be compiled"
                 echo "-compileLibraryAudioWasmList : select which audio processing nodes should be compiled"
                 echo "-compileAllLibraryAudioWasm : select all audio processing nodes to be compiled"
-                echo "-productioncompileLibraryAudioWasmList : compile audio processing nodes in production mode (or \"release\" mode)"
+                echo "-productionCompileLibraryAudioWasmList : compile audio processing nodes in production mode (or \"release\" mode)"
                 echo ""
                 echo "-compileCoreWasm : compile the wasm code in the core layer"
                 echo "-productionCoreWasm : compile the wasm code in the core layer in release mode"
@@ -124,7 +124,7 @@
 #rust code
     #library > audio
         if [ ${#compileLibraryAudioWasmList[@]} -ne 0 ]; then
-            if $productioncompileLibraryAudioWasmList; then
+            if $productionCompileLibraryAudioWasmList; then
                 echo ": compiling Library Audio WASM in production mode"
             else
                 echo ": compiling Library Audio WASM"
@@ -138,12 +138,16 @@
                 directoryToUse=workshop;
             fi
 
-            if $productioncompileLibraryAudioWasmList; then
-                "$dir"/../main/0\ -\ library/modules/audio/audioWorklet/$directoryToUse\ -\ wasm/$name/rust/comp.sh -production
-                cp "$dir"/../main/0\ -\ library/modules/audio/audioWorklet/$directoryToUse\ -\ wasm/$name/"$name"_production.wasm "$dir"/../docs/wasm/audio_processing/
+            if $productionCompileLibraryAudioWasmList; then
+                cd "$dir"/../main/0\ -\ library/modules/audio/audioWorklet/$directoryToUse\ -\ wasm/$name/rust/
+                cargo build --target wasm32-unknown-unknown --release
+                cd "$dir"
+                binaryen/bin/wasm-opt -Oz --strip-debug "$dir"/../main/0\ -\ library/modules/audio/audioWorklet/$directoryToUse\ -\ wasm/$name/rust/target/wasm32-unknown-unknown/release/$name.wasm -o "$dir"/../docs/wasm/audio_processing/$name.production.wasm
             else
-                "$dir"/../main/0\ -\ library/modules/audio/audioWorklet/$directoryToUse\ -\ wasm/$name/rust/comp.sh
-                cp "$dir"/../main/0\ -\ library/modules/audio/audioWorklet/$directoryToUse\ -\ wasm/$name/"$name"_development.wasm "$dir"/../docs/wasm/audio_processing/
+                cd "$dir"/../main/0\ -\ library/modules/audio/audioWorklet/$directoryToUse\ -\ wasm/$name/rust/
+                cargo build --target wasm32-unknown-unknown
+                cd "$dir"
+                cp "$dir"/../main/0\ -\ library/modules/audio/audioWorklet/$directoryToUse\ -\ wasm/$name/rust/target/wasm32-unknown-unknown/debug/$name.wasm "$dir"/../docs/wasm/audio_processing/$name.development.wasm
             fi
         done
         if [ ${#compileLibraryAudioWasmList[@]} -ne 0 ]; then
@@ -157,11 +161,11 @@
             if $productionCoreWasm; then
                 echo ":: compiling optimised version"
                 wasm-pack build --no-typescript --target no-modules
-                cp pkg/core_engine_bg.wasm "$dir"/../docs/wasm/core/core_engine_production.wasm
+                cp pkg/core_engine_bg.wasm "$dir"/../docs/wasm/core/core_engine.production.wasm
             else
                 echo ":: compiling regular version"
                 wasm-pack build --dev --no-typescript --target no-modules
-                cp pkg/core_engine_bg.wasm "$dir"/../docs/wasm/core/core_engine_development.wasm
+                cp pkg/core_engine_bg.wasm "$dir"/../docs/wasm/core/core_engine.development.wasm
             fi
             cd "$dir"
 
@@ -199,11 +203,11 @@
                     echo "  -> "$name".js"
                     awk '!/\/\/#development/' "$dir"/../docs/js/$name.js > "$dir"/../docs/js/$name.min.js
                 done
-            #tell core engine to use core_engine_production.wasm instead of core_engine_development.wasm (if its on the list)
+            #tell core engine to use core_engine.production.wasm instead of core_engine.development.wasm (if its on the list)
                 if [[ " ${nameArray[@]} " =~ "core_engine" ]]; then
-                    echo ":: telling core_engine.min.js to use core_engine_production.wasm instead of core_engine_development.wasm"
+                    echo ":: telling core_engine.min.js to use core_engine.production.wasm instead of core_engine.development.wasm"
                     echo "  -> core_engine.min.js"
-                    awk '{gsub("core_engine_development.wasm", "core_engine_production.wasm", $0); print}' "$dir"/../docs/js/core_engine.min.js > "$dir"/../docs/js/core_engine.min.tmp.js
+                    awk '{gsub("core_engine.development.wasm", "core_engine.production.wasm", $0); print}' "$dir"/../docs/js/core_engine.min.js > "$dir"/../docs/js/core_engine.min.tmp.js
                     mv "$dir"/../docs/js/core_engine.min.tmp.js "$dir"/../docs/js/core_engine.min.js
                 fi
             #tell core to use core_engine.min.js instead of core_engine.js
@@ -251,7 +255,7 @@
         for wasm_name in $(ls "$dir"/../docs/wasm/audio_processing); do
             echo " -> $wasm_name - $(ls -lh "$dir"/../docs/wasm/audio_processing/$wasm_name | awk '{ print $5}') - ($(date -r "$dir"/../docs/wasm/audio_processing/$wasm_name))"
             twiggy top "$dir"/../docs/wasm/audio_processing/$wasm_name > __tmp
-            head -n10 __tmp
+            head -n15 __tmp
             rm __tmp
             echo "";
         done
@@ -260,7 +264,7 @@
         for wasm_name in $(ls "$dir"/../docs/wasm/core); do
             echo " -> $wasm_name - $(ls -lh "$dir"/../docs/wasm/core/$wasm_name | awk '{ print $5}') - ($(date -r "$dir"/../docs/wasm/core/$wasm_name))"
             twiggy top "$dir"/../docs/wasm/core/$wasm_name > __tmp
-            head -n10 __tmp
+            head -n15 __tmp
             rm __tmp
             echo "";
         done

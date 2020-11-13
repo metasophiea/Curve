@@ -8,9 +8,7 @@ class nothing extends AudioWorkletProcessor{
         const output = outputs[0];
 
         for(let channel = 0; channel < input.length; channel++){
-            for(let a = 0; a < input[channel].length; a++){
-                output[channel][a] = input[channel][a];
-            }
+            output[channel].set(input[channel]);
         }
 
         return true;

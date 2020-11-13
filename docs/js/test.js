@@ -116,7 +116,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:12} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:13} };
             const library = this;
             
             const dev = {
@@ -3931,188 +3931,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             only_js:{
                                 list:[
                                     {
-                                        name:'amplitudeModifier',
-                                        worklet:new Blob([`
-                                            class amplitudeModifier extends AudioWorkletProcessor{
-                                                static get parameterDescriptors(){
-                                                    return [
-                                                        {
-                                                            name: 'invert',
-                                                            defaultValue: 0,
-                                                            minValue: 0,
-                                                            maxValue: 1,
-                                                            automationRate: 'k-rate',
-                                                        },{
-                                                            name: 'offset',
-                                                            defaultValue: 0,
-                                                            minValue: -10,
-                                                            maxValue: 10,
-                                                            automationRate: 'a-rate',
-                                                        },{
-                                                            name: 'divisor',
-                                                            defaultValue: 1,
-                                                            minValue: 1,
-                                                            maxValue: 16,
-                                                            automationRate: 'a-rate',
-                                                        },{
-                                                            name: 'ceiling',
-                                                            defaultValue: 10,
-                                                            minValue: -10,
-                                                            maxValue: 10,
-                                                            automationRate: 'a-rate',
-                                                        },{
-                                                            name: 'floor',
-                                                            defaultValue: -10,
-                                                            minValue: -10,
-                                                            maxValue: 10,
-                                                            automationRate: 'a-rate',
-                                                        }
-                                                    ];
-                                                }
-                                                
-                                                constructor(options){
-                                                    super(options);
-                                                }
-                                            
-                                                process(inputs, outputs, parameters){
-                                                    const input = inputs[0];
-                                                    const output = outputs[0];
-                                                    const sign = parameters.invert[0] == 1 ? -1 : 1;
-                                            
-                                                    const divisor_useFirstOnly = parameters.divisor.length == 1;
-                                                    const offset_useFirstOnly = parameters.offset.length == 1;
-                                                    const floor_useFirstOnly = parameters.floor.length == 1;
-                                                    const ceiling_useFirstOnly = parameters.ceiling.length == 1;
-                                            
-                                                    for(let channel = 0; channel < input.length; channel++){        
-                                                        for(let a = 0; a < input[channel].length; a++){
-                                                            const divisor = divisor_useFirstOnly ? parameters.divisor[0] : parameters.divisor[a];
-                                                            const offset = offset_useFirstOnly ? parameters.offset[0] : parameters.offset[a];
-                                                            const floor = floor_useFirstOnly ? parameters.floor[0] : parameters.floor[a];
-                                                            const ceiling = ceiling_useFirstOnly ? parameters.ceiling[0] : parameters.ceiling[a];
-                                            
-                                                            output[channel][a] = sign * (input[channel][a]/divisor) + offset;
-                                            
-                                                            if( output[channel][a] < floor ){
-                                                                output[channel][a] = floor;
-                                                            }else if( output[channel][a] > ceiling ){
-                                                                output[channel][a] = ceiling;
-                                                            }
-                                                        }
-                                                    }
-                                            
-                                                    return true;
-                                                }
-                                            }
-                                            registerProcessor('amplitudeModifier', amplitudeModifier);
-                                        `], { type: "text/javascript" }),
-                                        class:
-                                            class amplitudeModifier extends AudioWorkletNode{
-                                                constructor(context, options={}){
-                                                    options.numberOfInputs = 1;
-                                                    options.numberOfOutputs = 1;
-                                                    options.channelCount = 1;
-                                                    super(context, 'amplitudeModifier', options);
-                                            
-                                                    this._invert = false;
-                                                }
-                                            
-                                                get invert(){
-                                                    return this._invert;
-                                                }
-                                                set invert(value){
-                                                    this._invert = value;
-                                                    this.parameters.get('invert').setValueAtTime(this._invert?1:0,0);
-                                                }
-                                            
-                                                get offset(){
-                                                    return this.parameters.get('offset');
-                                                }
-                                                get divisor(){
-                                                    return this.parameters.get('divisor');
-                                                }
-                                                get ceiling(){
-                                                    return this.parameters.get('ceiling');
-                                                }
-                                                get floor(){
-                                                    return this.parameters.get('floor');
-                                                }
-                                            }
-                                        ,
-                                    },
-                                    {
-                                        name:'bitcrusher',
-                                        worklet:new Blob([`
-                                            class bitcrusher extends AudioWorkletProcessor{
-                                                static get parameterDescriptors(){
-                                                    return [
-                                                        {
-                                                            name: 'amplitudeResolution',
-                                                            defaultValue: 10,
-                                                            minValue: 1,
-                                                            maxValue: 128,
-                                                            automationRate: 'k-rate',
-                                                        },{
-                                                            name: 'sampleFrequency',
-                                                            defaultValue: 16,
-                                                            minValue: 1,
-                                                            maxValue: 128,
-                                                            automationRate: 'k-rate',
-                                                        }
-                                                    ];
-                                                }
-                                                
-                                                constructor(options){
-                                                    super(options);
-                                                }
-                                            
-                                                process(inputs, outputs, parameters){
-                                                    const input = inputs[0];
-                                                    const output = outputs[0];
-                                                    const amplitudeResolution = parameters.amplitudeResolution[0];
-                                                    const sampleFrequency = parameters.sampleFrequency[0];
-                                                
-                                                    for(let channel = 0; channel < input.length; channel++){    
-                                                        for(let a = 0; a < input[channel].length; a++){
-                                                            output[channel][a] = a%sampleFrequency == 0 ? Math.round(input[channel][a]*amplitudeResolution)/amplitudeResolution : output[channel][a-1];
-                                                        }
-                                                    }
-                                                    return true;
-                                                }
-                                            }
-                                            registerProcessor('bitcrusher', bitcrusher);
-                                        `], { type: "text/javascript" }),
-                                        class:
-                                            class bitcrusher extends AudioWorkletNode{
-                                                constructor(context, options={}){
-                                                    options.numberOfInputs = 1;
-                                                    options.numberOfOutputs = 1;
-                                                    options.channelCount = 1;
-                                                    super(context, 'bitcrusher', options);
-                                                    
-                                                    this._amplitudeResolution = 10;
-                                                    this._sampleFrequency = 16;
-                                                }
-                                            
-                                                get amplitudeResolution(){
-                                                    return this._amplitudeResolution;
-                                                }
-                                                set amplitudeResolution(value){
-                                                    this._amplitudeResolution = value;
-                                                    this.parameters.get('amplitudeResolution').setValueAtTime(this._amplitudeResolution,0);
-                                                }
-                                            
-                                                get sampleFrequency(){
-                                                    return this._sampleFrequency;
-                                                }
-                                                set sampleFrequency(value){
-                                                    this._sampleFrequency = value;
-                                                    this.parameters.get('sampleFrequency').setValueAtTime(this._sampleFrequency,0);
-                                                }
-                                            }
-                                        ,
-                                    },
-                                    {
                                         name:'momentaryAmplitudeMeter',
                                         worklet:new Blob([`
                                             class momentaryAmplitudeMeter extends AudioWorkletProcessor{
@@ -4340,72 +4158,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         ,
                                     },
                                     {
-                                        name:'sigmoid',
-                                        worklet:new Blob([`
-                                            class sigmoid extends AudioWorkletProcessor{
-                                                static get parameterDescriptors(){
-                                                    return [
-                                                        {
-                                                            name: 'gain',
-                                                            defaultValue: 1,
-                                                            minValue: 0,
-                                                            maxValue: 1,
-                                                            automationRate: 'a-rate',
-                                                        },
-                                                        {
-                                                            name: 'sharpness',
-                                                            defaultValue: 0,
-                                                            minValue: 0,
-                                                            maxValue: 1,
-                                                            automationRate: 'a-rate',
-                                                        }
-                                                    ];
-                                                }
-                                            
-                                                constructor(options){
-                                                    super(options);
-                                                }
-                                            
-                                                process(inputs, outputs, parameters){
-                                                    const input = inputs[0];
-                                                    const output = outputs[0];
-                                                    const gain_useFirstOnly = parameters.gain.length == 1;
-                                                    const sharpness_useFirstOnly = parameters.sharpness.length == 1;
-                                                
-                                                    for(let channel = 0; channel < input.length; channel++){
-                                                        const inputChannel = input[channel];
-                                                        const outputChannel = output[channel];
-                                                
-                                                        for(let a = 0; a < inputChannel.length; a++){
-                                                            const gain = gain_useFirstOnly ? parameters.gain[0] : parameters.gain[a];
-                                                            const sharpness = sharpness_useFirstOnly ? parameters.sharpness[0] : parameters.sharpness[a];
-                                                            outputChannel[a] = gain * ( inputChannel[a] / ( 1 - sharpness + sharpness*Math.abs(inputChannel[a]) ) );
-                                                        }
-                                                    }
-                                                    return true;
-                                                }
-                                            }
-                                            registerProcessor('sigmoid', sigmoid);
-                                        `], { type: "text/javascript" }),
-                                        class:
-                                            class sigmoid extends AudioWorkletNode{
-                                                constructor(context, options={}){
-                                                    options.numberOfInputs = 1;
-                                                    options.numberOfOutputs = 1;
-                                                    options.channelCount = 1;
-                                                    super(context, 'sigmoid', options);
-                                                }
-                                            
-                                                get gain(){
-                                                    return this.parameters.get('gain');
-                                                }
-                                                get sharpness(){
-                                                    return this.parameters.get('sharpness');
-                                                }
-                                            }
-                                        ,
-                                    },
-                                    {
                                         name:'lagProcessor',
                                         worklet:new Blob([`
                                             class lagProcessor extends AudioWorkletProcessor{
@@ -4627,9 +4379,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                     const output = outputs[0];
                                             
                                                     for(let channel = 0; channel < input.length; channel++){
-                                                        for(let a = 0; a < input[channel].length; a++){
-                                                            output[channel][a] = input[channel][a];
-                                                        }
+                                                        output[channel].set(input[channel]);
                                                     }
                                             
                                                     return true;
@@ -5261,76 +5011,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         ,
                                     },
                                     {
-                                        name:'streamAdder',
-                                        worklet:new Blob([`
-                                            class streamAdder extends AudioWorkletProcessor{
-                                                static get parameterDescriptors(){
-                                                    return [
-                                                        {
-                                                            name: 'mode',
-                                                            defaultValue: 0, // 0 - manual / 1 - automatic
-                                                            minValue: 0,
-                                                            maxValue: 1,
-                                                            automationRate: 'k-rate',
-                                                        },{
-                                                            name: 'mix',
-                                                            defaultValue: 0,
-                                                            minValue: 0,
-                                                            maxValue: 1,
-                                                            automationRate: 'a-rate',
-                                                        }
-                                                    ];
-                                                }
-                                                
-                                                constructor(options){
-                                                    super(options);
-                                                }
-                                            
-                                                process(inputs, outputs, parameters){
-                                                    const input_1 = inputs[0];
-                                                    const input_2 = inputs[1];
-                                                    const mixControl = inputs[2];
-                                                    const output = outputs[0];
-                                            
-                                                    const mix_useFirstOnly = parameters.mix.length == 1;
-                                            
-                                                    for(let channel = 0; channel < output.length; channel++){
-                                                        for(let a = 0; a < output[channel].length; a++){
-                                                            const mix = parameters.mode[0] == 0 ? (mix_useFirstOnly ? parameters.mix[0] : parameters.mix[a]) : (mixControl[channel][a]+1)/2;
-                                                            output[channel][a] = input_1[channel][a]*(1-mix) + input_2[channel][a]*mix;
-                                                        }
-                                                    }
-                                            
-                                                    return true;
-                                                }
-                                            }
-                                            registerProcessor('streamAdder', streamAdder);
-                                        `], { type: "text/javascript" }),
-                                        class:
-                                            class streamAdder extends AudioWorkletNode{
-                                                constructor(context, options={}){
-                                                    options.numberOfInputs = 3;
-                                                    options.numberOfOutputs = 1;
-                                                    options.channelCount = 1;
-                                                    super(context, 'streamAdder', options);
-                                            
-                                                    this._mode = false;
-                                                }
-                                            
-                                                get mode(){
-                                                    return this._mode;
-                                                }
-                                                set mode(value){
-                                                    this._mode = value;
-                                                    this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
-                                                }
-                                                get mix(){
-                                                    return this.parameters.get('mix');
-                                                }
-                                            }
-                                        ,
-                                    },
-                                    {
                                         name:'frequencyAmplitudeResponseAnalyser',
                                         worklet:new Blob([`
                                             // class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
@@ -5860,7 +5540,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     {
                                         name:'bitcrusher',
                                         worklet:new Blob([`
-                                            class bitcrusher_wasm extends AudioWorkletProcessor {
+                                            class bitcrusher extends AudioWorkletProcessor {
                                                 static get parameterDescriptors(){
                                                     return [
                                                         {
@@ -5890,11 +5570,11 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                                     self.wasm = result;
                                             
                                                                     self.inputFrame = {};
-                                                                    self.inputFrame.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                                                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
                                                                     self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
                                             
                                                                     self.outputFrame = {};
-                                                                    self.outputFrame.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
                                                                     self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
                                                                 });
                                                             break;
@@ -5913,8 +5593,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                         this.wasm.exports.process( 
                                                             parameters.amplitudeResolution[0],
                                                             parameters.sampleFrequency[0],
-                                                            this.inputFrame.pointer,
-                                                            this.outputFrame.pointer
                                                         );
                                                         output[channel].set(this.outputFrame.buffer);
                                                     }
@@ -5922,48 +5600,25 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                     return true;
                                                 }
                                             }
-                                            registerProcessor('bitcrusher_wasm', bitcrusher_wasm);
+                                            registerProcessor('bitcrusher', bitcrusher);
                                         `], { type: "text/javascript" }),
                                         class:
-                                            class bitcrusher_wasm extends AudioWorkletNode {
-                                                static wasm_url = 'wasm/audio_processing/bitcrusher_production.wasm';
-                                                // static wasm_url = 'wasm/audio_processing/bitcrusher_development.wasm';
+                                            class bitcrusher extends AudioWorkletNode {
+                                                static wasm_url = 'wasm/audio_processing/bitcrusher.production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/bitcrusher.development.wasm';
                                                 static fetch_promise;
-                                                static raw_file;
-                                                static arrayBuffer_wasm;
                                                 static compiled_wasm;
                                             
                                                 constructor(context, options={}){
                                                     options.numberOfInputs = 1;
                                                     options.numberOfOutputs = 1;
                                                     options.channelCount = 1;
-                                                    super(context, 'bitcrusher_wasm', options);
+                                                    super(context, 'bitcrusher', options);
                                                     
                                                     this._amplitudeResolution = 10;
                                                     this._sampleFrequency = 16;
                                             
-                                                    if(bitcrusher_wasm.compiled_wasm != undefined){
-                                                        this.port.postMessage({command:'loadWasm', 'load':bitcrusher_wasm.compiled_wasm});
-                                                    } else if(bitcrusher_wasm.fetch_promise == undefined){
-                                                        bitcrusher_wasm.fetch_promise = fetch(bitcrusher_wasm.wasm_url)
-                                                            .then(response => {
-                                                                bitcrusher_wasm.raw_file = response;
-                                                                return response.arrayBuffer();
-                                                            }).then(arrayBuffer => {
-                                                                bitcrusher_wasm.arrayBuffer_wasm = arrayBuffer;
-                                                                return WebAssembly.compile(arrayBuffer);
-                                                            }).then(module => {
-                                                                bitcrusher_wasm.compiled_wasm = module;
-                                                                this.port.postMessage({command:'loadWasm', 'load':bitcrusher_wasm.compiled_wasm});
-                                                            });
-                                                    } else {
-                                                        this.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
-                                                            if(bitcrusher_wasm.compiled_wasm != undefined){
-                                                                clearInterval(this.attemptSecondaryWasmLoadIntervalId);
-                                                                this.port.postMessage({command:'loadWasm', 'load':bitcrusher_wasm.compiled_wasm});
-                                                            }
-                                                        }, 100);
-                                                    }
+                                                    audio.audioWorklet.requestWasm(bitcrusher, this);
                                                 }
                                             
                                                 get amplitudeResolution(){
@@ -5980,6 +5635,370 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 set sampleFrequency(value){
                                                     this._sampleFrequency = value;
                                                     this.parameters.get('sampleFrequency').setValueAtTime(this._sampleFrequency,0);
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'sigmoid',
+                                        worklet:new Blob([`
+                                            class sigmoid extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'gain',
+                                                            defaultValue: 1,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        },
+                                                        {
+                                                            name: 'sharpness',
+                                                            defaultValue: 0,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                            
+                                                constructor(options){
+                                                    super(options);
+                                            		const self = this;
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        switch(event.data.command){
+                                                            case 'loadWasm':
+                                                                WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    self.wasm = result;
+                                            
+                                                                    self.inputFrame = {};
+                                                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                            
+                                                                    self.outputFrame = {};
+                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                            
+                                                                    self.gainBuffer = {};
+                                                                    self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
+                                                                    self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
+                                            
+                                                                    self.sharpnessBuffer = {};
+                                                                    self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
+                                                                    self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
+                                                                });
+                                                            break;
+                                                        }
+                                                    };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.wasm == undefined){ return true; }
+                                            
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                            
+                                                    const gain_useFirstOnly = parameters.gain.length == 1;
+                                                    const sharpness_useFirstOnly = parameters.sharpness.length == 1;
+                                                    this.gainBuffer.buffer.set(parameters.gain);
+                                                    this.sharpnessBuffer.buffer.set(parameters.sharpness);
+                                            
+                                                    for(let channel = 0; channel < input.length; channel++){
+                                                        this.inputFrame.buffer.set(input[channel]);
+                                                        this.wasm.exports.process(
+                                                            gain_useFirstOnly,
+                                                            sharpness_useFirstOnly,
+                                                        );
+                                                        output[channel].set(this.outputFrame.buffer);
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('sigmoid', sigmoid);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class sigmoid extends AudioWorkletNode{
+                                                static wasm_url = 'wasm/audio_processing/sigmoid.production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/sigmoid.development.wasm';
+                                                static fetch_promise;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'sigmoid', options);
+                                            
+                                                    audio.audioWorklet.requestWasm(sigmoid, this);
+                                                }
+                                            
+                                                get gain(){
+                                                    return this.parameters.get('gain');
+                                                }
+                                                get sharpness(){
+                                                    return this.parameters.get('sharpness');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'streamAdder',
+                                        worklet:new Blob([`
+                                            class streamAdder extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'mode',
+                                                            defaultValue: 0, // 0 - manual / 1 - automatic
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'mix',
+                                                            defaultValue: 0.5,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                                    const self = this;
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        switch(event.data.command){
+                                                            case 'loadWasm':
+                                                                WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    self.wasm = result;
+                                            
+                                                                    self.input1Frame = {};
+                                                                    self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                    self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                            
+                                                                    self.input2Frame = {};
+                                                                    self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                    self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                            
+                                                                    self.mixControlFrame = {};
+                                                                    self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
+                                                                    self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+                                            
+                                                                    self.outputFrame = {};
+                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                });
+                                                            break;
+                                                        }
+                                                    };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.wasm == undefined){ return true; }
+                                            
+                                                    const input_1 = inputs[0];
+                                                    const input_2 = inputs[1];
+                                                    const mixControl = inputs[2];
+                                                    const output = outputs[0];
+                                            
+                                                    const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
+                                            
+                                                    for(let channel = 0; channel < input_1.length; channel++){
+                                                        this.input1Frame.buffer.set(input_1[channel]);
+                                                        this.input2Frame.buffer.set(input_2[channel]);
+                                                        this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
+                                                        this.wasm.exports.process(
+                                                            mixControl_useFirstOnly
+                                                        );
+                                                        output[channel].set(this.outputFrame.buffer);
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('streamAdder', streamAdder);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class streamAdder extends AudioWorkletNode{
+                                                static wasm_url = 'wasm/audio_processing/stream_adder.production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/stream_adder.development.wasm';
+                                                static fetch_promise;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 3;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'streamAdder', options);
+                                            
+                                                    this._mode = false;
+                                            
+                                                    audio.audioWorklet.requestWasm(streamAdder, this);
+                                                }
+                                            
+                                                get mode(){
+                                                    return this._mode;
+                                                }
+                                                set mode(value){
+                                                    this._mode = value;
+                                                    this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
+                                                }
+                                                get mix(){
+                                                    return this.parameters.get('mix');
+                                                }
+                                            }
+                                        ,
+                                    },
+                                    {
+                                        name:'amplitudeModifier',
+                                        worklet:new Blob([`
+                                            class amplitudeModifier extends AudioWorkletProcessor{
+                                                static get parameterDescriptors(){
+                                                    return [
+                                                        {
+                                                            name: 'invert',
+                                                            defaultValue: 0,
+                                                            minValue: 0,
+                                                            maxValue: 1,
+                                                            automationRate: 'k-rate',
+                                                        },{
+                                                            name: 'offset',
+                                                            defaultValue: 0,
+                                                            minValue: -10,
+                                                            maxValue: 10,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'divisor',
+                                                            defaultValue: 1,
+                                                            minValue: 1,
+                                                            maxValue: 16,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'ceiling',
+                                                            defaultValue: 10,
+                                                            minValue: -10,
+                                                            maxValue: 10,
+                                                            automationRate: 'a-rate',
+                                                        },{
+                                                            name: 'floor',
+                                                            defaultValue: -10,
+                                                            minValue: -10,
+                                                            maxValue: 10,
+                                                            automationRate: 'a-rate',
+                                                        }
+                                                    ];
+                                                }
+                                                
+                                                constructor(options){
+                                                    super(options);
+                                            		const self = this;
+                                            
+                                                    this.port.onmessage = function(event){
+                                                        switch(event.data.command){
+                                                            case 'loadWasm':
+                                                                WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    self.wasm = result;
+                                            
+                                                                    self.inputFrame = {};
+                                                                    self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                    self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                            
+                                                                    self.outputFrame = {};
+                                                                    self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                            
+                                                                    self.divisorFrame = {};
+                                                                    self.divisorFrame.pointer = self.wasm.exports.get_divisor_pointer();
+                                                                    self.divisorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.divisorFrame.pointer, 128);
+                                                                    self.offsetFrame = {};
+                                                                    self.offsetFrame.pointer = self.wasm.exports.get_offset_pointer();
+                                                                    self.offsetFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.offsetFrame.pointer, 128);
+                                                                    self.floorFrame = {};
+                                                                    self.floorFrame.pointer = self.wasm.exports.get_floor_pointer();
+                                                                    self.floorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.floorFrame.pointer, 128);
+                                                                    self.ceilingFrame = {};
+                                                                    self.ceilingFrame.pointer = self.wasm.exports.get_ceiling_pointer();
+                                                                    self.ceilingFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.ceilingFrame.pointer, 128);
+                                                                });
+                                                            break;
+                                                        }
+                                                    };
+                                                }
+                                            
+                                                process(inputs, outputs, parameters){
+                                                    if(this.wasm == undefined){ return true; }
+                                            
+                                                    const input = inputs[0];
+                                                    const output = outputs[0];
+                                            
+                                                    const sign = parameters.invert[0] == 1 ? -1 : 1;
+                                                    const divisor_useFirstOnly = parameters.divisor.length == 1;
+                                                    const offset_useFirstOnly = parameters.offset.length == 1;
+                                                    const floor_useFirstOnly = parameters.floor.length == 1;
+                                                    const ceiling_useFirstOnly = parameters.ceiling.length == 1;
+                                            
+                                                    this.divisorFrame.buffer.set( divisor_useFirstOnly ? [parameters.divisor[0]] : parameters.divisor );
+                                                    this.offsetFrame.buffer.set( offset_useFirstOnly ? [parameters.offset[0]] : parameters.offset );
+                                                    this.floorFrame.buffer.set( floor_useFirstOnly ? [parameters.floor[0]] : parameters.floor );
+                                                    this.ceilingFrame.buffer.set( ceiling_useFirstOnly ? [parameters.ceiling[0]] : parameters.ceiling );
+                                            
+                                                    for(let channel = 0; channel < input.length; channel++){
+                                                        this.inputFrame.buffer.set(input[channel]);
+                                                        this.wasm.exports.process(
+                                                            sign,
+                                                            divisor_useFirstOnly,
+                                                            offset_useFirstOnly,
+                                                            floor_useFirstOnly,
+                                                            ceiling_useFirstOnly,
+                                                        );
+                                                        output[channel].set(this.outputFrame.buffer);
+                                                    }
+                                            
+                                                    return true;
+                                                }
+                                            }
+                                            registerProcessor('amplitudeModifier', amplitudeModifier);
+                                        `], { type: "text/javascript" }),
+                                        class:
+                                            class amplitudeModifier extends AudioWorkletNode{
+                                                static wasm_url = 'wasm/audio_processing/amplitude_modifier.production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/amplitude_modifier.development.wasm';
+                                                static fetch_promise;
+                                                static compiled_wasm;
+                                            
+                                                constructor(context, options={}){
+                                                    options.numberOfInputs = 1;
+                                                    options.numberOfOutputs = 1;
+                                                    options.channelCount = 1;
+                                                    super(context, 'amplitudeModifier', options);
+                                            
+                                                    this._invert = false;
+                                            
+                                                    audio.audioWorklet.requestWasm(amplitudeModifier, this);
+                                                }
+                                            
+                                                get invert(){
+                                                    return this._invert;
+                                                }
+                                                set invert(value){
+                                                    this._invert = value;
+                                                    this.parameters.get('invert').setValueAtTime(this._invert?1:0,0);
+                                                }
+                                            
+                                                get offset(){
+                                                    return this.parameters.get('offset');
+                                                }
+                                                get divisor(){
+                                                    return this.parameters.get('divisor');
+                                                }
+                                                get ceiling(){
+                                                    return this.parameters.get('ceiling');
+                                                }
+                                                get floor(){
+                                                    return this.parameters.get('floor');
                                                 }
                                             }
                                         ,
@@ -7223,10 +7242,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         `], { type: "text/javascript" }),
                                         class:
                                             class squareWaveGenerator_wasm extends AudioWorkletNode{
-                                                static wasm_url = 'wasm/audio_processing/squareWaveGenerator_production.wasm';
-                                                // static wasm_url = 'wasm/audio_processing/squareWaveGenerator_development.wasm';
-                                                static fetch_promise;
-                                                static raw_file;
+                                                static wasm_url = 'wasm/audio_processing/square_wave_generator.production.wasm';
+                                                // static wasm_url = 'wasm/audio_processing/square_wave_generator.development.wasm';
                                                 static arrayBuffer_wasm;
                                                 static compiled_wasm;
                                             
@@ -7236,28 +7253,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                     options.channelCount = 1;
                                                     super(context, 'squareWaveGenerator_wasm', options);
                                             
-                                                    if(squareWaveGenerator_wasm.compiled_wasm != undefined){
-                                                        this.port.postMessage({command:'loadWasm', 'load':gain.compiled_wasm});
-                                                    } else if(squareWaveGenerator_wasm.fetch_promise == undefined){
-                                                        squareWaveGenerator_wasm.fetch_promise = fetch(squareWaveGenerator_wasm.wasm_url)
-                                                            .then(response => {
-                                                                squareWaveGenerator_wasm.raw_file = response;
-                                                                return response.arrayBuffer();
-                                                            }).then(arrayBuffer => {
-                                                                squareWaveGenerator_wasm.arrayBuffer_wasm = arrayBuffer;
-                                                                return WebAssembly.compile(arrayBuffer);
-                                                            }).then(module => {
-                                                                squareWaveGenerator_wasm.compiled_wasm = module;
-                                                                this.port.postMessage({command:'loadWasm', 'load':squareWaveGenerator_wasm.compiled_wasm});
-                                                            });
-                                                    } else {
-                                                        this.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
-                                                            if(squareWaveGenerator_wasm.compiled_wasm != undefined){
-                                                                clearInterval(this.attemptSecondaryWasmLoadIntervalId);
-                                                                this.port.postMessage({command:'loadWasm', 'load':squareWaveGenerator_wasm.compiled_wasm});
-                                                            }
-                                                        }, 100);
-                                                    }
+                                                    audio.audioWorklet.requestWasm(squareWaveGenerator_wasm, this);
                                                 }
                                             
                                                 get frequency(){
@@ -7318,6 +7314,28 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     };
                     this.checkIfReady = function(){ return checkIfReady(); };
                     this.nowReady = function(){};
+                    this.requestWasm = function(class_self, instance_self){
+                        if(class_self.compiled_wasm != undefined){
+                            instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                        } else if(class_self.fetch_promise == undefined){
+                            class_self.fetch_promise = fetch(class_self.wasm_url)
+                                .then(response => {
+                                    return response.arrayBuffer();
+                                }).then(arrayBuffer => {
+                                    return WebAssembly.compile(arrayBuffer);
+                                }).then(module => {
+                                    class_self.compiled_wasm = module;
+                                    instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                                });
+                        } else {
+                            instance_self.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
+                                if(class_self.compiled_wasm != undefined){
+                                    clearInterval(instance_self.attemptSecondaryWasmLoadIntervalId);
+                                    instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                                }
+                            }, 100);
+                        }
+                    };
                 
                     Object.keys(worklets).forEach(developmentMode => { //production / workshop
                         Object.keys(worklets[developmentMode]).forEach(developmentType => { //only_js / wasm
@@ -24383,7 +24401,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("library");
         };
         _canvas_.core = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:06} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:13} };
         
             const core = this;
         
@@ -26579,7 +26597,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:12} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:13} };
             const interface = this;
         
             const dev = {
@@ -28594,7 +28612,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 divisor: 1,
                                 ceiling: 10,
                                 floor: -10,
-                                node: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.wasm.amplitudeModifier(context),
                             };
                 
                     //input/output node
@@ -28657,7 +28675,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             flow.streamAdder = {
                                 mode: false,
                                 mix: 1,
-                                node: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                                node: new _canvas_.library.audio.audioWorklet.production.wasm.streamAdder(context),
                             };
                 
                         flow.input_1.node.connect(flow.streamAdder.node, undefined, 0);
@@ -28695,7 +28713,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         flow.sigmoid = {
                             gain: 1,
                             sharpness: 0,
-                            node: new _canvas_.library.audio.audioWorklet.production.only_js.sigmoid(context),
+                            node: new _canvas_.library.audio.audioWorklet.production.wasm.sigmoid(context),
                         };
                 
                     //input/output node
@@ -56832,8 +56850,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         _canvas_.layers.registerFunctionForLayer("curve", function(){
             // _canvas_.core.render.frameRateLimit(10);
         
-            const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
-            // const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
+            // const bc = _canvas_.control.scene.addUnit(10,10,0,'bitcrusher','acousticresearch');
+            const am = _canvas_.control.scene.addUnit(10,10,0,'amplitude_modifier','acousticresearch');
             // const sa = _canvas_.control.scene.addUnit(10,10,0,'sigmoids_affecter','acousticresearch');
             // const lp = _canvas_.control.scene.addUnit(10,10,0,'lag_processor','acousticresearch');
             // const g = _canvas_.control.scene.addUnit(10,10,0,'gain','acousticresearch');

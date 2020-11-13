@@ -3,13 +3,13 @@ this.audioWorklet = new function(){
         production:{
             only_js:{
                 list:[
-                    {{include:production - only_js/manifest.js}}
+                    {{include:production - only_js/manifest}}
                 ],
                 readyCount:0,
             },
             wasm:{
                 list:[
-                    {{include:production - wasm/manifest.js}}
+                    {{include:production - wasm/manifest}}
                 ],
                 readyCount:0,
             },
@@ -17,13 +17,13 @@ this.audioWorklet = new function(){
         workshop:{
             only_js:{
                 list:[
-                    {{include:workshop - only_js/manifest.js}}
+                    {{include:workshop - only_js/manifest}}
                 ],
                 readyCount:0,
             },
             wasm:{
                 list:[
-                    {{include:workshop - wasm/manifest.js}}
+                    {{include:workshop - wasm/manifest}}
                 ],
                 readyCount:0,
             },
@@ -73,6 +73,28 @@ this.audioWorklet = new function(){
     };
     this.checkIfReady = function(){ return checkIfReady(); };
     this.nowReady = function(){};
+    this.requestWasm = function(class_self, instance_self){
+        if(class_self.compiled_wasm != undefined){
+            instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+        } else if(class_self.fetch_promise == undefined){
+            class_self.fetch_promise = fetch(class_self.wasm_url)
+                .then(response => {
+                    return response.arrayBuffer();
+                }).then(arrayBuffer => {
+                    return WebAssembly.compile(arrayBuffer);
+                }).then(module => {
+                    class_self.compiled_wasm = module;
+                    instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                });
+        } else {
+            instance_self.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
+                if(class_self.compiled_wasm != undefined){
+                    clearInterval(instance_self.attemptSecondaryWasmLoadIntervalId);
+                    instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                }
+            }, 100);
+        }
+    };
 
     Object.keys(worklets).forEach(developmentMode => { //production / workshop
         Object.keys(worklets[developmentMode]).forEach(developmentType => { //only_js / wasm

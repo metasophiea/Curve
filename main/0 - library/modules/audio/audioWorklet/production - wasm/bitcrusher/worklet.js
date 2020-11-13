@@ -1,4 +1,4 @@
-class bitcrusher_wasm extends AudioWorkletProcessor {
+class bitcrusher extends AudioWorkletProcessor {
     static get parameterDescriptors(){
         return [
             {
@@ -28,11 +28,11 @@ class bitcrusher_wasm extends AudioWorkletProcessor {
                         self.wasm = result;
 
                         self.inputFrame = {};
-                        self.inputFrame.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
                         self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
 
                         self.outputFrame = {};
-                        self.outputFrame.pointer = self.wasm.exports.alloc_128_f32_wasm_memory();
+                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
                         self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
                     });
                 break;
@@ -51,8 +51,6 @@ class bitcrusher_wasm extends AudioWorkletProcessor {
             this.wasm.exports.process( 
                 parameters.amplitudeResolution[0],
                 parameters.sampleFrequency[0],
-                this.inputFrame.pointer,
-                this.outputFrame.pointer
             );
             output[channel].set(this.outputFrame.buffer);
         }
@@ -60,4 +58,4 @@ class bitcrusher_wasm extends AudioWorkletProcessor {
         return true;
     }
 }
-registerProcessor('bitcrusher_wasm', bitcrusher_wasm);
+registerProcessor('bitcrusher', bitcrusher);

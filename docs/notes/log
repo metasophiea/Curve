@@ -1,4 +1,35 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-11-13
+  - did a little renaming of produced wasm files, so that now they are of the
+    format "name"."mode".wasm. So, for example, you can have
+    "core_engine.development.wasm"
+  - shifted audio worklet rust compilation code into the main comp.sh file, so
+    now there doesn't have to be comp.sh files in every "rust" directory of
+    these audio worklet things 
+  - simplified the way these new audio nodes request their wasm files, by
+    pulling that code out into the function
+    _canvas_.library.audio.audioWorklet.requestWasm. This removes repetitive
+    code and shrinks down the nodes nicely
+  - modified the bitcrusher to use a struct with lazy_static, which doubles
+    the size of the wasm file, but does mean that I don't have to use Vector
+    allocations and can just have static arrays defined upfront. I'm not sure
+    if it actually goes any faster, but it does remove some lines from the
+    processing code, and makes that a little simpler for me. You also don't
+    have to pass pointers back to the processing function either
+  - upgraded the sigmoid audio worklet to use wasm (upgrading the interface
+    circuit accordingly)
+  - removed all mention of the WebGl2textureFramebufferManager from the
+    system. The file for it is still there, and the system wasn't using this
+    code, but still an instance was being created and just passed around a
+    lot. There's still a lot of "framebuffer_active" values around though.
+    I'll just leave them for now. I've been watching the chrome debug output
+  - as the site has been crashing lately - and noticed errors related to
+    Framebuffers, so I figured I would just remove it, even if they weren't
+    actually in use..I don't think it's helped though
+  - upgraded the stream_adder and amplitude_modifier audio worklet to use
+    wasm (upgrading the interface circuits accordingly)
+    
+
 2020-11-12
   - rearranged how the audio nodes section of the library is layed out, and
     initialised on startup, all in prep for the new audio nodes that have wasm

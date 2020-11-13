@@ -6,7 +6,7 @@
 const communicationModule = new communicationModuleMaker(this,'core_engine');
 
 self.__getWorker = function(){ return self; };
-wasm_bindgen('/wasm/core/core_engine_development.wasm').then(r => {
+wasm_bindgen('/wasm/core/core_engine.development.wasm').then(r => {
     self.WASM = {};
     Object.entries(wasm_bindgen).forEach(item => {
         self.WASM[item[0]] = item[1];

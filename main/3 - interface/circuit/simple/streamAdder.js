@@ -27,7 +27,7 @@ this.streamAdder = function(
             flow.streamAdder = {
                 mode: false,
                 mix: 1,
-                node: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                node: new _canvas_.library.audio.audioWorklet.production.wasm.streamAdder(context),
             };
 
         flow.input_1.node.connect(flow.streamAdder.node, undefined, 0);

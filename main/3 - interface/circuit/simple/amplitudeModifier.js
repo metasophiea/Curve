@@ -14,7 +14,7 @@ this.amplitudeModifier = function(
                 divisor: 1,
                 ceiling: 10,
                 floor: -10,
-                node: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
+                node: new _canvas_.library.audio.audioWorklet.production.wasm.amplitudeModifier(context),
             };
 
     //input/output node

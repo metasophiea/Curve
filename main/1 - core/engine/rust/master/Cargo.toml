@@ -33,8 +33,6 @@ features = [
   'WebGlShader',
   'WebGlVertexArrayObject',
   'WebGlTexture',
-  'WebGlFramebuffer',
-  'WebGlRenderbuffer',
 ]
 
 [package.metadata.wasm-pack.profile.release]
