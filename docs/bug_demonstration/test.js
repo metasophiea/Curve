@@ -26566,7 +26566,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     canvas.requestUpdate();
                 });
         
-                console.log('bing');
             }, 10);
         });
         
