@@ -1,4 +1,19 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-11-15
+  - small modification to the image element in core, so that it now deals with
+    bitmaps and urls separately, and on initial creation, doesn't require the
+    url to be loaded (even if that url is blank) Thus stopping the need for a
+    double frame render to get the bitmap displayed
+
+
+2020-11-14
+  - upgraded the lag_processor audio worklet to use wasm (upgrading the 
+    interface circuit accordingly)
+  - upgraded the gain audio worklet to use wasm (upgrading the interface
+    circuit accordingly)
+  - fixed the import function for the stable_amplitude_generator
+
+
 2020-11-13
   - did a little renaming of produced wasm files, so that now they are of the
     format "name"."mode".wasm. So, for example, you can have
@@ -28,6 +43,8 @@
     actually in use..I don't think it's helped though
   - upgraded the stream_adder and amplitude_modifier audio worklet to use
     wasm (upgrading the interface circuits accordingly)
+  - slight change to the nothing audio node, now that I know that the .set
+    method exists
     
 
 2020-11-12

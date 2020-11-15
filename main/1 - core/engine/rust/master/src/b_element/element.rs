@@ -661,7 +661,7 @@ impl Engine {
 
     //universal attribute
         pub fn element__execute_method__set_unified_attribute( &mut self, id:usize, universal_attribute:js_sys::Object ) {
-            self.element_manager.execute_method__set_unified_attribute_from_js_sys_object( id, universal_attribute, &self.worker, self.viewport.get_viewbox());
+            self.element_manager.execute_method__set_unified_attribute_from_js_sys_object( id, universal_attribute, &self.worker, self.viewport.get_viewbox() );
         }
 
     //addressing

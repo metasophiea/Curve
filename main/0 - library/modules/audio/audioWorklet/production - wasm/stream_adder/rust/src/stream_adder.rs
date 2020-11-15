@@ -4,6 +4,7 @@ pub struct StreamAdder {
     mix_control_buffer: [f32; 128],
     output_buffer: [f32; 128],
 }
+
 impl StreamAdder {
     pub fn new() -> StreamAdder {
         StreamAdder {

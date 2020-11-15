@@ -43,7 +43,7 @@ this.gain = function(
             flow.gain = {
                 mode: false,
                 gain: 1,
-                node: new _canvas_.library.audio.audioWorklet.production.only_js.gain(context),
+                node: new _canvas_.library.audio.audioWorklet.production.wasm.gain(context),
             };
 
         flow.controlIn.node.connect(flow.gain.node, undefined, 1);

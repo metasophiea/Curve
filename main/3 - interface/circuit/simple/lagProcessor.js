@@ -2,7 +2,7 @@ this.lagProcessor = function(
     context
 ){
     //lagProcessorNode
-        const lagProcessorNode = new _canvas_.library.audio.audioWorklet.production.only_js.lagProcessor(context);
+        const lagProcessorNode = new _canvas_.library.audio.audioWorklet.production.wasm.lagProcessor(context);
 
     //input/output node
         this.in = function(){return lagProcessorNode;}

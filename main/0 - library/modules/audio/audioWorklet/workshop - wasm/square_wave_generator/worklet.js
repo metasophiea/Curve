@@ -24,7 +24,7 @@ class squareWaveGenerator_wasm extends AudioWorkletProcessor{
         this.port.onmessage = function(event){
             switch(event.data.command){
                 case 'loadWasm':
-                    WebAssembly.instantiate(event.data.load).then(result => {
+                    WebAssembly.instantiate(event.data.value).then(result => {
                         self.wasm = result;
 
                         self.outputFrame = {};

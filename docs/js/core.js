@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:13} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:14} };
                 const library = this;
                 
                 const dev = {
@@ -3875,196 +3875,6 @@
                                 only_js:{
                                     list:[
                                         {
-                                            name:'momentaryAmplitudeMeter',
-                                            worklet:new Blob([`
-                                                class momentaryAmplitudeMeter extends AudioWorkletProcessor{
-                                                    static get parameterDescriptors(){
-                                                        return [
-                                                            {
-                                                                name: 'active',
-                                                                defaultValue: 1, // 0 - off / 1 - on
-                                                                minValue: 0,
-                                                                maxValue: 1,
-                                                                automationRate: 'k-rate',
-                                                            },{
-                                                                name: 'fullSample',
-                                                                defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame since the last time a value was returned
-                                                                minValue: 0,
-                                                                maxValue: 1,
-                                                                automationRate: 'k-rate',
-                                                            },{
-                                                                name: 'updateMode',
-                                                                defaultValue: 0, // 0 - by timer / 1 - by request
-                                                                minValue: 0,
-                                                                maxValue: 1,
-                                                                automationRate: 'k-rate',
-                                                            },{
-                                                                name: 'updateDelay',
-                                                                defaultValue: 100,
-                                                                minValue: 1,
-                                                                maxValue: 1000,
-                                                                automationRate: 'k-rate',
-                                                            },{
-                                                                name: 'calculationMode',
-                                                                defaultValue: 3, //max, min, average, absMax, absMin, absAverage
-                                                                minValue: 0,
-                                                                maxValue: 5,
-                                                                automationRate: 'k-rate',
-                                                            }
-                                                        ];
-                                                    }
-                                                
-                                                    constructor(options){
-                                                        super(options);
-                                                        const self = this;
-                                                        this._lastUpdate = currentTime;
-                                                        this._dataArray = [];
-                                                        this._readingRequested = false;
-                                                        this._sync = false;
-                                                
-                                                        this.port.onmessage = function(event){
-                                                            if(event.data == 'sync'){
-                                                                self._sync = true;
-                                                            }
-                                                            if(event.data == 'readingRequest'){
-                                                                self._readingRequested = true;
-                                                            }
-                                                        };
-                                                        this.port.start();
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        const input = inputs[0];
-                                                        if(input.length == 0){ return true; }
-                                                
-                                                        const fullSample = parameters.fullSample[0];
-                                                        const updateDelay = parameters.updateDelay[0];
-                                                        const calculationMode = parameters.calculationMode[0];
-                                                
-                                                        if( parameters.active[0] == 0 ){ return true; }
-                                                
-                                                        if(fullSample){
-                                                            this._dataArray.push(...input[0]);
-                                                        }else{
-                                                            this._dataArray = new Array(...input[0]);
-                                                        }
-                                                
-                                                        if( 
-                                                            this._sync ||
-                                                            (parameters.updateMode[0] == 0 && (currentTime - this._lastUpdate > updateDelay/1000)) ||
-                                                            (parameters.updateMode[0] == 1 && this._readingRequested)
-                                                        ){
-                                                            this._sync = false;
-                                                            this._readingRequested = false;
-                                                            this._lastUpdate = currentTime;
-                                                
-                                                            switch(calculationMode[0]){
-                                                                case 0: default:
-                                                                    this.port.postMessage( Math.max(...this._dataArray) );
-                                                                break;
-                                                                case 1:
-                                                                    this.port.postMessage( Math.min(...this._dataArray) );
-                                                                break;
-                                                                case 2:
-                                                                    this.port.postMessage( this._dataArray.reduce((a,b) => a + b, 0) / this._dataArray.length );
-                                                                break;
-                                                                case 3:
-                                                                    this.port.postMessage( Math.max(...(this._dataArray).map(a => Math.abs(a)) ) );
-                                                                break;
-                                                                case 4:
-                                                                    this.port.postMessage( Math.min(...(this._dataArray).map(a => Math.abs(a)) ) );
-                                                                break;
-                                                                case 5:
-                                                                    this.port.postMessage( this._dataArray.map(a => Math.abs(a)).reduce((a,b) => a + b, 0) / this._dataArray.length );
-                                                                break;
-                                                            }
-                                                
-                                                            if(fullSample){
-                                                                this._dataArray = [];
-                                                            }
-                                                        }
-                                                
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('momentaryAmplitudeMeter', momentaryAmplitudeMeter);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class momentaryAmplitudeMeter extends AudioWorkletNode{
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 0;
-                                                        options.channelCount = 1;
-                                                        super(context, 'momentaryAmplitudeMeter', options);
-                                                
-                                                        const self = this;
-                                                
-                                                        this._active = true;
-                                                        this._fullSample = false;
-                                                        this._updateMode = 0;
-                                                        this._updateDelay = 100;
-                                                        this._calculationMode = 3;
-                                                
-                                                        this.reading = function(){};
-                                                        this.port.onmessage = function(event){
-                                                            try{
-                                                                self.reading(event.data);
-                                                            }catch(error){}
-                                                        };
-                                                        this.port.start();
-                                                
-                                                        this.requestReading = function(){
-                                                            this.port.postMessage('readingRequest');
-                                                        };
-                                                        this.sync = function(){
-                                                            this.port.postMessage('sync');
-                                                        };
-                                                    }
-                                                
-                                                
-                                                    get active(){
-                                                        return this._active;
-                                                    }
-                                                    set active(value){
-                                                        this._active = value;
-                                                        this.parameters.get('active').setValueAtTime(this._active?1:0,0);
-                                                    }
-                                                
-                                                    get fullSample(){
-                                                        return this._fullSample;
-                                                    }
-                                                    set fullSample(value){
-                                                        this._fullSample = value;
-                                                        this.parameters.get('fullSample').setValueAtTime(this._fullSample?1:0,0);
-                                                    }
-                                                
-                                                    get updateMode(){
-                                                        return this._updateMode;
-                                                    }
-                                                    set updateMode(value){
-                                                        this._updateMode = value;
-                                                        this.parameters.get('updateMode').setValueAtTime(this._updateMode,0);
-                                                    }
-                                                
-                                                    get updateDelay(){
-                                                        return this._updateDelay;
-                                                    }
-                                                    set updateDelay(value){
-                                                        this._updateDelay = value;
-                                                        this.parameters.get('updateDelay').setValueAtTime(this._updateDelay,0);
-                                                    }
-                                                
-                                                    get calculationMode(){
-                                                        return this._calculationMode;
-                                                    }
-                                                    set calculationMode(value){
-                                                        this._calculationMode = value;
-                                                        this.parameters.get('calculationMode').setValueAtTime(this._calculationMode,0);
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
                                             name:'whiteNoiseGenerator',
                                             worklet:new Blob([`
                                                 class whiteNoiseGenerator extends AudioWorkletProcessor{
@@ -4097,82 +3907,6 @@
                                                         options.numberOfOutputs = 1;
                                                         options.channelCount = 1;
                                                         super(context, 'whiteNoiseGenerator', options);
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
-                                            name:'lagProcessor',
-                                            worklet:new Blob([`
-                                                class lagProcessor extends AudioWorkletProcessor{
-                                                    static get parameterDescriptors(){
-                                                        return [{
-                                                                name: 'samples',
-                                                                defaultValue: 1,
-                                                                minValue: 1,
-                                                                maxValue: 100,
-                                                                automationRate: 'k-rate',
-                                                            }
-                                                        ];
-                                                    }
-                                                
-                                                    constructor(options){
-                                                        super(options);
-                                                        this._dataArrayWorkingIndex = 0;
-                                                        this._dataArray = [];
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
-                                                        const samples = parameters.samples[0];
-                                                        const _samplesMinusOne = samples-1;
-                                                
-                                                        if( samples != this._dataArray.length ){
-                                                            while( samples > this._dataArray.length ){
-                                                                this._dataArray.push(0);
-                                                            }
-                                                            while( samples < this._dataArray.length ){
-                                                                this._dataArray.pop();
-                                                            }
-                                                        }
-                                                        
-                                                        for(let channel = 0; channel < input.length; channel++){ 
-                                                            for(let a = 0; a < input[channel].length; a++){
-                                                                if(this._dataArrayWorkingIndex < _samplesMinusOne){
-                                                                    this._dataArrayWorkingIndex++;
-                                                                }else{
-                                                                    this._dataArrayWorkingIndex = 0;
-                                                                }
-                                                
-                                                                this._dataArray[this._dataArrayWorkingIndex] = input[channel][a];
-                                                                output[channel][a] = this._dataArray.reduce((a,b) => a + b) / samples;
-                                                                
-                                                            }
-                                                        }
-                                                        
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('lagProcessor', lagProcessor);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class lagProcessor extends AudioWorkletNode{
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'lagProcessor', options);
-                                                
-                                                        this._samples = 1;
-                                                    }
-                                                
-                                                    get samples(){
-                                                        return this._samples;
-                                                    }
-                                                    set samples(value){
-                                                        this._samples = Math.round(value);
-                                                        this.parameters.get('samples').setValueAtTime(this._samples,0);
                                                     }
                                                 }
                                             ,
@@ -4222,90 +3956,6 @@
                                                 
                                                     get amplitude(){
                                                         return this.parameters.get('amplitude');
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
-                                            name:'gain',
-                                            worklet:new Blob([`
-                                                class gain extends AudioWorkletProcessor{
-                                                    static get parameterDescriptors(){
-                                                        return [
-                                                            {
-                                                                name: 'mode',
-                                                                defaultValue: 0,
-                                                                minValue: 0,
-                                                                maxValue: 1,
-                                                                automationRate: 'k-rate',
-                                                            },{
-                                                                name: 'gain',
-                                                                defaultValue: 1,
-                                                                minValue: -100,
-                                                                maxValue: 100,
-                                                                automationRate: 'a-rate',
-                                                            }
-                                                        ];
-                                                    }
-                                                    
-                                                    constructor(options){
-                                                        super(options);
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        const input_1 = inputs[0];
-                                                        const input_2 = inputs[1];
-                                                        const output_1 = outputs[0];
-                                                
-                                                        if( parameters.mode[0] == 1 ){
-                                                            //automatic
-                                                            for(let channel = 0; channel < input_1.length; channel++){    
-                                                                for(let a = 0; a < output_1[channel].length; a++){
-                                                                    output_1[channel][a] = input_1[channel][a] * input_2[channel][a];
-                                                                }
-                                                            }
-                                                        }else{
-                                                            //manual
-                                                            if(parameters.gain.length == 1){
-                                                                for(let channel = 0; channel < input_1.length; channel++){        
-                                                                    for(let a = 0; a < input_1[channel].length; a++){
-                                                                        output_1[channel][a] = input_1[channel][a] * parameters.gain[0];
-                                                                    }
-                                                                }
-                                                            }else{
-                                                                for(let channel = 0; channel < input_1.length; channel++){        
-                                                                    for(let a = 0; a < input_1[channel].length; a++){
-                                                                        output_1[channel][a] = input_1[channel][a] * parameters.gain[a];
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('gain', gain);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class gain extends AudioWorkletNode{
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 2;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'gain', options);
-                                                
-                                                        this._mode = false;
-                                                    }
-                                                
-                                                    get mode(){
-                                                        return this._mode;
-                                                    }
-                                                    set mode(value){
-                                                        this._mode = value;
-                                                        this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
-                                                    }
-                                                    get gain(){
-                                                        return this.parameters.get('gain');
                                                     }
                                                 }
                                             ,
@@ -4950,6 +4600,196 @@
                                                     set phaseModulation_settings(value){
                                                         this._phaseModulation_settings = value;
                                                         this.port.postMessage({_phaseModulation_settings:value});
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                        {
+                                            name:'momentaryAmplitudeMeter',
+                                            worklet:new Blob([`
+                                                class momentaryAmplitudeMeter extends AudioWorkletProcessor{
+                                                    static get parameterDescriptors(){
+                                                        return [
+                                                            {
+                                                                name: 'active',
+                                                                defaultValue: 1, // 0 - off / 1 - on
+                                                                minValue: 0,
+                                                                maxValue: 1,
+                                                                automationRate: 'k-rate',
+                                                            },{
+                                                                name: 'fullSample',
+                                                                defaultValue: 0, // 0 - only use the current frame / 1 - collect and use all the data from every frame since the last time a value was returned
+                                                                minValue: 0,
+                                                                maxValue: 1,
+                                                                automationRate: 'k-rate',
+                                                            },{
+                                                                name: 'updateMode',
+                                                                defaultValue: 0, // 0 - by timer / 1 - by request
+                                                                minValue: 0,
+                                                                maxValue: 1,
+                                                                automationRate: 'k-rate',
+                                                            },{
+                                                                name: 'updateDelay',
+                                                                defaultValue: 100,
+                                                                minValue: 1,
+                                                                maxValue: 1000,
+                                                                automationRate: 'k-rate',
+                                                            },{
+                                                                name: 'calculationMode',
+                                                                defaultValue: 3, //max, min, average, absMax, absMin, absAverage
+                                                                minValue: 0,
+                                                                maxValue: 5,
+                                                                automationRate: 'k-rate',
+                                                            }
+                                                        ];
+                                                    }
+                                                
+                                                    constructor(options){
+                                                        super(options);
+                                                        const self = this;
+                                                        this._lastUpdate = currentTime;
+                                                        this._dataArray = [];
+                                                        this._readingRequested = false;
+                                                        this._sync = false;
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            if(event.data == 'sync'){
+                                                                self._sync = true;
+                                                            }
+                                                            if(event.data == 'readingRequest'){
+                                                                self._readingRequested = true;
+                                                            }
+                                                        };
+                                                        this.port.start();
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        const input = inputs[0];
+                                                        if(input.length == 0){ return true; }
+                                                
+                                                        const fullSample = parameters.fullSample[0];
+                                                        const updateDelay = parameters.updateDelay[0];
+                                                        const calculationMode = parameters.calculationMode[0];
+                                                
+                                                        if( parameters.active[0] == 0 ){ return true; }
+                                                
+                                                        if(fullSample){
+                                                            this._dataArray.push(...input[0]);
+                                                        }else{
+                                                            this._dataArray = new Array(...input[0]);
+                                                        }
+                                                
+                                                        if( 
+                                                            this._sync ||
+                                                            (parameters.updateMode[0] == 0 && (currentTime - this._lastUpdate > updateDelay/1000)) ||
+                                                            (parameters.updateMode[0] == 1 && this._readingRequested)
+                                                        ){
+                                                            this._sync = false;
+                                                            this._readingRequested = false;
+                                                            this._lastUpdate = currentTime;
+                                                
+                                                            switch(calculationMode[0]){
+                                                                case 0: default:
+                                                                    this.port.postMessage( Math.max(...this._dataArray) );
+                                                                break;
+                                                                case 1:
+                                                                    this.port.postMessage( Math.min(...this._dataArray) );
+                                                                break;
+                                                                case 2:
+                                                                    this.port.postMessage( this._dataArray.reduce((a,b) => a + b, 0) / this._dataArray.length );
+                                                                break;
+                                                                case 3:
+                                                                    this.port.postMessage( Math.max(...(this._dataArray).map(a => Math.abs(a)) ) );
+                                                                break;
+                                                                case 4:
+                                                                    this.port.postMessage( Math.min(...(this._dataArray).map(a => Math.abs(a)) ) );
+                                                                break;
+                                                                case 5:
+                                                                    this.port.postMessage( this._dataArray.map(a => Math.abs(a)).reduce((a,b) => a + b, 0) / this._dataArray.length );
+                                                                break;
+                                                            }
+                                                
+                                                            if(fullSample){
+                                                                this._dataArray = [];
+                                                            }
+                                                        }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('momentaryAmplitudeMeter', momentaryAmplitudeMeter);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class momentaryAmplitudeMeter extends AudioWorkletNode{
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 1;
+                                                        options.numberOfOutputs = 0;
+                                                        options.channelCount = 1;
+                                                        super(context, 'momentaryAmplitudeMeter', options);
+                                                
+                                                        const self = this;
+                                                
+                                                        this._active = true;
+                                                        this._fullSample = false;
+                                                        this._updateMode = 0;
+                                                        this._updateDelay = 100;
+                                                        this._calculationMode = 3;
+                                                
+                                                        this.reading = function(){};
+                                                        this.port.onmessage = function(event){
+                                                            try{
+                                                                self.reading(event.data);
+                                                            }catch(error){}
+                                                        };
+                                                        this.port.start();
+                                                
+                                                        this.requestReading = function(){
+                                                            this.port.postMessage('readingRequest');
+                                                        };
+                                                        this.sync = function(){
+                                                            this.port.postMessage('sync');
+                                                        };
+                                                    }
+                                                
+                                                
+                                                    get active(){
+                                                        return this._active;
+                                                    }
+                                                    set active(value){
+                                                        this._active = value;
+                                                        this.parameters.get('active').setValueAtTime(this._active?1:0,0);
+                                                    }
+                                                
+                                                    get fullSample(){
+                                                        return this._fullSample;
+                                                    }
+                                                    set fullSample(value){
+                                                        this._fullSample = value;
+                                                        this.parameters.get('fullSample').setValueAtTime(this._fullSample?1:0,0);
+                                                    }
+                                                
+                                                    get updateMode(){
+                                                        return this._updateMode;
+                                                    }
+                                                    set updateMode(value){
+                                                        this._updateMode = value;
+                                                        this.parameters.get('updateMode').setValueAtTime(this._updateMode,0);
+                                                    }
+                                                
+                                                    get updateDelay(){
+                                                        return this._updateDelay;
+                                                    }
+                                                    set updateDelay(value){
+                                                        this._updateDelay = value;
+                                                        this.parameters.get('updateDelay').setValueAtTime(this._updateDelay,0);
+                                                    }
+                                                
+                                                    get calculationMode(){
+                                                        return this._calculationMode;
+                                                    }
+                                                    set calculationMode(value){
+                                                        this._calculationMode = value;
+                                                        this.parameters.get('calculationMode').setValueAtTime(this._calculationMode,0);
                                                     }
                                                 }
                                             ,
@@ -5943,6 +5783,204 @@
                                                     }
                                                     get floor(){
                                                         return this.parameters.get('floor');
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                        {
+                                            name:'lagProcessor',
+                                            worklet:new Blob([`
+                                                class lagProcessor extends AudioWorkletProcessor{
+                                                    static get parameterDescriptors(){
+                                                        return [{
+                                                                name: 'samples',
+                                                                defaultValue: 1,
+                                                                minValue: 1,
+                                                                maxValue: 100,
+                                                                automationRate: 'k-rate',
+                                                            }
+                                                        ];
+                                                    }
+                                                
+                                                    constructor(options){
+                                                        super(options);
+                                                        this._dataArrayWorkingIndex = 0;
+                                                        this._dataArray = [];
+                                                        const self = this;
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                case 'loadWasm':
+                                                                    WebAssembly.instantiate(event.data.load).then(result => {
+                                                                        self.wasm = result;
+                                                
+                                                                        self.inputFrame = {};
+                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                        self.outputFrame = {};
+                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                    });
+                                                                break;
+                                                            }
+                                                        };
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        if(this.wasm == undefined){ return true; }
+                                                
+                                                        const input = inputs[0];
+                                                        const output = outputs[0];
+                                                        const samples = parameters.samples[0];
+                                                
+                                                        for(let channel = 0; channel < input.length; channel++){
+                                                            this.inputFrame.buffer.set(input[channel]);
+                                                            this.wasm.exports.process(samples);
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('lagProcessor', lagProcessor);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class lagProcessor extends AudioWorkletNode{
+                                                    static wasm_url = 'wasm/audio_processing/lag_processor.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/lag_processor.development.wasm';
+                                                    static fetch_promise;
+                                                    static compiled_wasm;
+                                                
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 1;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                                        super(context, 'lagProcessor', options);
+                                                
+                                                        this._samples = 1;
+                                                
+                                                        audio.audioWorklet.requestWasm(lagProcessor, this);
+                                                    }
+                                                
+                                                    get samples(){
+                                                        return this._samples;
+                                                    }
+                                                    set samples(value){
+                                                        this._samples = Math.round(value);
+                                                        this.parameters.get('samples').setValueAtTime(this._samples,0);
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                        {
+                                            name:'gain',
+                                            worklet:new Blob([`
+                                                class gain extends AudioWorkletProcessor{
+                                                    static get parameterDescriptors(){
+                                                        return [
+                                                            {
+                                                                name: 'mode',
+                                                                defaultValue: 0,
+                                                                minValue: 0,
+                                                                maxValue: 1,
+                                                                automationRate: 'k-rate',
+                                                            },{
+                                                                name: 'gain',
+                                                                defaultValue: 1,
+                                                                minValue: -100,
+                                                                maxValue: 100,
+                                                                automationRate: 'a-rate',
+                                                            }
+                                                        ];
+                                                    }
+                                                    
+                                                    constructor(options){
+                                                        super(options);
+                                                        const self = this;
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                case 'loadWasm':
+                                                                    WebAssembly.instantiate(event.data.load).then(result => {
+                                                                        self.wasm = result;
+                                                
+                                                                        self.input1Frame = {};
+                                                                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                
+                                                                        self.input2Frame = {};
+                                                                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                
+                                                                        self.outputFrame = {};
+                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                    });
+                                                                break;
+                                                            }
+                                                        };
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        if(this.wasm == undefined){ return true; }
+                                                
+                                                        const input_1 = inputs[0];
+                                                        const input_2 = inputs[1];
+                                                        const output = outputs[0];
+                                                
+                                                        if( parameters.mode[0] == 1 ){
+                                                            //automatic
+                                                            for(let channel = 0; channel < input_1.length; channel++){
+                                                                this.input1Frame.buffer.set(input_1[channel]);
+                                                                this.input2Frame.buffer.set(input_2[channel]);
+                                                                this.wasm.exports.process(false);
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
+                                                        } else {
+                                                            //manual
+                                                            const gain_useFirstOnly = parameters.gain.length == 1;
+                                                            this.input2Frame.buffer.set(parameters.gain);
+                                                
+                                                            for(let channel = 0; channel < input_1.length; channel++){
+                                                                this.input1Frame.buffer.set(input_1[channel]);
+                                                                this.wasm.exports.process(gain_useFirstOnly);
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
+                                                        }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('gain', gain);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class gain extends AudioWorkletNode{
+                                                    static wasm_url = 'wasm/audio_processing/gain.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/gain.development.wasm';
+                                                    static fetch_promise;
+                                                    static compiled_wasm;
+                                                
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 2;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                                        super(context, 'gain', options);
+                                                
+                                                        this._mode = false;
+                                                
+                                                        audio.audioWorklet.requestWasm(gain, this);
+                                                    }
+                                                
+                                                    get mode(){
+                                                        return this._mode;
+                                                    }
+                                                    set mode(value){
+                                                        this._mode = value;
+                                                        this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
+                                                    }
+                                                    get gain(){
+                                                        return this.parameters.get('gain');
                                                     }
                                                 }
                                             ,

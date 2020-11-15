@@ -20,13 +20,13 @@
         case ${!a} in
             -listLibraryAudioNames)
                 echo "production >"
-                production_array=($(ls main/0\ -\ library/modules/audio/audioWorklet/production\ -\ wasm | grep -v "manifest.js"));
+                production_array=($(ls main/0\ -\ library/modules/audio/audioWorklet/production\ -\ wasm | grep -v "manifest"));
                 for name in ${production_array[@]}; do
                     printf " - $name\n";
                 done
 
                 echo "workshop >"
-                workshop_array=($(ls main/0\ -\ library/modules/audio/audioWorklet/workshop\ -\ wasm | grep -v "manifest.js"));
+                workshop_array=($(ls main/0\ -\ library/modules/audio/audioWorklet/workshop\ -\ wasm | grep -v "manifest"));
                 for name in ${workshop_array[@]}; do
                     printf " - $name\n";
                 done

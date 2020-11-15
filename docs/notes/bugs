@@ -10,6 +10,7 @@
 [2020-02-05:1] the active area of image-based dials, stretches beyond the circle to the entire square image of the handle. Same problem with round buttons, probably could be solved with covers, though also a new round image element.
 [2020-03-01:1] sometimes the mouse pointer doesn't change back to normal after leaving the waveform workspace pin thing
 [2020-10-16:1] looping paths just don't work
+[2020-11-14:1] (probably since wasm was added) the webpage crashes sometimes. 
 
 fixed:
     [XXXX-XX-XX:1] moving groups of units around, doesn't work how you think it should when one of them collides with something (sorta?)

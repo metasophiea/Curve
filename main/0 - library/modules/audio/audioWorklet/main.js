@@ -75,7 +75,7 @@ this.audioWorklet = new function(){
     this.nowReady = function(){};
     this.requestWasm = function(class_self, instance_self){
         if(class_self.compiled_wasm != undefined){
-            instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+            instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
         } else if(class_self.fetch_promise == undefined){
             class_self.fetch_promise = fetch(class_self.wasm_url)
                 .then(response => {
@@ -84,13 +84,13 @@ this.audioWorklet = new function(){
                     return WebAssembly.compile(arrayBuffer);
                 }).then(module => {
                     class_self.compiled_wasm = module;
-                    instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                    instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
                 });
         } else {
             instance_self.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
                 if(class_self.compiled_wasm != undefined){
                     clearInterval(instance_self.attemptSecondaryWasmLoadIntervalId);
-                    instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                    instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
                 }
             }, 100);
         }

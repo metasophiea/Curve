@@ -1,0 +1,14 @@
+//for super basic logging
+    //js
+    const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
+    const importObject = {
+        env: {
+            debug_: debug,
+        },
+    };
+
+    //rust
+    extern "C" {
+        pub fn debug_(id: i32, v1: f32);
+    }
+    pub fn debug(id: i32, v1: f32) { unsafe { debug_(id, v1) } }

@@ -8,6 +8,16 @@
         ImageBitmap,
     };
 
+    // use wasm_bindgen::prelude::*;
+    // #[wasm_bindgen]
+    // extern "C" {
+    //     #[wasm_bindgen(js_namespace = console)]
+    //     fn log(a:&str);
+    // }
+    // macro_rules! console_log {
+    //     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+    // }
+
 //core
     use crate::a_library::{
         data_type::{
@@ -206,6 +216,7 @@ impl Image {
             pub fn set_url(&mut self, new:String, _viewbox:&Viewbox) {
                 self.url = new;
                 self.url_changed = true;
+                self.bitmap = None;
                 self.request_render();
             }
             pub fn get_bitmap(&self) -> &Option<ImageBitmap> { &self.bitmap }
@@ -381,32 +392,36 @@ impl ElementTrait for Image {
                     );
 
                 //texture
-                    if self.url_changed {
-                        if !image_requester.is_image_loaded(&self.url) {
-                            image_requester.request_image(&self.url, false);
-                            if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::ImageDataNotLoaded); }
-                            return true;
-                        } else if web_gl2_program_conglomerate_manager.program_is_loaded(self.element_type) {
-                            self.texture_index = web_gl2_program_conglomerate_manager.update_texture(
-                                &context,
-                                self.element_type,
-                                &self.url,
-                                image_requester.get_image_data(&self.url).unwrap(),
-                                false,
-                            );
-                            self.url_changed = false;
+                    //new
+                        if self.bitmap.is_some() {
+                            if self.bitmap_changed {
+                                self.texture_index = web_gl2_program_conglomerate_manager.update_texture(
+                                    &context,
+                                    self.element_type,
+                                    &format!("{}:internal_bitmap",self.id),
+                                    self.bitmap.as_ref().unwrap(),
+                                    true,
+                                );
+                                self.bitmap_changed = false;
+                            }
+                        } else {
+                            if self.url_changed {
+                                if !image_requester.is_image_loaded(&self.url) {
+                                    image_requester.request_image(&self.url, false);
+                                    if stats.get_active() { stats.element_render_decision_register_info(self.get_id(), self.get_element_type(), RenderDecision::ImageDataNotLoaded); }
+                                    return true;
+                                } else if web_gl2_program_conglomerate_manager.program_is_loaded(self.element_type) {
+                                    self.texture_index = web_gl2_program_conglomerate_manager.update_texture(
+                                        &context,
+                                        self.element_type,
+                                        &self.url,
+                                        image_requester.get_image_data(&self.url).unwrap(),
+                                        false,
+                                    );
+                                    self.url_changed = false;
+                                }
+                            }
                         }
-                    }
-                    if self.bitmap_changed {
-                        self.texture_index = web_gl2_program_conglomerate_manager.update_texture(
-                            &context,
-                            self.element_type,
-                            &format!("{}:internal_bitmap",self.id),
-                            self.bitmap.as_ref().unwrap(),
-                            true,
-                        );
-                        self.bitmap_changed = false;
-                    }
 
                 //determine which offset to use
                     let working_offset = match offset {

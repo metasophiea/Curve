@@ -42,6 +42,7 @@ _canvas_.layers.registerFunctionForLayer("library", function(){
                 // {{include:audioProcessing/audioWorket/7 - squareWaveGenerator.js}} //squareWaveGenerator
             //workshop - wasm
                 // {{include:audioProcessing/audioWorket/10 - squareWaveGenerator.js}} //squareWaveGenerator with wasm processor
+                {{include:audioProcessing/audioWorket/12 - simple_oscillator.js}} //simplistic sine-wave oscillator
                 // {{include:audioProcessing/audioWorket/3 - sigmoid.js}} //sigmoid with wasm processor
             //production - only_js
                 // {{include:audioProcessing/audioWorket/2 - amplitudeModifier.js}} //amplitudeModifier

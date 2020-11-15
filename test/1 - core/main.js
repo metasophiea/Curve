@@ -21,8 +21,9 @@
 // {{include:18.js}} //lots of different images
 // {{include:19.js}} //stress test
 // {{include:20.js}} //deep removal / shifting test
-{{include:21.js}} //heedCamera test
+// {{include:21.js}} //heedCamera test
 // {{include:22.js}} //framebuffers
 // {{include:23.js}} //sub framebuffers
+{{include:24.js}} //much usage of the canvas
 
 // {{include:bugs.js}}

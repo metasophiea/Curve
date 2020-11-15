@@ -81,7 +81,7 @@ this['stable_amplitude_generator'] = function(name,x,y,angle){
             return JSON.parse(JSON.stringify(state));
         };
         object.importData = function(data){
-            object.elements.dial_continuous_image.gain.set( data.amplitude_dial );
+            object.elements.dial_continuous_image.amplitude.set( data.amplitude_dial );
         };
         
     return object;
