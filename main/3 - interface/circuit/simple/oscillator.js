@@ -43,7 +43,7 @@ this.oscillator = function(
         this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
 
     //controls
-        //performace
+        //performance
             this.start = function(){
                 flow.oscillator.node.start();
             };

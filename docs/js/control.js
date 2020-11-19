@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:14} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:19} };
                 const library = this;
                 
                 const dev = {
@@ -3875,6 +3875,528 @@
                                 only_js:{
                                     list:[
                                         {
+                                            name:'frequencyAmplitudeResponseAnalyser',
+                                            worklet:new Blob([`
+                                                // class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
+                                                //     static twoPI = Math.PI*2;
+                                                
+                                                //     static get parameterDescriptors(){
+                                                //         return [];
+                                                //     }
+                                                
+                                                //     #state = {
+                                                //         signalGeneratorGain:1,
+                                                //         waveform:0,
+                                                //         dutyCycle:0.5,
+                                                //         frequency:{
+                                                //             current:100,
+                                                //             range:{ start:100, end:1000 },
+                                                //             stepSize:10,
+                                                //             timePerStep:0.005
+                                                //         },
+                                                //         responseData: [],
+                                                //     };
+                                                //     #wavePosition = 0;
+                                                //     #lastUpdate = 0;
+                                                //     #start = false;
+                                                //     #active = false;
+                                                //     #stepData = [];
+                                                
+                                                //     constructor(options){
+                                                //         super(options);
+                                                //         const self = this;
+                                                
+                                                //         this.port.onmessage = function(event){
+                                                //             if(event.data == 'stop'){
+                                                //                 self._active = false;
+                                                //                 return;
+                                                //             }
+                                                
+                                                //             if(self._active){ return; }
+                                                
+                                                //             if(event.data == 'start'){
+                                                //                 self._start = true;
+                                                //                 self._active = true;
+                                                //                 return;
+                                                //             }
+                                                //             if(event.data == 'clear'){
+                                                //                 this._state.responseData = [];
+                                                //                 this._stepData = [];
+                                                //                 this._wavePosition = 0;
+                                                //                 return;
+                                                //             }
+                                                
+                                                //             Object.entries(event.data).forEach(([key,value]) => {
+                                                //                 switch(key){
+                                                //                     case 'waveform': self._state.waveform = value; break;
+                                                //                     case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
+                                                //                     case 'dutyCycle': self._state.dutyCycle = value; break;
+                                                
+                                                //                     case 'range.start': self._state.frequency.range.start = value; break;
+                                                //                     case 'range.end': self._state.frequency.range.end = value; break;
+                                                //                     case 'stepSize': self._state.frequency.stepSize = value; break;
+                                                //                     case 'timePerStep': self._state.frequency.timePerStep = value; break;
+                                                //                 }
+                                                //             });
+                                                //         };
+                                                //         this.port.start();
+                                                //     }
+                                                
+                                                //     process(inputs, outputs, parameters){
+                                                //         if(!this._active){ return true; }
+                                                
+                                                //         if(this._start){
+                                                //             this._state.frequency.current = this._state.frequency.range.start;
+                                                //             this._start = false;
+                                                //             this._lastUpdate = currentTime;
+                                                //         }
+                                                
+                                                        
+                                                
+                                                //         //generator
+                                                //             const output = outputs[0];
+                                                
+                                                //             const gain = this._state.signalGeneratorGain;
+                                                //             const frequency = this._state.frequency.current;
+                                                //             const dutyCycle = this._state.frequency.dutyCycle;
+                                                
+                                                //             for(let channel = 0; channel < output.length; channel++){
+                                                //                 for(let a = 0; a < output[channel].length; a++){
+                                                
+                                                //                     this._wavePosition += frequency/sampleRate;
+                                                //                     const localWavePosition = this._wavePosition % 1;
+                                                
+                                                //                     switch(this._state.waveform){
+                                                //                         case 0: //sin
+                                                //                             output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
+                                                //                         break;
+                                                //                         case 1: //square
+                                                //                             output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                                //                         break;
+                                                //                         case 2: //triangle
+                                                //                             if(localWavePosition < dutyCycle/2){
+                                                //                                 output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                                //                             }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                //                                 output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                                //                             }else{
+                                                //                                 output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                                //                             }
+                                                //                         break;
+                                                //                     }
+                                                //                 }
+                                                //             }
+                                                
+                                                //         //collector
+                                                //             const input = inputs[0];
+                                                //             this._stepData.push(...input[0]);
+                                                            
+                                                
+                                                
+                                                //         if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
+                                                //             this._lastUpdate = currentTime;
+                                                
+                                                //             const result = {
+                                                //                 frequency:this._state.frequency.current,
+                                                //                 response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
+                                                //             };
+                                                //             this.port.postMessage({ onValue:result });
+                                                //             this._state.responseData.push(result);
+                                                //             this._stepData = [];
+                                                
+                                                //             this._state.frequency.current += this._state.frequency.stepSize;
+                                                //             if( this._state.frequency.current > this._state.frequency.range.end ){
+                                                //                 this.port.postMessage({ onCompletion:this._state.responseData });
+                                                //                 this._active = false;
+                                                //             }
+                                                //         }
+                                                
+                                                //         return true;
+                                                //     }
+                                                // }
+                                                // registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
+                                                    static twoPI = Math.PI*2;
+                                                
+                                                    static get parameterDescriptors(){
+                                                        return [];
+                                                    }
+                                                
+                                                    constructor(options){
+                                                        super(options);
+                                                        const self = this;
+                                                
+                                                        this._state = {
+                                                            signalGeneratorGain:1,
+                                                            waveform:'sine',
+                                                            dutyCycle:0.5,
+                                                            frequency:{
+                                                                current:100,
+                                                                range:{ start:100, end:1000 },
+                                                                stepSize:10,
+                                                                timePerStep:0.005
+                                                            },
+                                                            responseData: [],
+                                                        };
+                                                        this._wavePosition = 0;
+                                                        this._lastUpdate = 0;
+                                                        this._start = false;
+                                                        this._active = false;
+                                                        this._stepData = [];
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            if(event.data == 'stop'){
+                                                                self.port.postMessage({ onCompletion:self._state.responseData });
+                                                                self._active = false;
+                                                                return;
+                                                            }
+                                                
+                                                            if(self._active){ return; }
+                                                
+                                                            if(event.data == 'start'){
+                                                                self._start = true;
+                                                                self._active = true;
+                                                                return;
+                                                            }
+                                                            if(event.data == 'clear'){
+                                                                self._state.responseData = [];
+                                                                self._stepData = [];
+                                                                self._wavePosition = 0;
+                                                                return;
+                                                            }
+                                                
+                                                            Object.entries(event.data).forEach(([key,value]) => {
+                                                                switch(key){
+                                                                    case 'waveform': self._state.waveform = value; break;
+                                                                    case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
+                                                                    case 'dutyCycle': self._state.dutyCycle = value; break;
+                                                
+                                                                    case 'range.start': self._state.frequency.range.start = value; break;
+                                                                    case 'range.end': self._state.frequency.range.end = value; break;
+                                                                    case 'stepSize': self._state.frequency.stepSize = value; break;
+                                                                    case 'timePerStep': self._state.frequency.timePerStep = value; break;
+                                                                }
+                                                            });
+                                                        };
+                                                        this.port.start();
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        if(!this._active){ return true; }
+                                                
+                                                        if(this._start){
+                                                            this._state.frequency.current = this._state.frequency.range.start;
+                                                            this._start = false;
+                                                            this._lastUpdate = currentTime;
+                                                        }
+                                                
+                                                        
+                                                
+                                                        //generator
+                                                            const output = outputs[0];
+                                                
+                                                            const gain = this._state.signalGeneratorGain;
+                                                            const frequency = this._state.frequency.current;
+                                                            const dutyCycle = this._state.dutyCycle;
+                                                
+                                                            for(let channel = 0; channel < output.length; channel++){
+                                                                for(let a = 0; a < output[channel].length; a++){
+                                                
+                                                                    this._wavePosition += frequency/sampleRate;
+                                                                    const localWavePosition = this._wavePosition % 1;
+                                                
+                                                                    switch(this._state.waveform){
+                                                                        case 'sine':
+                                                                            output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
+                                                                        break;
+                                                                        case 'square':
+                                                                            output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
+                                                                        break;
+                                                                        case 'triangle':
+                                                                            if(localWavePosition < dutyCycle/2){
+                                                                                output[channel][a] = gain*(2*localWavePosition / dutyCycle);
+                                                                            }else if(localWavePosition >= 1 - dutyCycle/2){
+                                                                                output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
+                                                                            }else{
+                                                                                output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
+                                                                            }
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+                                                
+                                                        //collector
+                                                            const input = inputs[0];
+                                                            this._stepData.push(...input[0]);
+                                                            
+                                                
+                                                
+                                                        if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
+                                                            this._lastUpdate = currentTime;
+                                                
+                                                            const result = {
+                                                                frequency:this._state.frequency.current,
+                                                                response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
+                                                            };
+                                                            this.port.postMessage({ onValue:result });
+                                                            this._state.responseData.push(result);
+                                                            this._stepData = [];
+                                                
+                                                            this._state.frequency.current += this._state.frequency.stepSize;
+                                                            if( this._state.frequency.current > this._state.frequency.range.end ){
+                                                                this.port.postMessage({ onCompletion:this._state.responseData });
+                                                                this._active = false;
+                                                            }
+                                                        }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                // class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
+                                                //     #state = {
+                                                //         waveform:0,
+                                                //         signalGeneratorGain:1,
+                                                //         dutyCycle:0.5,
+                                                //         frequency:{
+                                                //             range:{ start:100, end:1000 },
+                                                //             stepSize:10,
+                                                //             timePerStep:0.005,
+                                                //         },
+                                                //     };
+                                                
+                                                //     constructor(context, options={}){
+                                                //         options.numberOfInputs = 1;
+                                                //         options.numberOfOutputs = 1;
+                                                //         options.channelCount = 1;
+                                                //         super(context, 'frequencyAmplitudeResponseAnalyser', options);
+                                                //         const self = this;
+                                                
+                                                //         this.port.onmessage = function(event){
+                                                //             Object.entries(event.data).forEach(([key,value]) => {
+                                                //                 switch(key){
+                                                //                     case 'onValue':
+                                                //                         if(self.onValue != undefined){ self.onValue(value); }
+                                                //                     break;
+                                                //                     case 'onCompletion':
+                                                //                         if(self.onCompletion != undefined){ self.onCompletion(value); }
+                                                //                     break;
+                                                //                 }
+                                                //             });
+                                                //         };
+                                                
+                                                //         this.start = function(){
+                                                //             this.port.postMessage('start');
+                                                //         };
+                                                //         this.stop = function(){
+                                                //             this.port.postMessage('stop');
+                                                //         };
+                                                //         this.clear = function(){
+                                                //             this.port.postMessage('clear');
+                                                //         };
+                                                
+                                                //         this.onValue = function(){};
+                                                //         this.onCompletion = function(){};
+                                                //     }
+                                                
+                                                //     get waveform(){
+                                                //         return this._state.waveform;
+                                                //     }
+                                                //     set waveform(value){
+                                                //         this._state.waveform = value;
+                                                //         this.port.postMessage({waveform:value});
+                                                //     }
+                                                
+                                                //     get signalGeneratorGain(){
+                                                //         return this._state.signalGeneratorGain;
+                                                //     }
+                                                //     set signalGeneratorGain(value){
+                                                //         this._state.signalGeneratorGain = value;
+                                                //         this.port.postMessage({signalGeneratorGain:value});
+                                                //     }
+                                                
+                                                //     get dutyCycle(){
+                                                //         return this._state.dutyCycle;
+                                                //     }
+                                                //     set dutyCycle(value){
+                                                //         this._state.dutyCycle = value;
+                                                //         this.port.postMessage({dutyCycle:value});
+                                                //     }
+                                                
+                                                //     get range(){
+                                                //         return this._state.frequency.range;
+                                                //     }
+                                                //     set range(value){
+                                                //         if(value.start == undefined){
+                                                //             value.start = this._state.frequency.range.start;
+                                                //         }
+                                                //         if(value.end == undefined){
+                                                //             value.end = this._state.frequency.range.end;
+                                                //         }
+                                                
+                                                //         this._state.frequency.range = value;
+                                                //         this.port.postMessage({
+                                                //             'range.start':this._state.frequency.range.start,
+                                                //             'range.end':this._state.frequency.range.end,
+                                                //         });
+                                                //     }
+                                                
+                                                //     get stepSize(){ 
+                                                //         return this._state.frequency.stepSize;
+                                                //     }
+                                                //     set stepSize(value){
+                                                //         this._state.frequency.stepSize = value;
+                                                //         this.port.postMessage({stepSize:value});
+                                                //     }
+                                                
+                                                //     get timePerStep(){ 
+                                                //         return this._state.frequency.timePerStep;
+                                                //     }
+                                                //     set timePerStep(value){
+                                                //         this._state.frequency.timePerStep = value;
+                                                //         this.port.postMessage({timePerStep:value});
+                                                //     }
+                                                // }
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 1;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                                        super(context, 'frequencyAmplitudeResponseAnalyser', options);
+                                                        const self = this;
+                                                
+                                                        this._state = {
+                                                            waveform:'sine',
+                                                            signalGeneratorGain:1,
+                                                            dutyCycle:0.5,
+                                                            frequency:{
+                                                                range:{ start:100, end:1000 },
+                                                                stepSize:10,
+                                                                timePerStep:0.005,
+                                                            },
+                                                        };
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            Object.entries(event.data).forEach(([key,value]) => {
+                                                                switch(key){
+                                                                    case 'onValue':
+                                                                        if(self.onValue != undefined){ self.onValue(value); }
+                                                                    break;
+                                                                    case 'onCompletion':
+                                                                        if(self.onCompletion != undefined){ self.onCompletion(value); }
+                                                                    break;
+                                                                }
+                                                            });
+                                                        };
+                                                
+                                                        this.start = function(){
+                                                            this.port.postMessage('start');
+                                                        };
+                                                        this.stop = function(){
+                                                            this.port.postMessage('stop');
+                                                        };
+                                                        this.clear = function(){
+                                                            this.port.postMessage('clear');
+                                                        };
+                                                
+                                                        this.onValue = function(){};
+                                                        this.onCompletion = function(){};
+                                                    }
+                                                
+                                                    get waveform(){
+                                                        return this._state.waveform;
+                                                    }
+                                                    set waveform(value){
+                                                        this._state.waveform = value;
+                                                        this.port.postMessage({waveform:value});
+                                                    }
+                                                
+                                                    get signalGeneratorGain(){
+                                                        return this._state.signalGeneratorGain;
+                                                    }
+                                                    set signalGeneratorGain(value){
+                                                        this._state.signalGeneratorGain = value;
+                                                        this.port.postMessage({signalGeneratorGain:value});
+                                                    }
+                                                
+                                                    get dutyCycle(){
+                                                        return this._state.dutyCycle;
+                                                    }
+                                                    set dutyCycle(value){
+                                                        this._state.dutyCycle = value;
+                                                        this.port.postMessage({dutyCycle:value});
+                                                    }
+                                                
+                                                    get range(){
+                                                        return this._state.frequency.range;
+                                                    }
+                                                    set range(value){
+                                                        if(value.start == undefined){
+                                                            value.start = this._state.frequency.range.start;
+                                                        }
+                                                        if(value.end == undefined){
+                                                            value.end = this._state.frequency.range.end;
+                                                        }
+                                                
+                                                        this._state.frequency.range = value;
+                                                        this.port.postMessage({
+                                                            'range.start':this._state.frequency.range.start,
+                                                            'range.end':this._state.frequency.range.end,
+                                                        });
+                                                    }
+                                                
+                                                    get stepSize(){ 
+                                                        return this._state.frequency.stepSize;
+                                                    }
+                                                    set stepSize(value){
+                                                        this._state.frequency.stepSize = value;
+                                                        this.port.postMessage({stepSize:value});
+                                                    }
+                                                
+                                                    get timePerStep(){ 
+                                                        return this._state.frequency.timePerStep;
+                                                    }
+                                                    set timePerStep(value){
+                                                        this._state.frequency.timePerStep = value;
+                                                        this.port.postMessage({timePerStep:value});
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                        {
                                             name:'whiteNoiseGenerator',
                                             worklet:new Blob([`
                                                 class whiteNoiseGenerator extends AudioWorkletProcessor{
@@ -3956,38 +4478,6 @@
                                                 
                                                     get amplitude(){
                                                         return this.parameters.get('amplitude');
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
-                                            name:'nothing',
-                                            worklet:new Blob([`
-                                                class nothing extends AudioWorkletProcessor{
-                                                    constructor(options){
-                                                        super(options);
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
-                                                
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            output[channel].set(input[channel]);
-                                                        }
-                                                
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('nothing', nothing);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class nothing extends AudioWorkletNode{
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'nothing', options);
                                                     }
                                                 }
                                             ,
@@ -4605,6 +5095,38 @@
                                             ,
                                         },
                                         {
+                                            name:'nothing',
+                                            worklet:new Blob([`
+                                                class nothing extends AudioWorkletProcessor{
+                                                    constructor(options){
+                                                        super(options);
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        const input = inputs[0];
+                                                        const output = outputs[0];
+                                                
+                                                        for(let channel = 0; channel < input.length; channel++){
+                                                            output[channel].set(input[channel]);
+                                                        }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('nothing', nothing);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class nothing extends AudioWorkletNode{
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 1;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                                        super(context, 'nothing', options);
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                        {
                                             name:'momentaryAmplitudeMeter',
                                             worklet:new Blob([`
                                                 class momentaryAmplitudeMeter extends AudioWorkletProcessor{
@@ -4794,845 +5316,271 @@
                                                 }
                                             ,
                                         },
-                                        {
-                                            name:'frequencyAmplitudeResponseAnalyser',
-                                            worklet:new Blob([`
-                                                // class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
-                                                //     static twoPI = Math.PI*2;
-                                                
-                                                //     static get parameterDescriptors(){
-                                                //         return [];
-                                                //     }
-                                                
-                                                //     #state = {
-                                                //         signalGeneratorGain:1,
-                                                //         waveform:0,
-                                                //         dutyCycle:0.5,
-                                                //         frequency:{
-                                                //             current:100,
-                                                //             range:{ start:100, end:1000 },
-                                                //             stepSize:10,
-                                                //             timePerStep:0.005
-                                                //         },
-                                                //         responseData: [],
-                                                //     };
-                                                //     #wavePosition = 0;
-                                                //     #lastUpdate = 0;
-                                                //     #start = false;
-                                                //     #active = false;
-                                                //     #stepData = [];
-                                                
-                                                //     constructor(options){
-                                                //         super(options);
-                                                //         const self = this;
-                                                
-                                                //         this.port.onmessage = function(event){
-                                                //             if(event.data == 'stop'){
-                                                //                 self._active = false;
-                                                //                 return;
-                                                //             }
-                                                
-                                                //             if(self._active){ return; }
-                                                
-                                                //             if(event.data == 'start'){
-                                                //                 self._start = true;
-                                                //                 self._active = true;
-                                                //                 return;
-                                                //             }
-                                                //             if(event.data == 'clear'){
-                                                //                 this._state.responseData = [];
-                                                //                 this._stepData = [];
-                                                //                 this._wavePosition = 0;
-                                                //                 return;
-                                                //             }
-                                                
-                                                //             Object.entries(event.data).forEach(([key,value]) => {
-                                                //                 switch(key){
-                                                //                     case 'waveform': self._state.waveform = value; break;
-                                                //                     case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
-                                                //                     case 'dutyCycle': self._state.dutyCycle = value; break;
-                                                
-                                                //                     case 'range.start': self._state.frequency.range.start = value; break;
-                                                //                     case 'range.end': self._state.frequency.range.end = value; break;
-                                                //                     case 'stepSize': self._state.frequency.stepSize = value; break;
-                                                //                     case 'timePerStep': self._state.frequency.timePerStep = value; break;
-                                                //                 }
-                                                //             });
-                                                //         };
-                                                //         this.port.start();
-                                                //     }
-                                                
-                                                //     process(inputs, outputs, parameters){
-                                                //         if(!this._active){ return true; }
-                                                
-                                                //         if(this._start){
-                                                //             this._state.frequency.current = this._state.frequency.range.start;
-                                                //             this._start = false;
-                                                //             this._lastUpdate = currentTime;
-                                                //         }
-                                                
-                                                        
-                                                
-                                                //         //generator
-                                                //             const output = outputs[0];
-                                                
-                                                //             const gain = this._state.signalGeneratorGain;
-                                                //             const frequency = this._state.frequency.current;
-                                                //             const dutyCycle = this._state.frequency.dutyCycle;
-                                                
-                                                //             for(let channel = 0; channel < output.length; channel++){
-                                                //                 for(let a = 0; a < output[channel].length; a++){
-                                                
-                                                //                     this._wavePosition += frequency/sampleRate;
-                                                //                     const localWavePosition = this._wavePosition % 1;
-                                                
-                                                //                     switch(this._state.waveform){
-                                                //                         case 0: //sin
-                                                //                             output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
-                                                //                         break;
-                                                //                         case 1: //square
-                                                //                             output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
-                                                //                         break;
-                                                //                         case 2: //triangle
-                                                //                             if(localWavePosition < dutyCycle/2){
-                                                //                                 output[channel][a] = gain*(2*localWavePosition / dutyCycle);
-                                                //                             }else if(localWavePosition >= 1 - dutyCycle/2){
-                                                //                                 output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
-                                                //                             }else{
-                                                //                                 output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
-                                                //                             }
-                                                //                         break;
-                                                //                     }
-                                                //                 }
-                                                //             }
-                                                
-                                                //         //collector
-                                                //             const input = inputs[0];
-                                                //             this._stepData.push(...input[0]);
-                                                            
-                                                
-                                                
-                                                //         if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
-                                                //             this._lastUpdate = currentTime;
-                                                
-                                                //             const result = {
-                                                //                 frequency:this._state.frequency.current,
-                                                //                 response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
-                                                //             };
-                                                //             this.port.postMessage({ onValue:result });
-                                                //             this._state.responseData.push(result);
-                                                //             this._stepData = [];
-                                                
-                                                //             this._state.frequency.current += this._state.frequency.stepSize;
-                                                //             if( this._state.frequency.current > this._state.frequency.range.end ){
-                                                //                 this.port.postMessage({ onCompletion:this._state.responseData });
-                                                //                 this._active = false;
-                                                //             }
-                                                //         }
-                                                
-                                                //         return true;
-                                                //     }
-                                                // }
-                                                // registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                class frequencyAmplitudeResponseAnalyser extends AudioWorkletProcessor{
-                                                    static twoPI = Math.PI*2;
-                                                
-                                                    static get parameterDescriptors(){
-                                                        return [];
-                                                    }
-                                                
-                                                    constructor(options){
-                                                        super(options);
-                                                        const self = this;
-                                                
-                                                        this._state = {
-                                                            signalGeneratorGain:1,
-                                                            waveform:'sine',
-                                                            dutyCycle:0.5,
-                                                            frequency:{
-                                                                current:100,
-                                                                range:{ start:100, end:1000 },
-                                                                stepSize:10,
-                                                                timePerStep:0.005
-                                                            },
-                                                            responseData: [],
-                                                        };
-                                                        this._wavePosition = 0;
-                                                        this._lastUpdate = 0;
-                                                        this._start = false;
-                                                        this._active = false;
-                                                        this._stepData = [];
-                                                
-                                                        this.port.onmessage = function(event){
-                                                            if(event.data == 'stop'){
-                                                                self.port.postMessage({ onCompletion:self._state.responseData });
-                                                                self._active = false;
-                                                                return;
-                                                            }
-                                                
-                                                            if(self._active){ return; }
-                                                
-                                                            if(event.data == 'start'){
-                                                                self._start = true;
-                                                                self._active = true;
-                                                                return;
-                                                            }
-                                                            if(event.data == 'clear'){
-                                                                self._state.responseData = [];
-                                                                self._stepData = [];
-                                                                self._wavePosition = 0;
-                                                                return;
-                                                            }
-                                                
-                                                            Object.entries(event.data).forEach(([key,value]) => {
-                                                                switch(key){
-                                                                    case 'waveform': self._state.waveform = value; break;
-                                                                    case 'signalGeneratorGain': self._state.signalGeneratorGain = value; break;
-                                                                    case 'dutyCycle': self._state.dutyCycle = value; break;
-                                                
-                                                                    case 'range.start': self._state.frequency.range.start = value; break;
-                                                                    case 'range.end': self._state.frequency.range.end = value; break;
-                                                                    case 'stepSize': self._state.frequency.stepSize = value; break;
-                                                                    case 'timePerStep': self._state.frequency.timePerStep = value; break;
-                                                                }
-                                                            });
-                                                        };
-                                                        this.port.start();
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        if(!this._active){ return true; }
-                                                
-                                                        if(this._start){
-                                                            this._state.frequency.current = this._state.frequency.range.start;
-                                                            this._start = false;
-                                                            this._lastUpdate = currentTime;
-                                                        }
-                                                
-                                                        
-                                                
-                                                        //generator
-                                                            const output = outputs[0];
-                                                
-                                                            const gain = this._state.signalGeneratorGain;
-                                                            const frequency = this._state.frequency.current;
-                                                            const dutyCycle = this._state.dutyCycle;
-                                                
-                                                            for(let channel = 0; channel < output.length; channel++){
-                                                                for(let a = 0; a < output[channel].length; a++){
-                                                
-                                                                    this._wavePosition += frequency/sampleRate;
-                                                                    const localWavePosition = this._wavePosition % 1;
-                                                
-                                                                    switch(this._state.waveform){
-                                                                        case 'sine':
-                                                                            output[channel][a] = gain*Math.sin( localWavePosition * frequencyAmplitudeResponseAnalyser.twoPI );
-                                                                        break;
-                                                                        case 'square':
-                                                                            output[channel][a] = gain*(localWavePosition < dutyCycle ? 1 : -1);
-                                                                        break;
-                                                                        case 'triangle':
-                                                                            if(localWavePosition < dutyCycle/2){
-                                                                                output[channel][a] = gain*(2*localWavePosition / dutyCycle);
-                                                                            }else if(localWavePosition >= 1 - dutyCycle/2){
-                                                                                output[channel][a] = gain*((2*localWavePosition - 2) / dutyCycle);
-                                                                            }else{
-                                                                                output[channel][a] = gain*((2*localWavePosition - 1) / (dutyCycle - 1));
-                                                                            }
-                                                                        break;
-                                                                    }
-                                                                }
-                                                            }
-                                                
-                                                        //collector
-                                                            const input = inputs[0];
-                                                            this._stepData.push(...input[0]);
-                                                            
-                                                
-                                                
-                                                        if( currentTime - this._lastUpdate > this._state.frequency.timePerStep ){
-                                                            this._lastUpdate = currentTime;
-                                                
-                                                            const result = {
-                                                                frequency:this._state.frequency.current,
-                                                                response:Math.max(...(this._stepData).map(a => Math.abs(a)) )
-                                                            };
-                                                            this.port.postMessage({ onValue:result });
-                                                            this._state.responseData.push(result);
-                                                            this._stepData = [];
-                                                
-                                                            this._state.frequency.current += this._state.frequency.stepSize;
-                                                            if( this._state.frequency.current > this._state.frequency.range.end ){
-                                                                this.port.postMessage({ onCompletion:this._state.responseData });
-                                                                this._active = false;
-                                                            }
-                                                        }
-                                                
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('frequencyAmplitudeResponseAnalyser', frequencyAmplitudeResponseAnalyser);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                // class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
-                                                //     #state = {
-                                                //         waveform:0,
-                                                //         signalGeneratorGain:1,
-                                                //         dutyCycle:0.5,
-                                                //         frequency:{
-                                                //             range:{ start:100, end:1000 },
-                                                //             stepSize:10,
-                                                //             timePerStep:0.005,
-                                                //         },
-                                                //     };
-                                                
-                                                //     constructor(context, options={}){
-                                                //         options.numberOfInputs = 1;
-                                                //         options.numberOfOutputs = 1;
-                                                //         options.channelCount = 1;
-                                                //         super(context, 'frequencyAmplitudeResponseAnalyser', options);
-                                                //         const self = this;
-                                                
-                                                //         this.port.onmessage = function(event){
-                                                //             Object.entries(event.data).forEach(([key,value]) => {
-                                                //                 switch(key){
-                                                //                     case 'onValue':
-                                                //                         if(self.onValue != undefined){ self.onValue(value); }
-                                                //                     break;
-                                                //                     case 'onCompletion':
-                                                //                         if(self.onCompletion != undefined){ self.onCompletion(value); }
-                                                //                     break;
-                                                //                 }
-                                                //             });
-                                                //         };
-                                                
-                                                //         this.start = function(){
-                                                //             this.port.postMessage('start');
-                                                //         };
-                                                //         this.stop = function(){
-                                                //             this.port.postMessage('stop');
-                                                //         };
-                                                //         this.clear = function(){
-                                                //             this.port.postMessage('clear');
-                                                //         };
-                                                
-                                                //         this.onValue = function(){};
-                                                //         this.onCompletion = function(){};
-                                                //     }
-                                                
-                                                //     get waveform(){
-                                                //         return this._state.waveform;
-                                                //     }
-                                                //     set waveform(value){
-                                                //         this._state.waveform = value;
-                                                //         this.port.postMessage({waveform:value});
-                                                //     }
-                                                
-                                                //     get signalGeneratorGain(){
-                                                //         return this._state.signalGeneratorGain;
-                                                //     }
-                                                //     set signalGeneratorGain(value){
-                                                //         this._state.signalGeneratorGain = value;
-                                                //         this.port.postMessage({signalGeneratorGain:value});
-                                                //     }
-                                                
-                                                //     get dutyCycle(){
-                                                //         return this._state.dutyCycle;
-                                                //     }
-                                                //     set dutyCycle(value){
-                                                //         this._state.dutyCycle = value;
-                                                //         this.port.postMessage({dutyCycle:value});
-                                                //     }
-                                                
-                                                //     get range(){
-                                                //         return this._state.frequency.range;
-                                                //     }
-                                                //     set range(value){
-                                                //         if(value.start == undefined){
-                                                //             value.start = this._state.frequency.range.start;
-                                                //         }
-                                                //         if(value.end == undefined){
-                                                //             value.end = this._state.frequency.range.end;
-                                                //         }
-                                                
-                                                //         this._state.frequency.range = value;
-                                                //         this.port.postMessage({
-                                                //             'range.start':this._state.frequency.range.start,
-                                                //             'range.end':this._state.frequency.range.end,
-                                                //         });
-                                                //     }
-                                                
-                                                //     get stepSize(){ 
-                                                //         return this._state.frequency.stepSize;
-                                                //     }
-                                                //     set stepSize(value){
-                                                //         this._state.frequency.stepSize = value;
-                                                //         this.port.postMessage({stepSize:value});
-                                                //     }
-                                                
-                                                //     get timePerStep(){ 
-                                                //         return this._state.frequency.timePerStep;
-                                                //     }
-                                                //     set timePerStep(value){
-                                                //         this._state.frequency.timePerStep = value;
-                                                //         this.port.postMessage({timePerStep:value});
-                                                //     }
-                                                // }
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                class frequencyAmplitudeResponseAnalyser extends AudioWorkletNode{
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'frequencyAmplitudeResponseAnalyser', options);
-                                                        const self = this;
-                                                
-                                                        this._state = {
-                                                            waveform:'sine',
-                                                            signalGeneratorGain:1,
-                                                            dutyCycle:0.5,
-                                                            frequency:{
-                                                                range:{ start:100, end:1000 },
-                                                                stepSize:10,
-                                                                timePerStep:0.005,
-                                                            },
-                                                        };
-                                                
-                                                        this.port.onmessage = function(event){
-                                                            Object.entries(event.data).forEach(([key,value]) => {
-                                                                switch(key){
-                                                                    case 'onValue':
-                                                                        if(self.onValue != undefined){ self.onValue(value); }
-                                                                    break;
-                                                                    case 'onCompletion':
-                                                                        if(self.onCompletion != undefined){ self.onCompletion(value); }
-                                                                    break;
-                                                                }
-                                                            });
-                                                        };
-                                                
-                                                        this.start = function(){
-                                                            this.port.postMessage('start');
-                                                        };
-                                                        this.stop = function(){
-                                                            this.port.postMessage('stop');
-                                                        };
-                                                        this.clear = function(){
-                                                            this.port.postMessage('clear');
-                                                        };
-                                                
-                                                        this.onValue = function(){};
-                                                        this.onCompletion = function(){};
-                                                    }
-                                                
-                                                    get waveform(){
-                                                        return this._state.waveform;
-                                                    }
-                                                    set waveform(value){
-                                                        this._state.waveform = value;
-                                                        this.port.postMessage({waveform:value});
-                                                    }
-                                                
-                                                    get signalGeneratorGain(){
-                                                        return this._state.signalGeneratorGain;
-                                                    }
-                                                    set signalGeneratorGain(value){
-                                                        this._state.signalGeneratorGain = value;
-                                                        this.port.postMessage({signalGeneratorGain:value});
-                                                    }
-                                                
-                                                    get dutyCycle(){
-                                                        return this._state.dutyCycle;
-                                                    }
-                                                    set dutyCycle(value){
-                                                        this._state.dutyCycle = value;
-                                                        this.port.postMessage({dutyCycle:value});
-                                                    }
-                                                
-                                                    get range(){
-                                                        return this._state.frequency.range;
-                                                    }
-                                                    set range(value){
-                                                        if(value.start == undefined){
-                                                            value.start = this._state.frequency.range.start;
-                                                        }
-                                                        if(value.end == undefined){
-                                                            value.end = this._state.frequency.range.end;
-                                                        }
-                                                
-                                                        this._state.frequency.range = value;
-                                                        this.port.postMessage({
-                                                            'range.start':this._state.frequency.range.start,
-                                                            'range.end':this._state.frequency.range.end,
-                                                        });
-                                                    }
-                                                
-                                                    get stepSize(){ 
-                                                        return this._state.frequency.stepSize;
-                                                    }
-                                                    set stepSize(value){
-                                                        this._state.frequency.stepSize = value;
-                                                        this.port.postMessage({stepSize:value});
-                                                    }
-                                                
-                                                    get timePerStep(){ 
-                                                        return this._state.frequency.timePerStep;
-                                                    }
-                                                    set timePerStep(value){
-                                                        this._state.frequency.timePerStep = value;
-                                                        this.port.postMessage({timePerStep:value});
-                                                    }
-                                                }
-                                            ,
-                                        },
                                     ],
                                     readyCount:0,
                                 },
                                 wasm:{
                                     list:[
+                                        //single waveform output
+                                        //four waveforms - sine / square / triangle / noise
+                                        //frequency controlled by parameter
+                                        //gain controlled by parameter or input 0
+                                        //detune controlled by parameter or input 1
+                                        //dutyCycle controlled by parameter or input 2
+                                        //start/stop commands, with hit velocity
+                                        
                                         {
-                                            name:'bitcrusher',
+                                            name:'oscillator_type_1',
                                             worklet:new Blob([`
-                                                class bitcrusher extends AudioWorkletProcessor {
+                                                const debug = function(id, ...args){ console.log(id+':', args.join(' ')); };
+                                                
+                                                class oscillator_type_1 extends AudioWorkletProcessor {
+                                                    static starterFrequency = 440;
+                                                    static maxFrequency = 20000;
+                                                    static detuneMux = 0.1;
+                                                    static detuneBounds = 1/oscillator_type_1.detuneMux;
+                                                    static availableWaveforms = ['sine', 'square', 'triangle', 'noise'];
+                                                
                                                     static get parameterDescriptors(){
                                                         return [
                                                             {
-                                                                name: 'amplitudeResolution',
-                                                                defaultValue: 10,
-                                                                minValue: 1,
-                                                                maxValue: 128,
-                                                                automationRate: 'k-rate',
+                                                                name: 'frequency',
+                                                                defaultValue: oscillator_type_1.starterFrequency,
+                                                                minValue: 0,
+                                                                maxValue: oscillator_type_1.maxFrequency,
+                                                                automationRate: 'a-rate',
                                                             },{
-                                                                name: 'sampleFrequency',
-                                                                defaultValue: 16,
-                                                                minValue: 1,
-                                                                maxValue: 128,
-                                                                automationRate: 'k-rate',
-                                                            }
-                                                        ];
-                                                    }
-                                                    
-                                                    constructor(options){
-                                                        super(options);
-                                                		const self = this;
-                                                
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.load).then(result => {
-                                                                        self.wasm = result;
-                                                
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
-                                                
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        if(this.wasm == undefined){ return true; }
-                                                
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
-                                                
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process( 
-                                                                parameters.amplitudeResolution[0],
-                                                                parameters.sampleFrequency[0],
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
-                                                
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('bitcrusher', bitcrusher);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class bitcrusher extends AudioWorkletNode {
-                                                    static wasm_url = 'wasm/audio_processing/bitcrusher.production.wasm';
-                                                    // static wasm_url = 'wasm/audio_processing/bitcrusher.development.wasm';
-                                                    static fetch_promise;
-                                                    static compiled_wasm;
-                                                
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'bitcrusher', options);
-                                                        
-                                                        this._amplitudeResolution = 10;
-                                                        this._sampleFrequency = 16;
-                                                
-                                                        audio.audioWorklet.requestWasm(bitcrusher, this);
-                                                    }
-                                                
-                                                    get amplitudeResolution(){
-                                                        return this._amplitudeResolution;
-                                                    }
-                                                    set amplitudeResolution(value){
-                                                        this._amplitudeResolution = value;
-                                                        this.parameters.get('amplitudeResolution').setValueAtTime(this._amplitudeResolution,0);
-                                                    }
-                                                
-                                                    get sampleFrequency(){
-                                                        return this._sampleFrequency;
-                                                    }
-                                                    set sampleFrequency(value){
-                                                        this._sampleFrequency = value;
-                                                        this.parameters.get('sampleFrequency').setValueAtTime(this._sampleFrequency,0);
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
-                                            name:'sigmoid',
-                                            worklet:new Blob([`
-                                                class sigmoid extends AudioWorkletProcessor{
-                                                    static get parameterDescriptors(){
-                                                        return [
-                                                            {
                                                                 name: 'gain',
                                                                 defaultValue: 1,
-                                                                minValue: 0,
+                                                                minValue: -1,
                                                                 maxValue: 1,
                                                                 automationRate: 'a-rate',
-                                                            },
-                                                            {
-                                                                name: 'sharpness',
-                                                                defaultValue: 0,
-                                                                minValue: 0,
-                                                                maxValue: 1,
-                                                                automationRate: 'a-rate',
-                                                            }
-                                                        ];
-                                                    }
-                                                
-                                                    constructor(options){
-                                                        super(options);
-                                                		const self = this;
-                                                
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.load).then(result => {
-                                                                        self.wasm = result;
-                                                
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
-                                                
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                
-                                                                        self.gainBuffer = {};
-                                                                        self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
-                                                                        self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
-                                                
-                                                                        self.sharpnessBuffer = {};
-                                                                        self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
-                                                                        self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        if(this.wasm == undefined){ return true; }
-                                                
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
-                                                
-                                                        const gain_useFirstOnly = parameters.gain.length == 1;
-                                                        const sharpness_useFirstOnly = parameters.sharpness.length == 1;
-                                                        this.gainBuffer.buffer.set(parameters.gain);
-                                                        this.sharpnessBuffer.buffer.set(parameters.sharpness);
-                                                
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process(
-                                                                gain_useFirstOnly,
-                                                                sharpness_useFirstOnly,
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
-                                                
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('sigmoid', sigmoid);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class sigmoid extends AudioWorkletNode{
-                                                    static wasm_url = 'wasm/audio_processing/sigmoid.production.wasm';
-                                                    // static wasm_url = 'wasm/audio_processing/sigmoid.development.wasm';
-                                                    static fetch_promise;
-                                                    static compiled_wasm;
-                                                
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'sigmoid', options);
-                                                
-                                                        audio.audioWorklet.requestWasm(sigmoid, this);
-                                                    }
-                                                
-                                                    get gain(){
-                                                        return this.parameters.get('gain');
-                                                    }
-                                                    get sharpness(){
-                                                        return this.parameters.get('sharpness');
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
-                                            name:'streamAdder',
-                                            worklet:new Blob([`
-                                                class streamAdder extends AudioWorkletProcessor{
-                                                    static get parameterDescriptors(){
-                                                        return [
-                                                            {
-                                                                name: 'mode',
-                                                                defaultValue: 0, // 0 - manual / 1 - automatic
-                                                                minValue: 0,
-                                                                maxValue: 1,
-                                                                automationRate: 'k-rate',
                                                             },{
-                                                                name: 'mix',
+                                                                name: 'detune',
+                                                                defaultValue: 0,
+                                                                minValue: -oscillator_type_1.detuneBounds,
+                                                                maxValue: oscillator_type_1.detuneBounds,
+                                                                automationRate: 'a-rate',
+                                                            },{
+                                                                name: 'dutyCycle',
                                                                 defaultValue: 0.5,
                                                                 minValue: 0,
                                                                 maxValue: 1,
                                                                 automationRate: 'a-rate',
-                                                            }
+                                                            },
                                                         ];
                                                     }
-                                                    
+                                                
                                                     constructor(options){
-                                                        super(options);
-                                                        const self = this;
+                                                        //construct class instance
+                                                            super(options);
+                                                        
+                                                        //setup instance values
+                                                            this._wavePosition = 0;
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.load).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this._state = {
+                                                                running: {state: false, velocity: 0},
                                                 
-                                                                        self.input1Frame = {};
-                                                                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
-                                                                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                                gain_useControl: false,
+                                                                detune_useControl: false,
+                                                                dutyCycle_useControl: false,
                                                 
-                                                                        self.input2Frame = {};
-                                                                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
-                                                                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                                selected_waveform: 0,
+                                                            };
                                                 
-                                                                        self.mixControlFrame = {};
-                                                                        self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
-                                                                        self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(
+                                                                                event.data.value,
+                                                                                { env: { Math_random: Math.random, debug_: debug, } },
+                                                                            ).then(result => {
+                                                                                //save wasm processor to instance
+                                                                                    self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                //assemble wasm buffers
+                                                                                    self.frequencyFrame = { pointer: self.wasm.exports.get_frequency_pointer() };
+                                                                                    self.frequencyFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.frequencyFrame.pointer, 128);
+                                                                                    self.gainFrame = { pointer: self.wasm.exports.get_gain_pointer() };
+                                                                                    self.gainFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainFrame.pointer, 128);
+                                                                                    self.detuneFrame = { pointer: self.wasm.exports.get_detune_pointer() };
+                                                                                    self.detuneFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.detuneFrame.pointer, 128);
+                                                                                    self.dutyCycleFrame = { pointer: self.wasm.exports.get_duty_cycle_pointer() };
+                                                                                    self.dutyCycleFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.dutyCycleFrame.pointer, 128);
+                                                                                    self.outputFrame = { pointer: self.wasm.exports.get_output_pointer() };
+                                                                                    self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                
+                                                                                //re-send waveform selection (just incase)
+                                                                                    self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                                                                //resend start signal (if necessary)(just incase)
+                                                                                    if(self._state.running.state){
+                                                                                        self.wasm.exports.start( self._state.running.velocity );
+                                                                                    }
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //start/stop
+                                                                        case 'start': 
+                                                                            self._state.running.state = true;
+                                                                            self._state.running.velocity = event.data.value;
+                                                                            if(self.wasm == undefined){ return; }
+                                                                            self.wasm.exports.start(event.data.value);
+                                                                        break;
+                                                                        case 'stop': 
+                                                                            self._state.state = false;
+                                                                            if(self.wasm == undefined){ return; }
+                                                                            self.wasm.exports.stop();
+                                                                        break;
+                                                
+                                                                    //use control
+                                                                        case 'gain_useControl': 
+                                                                            self._state.gain_useControl = event.data.value;
+                                                                        break;
+                                                                        case 'detune_useControl': 
+                                                                            self._state.detune_useControl = event.data.value;
+                                                                        break;
+                                                                        case 'dutyCycle_useControl': 
+                                                                            self._state.dutyCycle_useControl = event.data.value;
+                                                                        break;
+                                                
+                                                                    //waveform
+                                                                        case 'waveform':
+                                                                            self._state.selected_waveform = oscillator_type_1.availableWaveforms.indexOf(event.data.value);
+                                                                            if(self.wasm == undefined){ return; }
+                                                                            self.wasm.exports.select_waveform(self._state.selected_waveform);
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input_1 = inputs[0];
-                                                        const input_2 = inputs[1];
-                                                        const mixControl = inputs[2];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const output = outputs[0];
+                                                            const gainControl = inputs[0];
+                                                            const detuneControl = inputs[1];
+                                                            const dutyCycleControl = inputs[2];
                                                 
-                                                        const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
+                                                        //populate input buffers
+                                                            const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                            this.frequencyFrame.buffer.set( parameters.frequency );
                                                 
-                                                        for(let channel = 0; channel < input_1.length; channel++){
-                                                            this.input1Frame.buffer.set(input_1[channel]);
-                                                            this.input2Frame.buffer.set(input_2[channel]);
-                                                            this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
-                                                            this.wasm.exports.process(
-                                                                mixControl_useFirstOnly
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                            const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
+                                                            this.gainFrame.buffer.set( this._state.gain_useControl ? gainControl[0] : parameters.gain );
                                                 
+                                                            const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
+                                                            this.detuneFrame.buffer.set( this._state.detune_useControl ? detuneControl[0] : parameters.detune );
+                                                
+                                                            const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
+                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
+                                                
+                                                        //process data for, and copy to channels
+                                                            for(let channel = 0; channel < output.length; channel++){
+                                                                this.wasm.exports.process(
+                                                                    frequency_useFirstOnly,
+                                                                    gain_useFirstOnly,
+                                                                    detune_useFirstOnly,
+                                                                    dutyCycle_useFirstOnly,
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
+                                                        
                                                         return true;
                                                     }
                                                 }
-                                                registerProcessor('streamAdder', streamAdder);
+                                                registerProcessor('oscillator_type_1', oscillator_type_1);
                                             `], { type: "text/javascript" }),
                                             class:
-                                                class streamAdder extends AudioWorkletNode{
-                                                    static wasm_url = 'wasm/audio_processing/stream_adder.production.wasm';
-                                                    // static wasm_url = 'wasm/audio_processing/stream_adder.development.wasm';
+                                                class oscillator_type_1 extends AudioWorkletNode {
+                                                    static wasm_url = 'wasm/audio_processing/oscillator_type_1.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/oscillator_type_1.development.wasm';
                                                     static fetch_promise;
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 3;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'streamAdder', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 3;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._mode = false;
+                                                        //generate class instance
+                                                            super(context, 'oscillator_type_1', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(streamAdder, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(oscillator_type_1, this);
+                                                
+                                                        //instance state
+                                                            this._state = {
+                                                                gain_useControl: false,
+                                                                detune_useControl: false,
+                                                                dutyCycle_useControl: false,
+                                                
+                                                                waveform: 'sine',
+                                                            };
+                                                
+                                                        //setup methods
+                                                            this.start = function(hitVelocity=1){
+                                                                this.port.postMessage({command:'start', value:hitVelocity});
+                                                            };
+                                                            this.stop = function(){
+                                                                this.port.postMessage({command:'stop', value:undefined});
+                                                            };
                                                     }
                                                 
-                                                    get mode(){
-                                                        return this._mode;
-                                                    }
-                                                    set mode(value){
-                                                        this._mode = value;
-                                                        this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
-                                                    }
-                                                    get mix(){
-                                                        return this.parameters.get('mix');
-                                                    }
+                                                    //frequency
+                                                        get frequency(){
+                                                            return this.parameters.get('frequency');
+                                                        }
+                                                    
+                                                    //gain
+                                                        get gain(){
+                                                            return this.parameters.get('gain');
+                                                        }
+                                                        get gain_useControl(){
+                                                            return this._state.gain_useControl;
+                                                        }
+                                                        set gain_useControl(bool){
+                                                            this._state.gain_useControl = bool;
+                                                            this.port.postMessage({command:'gain_useControl', value:bool});
+                                                        }
+                                                
+                                                    //detune
+                                                        get detune(){
+                                                            return this.parameters.get('detune');
+                                                        }
+                                                        get detune_useControl(){
+                                                            return this._state.detune_useControl;
+                                                        }
+                                                        set detune_useControl(bool){
+                                                            this._state.detune_useControl = bool;
+                                                            this.port.postMessage({command:'detune_useControl', value:bool});
+                                                        }
+                                                
+                                                    //dutyCycle
+                                                        get dutyCycle(){
+                                                            return this.parameters.get('dutyCycle');
+                                                        }
+                                                        get dutyCycle_useControl(){
+                                                            return this._state.dutyCycle_useControl;
+                                                        }
+                                                        set dutyCycle_useControl(bool){
+                                                            this._state.dutyCycle_useControl = bool;
+                                                            this.port.postMessage({command:'dutyCycle_useControl', value:bool});
+                                                        }
+                                                
+                                                    //waveform
+                                                        get waveform(){
+                                                            return this._state.waveform;
+                                                        }
+                                                        set waveform(value){ // sine / square / triangle / noise
+                                                            this._state.waveform = value;
+                                                            this.port.postMessage({command:'waveform', value:value});
+                                                        }
                                                 }
                                             ,
                                         },
@@ -5683,7 +5631,7 @@
                                                         this.port.onmessage = function(event){
                                                             switch(event.data.command){
                                                                 case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    WebAssembly.instantiate(event.data.value).then(result => {
                                                                         self.wasm = result;
                                                 
                                                                         self.inputFrame = {};
@@ -5788,35 +5736,48 @@
                                             ,
                                         },
                                         {
-                                            name:'lagProcessor',
+                                            name:'streamAdder',
                                             worklet:new Blob([`
-                                                class lagProcessor extends AudioWorkletProcessor{
+                                                class streamAdder extends AudioWorkletProcessor{
                                                     static get parameterDescriptors(){
-                                                        return [{
-                                                                name: 'samples',
-                                                                defaultValue: 1,
-                                                                minValue: 1,
-                                                                maxValue: 100,
+                                                        return [
+                                                            {
+                                                                name: 'mode',
+                                                                defaultValue: 0, // 0 - manual / 1 - automatic
+                                                                minValue: 0,
+                                                                maxValue: 1,
                                                                 automationRate: 'k-rate',
+                                                            },{
+                                                                name: 'mix',
+                                                                defaultValue: 0.5,
+                                                                minValue: 0,
+                                                                maxValue: 1,
+                                                                automationRate: 'a-rate',
                                                             }
                                                         ];
                                                     }
-                                                
+                                                    
                                                     constructor(options){
                                                         super(options);
-                                                        this._dataArrayWorkingIndex = 0;
-                                                        this._dataArray = [];
                                                         const self = this;
                                                 
                                                         this.port.onmessage = function(event){
                                                             switch(event.data.command){
                                                                 case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    WebAssembly.instantiate(event.data.value).then(result => {
                                                                         self.wasm = result;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                                        self.input1Frame = {};
+                                                                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                
+                                                                        self.input2Frame = {};
+                                                                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                
+                                                                        self.mixControlFrame = {};
+                                                                        self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
+                                                                        self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
                                                 
                                                                         self.outputFrame = {};
                                                                         self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
@@ -5830,45 +5791,55 @@
                                                     process(inputs, outputs, parameters){
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
+                                                        const input_1 = inputs[0];
+                                                        const input_2 = inputs[1];
+                                                        const mixControl = inputs[2];
                                                         const output = outputs[0];
-                                                        const samples = parameters.samples[0];
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process(samples);
+                                                        const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
+                                                
+                                                        for(let channel = 0; channel < input_1.length; channel++){
+                                                            this.input1Frame.buffer.set(input_1[channel]);
+                                                            this.input2Frame.buffer.set(input_2[channel]);
+                                                            this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
+                                                            this.wasm.exports.process(
+                                                                mixControl_useFirstOnly
+                                                            );
                                                             output[channel].set(this.outputFrame.buffer);
                                                         }
                                                 
                                                         return true;
                                                     }
                                                 }
-                                                registerProcessor('lagProcessor', lagProcessor);
+                                                registerProcessor('streamAdder', streamAdder);
                                             `], { type: "text/javascript" }),
                                             class:
-                                                class lagProcessor extends AudioWorkletNode{
-                                                    static wasm_url = 'wasm/audio_processing/lag_processor.production.wasm';
-                                                    // static wasm_url = 'wasm/audio_processing/lag_processor.development.wasm';
+                                                class streamAdder extends AudioWorkletNode{
+                                                    static wasm_url = 'wasm/audio_processing/stream_adder.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/stream_adder.development.wasm';
                                                     static fetch_promise;
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
+                                                        options.numberOfInputs = 3;
                                                         options.numberOfOutputs = 1;
                                                         options.channelCount = 1;
-                                                        super(context, 'lagProcessor', options);
+                                                        super(context, 'streamAdder', options);
                                                 
-                                                        this._samples = 1;
+                                                        this._mode = false;
                                                 
-                                                        audio.audioWorklet.requestWasm(lagProcessor, this);
+                                                        audio.audioWorklet.requestWasm(streamAdder, this);
                                                     }
                                                 
-                                                    get samples(){
-                                                        return this._samples;
+                                                    get mode(){
+                                                        return this._mode;
                                                     }
-                                                    set samples(value){
-                                                        this._samples = Math.round(value);
-                                                        this.parameters.get('samples').setValueAtTime(this._samples,0);
+                                                    set mode(value){
+                                                        this._mode = value;
+                                                        this.parameters.get('mode').setValueAtTime(this._mode?1:0,0);
+                                                    }
+                                                    get mix(){
+                                                        return this.parameters.get('mix');
                                                     }
                                                 }
                                             ,
@@ -5902,7 +5873,7 @@
                                                         this.port.onmessage = function(event){
                                                             switch(event.data.command){
                                                                 case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    WebAssembly.instantiate(event.data.value).then(result => {
                                                                         self.wasm = result;
                                                 
                                                                         self.input1Frame = {};
@@ -5985,364 +5956,22 @@
                                                 }
                                             ,
                                         },
-                                    ],
-                                    readyCount:0,
-                                },
-                            },
-                            workshop:{
-                                only_js:{
-                                    list:[
                                         {
-                                            name:'testWorklet',
+                                            name:'sigmoid',
                                             worklet:new Blob([`
-                                                class testWorklet extends AudioWorkletProcessor{
-                                                    static MinimumValue = -10;
-                                                
-                                                    #privateValue = 100;
-                                                
+                                                class sigmoid extends AudioWorkletProcessor{
                                                     static get parameterDescriptors(){
                                                         return [
                                                             {
-                                                                name: 'valueA',
-                                                                defaultValue: 10,
-                                                                minValue: 1,
-                                                                maxValue: 100,
-                                                                automationRate: 'a-rate', //you should use the array, it's the same length as the block
-                                                            },{
-                                                                name: 'valueB',
-                                                                defaultValue: 10,
-                                                                minValue: 1,
-                                                                maxValue: 100,
-                                                                automationRate: 'k-rate', //you should use only the first value in the array
-                                                            }
-                                                        ];
-                                                    }
-                                                    
-                                                    constructor(options){
-                                                        super(options);
-                                                        console.log('<<< constructor >>>');
-                                                        console.log('options:',options);
-                                                
-                                                        this._lastUpdate = currentTime;
-                                                        this._callCount = 0;
-                                                
-                                                        this.port.onmessage = function(event){
-                                                            console.log('worklet.port.onmessage',event);
-                                                        };
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        this._callCount++;
-                                                        if( currentTime - this._lastUpdate >= 1 ){
-                                                            console.log('<<< process >>>');
-                                                            console.log('currentTime:',currentTime);
-                                                            console.log('currentFrame:',currentFrame);
-                                                            console.log('calls since last printing:',this._callCount);
-                                                            console.log('samples since last printing:',this._callCount*outputs[0][0].length);
-                                                            console.log(' - number of inputs:',inputs.length);
-                                                            inputs.forEach((input,index) => {
-                                                                console.log('   '+index+' : streams:',input.length,': samples per stream:',input.map(a => a.length));
-                                                            });
-                                                            console.log(' - number of outputs:',outputs.length);
-                                                            outputs.forEach((output,index) => {
-                                                                console.log('   '+index+' : streams:',output.length,': samples per stream:',output.map(a => a.length));
-                                                            });
-                                                
-                                                            console.log( 'parameters:',parameters );
-                                                            console.log( 'parameters.valueA:',parameters.valueA );
-                                                            console.log( 'parameters.valueB:',parameters.valueB );
-                                                
-                                                            // console.log( testWorklet.MinimumValue );
-                                                            // console.log( this.#privateValue );
-                                                
-                                                            this._lastUpdate = currentTime;
-                                                            this._callCount = 0;
-                                                            return false;
-                                                        }
-                                                
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
-                                                    
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            const inputChannel = input[channel];
-                                                            const outputChannel = output[channel];
-                                                    
-                                                            for(let a = 0; a < inputChannel.length; a++){
-                                                                outputChannel[a] = inputChannel[a];
-                                                            }
-                                                        }
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('testWorklet', testWorklet);
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                // class squareWaveGenerator extends AudioWorkletProcessor{
-                                                //     static get parameterDescriptors(){
-                                                //         return [];
-                                                //     }
-                                                
-                                                //     constructor(options){
-                                                //         super(options);
-                                                //         this._frequency = 440;
-                                                //         this._phaseMux = (2*this._frequency) / sampleRate;
-                                                //     }
-                                                
-                                                //     process(inputs, outputs, parameters){
-                                                //         const output = outputs[0];
-                                                        
-                                                //         for(let channel = 0; channel < output.length; channel++){
-                                                //             for(let a = 0; a < output[channel].length; a++){
-                                                //                 output[channel][a] = Math.sin( Math.PI * this._phaseMux * (currentFrame+a) );
-                                                //             }
-                                                //         }
-                                                //         return true;
-                                                //     }
-                                                // }
-                                                // registerProcessor('squareWaveGenerator', squareWaveGenerator);
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                // class squareWaveGenerator extends AudioWorkletProcessor{
-                                                //     static get parameterDescriptors(){
-                                                //         return [];
-                                                //     }
-                                                
-                                                //     constructor(options){
-                                                //         super(options);
-                                                
-                                                //         this._frequency = 440;
-                                                //         this._dutyCycle = 0.5;
-                                                //         this._frameCount = 0;
-                                                
-                                                //         this._flip = false;
-                                                
-                                                //         // this._data = [];
-                                                //     }
-                                                
-                                                //     process(inputs, outputs, parameters){
-                                                //         const samplingRate = sampleRate;
-                                                //         const output = outputs[0];
-                                                        
-                                                //         // for(let channel = 0; channel < output.length; channel++){
-                                                //         //     for(let a = 0; a < output[channel].length; a++){
-                                                //         //         if( this._sampleCount >= samplingRate / (this._frequency*2) ){
-                                                //         //             this._sampleCount = 0;
-                                                //         //             this._flip = !this._flip;
-                                                //         //         }else{
-                                                //         //             this._sampleCount++; 
-                                                //         //         }
-                                                //         //         output[channel][a] = (this._flip ? 1 : 0) * 0.25
-                                                //         //     }
-                                                //         // }
-                                                
-                                                
-                                                
-                                                //         const phaseMux = (2*this._frequency) / samplingRate;
-                                                //         function sineWave(sampleNumber){
-                                                //             return Math.sin( Math.PI * phaseMux * sampleNumber );
-                                                //         }
-                                                //         for(let channel = 0; channel < output.length; channel++){
-                                                //             for(let a = 0; a < output[channel].length; a++){
-                                                //                 output[channel][a] = sineWave(currentFrame+a);
-                                                //             }
-                                                //             // this._data.push(...output[channel]);
-                                                
-                                                //             // if( this._sampleCount >= samplingRate ){
-                                                //             //     this._sampleCount = 0;
-                                                //             //     // console.log(this._data);
-                                                //             //     // return false;
-                                                //             // }
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                //             // if( this._sampleCount >= 500 ){
-                                                //             //     console.log( JSON.stringify(this._data) );
-                                                //             //     return false;
-                                                //             // }
-                                                //         }
-                                                
-                                                
-                                                
-                                                
-                                                //         // // for(let a = 0; a < outputs[0][0].length; a++){
-                                                //         // //     this._sampleCount++;
-                                                //         // // }
-                                                //         // // if( this._sampleCount%44160 == 0 ){
-                                                //         // //     console.log( currentTime, this._sampleCount );
-                                                //         // // }
-                                                //         // if( this._frameCount%345 == 0 ){
-                                                //         //     console.log( currentTime, this._frameCount, samplingRate );
-                                                //         // }
-                                                
-                                                //         // for(let channel = 0; channel < output.length; channel++){
-                                                //         //     for(let a = 0; a < output[channel].length/2; a++){
-                                                //         //         output[channel][a] = 1;
-                                                //         //     }
-                                                //         //     for(let a = output[channel].length/2; a < output[channel].length; a++){
-                                                //         //         output[channel][a] = -1;
-                                                //         //     }
-                                                //         // }
-                                                
-                                                //         this._frameCount++;
-                                                //         return true;
-                                                //     }
-                                                // }
-                                                // registerProcessor('squareWaveGenerator', squareWaveGenerator);
-                                                
-                                                
-                                                
-                                                
-                                                
-                                                // samplingRate = 44160
-                                                //1hz = a complete waveform takes 44160 samples
-                                                //2hz = a complete waveform takes 22080 samples
-                                                //10hz = a complete waveform takes 4416 samples
-                                                //80hz = a complete waveform takes 552 samples
-                                                //100hz = a complete waveform takes 441.6 samples
-                                                //400hz = a complete waveform takes 110.4 samples
-                                                //440hz = a complete waveform takes 100.3636... samples
-                                                //480hz = a complete waveform takes 92 samples
-                                                
-                                                // samples that a complete waveform takes = samplingRate / frequency of wave
-                                                // frequency of wave = samplingRate / samples that a complete waveform takes
-                                                // frequency of wave * samples that a complete waveform takes = samplingRate
-                                                
-                                                // 441.6hz = a complete waveform takes 100 samples
-                                                // 437.2277227722772hz = a complete waveform takes 101 samples
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class testWorklet extends AudioWorkletNode {
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 6;
-                                                        options.numberOfOutputs = 6;
-                                                        options.channelCount = 1;
-                                                        super(context, 'testWorklet', options);
-                                                
-                                                        this._superImportantValue = 'farts';
-                                                
-                                                        this.port.onmessage = function(event){
-                                                            console.log('worklet.node.onmessage',event);
-                                                        };
-                                                        this.port.start();
-                                                    }
-                                                
-                                                    get superImportantValue(){
-                                                        console.log('getting super important value, which happens to be "'+this._superImportantValue+'"');
-                                                        return this._superImportantValue;
-                                                    }
-                                                    set superImportantValue(newValue){
-                                                        console.log('the super important value is being changed to "'+newValue+'"');
-                                                        this._superImportantValue = newValue;
-                                                        this.port.postMessage({ superImportantValue: this._superImportantValue });
-                                                    }
-                                                    doubleTheSuperImportantValue(){
-                                                        console.log('doubling the super important value');
-                                                        this._superImportantValue = this._superImportantValue + this._superImportantValue ;
-                                                        this.port.postMessage({ superImportantValue: this._superImportantValue });
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
-                                            name:'squareWaveGenerator',
-                                            worklet:new Blob([`
-                                                class squareWaveGenerator extends AudioWorkletProcessor{
-                                                    static get parameterDescriptors(){
-                                                        return [
-                                                            {
-                                                                name: 'frequency',
-                                                                defaultValue: 440,
+                                                                name: 'gain',
+                                                                defaultValue: 1,
                                                                 minValue: 0,
-                                                                maxValue: 20000,
+                                                                maxValue: 1,
                                                                 automationRate: 'a-rate',
-                                                            },{
-                                                                name: 'dutyCycle',
-                                                                defaultValue: 0.5,
+                                                            },
+                                                            {
+                                                                name: 'sharpness',
+                                                                defaultValue: 0,
                                                                 minValue: 0,
                                                                 maxValue: 1,
                                                                 automationRate: 'a-rate',
@@ -6352,48 +5981,280 @@
                                                 
                                                     constructor(options){
                                                         super(options);
+                                                		const self = this;
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                case 'loadWasm':
+                                                                    WebAssembly.instantiate(event.data.value).then(result => {
+                                                                        self.wasm = result;
+                                                
+                                                                        self.inputFrame = {};
+                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                        self.outputFrame = {};
+                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                
+                                                                        self.gainBuffer = {};
+                                                                        self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
+                                                                        self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
+                                                
+                                                                        self.sharpnessBuffer = {};
+                                                                        self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
+                                                                        self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
+                                                                    });
+                                                                break;
+                                                            }
+                                                        };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.wasm == undefined){ return true; }
+                                                
+                                                        const input = inputs[0];
                                                         const output = outputs[0];
                                                 
-                                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
-                                                        const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                                        const gain_useFirstOnly = parameters.gain.length == 1;
+                                                        const sharpness_useFirstOnly = parameters.sharpness.length == 1;
+                                                        this.gainBuffer.buffer.set(parameters.gain);
+                                                        this.sharpnessBuffer.buffer.set(parameters.sharpness);
                                                 
-                                                        for(let channel = 0; channel < output.length; channel++){
-                                                            for(let a = 0; a < output[channel].length; a++){
-                                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
-                                                                const dutyCycle = dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a];
-                                                
-                                                                const overallWaveProgressPercentage = (frequency/sampleRate) * (currentFrame+a);
-                                                                const waveProgress = overallWaveProgressPercentage - Math.trunc(overallWaveProgressPercentage);
-                                                                output[channel][a] = waveProgress < dutyCycle ? 1 : -1;
-                                                            }
+                                                        for(let channel = 0; channel < input.length; channel++){
+                                                            this.inputFrame.buffer.set(input[channel]);
+                                                            this.wasm.exports.process(
+                                                                gain_useFirstOnly,
+                                                                sharpness_useFirstOnly,
+                                                            );
+                                                            output[channel].set(this.outputFrame.buffer);
                                                         }
                                                 
                                                         return true;
                                                     }
                                                 }
-                                                registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                                registerProcessor('sigmoid', sigmoid);
                                             `], { type: "text/javascript" }),
                                             class:
-                                                class squareWaveGenerator extends AudioWorkletNode{
+                                                class sigmoid extends AudioWorkletNode{
+                                                    static wasm_url = 'wasm/audio_processing/sigmoid.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/sigmoid.development.wasm';
+                                                    static fetch_promise;
+                                                    static compiled_wasm;
+                                                
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 0;
+                                                        options.numberOfInputs = 1;
                                                         options.numberOfOutputs = 1;
                                                         options.channelCount = 1;
-                                                        super(context, 'squareWaveGenerator', options);
+                                                        super(context, 'sigmoid', options);
+                                                
+                                                        audio.audioWorklet.requestWasm(sigmoid, this);
                                                     }
                                                 
-                                                    get frequency(){
-                                                        return this.parameters.get('frequency');
+                                                    get gain(){
+                                                        return this.parameters.get('gain');
                                                     }
-                                                    get dutyCycle(){
-                                                        return this.parameters.get('dutyCycle');
+                                                    get sharpness(){
+                                                        return this.parameters.get('sharpness');
                                                     }
                                                 }
                                             ,
                                         },
+                                        {
+                                            name:'lagProcessor',
+                                            worklet:new Blob([`
+                                                class lagProcessor extends AudioWorkletProcessor{
+                                                    static get parameterDescriptors(){
+                                                        return [{
+                                                                name: 'samples',
+                                                                defaultValue: 1,
+                                                                minValue: 1,
+                                                                maxValue: 100,
+                                                                automationRate: 'k-rate',
+                                                            }
+                                                        ];
+                                                    }
+                                                
+                                                    constructor(options){
+                                                        super(options);
+                                                        this._dataArrayWorkingIndex = 0;
+                                                        this._dataArray = [];
+                                                        const self = this;
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                case 'loadWasm':
+                                                                    WebAssembly.instantiate(event.data.value).then(result => {
+                                                                        self.wasm = result;
+                                                
+                                                                        self.inputFrame = {};
+                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                        self.outputFrame = {};
+                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                    });
+                                                                break;
+                                                            }
+                                                        };
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        if(this.wasm == undefined){ return true; }
+                                                
+                                                        const input = inputs[0];
+                                                        const output = outputs[0];
+                                                        const samples = parameters.samples[0];
+                                                
+                                                        for(let channel = 0; channel < input.length; channel++){
+                                                            this.inputFrame.buffer.set(input[channel]);
+                                                            this.wasm.exports.process(samples);
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('lagProcessor', lagProcessor);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class lagProcessor extends AudioWorkletNode{
+                                                    static wasm_url = 'wasm/audio_processing/lag_processor.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/lag_processor.development.wasm';
+                                                    static fetch_promise;
+                                                    static compiled_wasm;
+                                                
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 1;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                                        super(context, 'lagProcessor', options);
+                                                
+                                                        this._samples = 1;
+                                                
+                                                        audio.audioWorklet.requestWasm(lagProcessor, this);
+                                                    }
+                                                
+                                                    get samples(){
+                                                        return this._samples;
+                                                    }
+                                                    set samples(value){
+                                                        this._samples = Math.round(value);
+                                                        this.parameters.get('samples').setValueAtTime(this._samples,0);
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                        {
+                                            name:'bitcrusher',
+                                            worklet:new Blob([`
+                                                class bitcrusher extends AudioWorkletProcessor {
+                                                    static get parameterDescriptors(){
+                                                        return [
+                                                            {
+                                                                name: 'amplitudeResolution',
+                                                                defaultValue: 10,
+                                                                minValue: 1,
+                                                                maxValue: 128,
+                                                                automationRate: 'k-rate',
+                                                            },{
+                                                                name: 'sampleFrequency',
+                                                                defaultValue: 16,
+                                                                minValue: 1,
+                                                                maxValue: 128,
+                                                                automationRate: 'k-rate',
+                                                            }
+                                                        ];
+                                                    }
+                                                    
+                                                    constructor(options){
+                                                        super(options);
+                                                		const self = this;
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            switch(event.data.command){
+                                                                case 'loadWasm':
+                                                                    WebAssembly.instantiate(event.data.value).then(result => {
+                                                                        self.wasm = result;
+                                                
+                                                                        self.inputFrame = {};
+                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                        self.outputFrame = {};
+                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                    });
+                                                                break;
+                                                            }
+                                                        };
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        if(this.wasm == undefined){ return true; }
+                                                
+                                                        const input = inputs[0];
+                                                        const output = outputs[0];
+                                                
+                                                        for(let channel = 0; channel < input.length; channel++){
+                                                            this.inputFrame.buffer.set(input[channel]);
+                                                            this.wasm.exports.process( 
+                                                                parameters.amplitudeResolution[0],
+                                                                parameters.sampleFrequency[0],
+                                                            );
+                                                            output[channel].set(this.outputFrame.buffer);
+                                                        }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('bitcrusher', bitcrusher);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class bitcrusher extends AudioWorkletNode {
+                                                    static wasm_url = 'wasm/audio_processing/bitcrusher.production.wasm';
+                                                    // static wasm_url = 'wasm/audio_processing/bitcrusher.development.wasm';
+                                                    static fetch_promise;
+                                                    static compiled_wasm;
+                                                
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 1;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                                        super(context, 'bitcrusher', options);
+                                                        
+                                                        this._amplitudeResolution = 10;
+                                                        this._sampleFrequency = 16;
+                                                
+                                                        audio.audioWorklet.requestWasm(bitcrusher, this);
+                                                    }
+                                                
+                                                    get amplitudeResolution(){
+                                                        return this._amplitudeResolution;
+                                                    }
+                                                    set amplitudeResolution(value){
+                                                        this._amplitudeResolution = value;
+                                                        this.parameters.get('amplitudeResolution').setValueAtTime(this._amplitudeResolution,0);
+                                                    }
+                                                
+                                                    get sampleFrequency(){
+                                                        return this._sampleFrequency;
+                                                    }
+                                                    set sampleFrequency(value){
+                                                        this._sampleFrequency = value;
+                                                        this.parameters.get('sampleFrequency').setValueAtTime(this._sampleFrequency,0);
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                    ],
+                                    readyCount:0,
+                                },
+                            },
+                            workshop:{
+                                only_js:{
+                                    list:[
                                         //oscillatorWithMultiLevelPhaseModulation
                                         {
                                             name:'osc_1',
@@ -7101,6 +6962,408 @@
                                             ,
                                         },
                                         {
+                                            name:'squareWaveGenerator',
+                                            worklet:new Blob([`
+                                                class squareWaveGenerator extends AudioWorkletProcessor{
+                                                    static get parameterDescriptors(){
+                                                        return [
+                                                            {
+                                                                name: 'frequency',
+                                                                defaultValue: 440,
+                                                                minValue: 0,
+                                                                maxValue: 20000,
+                                                                automationRate: 'a-rate',
+                                                            },{
+                                                                name: 'dutyCycle',
+                                                                defaultValue: 0.5,
+                                                                minValue: 0,
+                                                                maxValue: 1,
+                                                                automationRate: 'a-rate',
+                                                            }
+                                                        ];
+                                                    }
+                                                
+                                                    constructor(options){
+                                                        super(options);
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        const output = outputs[0];
+                                                
+                                                        const frequency_useFirstOnly = parameters.frequency.length == 1;
+                                                        const dutyCycle_useFirstOnly = parameters.dutyCycle.length == 1;
+                                                
+                                                        for(let channel = 0; channel < output.length; channel++){
+                                                            for(let a = 0; a < output[channel].length; a++){
+                                                                const frequency = frequency_useFirstOnly ? parameters.frequency[0] : parameters.frequency[a];
+                                                                const dutyCycle = dutyCycle_useFirstOnly ? parameters.dutyCycle[0] : parameters.dutyCycle[a];
+                                                
+                                                                const overallWaveProgressPercentage = (frequency/sampleRate) * (currentFrame+a);
+                                                                const waveProgress = overallWaveProgressPercentage - Math.trunc(overallWaveProgressPercentage);
+                                                                output[channel][a] = waveProgress < dutyCycle ? 1 : -1;
+                                                            }
+                                                        }
+                                                
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class squareWaveGenerator extends AudioWorkletNode{
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 0;
+                                                        options.numberOfOutputs = 1;
+                                                        options.channelCount = 1;
+                                                        super(context, 'squareWaveGenerator', options);
+                                                    }
+                                                
+                                                    get frequency(){
+                                                        return this.parameters.get('frequency');
+                                                    }
+                                                    get dutyCycle(){
+                                                        return this.parameters.get('dutyCycle');
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                        {
+                                            name:'testWorklet',
+                                            worklet:new Blob([`
+                                                class testWorklet extends AudioWorkletProcessor{
+                                                    static MinimumValue = -10;
+                                                
+                                                    #privateValue = 100;
+                                                
+                                                    static get parameterDescriptors(){
+                                                        return [
+                                                            {
+                                                                name: 'valueA',
+                                                                defaultValue: 10,
+                                                                minValue: 1,
+                                                                maxValue: 100,
+                                                                automationRate: 'a-rate', //you should use the array, it's the same length as the block
+                                                            },{
+                                                                name: 'valueB',
+                                                                defaultValue: 10,
+                                                                minValue: 1,
+                                                                maxValue: 100,
+                                                                automationRate: 'k-rate', //you should use only the first value in the array
+                                                            }
+                                                        ];
+                                                    }
+                                                    
+                                                    constructor(options){
+                                                        super(options);
+                                                        console.log('<<< constructor >>>');
+                                                        console.log('options:',options);
+                                                
+                                                        this._lastUpdate = currentTime;
+                                                        this._callCount = 0;
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            console.log('worklet.port.onmessage',event);
+                                                        };
+                                                    }
+                                                
+                                                    process(inputs, outputs, parameters){
+                                                        this._callCount++;
+                                                        if( currentTime - this._lastUpdate >= 1 ){
+                                                            console.log('<<< process >>>');
+                                                            console.log('currentTime:',currentTime);
+                                                            console.log('currentFrame:',currentFrame);
+                                                            console.log('calls since last printing:',this._callCount);
+                                                            console.log('samples since last printing:',this._callCount*outputs[0][0].length);
+                                                            console.log(' - number of inputs:',inputs.length);
+                                                            inputs.forEach((input,index) => {
+                                                                console.log('   '+index+' : streams:',input.length,': samples per stream:',input.map(a => a.length));
+                                                            });
+                                                            console.log(' - number of outputs:',outputs.length);
+                                                            outputs.forEach((output,index) => {
+                                                                console.log('   '+index+' : streams:',output.length,': samples per stream:',output.map(a => a.length));
+                                                            });
+                                                
+                                                            console.log( 'parameters:',parameters );
+                                                            console.log( 'parameters.valueA:',parameters.valueA );
+                                                            console.log( 'parameters.valueB:',parameters.valueB );
+                                                
+                                                            // console.log( testWorklet.MinimumValue );
+                                                            // console.log( this.#privateValue );
+                                                
+                                                            this._lastUpdate = currentTime;
+                                                            this._callCount = 0;
+                                                            return false;
+                                                        }
+                                                
+                                                        const input = inputs[0];
+                                                        const output = outputs[0];
+                                                    
+                                                        for(let channel = 0; channel < input.length; channel++){
+                                                            const inputChannel = input[channel];
+                                                            const outputChannel = output[channel];
+                                                    
+                                                            for(let a = 0; a < inputChannel.length; a++){
+                                                                outputChannel[a] = inputChannel[a];
+                                                            }
+                                                        }
+                                                        return true;
+                                                    }
+                                                }
+                                                registerProcessor('testWorklet', testWorklet);
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                // class squareWaveGenerator extends AudioWorkletProcessor{
+                                                //     static get parameterDescriptors(){
+                                                //         return [];
+                                                //     }
+                                                
+                                                //     constructor(options){
+                                                //         super(options);
+                                                //         this._frequency = 440;
+                                                //         this._phaseMux = (2*this._frequency) / sampleRate;
+                                                //     }
+                                                
+                                                //     process(inputs, outputs, parameters){
+                                                //         const output = outputs[0];
+                                                        
+                                                //         for(let channel = 0; channel < output.length; channel++){
+                                                //             for(let a = 0; a < output[channel].length; a++){
+                                                //                 output[channel][a] = Math.sin( Math.PI * this._phaseMux * (currentFrame+a) );
+                                                //             }
+                                                //         }
+                                                //         return true;
+                                                //     }
+                                                // }
+                                                // registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                // class squareWaveGenerator extends AudioWorkletProcessor{
+                                                //     static get parameterDescriptors(){
+                                                //         return [];
+                                                //     }
+                                                
+                                                //     constructor(options){
+                                                //         super(options);
+                                                
+                                                //         this._frequency = 440;
+                                                //         this._dutyCycle = 0.5;
+                                                //         this._frameCount = 0;
+                                                
+                                                //         this._flip = false;
+                                                
+                                                //         // this._data = [];
+                                                //     }
+                                                
+                                                //     process(inputs, outputs, parameters){
+                                                //         const samplingRate = sampleRate;
+                                                //         const output = outputs[0];
+                                                        
+                                                //         // for(let channel = 0; channel < output.length; channel++){
+                                                //         //     for(let a = 0; a < output[channel].length; a++){
+                                                //         //         if( this._sampleCount >= samplingRate / (this._frequency*2) ){
+                                                //         //             this._sampleCount = 0;
+                                                //         //             this._flip = !this._flip;
+                                                //         //         }else{
+                                                //         //             this._sampleCount++; 
+                                                //         //         }
+                                                //         //         output[channel][a] = (this._flip ? 1 : 0) * 0.25
+                                                //         //     }
+                                                //         // }
+                                                
+                                                
+                                                
+                                                //         const phaseMux = (2*this._frequency) / samplingRate;
+                                                //         function sineWave(sampleNumber){
+                                                //             return Math.sin( Math.PI * phaseMux * sampleNumber );
+                                                //         }
+                                                //         for(let channel = 0; channel < output.length; channel++){
+                                                //             for(let a = 0; a < output[channel].length; a++){
+                                                //                 output[channel][a] = sineWave(currentFrame+a);
+                                                //             }
+                                                //             // this._data.push(...output[channel]);
+                                                
+                                                //             // if( this._sampleCount >= samplingRate ){
+                                                //             //     this._sampleCount = 0;
+                                                //             //     // console.log(this._data);
+                                                //             //     // return false;
+                                                //             // }
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                //             // if( this._sampleCount >= 500 ){
+                                                //             //     console.log( JSON.stringify(this._data) );
+                                                //             //     return false;
+                                                //             // }
+                                                //         }
+                                                
+                                                
+                                                
+                                                
+                                                //         // // for(let a = 0; a < outputs[0][0].length; a++){
+                                                //         // //     this._sampleCount++;
+                                                //         // // }
+                                                //         // // if( this._sampleCount%44160 == 0 ){
+                                                //         // //     console.log( currentTime, this._sampleCount );
+                                                //         // // }
+                                                //         // if( this._frameCount%345 == 0 ){
+                                                //         //     console.log( currentTime, this._frameCount, samplingRate );
+                                                //         // }
+                                                
+                                                //         // for(let channel = 0; channel < output.length; channel++){
+                                                //         //     for(let a = 0; a < output[channel].length/2; a++){
+                                                //         //         output[channel][a] = 1;
+                                                //         //     }
+                                                //         //     for(let a = output[channel].length/2; a < output[channel].length; a++){
+                                                //         //         output[channel][a] = -1;
+                                                //         //     }
+                                                //         // }
+                                                
+                                                //         this._frameCount++;
+                                                //         return true;
+                                                //     }
+                                                // }
+                                                // registerProcessor('squareWaveGenerator', squareWaveGenerator);
+                                                
+                                                
+                                                
+                                                
+                                                
+                                                // samplingRate = 44160
+                                                //1hz = a complete waveform takes 44160 samples
+                                                //2hz = a complete waveform takes 22080 samples
+                                                //10hz = a complete waveform takes 4416 samples
+                                                //80hz = a complete waveform takes 552 samples
+                                                //100hz = a complete waveform takes 441.6 samples
+                                                //400hz = a complete waveform takes 110.4 samples
+                                                //440hz = a complete waveform takes 100.3636... samples
+                                                //480hz = a complete waveform takes 92 samples
+                                                
+                                                // samples that a complete waveform takes = samplingRate / frequency of wave
+                                                // frequency of wave = samplingRate / samples that a complete waveform takes
+                                                // frequency of wave * samples that a complete waveform takes = samplingRate
+                                                
+                                                // 441.6hz = a complete waveform takes 100 samples
+                                                // 437.2277227722772hz = a complete waveform takes 101 samples
+                                            `], { type: "text/javascript" }),
+                                            class:
+                                                class testWorklet extends AudioWorkletNode {
+                                                    constructor(context, options={}){
+                                                        options.numberOfInputs = 6;
+                                                        options.numberOfOutputs = 6;
+                                                        options.channelCount = 1;
+                                                        super(context, 'testWorklet', options);
+                                                
+                                                        this._superImportantValue = 'farts';
+                                                
+                                                        this.port.onmessage = function(event){
+                                                            console.log('worklet.node.onmessage',event);
+                                                        };
+                                                        this.port.start();
+                                                    }
+                                                
+                                                    get superImportantValue(){
+                                                        console.log('getting super important value, which happens to be "'+this._superImportantValue+'"');
+                                                        return this._superImportantValue;
+                                                    }
+                                                    set superImportantValue(newValue){
+                                                        console.log('the super important value is being changed to "'+newValue+'"');
+                                                        this._superImportantValue = newValue;
+                                                        this.port.postMessage({ superImportantValue: this._superImportantValue });
+                                                    }
+                                                    doubleTheSuperImportantValue(){
+                                                        console.log('doubling the super important value');
+                                                        this._superImportantValue = this._superImportantValue + this._superImportantValue ;
+                                                        this.port.postMessage({ superImportantValue: this._superImportantValue });
+                                                    }
+                                                }
+                                            ,
+                                        },
+                                        {
                                             name:'amplitudeControlledModulator',
                                             worklet:new Blob([`
                                                 class amplitudeControlledModulator extends AudioWorkletProcessor{
@@ -7173,7 +7436,7 @@
                                                         this.port.onmessage = function(event){
                                                             switch(event.data.command){
                                                                 case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.load).then(result => {
+                                                                    WebAssembly.instantiate(event.data.value).then(result => {
                                                                         self.wasm = result;
                                                 
                                                                         self.outputFrame = {};
@@ -7298,7 +7561,7 @@
                         this.nowReady = function(){};
                         this.requestWasm = function(class_self, instance_self){
                             if(class_self.compiled_wasm != undefined){
-                                instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                                instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
                             } else if(class_self.fetch_promise == undefined){
                                 class_self.fetch_promise = fetch(class_self.wasm_url)
                                     .then(response => {
@@ -7307,13 +7570,13 @@
                                         return WebAssembly.compile(arrayBuffer);
                                     }).then(module => {
                                         class_self.compiled_wasm = module;
-                                        instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                                        instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
                                     });
                             } else {
                                 instance_self.attemptSecondaryWasmLoadIntervalId = setInterval(() => {
                                     if(class_self.compiled_wasm != undefined){
                                         clearInterval(instance_self.attemptSecondaryWasmLoadIntervalId);
-                                        instance_self.port.postMessage({command:'loadWasm', 'load':class_self.compiled_wasm});
+                                        instance_self.port.postMessage({command:'loadWasm', 'value':class_self.compiled_wasm});
                                     }
                                 }, 100);
                             }
@@ -24383,7 +24646,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:13} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:15} };
             
                 const core = this;
             
@@ -28270,7 +28533,7 @@
                             this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
                     
                         //controls
-                            //performace
+                            //performance
                                 this.start = function(){
                                     flow.oscillator.node.start();
                                 };

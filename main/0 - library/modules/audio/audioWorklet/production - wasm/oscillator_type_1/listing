@@ -1,0 +1,17 @@
+//single waveform output
+//four waveforms - sine / square / triangle / noise
+//frequency controlled by parameter
+//gain controlled by parameter or input 0
+//detune controlled by parameter or input 1
+//dutyCycle controlled by parameter or input 2
+//start/stop commands, with hit velocity
+
+{
+    name:'oscillator_type_1',
+    worklet:new Blob([`
+        {{include:worklet.js}}
+    `], { type: "text/javascript" }),
+    class:
+        {{include:node.js}}
+    ,
+},

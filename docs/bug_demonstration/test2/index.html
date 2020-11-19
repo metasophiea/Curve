@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                width:100%; height:100%;
+                background-color: black;
+            }
+        </style>
+    </head>
+
+    <body></body>
+        <canvas id='workspaceCanvas' workspace workspaceWidth='100%' workspaceHeight='100%' style='display: block; margin: auto;'></canvas>     
+    </body>
+
+</html>
+
+<script type='text/javascript' src='test.js'></script>
+<script>
+    const _canvas_ = document.getElementById('workspaceCanvas');
+    _canvas_.layers.onLayerLoad = function(layerName,layerRegistry){
+        console.log('%c- '+layerName+' loaded', 'font-style:italic;' );
+    };
+</script>

@@ -111,17 +111,17 @@
 //                     x:150, y:80, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,value:0.5, resetValue:0.5, arcDistance:1.2,
 //                     handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
 //                 }},
-//                 {collection:'control', type:'checkbox_image', name:'gain_mode', data:{
+//                 {collection:'control', type:'checkbox_image', name:'gain_useControl', data:{
 //                     x:7.5, y:70, width:10, height:20,
 //                     uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
 //                     checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
 //                 }},
-//                 {collection:'control', type:'checkbox_image', name:'detune_mode', data:{
+//                 {collection:'control', type:'checkbox_image', name:'detune_useControl', data:{
 //                     x:62.5, y:70, width:10, height:20,
 //                     uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
 //                     checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
 //                 }},
-//                 {collection:'control', type:'checkbox_image', name:'adjust_mode', data:{
+//                 {collection:'control', type:'checkbox_image', name:'adjust_useControl', data:{
 //                     x:117.5, y:70, width:10, height:20,
 //                     uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
 //                     checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
@@ -137,11 +137,12 @@
 //             gain:1,
 //             detune:0,
 //             adjust:0.5,
-//             gain_mode:false,
-//             detune_mode:false,
-//             adjust_mode:false,
+//             gain_useControl:false,
+//             detune_useControl:false,
+//             adjust_useControl:false,
 //         };
 //         const oscillator = new _canvas_.interface.circuit.oscillator(_canvas_.library.audio.context);
+
 //         function stepFrequencyCharacter(index,increment){
 //             if(increment){
 //                 state.frequencyDigits[index]++;
@@ -172,9 +173,7 @@
 //             state.waveform = waveform;
 //             object.elements.button_image['waveformSelect_'+state.waveform].glow(true);
 
-//             oscillator.waveform(
-//                 ['sine','square','triangle','noise'].indexOf(waveform)
-//             );
+//             oscillator.waveform(waveform);
 //         }
 
 //     //wiring
@@ -213,17 +212,17 @@
 //                 state.adjust = value;
 //                 oscillator.dutyCycle(value);
 //             };
-//             object.elements.checkbox_image.gain_mode.onchange = function(value){ 
-//                 state.gain_mode = value;
-//                 oscillator.gainMode(value?1:0);
+//             object.elements.checkbox_image.gain_useControl.onchange = function(value){ 
+//                 state.gain_useControl = value;
+//                 oscillator.gain_useControl(value);
 //             };
-//             object.elements.checkbox_image.detune_mode.onchange = function(value){ 
-//                 state.detune_mode = value;
-//                 oscillator.detuneMode(value?1:0);
+//             object.elements.checkbox_image.detune_useControl.onchange = function(value){ 
+//                 state.detune_useControl = value;
+//                 oscillator.detune_useControl(value);
 //             };
-//             object.elements.checkbox_image.adjust_mode.onchange = function(value){ 
-//                 state.adjust_mode = value;
-//                 oscillator.dutyCycleMode(value?1:0);
+//             object.elements.checkbox_image.adjust_useControl.onchange = function(value){ 
+//                 state.adjust_useControl = value;
+//                 oscillator.dutyCycle_useControl(value);
 //             };
 
 //         //io
@@ -280,17 +279,17 @@
 //                 if(value == undefined){ return state.adjust; }
 //                 object.elements.dial_continuous_image.adjust.set(value);
 //             },
-//             gainMode:function(bool){
-//                 if(bool == undefined){ return state.gain_mode; }
-//                 object.elements.checkbox_image.gain_mode.set(bool);
+//             gain_useControl:function(bool){
+//                 if(bool == undefined){ return state.gain_useControl; }
+//                 object.elements.checkbox_image.gain_useControl.set(bool);
 //             },
-//             detuneMode:function(bool){
-//                 if(bool == undefined){ return state.detune_mode; }
-//                 object.elements.checkbox_image.detune_mode.set(bool);
+//             detune_useControl:function(bool){
+//                 if(bool == undefined){ return state.detune_useControl; }
+//                 object.elements.checkbox_image.detune_useControl.set(bool);
 //             },
-//             adjustMode:function(bool){
-//                 if(bool == undefined){ return state.adjust_mode; }
-//                 object.elements.checkbox_image.adjust_mode.set(bool);
+//             adjust_useControl:function(bool){
+//                 if(bool == undefined){ return state.adjust_useControl; }
+//                 object.elements.checkbox_image.adjust_useControl.set(bool);
 //             },
 //         };
 
@@ -305,15 +304,16 @@
 //             object.elements.dial_continuous_image.gain.set((data.gain+1)/2);
 //             object.elements.dial_continuous_image.detune.set((data.detune+1)/2);
 //             object.elements.dial_continuous_image.adjust.set(data.adjust);
-//             object.elements.checkbox_image.gain_mode.set(data.gain_mode);
-//             object.elements.checkbox_image.detune_mode.set(data.detune_mode);
-//             object.elements.checkbox_image.adjust_mode.set(data.adjust_mode);
+//             object.elements.checkbox_image.gain_useControl.set(data.gain_useControl);
+//             object.elements.checkbox_image.detune_useControl.set(data.detune_useControl);
+//             object.elements.checkbox_image.adjust_useControl.set(data.adjust_useControl);
 //         };
 
 //     //oncreate/ondelete
 //         object.oncreate = function(){
 //             updateFrequency();
 //             object.elements.button_image.waveformSelect_sine.glow(true);
+//             oscillator.start();
 //         };
     
 //     return object;
@@ -323,21 +323,6 @@
 //     category:'',
 //     helpURL:''
 // };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 this['frequency_generator'] = function(name,x,y,angle){
     //style data
@@ -482,7 +467,14 @@ this['frequency_generator'] = function(name,x,y,angle){
             detune_useControl:false,
             adjust_useControl:false,
         };
-        const oscillator = new _canvas_.interface.circuit.oscillator(_canvas_.library.audio.context);
+        gainControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
+        detuneControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
+        dutyCycleControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
+        const oscillator = new _canvas_.library.audio.audioWorklet.production.wasm.oscillator_type_1(_canvas_.library.audio.context);
+
+        gainControl.connect(oscillator, undefined, 0);
+        detuneControl.connect(oscillator, undefined, 1);
+        dutyCycleControl.connect(oscillator, undefined, 2);
 
         function stepFrequencyCharacter(index,increment){
             if(increment){
@@ -506,7 +498,7 @@ this['frequency_generator'] = function(name,x,y,angle){
             object.elements.readout_sevenSegmentDisplay.LCD.text( frequency );
             object.elements.readout_sevenSegmentDisplay.LCD.print();
 
-            oscillator.frequency(parseFloat(frequency));
+            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.frequency, parseFloat(frequency), 0.01, 'instant', true);
         }
         function selectWaveform(waveform){
             if(state.waveform == waveform){ return; }
@@ -514,7 +506,7 @@ this['frequency_generator'] = function(name,x,y,angle){
             state.waveform = waveform;
             object.elements.button_image['waveformSelect_'+state.waveform].glow(true);
 
-            oscillator.waveform(waveform);
+            oscillator.waveform = waveform;
         }
 
     //wiring
@@ -543,27 +535,27 @@ this['frequency_generator'] = function(name,x,y,angle){
 
             object.elements.dial_continuous_image.gain.onchange = function(value){ 
                 state.gain = value;
-                oscillator.gain(value*2 - 1);
+                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.gain, (value*2 - 1), 0.01, 'instant', true);
             };
             object.elements.dial_continuous_image.detune.onchange = function(value){ 
                 state.detune = value;
-                oscillator.detune(value*2 - 1);
+                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.detune, (value*2 - 1), 0.01, 'instant', true);
             };
             object.elements.dial_continuous_image.adjust.onchange = function(value){ 
                 state.adjust = value;
-                oscillator.dutyCycle(value);
+                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.dutyCycle, (value), 0.01, 'instant', true);
             };
             object.elements.checkbox_image.gain_useControl.onchange = function(value){ 
                 state.gain_useControl = value;
-                oscillator.gain_useControl(value);
+                oscillator.gain_useControl = value;
             };
             object.elements.checkbox_image.detune_useControl.onchange = function(value){ 
                 state.detune_useControl = value;
-                oscillator.detune_useControl(value);
+                oscillator.detune_useControl = value;
             };
             object.elements.checkbox_image.adjust_useControl.onchange = function(value){ 
                 state.adjust_useControl = value;
-                oscillator.dutyCycle_useControl(value);
+                oscillator.dutyCycle_useControl = value;
             };
 
         //io
@@ -576,10 +568,11 @@ this['frequency_generator'] = function(name,x,y,angle){
             object.io.voltage.voltage_adjust.onchange = function(value){
                 object.elements.dial_continuous_image.adjust.set(value);
             };
-            object.io.audio.control_gain.audioNode = oscillator.gainControl();
-            object.io.audio.control_detune.audioNode = oscillator.detuneControl();
-            object.io.audio.control_adjust.audioNode = oscillator.dutyCycleControl();
-            object.io.audio.output.audioNode = oscillator.out();
+
+            object.io.audio.control_gain.audioNode = gainControl;
+            object.io.audio.control_detune.audioNode = detuneControl;
+            object.io.audio.control_adjust.audioNode = dutyCycleControl;
+            object.io.audio.output.audioNode = oscillator;
 
     //interface
         object.i = {

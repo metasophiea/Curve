@@ -3,13 +3,13 @@ this.audioWorklet = new function(){
         production:{
             only_js:{
                 list:[
-                    {{include:production - only_js/manifest}}
+                    {{include:production - only_js/*/listing}}
                 ],
                 readyCount:0,
             },
             wasm:{
                 list:[
-                    {{include:production - wasm/manifest}}
+                    {{include:production - wasm/*/listing}}
                 ],
                 readyCount:0,
             },
@@ -17,13 +17,13 @@ this.audioWorklet = new function(){
         workshop:{
             only_js:{
                 list:[
-                    {{include:workshop - only_js/manifest}}
+                    {{include:workshop - only_js/*/listing}}
                 ],
                 readyCount:0,
             },
             wasm:{
                 list:[
-                    {{include:workshop - wasm/manifest}}
+                    {{include:workshop - wasm/*/listing}}
                 ],
                 readyCount:0,
             },

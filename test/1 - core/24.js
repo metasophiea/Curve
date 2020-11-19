@@ -24,7 +24,5 @@ _canvas_.layers.registerFunctionForLayer("core", function(){
             canvas._.fillRect(canvas.$(0),canvas.$(0),canvas.$(60),canvas.$(length*60));
             canvas.requestUpdate();
         });
-
-        console.log('bing');
-    }, 10);
+    }, 1);
 });

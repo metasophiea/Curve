@@ -1,4 +1,18 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-11-19
+  - put together new oscillator "oscillator_type_1" which uses wasm for 
+    processing
+  - updated Acoustic Research's Frequency Generator to use this new oscillator.
+    It also skips over the interface section, so, things are a little more 
+    involved, but it just as good
+
+
+2020-11-17
+  - dark-mode / light-mode is now selected based on the time (on start up). So
+    between 8pm and 8am, dark mode will be activated. Of course, the url
+    argument still works as does the menubar's tool's checkbox
+
+
 2020-11-15
   - small modification to the image element in core, so that it now deals with
     bitmaps and urls separately, and on initial creation, doesn't require the
