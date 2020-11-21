@@ -16,6 +16,11 @@ this.stableAmplitudeGenerator = function(
     //input/output node
         this.out = function(){ return flow.stableAmplitudeGenerator.node; }
 
+    //shutdown
+        this.shutdown = function(){
+            flow.stableAmplitudeGenerator.node.shutdown();
+        }
+
     //controls
         this.amplitude = function(value){
             if(value == undefined){ return flow.stableAmplitudeGenerator.amplitude; }

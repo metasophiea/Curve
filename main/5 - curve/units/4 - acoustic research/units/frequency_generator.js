@@ -467,14 +467,7 @@ this['frequency_generator'] = function(name,x,y,angle){
             detune_useControl:false,
             adjust_useControl:false,
         };
-        gainControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
-        detuneControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
-        dutyCycleControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
-        const oscillator = new _canvas_.library.audio.audioWorklet.production.wasm.oscillator_type_1(_canvas_.library.audio.context);
-
-        gainControl.connect(oscillator, undefined, 0);
-        detuneControl.connect(oscillator, undefined, 1);
-        dutyCycleControl.connect(oscillator, undefined, 2);
+        const oscillator = new _canvas_.interface.circuit.oscillator_type_1(_canvas_.library.audio.context);
 
         function stepFrequencyCharacter(index,increment){
             if(increment){
@@ -498,7 +491,7 @@ this['frequency_generator'] = function(name,x,y,angle){
             object.elements.readout_sevenSegmentDisplay.LCD.text( frequency );
             object.elements.readout_sevenSegmentDisplay.LCD.print();
 
-            _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.frequency, parseFloat(frequency), 0.01, 'instant', true);
+            oscillator.frequency(parseFloat(frequency));
         }
         function selectWaveform(waveform){
             if(state.waveform == waveform){ return; }
@@ -506,7 +499,7 @@ this['frequency_generator'] = function(name,x,y,angle){
             state.waveform = waveform;
             object.elements.button_image['waveformSelect_'+state.waveform].glow(true);
 
-            oscillator.waveform = waveform;
+            oscillator.waveform(waveform);
         }
 
     //wiring
@@ -535,27 +528,27 @@ this['frequency_generator'] = function(name,x,y,angle){
 
             object.elements.dial_continuous_image.gain.onchange = function(value){ 
                 state.gain = value;
-                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.gain, (value*2 - 1), 0.01, 'instant', true);
+                oscillator.gain(value*2 - 1);
             };
             object.elements.dial_continuous_image.detune.onchange = function(value){ 
                 state.detune = value;
-                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.detune, (value*2 - 1), 0.01, 'instant', true);
+                oscillator.detune(value*2 - 1);
             };
             object.elements.dial_continuous_image.adjust.onchange = function(value){ 
                 state.adjust = value;
-                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.dutyCycle, (value), 0.01, 'instant', true);
+                oscillator.dutyCycle(value);
             };
             object.elements.checkbox_image.gain_useControl.onchange = function(value){ 
                 state.gain_useControl = value;
-                oscillator.gain_useControl = value;
+                oscillator.gain_useControl(value);
             };
             object.elements.checkbox_image.detune_useControl.onchange = function(value){ 
                 state.detune_useControl = value;
-                oscillator.detune_useControl = value;
+                oscillator.detune_useControl(value);
             };
             object.elements.checkbox_image.adjust_useControl.onchange = function(value){ 
                 state.adjust_useControl = value;
-                oscillator.dutyCycle_useControl = value;
+                oscillator.dutyCycle_useControl(value);
             };
 
         //io
@@ -568,11 +561,10 @@ this['frequency_generator'] = function(name,x,y,angle){
             object.io.voltage.voltage_adjust.onchange = function(value){
                 object.elements.dial_continuous_image.adjust.set(value);
             };
-
-            object.io.audio.control_gain.audioNode = gainControl;
-            object.io.audio.control_detune.audioNode = detuneControl;
-            object.io.audio.control_adjust.audioNode = dutyCycleControl;
-            object.io.audio.output.audioNode = oscillator;
+            object.io.audio.control_gain.audioNode = oscillator.gainControl();
+            object.io.audio.control_detune.audioNode = oscillator.detuneControl();
+            object.io.audio.control_adjust.audioNode = oscillator.dutyCycleControl();
+            object.io.audio.output.audioNode = oscillator.out();
 
     //interface
         object.i = {
@@ -647,7 +639,9 @@ this['frequency_generator'] = function(name,x,y,angle){
         object.oncreate = function(){
             updateFrequency();
             object.elements.button_image.waveformSelect_sine.glow(true);
-            oscillator.start();
+        };
+        object.ondelete = function(){
+            oscillator.shutdown();
         };
     
     return object;

@@ -110,8 +110,10 @@ this.connectionNode_audio = function(
                 return;
             }
             
-            if(object._direction == 'out'){
-                object.audioNode.disconnect(object.getForeignNode().audioNode);
+            if( object._direction == 'out' ){
+                try {
+                    object.audioNode.disconnect(object.getForeignNode().audioNode);
+                } catch (err) {}
             }
         };
 

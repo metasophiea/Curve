@@ -94,20 +94,20 @@ this['amplitude_modifier'] = function(name,x,y,angle){
     //wiring
         //hid
             object.elements.dial_continuous_image.offset.onchange = function(value){
-                amplitudeModifier.offset(value*2 - 1);
                 state.offset = value*2 - 1;
+                amplitudeModifier.offset( state.offset );
             };
             object.elements.dial_continuous_image.divideBy.onchange = function(value){
-                amplitudeModifier.divisor(value*7 + 1);
                 state.divideBy = value*7 + 1;
+                amplitudeModifier.divisor( state.divideBy );
             };
             object.elements.dial_continuous_image.ceiling.onchange = function(value){
-                amplitudeModifier.ceiling(value*2);
                 state.ceiling = value*2;
+                amplitudeModifier.ceiling( state.ceiling );
             };
             object.elements.dial_continuous_image.floor.onchange = function(value){
-                amplitudeModifier.floor(-(1-value)*2);
                 state.floor = -(1-value)*2;
+                amplitudeModifier.floor( state.floor );
             };
             object.elements.checkbox_image.invert.onchange = function(value){
                 amplitudeModifier.invert(value);
@@ -169,6 +169,11 @@ this['amplitude_modifier'] = function(name,x,y,angle){
             object.elements.dial_continuous_image.ceiling.set( data.ceiling/2 );
             object.elements.dial_continuous_image.floor.set( -data.floor/2 );
             object.elements.checkbox_image.invert.set( data.invert );
+        };
+
+    //oncreate/ondelete
+        object.ondelete = function(){
+            amplitudeModifier.shutdown();
         };
         
     return object;

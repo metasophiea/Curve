@@ -5,14 +5,25 @@ class amplitudeModifier extends AudioWorkletNode{
     static compiled_wasm;
 
     constructor(context, options={}){
-        options.numberOfInputs = 1;
-        options.numberOfOutputs = 1;
-        options.channelCount = 1;
-        super(context, 'amplitudeModifier', options);
+        //populate options
+            options.numberOfInputs = 1;
+            options.numberOfOutputs = 1;
+            options.channelCount = 1;
 
-        this._invert = false;
+        //generate class instance
+            super(context, 'amplitudeModifier', options);
 
-        audio.audioWorklet.requestWasm(amplitudeModifier, this);
+        //load wasm processor
+            audio.audioWorklet.requestWasm(amplitudeModifier, this);
+
+        //instance state
+            this._invert = false;
+
+        //shutdown
+            this.shutdown = function(){
+                this.port.postMessage({command:'shutdown', value:undefined});
+                this.port.close();
+            };
     }
 
     get invert(){

@@ -40,14 +40,10 @@ class oscillator_type_1 extends AudioWorkletProcessor {
     constructor(options){
         //construct class instance
             super(options);
-        
-        //setup instance values
-            this._wavePosition = 0;
 
         //instance state
+            this.shutdown = false;
             this._state = {
-                running: {state: false, velocity: 0},
-
                 gain_useControl: false,
                 detune_useControl: false,
                 dutyCycle_useControl: false,
@@ -82,24 +78,12 @@ class oscillator_type_1 extends AudioWorkletProcessor {
 
                                 //re-send waveform selection (just incase)
                                     self.wasm.exports.select_waveform(self._state.selected_waveform);
-                                //resend start signal (if necessary)(just incase)
-                                    if(self._state.running.state){
-                                        self.wasm.exports.start( self._state.running.velocity );
-                                    }
                             });
                         break;
                     
-                    //start/stop
-                        case 'start': 
-                            self._state.running.state = true;
-                            self._state.running.velocity = event.data.value;
-                            if(self.wasm == undefined){ return; }
-                            self.wasm.exports.start(event.data.value);
-                        break;
-                        case 'stop': 
-                            self._state.state = false;
-                            if(self.wasm == undefined){ return; }
-                            self.wasm.exports.stop();
+                    //shutdown
+                        case 'shutdown':
+                            self.shutdown = true;
                         break;
 
                     //use control
@@ -124,6 +108,7 @@ class oscillator_type_1 extends AudioWorkletProcessor {
     }
 
     process(inputs, outputs, parameters){
+        if(this.shutdown){ return false; }
         if(this.wasm == undefined){ return true; }
 
         //collect inputs/outputs
@@ -145,7 +130,7 @@ class oscillator_type_1 extends AudioWorkletProcessor {
             const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
             this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
 
-        //process data for, and copy to channels
+        //process data, and copy results to channels
             for(let channel = 0; channel < output.length; channel++){
                 this.wasm.exports.process(
                     frequency_useFirstOnly,

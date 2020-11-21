@@ -92,6 +92,11 @@ this['lag_processor'] = function(name,x,y,angle){
         object.importData = function(data){
             object.elements.dial_continuous_image.samples.set( data.samples_dial );
         };
+
+    //oncreate/ondelete
+        object.ondelete = function(){
+            lagProcessor.shutdown();
+        };
         
     return object;
 };

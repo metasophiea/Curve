@@ -18,6 +18,11 @@ this.sigmoid = function(
         this.in = function(){return flow.sigmoid.node;}
         this.out = function(a){return flow.sigmoid.node;}
 
+    //shutdown
+        this.shutdown = function(){
+            flow.sigmoid.node.shutdown();
+        }
+
     //controls
         this.gain = function(value){
             if(value == undefined){ return flow.sigmoid.gain; }

@@ -31,12 +31,6 @@ lazy_static! {
     #[no_mangle]
     pub extern "C" fn get_output_pointer() -> *mut f32 { SIMPLE_OSCILLATOR.lock().unwrap().get_output_pointer() }
 
-//start/stop
-    #[no_mangle]
-    pub extern "C" fn start(velocity:f32) { SIMPLE_OSCILLATOR.lock().unwrap().running(true, Some(velocity)); }
-    #[no_mangle]
-    pub extern "C" fn stop() { SIMPLE_OSCILLATOR.lock().unwrap().running(false, None); }
-
 //change value
     #[no_mangle]
     pub extern "C" fn select_waveform(waveform_index:usize) { SIMPLE_OSCILLATOR.lock().unwrap().select_waveform(waveform_index)  }

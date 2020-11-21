@@ -8,6 +8,11 @@ this.bitcrusher = function(
         this.in = function(){return bitcrusherNode;}
         this.out = function(a){return bitcrusherNode;}
 
+    //shutdown
+        this.shutdown = function(){
+            bitcrusherNode.shutdown();
+        }
+
     //controls
         this.amplitudeResolution = function(value){
             if(value == undefined){ return bitcrusherNode.amplitudeResolution; }

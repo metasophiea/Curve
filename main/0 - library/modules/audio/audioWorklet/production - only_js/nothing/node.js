@@ -4,5 +4,10 @@ class nothing extends AudioWorkletNode{
         options.numberOfOutputs = 1;
         options.channelCount = 1;
         super(context, 'nothing', options);
+
+        this.shutdown = function(){
+            this.port.postMessage({command:'shutdown'});
+            this.port.close();
+        };
     }
 }

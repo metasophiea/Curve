@@ -5,15 +5,26 @@ class bitcrusher extends AudioWorkletNode {
     static compiled_wasm;
 
     constructor(context, options={}){
-        options.numberOfInputs = 1;
-        options.numberOfOutputs = 1;
-        options.channelCount = 1;
-        super(context, 'bitcrusher', options);
-        
-        this._amplitudeResolution = 10;
-        this._sampleFrequency = 16;
+        //populate options
+            options.numberOfInputs = 1;
+            options.numberOfOutputs = 1;
+            options.channelCount = 1;
 
-        audio.audioWorklet.requestWasm(bitcrusher, this);
+        //generate class instance
+            super(context, 'bitcrusher', options);
+
+        //load wasm processor
+            audio.audioWorklet.requestWasm(bitcrusher, this);
+        
+        //instance state
+            this._amplitudeResolution = 10;
+            this._sampleFrequency = 16;
+
+        //shutdown
+            this.shutdown = function(){
+                this.port.postMessage({command:'shutdown', value:undefined});
+                this.port.close();
+            };
     }
 
     get amplitudeResolution(){

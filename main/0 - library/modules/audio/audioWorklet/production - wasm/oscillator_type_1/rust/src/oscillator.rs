@@ -11,9 +11,6 @@ static SAMPLE_RATE:f64 = 44100.0;
 
 //struct description
     pub struct SimpleOscillator {
-        running: bool,
-        velocity: f32,
-
         frequency_buffer: [f32; 128],
         gain_buffer: [f32; 128],
         detune_buffer: [f32; 128],
@@ -29,9 +26,6 @@ static SAMPLE_RATE:f64 = 44100.0;
     impl SimpleOscillator {
         pub fn new() -> SimpleOscillator {
             SimpleOscillator {
-                running: false,
-                velocity: 0.0,
-
                 frequency_buffer: [0.0; 128],
                 gain_buffer: [0.0; 128],
                 detune_buffer: [0.0; 128],
@@ -66,13 +60,6 @@ static SAMPLE_RATE:f64 = 44100.0;
 
 //attribute modification
     impl SimpleOscillator {
-        pub fn running(&mut self, state:bool, velocity:Option<f32>) {
-            self.running = state;
-            self.velocity = match velocity {
-                None => 0.0,
-                Some(v) => v,
-            };
-        }
         pub fn select_waveform(&mut self, waveform_index:usize) {
             self.selected_waveform_index = waveform_index;
         }
@@ -87,13 +74,6 @@ static SAMPLE_RATE:f64 = 44100.0;
             detune_useFirstOnly: bool,
             duty_cycle_useFirstOnly: bool,
         ){
-            if !self.running {
-                for index in 0..128 {
-                    self.output_buffer[index] = 0.0;
-                }
-                return;
-            }
-
             fn preamble(
                 this: &mut SimpleOscillator,
 
@@ -119,14 +99,14 @@ static SAMPLE_RATE:f64 = 44100.0;
                     for index in 0..128 {
                         let gain = (if gain_useFirstOnly { self.gain_buffer[0] } else { self.gain_buffer[index] }) as f64;
                         let (local_wave_position, _duty_cycle) = preamble(self, frequency_useFirstOnly, detune_useFirstOnly, duty_cycle_useFirstOnly, index);
-                        self.output_buffer[index] = (((local_wave_position * std::f64::consts::TAU).sin() * gain) as f32) * self.velocity;
+                        self.output_buffer[index] = ((local_wave_position * std::f64::consts::TAU).sin() * gain) as f32;
                     }
                 },
                 1 => { //square
                     for index in 0..128 {
                         let gain = (if gain_useFirstOnly { self.gain_buffer[0] } else { self.gain_buffer[index] }) as f64;
                         let (local_wave_position, duty_cycle) = preamble(self, frequency_useFirstOnly, detune_useFirstOnly, duty_cycle_useFirstOnly, index);
-                        self.output_buffer[index] = ((if local_wave_position < duty_cycle { 1.0 } else { -1.0 } * gain) as f32) * self.velocity;
+                        self.output_buffer[index] = (if local_wave_position < duty_cycle { 1.0 } else { -1.0 } * gain) as f32;
                     }
                 },
                 2 => { //triangle
@@ -134,19 +114,19 @@ static SAMPLE_RATE:f64 = 44100.0;
                         let gain = (if gain_useFirstOnly { self.gain_buffer[0] } else { self.gain_buffer[index] }) as f64;
                         let (local_wave_position, duty_cycle) = preamble(self, frequency_useFirstOnly, detune_useFirstOnly, duty_cycle_useFirstOnly, index);
 
-                        self.output_buffer[index] = ((if local_wave_position < (duty_cycle / 2.0) {
+                        self.output_buffer[index] = (if local_wave_position < (duty_cycle / 2.0) {
                             (2.0*local_wave_position) / duty_cycle
                         } else if local_wave_position >= (1.0 - duty_cycle/2.0) {
                             (2.0*local_wave_position - 2.0) / duty_cycle
                         } else {
                             (2.0*local_wave_position - 1.0) / (duty_cycle - 1.0)
-                        } * gain) as f32) * self.velocity;
+                        } * gain) as f32;
                     }
                 },
                 3 => { //noise
                     for index in 0..128 {
                         let gain = (if gain_useFirstOnly { self.gain_buffer[0] } else { self.gain_buffer[index] }) as f64;
-                        self.output_buffer[index] = (2.0*generate_random_number() - 1.0) * (gain as f32) * self.velocity;
+                        self.output_buffer[index] = (2.0*generate_random_number() - 1.0) * (gain as f32);
                     }
                 },
                 _ => { //unknown selection

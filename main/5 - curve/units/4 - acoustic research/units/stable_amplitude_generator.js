@@ -61,7 +61,7 @@ this['stable_amplitude_generator'] = function(name,x,y,angle){
             object.elements.dial_continuous_image.amplitude.onchange = function(value){
                 state.amplitude_dial = value;
                 state.amplitude = value*2 - 1;
-                stableAmplitudeGenerator.amplitude( state.amplitude );
+                stableAmplitudeGenerator.amplitude(state.amplitude);
             };
         //io
             object.io.audio.output.audioNode = stableAmplitudeGenerator.out();
@@ -82,6 +82,11 @@ this['stable_amplitude_generator'] = function(name,x,y,angle){
         };
         object.importData = function(data){
             object.elements.dial_continuous_image.amplitude.set( data.amplitude_dial );
+        };
+
+    //oncreate/ondelete
+        object.ondelete = function(){
+            stableAmplitudeGenerator.shutdown();
         };
         
     return object;

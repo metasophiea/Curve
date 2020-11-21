@@ -25,12 +25,10 @@ class oscillator_type_1 extends AudioWorkletNode {
                 waveform: 'sine',
             };
 
-        //setup methods
-            this.start = function(hitVelocity=1){
-                this.port.postMessage({command:'start', value:hitVelocity});
-            };
-            this.stop = function(){
-                this.port.postMessage({command:'stop', value:undefined});
+        //shutdown
+            this.shutdown = function(){
+                this.port.postMessage({command:'shutdown', value:undefined});
+                this.port.close();
             };
     }
 

@@ -40,6 +40,18 @@ this.streamAdder = function(
         this.mixControl = function(){return flow.mixControl.node;}
         this.out = function(){return flow.streamAdder.node;}
 
+    //shutdown
+        this.shutdown = function(){
+            flow.input_1.node.shutdown();
+            flow.input_2.node.shutdown();
+            flow.mixControl.node.shutdown();
+            flow.streamAdder.node.shutdown();
+
+            flow.input_1.node.disconnect(flow.streamAdder.node);
+            flow.input_2.node.disconnect(flow.streamAdder.node);
+            flow.mixControl.node.disconnect(flow.streamAdder.node);
+        }
+
     //controls
         this.mode = function(value){
             if(value == undefined){ return flow.streamAdder.mode; }

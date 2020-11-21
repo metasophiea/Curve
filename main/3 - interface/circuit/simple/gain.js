@@ -53,6 +53,14 @@ this.gain = function(
         this.out = function(){return flow.gain.node;}
         this.control = function(){return flow.controlIn.node;}
 
+    //shutdown
+        this.shutdown = function(){
+            flow.controlIn.node.shutdown();
+            flow.gain.node.shutdown();
+
+            flow.controlIn.node.disconnect(flow.gain.node);
+        }
+
     //controls
         this.mode = function(value){
             if(value == undefined){ return flow.gain.mode; }

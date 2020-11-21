@@ -21,6 +21,11 @@ this.amplitudeModifier = function(
         this.in = function(){return flow.amplitudeModifierNode.node;}
         this.out = function(a){return flow.amplitudeModifierNode.node;}
 
+    //shutdown
+        this.shutdown = function(){
+            flow.amplitudeModifierNode.node.shutdown();
+        }
+
     //controls
         this.invert = function(value){
             if(value == undefined){ return flow.amplitudeModifierNode.invert; }

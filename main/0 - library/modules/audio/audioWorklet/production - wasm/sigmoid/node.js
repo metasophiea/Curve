@@ -5,12 +5,22 @@ class sigmoid extends AudioWorkletNode{
     static compiled_wasm;
 
     constructor(context, options={}){
-        options.numberOfInputs = 1;
-        options.numberOfOutputs = 1;
-        options.channelCount = 1;
-        super(context, 'sigmoid', options);
+        //populate options
+            options.numberOfInputs = 1;
+            options.numberOfOutputs = 1;
+            options.channelCount = 1;
 
-        audio.audioWorklet.requestWasm(sigmoid, this);
+        //generate class instance
+            super(context, 'sigmoid', options);
+
+        //load wasm processor
+            audio.audioWorklet.requestWasm(sigmoid, this);
+
+        //shutdown
+            this.shutdown = function(){
+                this.port.postMessage({command:'shutdown', value:undefined});
+                this.port.close();
+            };
     }
 
     get gain(){

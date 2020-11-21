@@ -3,4 +3,7 @@ this.whiteNoiseGenerator = function(
 ){
     const audioWorklet = new _canvas_.library.audio.audioWorklet.production.only_js.whiteNoiseGenerator(context);
     this.out = function(){ return audioWorklet; }
+    this.shutdown = function(){
+        audioWorklet.shutdown();
+    }
 };

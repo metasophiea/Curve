@@ -1,4 +1,39 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-11-21
+  - created a circuit for the oscillator_type_1 (with the same name) and
+    changed the Frequency Generator to use that instead..I'm flip-flopping
+    around a bit, but I think the circuits are actually a good idea
+  - same as above, but for the amplitude_modifier, bitcrusher, gain,
+    lag_processor, sigmoids_affector and stable_amplitude_generator. Also the
+    stream_adder, though I'd missed that one yesterday, so I didn't need to
+    undo any work, only add the shutdown sections
+  - threw out the white noise generator audio node, as no one was using it and
+    you can get the same functionality from the oscillator_type_1 node
+  - only code that uses the old oscillator interface circuit is the
+    synthesizer_2 interface circuit, and no one uses that, so I've commented
+    out both (there's some interesting code in there regarding control of the
+    envelopes) These circuits weren't used originally (I think) because the
+    system wasn't able to keep up with the js-based audio nodes that they used.
+    Things are different now of course thanks to rust and wasm.
+
+
+2020-11-20
+  - modified the "nothing" and "oscillator_type_1" audio nodes to have
+    'shutdown' methods, which stop the process loop, thus removing their load
+    from the audio rendering thread. I'll need to add this to all audio nodes
+  - updated the frequency generator to shutdown audio nodes on its deletion
+  - modified the amplitude_modifier, bitcrusher, gain, lag_processor, sigmoid,
+    stream_adder and stable_amplitude_generator audio nodes to have
+    'shutdown' methods
+  - modified a number of Acoustic Research's units to use audio nodes directly,
+    instead of the circuits from the interface layer. These units also shutdown
+    the nodes on deletion, which led to an issue with a double disconnect
+    attempt on the nodes when the unit is deleted (while still being connected)
+    I've had to add a "try/catch" statement around the disconnection node in
+    the interface layer's connectionNode_audio.. its a bit of a messy solution,
+    but it works.
+
+
 2020-11-19
   - put together new oscillator "oscillator_type_1" which uses wasm for 
     processing

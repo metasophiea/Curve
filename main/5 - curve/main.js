@@ -1,5 +1,5 @@
 _canvas_.curve = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:19} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:21} };
 };
 
 _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -21,7 +21,7 @@ _canvas_.layers.registerFunctionForLayer("curve", function(){
     const hour = (new Date()).getHours();
     if( 
         (new URL(window.location.href)).searchParams.get("darkmode") != null ||
-        hour < 8 || hour > 20
+        hour < 8 || hour >= 20
     ){ _canvas_.control.gui.style.darkMode(); }
 });
 

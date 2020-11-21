@@ -86,6 +86,7 @@ this['gain'] = function(name,x,y,angle){
         };
         const gain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
 
+
         function update(){
             const v = state.gain_dial*2 - 1;
             state.gain = ( v + (state.plusOne?1:0) ) * (state.byTen?10:1);
@@ -112,7 +113,7 @@ this['gain'] = function(name,x,y,angle){
             };
         //io
             object.io.audio.input.audioNode = gain.in();
-            object.io.audio.output.audioNode = gain.out();
+            object.io.audio.output.audioNode = gain.in();
             object.io.audio.control.audioNode = gain.control();
             object.io.signal.mux.onchange = function(value){
                 if(!value){return;}
@@ -161,9 +162,12 @@ this['gain'] = function(name,x,y,angle){
             object.elements.dial_continuous_image.gain.set( data.gain_dial );
         };
 
-    //setup/tearDown
+    //oncreate/ondelete
         object.oncreate = function(){
             object.elements.checkbox_image.plusOne.set(true);
+        };
+        object.ondelete = function(){
+            gain.shutdown();
         };
 
     return object;

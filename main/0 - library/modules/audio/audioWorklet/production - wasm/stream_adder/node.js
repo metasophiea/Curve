@@ -5,14 +5,25 @@ class streamAdder extends AudioWorkletNode{
     static compiled_wasm;
 
     constructor(context, options={}){
-        options.numberOfInputs = 3;
-        options.numberOfOutputs = 1;
-        options.channelCount = 1;
-        super(context, 'streamAdder', options);
+        //populate options
+            options.numberOfInputs = 3;
+            options.numberOfOutputs = 1;
+            options.channelCount = 1;
 
-        this._mode = false;
+        //generate class instance
+            super(context, 'streamAdder', options);
 
-        audio.audioWorklet.requestWasm(streamAdder, this);
+        //load wasm processor
+            audio.audioWorklet.requestWasm(streamAdder, this);
+
+        //instance state
+            this._mode = false;
+
+        //shutdown
+            this.shutdown = function(){
+                this.port.postMessage({command:'shutdown', value:undefined});
+                this.port.close();
+            };
     }
 
     get mode(){

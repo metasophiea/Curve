@@ -78,7 +78,9 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
             exponentialMode:false,
             asCloseToOneAsIsAllowed:0.999,
         };
-        const amplitudeExciter = new _canvas_.interface.circuit.sigmoid(_canvas_.library.audio.context);
+        const sigmoid = new _canvas_.interface.circuit.sigmoid(_canvas_.library.audio.context);
+
+
         function setSharpness(value){
             if(state.exponentialMode){
                 value = _canvas_.library.math.curvePoint.halfSigmoid_up( value, 0, 1, 0.75 );
@@ -88,14 +90,14 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
                 value = state.asCloseToOneAsIsAllowed;
             }
 
-            amplitudeExciter.sharpness(value);
+            sigmoid.sharpness(value);
             state.sharpness = value;
         }
 
     //wiring
         //hid
             object.elements.dial_continuous_image.gain.onchange = function(value){
-                amplitudeExciter.gain(value);
+                sigmoid.gain(value);
                 state.gain = value;
             };
             object.elements.dial_continuous_image.sharpness.onchange = function(value){
@@ -111,8 +113,8 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
                 setSharpness(state.sharpnessDial);
             };
         //io
-            object.io.audio.input.audioNode = amplitudeExciter.in();
-            object.io.audio.output.audioNode = amplitudeExciter.out();
+            object.io.audio.input.audioNode = sigmoid.in();
+            object.io.audio.output.audioNode = sigmoid.out();
             object.io.voltage.voltage_gain.onchange = function(value){
                 object.elements.dial_continuous_image.gain.set(value);
             };
@@ -164,6 +166,11 @@ this['sigmoids_affecter'] = function(name,x,y,angle){
             object.elements.dial_continuous_image.sharpness.set(data.sharpnessDial);
             object.elements.checkbox_image.allowOne.set(data.allowOne);
             object.elements.checkbox_image.exponentialMode.set(data.exponentialMode);
+        };
+
+    //oncreate/ondelete
+        object.ondelete = function(){
+            sigmoid.shutdown();
         };
         
     return object;

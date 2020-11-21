@@ -104,6 +104,11 @@ this['stream_adder'] = function(name,x,y,angle){
         object.importData = function(data){
             object.elements.dial_continuous_image.mix.set( data.mix );
         };
+
+    //oncreate/ondelete
+        object.ondelete = function(){
+            streamAdder.shutdown();
+        };
         
     return object;
 };

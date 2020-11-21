@@ -73,7 +73,7 @@ this['bitcrusher'] = function(name,x,y,angle){
                 state.amplitudeResolution = value;
             };
             object.elements.dial_discrete_image.sampleFrequency.onchange = function(value){
-                bitcrusher.sampleFrequency(Math.pow(2, value));
+                bitcrusher.sampleFrequency( Math.pow(2, value) );
                 state.sampleFrequency = value;
             };
 
@@ -109,10 +109,13 @@ this['bitcrusher'] = function(name,x,y,angle){
             object.elements.dial_discrete_image.sampleFrequency.set( data.sampleFrequency );
         };
 
-    //setup/tearDown
+    //oncreate/ondelete
         object.oncreate = function(){
             object.elements.dial_continuous_image.amplitudeResolution.set(0.425);
             object.elements.dial_discrete_image.sampleFrequency.set(4);
+        };
+        object.ondelete = function(){
+            bitcrusher.shutdown();
         };
 
     return object;

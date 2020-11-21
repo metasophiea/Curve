@@ -5,14 +5,25 @@ class lagProcessor extends AudioWorkletNode{
     static compiled_wasm;
 
     constructor(context, options={}){
-        options.numberOfInputs = 1;
-        options.numberOfOutputs = 1;
-        options.channelCount = 1;
-        super(context, 'lagProcessor', options);
+        //populate options
+            options.numberOfInputs = 1;
+            options.numberOfOutputs = 1;
+            options.channelCount = 1;
 
-        this._samples = 1;
+        //generate class instance
+            super(context, 'lagProcessor', options);
 
-        audio.audioWorklet.requestWasm(lagProcessor, this);
+        //load wasm processor
+            audio.audioWorklet.requestWasm(lagProcessor, this);
+
+        //instance state
+            this._samples = 1;
+
+        //shutdown
+            this.shutdown = function(){
+                this.port.postMessage({command:'shutdown', value:undefined});
+                this.port.close();
+            };
     }
 
     get samples(){

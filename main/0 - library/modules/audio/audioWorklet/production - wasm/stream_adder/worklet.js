@@ -18,55 +18,71 @@ class streamAdder extends AudioWorkletProcessor{
     }
     
     constructor(options){
-        super(options);
-        const self = this;
+        //construct class instance
+            super(options);
 
-        this.port.onmessage = function(event){
-            switch(event.data.command){
-                case 'loadWasm':
-                    WebAssembly.instantiate(event.data.value).then(result => {
-                        self.wasm = result;
 
-                        self.input1Frame = {};
-                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
-                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+        //instance state
+            this.shutdown = false;
 
-                        self.input2Frame = {};
-                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
-                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+        //setup message receiver
+            const self = this;
+            this.port.onmessage = function(event){
+                switch(event.data.command){
+                    //wasm initialization
+                        case 'loadWasm':
+                            WebAssembly.instantiate(event.data.value).then(result => {
+                                self.wasm = result;
 
-                        self.mixControlFrame = {};
-                        self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
-                        self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+                                self.input1Frame = {};
+                                self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
 
-                        self.outputFrame = {};
-                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                    });
-                break;
-            }
-        };
+                                self.input2Frame = {};
+                                self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+
+                                self.mixControlFrame = {};
+                                self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
+                                self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+
+                                self.outputFrame = {};
+                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                            });
+                        break;
+                    
+                    //shutdown
+                        case 'shutdown':
+                            self.shutdown = true;
+                        break;
+                }
+            };
     }
 
     process(inputs, outputs, parameters){
+        if(this.shutdown){ return false; }
         if(this.wasm == undefined){ return true; }
 
-        const input_1 = inputs[0];
-        const input_2 = inputs[1];
-        const mixControl = inputs[2];
-        const output = outputs[0];
+        //collect inputs/outputs
+            const input_1 = inputs[0];
+            const input_2 = inputs[1];
+            const mixControl = inputs[2];
+            const output = outputs[0];
 
-        const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
+        //pre-calculation
+            const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
 
-        for(let channel = 0; channel < input_1.length; channel++){
-            this.input1Frame.buffer.set(input_1[channel]);
-            this.input2Frame.buffer.set(input_2[channel]);
-            this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
-            this.wasm.exports.process(
-                mixControl_useFirstOnly
-            );
-            output[channel].set(this.outputFrame.buffer);
-        }
+        //populate input buffers, process data, and copy results to channels
+            for(let channel = 0; channel < input_1.length; channel++){
+                this.input1Frame.buffer.set(input_1[channel]);
+                this.input2Frame.buffer.set(input_2[channel]);
+                this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
+                this.wasm.exports.process(
+                    mixControl_useFirstOnly
+                );
+                output[channel].set(this.outputFrame.buffer);
+            }
 
         return true;
     }

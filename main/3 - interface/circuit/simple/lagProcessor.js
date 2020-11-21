@@ -6,7 +6,12 @@ this.lagProcessor = function(
 
     //input/output node
         this.in = function(){return lagProcessorNode;}
-        this.out = function(a){return lagProcessorNode;}
+        this.out = function(){return lagProcessorNode;}
+
+    //shutdown
+        this.shutdown = function(){
+            lagProcessorNode.shutdown();
+        }
 
     //controls
         this.samples = function(value){

@@ -1,9 +1,26 @@
 class nothing extends AudioWorkletProcessor{
     constructor(options){
-        super(options);
+        //construct class instance
+            super(options);
+
+        //instance state
+            this.shutdown = false;
+
+        //setup message receiver
+            const self = this;
+            this.port.onmessage = function(event){
+                switch(event.data.command){
+                    //shutdown
+                        case 'shutdown':
+                            self.shutdown = true;
+                        break;
+                }
+            };
     }
 
     process(inputs, outputs, parameters){
+        if(this.shutdown){ return false; }
+        
         const input = inputs[0];
         const output = outputs[0];
 

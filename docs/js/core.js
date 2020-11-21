@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:19} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:20} };
                 const library = this;
                 
                 const dev = {
@@ -4397,43 +4397,6 @@
                                             ,
                                         },
                                         {
-                                            name:'whiteNoiseGenerator',
-                                            worklet:new Blob([`
-                                                class whiteNoiseGenerator extends AudioWorkletProcessor{
-                                                    static get parameterDescriptors(){
-                                                        return [];
-                                                    }
-                                                    
-                                                    constructor(options){
-                                                        super(options);
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        const output = outputs[0];
-                                                
-                                                        for(let channel = 0; channel < output.length; channel++){
-                                                            for(let a = 0; a < output[channel].length; a++){
-                                                                output[channel][a] = Math.random()*2 - 1;
-                                                            }
-                                                        }
-                                                
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('whiteNoiseGenerator', whiteNoiseGenerator);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class whiteNoiseGenerator extends AudioWorkletNode{
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 0;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'whiteNoiseGenerator', options);
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
                                             name:'stableAmplitudeGenerator',
                                             worklet:new Blob([`
                                                 class stableAmplitudeGenerator extends AudioWorkletProcessor{
@@ -4450,10 +4413,27 @@
                                                     }
                                                 
                                                     constructor(options){
-                                                        super(options);
+                                                        //construct class instance
+                                                            super(options);
+                                                
+                                                        //instance state
+                                                            this.shutdown = false;
+                                                
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
+                                                
                                                         const output = outputs[0];
                                                 
                                                         for(let channel = 0; channel < output.length; channel++){
@@ -4470,10 +4450,19 @@
                                             class:
                                                 class stableAmplitudeGenerator extends AudioWorkletNode{
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 0;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'stableAmplitudeGenerator', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 0;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
+                                                
+                                                        //generate class instance
+                                                            super(context, 'stableAmplitudeGenerator', options);
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get amplitude(){
@@ -5099,10 +5088,27 @@
                                             worklet:new Blob([`
                                                 class nothing extends AudioWorkletProcessor{
                                                     constructor(options){
-                                                        super(options);
+                                                        //construct class instance
+                                                            super(options);
+                                                
+                                                        //instance state
+                                                            this.shutdown = false;
+                                                
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
+                                                        
                                                         const input = inputs[0];
                                                         const output = outputs[0];
                                                 
@@ -5122,6 +5128,11 @@
                                                         options.numberOfOutputs = 1;
                                                         options.channelCount = 1;
                                                         super(context, 'nothing', options);
+                                                
+                                                        this.shutdown = function(){
+                                                            this.port.postMessage({command:'shutdown'});
+                                                            this.port.close();
+                                                        };
                                                     }
                                                 }
                                             ,
@@ -5374,14 +5385,10 @@
                                                     constructor(options){
                                                         //construct class instance
                                                             super(options);
-                                                        
-                                                        //setup instance values
-                                                            this._wavePosition = 0;
                                                 
                                                         //instance state
+                                                            this.shutdown = false;
                                                             this._state = {
-                                                                running: {state: false, velocity: 0},
-                                                
                                                                 gain_useControl: false,
                                                                 detune_useControl: false,
                                                                 dutyCycle_useControl: false,
@@ -5416,24 +5423,12 @@
                                                 
                                                                                 //re-send waveform selection (just incase)
                                                                                     self.wasm.exports.select_waveform(self._state.selected_waveform);
-                                                                                //resend start signal (if necessary)(just incase)
-                                                                                    if(self._state.running.state){
-                                                                                        self.wasm.exports.start( self._state.running.velocity );
-                                                                                    }
                                                                             });
                                                                         break;
                                                                     
-                                                                    //start/stop
-                                                                        case 'start': 
-                                                                            self._state.running.state = true;
-                                                                            self._state.running.velocity = event.data.value;
-                                                                            if(self.wasm == undefined){ return; }
-                                                                            self.wasm.exports.start(event.data.value);
-                                                                        break;
-                                                                        case 'stop': 
-                                                                            self._state.state = false;
-                                                                            if(self.wasm == undefined){ return; }
-                                                                            self.wasm.exports.stop();
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
                                                                         break;
                                                 
                                                                     //use control
@@ -5458,6 +5453,7 @@
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
                                                         //collect inputs/outputs
@@ -5479,7 +5475,7 @@
                                                             const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
                                                             this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
                                                 
-                                                        //process data for, and copy to channels
+                                                        //process data, and copy results to channels
                                                             for(let channel = 0; channel < output.length; channel++){
                                                                 this.wasm.exports.process(
                                                                     frequency_useFirstOnly,
@@ -5523,12 +5519,10 @@
                                                                 waveform: 'sine',
                                                             };
                                                 
-                                                        //setup methods
-                                                            this.start = function(hitVelocity=1){
-                                                                this.port.postMessage({command:'start', value:hitVelocity});
-                                                            };
-                                                            this.stop = function(){
-                                                                this.port.postMessage({command:'stop', value:undefined});
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
                                                             };
                                                     }
                                                 
@@ -5625,69 +5619,85 @@
                                                     }
                                                     
                                                     constructor(options){
-                                                        super(options);
-                                                		const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                                self.inputFrame = {};
+                                                                                self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
                                                 
-                                                                        self.divisorFrame = {};
-                                                                        self.divisorFrame.pointer = self.wasm.exports.get_divisor_pointer();
-                                                                        self.divisorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.divisorFrame.pointer, 128);
-                                                                        self.offsetFrame = {};
-                                                                        self.offsetFrame.pointer = self.wasm.exports.get_offset_pointer();
-                                                                        self.offsetFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.offsetFrame.pointer, 128);
-                                                                        self.floorFrame = {};
-                                                                        self.floorFrame.pointer = self.wasm.exports.get_floor_pointer();
-                                                                        self.floorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.floorFrame.pointer, 128);
-                                                                        self.ceilingFrame = {};
-                                                                        self.ceilingFrame.pointer = self.wasm.exports.get_ceiling_pointer();
-                                                                        self.ceilingFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.ceilingFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                
+                                                                                self.divisorFrame = {};
+                                                                                self.divisorFrame.pointer = self.wasm.exports.get_divisor_pointer();
+                                                                                self.divisorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.divisorFrame.pointer, 128);
+                                                                                self.offsetFrame = {};
+                                                                                self.offsetFrame.pointer = self.wasm.exports.get_offset_pointer();
+                                                                                self.offsetFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.offsetFrame.pointer, 128);
+                                                                                self.floorFrame = {};
+                                                                                self.floorFrame.pointer = self.wasm.exports.get_floor_pointer();
+                                                                                self.floorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.floorFrame.pointer, 128);
+                                                                                self.ceilingFrame = {};
+                                                                                self.ceilingFrame.pointer = self.wasm.exports.get_ceiling_pointer();
+                                                                                self.ceilingFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.ceilingFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input = inputs[0];
+                                                            const output = outputs[0];
                                                 
-                                                        const sign = parameters.invert[0] == 1 ? -1 : 1;
-                                                        const divisor_useFirstOnly = parameters.divisor.length == 1;
-                                                        const offset_useFirstOnly = parameters.offset.length == 1;
-                                                        const floor_useFirstOnly = parameters.floor.length == 1;
-                                                        const ceiling_useFirstOnly = parameters.ceiling.length == 1;
+                                                        //pre-calculations
+                                                            const sign = parameters.invert[0] == 1 ? -1 : 1;
+                                                            const divisor_useFirstOnly = parameters.divisor.length == 1;
+                                                            const offset_useFirstOnly = parameters.offset.length == 1;
+                                                            const floor_useFirstOnly = parameters.floor.length == 1;
+                                                            const ceiling_useFirstOnly = parameters.ceiling.length == 1;
                                                 
-                                                        this.divisorFrame.buffer.set( divisor_useFirstOnly ? [parameters.divisor[0]] : parameters.divisor );
-                                                        this.offsetFrame.buffer.set( offset_useFirstOnly ? [parameters.offset[0]] : parameters.offset );
-                                                        this.floorFrame.buffer.set( floor_useFirstOnly ? [parameters.floor[0]] : parameters.floor );
-                                                        this.ceilingFrame.buffer.set( ceiling_useFirstOnly ? [parameters.ceiling[0]] : parameters.ceiling );
+                                                        //populate input buffers
+                                                            this.divisorFrame.buffer.set( divisor_useFirstOnly ? [parameters.divisor[0]] : parameters.divisor );
+                                                            this.offsetFrame.buffer.set( offset_useFirstOnly ? [parameters.offset[0]] : parameters.offset );
+                                                            this.floorFrame.buffer.set( floor_useFirstOnly ? [parameters.floor[0]] : parameters.floor );
+                                                            this.ceilingFrame.buffer.set( ceiling_useFirstOnly ? [parameters.ceiling[0]] : parameters.ceiling );
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process(
-                                                                sign,
-                                                                divisor_useFirstOnly,
-                                                                offset_useFirstOnly,
-                                                                floor_useFirstOnly,
-                                                                ceiling_useFirstOnly,
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //process data, and copy results to channels
+                                                            for(let channel = 0; channel < input.length; channel++){
+                                                                this.inputFrame.buffer.set(input[channel]);
+                                                                this.wasm.exports.process(
+                                                                    sign,
+                                                                    divisor_useFirstOnly,
+                                                                    offset_useFirstOnly,
+                                                                    floor_useFirstOnly,
+                                                                    ceiling_useFirstOnly,
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -5702,14 +5712,25 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'amplitudeModifier', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 1;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._invert = false;
+                                                        //generate class instance
+                                                            super(context, 'amplitudeModifier', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(amplitudeModifier, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(amplitudeModifier, this);
+                                                
+                                                        //instance state
+                                                            this._invert = false;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get invert(){
@@ -5758,55 +5779,71 @@
                                                     }
                                                     
                                                     constructor(options){
-                                                        super(options);
-                                                        const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
                                                 
-                                                                        self.input1Frame = {};
-                                                                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
-                                                                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.input2Frame = {};
-                                                                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
-                                                                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.mixControlFrame = {};
-                                                                        self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
-                                                                        self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+                                                                                self.input1Frame = {};
+                                                                                self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                                self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.input2Frame = {};
+                                                                                self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                                self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                
+                                                                                self.mixControlFrame = {};
+                                                                                self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
+                                                                                self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+                                                
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input_1 = inputs[0];
-                                                        const input_2 = inputs[1];
-                                                        const mixControl = inputs[2];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input_1 = inputs[0];
+                                                            const input_2 = inputs[1];
+                                                            const mixControl = inputs[2];
+                                                            const output = outputs[0];
                                                 
-                                                        const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
+                                                        //pre-calculation
+                                                            const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
                                                 
-                                                        for(let channel = 0; channel < input_1.length; channel++){
-                                                            this.input1Frame.buffer.set(input_1[channel]);
-                                                            this.input2Frame.buffer.set(input_2[channel]);
-                                                            this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
-                                                            this.wasm.exports.process(
-                                                                mixControl_useFirstOnly
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //populate input buffers, process data, and copy results to channels
+                                                            for(let channel = 0; channel < input_1.length; channel++){
+                                                                this.input1Frame.buffer.set(input_1[channel]);
+                                                                this.input2Frame.buffer.set(input_2[channel]);
+                                                                this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
+                                                                this.wasm.exports.process(
+                                                                    mixControl_useFirstOnly
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -5821,14 +5858,25 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 3;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'streamAdder', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 3;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._mode = false;
+                                                        //generate class instance
+                                                            super(context, 'streamAdder', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(streamAdder, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(streamAdder, this);
+                                                
+                                                        //instance state
+                                                            this._mode = false;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get mode(){
@@ -5867,38 +5915,51 @@
                                                     }
                                                     
                                                     constructor(options){
-                                                        super(options);
-                                                        const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.input1Frame = {};
-                                                                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
-                                                                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.input2Frame = {};
-                                                                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
-                                                                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                                                self.input1Frame = {};
+                                                                                self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                                self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.input2Frame = {};
+                                                                                self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                                self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input_1 = inputs[0];
-                                                        const input_2 = inputs[1];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input_1 = inputs[0];
+                                                            const input_2 = inputs[1];
+                                                            const output = outputs[0];
                                                 
                                                         if( parameters.mode[0] == 1 ){
                                                             //automatic
@@ -5933,14 +5994,25 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 2;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'gain', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 2;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._mode = false;
+                                                        //generate class instance
+                                                            super(context, 'gain', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(gain, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(gain, this);
+                                                
+                                                        //instance state
+                                                            this._mode = false;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get mode(){
@@ -5980,55 +6052,70 @@
                                                     }
                                                 
                                                     constructor(options){
-                                                        super(options);
-                                                		const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                        //setup message receiver
+                                                		    const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                                self.inputFrame = {};
+                                                                                self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
                                                 
-                                                                        self.gainBuffer = {};
-                                                                        self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
-                                                                        self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
                                                 
-                                                                        self.sharpnessBuffer = {};
-                                                                        self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
-                                                                        self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.gainBuffer = {};
+                                                                                self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
+                                                                                self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
+                                                
+                                                                                self.sharpnessBuffer = {};
+                                                                                self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
+                                                                                self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input = inputs[0];
+                                                            const output = outputs[0];
                                                 
-                                                        const gain_useFirstOnly = parameters.gain.length == 1;
-                                                        const sharpness_useFirstOnly = parameters.sharpness.length == 1;
-                                                        this.gainBuffer.buffer.set(parameters.gain);
-                                                        this.sharpnessBuffer.buffer.set(parameters.sharpness);
+                                                        //populate input buffers
+                                                            const gain_useFirstOnly = parameters.gain.length == 1;
+                                                            const sharpness_useFirstOnly = parameters.sharpness.length == 1;
+                                                            this.gainBuffer.buffer.set(parameters.gain);
+                                                            this.sharpnessBuffer.buffer.set(parameters.sharpness);
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process(
-                                                                gain_useFirstOnly,
-                                                                sharpness_useFirstOnly,
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //copy data in, process data, and copy results to channels
+                                                            for(let channel = 0; channel < input.length; channel++){
+                                                                this.inputFrame.buffer.set(input[channel]);
+                                                                this.wasm.exports.process(
+                                                                    gain_useFirstOnly,
+                                                                    sharpness_useFirstOnly,
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -6043,12 +6130,22 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'sigmoid', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 1;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        audio.audioWorklet.requestWasm(sigmoid, this);
+                                                        //generate class instance
+                                                            super(context, 'sigmoid', options);
+                                                
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(sigmoid, this);
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get gain(){
@@ -6076,42 +6173,54 @@
                                                     }
                                                 
                                                     constructor(options){
-                                                        super(options);
-                                                        this._dataArrayWorkingIndex = 0;
-                                                        this._dataArray = [];
-                                                        const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.inputFrame = {};
+                                                                                self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
-                                                        const samples = parameters.samples[0];
+                                                        //collect inputs/outputs
+                                                            const input = inputs[0];
+                                                            const output = outputs[0];
+                                                            const samples = parameters.samples[0];
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process(samples);
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //copy data in, process data, and copy results to channels
+                                                            for(let channel = 0; channel < input.length; channel++){
+                                                                this.inputFrame.buffer.set(input[channel]);
+                                                                this.wasm.exports.process(samples);
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -6126,14 +6235,25 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'lagProcessor', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 1;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._samples = 1;
+                                                        //generate class instance
+                                                            super(context, 'lagProcessor', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(lagProcessor, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(lagProcessor, this);
+                                                
+                                                        //instance state
+                                                            this._samples = 1;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get samples(){
@@ -6169,42 +6289,56 @@
                                                     }
                                                     
                                                     constructor(options){
-                                                        super(options);
-                                                		const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.inputFrame = {};
+                                                                                self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input = inputs[0];
+                                                            const output = outputs[0];
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process( 
-                                                                parameters.amplitudeResolution[0],
-                                                                parameters.sampleFrequency[0],
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //process data, and copy results to channels
+                                                            for(let channel = 0; channel < input.length; channel++){
+                                                                this.inputFrame.buffer.set(input[channel]);
+                                                                this.wasm.exports.process( 
+                                                                    parameters.amplitudeResolution[0],
+                                                                    parameters.sampleFrequency[0],
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -6219,15 +6353,26 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'bitcrusher', options);
-                                                        
-                                                        this._amplitudeResolution = 10;
-                                                        this._sampleFrequency = 16;
+                                                        //populate options
+                                                            options.numberOfInputs = 1;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        audio.audioWorklet.requestWasm(bitcrusher, this);
+                                                        //generate class instance
+                                                            super(context, 'bitcrusher', options);
+                                                
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(bitcrusher, this);
+                                                        
+                                                        //instance state
+                                                            this._amplitudeResolution = 10;
+                                                            this._sampleFrequency = 16;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get amplitudeResolution(){

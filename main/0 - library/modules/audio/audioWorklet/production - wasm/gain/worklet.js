@@ -18,38 +18,51 @@ class gain extends AudioWorkletProcessor{
     }
     
     constructor(options){
-        super(options);
-        const self = this;
+        //construct class instance
+            super(options);
 
-        this.port.onmessage = function(event){
-            switch(event.data.command){
-                case 'loadWasm':
-                    WebAssembly.instantiate(event.data.value).then(result => {
-                        self.wasm = result;
+        //instance state
+            this.shutdown = false;
 
-                        self.input1Frame = {};
-                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
-                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+        //setup message receiver
+            const self = this;
+            this.port.onmessage = function(event){
+                switch(event.data.command){
+                    //wasm initialization
+                        case 'loadWasm':
+                            WebAssembly.instantiate(event.data.value).then(result => {
+                                self.wasm = result;
 
-                        self.input2Frame = {};
-                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
-                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                self.input1Frame = {};
+                                self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
 
-                        self.outputFrame = {};
-                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                    });
-                break;
-            }
-        };
+                                self.input2Frame = {};
+                                self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+
+                                self.outputFrame = {};
+                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                            });
+                        break;
+                    
+                    //shutdown
+                        case 'shutdown':
+                            self.shutdown = true;
+                        break;
+                }
+            };
     }
 
     process(inputs, outputs, parameters){
+        if(this.shutdown){ return false; }
         if(this.wasm == undefined){ return true; }
 
-        const input_1 = inputs[0];
-        const input_2 = inputs[1];
-        const output = outputs[0];
+        //collect inputs/outputs
+            const input_1 = inputs[0];
+            const input_2 = inputs[1];
+            const output = outputs[0];
 
         if( parameters.mode[0] == 1 ){
             //automatic

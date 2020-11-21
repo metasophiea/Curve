@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:19} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:20} };
                 const library = this;
                 
                 const dev = {
@@ -4397,43 +4397,6 @@
                                             ,
                                         },
                                         {
-                                            name:'whiteNoiseGenerator',
-                                            worklet:new Blob([`
-                                                class whiteNoiseGenerator extends AudioWorkletProcessor{
-                                                    static get parameterDescriptors(){
-                                                        return [];
-                                                    }
-                                                    
-                                                    constructor(options){
-                                                        super(options);
-                                                    }
-                                                
-                                                    process(inputs, outputs, parameters){
-                                                        const output = outputs[0];
-                                                
-                                                        for(let channel = 0; channel < output.length; channel++){
-                                                            for(let a = 0; a < output[channel].length; a++){
-                                                                output[channel][a] = Math.random()*2 - 1;
-                                                            }
-                                                        }
-                                                
-                                                        return true;
-                                                    }
-                                                }
-                                                registerProcessor('whiteNoiseGenerator', whiteNoiseGenerator);
-                                            `], { type: "text/javascript" }),
-                                            class:
-                                                class whiteNoiseGenerator extends AudioWorkletNode{
-                                                    constructor(context, options={}){
-                                                        options.numberOfInputs = 0;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'whiteNoiseGenerator', options);
-                                                    }
-                                                }
-                                            ,
-                                        },
-                                        {
                                             name:'stableAmplitudeGenerator',
                                             worklet:new Blob([`
                                                 class stableAmplitudeGenerator extends AudioWorkletProcessor{
@@ -4450,10 +4413,27 @@
                                                     }
                                                 
                                                     constructor(options){
-                                                        super(options);
+                                                        //construct class instance
+                                                            super(options);
+                                                
+                                                        //instance state
+                                                            this.shutdown = false;
+                                                
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
+                                                
                                                         const output = outputs[0];
                                                 
                                                         for(let channel = 0; channel < output.length; channel++){
@@ -4470,10 +4450,19 @@
                                             class:
                                                 class stableAmplitudeGenerator extends AudioWorkletNode{
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 0;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'stableAmplitudeGenerator', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 0;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
+                                                
+                                                        //generate class instance
+                                                            super(context, 'stableAmplitudeGenerator', options);
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get amplitude(){
@@ -5099,10 +5088,27 @@
                                             worklet:new Blob([`
                                                 class nothing extends AudioWorkletProcessor{
                                                     constructor(options){
-                                                        super(options);
+                                                        //construct class instance
+                                                            super(options);
+                                                
+                                                        //instance state
+                                                            this.shutdown = false;
+                                                
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
+                                                        
                                                         const input = inputs[0];
                                                         const output = outputs[0];
                                                 
@@ -5122,6 +5128,11 @@
                                                         options.numberOfOutputs = 1;
                                                         options.channelCount = 1;
                                                         super(context, 'nothing', options);
+                                                
+                                                        this.shutdown = function(){
+                                                            this.port.postMessage({command:'shutdown'});
+                                                            this.port.close();
+                                                        };
                                                     }
                                                 }
                                             ,
@@ -5374,14 +5385,10 @@
                                                     constructor(options){
                                                         //construct class instance
                                                             super(options);
-                                                        
-                                                        //setup instance values
-                                                            this._wavePosition = 0;
                                                 
                                                         //instance state
+                                                            this.shutdown = false;
                                                             this._state = {
-                                                                running: {state: false, velocity: 0},
-                                                
                                                                 gain_useControl: false,
                                                                 detune_useControl: false,
                                                                 dutyCycle_useControl: false,
@@ -5416,24 +5423,12 @@
                                                 
                                                                                 //re-send waveform selection (just incase)
                                                                                     self.wasm.exports.select_waveform(self._state.selected_waveform);
-                                                                                //resend start signal (if necessary)(just incase)
-                                                                                    if(self._state.running.state){
-                                                                                        self.wasm.exports.start( self._state.running.velocity );
-                                                                                    }
                                                                             });
                                                                         break;
                                                                     
-                                                                    //start/stop
-                                                                        case 'start': 
-                                                                            self._state.running.state = true;
-                                                                            self._state.running.velocity = event.data.value;
-                                                                            if(self.wasm == undefined){ return; }
-                                                                            self.wasm.exports.start(event.data.value);
-                                                                        break;
-                                                                        case 'stop': 
-                                                                            self._state.state = false;
-                                                                            if(self.wasm == undefined){ return; }
-                                                                            self.wasm.exports.stop();
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
                                                                         break;
                                                 
                                                                     //use control
@@ -5458,6 +5453,7 @@
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
                                                         //collect inputs/outputs
@@ -5479,7 +5475,7 @@
                                                             const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
                                                             this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
                                                 
-                                                        //process data for, and copy to channels
+                                                        //process data, and copy results to channels
                                                             for(let channel = 0; channel < output.length; channel++){
                                                                 this.wasm.exports.process(
                                                                     frequency_useFirstOnly,
@@ -5523,12 +5519,10 @@
                                                                 waveform: 'sine',
                                                             };
                                                 
-                                                        //setup methods
-                                                            this.start = function(hitVelocity=1){
-                                                                this.port.postMessage({command:'start', value:hitVelocity});
-                                                            };
-                                                            this.stop = function(){
-                                                                this.port.postMessage({command:'stop', value:undefined});
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
                                                             };
                                                     }
                                                 
@@ -5625,69 +5619,85 @@
                                                     }
                                                     
                                                     constructor(options){
-                                                        super(options);
-                                                		const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                                self.inputFrame = {};
+                                                                                self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
                                                 
-                                                                        self.divisorFrame = {};
-                                                                        self.divisorFrame.pointer = self.wasm.exports.get_divisor_pointer();
-                                                                        self.divisorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.divisorFrame.pointer, 128);
-                                                                        self.offsetFrame = {};
-                                                                        self.offsetFrame.pointer = self.wasm.exports.get_offset_pointer();
-                                                                        self.offsetFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.offsetFrame.pointer, 128);
-                                                                        self.floorFrame = {};
-                                                                        self.floorFrame.pointer = self.wasm.exports.get_floor_pointer();
-                                                                        self.floorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.floorFrame.pointer, 128);
-                                                                        self.ceilingFrame = {};
-                                                                        self.ceilingFrame.pointer = self.wasm.exports.get_ceiling_pointer();
-                                                                        self.ceilingFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.ceilingFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                
+                                                                                self.divisorFrame = {};
+                                                                                self.divisorFrame.pointer = self.wasm.exports.get_divisor_pointer();
+                                                                                self.divisorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.divisorFrame.pointer, 128);
+                                                                                self.offsetFrame = {};
+                                                                                self.offsetFrame.pointer = self.wasm.exports.get_offset_pointer();
+                                                                                self.offsetFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.offsetFrame.pointer, 128);
+                                                                                self.floorFrame = {};
+                                                                                self.floorFrame.pointer = self.wasm.exports.get_floor_pointer();
+                                                                                self.floorFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.floorFrame.pointer, 128);
+                                                                                self.ceilingFrame = {};
+                                                                                self.ceilingFrame.pointer = self.wasm.exports.get_ceiling_pointer();
+                                                                                self.ceilingFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.ceilingFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input = inputs[0];
+                                                            const output = outputs[0];
                                                 
-                                                        const sign = parameters.invert[0] == 1 ? -1 : 1;
-                                                        const divisor_useFirstOnly = parameters.divisor.length == 1;
-                                                        const offset_useFirstOnly = parameters.offset.length == 1;
-                                                        const floor_useFirstOnly = parameters.floor.length == 1;
-                                                        const ceiling_useFirstOnly = parameters.ceiling.length == 1;
+                                                        //pre-calculations
+                                                            const sign = parameters.invert[0] == 1 ? -1 : 1;
+                                                            const divisor_useFirstOnly = parameters.divisor.length == 1;
+                                                            const offset_useFirstOnly = parameters.offset.length == 1;
+                                                            const floor_useFirstOnly = parameters.floor.length == 1;
+                                                            const ceiling_useFirstOnly = parameters.ceiling.length == 1;
                                                 
-                                                        this.divisorFrame.buffer.set( divisor_useFirstOnly ? [parameters.divisor[0]] : parameters.divisor );
-                                                        this.offsetFrame.buffer.set( offset_useFirstOnly ? [parameters.offset[0]] : parameters.offset );
-                                                        this.floorFrame.buffer.set( floor_useFirstOnly ? [parameters.floor[0]] : parameters.floor );
-                                                        this.ceilingFrame.buffer.set( ceiling_useFirstOnly ? [parameters.ceiling[0]] : parameters.ceiling );
+                                                        //populate input buffers
+                                                            this.divisorFrame.buffer.set( divisor_useFirstOnly ? [parameters.divisor[0]] : parameters.divisor );
+                                                            this.offsetFrame.buffer.set( offset_useFirstOnly ? [parameters.offset[0]] : parameters.offset );
+                                                            this.floorFrame.buffer.set( floor_useFirstOnly ? [parameters.floor[0]] : parameters.floor );
+                                                            this.ceilingFrame.buffer.set( ceiling_useFirstOnly ? [parameters.ceiling[0]] : parameters.ceiling );
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process(
-                                                                sign,
-                                                                divisor_useFirstOnly,
-                                                                offset_useFirstOnly,
-                                                                floor_useFirstOnly,
-                                                                ceiling_useFirstOnly,
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //process data, and copy results to channels
+                                                            for(let channel = 0; channel < input.length; channel++){
+                                                                this.inputFrame.buffer.set(input[channel]);
+                                                                this.wasm.exports.process(
+                                                                    sign,
+                                                                    divisor_useFirstOnly,
+                                                                    offset_useFirstOnly,
+                                                                    floor_useFirstOnly,
+                                                                    ceiling_useFirstOnly,
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -5702,14 +5712,25 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'amplitudeModifier', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 1;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._invert = false;
+                                                        //generate class instance
+                                                            super(context, 'amplitudeModifier', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(amplitudeModifier, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(amplitudeModifier, this);
+                                                
+                                                        //instance state
+                                                            this._invert = false;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get invert(){
@@ -5758,55 +5779,71 @@
                                                     }
                                                     
                                                     constructor(options){
-                                                        super(options);
-                                                        const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
                                                 
-                                                                        self.input1Frame = {};
-                                                                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
-                                                                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.input2Frame = {};
-                                                                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
-                                                                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.mixControlFrame = {};
-                                                                        self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
-                                                                        self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+                                                                                self.input1Frame = {};
+                                                                                self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                                self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.input2Frame = {};
+                                                                                self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                                self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                
+                                                                                self.mixControlFrame = {};
+                                                                                self.mixControlFrame.pointer = self.wasm.exports.get_mix_control_pointer();
+                                                                                self.mixControlFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.mixControlFrame.pointer, 128);
+                                                
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input_1 = inputs[0];
-                                                        const input_2 = inputs[1];
-                                                        const mixControl = inputs[2];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input_1 = inputs[0];
+                                                            const input_2 = inputs[1];
+                                                            const mixControl = inputs[2];
+                                                            const output = outputs[0];
                                                 
-                                                        const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
+                                                        //pre-calculation
+                                                            const mixControl_useFirstOnly = parameters.mode[0] == 0 ? parameters.mix.length == 1 : false;
                                                 
-                                                        for(let channel = 0; channel < input_1.length; channel++){
-                                                            this.input1Frame.buffer.set(input_1[channel]);
-                                                            this.input2Frame.buffer.set(input_2[channel]);
-                                                            this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
-                                                            this.wasm.exports.process(
-                                                                mixControl_useFirstOnly
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //populate input buffers, process data, and copy results to channels
+                                                            for(let channel = 0; channel < input_1.length; channel++){
+                                                                this.input1Frame.buffer.set(input_1[channel]);
+                                                                this.input2Frame.buffer.set(input_2[channel]);
+                                                                this.mixControlFrame.buffer.set(parameters.mode[0] == 0 ? [(mixControl_useFirstOnly ? parameters.mix[0] : parameters.mix[a])] : mixControl[channel]);
+                                                                this.wasm.exports.process(
+                                                                    mixControl_useFirstOnly
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -5821,14 +5858,25 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 3;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'streamAdder', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 3;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._mode = false;
+                                                        //generate class instance
+                                                            super(context, 'streamAdder', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(streamAdder, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(streamAdder, this);
+                                                
+                                                        //instance state
+                                                            this._mode = false;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get mode(){
@@ -5867,38 +5915,51 @@
                                                     }
                                                     
                                                     constructor(options){
-                                                        super(options);
-                                                        const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.input1Frame = {};
-                                                                        self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
-                                                                        self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.input2Frame = {};
-                                                                        self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
-                                                                        self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                                                self.input1Frame = {};
+                                                                                self.input1Frame.pointer = self.wasm.exports.get_input_1_pointer();
+                                                                                self.input1Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input1Frame.pointer, 128);
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.input2Frame = {};
+                                                                                self.input2Frame.pointer = self.wasm.exports.get_input_2_pointer();
+                                                                                self.input2Frame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.input2Frame.pointer, 128);
+                                                
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input_1 = inputs[0];
-                                                        const input_2 = inputs[1];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input_1 = inputs[0];
+                                                            const input_2 = inputs[1];
+                                                            const output = outputs[0];
                                                 
                                                         if( parameters.mode[0] == 1 ){
                                                             //automatic
@@ -5933,14 +5994,25 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 2;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'gain', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 2;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._mode = false;
+                                                        //generate class instance
+                                                            super(context, 'gain', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(gain, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(gain, this);
+                                                
+                                                        //instance state
+                                                            this._mode = false;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get mode(){
@@ -5980,55 +6052,70 @@
                                                     }
                                                 
                                                     constructor(options){
-                                                        super(options);
-                                                		const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                        //setup message receiver
+                                                		    const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                                self.inputFrame = {};
+                                                                                self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
                                                 
-                                                                        self.gainBuffer = {};
-                                                                        self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
-                                                                        self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
                                                 
-                                                                        self.sharpnessBuffer = {};
-                                                                        self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
-                                                                        self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.gainBuffer = {};
+                                                                                self.gainBuffer.pointer = self.wasm.exports.get_gain_pointer();
+                                                                                self.gainBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.gainBuffer.pointer, 128);
+                                                
+                                                                                self.sharpnessBuffer = {};
+                                                                                self.sharpnessBuffer.pointer = self.wasm.exports.get_sharpness_pointer();
+                                                                                self.sharpnessBuffer.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.sharpnessBuffer.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input = inputs[0];
+                                                            const output = outputs[0];
                                                 
-                                                        const gain_useFirstOnly = parameters.gain.length == 1;
-                                                        const sharpness_useFirstOnly = parameters.sharpness.length == 1;
-                                                        this.gainBuffer.buffer.set(parameters.gain);
-                                                        this.sharpnessBuffer.buffer.set(parameters.sharpness);
+                                                        //populate input buffers
+                                                            const gain_useFirstOnly = parameters.gain.length == 1;
+                                                            const sharpness_useFirstOnly = parameters.sharpness.length == 1;
+                                                            this.gainBuffer.buffer.set(parameters.gain);
+                                                            this.sharpnessBuffer.buffer.set(parameters.sharpness);
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process(
-                                                                gain_useFirstOnly,
-                                                                sharpness_useFirstOnly,
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //copy data in, process data, and copy results to channels
+                                                            for(let channel = 0; channel < input.length; channel++){
+                                                                this.inputFrame.buffer.set(input[channel]);
+                                                                this.wasm.exports.process(
+                                                                    gain_useFirstOnly,
+                                                                    sharpness_useFirstOnly,
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -6043,12 +6130,22 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'sigmoid', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 1;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        audio.audioWorklet.requestWasm(sigmoid, this);
+                                                        //generate class instance
+                                                            super(context, 'sigmoid', options);
+                                                
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(sigmoid, this);
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get gain(){
@@ -6076,42 +6173,54 @@
                                                     }
                                                 
                                                     constructor(options){
-                                                        super(options);
-                                                        this._dataArrayWorkingIndex = 0;
-                                                        this._dataArray = [];
-                                                        const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.inputFrame = {};
+                                                                                self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
-                                                        const samples = parameters.samples[0];
+                                                        //collect inputs/outputs
+                                                            const input = inputs[0];
+                                                            const output = outputs[0];
+                                                            const samples = parameters.samples[0];
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process(samples);
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //copy data in, process data, and copy results to channels
+                                                            for(let channel = 0; channel < input.length; channel++){
+                                                                this.inputFrame.buffer.set(input[channel]);
+                                                                this.wasm.exports.process(samples);
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -6126,14 +6235,25 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'lagProcessor', options);
+                                                        //populate options
+                                                            options.numberOfInputs = 1;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        this._samples = 1;
+                                                        //generate class instance
+                                                            super(context, 'lagProcessor', options);
                                                 
-                                                        audio.audioWorklet.requestWasm(lagProcessor, this);
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(lagProcessor, this);
+                                                
+                                                        //instance state
+                                                            this._samples = 1;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get samples(){
@@ -6169,42 +6289,56 @@
                                                     }
                                                     
                                                     constructor(options){
-                                                        super(options);
-                                                		const self = this;
+                                                        //construct class instance
+                                                            super(options);
                                                 
-                                                        this.port.onmessage = function(event){
-                                                            switch(event.data.command){
-                                                                case 'loadWasm':
-                                                                    WebAssembly.instantiate(event.data.value).then(result => {
-                                                                        self.wasm = result;
+                                                        //instance state
+                                                            this.shutdown = false;
                                                 
-                                                                        self.inputFrame = {};
-                                                                        self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
-                                                                        self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                        //setup message receiver
+                                                            const self = this;
+                                                            this.port.onmessage = function(event){
+                                                                switch(event.data.command){
+                                                                    //wasm initialization
+                                                                        case 'loadWasm':
+                                                                            WebAssembly.instantiate(event.data.value).then(result => {
+                                                                                self.wasm = result;
                                                 
-                                                                        self.outputFrame = {};
-                                                                        self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
-                                                                        self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
-                                                                    });
-                                                                break;
-                                                            }
-                                                        };
+                                                                                self.inputFrame = {};
+                                                                                self.inputFrame.pointer = self.wasm.exports.get_input_pointer();
+                                                                                self.inputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.inputFrame.pointer, 128);
+                                                
+                                                                                self.outputFrame = {};
+                                                                                self.outputFrame.pointer = self.wasm.exports.get_output_pointer();
+                                                                                self.outputFrame.buffer = new Float32Array(self.wasm.exports.memory.buffer, self.outputFrame.pointer, 128);
+                                                                            });
+                                                                        break;
+                                                                    
+                                                                    //shutdown
+                                                                        case 'shutdown':
+                                                                            self.shutdown = true;
+                                                                        break;
+                                                                }
+                                                            };
                                                     }
                                                 
                                                     process(inputs, outputs, parameters){
+                                                        if(this.shutdown){ return false; }
                                                         if(this.wasm == undefined){ return true; }
                                                 
-                                                        const input = inputs[0];
-                                                        const output = outputs[0];
+                                                        //collect inputs/outputs
+                                                            const input = inputs[0];
+                                                            const output = outputs[0];
                                                 
-                                                        for(let channel = 0; channel < input.length; channel++){
-                                                            this.inputFrame.buffer.set(input[channel]);
-                                                            this.wasm.exports.process( 
-                                                                parameters.amplitudeResolution[0],
-                                                                parameters.sampleFrequency[0],
-                                                            );
-                                                            output[channel].set(this.outputFrame.buffer);
-                                                        }
+                                                        //process data, and copy results to channels
+                                                            for(let channel = 0; channel < input.length; channel++){
+                                                                this.inputFrame.buffer.set(input[channel]);
+                                                                this.wasm.exports.process( 
+                                                                    parameters.amplitudeResolution[0],
+                                                                    parameters.sampleFrequency[0],
+                                                                );
+                                                                output[channel].set(this.outputFrame.buffer);
+                                                            }
                                                 
                                                         return true;
                                                     }
@@ -6219,15 +6353,26 @@
                                                     static compiled_wasm;
                                                 
                                                     constructor(context, options={}){
-                                                        options.numberOfInputs = 1;
-                                                        options.numberOfOutputs = 1;
-                                                        options.channelCount = 1;
-                                                        super(context, 'bitcrusher', options);
-                                                        
-                                                        this._amplitudeResolution = 10;
-                                                        this._sampleFrequency = 16;
+                                                        //populate options
+                                                            options.numberOfInputs = 1;
+                                                            options.numberOfOutputs = 1;
+                                                            options.channelCount = 1;
                                                 
-                                                        audio.audioWorklet.requestWasm(bitcrusher, this);
+                                                        //generate class instance
+                                                            super(context, 'bitcrusher', options);
+                                                
+                                                        //load wasm processor
+                                                            audio.audioWorklet.requestWasm(bitcrusher, this);
+                                                        
+                                                        //instance state
+                                                            this._amplitudeResolution = 10;
+                                                            this._sampleFrequency = 16;
+                                                
+                                                        //shutdown
+                                                            this.shutdown = function(){
+                                                                this.port.postMessage({command:'shutdown', value:undefined});
+                                                                this.port.close();
+                                                            };
                                                     }
                                                 
                                                     get amplitudeResolution(){
@@ -26842,7 +26987,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:14} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:21} };
                 const interface = this;
             
                 const dev = {
@@ -26946,6 +27091,586 @@
                             };
                     
                     };
+                    // //replacement for prior synthesizer; this system uses the custom oscillators and implements an ADSR envelope
+                    // //  oscillators generated on demand
+                    // //  conservative use of oscillators
+                    // //  use of custom oscillator with duty cycle
+                    // //  use of custom oscillator audio worklet (which has ADSR envelope built in for gain, detune and dutyCycle)
+                    // //  gainWobble provided by internal LFO, or external input
+                    // //  detuneWobble provided by internal LFO, or external input
+                    // //  dutyCycleWobble provided by internal LFO, or external input
+                    
+                    // this.synthesizer_3 = function(
+                    //     context,
+                    //     waveType='sine',
+                    //     masterGain=1,
+                    //     gain={
+                    //         envelope:{
+                    //             front:[ {destination:1, elapse:0} ],
+                    //             back:[ {destination:0, elapse:0} ],
+                    //         },
+                    //         mode:'manual',
+                    //         manual:{value:1},
+                    //         internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
+                    //     },
+                    //     octave=0,
+                    //     detune={
+                    //         envelope:{
+                    //             front:[ {destination:0, elapse:0} ],
+                    //             back:[ {destination:0, elapse:0} ],
+                    //         },
+                    //         mode:'manual',
+                    //         manual:{value:0},
+                    //         internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
+                    //     },
+                    //     dutyCycle={
+                    //         envelope:{
+                    //             front:[ {destination:0, elapse:0} ],
+                    //             back:[ {destination:0, elapse:0} ],
+                    //         },
+                    //         mode:'manual',
+                    //         manual:{value:0.5},
+                    //         internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
+                    //     },
+                    //     additiveSynthesis={
+                    //         sin:[1],
+                    //         cos:[]
+                    //     },
+                    //     phaseModulation=[
+                    //         {mux:2,power:1},
+                    //         {mux:3,power:1},
+                    //     ],
+                    // ){
+                    //     //flow
+                    //         const flow = {
+                    //             controlIn:{
+                    //                 gain: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                    //                 detune: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                    //                 dutyCycle: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                    //             },
+                    
+                    //             LFO:{
+                    //                 gain:{
+                    //                     oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
+                    //                     amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
+                    //                 },
+                    //                 detune:{
+                    //                     oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
+                    //                 },
+                    //                 dutyCycle:{
+                    //                     oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
+                    //                     amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
+                    //                 },
+                    //             },
+                    
+                    //             controlMix:{
+                    //                 gain: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                    //                 detune: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                    //                 dutyCycle: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
+                    //             },
+                    
+                    //             oscillators: [],
+                    //             aggregator: new _canvas_.library.audio.audioWorklet.production.only_js.gain(context),
+                    //         };
+                    
+                    //         flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);
+                    //         flow.LFO.gain.oscillator.gain.setValueAtTime(gain.internalLFO.depth, 0);
+                    //         flow.LFO.gain.oscillator.connect(flow.LFO.gain.amplitudeModifier);
+                    //         flow.LFO.gain.amplitudeModifier.divisor.setValueAtTime(2, 0);
+                    //         flow.LFO.gain.amplitudeModifier.offset.setValueAtTime(1 - gain.internalLFO.depth/2, 0);
+                    //         flow.LFO.gain.amplitudeModifier.connect(flow.controlMix.gain,undefined,0);
+                    
+                    //         flow.LFO.detune.oscillator.frequency.setValueAtTime(1/detune.internalLFO.period, 0);
+                    //         flow.LFO.detune.oscillator.gain.setValueAtTime(detune.internalLFO.depth, 0);
+                    //         flow.LFO.detune.oscillator.connect(flow.controlMix.detune,undefined,0);
+                    
+                    //         flow.LFO.dutyCycle.oscillator.frequency.setValueAtTime(1/dutyCycle.internalLFO.period, 0);
+                    //         flow.LFO.dutyCycle.oscillator.gain.setValueAtTime(dutyCycle.internalLFO.depth, 0);
+                    //         flow.LFO.dutyCycle.oscillator.connect(flow.LFO.dutyCycle.amplitudeModifier);
+                    //         flow.LFO.dutyCycle.amplitudeModifier.divisor.setValueAtTime(2, 0);
+                    //         flow.LFO.dutyCycle.amplitudeModifier.offset.setValueAtTime(0.5, 0);
+                    //         flow.LFO.dutyCycle.amplitudeModifier.connect(flow.controlMix.dutyCycle,undefined,0);
+                    
+                    //         flow.controlIn.gain.connect(flow.controlMix.gain,undefined,1);
+                    //         flow.controlIn.detune.connect(flow.controlMix.detune,undefined,1);
+                    //         flow.controlIn.dutyCycle.connect(flow.controlMix.dutyCycle,undefined,1);
+                    
+                    //     //io
+                    //         this.control = new function(){
+                    //             this.gain = function(){
+                    //                 return flow.controlIn.gain;
+                    //             };
+                    //             this.detune = function(){
+                    //                 return flow.controlIn.detune;
+                    //             };
+                    //             this.dutyCycle = function(){
+                    //                 return flow.controlIn.dutyCycle;
+                    //             };
+                    //         };
+                    //         this.out = function(){
+                    //             return flow.aggregator;
+                    //         }
+                    
+                    //     //controls
+                    //         this._dump = function(){
+                    //             console.log('waveType:', JSON.parse(JSON.stringify(waveType)));
+                    //             console.log('gain:', JSON.parse(JSON.stringify(gain)));
+                    //             console.log('octave:', JSON.parse(JSON.stringify(octave)));
+                    //             console.log('detune:', JSON.parse(JSON.stringify(detune)));
+                    //             console.log('dutyCycle:', JSON.parse(JSON.stringify(dutyCycle)));
+                    
+                    //             console.log('flow',flow);
+                    //         };
+                    
+                    //         this.perform = function(note){
+                    //             //find the oscillator for this note (if there is one)
+                    //                 const oscillator = flow.oscillators.filter(oscillator => oscillator.noteNumber == note.num && oscillator.velocity != 0 )[0];
+                    
+                    //             if( oscillator != undefined && note.velocity == 0 ){
+                    //                 //note stopping
+                    //                 oscillator.stop();
+                    //                 oscillator.velocity = 0;
+                    //             }else if( oscillator != undefined && oscillator.velocity != 0 ){
+                    //                 //note velocity adjustment
+                    //                 oscillator.start(note.velocity);
+                    //                 oscillator.velocity = note.velocity;
+                    //             }else if( oscillator == undefined && note.velocity == 0 ){ 
+                    //                 //don't do anything (you're trying to stop a note that isn't sounding)
+                    //             }else{
+                    //                 //fresh note
+                    
+                    //                 //get free oscillator, or generate new one
+                    //                     let oscillatorToUse = undefined;
+                    
+                    //                     //get free oscillators
+                    //                         const freeOscillators = flow.oscillators.filter(oscillator => oscillator.noteNumber == undefined);
+                    //                     //generate new oscillator if necessary
+                    //                         if(freeOscillators.length > 0){
+                    //                             oscillatorToUse = freeOscillators[0];
+                    //                         }else{
+                    //                             oscillatorToUse = new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context);
+                    //                             oscillatorToUse.connect(flow.aggregator);
+                    //                             oscillatorToUse.waveform = waveType;
+                    //                             oscillatorToUse.gain_envelope_reporting = true;
+                    
+                    //                             oscillatorToUse.gain_envelope = gain.envelope;
+                    //                             oscillatorToUse.detune_envelope = detune.envelope;
+                    //                             oscillatorToUse.dutyCycle_envelope = dutyCycle.envelope;
+                    
+                    //                             oscillatorToUse.detune.setValueAtTime(detune.manual.value, 0);
+                    //                             oscillatorToUse.dutyCycle.setValueAtTime(dutyCycle.manual.value, 0);
+                    
+                    //                             oscillatorToUse.gain_useControl = gain.mode != 'manual';
+                    //                             oscillatorToUse.detune_useControl = detune.mode != 'manual';
+                    //                             oscillatorToUse.dutyCycle_useControl = dutyCycle.mode != 'manual';
+                    
+                    //                             flow.controlMix.gain.connect(oscillatorToUse,undefined,0);
+                    //                             flow.controlMix.detune.connect(oscillatorToUse,undefined,1);
+                    //                             flow.controlMix.dutyCycle.connect(oscillatorToUse,undefined,2);
+                    
+                    //                             oscillatorToUse.additiveSynthesis_sin = additiveSynthesis.sin;
+                    //                             oscillatorToUse.additiveSynthesis_cos = additiveSynthesis.cos;
+                    //                             oscillatorToUse.phaseModulation_settings = phaseModulation.sin;
+                    
+                    //                             flow.oscillators.push(oscillatorToUse);
+                    //                         }
+                    
+                    //                 //activate oscillator
+                    //                     oscillatorToUse.frequency.setValueAtTime(_canvas_.library.audio.num2freq(note.num+12*octave),0);
+                    //                     oscillatorToUse.noteNumber = note.num;
+                    //                     oscillatorToUse.velocity = note.velocity;
+                    //                     oscillatorToUse.onEnvelopeEvent = function(event){
+                    //                         if(event.aspect == 'gain' && event.phase == 'off'){
+                    //                             oscillatorToUse.noteNumber = undefined;
+                    //                         }
+                    //                     };
+                    //                     oscillatorToUse.start(note.velocity);
+                    //             }
+                    //         };
+                    
+                    //         this.panic = function(){
+                    //             flow.oscillators.map(a => a.noteNumber).filter(a => a != undefined).forEach(a => {
+                    //                 this.perform({num:a,velocity:0});
+                    //             });
+                    //         };
+                    
+                    //         this.masterGain = function(value){
+                    //             if(value == undefined){return masterGain;}
+                    //             masterGain = value;
+                    //             flow.aggregator.gain.setValueAtTime(value, 0);
+                    //         };
+                    //         this.waveform = function(type){
+                    //             if(type == undefined){return waveType;}
+                    //             waveType = type;
+                    
+                    //             flow.oscillators.forEach(oscillator => {
+                    //                 oscillator.waveform = waveType;
+                    //             });
+                    //         };
+                    //         this.octave = function(target){
+                    //             if(target == null){return octave;}
+                    //             octave = target;
+                    //             flow.oscillators.forEach(oscillator => {
+                    //                 if(oscillator.noteNumber == undefined){return;}
+                    //                 oscillator.frequency.setValueAtTime(_canvas_.library.audio.num2freq(oscillator.noteNumber+12*octave), 0);
+                    //             });
+                    //         };
+                    //         this.detune = function(target){
+                    //             if(target == null){return detune;}
+                    //             detune = target;
+                    //             flow.oscillators.forEach(oscillator => {
+                    //                 oscillator.detune.setValueAtTime(target, 0);
+                    //             });
+                    //         };
+                    //         this.dutyCycle = function(target){
+                    //             if(target == null){return detune;}
+                    //             dutyCycle = target;
+                    //             flow.oscillators.forEach(oscillator => {
+                    //                 oscillator.dutyCycle.setValueAtTime(target, 0);
+                    //             });
+                    //         };
+                    
+                    //         this.gain = new function(){
+                    //             this.envelope = function(newEnvelope){
+                    //                 if(newEnvelope == null){return gain.envelope;}
+                    //                 gain.envelope = newEnvelope;
+                    //                 flow.oscillators.forEach(oscillator => {
+                    //                     oscillator.gain_envelope = gain.envelope;
+                    //                 });
+                    //             };
+                    //             this.mode = function(mode){ // manual / internalLFO / external
+                    //                 if(mode == null){return gain.mode; }
+                    //                 gain.mode = mode;
+                    
+                    //                 switch(mode){
+                    //                     case 'manual': 
+                    //                         flow.LFO.gain.oscillator.stop();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.gain_useControl = false;
+                    //                         });
+                    //                     break;
+                    //                     case 'internalLFO':
+                    //                         flow.LFO.gain.oscillator.start();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.gain_useControl = true;
+                    //                         });
+                    
+                    //                         flow.controlMix.gain.mix.setValueAtTime(0, 0);
+                    //                     break;
+                    //                     case 'external':
+                    //                         flow.LFO.gain.oscillator.stop();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.gain_useControl = true;
+                    //                         });
+                    
+                    //                         flow.controlMix.gain.mix.setValueAtTime(1, 0);
+                    //                     break;
+                    //                 }
+                    //             };
+                    //             this.manual = new function(){
+                    //                 this.value = function(value){
+                    //                     if(value == null){ return gain.manual.value; }
+                    //                     gain.manual.value = value;
+                    //                     flow.oscillators.forEach(oscillator => {
+                    //                         oscillator.gain.setValueAtTime(gain.manual.value, 0);
+                    //                     });    
+                    //                 };
+                    //             };
+                    //             this.internalLFO = new function(){
+                    //                 this.depth = function(value){
+                    //                     if(value == null){return gain.internalLFO.depth; }
+                    //                     if(value < 0){ value = 0; }
+                    //                     else if(value > 1){ value = 1; }
+                    //                     gain.internalLFO.depth = value;
+                    //                     flow.LFO.gain.oscillator.gain.setValueAtTime(gain.internalLFO.depth, 0);
+                    //                     flow.LFO.gain.amplitudeModifier.offset.setValueAtTime(1 - gain.internalLFO.depth/2, 0);
+                    //                 };
+                    //                 this.period = function(value){
+                    //                     if(value == null){ return gain.internalLFO.period; }
+                    //                     if(value < gain.internalLFO.periodMin){ value = gain.internalLFO.periodMin; }
+                    //                     else if(value > gain.internalLFO.periodMax){ value = gain.internalLFO.periodMax; }
+                    //                     gain.internalLFO.period = value;
+                    //                     flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);
+                    //                 };
+                    //             };
+                    //         };
+                    //         this.detune = new function(){
+                    //             this.envelope = function(newEnvelope){
+                    //                 if(newEnvelope == null){return detune.envelope;}
+                    //                 detune.envelope = newEnvelope;
+                    //                 flow.oscillators.forEach(oscillator => {
+                    //                     oscillator.detune_envelope = detune.envelope;
+                    //                 });
+                    //             };
+                    //             this.mode = function(mode){ // manual / internalLFO / external
+                    //                 if(mode == null){return detune.mode; }
+                    //                 detune.mode = mode;
+                    
+                    //                 switch(mode){
+                    //                     case 'manual': 
+                    //                         flow.LFO.detune.oscillator.stop();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.detune_useControl = false;
+                    //                         });
+                    //                     break;
+                    //                     case 'internalLFO':
+                    //                         flow.LFO.detune.oscillator.start();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.detune_useControl = true;
+                    //                         });
+                    //                         flow.controlMix.detune.mix.setValueAtTime(0, 0);
+                    //                     break;
+                    //                     case 'external':
+                    //                         flow.LFO.detune.oscillator.stop();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.detune_useControl = true;
+                    //                         });
+                    //                         flow.controlMix.detune.mix.setValueAtTime(1, 0);
+                    //                     break;
+                    //                 }
+                    //             };
+                    //             this.manual = new function(){
+                    //                 this.value = function(value){
+                    //                     if(value == null){ return detune.manual.value; }
+                    //                     detune.manual.value = value;
+                    //                     flow.oscillators.forEach(oscillator => {
+                    //                         oscillator.detune.setValueAtTime(detune.manual.value, 0);
+                    //                     });    
+                    //                 };
+                    //             };
+                    //             this.internalLFO = new function(){
+                    //                 this.depth = function(value){
+                    //                     if(value == null){return detune.internalLFO.depth; }
+                    //                     if(value < 0){ value = 0; }
+                    //                     else if(value > 1){ value = 1; }
+                    //                     detune.internalLFO.depth = value;
+                    //                     flow.LFO.detune.oscillator.gain.setValueAtTime(detune.internalLFO.depth, 0);
+                    //                 };
+                    //                 this.period = function(value){
+                    //                     if(value == null){ return detune.internalLFO.period; }
+                    //                     if(value < detune.internalLFO.periodMin){ value = detune.internalLFO.periodMin; }
+                    //                     else if(value > detune.internalLFO.periodMax){ value = detune.internalLFO.periodMax; }
+                    //                     detune.internalLFO.period = value;
+                    //                     flow.LFO.detune.oscillator.frequency.setValueAtTime(1/detune.internalLFO.period, 0);
+                    //                 };
+                    //             };
+                    //         };
+                    //         this.dutyCycle = new function(){
+                    //             this.envelope = function(newEnvelope){
+                    //                 if(newEnvelope == null){return dutyCycle.envelope;}
+                    //                 dutyCycle.envelope = newEnvelope;
+                    //                 flow.oscillators.forEach(oscillator => {
+                    //                     oscillator.dutyCycle_envelope = dutyCycle.envelope;
+                    //                 });
+                    //             };
+                    //             this.mode = function(mode){ // manual / internalLFO / external
+                    //                 if(mode == null){return dutyCycle.mode; }
+                    //                 dutyCycle.mode = mode;
+                    
+                    //                 switch(mode){
+                    //                     case 'manual': 
+                    //                         flow.LFO.dutyCycle.oscillator.stop();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.dutyCycle_useControl = false;
+                    //                         });
+                    //                     break;
+                    //                     case 'internalLFO':
+                    //                         flow.LFO.gain.oscillator.start();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.dutyCycle_useControl = true;
+                    //                         });
+                    //                         flow.controlMix.dutyCycle.mix.setValueAtTime(0, 0);
+                    //                     break;
+                    //                     case 'external':
+                    //                         flow.LFO.gain.oscillator.stop();
+                    //                         flow.oscillators.forEach(oscillator => {
+                    //                             oscillator.dutyCycle_useControl = true;
+                    //                         });
+                    //                         flow.controlMix.dutyCycle.mix.setValueAtTime(1, 0);
+                    //                     break;
+                    //                 }
+                    //             };
+                    //             this.manual = new function(){
+                    //                 this.value = function(value){
+                    //                     if(value == null){ return dutyCycle.manual.value; }
+                    //                     dutyCycle.manual.value = value;
+                    //                     flow.oscillators.forEach(oscillator => {
+                    //                         oscillator.dutyCycle.setValueAtTime(dutyCycle.manual.value, 0);
+                    //                     });    
+                    //                 };
+                    //             };
+                    //             this.internalLFO = new function(){
+                    //                 this.depth = function(value){
+                    //                     if(value == null){return dutyCycle.internalLFO.depth; }
+                    //                     if(value < 0){ value = 0; }
+                    //                     else if(value > 1){ value = 1; }
+                    //                     dutyCycle.internalLFO.depth = value;
+                    //                     flow.LFO.dutyCycle.oscillator.gain.setValueAtTime(dutyCycle.internalLFO.depth, 0);
+                    //                     flow.LFO.dutyCycle.amplitudeModifier.offset.setValueAtTime(1 - dutyCycle.internalLFO.depth/2, 0);
+                    //                 };
+                    //                 this.period = function(value){
+                    //                     if(value == null){ return dutyCycle.internalLFO.period; }
+                    //                     if(value < dutyCycle.internalLFO.periodMin){ value = dutyCycle.internalLFO.periodMin; }
+                    //                     else if(value > dutyCycle.internalLFO.periodMax){ value = dutyCycle.internalLFO.periodMax; }
+                    //                     dutyCycle.internalLFO.period = value;
+                    //                     flow.LFO.dutyCycle.oscillator.frequency.setTargetAtTime(1/dutyCycle.internalLFO.period, context.currentTime, 0);
+                    //                 };
+                    //             };
+                    //         };
+                    
+                    //         this.additiveSynthesis = new function(){
+                    //             this.sin = function(value){
+                    //                 if(value == undefined){ return additiveSynthesis.sin; }
+                    //                 additiveSynthesis.sin = value;
+                    //                 flow.oscillators.forEach(oscillator => {
+                    //                     oscillator.additiveSynthesis_sin = value;
+                    //                 });
+                    //             };
+                    //             this.cos = function(value){
+                    //                 if(value == undefined){ return additiveSynthesis.cos; }
+                    //                 additiveSynthesis.cos = value;
+                    //                 flow.oscillators.forEach(oscillator => {
+                    //                     oscillator.additiveSynthesis_cos = value;
+                    //                 });
+                    //             };
+                    //         };
+                    //         this.phaseModulation = function(value){
+                    //             if(value == undefined){ return phaseModulation; }
+                    //             phaseModulation = value;
+                    //             flow.oscillators.forEach(oscillator => {
+                    //                 oscillator.phaseModulation_settings = phaseModulation;
+                    //             });
+                    //         };
+                    // };
+                    // this.oscillator = function(
+                    //     context
+                    // ){
+                    //     const self = this;
+                    
+                    //     //flow
+                    //         //flow chain
+                    //             const flow = {
+                    //                 gainControl:{},
+                    //                 detuneControl:{},
+                    //                 dutyCycleControl:{},
+                    //                 oscillator:{},
+                    //             };
+                    
+                    //         //control streams
+                    //             flow.gainControl = {
+                    //                 node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                    //             };
+                    //             flow.detuneControl = {
+                    //                 node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                    //             };
+                    //             flow.dutyCycleControl = {
+                    //                 node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                    //             };
+                    
+                    //         //oscillator
+                    //             flow.oscillator = {
+                    //                 frequency: 440,
+                    //                 gain: 1,
+                    //                 detune: 0,
+                    //                 dutyCycle: 0.5,
+                    //                 node: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
+                    //             };
+                    
+                    //         flow.gainControl.node.connect(flow.oscillator.node, undefined, 0);
+                    //         flow.detuneControl.node.connect(flow.oscillator.node, undefined, 1);
+                    //         flow.dutyCycleControl.node.connect(flow.oscillator.node, undefined, 2);
+                        
+                    //     //input/output
+                    //         this.out = function(){return flow.oscillator.node;}
+                    //         this.gainControl = function(){return flow.gainControl.node;}
+                    //         this.detuneControl = function(){return flow.detuneControl.node;}
+                    //         this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
+                    
+                    //     //controls
+                    //         //performance
+                    //             this.start = function(){
+                    //                 flow.oscillator.node.start();
+                    //             };
+                    //             this.stop = function(){
+                    //                 flow.oscillator.node.stop();
+                    //             };
+                    
+                    //         //generic controls
+                    //             this.waveform = function(value){ // sine / square / triangle / noise / additiveSynthesis / phaseModulation
+                    //                 if(value == undefined){ return flow.oscillator.node.waveform; }
+                    //                 flow.oscillator.node.waveform = value;
+                    //             };
+                    //             this.frequency = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.frequency; }
+                    //                 flow.oscillator.frequency = value;
+                    //                 _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.frequency, value, 0.01, 'instant', true);
+                    //             };
+                    //             this.gain = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.gain; }
+                    //                 flow.oscillator.gain = value;
+                    //                 _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.gain, value, 0.01, 'instant', true);
+                    //             };
+                    //             this.detune = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.detune; }
+                    //                 flow.oscillator.detune = value;
+                    //                 _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.detune, value, 0.01, 'instant', true);
+                    //             };
+                    //             this.dutyCycle = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.dutyCycle; }
+                    //                 flow.oscillator.dutyCycle = value;
+                    //                 _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.dutyCycle, value, 0.01, 'instant', true);
+                    //             };
+                                 
+                    //         //control select
+                    //             this.gain_useControl = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.gain_useControl; }
+                    //                 flow.oscillator.node.gain_useControl = value;
+                    //             };
+                    //             this.detune_useControl = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.detune_useControl; }
+                    //                 flow.oscillator.node.detune_useControl = value;
+                    //             };
+                    //             this.dutyCycle_useControl = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.dutyCycle_useControl; }
+                    //                 flow.oscillator.node.dutyCycle_useControl = value;
+                    //             }
+                    
+                    //         //envelope
+                    //             this.gain_envelope = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.gain_envelope; }
+                    //                 flow.oscillator.node.gain_envelope = value;
+                    //             };
+                    //             this.detune_envelope = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.detune_envelope; }
+                    //                 flow.oscillator.node.detune_envelope = value;
+                    //             };
+                    //             this.dutyCycle_envelope = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.dutyCycle_envelope; }
+                    //                 flow.oscillator.node.dutyCycle_envelope = value;
+                    //             }
+                    
+                    //         //additional miscellaneous waveform controls
+                    //             this,additiveSynthesis_sin = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.additiveSynthesis_sin; }
+                    //                 flow.oscillator.node.additiveSynthesis_sin = value;
+                    //             };
+                    //             this,additiveSynthesis_cos = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.additiveSynthesis_cos; }
+                    //                 flow.oscillator.node.additiveSynthesis_cos = value;
+                    //             };
+                    
+                    //             this.phaseModulation_settings = function(value){
+                    //                 if(value == undefined){ return flow.oscillator.node.phaseModulation_settings; }
+                    //                 flow.oscillator.node.phaseModulation_settings = value;
+                    //             };
+                    
+                    //     //callbacks
+                    //         flow.oscillator.node.onEnvelopeEvent = function(data){
+                    //             if(self.onEnvelopeEvent == undefined){ return; }
+                    //             self.onEnvelopeEvent(data);
+                    //         };
+                    //         this.onEnvelopeEvent = function(){};
+                    // };
                     this.audio2percentage = function(){
                         return new function(){
                             const analyser = {
@@ -26991,457 +27716,6 @@
                             //callbacks
                                 this.newValue = function(a){};
                         };
-                    };
-                    //replacement for prior synthesizer; this system uses the custom oscillators and implements an ADSR envelope
-                    //  oscillators generated on demand
-                    //  conservative use of oscillators
-                    //  use of custom oscillator with duty cycle
-                    //  use of custom oscillator audio worklet (which has ADSR envelope built in for gain, detune and dutyCycle)
-                    //  gainWobble provided by internal LFO, or external input
-                    //  detuneWobble provided by internal LFO, or external input
-                    //  dutyCycleWobble provided by internal LFO, or external input
-                    
-                    this.synthesizer_3 = function(
-                        context,
-                        waveType='sine',
-                        masterGain=1,
-                        gain={
-                            envelope:{
-                                front:[ {destination:1, elapse:0} ],
-                                back:[ {destination:0, elapse:0} ],
-                            },
-                            mode:'manual',
-                            manual:{value:1},
-                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
-                        },
-                        octave=0,
-                        detune={
-                            envelope:{
-                                front:[ {destination:0, elapse:0} ],
-                                back:[ {destination:0, elapse:0} ],
-                            },
-                            mode:'manual',
-                            manual:{value:0},
-                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
-                        },
-                        dutyCycle={
-                            envelope:{
-                                front:[ {destination:0, elapse:0} ],
-                                back:[ {destination:0, elapse:0} ],
-                            },
-                            mode:'manual',
-                            manual:{value:0.5},
-                            internalLFO:{depth:0, period:1, periodMin:0.01, periodMax:100},
-                        },
-                        additiveSynthesis={
-                            sin:[1],
-                            cos:[]
-                        },
-                        phaseModulation=[
-                            {mux:2,power:1},
-                            {mux:3,power:1},
-                        ],
-                    ){
-                        //flow
-                            const flow = {
-                                controlIn:{
-                                    gain: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
-                                    detune: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
-                                    dutyCycle: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
-                                },
-                    
-                                LFO:{
-                                    gain:{
-                                        oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
-                                        amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
-                                    },
-                                    detune:{
-                                        oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
-                                    },
-                                    dutyCycle:{
-                                        oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
-                                        amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
-                                    },
-                                },
-                    
-                                controlMix:{
-                                    gain: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
-                                    detune: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
-                                    dutyCycle: new _canvas_.library.audio.audioWorklet.production.only_js.streamAdder(context),
-                                },
-                    
-                                oscillators: [],
-                                aggregator: new _canvas_.library.audio.audioWorklet.production.only_js.gain(context),
-                            };
-                    
-                            flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);
-                            flow.LFO.gain.oscillator.gain.setValueAtTime(gain.internalLFO.depth, 0);
-                            flow.LFO.gain.oscillator.connect(flow.LFO.gain.amplitudeModifier);
-                            flow.LFO.gain.amplitudeModifier.divisor.setValueAtTime(2, 0);
-                            flow.LFO.gain.amplitudeModifier.offset.setValueAtTime(1 - gain.internalLFO.depth/2, 0);
-                            flow.LFO.gain.amplitudeModifier.connect(flow.controlMix.gain,undefined,0);
-                    
-                            flow.LFO.detune.oscillator.frequency.setValueAtTime(1/detune.internalLFO.period, 0);
-                            flow.LFO.detune.oscillator.gain.setValueAtTime(detune.internalLFO.depth, 0);
-                            flow.LFO.detune.oscillator.connect(flow.controlMix.detune,undefined,0);
-                    
-                            flow.LFO.dutyCycle.oscillator.frequency.setValueAtTime(1/dutyCycle.internalLFO.period, 0);
-                            flow.LFO.dutyCycle.oscillator.gain.setValueAtTime(dutyCycle.internalLFO.depth, 0);
-                            flow.LFO.dutyCycle.oscillator.connect(flow.LFO.dutyCycle.amplitudeModifier);
-                            flow.LFO.dutyCycle.amplitudeModifier.divisor.setValueAtTime(2, 0);
-                            flow.LFO.dutyCycle.amplitudeModifier.offset.setValueAtTime(0.5, 0);
-                            flow.LFO.dutyCycle.amplitudeModifier.connect(flow.controlMix.dutyCycle,undefined,0);
-                    
-                            flow.controlIn.gain.connect(flow.controlMix.gain,undefined,1);
-                            flow.controlIn.detune.connect(flow.controlMix.detune,undefined,1);
-                            flow.controlIn.dutyCycle.connect(flow.controlMix.dutyCycle,undefined,1);
-                    
-                        //io
-                            this.control = new function(){
-                                this.gain = function(){
-                                    return flow.controlIn.gain;
-                                };
-                                this.detune = function(){
-                                    return flow.controlIn.detune;
-                                };
-                                this.dutyCycle = function(){
-                                    return flow.controlIn.dutyCycle;
-                                };
-                            };
-                            this.out = function(){
-                                return flow.aggregator;
-                            }
-                    
-                        //controls
-                            this._dump = function(){
-                                console.log('waveType:', JSON.parse(JSON.stringify(waveType)));
-                                console.log('gain:', JSON.parse(JSON.stringify(gain)));
-                                console.log('octave:', JSON.parse(JSON.stringify(octave)));
-                                console.log('detune:', JSON.parse(JSON.stringify(detune)));
-                                console.log('dutyCycle:', JSON.parse(JSON.stringify(dutyCycle)));
-                    
-                                console.log('flow',flow);
-                            };
-                    
-                            this.perform = function(note){
-                                //find the oscillator for this note (if there is one)
-                                    const oscillator = flow.oscillators.filter(oscillator => oscillator.noteNumber == note.num && oscillator.velocity != 0 )[0];
-                    
-                                if( oscillator != undefined && note.velocity == 0 ){
-                                    //note stopping
-                                    oscillator.stop();
-                                    oscillator.velocity = 0;
-                                }else if( oscillator != undefined && oscillator.velocity != 0 ){
-                                    //note velocity adjustment
-                                    oscillator.start(note.velocity);
-                                    oscillator.velocity = note.velocity;
-                                }else if( oscillator == undefined && note.velocity == 0 ){ 
-                                    //don't do anything (you're trying to stop a note that isn't sounding)
-                                }else{
-                                    //fresh note
-                    
-                                    //get free oscillator, or generate new one
-                                        let oscillatorToUse = undefined;
-                    
-                                        //get free oscillators
-                                            const freeOscillators = flow.oscillators.filter(oscillator => oscillator.noteNumber == undefined);
-                                        //generate new oscillator if necessary
-                                            if(freeOscillators.length > 0){
-                                                oscillatorToUse = freeOscillators[0];
-                                            }else{
-                                                oscillatorToUse = new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context);
-                                                oscillatorToUse.connect(flow.aggregator);
-                                                oscillatorToUse.waveform = waveType;
-                                                oscillatorToUse.gain_envelope_reporting = true;
-                    
-                                                oscillatorToUse.gain_envelope = gain.envelope;
-                                                oscillatorToUse.detune_envelope = detune.envelope;
-                                                oscillatorToUse.dutyCycle_envelope = dutyCycle.envelope;
-                    
-                                                oscillatorToUse.detune.setValueAtTime(detune.manual.value, 0);
-                                                oscillatorToUse.dutyCycle.setValueAtTime(dutyCycle.manual.value, 0);
-                    
-                                                oscillatorToUse.gain_useControl = gain.mode != 'manual';
-                                                oscillatorToUse.detune_useControl = detune.mode != 'manual';
-                                                oscillatorToUse.dutyCycle_useControl = dutyCycle.mode != 'manual';
-                    
-                                                flow.controlMix.gain.connect(oscillatorToUse,undefined,0);
-                                                flow.controlMix.detune.connect(oscillatorToUse,undefined,1);
-                                                flow.controlMix.dutyCycle.connect(oscillatorToUse,undefined,2);
-                    
-                                                oscillatorToUse.additiveSynthesis_sin = additiveSynthesis.sin;
-                                                oscillatorToUse.additiveSynthesis_cos = additiveSynthesis.cos;
-                                                oscillatorToUse.phaseModulation_settings = phaseModulation.sin;
-                    
-                                                flow.oscillators.push(oscillatorToUse);
-                                            }
-                    
-                                    //activate oscillator
-                                        oscillatorToUse.frequency.setValueAtTime(_canvas_.library.audio.num2freq(note.num+12*octave),0);
-                                        oscillatorToUse.noteNumber = note.num;
-                                        oscillatorToUse.velocity = note.velocity;
-                                        oscillatorToUse.onEnvelopeEvent = function(event){
-                                            if(event.aspect == 'gain' && event.phase == 'off'){
-                                                oscillatorToUse.noteNumber = undefined;
-                                            }
-                                        };
-                                        oscillatorToUse.start(note.velocity);
-                                }
-                            };
-                    
-                            this.panic = function(){
-                                flow.oscillators.map(a => a.noteNumber).filter(a => a != undefined).forEach(a => {
-                                    this.perform({num:a,velocity:0});
-                                });
-                            };
-                    
-                            this.masterGain = function(value){
-                                if(value == undefined){return masterGain;}
-                                masterGain = value;
-                                flow.aggregator.gain.setValueAtTime(value, 0);
-                            };
-                            this.waveform = function(type){
-                                if(type == undefined){return waveType;}
-                                waveType = type;
-                    
-                                flow.oscillators.forEach(oscillator => {
-                                    oscillator.waveform = waveType;
-                                });
-                            };
-                            this.octave = function(target){
-                                if(target == null){return octave;}
-                                octave = target;
-                                flow.oscillators.forEach(oscillator => {
-                                    if(oscillator.noteNumber == undefined){return;}
-                                    oscillator.frequency.setValueAtTime(_canvas_.library.audio.num2freq(oscillator.noteNumber+12*octave), 0);
-                                });
-                            };
-                            this.detune = function(target){
-                                if(target == null){return detune;}
-                                detune = target;
-                                flow.oscillators.forEach(oscillator => {
-                                    oscillator.detune.setValueAtTime(target, 0);
-                                });
-                            };
-                            this.dutyCycle = function(target){
-                                if(target == null){return detune;}
-                                dutyCycle = target;
-                                flow.oscillators.forEach(oscillator => {
-                                    oscillator.dutyCycle.setValueAtTime(target, 0);
-                                });
-                            };
-                    
-                            this.gain = new function(){
-                                this.envelope = function(newEnvelope){
-                                    if(newEnvelope == null){return gain.envelope;}
-                                    gain.envelope = newEnvelope;
-                                    flow.oscillators.forEach(oscillator => {
-                                        oscillator.gain_envelope = gain.envelope;
-                                    });
-                                };
-                                this.mode = function(mode){ // manual / internalLFO / external
-                                    if(mode == null){return gain.mode; }
-                                    gain.mode = mode;
-                    
-                                    switch(mode){
-                                        case 'manual': 
-                                            flow.LFO.gain.oscillator.stop();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.gain_useControl = false;
-                                            });
-                                        break;
-                                        case 'internalLFO':
-                                            flow.LFO.gain.oscillator.start();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.gain_useControl = true;
-                                            });
-                    
-                                            flow.controlMix.gain.mix.setValueAtTime(0, 0);
-                                        break;
-                                        case 'external':
-                                            flow.LFO.gain.oscillator.stop();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.gain_useControl = true;
-                                            });
-                    
-                                            flow.controlMix.gain.mix.setValueAtTime(1, 0);
-                                        break;
-                                    }
-                                };
-                                this.manual = new function(){
-                                    this.value = function(value){
-                                        if(value == null){ return gain.manual.value; }
-                                        gain.manual.value = value;
-                                        flow.oscillators.forEach(oscillator => {
-                                            oscillator.gain.setValueAtTime(gain.manual.value, 0);
-                                        });    
-                                    };
-                                };
-                                this.internalLFO = new function(){
-                                    this.depth = function(value){
-                                        if(value == null){return gain.internalLFO.depth; }
-                                        if(value < 0){ value = 0; }
-                                        else if(value > 1){ value = 1; }
-                                        gain.internalLFO.depth = value;
-                                        flow.LFO.gain.oscillator.gain.setValueAtTime(gain.internalLFO.depth, 0);
-                                        flow.LFO.gain.amplitudeModifier.offset.setValueAtTime(1 - gain.internalLFO.depth/2, 0);
-                                    };
-                                    this.period = function(value){
-                                        if(value == null){ return gain.internalLFO.period; }
-                                        if(value < gain.internalLFO.periodMin){ value = gain.internalLFO.periodMin; }
-                                        else if(value > gain.internalLFO.periodMax){ value = gain.internalLFO.periodMax; }
-                                        gain.internalLFO.period = value;
-                                        flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);
-                                    };
-                                };
-                            };
-                            this.detune = new function(){
-                                this.envelope = function(newEnvelope){
-                                    if(newEnvelope == null){return detune.envelope;}
-                                    detune.envelope = newEnvelope;
-                                    flow.oscillators.forEach(oscillator => {
-                                        oscillator.detune_envelope = detune.envelope;
-                                    });
-                                };
-                                this.mode = function(mode){ // manual / internalLFO / external
-                                    if(mode == null){return detune.mode; }
-                                    detune.mode = mode;
-                    
-                                    switch(mode){
-                                        case 'manual': 
-                                            flow.LFO.detune.oscillator.stop();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.detune_useControl = false;
-                                            });
-                                        break;
-                                        case 'internalLFO':
-                                            flow.LFO.detune.oscillator.start();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.detune_useControl = true;
-                                            });
-                                            flow.controlMix.detune.mix.setValueAtTime(0, 0);
-                                        break;
-                                        case 'external':
-                                            flow.LFO.detune.oscillator.stop();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.detune_useControl = true;
-                                            });
-                                            flow.controlMix.detune.mix.setValueAtTime(1, 0);
-                                        break;
-                                    }
-                                };
-                                this.manual = new function(){
-                                    this.value = function(value){
-                                        if(value == null){ return detune.manual.value; }
-                                        detune.manual.value = value;
-                                        flow.oscillators.forEach(oscillator => {
-                                            oscillator.detune.setValueAtTime(detune.manual.value, 0);
-                                        });    
-                                    };
-                                };
-                                this.internalLFO = new function(){
-                                    this.depth = function(value){
-                                        if(value == null){return detune.internalLFO.depth; }
-                                        if(value < 0){ value = 0; }
-                                        else if(value > 1){ value = 1; }
-                                        detune.internalLFO.depth = value;
-                                        flow.LFO.detune.oscillator.gain.setValueAtTime(detune.internalLFO.depth, 0);
-                                    };
-                                    this.period = function(value){
-                                        if(value == null){ return detune.internalLFO.period; }
-                                        if(value < detune.internalLFO.periodMin){ value = detune.internalLFO.periodMin; }
-                                        else if(value > detune.internalLFO.periodMax){ value = detune.internalLFO.periodMax; }
-                                        detune.internalLFO.period = value;
-                                        flow.LFO.detune.oscillator.frequency.setValueAtTime(1/detune.internalLFO.period, 0);
-                                    };
-                                };
-                            };
-                            this.dutyCycle = new function(){
-                                this.envelope = function(newEnvelope){
-                                    if(newEnvelope == null){return dutyCycle.envelope;}
-                                    dutyCycle.envelope = newEnvelope;
-                                    flow.oscillators.forEach(oscillator => {
-                                        oscillator.dutyCycle_envelope = dutyCycle.envelope;
-                                    });
-                                };
-                                this.mode = function(mode){ // manual / internalLFO / external
-                                    if(mode == null){return dutyCycle.mode; }
-                                    dutyCycle.mode = mode;
-                    
-                                    switch(mode){
-                                        case 'manual': 
-                                            flow.LFO.dutyCycle.oscillator.stop();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.dutyCycle_useControl = false;
-                                            });
-                                        break;
-                                        case 'internalLFO':
-                                            flow.LFO.gain.oscillator.start();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.dutyCycle_useControl = true;
-                                            });
-                                            flow.controlMix.dutyCycle.mix.setValueAtTime(0, 0);
-                                        break;
-                                        case 'external':
-                                            flow.LFO.gain.oscillator.stop();
-                                            flow.oscillators.forEach(oscillator => {
-                                                oscillator.dutyCycle_useControl = true;
-                                            });
-                                            flow.controlMix.dutyCycle.mix.setValueAtTime(1, 0);
-                                        break;
-                                    }
-                                };
-                                this.manual = new function(){
-                                    this.value = function(value){
-                                        if(value == null){ return dutyCycle.manual.value; }
-                                        dutyCycle.manual.value = value;
-                                        flow.oscillators.forEach(oscillator => {
-                                            oscillator.dutyCycle.setValueAtTime(dutyCycle.manual.value, 0);
-                                        });    
-                                    };
-                                };
-                                this.internalLFO = new function(){
-                                    this.depth = function(value){
-                                        if(value == null){return dutyCycle.internalLFO.depth; }
-                                        if(value < 0){ value = 0; }
-                                        else if(value > 1){ value = 1; }
-                                        dutyCycle.internalLFO.depth = value;
-                                        flow.LFO.dutyCycle.oscillator.gain.setValueAtTime(dutyCycle.internalLFO.depth, 0);
-                                        flow.LFO.dutyCycle.amplitudeModifier.offset.setValueAtTime(1 - dutyCycle.internalLFO.depth/2, 0);
-                                    };
-                                    this.period = function(value){
-                                        if(value == null){ return dutyCycle.internalLFO.period; }
-                                        if(value < dutyCycle.internalLFO.periodMin){ value = dutyCycle.internalLFO.periodMin; }
-                                        else if(value > dutyCycle.internalLFO.periodMax){ value = dutyCycle.internalLFO.periodMax; }
-                                        dutyCycle.internalLFO.period = value;
-                                        flow.LFO.dutyCycle.oscillator.frequency.setTargetAtTime(1/dutyCycle.internalLFO.period, context.currentTime, 0);
-                                    };
-                                };
-                            };
-                    
-                            this.additiveSynthesis = new function(){
-                                this.sin = function(value){
-                                    if(value == undefined){ return additiveSynthesis.sin; }
-                                    additiveSynthesis.sin = value;
-                                    flow.oscillators.forEach(oscillator => {
-                                        oscillator.additiveSynthesis_sin = value;
-                                    });
-                                };
-                                this.cos = function(value){
-                                    if(value == undefined){ return additiveSynthesis.cos; }
-                                    additiveSynthesis.cos = value;
-                                    flow.oscillators.forEach(oscillator => {
-                                        oscillator.additiveSynthesis_cos = value;
-                                    });
-                                };
-                            };
-                            this.phaseModulation = function(value){
-                                if(value == undefined){ return phaseModulation; }
-                                phaseModulation = value;
-                                flow.oscillators.forEach(oscillator => {
-                                    oscillator.phaseModulation_settings = phaseModulation;
-                                });
-                            };
                     };
                     // replacement for prior synthesizer; this system reuses oscillators
                     //  oscillators generated on demand
@@ -28488,135 +28762,6 @@
                             };
                     };
                         
-                    this.oscillator = function(
-                        context
-                    ){
-                        const self = this;
-                    
-                        //flow
-                            //flow chain
-                                const flow = {
-                                    gainControl:{},
-                                    detuneControl:{},
-                                    dutyCycleControl:{},
-                                    oscillator:{},
-                                };
-                    
-                            //control streams
-                                flow.gainControl = {
-                                    node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
-                                };
-                                flow.detuneControl = {
-                                    node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
-                                };
-                                flow.dutyCycleControl = {
-                                    node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
-                                };
-                    
-                            //oscillator
-                                flow.oscillator = {
-                                    frequency: 440,
-                                    gain: 1,
-                                    detune: 0,
-                                    dutyCycle: 0.5,
-                                    node: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
-                                };
-                    
-                            flow.gainControl.node.connect(flow.oscillator.node, undefined, 0);
-                            flow.detuneControl.node.connect(flow.oscillator.node, undefined, 1);
-                            flow.dutyCycleControl.node.connect(flow.oscillator.node, undefined, 2);
-                        
-                        //input/output
-                            this.out = function(){return flow.oscillator.node;}
-                            this.gainControl = function(){return flow.gainControl.node;}
-                            this.detuneControl = function(){return flow.detuneControl.node;}
-                            this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
-                    
-                        //controls
-                            //performance
-                                this.start = function(){
-                                    flow.oscillator.node.start();
-                                };
-                                this.stop = function(){
-                                    flow.oscillator.node.stop();
-                                };
-                    
-                            //generic controls
-                                this.waveform = function(value){ // sine / square / triangle / noise / additiveSynthesis / phaseModulation
-                                    if(value == undefined){ return flow.oscillator.node.waveform; }
-                                    flow.oscillator.node.waveform = value;
-                                };
-                                this.frequency = function(value){
-                                    if(value == undefined){ return flow.oscillator.frequency; }
-                                    flow.oscillator.frequency = value;
-                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.frequency, value, 0.01, 'instant', true);
-                                };
-                                this.gain = function(value){
-                                    if(value == undefined){ return flow.oscillator.gain; }
-                                    flow.oscillator.gain = value;
-                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.gain, value, 0.01, 'instant', true);
-                                };
-                                this.detune = function(value){
-                                    if(value == undefined){ return flow.oscillator.detune; }
-                                    flow.oscillator.detune = value;
-                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.detune, value, 0.01, 'instant', true);
-                                };
-                                this.dutyCycle = function(value){
-                                    if(value == undefined){ return flow.oscillator.dutyCycle; }
-                                    flow.oscillator.dutyCycle = value;
-                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.dutyCycle, value, 0.01, 'instant', true);
-                                };
-                                 
-                            //control select
-                                this.gain_useControl = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.gain_useControl; }
-                                    flow.oscillator.node.gain_useControl = value;
-                                };
-                                this.detune_useControl = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.detune_useControl; }
-                                    flow.oscillator.node.detune_useControl = value;
-                                };
-                                this.dutyCycle_useControl = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.dutyCycle_useControl; }
-                                    flow.oscillator.node.dutyCycle_useControl = value;
-                                }
-                    
-                            //envelope
-                                this.gain_envelope = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.gain_envelope; }
-                                    flow.oscillator.node.gain_envelope = value;
-                                };
-                                this.detune_envelope = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.detune_envelope; }
-                                    flow.oscillator.node.detune_envelope = value;
-                                };
-                                this.dutyCycle_envelope = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.dutyCycle_envelope; }
-                                    flow.oscillator.node.dutyCycle_envelope = value;
-                                }
-                    
-                            //additional miscellaneous waveform controls
-                                this,additiveSynthesis_sin = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.additiveSynthesis_sin; }
-                                    flow.oscillator.node.additiveSynthesis_sin = value;
-                                };
-                                this,additiveSynthesis_cos = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.additiveSynthesis_cos; }
-                                    flow.oscillator.node.additiveSynthesis_cos = value;
-                                };
-                    
-                                this.phaseModulation_settings = function(value){
-                                    if(value == undefined){ return flow.oscillator.node.phaseModulation_settings; }
-                                    flow.oscillator.node.phaseModulation_settings = value;
-                                };
-                    
-                        //callbacks
-                            flow.oscillator.node.onEnvelopeEvent = function(data){
-                                if(self.onEnvelopeEvent == undefined){ return; }
-                                self.onEnvelopeEvent(data);
-                            };
-                            this.onEnvelopeEvent = function(){};
-                    };
                     this.recorder = function(context){
                     
                         //state
@@ -28829,6 +28974,14 @@
                             this.out = function(){return flow.gain.node;}
                             this.control = function(){return flow.controlIn.node;}
                     
+                        //shutdown
+                            this.shutdown = function(){
+                                flow.controlIn.node.shutdown();
+                                flow.gain.node.shutdown();
+                    
+                                flow.controlIn.node.disconnect(flow.gain.node);
+                            }
+                    
                         //controls
                             this.mode = function(value){
                                 if(value == undefined){ return flow.gain.mode; }
@@ -28863,6 +29016,11 @@
                         //input/output node
                             this.in = function(){return flow.amplitudeModifierNode.node;}
                             this.out = function(a){return flow.amplitudeModifierNode.node;}
+                    
+                        //shutdown
+                            this.shutdown = function(){
+                                flow.amplitudeModifierNode.node.shutdown();
+                            }
                     
                         //controls
                             this.invert = function(value){
@@ -28933,6 +29091,18 @@
                             this.mixControl = function(){return flow.mixControl.node;}
                             this.out = function(){return flow.streamAdder.node;}
                     
+                        //shutdown
+                            this.shutdown = function(){
+                                flow.input_1.node.shutdown();
+                                flow.input_2.node.shutdown();
+                                flow.mixControl.node.shutdown();
+                                flow.streamAdder.node.shutdown();
+                    
+                                flow.input_1.node.disconnect(flow.streamAdder.node);
+                                flow.input_2.node.disconnect(flow.streamAdder.node);
+                                flow.mixControl.node.disconnect(flow.streamAdder.node);
+                            }
+                    
                         //controls
                             this.mode = function(value){
                                 if(value == undefined){ return flow.streamAdder.mode; }
@@ -28964,6 +29134,11 @@
                         //input/output node
                             this.in = function(){return flow.sigmoid.node;}
                             this.out = function(a){return flow.sigmoid.node;}
+                    
+                        //shutdown
+                            this.shutdown = function(){
+                                flow.sigmoid.node.shutdown();
+                            }
                     
                         //controls
                             this.gain = function(value){
@@ -29139,6 +29314,11 @@
                             this.in = function(){return bitcrusherNode;}
                             this.out = function(a){return bitcrusherNode;}
                     
+                        //shutdown
+                            this.shutdown = function(){
+                                bitcrusherNode.shutdown();
+                            }
+                    
                         //controls
                             this.amplitudeResolution = function(value){
                                 if(value == undefined){ return bitcrusherNode.amplitudeResolution; }
@@ -29239,12 +29419,122 @@
                         //input/output node
                             this.out = function(){ return flow.stableAmplitudeGenerator.node; }
                     
+                        //shutdown
+                            this.shutdown = function(){
+                                flow.stableAmplitudeGenerator.node.shutdown();
+                            }
+                    
                         //controls
                             this.amplitude = function(value){
                                 if(value == undefined){ return flow.stableAmplitudeGenerator.amplitude; }
                                 flow.stableAmplitudeGenerator.amplitude = value;
                                 _canvas_.library.audio.changeAudioParam(context, flow.stableAmplitudeGenerator.node.amplitude, value, 0.01, 'instant', true);
                             };
+                    };
+                    this.oscillator_type_1 = function(
+                        context
+                    ){
+                        const self = this;
+                    
+                        //flow
+                            //flow chain
+                                const flow = {
+                                    gainControl:{},
+                                    detuneControl:{},
+                                    dutyCycleControl:{},
+                                    oscillator:{},
+                                };
+                    
+                            //control streams
+                                flow.gainControl = {
+                                    node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                                };
+                                flow.detuneControl = {
+                                    node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                                };
+                                flow.dutyCycleControl = {
+                                    node: new _canvas_.library.audio.audioWorklet.production.only_js.nothing(context),
+                                };
+                    
+                            //oscillator
+                                flow.oscillator = {
+                                    frequency: 440,
+                                    gain: 1,
+                                    detune: 0,
+                                    dutyCycle: 0.5,
+                                    node: new _canvas_.library.audio.audioWorklet.production.wasm.oscillator_type_1(_canvas_.library.audio.context)
+                                };
+                    
+                            flow.gainControl.node.connect(flow.oscillator.node, undefined, 0);
+                            flow.detuneControl.node.connect(flow.oscillator.node, undefined, 1);
+                            flow.dutyCycleControl.node.connect(flow.oscillator.node, undefined, 2);
+                        
+                        //input/output
+                            this.out = function(){return flow.oscillator.node;}
+                            this.gainControl = function(){return flow.gainControl.node;}
+                            this.detuneControl = function(){return flow.detuneControl.node;}
+                            this.dutyCycleControl = function(){return flow.dutyCycleControl.node;}
+                    
+                        //shutdown
+                            this.shutdown = function(){
+                                flow.gainControl.node.shutdown();
+                                flow.detuneControl.node.shutdown();
+                                flow.dutyCycleControl.node.shutdown();
+                                flow.oscillator.node.shutdown();
+                    
+                                flow.gainControl.node.disconnect(flow.oscillator.node);
+                                flow.detuneControl.node.disconnect(flow.oscillator.node);
+                                flow.dutyCycleControl.node.disconnect(flow.oscillator.node);
+                            }
+                    
+                        //controls
+                            //performance
+                                this.start = function(){
+                                    flow.oscillator.node.start();
+                                };
+                                this.stop = function(){
+                                    flow.oscillator.node.stop();
+                                };
+                    
+                            //generic controls
+                                this.waveform = function(value){ // sine / square / triangle / noise / additiveSynthesis / phaseModulation
+                                    if(value == undefined){ return flow.oscillator.node.waveform; }
+                                    flow.oscillator.node.waveform = value;
+                                };
+                                this.frequency = function(value){
+                                    if(value == undefined){ return flow.oscillator.frequency; }
+                                    flow.oscillator.frequency = value;
+                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.frequency, value, 0.01, 'instant', true);
+                                };
+                                this.gain = function(value){
+                                    if(value == undefined){ return flow.oscillator.gain; }
+                                    flow.oscillator.gain = value;
+                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.gain, value, 0.01, 'instant', true);
+                                };
+                                this.detune = function(value){
+                                    if(value == undefined){ return flow.oscillator.detune; }
+                                    flow.oscillator.detune = value;
+                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.detune, value, 0.01, 'instant', true);
+                                };
+                                this.dutyCycle = function(value){
+                                    if(value == undefined){ return flow.oscillator.dutyCycle; }
+                                    flow.oscillator.dutyCycle = value;
+                                    _canvas_.library.audio.changeAudioParam(context, flow.oscillator.node.dutyCycle, value, 0.01, 'instant', true);
+                                };
+                                 
+                            //control select
+                                this.gain_useControl = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.gain_useControl; }
+                                    flow.oscillator.node.gain_useControl = value;
+                                };
+                                this.detune_useControl = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.detune_useControl; }
+                                    flow.oscillator.node.detune_useControl = value;
+                                };
+                                this.dutyCycle_useControl = function(value){
+                                    if(value == undefined){ return flow.oscillator.node.dutyCycle_useControl; }
+                                    flow.oscillator.node.dutyCycle_useControl = value;
+                                }
                     };
                     this.filterUnit = function(
                         context
@@ -29322,7 +29612,12 @@
                     
                         //input/output node
                             this.in = function(){return lagProcessorNode;}
-                            this.out = function(a){return lagProcessorNode;}
+                            this.out = function(){return lagProcessorNode;}
+                    
+                        //shutdown
+                            this.shutdown = function(){
+                                lagProcessorNode.shutdown();
+                            }
                     
                         //controls
                             this.samples = function(value){
@@ -29335,6 +29630,9 @@
                     ){
                         const audioWorklet = new _canvas_.library.audio.audioWorklet.production.only_js.whiteNoiseGenerator(context);
                         this.out = function(){ return audioWorklet; }
+                        this.shutdown = function(){
+                            audioWorklet.shutdown();
+                        }
                     };
                     this.frequencyAmplitudeResponseAnalyser = function(
                         context
@@ -41211,8 +41509,10 @@
                                             return;
                                         }
                                         
-                                        if(object._direction == 'out'){
-                                            object.audioNode.disconnect(object.getForeignNode().audioNode);
+                                        if( object._direction == 'out' ){
+                                            try {
+                                                object.audioNode.disconnect(object.getForeignNode().audioNode);
+                                            } catch (err) {}
                                         }
                                     };
                             
@@ -44781,7 +45081,7 @@
                 _canvas_.layers.declareLayerAsLoaded("control");
             } );
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:19} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:21} };
             };
             
             _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -44803,7 +45103,7 @@
                 const hour = (new Date()).getHours();
                 if( 
                     (new URL(window.location.href)).searchParams.get("darkmode") != null ||
-                    hour < 8 || hour > 20
+                    hour < 8 || hour >= 20
                 ){ _canvas_.control.gui.style.darkMode(); }
             });
             
@@ -54707,6 +55007,7 @@
                             };
                             const gain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
                     
+                    
                             function update(){
                                 const v = state.gain_dial*2 - 1;
                                 state.gain = ( v + (state.plusOne?1:0) ) * (state.byTen?10:1);
@@ -54733,7 +55034,7 @@
                                 };
                             //io
                                 object.io.audio.input.audioNode = gain.in();
-                                object.io.audio.output.audioNode = gain.out();
+                                object.io.audio.output.audioNode = gain.in();
                                 object.io.audio.control.audioNode = gain.control();
                                 object.io.signal.mux.onchange = function(value){
                                     if(!value){return;}
@@ -54782,9 +55083,12 @@
                                 object.elements.dial_continuous_image.gain.set( data.gain_dial );
                             };
                     
-                        //setup/tearDown
+                        //oncreate/ondelete
                             object.oncreate = function(){
                                 object.elements.checkbox_image.plusOne.set(true);
+                            };
+                            object.ondelete = function(){
+                                gain.shutdown();
                             };
                     
                         return object;
@@ -55820,14 +56124,7 @@
                                 detune_useControl:false,
                                 adjust_useControl:false,
                             };
-                            gainControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
-                            detuneControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
-                            dutyCycleControl = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
-                            const oscillator = new _canvas_.library.audio.audioWorklet.production.wasm.oscillator_type_1(_canvas_.library.audio.context);
-                    
-                            gainControl.connect(oscillator, undefined, 0);
-                            detuneControl.connect(oscillator, undefined, 1);
-                            dutyCycleControl.connect(oscillator, undefined, 2);
+                            const oscillator = new _canvas_.interface.circuit.oscillator_type_1(_canvas_.library.audio.context);
                     
                             function stepFrequencyCharacter(index,increment){
                                 if(increment){
@@ -55851,7 +56148,7 @@
                                 object.elements.readout_sevenSegmentDisplay.LCD.text( frequency );
                                 object.elements.readout_sevenSegmentDisplay.LCD.print();
                     
-                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.frequency, parseFloat(frequency), 0.01, 'instant', true);
+                                oscillator.frequency(parseFloat(frequency));
                             }
                             function selectWaveform(waveform){
                                 if(state.waveform == waveform){ return; }
@@ -55859,7 +56156,7 @@
                                 state.waveform = waveform;
                                 object.elements.button_image['waveformSelect_'+state.waveform].glow(true);
                     
-                                oscillator.waveform = waveform;
+                                oscillator.waveform(waveform);
                             }
                     
                         //wiring
@@ -55888,27 +56185,27 @@
                     
                                 object.elements.dial_continuous_image.gain.onchange = function(value){ 
                                     state.gain = value;
-                                    _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.gain, (value*2 - 1), 0.01, 'instant', true);
+                                    oscillator.gain(value*2 - 1);
                                 };
                                 object.elements.dial_continuous_image.detune.onchange = function(value){ 
                                     state.detune = value;
-                                    _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.detune, (value*2 - 1), 0.01, 'instant', true);
+                                    oscillator.detune(value*2 - 1);
                                 };
                                 object.elements.dial_continuous_image.adjust.onchange = function(value){ 
                                     state.adjust = value;
-                                    _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, oscillator.dutyCycle, (value), 0.01, 'instant', true);
+                                    oscillator.dutyCycle(value);
                                 };
                                 object.elements.checkbox_image.gain_useControl.onchange = function(value){ 
                                     state.gain_useControl = value;
-                                    oscillator.gain_useControl = value;
+                                    oscillator.gain_useControl(value);
                                 };
                                 object.elements.checkbox_image.detune_useControl.onchange = function(value){ 
                                     state.detune_useControl = value;
-                                    oscillator.detune_useControl = value;
+                                    oscillator.detune_useControl(value);
                                 };
                                 object.elements.checkbox_image.adjust_useControl.onchange = function(value){ 
                                     state.adjust_useControl = value;
-                                    oscillator.dutyCycle_useControl = value;
+                                    oscillator.dutyCycle_useControl(value);
                                 };
                     
                             //io
@@ -55921,11 +56218,10 @@
                                 object.io.voltage.voltage_adjust.onchange = function(value){
                                     object.elements.dial_continuous_image.adjust.set(value);
                                 };
-                    
-                                object.io.audio.control_gain.audioNode = gainControl;
-                                object.io.audio.control_detune.audioNode = detuneControl;
-                                object.io.audio.control_adjust.audioNode = dutyCycleControl;
-                                object.io.audio.output.audioNode = oscillator;
+                                object.io.audio.control_gain.audioNode = oscillator.gainControl();
+                                object.io.audio.control_detune.audioNode = oscillator.detuneControl();
+                                object.io.audio.control_adjust.audioNode = oscillator.dutyCycleControl();
+                                object.io.audio.output.audioNode = oscillator.out();
                     
                         //interface
                             object.i = {
@@ -56000,7 +56296,9 @@
                             object.oncreate = function(){
                                 updateFrequency();
                                 object.elements.button_image.waveformSelect_sine.glow(true);
-                                oscillator.start();
+                            };
+                            object.ondelete = function(){
+                                oscillator.shutdown();
                             };
                         
                         return object;
@@ -56085,7 +56383,7 @@
                                     state.amplitudeResolution = value;
                                 };
                                 object.elements.dial_discrete_image.sampleFrequency.onchange = function(value){
-                                    bitcrusher.sampleFrequency(Math.pow(2, value));
+                                    bitcrusher.sampleFrequency( Math.pow(2, value) );
                                     state.sampleFrequency = value;
                                 };
                     
@@ -56121,10 +56419,13 @@
                                 object.elements.dial_discrete_image.sampleFrequency.set( data.sampleFrequency );
                             };
                     
-                        //setup/tearDown
+                        //oncreate/ondelete
                             object.oncreate = function(){
                                 object.elements.dial_continuous_image.amplitudeResolution.set(0.425);
                                 object.elements.dial_discrete_image.sampleFrequency.set(4);
+                            };
+                            object.ondelete = function(){
+                                bitcrusher.shutdown();
                             };
                     
                         return object;
@@ -56197,7 +56498,7 @@
                                 object.elements.dial_continuous_image.amplitude.onchange = function(value){
                                     state.amplitude_dial = value;
                                     state.amplitude = value*2 - 1;
-                                    stableAmplitudeGenerator.amplitude( state.amplitude );
+                                    stableAmplitudeGenerator.amplitude(state.amplitude);
                                 };
                             //io
                                 object.io.audio.output.audioNode = stableAmplitudeGenerator.out();
@@ -56218,6 +56519,11 @@
                             };
                             object.importData = function(data){
                                 object.elements.dial_continuous_image.amplitude.set( data.amplitude_dial );
+                            };
+                    
+                        //oncreate/ondelete
+                            object.ondelete = function(){
+                                stableAmplitudeGenerator.shutdown();
                             };
                             
                         return object;
@@ -56307,7 +56613,9 @@
                                 exponentialMode:false,
                                 asCloseToOneAsIsAllowed:0.999,
                             };
-                            const amplitudeExciter = new _canvas_.interface.circuit.sigmoid(_canvas_.library.audio.context);
+                            const sigmoid = new _canvas_.interface.circuit.sigmoid(_canvas_.library.audio.context);
+                    
+                    
                             function setSharpness(value){
                                 if(state.exponentialMode){
                                     value = _canvas_.library.math.curvePoint.halfSigmoid_up( value, 0, 1, 0.75 );
@@ -56317,14 +56625,14 @@
                                     value = state.asCloseToOneAsIsAllowed;
                                 }
                     
-                                amplitudeExciter.sharpness(value);
+                                sigmoid.sharpness(value);
                                 state.sharpness = value;
                             }
                     
                         //wiring
                             //hid
                                 object.elements.dial_continuous_image.gain.onchange = function(value){
-                                    amplitudeExciter.gain(value);
+                                    sigmoid.gain(value);
                                     state.gain = value;
                                 };
                                 object.elements.dial_continuous_image.sharpness.onchange = function(value){
@@ -56340,8 +56648,8 @@
                                     setSharpness(state.sharpnessDial);
                                 };
                             //io
-                                object.io.audio.input.audioNode = amplitudeExciter.in();
-                                object.io.audio.output.audioNode = amplitudeExciter.out();
+                                object.io.audio.input.audioNode = sigmoid.in();
+                                object.io.audio.output.audioNode = sigmoid.out();
                                 object.io.voltage.voltage_gain.onchange = function(value){
                                     object.elements.dial_continuous_image.gain.set(value);
                                 };
@@ -56393,6 +56701,11 @@
                                 object.elements.dial_continuous_image.sharpness.set(data.sharpnessDial);
                                 object.elements.checkbox_image.allowOne.set(data.allowOne);
                                 object.elements.checkbox_image.exponentialMode.set(data.exponentialMode);
+                            };
+                    
+                        //oncreate/ondelete
+                            object.ondelete = function(){
+                                sigmoid.shutdown();
                             };
                             
                         return object;
@@ -56508,6 +56821,11 @@
                             object.importData = function(data){
                                 object.elements.dial_continuous_image.mix.set( data.mix );
                             };
+                    
+                        //oncreate/ondelete
+                            object.ondelete = function(){
+                                streamAdder.shutdown();
+                            };
                             
                         return object;
                     };
@@ -56612,20 +56930,20 @@
                         //wiring
                             //hid
                                 object.elements.dial_continuous_image.offset.onchange = function(value){
-                                    amplitudeModifier.offset(value*2 - 1);
                                     state.offset = value*2 - 1;
+                                    amplitudeModifier.offset( state.offset );
                                 };
                                 object.elements.dial_continuous_image.divideBy.onchange = function(value){
-                                    amplitudeModifier.divisor(value*7 + 1);
                                     state.divideBy = value*7 + 1;
+                                    amplitudeModifier.divisor( state.divideBy );
                                 };
                                 object.elements.dial_continuous_image.ceiling.onchange = function(value){
-                                    amplitudeModifier.ceiling(value*2);
                                     state.ceiling = value*2;
+                                    amplitudeModifier.ceiling( state.ceiling );
                                 };
                                 object.elements.dial_continuous_image.floor.onchange = function(value){
-                                    amplitudeModifier.floor(-(1-value)*2);
                                     state.floor = -(1-value)*2;
+                                    amplitudeModifier.floor( state.floor );
                                 };
                                 object.elements.checkbox_image.invert.onchange = function(value){
                                     amplitudeModifier.invert(value);
@@ -56687,6 +57005,11 @@
                                 object.elements.dial_continuous_image.ceiling.set( data.ceiling/2 );
                                 object.elements.dial_continuous_image.floor.set( -data.floor/2 );
                                 object.elements.checkbox_image.invert.set( data.invert );
+                            };
+                    
+                        //oncreate/ondelete
+                            object.ondelete = function(){
+                                amplitudeModifier.shutdown();
                             };
                             
                         return object;
@@ -56789,6 +57112,11 @@
                             };
                             object.importData = function(data){
                                 object.elements.dial_continuous_image.samples.set( data.samples_dial );
+                            };
+                    
+                        //oncreate/ondelete
+                            object.ondelete = function(){
+                                lagProcessor.shutdown();
                             };
                             
                         return object;
