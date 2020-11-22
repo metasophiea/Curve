@@ -55,14 +55,6 @@ this.oscillator_type_1 = function(
         }
 
     //controls
-        //performance
-            this.start = function(){
-                flow.oscillator.node.start();
-            };
-            this.stop = function(){
-                flow.oscillator.node.stop();
-            };
-
         //generic controls
             this.waveform = function(value){ // sine / square / triangle / noise / additiveSynthesis / phaseModulation
                 if(value == undefined){ return flow.oscillator.node.waveform; }

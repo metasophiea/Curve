@@ -113,7 +113,10 @@ this.connectionNode_audio = function(
             if( object._direction == 'out' ){
                 try {
                     object.audioNode.disconnect(object.getForeignNode().audioNode);
-                } catch (err) {}
+                } catch (err) {
+                    console.warn('connectionNode_audio._ondisconnect : attempted disconnect faied');
+                    console.log(err);
+                }
             }
         };
 

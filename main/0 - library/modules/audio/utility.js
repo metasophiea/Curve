@@ -12,7 +12,6 @@ this.changeAudioParam = function(context,audioParam,target,time,curve,cancelSche
                 audioParam.linearRampToValueAtTime(target, context.currentTime+time);
             break;
             case 'exponential':
-                console.warn('2018-4-18 - changeAudioParam:exponential doesn\'t work on chrome');
                 if(target == 0){target = 1/10000;}
                 audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
             break;

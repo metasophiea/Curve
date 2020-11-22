@@ -59,14 +59,14 @@
 //             LFO:{
 //                 gain:{
 //                     oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
-//                     amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
+//                     amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.wasm.amplitudeModifier(context),
 //                 },
 //                 detune:{
 //                     oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
 //                 },
 //                 dutyCycle:{
 //                     oscillator: new _canvas_.library.audio.audioWorklet.production.only_js.oscillator(context),
-//                     amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.only_js.amplitudeModifier(context),
+//                     amplitudeModifier: new _canvas_.library.audio.audioWorklet.production.wasm./c    c   .amplitudeModifier(context),
 //                 },
 //             },
 
@@ -77,7 +77,7 @@
 //             },
 
 //             oscillators: [],
-//             aggregator: new _canvas_.library.audio.audioWorklet.production.only_js.gain(context),
+//             aggregator: new _canvas_.library.audio.audioWorklet.production.wasm.gain(context),
 //         };
 
 //         flow.LFO.gain.oscillator.frequency.setValueAtTime(1/gain.internalLFO.period, 0);

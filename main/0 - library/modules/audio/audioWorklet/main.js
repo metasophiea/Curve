@@ -31,6 +31,7 @@ this.audioWorklet = new function(){
     };
     this.production = { only_js:{}, wasm:{} };
     this.workshop = { only_js:{}, wasm:{} };
+    this._getWorklets = function(){ return worklets; };
 
 
     function checkIfReady(){

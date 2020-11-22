@@ -1,4 +1,13 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-11-22
+  - oops! Used the wrong words in the synthesizer_2 circuit
+  - began work on a new audio node; integrated_synthesizer_type_1
+  - it seems that "exponentialRampToValueAtTime" works on chrome now, so I've
+    removed the console message that said it woueln't
+  - added error output to the connectionNode_audio _ondisconnect code, so, you
+    can see the errors in future, but they won't stop the whole program
+
+
 2020-11-21
   - created a circuit for the oscillator_type_1 (with the same name) and
     changed the Frequency Generator to use that instead..I'm flip-flopping
