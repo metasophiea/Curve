@@ -1,5 +1,5 @@
 _canvas_.core = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:15} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
 
     const core = this;
 

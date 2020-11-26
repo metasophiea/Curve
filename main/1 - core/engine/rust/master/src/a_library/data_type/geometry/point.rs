@@ -47,8 +47,14 @@
         pub fn get_x(&self) -> f32 {
             self.x
         }
+        pub fn get_ref_x(&self) -> &f32 {
+            &self.x
+        }
         pub fn get_y(&self) -> f32 {
             self.y
+        }
+        pub fn get_ref_y(&self) -> &f32 {
+            &self.y
         }
         pub fn to_tuple(&self) -> (f32,f32) {
             (self.x,self.y)

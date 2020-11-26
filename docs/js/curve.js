@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:22} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
                 const library = this;
                 
                 const dev = {
@@ -5964,7 +5964,9 @@
                                                             //automatic
                                                             for(let channel = 0; channel < input_1.length; channel++){
                                                                 this.input1Frame.buffer.set(input_1[channel]);
-                                                                this.input2Frame.buffer.set(input_2[channel]);
+                                                                if(input_2[channel] != undefined){
+                                                                    this.input2Frame.buffer.set(input_2[channel]);
+                                                                }
                                                                 this.wasm.exports.process(false);
                                                                 output[channel].set(this.outputFrame.buffer);
                                                             }
@@ -7776,13 +7778,13 @@
                                                 
                                                         //populate input buffers
                                                             const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
-                                                            this.gainFrame.buffer.set( this._state.gain_useControl ? gainControl[0] : parameters.gain );
+                                                            this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
                                                 
                                                             const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
-                                                            this.detuneFrame.buffer.set( this._state.detune_useControl ? detuneControl[0] : parameters.detune );
+                                                            this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
                                                 
                                                             const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
-                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
+                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
                                                 
                                                         //process data, and copy results to channels
                                                             for(let channel = 0; channel < output.length; channel++){
@@ -25026,7 +25028,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:15} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
             
                 const core = this;
             
@@ -27222,7 +27224,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:22} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
                 const interface = this;
             
                 const dev = {
@@ -41710,7 +41712,8 @@
                                     object._direction = isAudioOutput ? 'out' : 'in';
                             
                                 //circuitry
-                                    object.audioNode = undefined; //audioContext.createAnalyser();
+                                    object.audioNode = undefined;
+                                    object.inputChannelIndex = 0;
                             
                                     object._onconnect = function(instigator){
                                         if( object.audioNode == undefined ){
@@ -41723,7 +41726,7 @@
                                         }
                                         
                                         if(object._direction == 'out'){
-                                            object.audioNode.connect(object.getForeignNode().audioNode);
+                                            object.audioNode.connect(object.getForeignNode().audioNode, undefined, object.getForeignNode().inputChannelIndex);
                                         }
                                     };
                                     object._ondisconnect = function(instigator){
@@ -41738,9 +41741,9 @@
                                         
                                         if( object._direction == 'out' ){
                                             try {
-                                                object.audioNode.disconnect(object.getForeignNode().audioNode);
+                                                object.audioNode.disconnect(object.getForeignNode().audioNode, undefined, object.getForeignNode().inputChannelIndex);
                                             } catch (err) {
-                                                console.warn('connectionNode_audio._ondisconnect : attempted disconnect faied');
+                                                console.warn('connectionNode_audio._ondisconnect : attempted disconnect failed from index', object.inputChannelIndex);
                                                 console.log(err);
                                             }
                                         }
@@ -43231,7 +43234,7 @@
             });
                 
             _canvas_.control = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:10,d:27} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:24} };
                 const control = this;
             
                 const dev = {
@@ -43371,7 +43374,7 @@
                                 width: _canvas_.control.viewport.width(),
                                 height: 20,
                                 selected: undefined,
-                                activedropdown: undefined,
+                                activeDropdown: undefined,
                                 item_horizontalPadding:10,
                                 item_spacingHeight:0,
                         
@@ -43383,91 +43386,13 @@
                                 textBreak_textToLineSpacing:1,
                                 textBreak_textHeightMux:1.1,
                                 textBreak_lineMux:1/5,
-                            };
-                            let style = {
-                                backgroundColour:{r:240/255,g:240/255,b:240/255,a:1},
-                                
-                                text__font:'Helvetica',
-                                text__fontSize:14,
-                                text__spacing:0.3,
-                                text__interCharacterSpacing:0.04,
                         
-                                text_colour__off:                                  {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__up:                                   {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__press:                                {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__select:                               {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__select_press:                         {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__glow:                                 {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__glow_press:                           {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__glow_select:                          {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__glow_select_press:                    {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__hover:                                {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__hover_press:                          {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__hover_select:                         {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__hover_select_press:                   {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__hover_glow:                           {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__hover_glow_press:                     {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__hover_glow_select:                    {r:0.2,g:0.2,b:0.2,a:1},
-                                text_colour__hover_glow_select_press:              {r:0.2,g:0.2,b:0.2,a:1},
-                                    
-                                item_backing__off__colour:                              {r:180/255,g:180/255,b:180/255,a:1},
-                                item_backing__off__lineColour:                          {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__off__lineThickness:                       0,
-                                item_backing__up__colour:                               {r:240/255,g:240/255,b:240/255,a:1},
-                                item_backing__up__lineColour:                           {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__up__lineThickness:                        0,
-                                item_backing__press__colour:                            {r:240/255,g:240/255,b:240/255,a:1},
-                                item_backing__press__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__press__lineThickness:                     0,
-                                item_backing__select__colour:                           {r:220/255,g:220/255,b:220/255,a:1},
-                                item_backing__select__lineColour:                       {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__select__lineThickness:                    0,
-                                item_backing__select_press__colour:                     {r:229/255,g:167/255,b:255/255,a:1},
-                                item_backing__select_press__lineColour:                 {r:0,g:0,b:0,a:0},
-                                item_backing__select_press__lineThickness:              0,
-                                item_backing__glow__colour:                             {r:220/255,g:220/255,b:220/255,a:1},
-                                item_backing__glow__lineColour:                         {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__glow__lineThickness:                      0,
-                                item_backing__glow_press__colour:                       {r:250/255,g:250/255,b:250/255,a:1},
-                                item_backing__glow_press__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__glow_press__lineThickness:                0,
-                                item_backing__glow_select__colour:                      {r:220/255,g:220/255,b:220/255,a:1},
-                                item_backing__glow_select__lineColour:                  {r:120/255,g:120/255,b:120/255,a:1},
-                                item_backing__glow_select__lineThickness:               0,
-                                item_backing__glow_select_press__colour:                {r:250/255,g:250/255,b:250/255,a:1},
-                                item_backing__glow_select_press__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
-                                item_backing__glow_select_press__lineThickness:         0,
-                                item_backing__hover__colour:                            {r:229/255,g:167/255,b:255/255,a:1},
-                                item_backing__hover__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__hover__lineThickness:                     0,
-                                item_backing__hover_press__colour:                      {r:240/255,g:240/255,b:240/255,a:1},
-                                item_backing__hover_press__lineColour:                  {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__hover_press__lineThickness:               0,
-                                item_backing__hover_select__colour:                     {r:239/255,g:209/255,b:255/255,a:1},
-                                item_backing__hover_select__lineColour:                 {r:120/255,g:120/255,b:120/255,a:1},
-                                item_backing__hover_select__lineThickness:              0,
-                                item_backing__hover_select_press__colour:               {r:240/255,g:240/255,b:240/255,a:1},
-                                item_backing__hover_select_press__lineColour:           {r:120/255,g:120/255,b:120/255,a:1},
-                                item_backing__hover_select_press__lineThickness:        0,
-                                item_backing__hover_glow__colour:                       {r:239/255,g:209/255,b:255/255,a:1},
-                                item_backing__hover_glow__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__hover_glow__lineThickness:                0,
-                                item_backing__hover_glow_press__colour:                 {r:250/255,g:250/255,b:250/255,a:1},
-                                item_backing__hover_glow_press__lineColour:             {r:0/255,g:0/255,b:0/255,a:0},
-                                item_backing__hover_glow_press__lineThickness:          0,
-                                item_backing__hover_glow_select__colour:                {r:240/255,g:240/255,b:240/255,a:1},
-                                item_backing__hover_glow_select__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
-                                item_backing__hover_glow_select__lineThickness:         0,
-                                item_backing__hover_glow_select_press__colour:          {r:250/255,g:250/255,b:250/255,a:1},
-                                item_backing__hover_glow_select_press__lineColour:      {r:120/255,g:120/255,b:120/255,a:1},
-                                item_backing__hover_glow_select_press__lineThickness:   0,
-                            
-                                checkbox_checkColour:{r:0.7,g:0.7,b:0.7,a:1}, 
+                                style: 'default',
                             };
                         
                             //elements
                                 //main
-                                    const object = _canvas_.interface.part.builder( 'basic', 'group', 'menubar', {});
+                                    const object = _canvas_.interface.part.builder('basic', 'group', 'menubar', {});
                                     let bar;
                         
                                 //items
@@ -43475,12 +43400,13 @@
                                         let dropdown = undefined;
                         
                                         //produce dropdown
+                                            const style = control.gui.elements.menubar.styleLibrary[vars.style];
                                             dropdown = _canvas_.interface.part.builder( 'control', 'list', 'dropdown', {
                                                 x:x, y:vars.height,
                         
                                                 list:self.menubar.dropdowns[a].itemList,
                             
-                                                backgroundColour:style.backgroundColour,
+                                                backgroundColour:style.normal.backgroundColour,
                                                 backgroundMarkingColour:undefined,
                                             
                                                 default_item_height:self.menubar.dropdowns[a].listItemHeight,
@@ -43489,81 +43415,81 @@
                                                 default_item_horizontalPadding:vars.item_horizontalPadding,
                                             
                                                 default_text__text:undefined,
-                                                default_text__font:style.text__font,
-                                                default_text__fontSize:style.text__fontSize,
+                                                default_text__font:                                   self.menubar.dropdowns[a].important ? style.important.text__font :                                           style.normal.text__font,
+                                                default_text__fontSize:                               self.menubar.dropdowns[a].important ? style.important.text__fontSize :                                       style.normal.text__fontSize,
                                                 default_text__printingMode:undefined,
-                                                default_text__spacing:style.text__spacing,
-                                                default_text__interCharacterSpacing:style.text__interCharacterSpacing,
+                                                default_text__spacing:                                self.menubar.dropdowns[a].important ? style.important.text__spacing :                                        style.normal.text__spacing,
+                                                default_text__interCharacterSpacing:                  self.menubar.dropdowns[a].important ? style.important.text__interCharacterSpacing :                          style.normal.text__interCharacterSpacing,
                         
-                                                default_text_colour__off:style.text_colour__off,
-                                                default_text_colour__up:style.text_colour__up,
-                                                default_text_colour__press:style.text_colour__press,
-                                                default_text_colour__select:style.text_colour__select,
-                                                default_text_colour__select_press:style.text_colour__select_press,
-                                                default_text_colour__glow:style.text_colour__glow,
-                                                default_text_colour__glow_press:style.text_colour__glow_press,
-                                                default_text_colour__glow_select:style.text_colour__glow_select,
-                                                default_text_colour__glow_select_press:style.text_colour__glow_select_press,
-                                                default_text_colour__hover:style.text_colour__hover,
-                                                default_text_colour__hover_press:style.text_colour__hover_press,
-                                                default_text_colour__hover_select:style.text_colour__hover_select,
-                                                default_text_colour__hover_select_press:style.text_colour__hover_select_press,
-                                                default_text_colour__hover_glow:style.text_colour__hover_glow,
-                                                default_text_colour__hover_glow_press:style.text_colour__hover_glow_press,
-                                                default_text_colour__hover_glow_select:style.text_colour__hover_glow_select,
-                                                default_text_colour__hover_glow_select_press:style.text_colour__hover_glow_select_press,
+                                                default_text_colour__off:                             self.menubar.dropdowns[a].important ? style.important.text_colour__off :                                     style.normal.text_colour__off,         
+                                                default_text_colour__up:                              self.menubar.dropdowns[a].important ? style.important.text_colour__up :                                      style.normal.text_colour__up,         
+                                                default_text_colour__press:                           self.menubar.dropdowns[a].important ? style.important.text_colour__press :                                   style.normal.text_colour__press,         
+                                                default_text_colour__select:                          self.menubar.dropdowns[a].important ? style.important.text_colour__select :                                  style.normal.text_colour__select,           
+                                                default_text_colour__select_press:                    self.menubar.dropdowns[a].important ? style.important.text_colour__select_press :                            style.normal.text_colour__select_press,               
+                                                default_text_colour__glow:                            self.menubar.dropdowns[a].important ? style.important.text_colour__glow :                                    style.normal.text_colour__glow,         
+                                                default_text_colour__glow_press:                      self.menubar.dropdowns[a].important ? style.important.text_colour__glow_press :                              style.normal.text_colour__glow_press,               
+                                                default_text_colour__glow_select:                     self.menubar.dropdowns[a].important ? style.important.text_colour__glow_select :                             style.normal.text_colour__glow_select,               
+                                                default_text_colour__glow_select_press:               self.menubar.dropdowns[a].important ? style.important.text_colour__glow_select_press :                       style.normal.text_colour__glow_select_press,                   
+                                                default_text_colour__hover:                           self.menubar.dropdowns[a].important ? style.important.text_colour__hover :                                   style.normal.text_colour__hover,         
+                                                default_text_colour__hover_press:                     self.menubar.dropdowns[a].important ? style.important.text_colour__hover_press :                             style.normal.text_colour__hover_press,               
+                                                default_text_colour__hover_select:                    self.menubar.dropdowns[a].important ? style.important.text_colour__hover_select :                            style.normal.text_colour__hover_select,               
+                                                default_text_colour__hover_select_press:              self.menubar.dropdowns[a].important ? style.important.text_colour__hover_select_press :                      style.normal.text_colour__hover_select_press,                       
+                                                default_text_colour__hover_glow:                      self.menubar.dropdowns[a].important ? style.important.text_colour__hover_glow :                              style.normal.text_colour__hover_glow,               
+                                                default_text_colour__hover_glow_press:                self.menubar.dropdowns[a].important ? style.important.text_colour__hover_glow_press :                        style.normal.text_colour__hover_glow_press,                   
+                                                default_text_colour__hover_glow_select:               self.menubar.dropdowns[a].important ? style.important.text_colour__hover_glow_select :                       style.normal.text_colour__hover_glow_select,                   
+                                                default_text_colour__hover_glow_select_press:         self.menubar.dropdowns[a].important ? style.important.text_colour__hover_glow_select_press :                 style.normal.text_colour__hover_glow_select_press,                           
                                             
-                                                default_item__off__colour:style.item_backing__off__colour,
-                                                default_item__off__lineColour:style.item_backing__off__lineColour,
-                                                default_item__off__lineThickness:style.item_backing__off__lineThickness,
-                                                default_item__up__colour:style.item_backing__up__colour,
-                                                default_item__up__lineColour:style.item_backing__up__lineColour,
-                                                default_item__up__lineThickness:style.item_backing__up__lineThickness,
-                                                default_item__press__colour:style.item_backing__press__colour,
-                                                default_item__press__lineColour:style.item_backing__press__lineColour,
-                                                default_item__press__lineThickness:style.item_backing__press__lineThickness,
-                                                default_item__select__colour:style.item_backing__select__colour,
-                                                default_item__select__lineColour:style.item_backing__select__lineColour,
-                                                default_item__select__lineThickness:style.item_backing__select__lineThickness,
-                                                default_item__select_press__colour:style.item_backing__select_press__colour,
-                                                default_item__select_press__lineColour:style.item_backing__select_press__lineColour,
-                                                default_item__select_press__lineThickness:style.item_backing__select_press__lineThickness,
-                                                default_item__glow__colour:style.item_backing__glow__colour,
-                                                default_item__glow__lineColour:style.item_backing__glow__lineColour,
-                                                default_item__glow__lineThickness:style.item_backing__glow__lineThickness,
-                                                default_item__glow_press__colour:style.item_backing__glow_press__colour,
-                                                default_item__glow_press__lineColour:style.item_backing__glow_press__lineColour,
-                                                default_item__glow_press__lineThickness:style.item_backing__glow_press__lineThickness,
-                                                default_item__glow_select__colour:style.item_backing__glow_select__colour,
-                                                default_item__glow_select__lineColour:style.item_backing__glow_select__lineColour,
-                                                default_item__glow_select__lineThickness:style.item_backing__glow_select__lineThickness,
-                                                default_item__glow_select_press__colour:style.item_backing__glow_select_press__colour,
-                                                default_item__glow_select_press__lineColour:style.item_backing__glow_select_press__lineColour,
-                                                default_item__glow_select_press__lineThickness:style.item_backing__glow_select_press__lineThickness,
-                                                default_item__hover__colour:style.item_backing__hover__colour,
-                                                default_item__hover__lineColour:style.item_backing__hover__lineColour,
-                                                default_item__hover__lineThickness:style.item_backing__hover__lineThickness,
-                                                default_item__hover_press__colour:style.item_backing__hover_press__colour,
-                                                default_item__hover_press__lineColour:style.item_backing__hover_press__lineColour,
-                                                default_item__hover_press__lineThickness:style.item_backing__hover_press__lineThickness,
-                                                default_item__hover_select__colour:style.item_backing__hover_select__colour,
-                                                default_item__hover_select__lineColour:style.item_backing__hover_select__lineColour,
-                                                default_item__hover_select__lineThickness:style.item_backing__hover_select__lineThickness,
-                                                default_item__hover_select_press__colour:style.item_backing__hover_select_press__colour,
-                                                default_item__hover_select_press__lineColour:style.item_backing__hover_select_press__lineColour,
-                                                default_item__hover_select_press__lineThickness:style.item_backing__hover_select_press__lineThickness,
-                                                default_item__hover_glow__colour:style.item_backing__hover_glow__colour,
-                                                default_item__hover_glow__lineColour:style.item_backing__hover_glow__lineColour,
-                                                default_item__hover_glow__lineThickness:style.item_backing__hover_glow__lineThickness,
-                                                default_item__hover_glow_press__colour:style.item_backing__hover_glow_press__colour,
-                                                default_item__hover_glow_press__lineColour:style.item_backing__hover_glow_press__lineColour,
-                                                default_item__hover_glow_press__lineThickness:style.item_backing__hover_glow_press__lineThickness,
-                                                default_item__hover_glow_select__colour:style.item_backing__hover_glow_select__colour,
-                                                default_item__hover_glow_select__lineColour:style.item_backing__hover_glow_select__lineColour,
-                                                default_item__hover_glow_select__lineThickness:style.item_backing__hover_glow_select__lineThickness,
-                                                default_item__hover_glow_select_press__colour:style.item_backing__hover_glow_select_press__colour,
-                                                default_item__hover_glow_select_press__lineColour:style.item_backing__hover_glow_select_press__lineColour,
-                                                default_item__hover_glow_select_press__lineThickness:style.item_backing__hover_glow_select_press__lineThickness,
+                                                default_item__off__colour:                            self.menubar.dropdowns[a].important ? style.important.item_backing__off__colour :                            style.normal.item_backing__off__colour,
+                                                default_item__off__lineColour:                        self.menubar.dropdowns[a].important ? style.important.item_backing__off__lineColour :                        style.normal.item_backing__off__lineColour,
+                                                default_item__off__lineThickness:                     self.menubar.dropdowns[a].important ? style.important.item_backing__off__lineThickness :                     style.normal.item_backing__off__lineThickness,
+                                                default_item__up__colour:                             self.menubar.dropdowns[a].important ? style.important.item_backing__up__colour :                             style.normal.item_backing__up__colour,
+                                                default_item__up__lineColour:                         self.menubar.dropdowns[a].important ? style.important.item_backing__up__lineColour :                         style.normal.item_backing__up__lineColour,
+                                                default_item__up__lineThickness:                      self.menubar.dropdowns[a].important ? style.important.item_backing__up__lineThickness :                      style.normal.item_backing__up__lineThickness,
+                                                default_item__press__colour:                          self.menubar.dropdowns[a].important ? style.important.item_backing__press__colour :                          style.normal.item_backing__press__colour,
+                                                default_item__press__lineColour:                      self.menubar.dropdowns[a].important ? style.important.item_backing__press__lineColour :                      style.normal.item_backing__press__lineColour,
+                                                default_item__press__lineThickness:                   self.menubar.dropdowns[a].important ? style.important.item_backing__press__lineThickness :                   style.normal.item_backing__press__lineThickness,
+                                                default_item__select__colour:                         self.menubar.dropdowns[a].important ? style.important.item_backing__select__colour :                         style.normal.item_backing__select__colour,
+                                                default_item__select__lineColour:                     self.menubar.dropdowns[a].important ? style.important.item_backing__select__lineColour :                     style.normal.item_backing__select__lineColour,
+                                                default_item__select__lineThickness:                  self.menubar.dropdowns[a].important ? style.important.item_backing__select__lineThickness :                  style.normal.item_backing__select__lineThickness,
+                                                default_item__select_press__colour:                   self.menubar.dropdowns[a].important ? style.important.item_backing__select_press__colour :                   style.normal.item_backing__select_press__colour,
+                                                default_item__select_press__lineColour:               self.menubar.dropdowns[a].important ? style.important.item_backing__select_press__lineColour :               style.normal.item_backing__select_press__lineColour,
+                                                default_item__select_press__lineThickness:            self.menubar.dropdowns[a].important ? style.important.item_backing__select_press__lineThickness :            style.normal.item_backing__select_press__lineThickness,
+                                                default_item__glow__colour:                           self.menubar.dropdowns[a].important ? style.important.item_backing__glow__colour :                           style.normal.item_backing__glow__colour,
+                                                default_item__glow__lineColour:                       self.menubar.dropdowns[a].important ? style.important.item_backing__glow__lineColour :                       style.normal.item_backing__glow__lineColour,
+                                                default_item__glow__lineThickness:                    self.menubar.dropdowns[a].important ? style.important.item_backing__glow__lineThickness :                    style.normal.item_backing__glow__lineThickness,
+                                                default_item__glow_press__colour:                     self.menubar.dropdowns[a].important ? style.important.item_backing__glow_press__colour :                     style.normal.item_backing__glow_press__colour,
+                                                default_item__glow_press__lineColour:                 self.menubar.dropdowns[a].important ? style.important.item_backing__glow_press__lineColour :                 style.normal.item_backing__glow_press__lineColour,
+                                                default_item__glow_press__lineThickness:              self.menubar.dropdowns[a].important ? style.important.item_backing__glow_press__lineThickness :              style.normal.item_backing__glow_press__lineThickness,
+                                                default_item__glow_select__colour:                    self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select__colour :                    style.normal.item_backing__glow_select__colour,
+                                                default_item__glow_select__lineColour:                self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select__lineColour :                style.normal.item_backing__glow_select__lineColour,
+                                                default_item__glow_select__lineThickness:             self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select__lineThickness :             style.normal.item_backing__glow_select__lineThickness,
+                                                default_item__glow_select_press__colour:              self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select_press__colour :              style.normal.item_backing__glow_select_press__colour,
+                                                default_item__glow_select_press__lineColour:          self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select_press__lineColour :          style.normal.item_backing__glow_select_press__lineColour,
+                                                default_item__glow_select_press__lineThickness:       self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select_press__lineThickness :       style.normal.item_backing__glow_select_press__lineThickness,
+                                                default_item__hover__colour:                          self.menubar.dropdowns[a].important ? style.important.item_backing__hover__colour :                          style.normal.item_backing__hover__colour,
+                                                default_item__hover__lineColour:                      self.menubar.dropdowns[a].important ? style.important.item_backing__hover__lineColour :                      style.normal.item_backing__hover__lineColour,
+                                                default_item__hover__lineThickness:                   self.menubar.dropdowns[a].important ? style.important.item_backing__hover__lineThickness :                   style.normal.item_backing__hover__lineThickness,
+                                                default_item__hover_press__colour:                    self.menubar.dropdowns[a].important ? style.important.item_backing__hover_press__colour :                    style.normal.item_backing__hover_press__colour,
+                                                default_item__hover_press__lineColour:                self.menubar.dropdowns[a].important ? style.important.item_backing__hover_press__lineColour :                style.normal.item_backing__hover_press__lineColour,
+                                                default_item__hover_press__lineThickness:             self.menubar.dropdowns[a].important ? style.important.item_backing__hover_press__lineThickness :             style.normal.item_backing__hover_press__lineThickness,
+                                                default_item__hover_select__colour:                   self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select__colour :                   style.normal.item_backing__hover_select__colour,
+                                                default_item__hover_select__lineColour:               self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select__lineColour :               style.normal.item_backing__hover_select__lineColour,
+                                                default_item__hover_select__lineThickness:            self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select__lineThickness :            style.normal.item_backing__hover_select__lineThickness,
+                                                default_item__hover_select_press__colour:             self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select_press__colour :             style.normal.item_backing__hover_select_press__colour,
+                                                default_item__hover_select_press__lineColour:         self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select_press__lineColour :         style.normal.item_backing__hover_select_press__lineColour,
+                                                default_item__hover_select_press__lineThickness:      self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select_press__lineThickness :      style.normal.item_backing__hover_select_press__lineThickness,
+                                                default_item__hover_glow__colour:                     self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow__colour :                     style.normal.item_backing__hover_glow__colour,
+                                                default_item__hover_glow__lineColour:                 self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow__lineColour :                 style.normal.item_backing__hover_glow__lineColour,
+                                                default_item__hover_glow__lineThickness:              self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow__lineThickness :              style.normal.item_backing__hover_glow__lineThickness,
+                                                default_item__hover_glow_press__colour:               self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_press__colour :               style.normal.item_backing__hover_glow_press__colour,
+                                                default_item__hover_glow_press__lineColour:           self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_press__lineColour :           style.normal.item_backing__hover_glow_press__lineColour,
+                                                default_item__hover_glow_press__lineThickness:        self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_press__lineThickness :        style.normal.item_backing__hover_glow_press__lineThickness,
+                                                default_item__hover_glow_select__colour:              self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select__colour :              style.normal.item_backing__hover_glow_select__colour,
+                                                default_item__hover_glow_select__lineColour:          self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select__lineColour :          style.normal.item_backing__hover_glow_select__lineColour,
+                                                default_item__hover_glow_select__lineThickness:       self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select__lineThickness :       style.normal.item_backing__hover_glow_select__lineThickness,
+                                                default_item__hover_glow_select_press__colour:        self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select_press__colour :        style.normal.item_backing__hover_glow_select_press__colour,
+                                                default_item__hover_glow_select_press__lineColour:    self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select_press__lineColour :    style.normal.item_backing__hover_glow_select_press__lineColour,
+                                                default_item__hover_glow_select_press__lineThickness: self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select_press__lineThickness : style.normal.item_backing__hover_glow_select_press__lineThickness,
                                             
                                                 subList_arrowMux:vars.subList_arrowMux,
                                                 space_height:vars.space_height,
@@ -43590,100 +43516,130 @@
                                         return dropdown;
                                     }
                                     function produceBar(){ 
+                                        //just incase this function has been started by a button on the menubar, make sure to clear out the
+                                        //old "onrelease" functions so we don't end up trying to deselect something that doesn't exist
+                                            object.getChildren().forEach(child => {
+                                                if(child.onrelease != undefined){
+                                                    child.onrelease = function(){};
+                                                }
+                                            });
+                                        //obviously, also deselect anything
+                                            vars.selected = undefined;
+                        
                                         object.clear();
                         
+                                        const style = control.gui.elements.menubar.styleLibrary[vars.style];
+                        
                                         bar = _canvas_.interface.part.builder( 'basic', 'rectangle', 'barBacking', {
-                                            x:0, y:0, width:_canvas_.control.viewport.width(), height:vars.height, colour:style.backgroundColour
+                                            x:0, y:0, width:_canvas_.control.viewport.width(), height:vars.height, colour:style.normal.backgroundColour
                                         } );
                                         object.append(bar);
                         
-                                        let accWidth = 0;
+                                        let accWidth_fromLeft = 0;
+                                        let accWidth_fromRight = 0;
                                         for(let a = 0; a < self.menubar.dropdowns.length; a++){
+                                            let button_x = 0;
+                                            let list_x = 0;
+                        
+                                            if(self.menubar.dropdowns[a].side == 'right'){
+                                                button_x = bar.width() - (accWidth_fromRight + self.menubar.dropdowns[a].width);
+                                                list_x = bar.width() - (accWidth_fromRight + self.menubar.dropdowns[a].listWidth);
+                        
+                                                self.menubar.dropdowns[a].x = accWidth_fromRight;
+                                                accWidth_fromRight += self.menubar.dropdowns[a].width;
+                                            } else if (self.menubar.dropdowns[a].side == 'left' || self.menubar.dropdowns[a].side == undefined) {
+                                                button_x = accWidth_fromLeft;
+                                                list_x = accWidth_fromLeft;
+                        
+                                                self.menubar.dropdowns[a].x = accWidth_fromLeft;
+                                                accWidth_fromLeft += self.menubar.dropdowns[a].width;
+                                            }
+                        
                                             const item = _canvas_.interface.part.builder( 'control', 'button_rectangle', 'dropdownButton_'+a, {
-                                                x:accWidth, y:0, 
+                                                x:button_x, y:0, 
                                                 width:self.menubar.dropdowns[a].width,
                                                 height:vars.height, 
                                                 hoverable:false, selectable:true,
                                                 text_centre:self.menubar.dropdowns[a].text,
                                                 style:{
-                                                    text_font:style.text__font, 
-                                                    text_size:style.text__fontSize, 
-                                                    text_spacing:style.text__spacing, 
-                                                    text_interCharacterSpacing:style.text__interCharacterSpacing,
+                                                    text_font:                                          self.menubar.dropdowns[a].important ? style.important.text__font :                                           style.normal.text__font,
+                                                    text_size:                                          self.menubar.dropdowns[a].important ? style.important.text__fontSize :                                       style.normal.text__fontSize,
+                                                    text_spacing:                                       self.menubar.dropdowns[a].important ? style.important.text__spacing :                                        style.normal.text__spacing,
+                                                    text_interCharacterSpacing:                         self.menubar.dropdowns[a].important ? style.important.text__interCharacterSpacing :                          style.normal.text__interCharacterSpacing,
                                                 
-                                                    text__off__colour:style.text_colour__off,
-                                                    text__up__colour:style.text_colour__up,
-                                                    text__press__colour:style.text_colour__press,
-                                                    text__select__colour:style.text_colour__select,
-                                                    text__select_press__colour:style.text_colour__select_press,
-                                                    text__glow__colour:style.text_colour__glow,
-                                                    text__glow_press__colour:style.text_colour__glow_press,
-                                                    text__glow_select__colour:style.text_colour__glow_select,
-                                                    text__glow_select_press__colour:style.text_colour__glow_select_press,
-                                                    text__hover__colour:style.text_colour__hover,
-                                                    text__hover_press__colour:style.text_colour__hover_press,
-                                                    text__hover_select__colour:style.text_colour__hover_select,
-                                                    text__hover_select_press__colour:style.text_colour__hover_select_press,
-                                                    text__hover_glow__colour:style.text_colour__hover_glow,
-                                                    text__hover_glow_press__colour:style.text_colour__hover_glow_press,
-                                                    text__hover_glow_select__colour:style.text_colour__hover_glow_select,
-                                                    text__hover_glow_select_press__colour:style.text_colour__hover_glow_select_press,
+                                                    text__off__colour:                                  self.menubar.dropdowns[a].important ? style.important.text_colour__off :                                     style.normal.text_colour__off,
+                                                    text__up__colour:                                   self.menubar.dropdowns[a].important ? style.important.text_colour__up :                                      style.normal.text_colour__up,
+                                                    text__press__colour:                                self.menubar.dropdowns[a].important ? style.important.text_colour__press :                                   style.normal.text_colour__press,
+                                                    text__select__colour:                               self.menubar.dropdowns[a].important ? style.important.text_colour__select :                                  style.normal.text_colour__select,
+                                                    text__select_press__colour:                         self.menubar.dropdowns[a].important ? style.important.text_colour__select_press :                            style.normal.text_colour__select_press,
+                                                    text__glow__colour:                                 self.menubar.dropdowns[a].important ? style.important.text_colour__glow :                                    style.normal.text_colour__glow,
+                                                    text__glow_press__colour:                           self.menubar.dropdowns[a].important ? style.important.text_colour__glow_press :                              style.normal.text_colour__glow_press,
+                                                    text__glow_select__colour:                          self.menubar.dropdowns[a].important ? style.important.text_colour__glow_select :                             style.normal.text_colour__glow_select,
+                                                    text__glow_select_press__colour:                    self.menubar.dropdowns[a].important ? style.important.text_colour__glow_select_press :                       style.normal.text_colour__glow_select_press,
+                                                    text__hover__colour:                                self.menubar.dropdowns[a].important ? style.important.text_colour__hover :                                   style.normal.text_colour__hover,
+                                                    text__hover_press__colour:                          self.menubar.dropdowns[a].important ? style.important.text_colour__hover_press :                             style.normal.text_colour__hover_press,
+                                                    text__hover_select__colour:                         self.menubar.dropdowns[a].important ? style.important.text_colour__hover_select :                            style.normal.text_colour__hover_select,
+                                                    text__hover_select_press__colour:                   self.menubar.dropdowns[a].important ? style.important.text_colour__hover_select_press :                      style.normal.text_colour__hover_select_press,
+                                                    text__hover_glow__colour:                           self.menubar.dropdowns[a].important ? style.important.text_colour__hover_glow :                              style.normal.text_colour__hover_glow,
+                                                    text__hover_glow_press__colour:                     self.menubar.dropdowns[a].important ? style.important.text_colour__hover_glow_press :                        style.normal.text_colour__hover_glow_press,
+                                                    text__hover_glow_select__colour:                    self.menubar.dropdowns[a].important ? style.important.text_colour__hover_glow_select :                       style.normal.text_colour__hover_glow_select,
+                                                    text__hover_glow_select_press__colour:              self.menubar.dropdowns[a].important ? style.important.text_colour__hover_glow_select_press :                 style.normal.text_colour__hover_glow_select_press,
                                                 
-                                                    background__off__colour:style.item_backing__off__colour,
-                                                    background__off__lineColour:style.item_backing__off__lineColour,
-                                                    background__off__lineThickness:style.item_backing__off__lineThickness,
-                                                    background__up__colour:style.item_backing__up__colour,
-                                                    background__up__lineColour:style.item_backing__up__lineColour,
-                                                    background__up__lineThickness:style.item_backing__up__lineThickness,
-                                                    background__press__colour:style.item_backing__press__colour,
-                                                    background__press__lineColour:style.item_backing__press__lineColour,
-                                                    background__press__lineThickness:style.item_backing__press__lineThickness,
-                                                    background__select__colour:style.item_backing__select__colour,
-                                                    background__select__lineColour:style.item_backing__select__lineColour,
-                                                    background__select__lineThickness:style.item_backing__select__lineThickness,
-                                                    background__select_press__colour:style.item_backing__select_press__colour,
-                                                    background__select_press__lineColour:style.item_backing__select_press__lineColour,
-                                                    background__select_press__lineThickness:style.item_backing__select_press__lineThickness,
-                                                    background__glow__colour:style.item_backing__glow__colour,
-                                                    background__glow__lineColour:style.item_backing__glow__lineColour,
-                                                    background__glow__lineThickness:style.item_backing__glow__lineThickness,
-                                                    background__glow_press__colour:style.item_backing__glow_press__colour,
-                                                    background__glow_press__lineColour:style.item_backing__glow_press__lineColour,
-                                                    background__glow_press__lineThickness:style.item_backing__glow_press__lineThickness,
-                                                    background__glow_select__colour:style.item_backing__glow_select__colour,
-                                                    background__glow_select__lineColour:style.item_backing__glow_select__lineColour,
-                                                    background__glow_select__lineThickness:style.item_backing__glow_select__lineThickness,
-                                                    background__glow_select_press__colour:style.item_backing__glow_select_press__colour,
-                                                    background__glow_select_press__lineColour:style.item_backing__glow_select_press__lineColour,
-                                                    background__glow_select_press__lineThickness:style.item_backing__glow_select_press__lineThickness,
-                                                    background__hover__colour:style.item_backing__hover__colour,
-                                                    background__hover__lineColour:style.item_backing__hover__lineColour,
-                                                    background__hover__lineThickness:style.item_backing__hover__lineThickness,
-                                                    background__hover_press__colour:style.item_backing__hover_press__colour,
-                                                    background__hover_press__lineColour:style.item_backing__hover_press__lineColour,
-                                                    background__hover_press__lineThickness:style.item_backing__hover_press__lineThickness,
-                                                    background__hover_select__colour:style.item_backing__hover_select__colour,
-                                                    background__hover_select__lineColour:style.item_backing__hover_select__lineColour,
-                                                    background__hover_select__lineThickness:style.item_backing__hover_select__lineThickness,
-                                                    background__hover_select_press__colour:style.item_backing__hover_select_press__colour,
-                                                    background__hover_select_press__lineColour:style.item_backing__hover_select_press__lineColour,
-                                                    background__hover_select_press__lineThickness:style.item_backing__hover_select_press__lineThickness,
-                                                    background__hover_glow__colour:style.item_backing__hover_glow__colour,
-                                                    background__hover_glow__lineColour:style.item_backing__hover_glow__lineColour,
-                                                    background__hover_glow__lineThickness:style.item_backing__hover_glow__lineThickness,
-                                                    background__hover_glow_press__colour:style.item_backing__hover_glow_press__colour,
-                                                    background__hover_glow_press__lineColour:style.item_backing__hover_glow_press__lineColour,
-                                                    background__hover_glow_press__lineThickness:style.item_backing__hover_glow_press__lineThickness,
-                                                    background__hover_glow_select__colour:style.item_backing__hover_glow_select__colour,
-                                                    background__hover_glow_select__lineColour:style.item_backing__hover_glow_select__lineColour,
-                                                    background__hover_glow_select__lineThickness:style.item_backing__hover_glow_select__lineThickness,
-                                                    background__hover_glow_select_press__colour:style.item_backing__hover_glow_select_press__colour,
-                                                    background__hover_glow_select_press__lineColour:style.item_backing__hover_glow_select_press__lineColour,
-                                                    background__hover_glow_select_press__lineThickness:style.item_backing__hover_glow_select_press__lineThickness,
+                                                    background__off__colour:                            self.menubar.dropdowns[a].important ? style.important.item_backing__off__colour :                            style.normal.item_backing__off__colour,
+                                                    background__off__lineColour:                        self.menubar.dropdowns[a].important ? style.important.item_backing__off__lineColour :                        style.normal.item_backing__off__lineColour,
+                                                    background__off__lineThickness:                     self.menubar.dropdowns[a].important ? style.important.item_backing__off__lineThickness :                     style.normal.item_backing__off__lineThickness,
+                                                    background__up__colour:                             self.menubar.dropdowns[a].important ? style.important.item_backing__up__colour :                             style.normal.item_backing__up__colour,
+                                                    background__up__lineColour:                         self.menubar.dropdowns[a].important ? style.important.item_backing__up__lineColour :                         style.normal.item_backing__up__lineColour,
+                                                    background__up__lineThickness:                      self.menubar.dropdowns[a].important ? style.important.item_backing__up__lineThickness :                      style.normal.item_backing__up__lineThickness,
+                                                    background__press__colour:                          self.menubar.dropdowns[a].important ? style.important.item_backing__press__colour :                          style.normal.item_backing__press__colour,
+                                                    background__press__lineColour:                      self.menubar.dropdowns[a].important ? style.important.item_backing__press__lineColour :                      style.normal.item_backing__press__lineColour,
+                                                    background__press__lineThickness:                   self.menubar.dropdowns[a].important ? style.important.item_backing__press__lineThickness :                   style.normal.item_backing__press__lineThickness,
+                                                    background__select__colour:                         self.menubar.dropdowns[a].important ? style.important.item_backing__select__colour :                         style.normal.item_backing__select__colour,
+                                                    background__select__lineColour:                     self.menubar.dropdowns[a].important ? style.important.item_backing__select__lineColour :                     style.normal.item_backing__select__lineColour,
+                                                    background__select__lineThickness:                  self.menubar.dropdowns[a].important ? style.important.item_backing__select__lineThickness :                  style.normal.item_backing__select__lineThickness,
+                                                    background__select_press__colour:                   self.menubar.dropdowns[a].important ? style.important.item_backing__select_press__colour :                   style.normal.item_backing__select_press__colour,
+                                                    background__select_press__lineColour:               self.menubar.dropdowns[a].important ? style.important.item_backing__select_press__lineColour :               style.normal.item_backing__select_press__lineColour,
+                                                    background__select_press__lineThickness:            self.menubar.dropdowns[a].important ? style.important.item_backing__select_press__lineThickness :            style.normal.item_backing__select_press__lineThickness,
+                                                    background__glow__colour:                           self.menubar.dropdowns[a].important ? style.important.item_backing__glow__colour :                           style.normal.item_backing__glow__colour,
+                                                    background__glow__lineColour:                       self.menubar.dropdowns[a].important ? style.important.item_backing__glow__lineColour :                       style.normal.item_backing__glow__lineColour,
+                                                    background__glow__lineThickness:                    self.menubar.dropdowns[a].important ? style.important.item_backing__glow__lineThickness :                    style.normal.item_backing__glow__lineThickness,
+                                                    background__glow_press__colour:                     self.menubar.dropdowns[a].important ? style.important.item_backing__glow_press__colour :                     style.normal.item_backing__glow_press__colour,
+                                                    background__glow_press__lineColour:                 self.menubar.dropdowns[a].important ? style.important.item_backing__glow_press__lineColour :                 style.normal.item_backing__glow_press__lineColour,
+                                                    background__glow_press__lineThickness:              self.menubar.dropdowns[a].important ? style.important.item_backing__glow_press__lineThickness :              style.normal.item_backing__glow_press__lineThickness,
+                                                    background__glow_select__colour:                    self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select__colour :                    style.normal.item_backing__glow_select__colour,
+                                                    background__glow_select__lineColour:                self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select__lineColour :                style.normal.item_backing__glow_select__lineColour,
+                                                    background__glow_select__lineThickness:             self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select__lineThickness :             style.normal.item_backing__glow_select__lineThickness,
+                                                    background__glow_select_press__colour:              self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select_press__colour :              style.normal.item_backing__glow_select_press__colour,
+                                                    background__glow_select_press__lineColour:          self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select_press__lineColour :          style.normal.item_backing__glow_select_press__lineColour,
+                                                    background__glow_select_press__lineThickness:       self.menubar.dropdowns[a].important ? style.important.item_backing__glow_select_press__lineThickness :       style.normal.item_backing__glow_select_press__lineThickness,
+                                                    background__hover__colour:                          self.menubar.dropdowns[a].important ? style.important.item_backing__hover__colour :                          style.normal.item_backing__hover__colour,
+                                                    background__hover__lineColour:                      self.menubar.dropdowns[a].important ? style.important.item_backing__hover__lineColour :                      style.normal.item_backing__hover__lineColour,
+                                                    background__hover__lineThickness:                   self.menubar.dropdowns[a].important ? style.important.item_backing__hover__lineThickness :                   style.normal.item_backing__hover__lineThickness,
+                                                    background__hover_press__colour:                    self.menubar.dropdowns[a].important ? style.important.item_backing__hover_press__colour :                    style.normal.item_backing__hover_press__colour,
+                                                    background__hover_press__lineColour:                self.menubar.dropdowns[a].important ? style.important.item_backing__hover_press__lineColour :                style.normal.item_backing__hover_press__lineColour,
+                                                    background__hover_press__lineThickness:             self.menubar.dropdowns[a].important ? style.important.item_backing__hover_press__lineThickness :             style.normal.item_backing__hover_press__lineThickness,
+                                                    background__hover_select__colour:                   self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select__colour :                   style.normal.item_backing__hover_select__colour,
+                                                    background__hover_select__lineColour:               self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select__lineColour :               style.normal.item_backing__hover_select__lineColour,
+                                                    background__hover_select__lineThickness:            self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select__lineThickness :            style.normal.item_backing__hover_select__lineThickness,
+                                                    background__hover_select_press__colour:             self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select_press__colour :             style.normal.item_backing__hover_select_press__colour,
+                                                    background__hover_select_press__lineColour:         self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select_press__lineColour :         style.normal.item_backing__hover_select_press__lineColour,
+                                                    background__hover_select_press__lineThickness:      self.menubar.dropdowns[a].important ? style.important.item_backing__hover_select_press__lineThickness :      style.normal.item_backing__hover_select_press__lineThickness,
+                                                    background__hover_glow__colour:                     self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow__colour :                     style.normal.item_backing__hover_glow__colour,
+                                                    background__hover_glow__lineColour:                 self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow__lineColour :                 style.normal.item_backing__hover_glow__lineColour,
+                                                    background__hover_glow__lineThickness:              self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow__lineThickness :              style.normal.item_backing__hover_glow__lineThickness,
+                                                    background__hover_glow_press__colour:               self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_press__colour :               style.normal.item_backing__hover_glow_press__colour,
+                                                    background__hover_glow_press__lineColour:           self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_press__lineColour :           style.normal.item_backing__hover_glow_press__lineColour,
+                                                    background__hover_glow_press__lineThickness:        self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_press__lineThickness :        style.normal.item_backing__hover_glow_press__lineThickness,
+                                                    background__hover_glow_select__colour:              self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select__colour :              style.normal.item_backing__hover_glow_select__colour,
+                                                    background__hover_glow_select__lineColour:          self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select__lineColour :          style.normal.item_backing__hover_glow_select__lineColour,
+                                                    background__hover_glow_select__lineThickness:       self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select__lineThickness :       style.normal.item_backing__hover_glow_select__lineThickness,
+                                                    background__hover_glow_select_press__colour:        self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select_press__colour :        style.normal.item_backing__hover_glow_select_press__colour,
+                                                    background__hover_glow_select_press__lineColour:    self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select_press__lineColour :    style.normal.item_backing__hover_glow_select_press__lineColour,
+                                                    background__hover_glow_select_press__lineThickness: self.menubar.dropdowns[a].important ? style.important.item_backing__hover_glow_select_press__lineThickness : style.normal.item_backing__hover_glow_select_press__lineThickness,
                                                 },
                                             } );
                                             object.append(item);
-                            
+                        
                                             item.onpress = function(a){ return function(){
                                                 // if this item has already been selected (and will be deselected after this callback)
                                                 // sent the menubar's 'vars.selected' value to undefined. Otherwise, set it to
@@ -43702,39 +43658,39 @@
                                                 }
                                             }; }(a);
                                             item.onselect = function(a,x){ return function(){
-                                                vars.activedropdown = createDropdown(a,x)
-                                                object.append(vars.activedropdown);
-                                            } }(a,accWidth);
+                                                vars.activeDropdown = createDropdown(a,x)
+                                                object.append(vars.activeDropdown);
+                                            } }(a,list_x);
                                             item.ondeselect = function(){ 
-                                                object.remove(vars.activedropdown); 
-                                                vars.activedropdown = undefined;
+                                                object.remove(vars.activeDropdown); 
+                                                vars.activeDropdown = undefined;
                                             };
-                            
-                                            self.menubar.dropdowns[a].x = accWidth;
-                                            accWidth += self.menubar.dropdowns[a].width;
                                         }
                                     }
                                     produceBar();
                         
                             //control
                                 object.closeAllDropdowns = function(){
-                                    if(vars.activedropdown != undefined){
-                                        vars.activedropdown.onrelease();
+                                    if(vars.activeDropdown != undefined){
+                                        vars.activeDropdown.onrelease();
                                     }
                                 };
                                 object.style = function(newStyle){
                                     if(newStyle==undefined){return style;}
-                                    style = newStyle;
+                                    vars.style = newStyle;
+                                    // style = control.gui.elements.menubar.styleLibrary[vars.style];
                                     produceBar();
                                 };
                         
                             //refresh
                                 object.refresh = function(){
                                     bar.width( _canvas_.control.viewport.width() );
-                                    if(vars.activedropdown != undefined){ object.closeAllDropdowns(); }
+                                    if(vars.activeDropdown != undefined){ object.closeAllDropdowns(); }
                                 };
                                 object.refresh();
-                                object.heavyRefresh = function(){ produceBar(); };
+                                object.heavyRefresh = function(){
+                                    produceBar();
+                                };
                                 object.checkboxRefresh = function(){
                                     console.log(object.getTree());
                                 };
@@ -43743,6 +43699,333 @@
                         };
                         
                         this.menubar.dropdowns = [];
+                        this.menubar.styleLibrary = {};
+                        {
+                            const mux = 0.2;
+                            this.menubar.styleLibrary.dark = {};
+                            this.menubar.styleLibrary.dark.normal = {
+                                backgroundColour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
+                        
+                                text__font:'Helvetica',
+                                text__fontSize:14,
+                                text__spacing:0.3,
+                                text__interCharacterSpacing:0.04,
+                        
+                                text_colour__off:                                       {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__up:                                        {r:1.0,g:1.0,b:1.0,a:1},
+                                text_colour__press:                                     {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__select:                                    {r:0.0,g:0.0,b:0.0,a:1},
+                                text_colour__select_press:                              {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__glow:                                      {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__glow_press:                                {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__glow_select:                               {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__glow_select_press:                         {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover:                                     {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_press:                               {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_select:                              {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_select_press:                        {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_glow:                                {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_glow_press:                          {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_glow_select:                         {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_glow_select_press:                   {r:0.2,g:0.2,b:0.2,a:1},
+                                    
+                                item_backing__off__colour:                              {r:180/255,g:180/255,b:180/255,a:1},
+                                item_backing__off__lineColour:                          {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__off__lineThickness:                       0,
+                                item_backing__up__colour:                               {r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
+                                item_backing__up__lineColour:                           {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__up__lineThickness:                        0,
+                                item_backing__press__colour:                            {r:240/255,g:240/255,b:240/255,a:1},
+                                item_backing__press__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__press__lineThickness:                     0,
+                                item_backing__select__colour:                           {r:1,g:1,b:1,a:1},
+                                item_backing__select__lineColour:                       {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__select__lineThickness:                    0,
+                                item_backing__select_press__colour:                     {r:0.85,g:0.85,b:0.85,a:1},
+                                item_backing__select_press__lineColour:                 {r:0,g:0,b:0,a:0},
+                                item_backing__select_press__lineThickness:              0,
+                                item_backing__glow__colour:                             {r:220/255,g:220/255,b:220/255,a:1},
+                                item_backing__glow__lineColour:                         {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__glow__lineThickness:                      0,
+                                item_backing__glow_press__colour:                       {r:250/255,g:250/255,b:250/255,a:1},
+                                item_backing__glow_press__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__glow_press__lineThickness:                0,
+                                item_backing__glow_select__colour:                      {r:220/255,g:220/255,b:220/255,a:1},
+                                item_backing__glow_select__lineColour:                  {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__glow_select__lineThickness:               0,
+                                item_backing__glow_select_press__colour:                {r:250/255,g:250/255,b:250/255,a:1},
+                                item_backing__glow_select_press__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__glow_select_press__lineThickness:         0,
+                                item_backing__hover__colour:                            {r:1,g:1,b:1,a:1},
+                                item_backing__hover__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__hover__lineThickness:                     0,
+                                item_backing__hover_press__colour:                      {r:0.85,g:0.85,b:0.85,a:1},
+                                item_backing__hover_press__lineColour:                  {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__hover_press__lineThickness:               0,
+                                item_backing__hover_select__colour:                     {r:0.9,g:0.9,b:0.9,a:1},
+                                item_backing__hover_select__lineColour:                 {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__hover_select__lineThickness:              0,
+                                item_backing__hover_select_press__colour:               {r:0.85,g:0.85,b:0.85,a:1},
+                                item_backing__hover_select_press__lineColour:           {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__hover_select_press__lineThickness:        0,
+                                item_backing__hover_glow__colour:                       {r:239/255,g:209/255,b:255/255,a:1},
+                                item_backing__hover_glow__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__hover_glow__lineThickness:                0,
+                                item_backing__hover_glow_press__colour:                 {r:250/255,g:250/255,b:250/255,a:1},
+                                item_backing__hover_glow_press__lineColour:             {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__hover_glow_press__lineThickness:          0,
+                                item_backing__hover_glow_select__colour:                {r:240/255,g:240/255,b:240/255,a:1},
+                                item_backing__hover_glow_select__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__hover_glow_select__lineThickness:         0,
+                                item_backing__hover_glow_select_press__colour:          {r:250/255,g:250/255,b:250/255,a:1},
+                                item_backing__hover_glow_select_press__lineColour:      {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__hover_glow_select_press__lineThickness:   0,
+                        
+                                checkbox_checkColour:{r:0.7,g:0.7,b:0.7,a:1}, 
+                            };
+                            this.menubar.styleLibrary.dark.important = {
+                                backgroundColour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
+                        
+                                text__font:'Helvetica',
+                                text__fontSize:14,
+                                text__spacing:0.3,
+                                text__interCharacterSpacing:0.04,
+                        
+                                text_colour__off:                                       {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__up:                                        {r:0.0,g:0.0,b:0.0,a:1},
+                                text_colour__press:                                     {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__select:                                    {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__select_press:                              {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__glow:                                      {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__glow_press:                                {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__glow_select:                               {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__glow_select_press:                         {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover:                                     {r:1.0,g:1.0,b:1.0,a:1},
+                                text_colour__hover_press:                               {r:1.0,g:1.0,b:1.0,a:1},
+                                text_colour__hover_select:                              {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_select_press:                        {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_glow:                                {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_glow_press:                          {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_glow_select:                         {r:0.2,g:0.2,b:0.2,a:1},
+                                text_colour__hover_glow_select_press:                   {r:0.2,g:0.2,b:0.2,a:1},
+                                    
+                                item_backing__off__colour:                              {r:180/255,g:180/255,b:180/255,a:1},
+                                item_backing__off__lineColour:                          {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__off__lineThickness:                       0,
+                                item_backing__up__colour:                               {r:1,g:1,b:1,a:1},
+                                item_backing__up__lineColour:                           {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__up__lineThickness:                        0,
+                                item_backing__press__colour:                            {r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
+                                item_backing__press__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__press__lineThickness:                     0,
+                                item_backing__select__colour:                           {r:240/255,g:240/255,b:240/255,a:1},
+                                item_backing__select__lineColour:                       {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__select__lineThickness:                    0,
+                                item_backing__select_press__colour:                     {r:0.85,g:0.85,b:0.85,a:1},
+                                item_backing__select_press__lineColour:                 {r:0,g:0,b:0,a:0},
+                                item_backing__select_press__lineThickness:              0,
+                                item_backing__glow__colour:                             {r:220/255,g:220/255,b:220/255,a:1},
+                                item_backing__glow__lineColour:                         {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__glow__lineThickness:                      0,
+                                item_backing__glow_press__colour:                       {r:250/255,g:250/255,b:250/255,a:1},
+                                item_backing__glow_press__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__glow_press__lineThickness:                0,
+                                item_backing__glow_select__colour:                      {r:220/255,g:220/255,b:220/255,a:1},
+                                item_backing__glow_select__lineColour:                  {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__glow_select__lineThickness:               0,
+                                item_backing__glow_select_press__colour:                {r:250/255,g:250/255,b:250/255,a:1},
+                                item_backing__glow_select_press__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__glow_select_press__lineThickness:         0,
+                                item_backing__hover__colour:                            {r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
+                                item_backing__hover__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__hover__lineThickness:                     0,
+                                item_backing__hover_press__colour:                      {r:0.25,g:0.25,b:0.25,a:1},
+                                item_backing__hover_press__lineColour:                  {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__hover_press__lineThickness:               0,
+                                item_backing__hover_select__colour:                     {r:0.9,g:0.9,b:0.9,a:1},
+                                item_backing__hover_select__lineColour:                 {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__hover_select__lineThickness:              0,
+                                item_backing__hover_select_press__colour:               {r:0.85,g:0.85,b:0.85,a:1},
+                                item_backing__hover_select_press__lineColour:           {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__hover_select_press__lineThickness:        0,
+                                item_backing__hover_glow__colour:                       {r:239/255,g:209/255,b:255/255,a:1},
+                                item_backing__hover_glow__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__hover_glow__lineThickness:                0,
+                                item_backing__hover_glow_press__colour:                 {r:250/255,g:250/255,b:250/255,a:1},
+                                item_backing__hover_glow_press__lineColour:             {r:0/255,g:0/255,b:0/255,a:0},
+                                item_backing__hover_glow_press__lineThickness:          0,
+                                item_backing__hover_glow_select__colour:                {r:240/255,g:240/255,b:240/255,a:1},
+                                item_backing__hover_glow_select__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__hover_glow_select__lineThickness:         0,
+                                item_backing__hover_glow_select_press__colour:          {r:250/255,g:250/255,b:250/255,a:1},
+                                item_backing__hover_glow_select_press__lineColour:      {r:120/255,g:120/255,b:120/255,a:1},
+                                item_backing__hover_glow_select_press__lineThickness:   0,
+                        
+                                checkbox_checkColour:{r:0.7,g:0.7,b:0.7,a:1}, 
+                            };
+                        }
+                        this.menubar.styleLibrary.default = {};
+                        this.menubar.styleLibrary.default.normal = {
+                            backgroundColour:{r:240/255,g:240/255,b:240/255,a:1},
+                            
+                            text__font:'Helvetica',
+                            text__fontSize:14,
+                            text__spacing:0.3,
+                            text__interCharacterSpacing:0.04,
+                        
+                            text_colour__off:                                  {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__up:                                   {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__press:                                {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__select:                               {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__select_press:                         {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__glow:                                 {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__glow_press:                           {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__glow_select:                          {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__glow_select_press:                    {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover:                                {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_press:                          {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_select:                         {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_select_press:                   {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_glow:                           {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_glow_press:                     {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_glow_select:                    {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_glow_select_press:              {r:0.2,g:0.2,b:0.2,a:1},
+                                
+                            item_backing__off__colour:                              {r:180/255,g:180/255,b:180/255,a:1},
+                            item_backing__off__lineColour:                          {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__off__lineThickness:                       0,
+                            item_backing__up__colour:                               {r:240/255,g:240/255,b:240/255,a:1},
+                            item_backing__up__lineColour:                           {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__up__lineThickness:                        0,
+                            item_backing__press__colour:                            {r:240/255,g:240/255,b:240/255,a:1},
+                            item_backing__press__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__press__lineThickness:                     0,
+                            item_backing__select__colour:                           {r:220/255,g:220/255,b:220/255,a:1},
+                            item_backing__select__lineColour:                       {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__select__lineThickness:                    0,
+                            item_backing__select_press__colour:                     {r:229/255,g:167/255,b:255/255,a:1},
+                            item_backing__select_press__lineColour:                 {r:0,g:0,b:0,a:0},
+                            item_backing__select_press__lineThickness:              0,
+                            item_backing__glow__colour:                             {r:220/255,g:220/255,b:220/255,a:1},
+                            item_backing__glow__lineColour:                         {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__glow__lineThickness:                      0,
+                            item_backing__glow_press__colour:                       {r:250/255,g:250/255,b:250/255,a:1},
+                            item_backing__glow_press__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__glow_press__lineThickness:                0,
+                            item_backing__glow_select__colour:                      {r:220/255,g:220/255,b:220/255,a:1},
+                            item_backing__glow_select__lineColour:                  {r:120/255,g:120/255,b:120/255,a:1},
+                            item_backing__glow_select__lineThickness:               0,
+                            item_backing__glow_select_press__colour:                {r:250/255,g:250/255,b:250/255,a:1},
+                            item_backing__glow_select_press__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
+                            item_backing__glow_select_press__lineThickness:         0,
+                            item_backing__hover__colour:                            {r:229/255,g:167/255,b:255/255,a:1},
+                            item_backing__hover__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__hover__lineThickness:                     0,
+                            item_backing__hover_press__colour:                      {r:240/255,g:240/255,b:240/255,a:1},
+                            item_backing__hover_press__lineColour:                  {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__hover_press__lineThickness:               0,
+                            item_backing__hover_select__colour:                     {r:239/255,g:209/255,b:255/255,a:1},
+                            item_backing__hover_select__lineColour:                 {r:120/255,g:120/255,b:120/255,a:1},
+                            item_backing__hover_select__lineThickness:              0,
+                            item_backing__hover_select_press__colour:               {r:240/255,g:240/255,b:240/255,a:1},
+                            item_backing__hover_select_press__lineColour:           {r:120/255,g:120/255,b:120/255,a:1},
+                            item_backing__hover_select_press__lineThickness:        0,
+                            item_backing__hover_glow__colour:                       {r:239/255,g:209/255,b:255/255,a:1},
+                            item_backing__hover_glow__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__hover_glow__lineThickness:                0,
+                            item_backing__hover_glow_press__colour:                 {r:250/255,g:250/255,b:250/255,a:1},
+                            item_backing__hover_glow_press__lineColour:             {r:0/255,g:0/255,b:0/255,a:0},
+                            item_backing__hover_glow_press__lineThickness:          0,
+                            item_backing__hover_glow_select__colour:                {r:240/255,g:240/255,b:240/255,a:1},
+                            item_backing__hover_glow_select__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
+                            item_backing__hover_glow_select__lineThickness:         0,
+                            item_backing__hover_glow_select_press__colour:          {r:250/255,g:250/255,b:250/255,a:1},
+                            item_backing__hover_glow_select_press__lineColour:      {r:120/255,g:120/255,b:120/255,a:1},
+                            item_backing__hover_glow_select_press__lineThickness:   0,
+                        
+                            checkbox_checkColour:{r:0.7,g:0.7,b:0.7,a:1}, 
+                        };
+                        const important_style_blending_colour = {r:1,g:0.75,b:0.75,a:1};
+                        this.menubar.styleLibrary.default.important = {
+                            backgroundColour:{r:240/255,g:240/255,b:240/255,a:1},
+                        
+                            text__font:'Helvetica',
+                            text__fontSize:14,
+                            text__spacing:0.3,
+                            text__interCharacterSpacing:0.04,
+                        
+                            text_colour__off:                                  {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__up:                                   {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__press:                                {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__select:                               {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__select_press:                         {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__glow:                                 {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__glow_press:                           {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__glow_select:                          {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__glow_select_press:                    {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover:                                {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_press:                          {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_select:                         {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_select_press:                   {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_glow:                           {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_glow_press:                     {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_glow_select:                    {r:0.2,g:0.2,b:0.2,a:1},
+                            text_colour__hover_glow_select_press:              {r:0.2,g:0.2,b:0.2,a:1},
+                                
+                            item_backing__off__colour:                              _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__off__colour, important_style_blending_colour, 0.5),
+                            item_backing__off__lineColour:                          _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__off__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__off__lineThickness:                       0,
+                            item_backing__up__colour:                               _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__up__colour, important_style_blending_colour, 0.5),
+                            item_backing__up__lineColour:                           _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__up__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__up__lineThickness:                        0,
+                            item_backing__press__colour:                            _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__press__colour, important_style_blending_colour, 0.5),
+                            item_backing__press__lineColour:                        _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__press__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__press__lineThickness:                     0,
+                            item_backing__select__colour:                           _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__select__colour, important_style_blending_colour, 0.5),
+                            item_backing__select__lineColour:                       _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__select__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__select__lineThickness:                    0,
+                            item_backing__select_press__colour:                     _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__select_press__colour, important_style_blending_colour, 0.5),
+                            item_backing__select_press__lineColour:                 _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__select_press__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__select_press__lineThickness:              0,
+                            item_backing__glow__colour:                             _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__glow__colour, important_style_blending_colour, 0.5),
+                            item_backing__glow__lineColour:                         _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__glow__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__glow__lineThickness:                      0,
+                            item_backing__glow_press__colour:                       _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__glow_press__colour, important_style_blending_colour, 0.5),
+                            item_backing__glow_press__lineColour:                   _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__glow_press__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__glow_press__lineThickness:                0,
+                            item_backing__glow_select__colour:                      _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__glow_select__colour, important_style_blending_colour, 0.5),
+                            item_backing__glow_select__lineColour:                  _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__glow_select__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__glow_select__lineThickness:               0,
+                            item_backing__glow_select_press__colour:                _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__glow_select_press__colour, important_style_blending_colour, 0.5),
+                            item_backing__glow_select_press__lineColour:            _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__glow_select_press__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__glow_select_press__lineThickness:         0,
+                            item_backing__hover__colour:                            _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover__colour, important_style_blending_colour, 0.5),
+                            item_backing__hover__lineColour:                        _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__hover__lineThickness:                     0,
+                            item_backing__hover_press__colour:                      _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_press__colour, important_style_blending_colour, 0.5),
+                            item_backing__hover_press__lineColour:                  _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_press__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__hover_press__lineThickness:               0,
+                            item_backing__hover_select__colour:                     _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_select__colour, important_style_blending_colour, 0.5),
+                            item_backing__hover_select__lineColour:                 _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_select__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__hover_select__lineThickness:              0,
+                            item_backing__hover_select_press__colour:               _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_select_press__colour, important_style_blending_colour, 0.5),
+                            item_backing__hover_select_press__lineColour:           _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_select_press__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__hover_select_press__lineThickness:        0,
+                            item_backing__hover_glow__colour:                       _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_glow__colour, important_style_blending_colour, 0.5),
+                            item_backing__hover_glow__lineColour:                   _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_glow__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__hover_glow__lineThickness:                0,
+                            item_backing__hover_glow_press__colour:                 _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_glow_press__colour, important_style_blending_colour, 0.5),
+                            item_backing__hover_glow_press__lineColour:             _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_glow_press__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__hover_glow_press__lineThickness:          0,
+                            item_backing__hover_glow_select__colour:                _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_glow_select__colour, important_style_blending_colour, 0.5),
+                            item_backing__hover_glow_select__lineColour:            _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_glow_select__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__hover_glow_select__lineThickness:         0,
+                            item_backing__hover_glow_select_press__colour:          _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_glow_select_press__colour, important_style_blending_colour, 0.5),
+                            item_backing__hover_glow_select_press__lineColour:      _canvas_.library.math.blendColours(this.menubar.styleLibrary.default.normal.item_backing__hover_glow_select_press__lineColour, important_style_blending_colour, 0.5),
+                            item_backing__hover_glow_select_press__lineThickness:   0,
+                        
+                            checkbox_checkColour:{r:0.7,g:0.7,b:0.7,a:1}, 
+                        };
                     };
                     this.style = new function(){
                         this.set = function(newStyle){
@@ -43756,173 +44039,14 @@
                         
                             _canvas_.control.scene.backgroundColour({r:1,g:1,b:1,a:1});
                         
-                            _canvas_.control.gui.style.set(
-                                {
-                                    backgroundColour:{r:240/255,g:240/255,b:240/255,a:1},
-                            
-                                    text__font:'Helvetica',
-                                    text__fontSize:14,
-                                    text__spacing:0.3,
-                                    text__interCharacterSpacing:0.04,
-                            
-                                    text_colour__off:                                       {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__up:                                        {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__press:                                     {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__select:                                    {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__select_press:                              {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__glow:                                      {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__glow_press:                                {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__glow_select:                               {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__glow_select_press:                         {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover:                                     {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_press:                               {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_select:                              {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_select_press:                        {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_glow:                                {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_glow_press:                          {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_glow_select:                         {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_glow_select_press:                   {r:0.2,g:0.2,b:0.2,a:1},
-                                        
-                                    item_backing__off__colour:                              {r:180/255,g:180/255,b:180/255,a:1},
-                                    item_backing__off__lineColour:                          {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__off__lineThickness:                       0,
-                                    item_backing__up__colour:                               {r:240/255,g:240/255,b:240/255,a:1},
-                                    item_backing__up__lineColour:                           {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__up__lineThickness:                        0,
-                                    item_backing__press__colour:                            {r:240/255,g:240/255,b:240/255,a:1},
-                                    item_backing__press__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__press__lineThickness:                     0,
-                                    item_backing__select__colour:                           {r:220/255,g:220/255,b:220/255,a:1},
-                                    item_backing__select__lineColour:                       {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__select__lineThickness:                    0,
-                                    item_backing__select_press__colour:                     {r:229/255,g:167/255,b:255/255,a:1},
-                                    item_backing__select_press__lineColour:                 {r:0,g:0,b:0,a:0},
-                                    item_backing__select_press__lineThickness:              0,
-                                    item_backing__glow__colour:                             {r:220/255,g:220/255,b:220/255,a:1},
-                                    item_backing__glow__lineColour:                         {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__glow__lineThickness:                      0,
-                                    item_backing__glow_press__colour:                       {r:250/255,g:250/255,b:250/255,a:1},
-                                    item_backing__glow_press__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__glow_press__lineThickness:                0,
-                                    item_backing__glow_select__colour:                      {r:220/255,g:220/255,b:220/255,a:1},
-                                    item_backing__glow_select__lineColour:                  {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__glow_select__lineThickness:               0,
-                                    item_backing__glow_select_press__colour:                {r:250/255,g:250/255,b:250/255,a:1},
-                                    item_backing__glow_select_press__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__glow_select_press__lineThickness:         0,
-                                    item_backing__hover__colour:                            {r:229/255,g:167/255,b:255/255,a:1},
-                                    item_backing__hover__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__hover__lineThickness:                     0,
-                                    item_backing__hover_press__colour:                      {r:240/255,g:240/255,b:240/255,a:1},
-                                    item_backing__hover_press__lineColour:                  {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__hover_press__lineThickness:               0,
-                                    item_backing__hover_select__colour:                     {r:239/255,g:209/255,b:255/255,a:1},
-                                    item_backing__hover_select__lineColour:                 {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__hover_select__lineThickness:              0,
-                                    item_backing__hover_select_press__colour:               {r:240/255,g:240/255,b:240/255,a:1},
-                                    item_backing__hover_select_press__lineColour:           {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__hover_select_press__lineThickness:        0,
-                                    item_backing__hover_glow__colour:                       {r:239/255,g:209/255,b:255/255,a:1},
-                                    item_backing__hover_glow__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__hover_glow__lineThickness:                0,
-                                    item_backing__hover_glow_press__colour:                 {r:250/255,g:250/255,b:250/255,a:1},
-                                    item_backing__hover_glow_press__lineColour:             {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__hover_glow_press__lineThickness:          0,
-                                    item_backing__hover_glow_select__colour:                {r:240/255,g:240/255,b:240/255,a:1},
-                                    item_backing__hover_glow_select__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__hover_glow_select__lineThickness:         0,
-                                    item_backing__hover_glow_select_press__colour:          {r:250/255,g:250/255,b:250/255,a:1},
-                                    item_backing__hover_glow_select_press__lineColour:      {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__hover_glow_select_press__lineThickness:   0,
-                                }
-                            );
+                            _canvas_.control.gui.style.set('default');
                         };
                         this.darkMode = function(){
                             this.currentStyleMode = 'dark';
                         
                             _canvas_.control.scene.backgroundColour({r:0,g:0,b:0,a:1});
                         
-                            const mux = 0.2;
-                            _canvas_.control.gui.style.set(
-                                {
-                                    backgroundColour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
-                            
-                                    text__font:'Helvetica',
-                                    text__fontSize:14,
-                                    text__spacing:0.3,
-                                    text__interCharacterSpacing:0.04,
-                            
-                                    text_colour__off:                                       {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__up:                                        {r:1.0,g:1.0,b:1.0,a:1},
-                                    text_colour__press:                                     {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__select:                                    {r:0.0,g:0.0,b:0.0,a:1},
-                                    text_colour__select_press:                              {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__glow:                                      {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__glow_press:                                {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__glow_select:                               {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__glow_select_press:                         {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover:                                     {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_press:                               {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_select:                              {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_select_press:                        {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_glow:                                {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_glow_press:                          {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_glow_select:                         {r:0.2,g:0.2,b:0.2,a:1},
-                                    text_colour__hover_glow_select_press:                   {r:0.2,g:0.2,b:0.2,a:1},
-                                        
-                                    item_backing__off__colour:                              {r:180/255,g:180/255,b:180/255,a:1},
-                                    item_backing__off__lineColour:                          {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__off__lineThickness:                       0,
-                                    item_backing__up__colour:                               {r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
-                                    item_backing__up__lineColour:                           {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__up__lineThickness:                        0,
-                                    item_backing__press__colour:                            {r:240/255,g:240/255,b:240/255,a:1},
-                                    item_backing__press__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__press__lineThickness:                     0,
-                                    item_backing__select__colour:                           {r:1,g:1,b:1,a:1},
-                                    item_backing__select__lineColour:                       {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__select__lineThickness:                    0,
-                                    item_backing__select_press__colour:                     {r:0.85,g:0.85,b:0.85,a:1},
-                                    item_backing__select_press__lineColour:                 {r:0,g:0,b:0,a:0},
-                                    item_backing__select_press__lineThickness:              0,
-                                    item_backing__glow__colour:                             {r:220/255,g:220/255,b:220/255,a:1},
-                                    item_backing__glow__lineColour:                         {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__glow__lineThickness:                      0,
-                                    item_backing__glow_press__colour:                       {r:250/255,g:250/255,b:250/255,a:1},
-                                    item_backing__glow_press__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__glow_press__lineThickness:                0,
-                                    item_backing__glow_select__colour:                      {r:220/255,g:220/255,b:220/255,a:1},
-                                    item_backing__glow_select__lineColour:                  {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__glow_select__lineThickness:               0,
-                                    item_backing__glow_select_press__colour:                {r:250/255,g:250/255,b:250/255,a:1},
-                                    item_backing__glow_select_press__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__glow_select_press__lineThickness:         0,
-                                    item_backing__hover__colour:                            {r:1,g:1,b:1,a:1},
-                                    item_backing__hover__lineColour:                        {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__hover__lineThickness:                     0,
-                                    item_backing__hover_press__colour:                      {r:0.85,g:0.85,b:0.85,a:1},
-                                    item_backing__hover_press__lineColour:                  {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__hover_press__lineThickness:               0,
-                                    item_backing__hover_select__colour:                     {r:0.9,g:0.9,b:0.9,a:1},
-                                    item_backing__hover_select__lineColour:                 {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__hover_select__lineThickness:              0,
-                                    item_backing__hover_select_press__colour:               {r:0.85,g:0.85,b:0.85,a:1},
-                                    item_backing__hover_select_press__lineColour:           {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__hover_select_press__lineThickness:        0,
-                                    item_backing__hover_glow__colour:                       {r:239/255,g:209/255,b:255/255,a:1},
-                                    item_backing__hover_glow__lineColour:                   {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__hover_glow__lineThickness:                0,
-                                    item_backing__hover_glow_press__colour:                 {r:250/255,g:250/255,b:250/255,a:1},
-                                    item_backing__hover_glow_press__lineColour:             {r:0/255,g:0/255,b:0/255,a:0},
-                                    item_backing__hover_glow_press__lineThickness:          0,
-                                    item_backing__hover_glow_select__colour:                {r:240/255,g:240/255,b:240/255,a:1},
-                                    item_backing__hover_glow_select__lineColour:            {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__hover_glow_select__lineThickness:         0,
-                                    item_backing__hover_glow_select_press__colour:          {r:250/255,g:250/255,b:250/255,a:1},
-                                    item_backing__hover_glow_select_press__lineColour:      {r:120/255,g:120/255,b:120/255,a:1},
-                                    item_backing__hover_glow_select_press__lineThickness:   0,
-                                }
-                            );
+                            _canvas_.control.gui.style.set('dark');
                         };
                     };
                 };
@@ -45311,7 +45435,7 @@
                 _canvas_.layers.declareLayerAsLoaded("control");
             } );
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:21} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
             };
             
             _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -45340,121 +45464,121 @@
             
             _canvas_.interface.unit.collection = new function(){
                 this.development = new function(){
-                    this['test_c'] = function(name,x,y,angle){
-                        //main object creation
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'test_c',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    {x:0, y:0},
-                                    {x:100, y:0},
-                                    {x:100, y:100},
-                                    {x:0, y:100},
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_1', data:{ 
-                                        x:100, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_2', data:{ 
-                                        x:100, y:60, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_3', data:{ 
-                                        x:100, y:80, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
-                                    }},
+                    // this['test_c'] = function(name,x,y,angle){
+                    //     //main object creation
+                    //         const object = _canvas_.interface.unit.builder({
+                    //             name:name,
+                    //             model:'test_c',
+                    //             x:x, y:y, angle:angle,
+                    //             space:[
+                    //                 {x:0, y:0},
+                    //                 {x:100, y:0},
+                    //                 {x:100, y:100},
+                    //                 {x:0, y:100},
+                    //             ],
+                    //             elements:[
+                    //                 {collection:'dynamic', type:'connectionNode_audio', name:'input_1', data:{ 
+                    //                     x:100, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                    //                 }},
+                    //                 {collection:'dynamic', type:'connectionNode_audio', name:'input_2', data:{ 
+                    //                     x:100, y:60, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                    //                 }},
+                    //                 {collection:'dynamic', type:'connectionNode_audio', name:'input_3', data:{ 
+                    //                     x:100, y:80, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                    //                 }},
+                    //                 {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                    //                     x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                    //                 }},
                                     
-                                    {collection:'basic', type:'rectangle', name:'backing', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
+                    //                 {collection:'basic', type:'rectangle', name:'backing', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
                     
-                                    {collection:'control', type:'dial_discrete', name:'mode', data:{
-                                        x:20, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
-                                    }},
-                                    {collection:'control', type:'dial_continuous', name:'mix', data:{
-                                        x:40, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
-                                    }},
-                                    // {collection:'control', type:'dial_continuous', name:'floor', data:{
-                                    //     x:60, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
-                                    // }},
-                                    // {collection:'control', type:'dial_continuous', name:'detune', data:{
-                                    //     x:80, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2,
-                                    // }},
-                                    // {collection:'control', type:'dial_continuous', name:'dutyCycle', data:{
-                                    //     x:100, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2,
-                                    // }},
-                                    // {collection:'control', type:'dial_discrete', name:'gainMode', data:{
-                                    //     x:20, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
-                                    // }},
-                                    // {collection:'control', type:'dial_discrete', name:'detuneMode', data:{
-                                    //     x:40, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
-                                    // }},
-                                    // {collection:'control', type:'dial_discrete', name:'dutyCycleMode', data:{
-                                    //     x:60, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
-                                    // }},
-                                ]
-                            });
+                    //                 {collection:'control', type:'dial_discrete', name:'mode', data:{
+                    //                     x:20, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
+                    //                 }},
+                    //                 {collection:'control', type:'dial_continuous', name:'mix', data:{
+                    //                     x:40, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
+                    //                 }},
+                    //                 // {collection:'control', type:'dial_continuous', name:'floor', data:{
+                    //                 //     x:60, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2,
+                    //                 // }},
+                    //                 // {collection:'control', type:'dial_continuous', name:'detune', data:{
+                    //                 //     x:80, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2,
+                    //                 // }},
+                    //                 // {collection:'control', type:'dial_continuous', name:'dutyCycle', data:{
+                    //                 //     x:100, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2,
+                    //                 // }},
+                    //                 // {collection:'control', type:'dial_discrete', name:'gainMode', data:{
+                    //                 //     x:20, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
+                    //                 // }},
+                    //                 // {collection:'control', type:'dial_discrete', name:'detuneMode', data:{
+                    //                 //     x:40, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
+                    //                 // }},
+                    //                 // {collection:'control', type:'dial_discrete', name:'dutyCycleMode', data:{
+                    //                 //     x:60, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
+                    //                 // }},
+                    //             ]
+                    //         });
                     
-                        //circuitry
-                            SA = new _canvas_.interface.circuit.streamAdder(_canvas_.library.audio.context);
+                    //     //circuitry
+                    //         SA = new _canvas_.interface.circuit.streamAdder(_canvas_.library.audio.context);
                     
-                        //wiring
-                            //hid
-                                object.elements.dial_discrete.mode.onchange = function(value){
-                                    SA.mode(value == 1);
-                                };
-                                object.elements.dial_continuous.mix.onchange = function(value){ 
-                                    SA.mix(value);
-                                };
-                                // object.elements.dial_continuous.floor.onchange = function(value){
-                                //     _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, WNG.floor, value, 0.01, 'instant', true);
-                                // };
-                                // object.elements.dial_continuous.detune.onchange = function(value){
-                                //     OSC.detune( value*2 - 1 );
-                                // };
-                                // object.elements.dial_continuous.dutyCycle.onchange = function(value){
-                                //     OSC.dutyCycle( value );
-                                // };
-                                // object.elements.dial_discrete.gainMode.onchange = function(value){
-                                //     OSC.gainMode(value);
-                                // };
-                                // object.elements.dial_discrete.detuneMode.onchange = function(value){
-                                //     OSC.detuneMode(value);
-                                // };
-                                // object.elements.dial_discrete.dutyCycleMode.onchange = function(value){
-                                //     OSC.dutyCycleMode(value);
-                                // };
+                    //     //wiring
+                    //         //hid
+                    //             object.elements.dial_discrete.mode.onchange = function(value){
+                    //                 SA.mode(value == 1);
+                    //             };
+                    //             object.elements.dial_continuous.mix.onchange = function(value){ 
+                    //                 SA.mix(value);
+                    //             };
+                    //             // object.elements.dial_continuous.floor.onchange = function(value){
+                    //             //     _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, WNG.floor, value, 0.01, 'instant', true);
+                    //             // };
+                    //             // object.elements.dial_continuous.detune.onchange = function(value){
+                    //             //     OSC.detune( value*2 - 1 );
+                    //             // };
+                    //             // object.elements.dial_continuous.dutyCycle.onchange = function(value){
+                    //             //     OSC.dutyCycle( value );
+                    //             // };
+                    //             // object.elements.dial_discrete.gainMode.onchange = function(value){
+                    //             //     OSC.gainMode(value);
+                    //             // };
+                    //             // object.elements.dial_discrete.detuneMode.onchange = function(value){
+                    //             //     OSC.detuneMode(value);
+                    //             // };
+                    //             // object.elements.dial_discrete.dutyCycleMode.onchange = function(value){
+                    //             //     OSC.dutyCycleMode(value);
+                    //             // };
                     
-                            //keycapture
-                            //io
-                                object.io.audio.input_1.audioNode = SA.in_1();
-                                object.io.audio.input_2.audioNode = SA.in_2();
-                                object.io.audio.input_3.audioNode = SA.mixControl();
-                                object.io.audio.output.audioNode = SA.out();
+                    //         //keycapture
+                    //         //io
+                    //             object.io.audio.input_1.audioNode = SA.in_1();
+                    //             object.io.audio.input_2.audioNode = SA.in_2();
+                    //             object.io.audio.input_3.audioNode = SA.mixControl();
+                    //             object.io.audio.output.audioNode = SA.out();
                     
-                        //interface
-                            object.i = {
-                            };
+                    //     //interface
+                    //         object.i = {
+                    //         };
                     
-                        //import/export
-                            object.exportData = function(){
-                            };
-                            object.importData = function(data){
-                            };
+                    //     //import/export
+                    //         object.exportData = function(){
+                    //         };
+                    //         object.importData = function(data){
+                    //         };
                     
-                        //setup/tearDown
-                            object.oncreate = function(){
-                            };
-                            object.ondelete = function(){
-                            };
+                    //     //setup/tearDown
+                    //         object.oncreate = function(){
+                    //         };
+                    //         object.ondelete = function(){
+                    //         };
                     
-                        return object;
-                    };
-                    this['test_c'].metadata = {
-                        name:'test c',
-                        category:'',
-                        helpURL:''
-                    };
+                    //     return object;
+                    // };
+                    // this['test_c'].metadata = {
+                    //     name:'test c',
+                    //     category:'',
+                    //     helpURL:''
+                    // };
                     const imageStoreURL = '/images/units/0 - development/';
                     const style = {
                         background:{r:70/255,g:70/255,b:70/255,a:1},
@@ -45571,7 +45695,7 @@
                             });
                     
                         //circuitry
-                            OSC = new _canvas_.library.audio.audioWorklet.osc_2(_canvas_.library.audio.context);
+                            OSC = new _canvas_.library.audio.audioWorklet.workshop.only_js.osc_2(_canvas_.library.audio.context);
                     
                         //wiring
                             //hid
@@ -45634,13 +45758,16 @@
                                     {x:0, y:100},
                                 ],
                                 elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_1', data:{ 
+                                    {collection:'dynamic', type:'connectionNode_data', name:'input_note', data:{ 
+                                        x:100, y:20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_gain', data:{ 
                                         x:100, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
                                     }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_2', data:{ 
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_detune', data:{ 
                                         x:100, y:60, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
                                     }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_3', data:{ 
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_dutyCycle', data:{ 
                                         x:100, y:80, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
                                     }},
                                     {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
@@ -45650,68 +45777,80 @@
                                     {collection:'basic', type:'rectangle', name:'backing', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
                     
                                     {collection:'control', type:'dial_discrete', name:'waveform', data:{
-                                        x:20, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:3,
+                                        x:20, y:20, radius:15/2, startAngle:(5/4)*Math.PI, maxAngle:(2/4)*Math.PI, value:0, optionCount:3,
                                     }},
-                                    {collection:'control', type:'dial_continuous', name:'frequency', data:{
-                                        x:40, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2,
+                                    {collection:'control', type:'dial_continuous', name:'dial_gain', data:{
+                                        x:60, y:40+7.5, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5,
                                     }},
-                                    {collection:'control', type:'dial_continuous', name:'gain', data:{
-                                        x:60, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:1, arcDistance:1.2,
+                                    {collection:'control', type:'dial_continuous', name:'dial_detune', data:{
+                                        x:60, y:60+7.5, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5,
                                     }},
-                                    {collection:'control', type:'dial_continuous', name:'detune', data:{
-                                        x:80, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2,
+                                    {collection:'control', type:'dial_continuous', name:'dial_dutyCycle', data:{
+                                        x:60, y:80+7.5, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5,
                                     }},
-                                    {collection:'control', type:'dial_continuous', name:'dutyCycle', data:{
-                                        x:100, y:20, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2,
+                    
+                                    {collection:'control', type:'checkbox_circle', name:'checkbox_gain', data:{
+                                        x:80, y:40+7.5, radius:15/2, style:{backing:{r:1,g:1,b:1,a:1}},
                                     }},
-                                    {collection:'control', type:'dial_discrete', name:'gainMode', data:{
-                                        x:20, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
+                                    {collection:'control', type:'checkbox_circle', name:'checkbox_detune', data:{
+                                        x:80, y:60+7.5, radius:15/2, style:{backing:{r:1,g:1,b:1,a:1}},
                                     }},
-                                    {collection:'control', type:'dial_discrete', name:'detuneMode', data:{
-                                        x:40, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
-                                    }},
-                                    {collection:'control', type:'dial_discrete', name:'dutyCycleMode', data:{
-                                        x:60, y:40, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, optionCount:2,
+                                    {collection:'control', type:'checkbox_circle', name:'checkbox_dutyCycle', data:{
+                                        x:80, y:80+7.5, radius:15/2, style:{backing:{r:1,g:1,b:1,a:1}},
                                     }},
                                 ]
                             });
                     
                         //circuitry
-                            const OSC = new _canvas_.interface.circuit.oscillator(_canvas_.library.audio.context);
+                            const gain_input_node = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
+                            const detune_input_node = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
+                            const dutyCycle_input_node = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
+                            const OSC = new _canvas_.library.audio.audioWorklet.workshop.wasm.integrated_synthesizer_type_1(_canvas_.library.audio.context);
+                    
+                            gain_input_node.connect(OSC, undefined, 0);
+                            detune_input_node.connect(OSC, undefined, 1);
+                            dutyCycle_input_node.connect(OSC, undefined, 2);
                     
                         //wiring
                             //hid
                                 object.elements.dial_discrete.waveform.onchange = function(value){
-                                    OSC.waveform(value);
+                                    OSC.waveform = ['sine', 'square', 'triangle'][value];
                                 };
-                                object.elements.dial_continuous.frequency.onchange = function(value){
-                                    OSC.frequency( value*880 );
+                    
+                                object.elements.dial_continuous.dial_gain.onchange = function(value){
+                                    _canvas_.library.audio.changeAudioParam( _canvas_.library.audio.context, OSC.gain, value, 0, 'instant', true );
                                 };
-                                object.elements.dial_continuous.gain.onchange = function(value){
-                                    OSC.gain( value*2 - 1 );
+                                object.elements.dial_continuous.dial_detune.onchange = function(value){
+                                    _canvas_.library.audio.changeAudioParam( _canvas_.library.audio.context, OSC.detune, (2*value)-1, 0, 'instant', true );
                                 };
-                                object.elements.dial_continuous.detune.onchange = function(value){
-                                    OSC.detune( value*2 - 1 );
+                                object.elements.dial_continuous.dial_dutyCycle.onchange = function(value){
+                                    _canvas_.library.audio.changeAudioParam( _canvas_.library.audio.context, OSC.dutyCycle, value, 0, 'instant', true );
                                 };
-                                object.elements.dial_continuous.dutyCycle.onchange = function(value){
-                                    OSC.dutyCycle( value );
+                    
+                                object.elements.checkbox_circle.checkbox_gain.onchange = function(value){
+                                    OSC.gain_useControl = value;
                                 };
-                                object.elements.dial_discrete.gainMode.onchange = function(value){
-                                    OSC.gainMode(value);
+                                object.elements.checkbox_circle.checkbox_detune.onchange = function(value){
+                                    OSC.detune_useControl = value;
                                 };
-                                object.elements.dial_discrete.detuneMode.onchange = function(value){
-                                    OSC.detuneMode(value);
-                                };
-                                object.elements.dial_discrete.dutyCycleMode.onchange = function(value){
-                                    OSC.dutyCycleMode(value);
+                                object.elements.checkbox_circle.checkbox_dutyCycle.onchange = function(value){
+                                    OSC.dutyCycle_useControl = value;
                                 };
                     
                             //keycapture
                             //io
-                                object.io.audio.input_1.audioNode = OSC.gainControl();
-                                object.io.audio.input_2.audioNode = OSC.detuneControl();
-                                object.io.audio.input_3.audioNode = OSC.dutyCycleControl();
-                                object.io.audio.output.audioNode = OSC.out();
+                                object.io.data.input_note.onreceive = function(address,data){
+                                    if(address != 'midinumber'){return;}
+                                    OSC.perform(
+                                        _canvas_.library.audio.num2freq(data.num), 
+                                        data.velocity
+                                    );
+                                };
+                    
+                                object.io.audio.input_gain.audioNode = gain_input_node;
+                                object.io.audio.input_detune.audioNode = detune_input_node;
+                                object.io.audio.input_dutyCycle.audioNode = dutyCycle_input_node;
+                                object.io.audio.output.audioNode = OSC;
                     
                         //interface
                             object.i = {
@@ -45783,7 +45922,7 @@
                             });
                     
                         //circuitry
-                            OSC = new _canvas_.library.audio.audioWorklet.osc_3(_canvas_.library.audio.context);
+                            OSC = new _canvas_.library.audio.audioWorklet.workshop.only_js.osc_3(_canvas_.library.audio.context);
                     
                         //wiring
                             //hid
@@ -55149,6 +55288,457 @@
                         category:'',
                         helpURL:''
                     };
+                    this.data_controlled_frequency_generator = function(name,x,y,angle){
+                    
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'data_controlled_frequency_generator/';
+                    
+                                //calculation of measurements
+                                    const div = 10;
+                                    const measurement = { 
+                                        file: { width:2040, height:500 },
+                                        design: { width:20.4, height:5 },
+                                    };
+                    
+                                    this.offset = {x:0,y:0};
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'data_controlled_frequency_generator',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                                    {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                                    {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                    {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'waveform_toggle', data:{ 
+                                        x:5.67, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                    
+                                    {collection:'dynamic', type:'connectionNode_data', name:'note_data_in', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height/2 - 15/2, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data
+                                    }},
+                    
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'control_gain', data:{ 
+                                        x:25 + 0.67 + 15/2, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_gain', data:{ 
+                                        x:25 + 32.5 + 0.67, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                    
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'control_detune', data:{ 
+                                        x:25 + 55 + 0.67 + 15/2, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_detune', data:{ 
+                                        x:25 + 32.5 + 0.67 + 55, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                    
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'control_adjust', data:{ 
+                                        x:25 + 55*2 + 0.67 + 15/2, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_adjust', data:{ 
+                                        x:25 + 32.5 + 0.67 + 55*2, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                    
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height/2 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                    
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                    },
+                    
+                                    {collection:'control', type:'button_image', name:'waveformSelect_sine', data:{ x:4, y:4, width:13, height:13, hoverable:false,
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_sine_up.png', 
+                                        backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_sine_down.png',
+                                        backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_sine_down.png'
+                                    }},
+                                    {collection:'control', type:'button_image', name:'waveformSelect_triangle', data:{ x:4, y:4+14.5, width:13, height:13, hoverable:false,
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_triangle_up.png', 
+                                        backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_triangle_down.png',
+                                        backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_triangle_down.png'
+                                    }},
+                                    {collection:'control', type:'button_image', name:'waveformSelect_square', data:{ x:4, y:4+14.5+14.5, width:13, height:13, hoverable:false,
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_square_up.png', 
+                                        backingURL__glow:unitStyle.imageStoreURL_localPrefix+'button_square_down.png',
+                                        backingURL__glow_press:unitStyle.imageStoreURL_localPrefix+'button_square_down.png'
+                                    }},
+                    
+                                    {collection:'control', type:'dial_continuous_image', name:'gain', data:{
+                                        x:40+13.2, y:24.75, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,value:1, resetValue:0.5, arcDistance:1.2,
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                                    }},
+                                    {collection:'control', type:'dial_continuous_image', name:'detune', data:{
+                                        x:95+13.2, y:24.75, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,value:0.5, resetValue:0.5, arcDistance:1.2,
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                                    }},
+                                    {collection:'control', type:'dial_continuous_image', name:'adjust', data:{
+                                        x:150+13.2, y:24.75, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,value:0.5, resetValue:0.5, arcDistance:1.2,
+                                        handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                                    }},
+                    
+                                    {collection:'control', type:'checkbox_image', name:'gain_useControl', data:{
+                                        x:7.5 + 13.2, y:14.75, width:10, height:20,
+                                        uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                                        checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
+                                    }},
+                                    {collection:'control', type:'checkbox_image', name:'detune_useControl', data:{
+                                        x:62.5 + 13.2, y:14.75, width:10, height:20,
+                                        uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                                        checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
+                                    }},
+                                    {collection:'control', type:'checkbox_image', name:'adjust_useControl', data:{
+                                        x:117.5 + 13.2, y:14.75, width:10, height:20,
+                                        uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                                        checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
+                                    }},
+                                ],
+                            });
+                    
+                            //circuitry
+                                const state = {
+                                    waveforms:['sine', 'triangle', 'square'],
+                                    waveform:'sine',
+                                    gain:1,
+                                    detune:0,
+                                    adjust:0.5,
+                                    gain_useControl:false,
+                                    detune_useControl:false,
+                                    adjust_useControl:false,
+                                };
+                                const OSC = new _canvas_.library.audio.audioWorklet.workshop.wasm.integrated_synthesizer_type_1(_canvas_.library.audio.context);
+                    
+                                function selectWaveform(waveform){
+                                    if(state.waveform == waveform){ return; }
+                                    object.elements.button_image['waveformSelect_'+state.waveform].glow(false);
+                                    state.waveform = waveform;
+                                    object.elements.button_image['waveformSelect_'+state.waveform].glow(true);
+                        
+                                    OSC.waveform = waveform;
+                                }
+                    
+                            //wiring
+                                //hid
+                                    object.elements.button_image.waveformSelect_sine.onpress = function(){ selectWaveform('sine'); };
+                                    object.elements.button_image.waveformSelect_triangle.onpress = function(){ selectWaveform('triangle'); };
+                                    object.elements.button_image.waveformSelect_square.onpress = function(){ selectWaveform('square'); };
+                    
+                                    object.elements.dial_continuous_image.gain.onchange = function(value){ 
+                                        state.gain = value;
+                                        _canvas_.library.audio.changeAudioParam( _canvas_.library.audio.context, OSC.gain, (value*2 - 1), 0, 'instant', true );
+                                    };
+                                    object.elements.dial_continuous_image.detune.onchange = function(value){ 
+                                        state.detune = value;
+                                        _canvas_.library.audio.changeAudioParam( _canvas_.library.audio.context, OSC.detune, (value*2 - 1), 0, 'instant', true );
+                                    };
+                                    object.elements.dial_continuous_image.adjust.onchange = function(value){ 
+                                        state.adjust = value;
+                                        _canvas_.library.audio.changeAudioParam( _canvas_.library.audio.context, OSC.dutyCycle, (value), 0, 'instant', true );
+                                    };
+                                    object.elements.checkbox_image.gain_useControl.onchange = function(value){ 
+                                        state.gain_useControl = value;
+                                        OSC.gain_useControl = value;
+                                    };
+                                    object.elements.checkbox_image.detune_useControl.onchange = function(value){ 
+                                        state.detune_useControl = value;
+                                        OSC.detune_useControl = value;
+                                    };
+                                    object.elements.checkbox_image.adjust_useControl.onchange = function(value){ 
+                                        state.adjust_useControl = value;
+                                        OSC.dutyCycle_useControl = value;
+                                    };
+                    
+                                //io
+                                    object.io.signal.waveform_toggle.onchange = function(value){
+                                        if(value){
+                                            const index = state.waveforms.indexOf(state.waveform);
+                                            selectWaveform(state.waveforms[
+                                                index == state.waveforms.length-1 ? 0 : index+1
+                                            ]);
+                                        }
+                                    };
+                                    object.io.data.note_data_in.onreceive = function(address,data){
+                                        if(address != 'midinumber'){return;}
+                                        OSC.perform(
+                                            _canvas_.library.audio.num2freq(data.num), 
+                                            data.velocity
+                                        );
+                                    };
+                                    object.io.voltage.voltage_gain.onchange = function(value){
+                                        object.elements.dial_continuous_image.gain.set( (value+1)/2 );
+                                    };
+                                    object.io.voltage.voltage_detune.onchange = function(value){
+                                        object.elements.dial_continuous_image.detune.set( (value+1)/2 );
+                                    };
+                                    object.io.voltage.voltage_adjust.onchange = function(value){
+                                        object.elements.dial_continuous_image.adjust.set( value );
+                                    };
+                                    
+                                    object.io.audio.control_gain.audioNode = OSC;
+                                    object.io.audio.control_gain.inputChannelIndex = 0;
+                                    object.io.audio.control_detune.audioNode = OSC;
+                                    object.io.audio.control_detune.inputChannelIndex = 1;
+                                    object.io.audio.control_adjust.audioNode = OSC;
+                                    object.io.audio.control_adjust.inputChannelIndex = 2;
+                    
+                                    object.io.audio.output.audioNode = OSC;
+                    
+                            //interface
+                                object.i = {
+                                    performMidiNote:function(data){
+                                        OSC.perform(data)
+                                    },
+                                    waveform:function(wavename){
+                                        if(wavename == undefined){ return state.waveform; }
+                                        selectWaveform(wavename);
+                                    },
+                                    gain:function(value){
+                                        if(value == undefined){ return state.gain; }
+                                        object.elements.dial_continuous_image.gain.set((value+1)/2);
+                                    },
+                                    detune:function(value){
+                                        if(value == undefined){ return state.detune; }
+                                        object.elements.dial_continuous_image.detune.set((value+1)/2);
+                                    },
+                                    adjust:function(value){
+                                        if(value == undefined){ return state.adjust; }
+                                        object.elements.dial_continuous_image.adjust.set(value);
+                                    },
+                                    gain_useControl:function(bool){
+                                        if(bool == undefined){ return state.gain_useControl; }
+                                        object.elements.checkbox_image.gain_useControl.set(bool);
+                                    },
+                                    detune_useControl:function(bool){
+                                        if(bool == undefined){ return state.detune_useControl; }
+                                        object.elements.checkbox_image.detune_useControl.set(bool);
+                                    },
+                                    adjust_useControl:function(bool){
+                                        if(bool == undefined){ return state.adjust_useControl; }
+                                        object.elements.checkbox_image.adjust_useControl.set(bool);
+                                    },
+                                };
+                    
+                            //import/export
+                                object.exportData = function(){
+                                    return JSON.parse(JSON.stringify(state));
+                                };
+                                object.importData = function(data){
+                                    selectWaveform(data.waveform);
+                                    object.elements.dial_continuous_image.gain.set((data.gain+1)/2);
+                                    object.elements.dial_continuous_image.detune.set((data.detune+1)/2);
+                                    object.elements.dial_continuous_image.adjust.set(data.adjust);
+                                    object.elements.checkbox_image.gain_useControl.set(data.gain_useControl);
+                                    object.elements.checkbox_image.detune_useControl.set(data.detune_useControl);
+                                    object.elements.checkbox_image.adjust_useControl.set(data.adjust_useControl);
+                                
+                                };
+                    
+                            //oncreate/ondelete 
+                                object.oncreate = function(){
+                                    object.elements.button_image.waveformSelect_sine.glow(true);
+                                };
+                                object.ondelete = function(){
+                                    OSC.shutdown();
+                                };
+                    
+                            return object;
+                    };
+                    this.data_controlled_frequency_generator.metadata = {
+                        name:'Data Controlled Frequency Generator',
+                        category:'',
+                        helpURL:''
+                    };
+                    // this['gain'] = function(name,x,y,angle){
+                    //     //style data
+                    //         const unitStyle = new function(){
+                    //             //image store location URL
+                    //                 this.imageStoreURL_commonPrefix = imageStoreURL+'common/';
+                    //                 this.imageStoreURL_localPrefix = imageStoreURL+'gain/';
+                    
+                    //             //calculation of measurements
+                    //                 const div = 10;
+                    //                 const measurement = { 
+                    //                     file: { width:1200, height:500 },
+                    //                     design: { width:12, height:5 },
+                    //                 };
+                    
+                    //                 this.offset = {x:0,y:0};
+                    //                 this.drawingValue = { 
+                    //                     width: measurement.file.width/div, 
+                    //                     height: measurement.file.height/div
+                    //                 };
+                    //         };
+                    
+                    //     //main object creation
+                    //         const object = _canvas_.interface.unit.builder({
+                    //             name:name,
+                    //             model:'gain',
+                    //             x:x, y:y, angle:angle,
+                    //             space:[
+                    //                 {x:-unitStyle.offset.x,                               y:-unitStyle.offset.y},
+                    //                 {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:-unitStyle.offset.y},
+                    //                 {x:unitStyle.drawingValue.width - unitStyle.offset.x, y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                    //                 {x:-unitStyle.offset.x,                               y:unitStyle.drawingValue.height - unitStyle.offset.y},
+                    //             ],
+                    //             elements:[
+                    //                 {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                    //                     x:unitStyle.drawingValue.width, y:22.5, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                    //                 }},
+                    //                 {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                    //                     x:0, y:37.5, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                    //                 }},
+                    //                 {collection:'dynamic', type:'connectionNode_audio', name:'control', data:{ 
+                    //                     x:32.5, y:unitStyle.drawingValue.height, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                    //                 }},
+                    //                 {collection:'dynamic', type:'connectionNode_signal', name:'mux', data:{ 
+                    //                     x:30, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                    //                 }},
+                    //                 {collection:'dynamic', type:'connectionNode_signal', name:'offset', data:{ 
+                    //                     x:45, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                    //                 }},
+                    //                 {collection:'dynamic', type:'connectionNode_voltage', name:'voltage_gain', data:{ 
+                    //                     x:85, y:unitStyle.drawingValue.height, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    //                 }},
+                                    
+                    //                 {collection:'basic', type:'image', name:'backing', 
+                    //                     data:{ x:-unitStyle.offset.x, y:-unitStyle.offset.y, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
+                    //                 },
+                    
+                    //                 {collection:'control', type:'dial_continuous_image', name:'gain', data:{
+                    //                     x:80, y:25, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, resetValue:0.5, arcDistance:1.2, optionCount:128, 
+                    //                     handleURL:unitStyle.imageStoreURL_commonPrefix+'dial_large.png',
+                    //                 }},
+                    //                 {collection:'control', type:'checkbox_image', name:'plusOne', data:{
+                    //                     x:45, y:15, width:10, height:20,
+                    //                     uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png', 
+                    //                     checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png',
+                    //                 }},
+                    //                 {collection:'control', type:'checkbox_image', name:'byTen', data:{
+                    //                     x:30, y:15, width:10, height:20,
+                    //                     uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png', 
+                    //                     checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png',
+                    //                 }},
+                    //                 {collection:'control', type:'checkbox_image', name:'flow', data:{
+                    //                     x:10, y:15, width:10, height:20,
+                    //                     uncheckURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_up.png', 
+                    //                     checkURL:unitStyle.imageStoreURL_commonPrefix+'switch_large_down.png',
+                    //                 }},
+                    //             ]
+                    //         });
+                    
+                    //     //circuitry
+                    //         const state = {
+                    //             gain_dial:0.5,
+                    //             gain:1,
+                    //             plusOne:false,
+                    //             byTen:false,
+                    //             flow:false,
+                    //         };
+                    //         const gain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
+                    
+                    
+                    //         function update(){
+                    //             const v = state.gain_dial*2 - 1;
+                    //             state.gain = ( v + (state.plusOne?1:0) ) * (state.byTen?10:1);
+                    //             gain.gain(state.gain);
+                    //         }
+                    
+                    //     //wiring
+                    //         //hid
+                    //             object.elements.dial_continuous_image.gain.onchange = function(value){
+                    //                 state.gain_dial = value;
+                    //                 update();
+                    //             };
+                    //             object.elements.checkbox_image.plusOne.onchange = function(value){
+                    //                 state.plusOne = value;
+                    //                 update();
+                    //             };
+                    //             object.elements.checkbox_image.byTen.onchange = function(value){
+                    //                 state.byTen = value;
+                    //                 update();
+                    //             };
+                    //             object.elements.checkbox_image.flow.onchange = function(value){
+                    //                 state.flow = value;
+                    //                 gain.mode(value);
+                    //             };
+                    //         //io
+                    //             object.io.audio.input.audioNode = gain.in();
+                    //             object.io.audio.output.audioNode = gain.in();
+                    //             object.io.audio.control.audioNode = gain.control();
+                    //             object.io.signal.mux.onchange = function(value){
+                    //                 if(!value){return;}
+                    //                 object.elements.checkbox_image.byTen.set(
+                    //                     !object.elements.checkbox_image.byTen.get()
+                    //                 );
+                    //             };
+                    //             object.io.signal.offset.onchange = function(value){
+                    //                 if(!value){return;}
+                    //                 object.elements.checkbox_image.plusOne.set(
+                    //                     !object.elements.checkbox_image.plusOne.get()
+                    //                 );
+                    //             };
+                    //             object.io.voltage.voltage_gain.onchange = function(value){
+                    //                 object.elements.dial_continuous_image.gain.set( (value+1)/2 );
+                    //             };
+                    
+                    //     //interface
+                    //         object.i = {
+                    //             flow:function(a){
+                    //                 if(a==undefined){ return state.flow; }
+                    //                 object.elements.checkbox_image.flow.set( a );
+                    //             },
+                    //             plusOne:function(a){
+                    //                 if(a==undefined){ return state.plusOne; }
+                    //                 object.elements.checkbox_image.plusOne.set( a );
+                    //             },
+                    //             byTen:function(a){
+                    //                 if(a==undefined){ return state.byTen; }
+                    //                 object.elements.checkbox_image.byTen.set( a );
+                    //             },
+                    //             dial:function(a){
+                    //                 if(a==undefined){ return state.gain_dial; }
+                    //                 object.elements.dial_continuous_image.gain.set( a );
+                    //             },
+                    //         };
+                    
+                    //     //import/export
+                    //         object.exportData = function(){
+                    //             return JSON.parse(JSON.stringify(state));
+                    //         };
+                    //         object.importData = function(data){
+                    //             object.elements.checkbox_image.flow.set( data.flow );
+                    //             object.elements.checkbox_image.plusOne.set( data.plusOne );
+                    //             object.elements.checkbox_image.byTen.set( data.byTen );
+                    //             object.elements.dial_continuous_image.gain.set( data.gain_dial );
+                    //         };
+                    
+                    //     //oncreate/ondelete
+                    //         object.oncreate = function(){
+                    //             object.elements.checkbox_image.plusOne.set(true);
+                    //         };
+                    //         object.ondelete = function(){
+                    //             gain.shutdown();
+                    //         };
+                    
+                    //     return object;
+                    // };
+                    // this['gain'].metadata = {
+                    //     name:'Gain',
+                    //     category:'',
+                    //     helpURL:''
+                    // };
+                    
                     this['gain'] = function(name,x,y,angle){
                         //style data
                             const unitStyle = new function(){
@@ -55235,13 +55825,12 @@
                                 byTen:false,
                                 flow:false,
                             };
-                            const gain = new _canvas_.interface.circuit.gain(_canvas_.library.audio.context);
-                    
+                            const gain = new _canvas_.library.audio.audioWorklet.production.wasm.gain(_canvas_.library.audio.context);
                     
                             function update(){
                                 const v = state.gain_dial*2 - 1;
                                 state.gain = ( v + (state.plusOne?1:0) ) * (state.byTen?10:1);
-                                gain.gain(state.gain);
+                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, gain.gain, state.gain, 0.01, 'instant', true);
                             }
                     
                         //wiring
@@ -55260,12 +55849,14 @@
                                 };
                                 object.elements.checkbox_image.flow.onchange = function(value){
                                     state.flow = value;
-                                    gain.mode(value);
+                                    gain.mode = value;
                                 };
                             //io
-                                object.io.audio.input.audioNode = gain.in();
-                                object.io.audio.output.audioNode = gain.in();
-                                object.io.audio.control.audioNode = gain.control();
+                                object.io.audio.control.audioNode = gain;
+                                object.io.audio.control.inputChannelIndex = 1;
+                                object.io.audio.input.audioNode = gain;
+                                object.io.audio.output.audioNode = gain;
+                    
                                 object.io.signal.mux.onchange = function(value){
                                     if(!value){return;}
                                     object.elements.checkbox_image.byTen.set(
@@ -57359,7 +57950,7 @@
                     
                     this._collectionData = {
                         name:'Acoustic Research',
-                        itemWidth:210,
+                        itemWidth:275,
                         categoryOrder:[
                         ],   
                     };
@@ -57637,6 +58228,33 @@
                                     ).reverse()
                                 )
                             }
+                        );
+                    }
+            
+                //audio context starter
+                    if(_canvas_.library.audio.context.state == 'suspended'){
+                        _canvas_.control.gui.elements.menubar.dropdowns.push(
+                            {
+                                text: '! ! ! !',
+                                side: 'right',
+                                important: true,
+                                width: 50,
+                                listWidth: 170,
+                                listItemHeight: 22.5,
+                                breakHeight: 0.5,
+                                spaceHeight: 1,
+                                itemList:[
+                                    {type:'button', text_left:'Start Audio Context', function:function(){ 
+                                        _canvas_.library.audio.context.resume();
+                                        const index = _canvas_.control.gui.elements.menubar.dropdowns.findIndex(item => item.text == '! ! ! !')
+                                        _canvas_.control.gui.elements.menubar.dropdowns.splice(index, 1);
+                                        _canvas_.control.gui.heavyRefresh();
+                                    } },
+                                    {type:'button', text_right:'Why?', function:function(){
+                                        window.open('explainPage?level=info&type=StartAudioContext&message=Why should I start this?');
+                                    }},
+                                ]
+                            },
                         );
                     }
             

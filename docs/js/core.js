@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:22} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
                 const library = this;
                 
                 const dev = {
@@ -5964,7 +5964,9 @@
                                                             //automatic
                                                             for(let channel = 0; channel < input_1.length; channel++){
                                                                 this.input1Frame.buffer.set(input_1[channel]);
-                                                                this.input2Frame.buffer.set(input_2[channel]);
+                                                                if(input_2[channel] != undefined){
+                                                                    this.input2Frame.buffer.set(input_2[channel]);
+                                                                }
                                                                 this.wasm.exports.process(false);
                                                                 output[channel].set(this.outputFrame.buffer);
                                                             }
@@ -7776,13 +7778,13 @@
                                                 
                                                         //populate input buffers
                                                             const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
-                                                            this.gainFrame.buffer.set( this._state.gain_useControl ? gainControl[0] : parameters.gain );
+                                                            this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
                                                 
                                                             const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
-                                                            this.detuneFrame.buffer.set( this._state.detune_useControl ? detuneControl[0] : parameters.detune );
+                                                            this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
                                                 
                                                             const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
-                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
+                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
                                                 
                                                         //process data, and copy results to channels
                                                             for(let channel = 0; channel < output.length; channel++){
@@ -25026,7 +25028,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:15} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
             
                 const core = this;
             

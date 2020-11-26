@@ -68,7 +68,9 @@ class gain extends AudioWorkletProcessor{
             //automatic
             for(let channel = 0; channel < input_1.length; channel++){
                 this.input1Frame.buffer.set(input_1[channel]);
-                this.input2Frame.buffer.set(input_2[channel]);
+                if(input_2[channel] != undefined){
+                    this.input2Frame.buffer.set(input_2[channel]);
+                }
                 this.wasm.exports.process(false);
                 output[channel].set(this.outputFrame.buffer);
             }

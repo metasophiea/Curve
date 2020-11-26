@@ -84,7 +84,8 @@ this.connectionNode_audio = function(
         object._direction = isAudioOutput ? 'out' : 'in';
 
     //circuitry
-        object.audioNode = undefined; //audioContext.createAnalyser();
+        object.audioNode = undefined;
+        object.inputChannelIndex = 0;
 
         object._onconnect = function(instigator){
             if( object.audioNode == undefined ){
@@ -97,7 +98,7 @@ this.connectionNode_audio = function(
             }
             
             if(object._direction == 'out'){
-                object.audioNode.connect(object.getForeignNode().audioNode);
+                object.audioNode.connect(object.getForeignNode().audioNode, undefined, object.getForeignNode().inputChannelIndex);
             }
         };
         object._ondisconnect = function(instigator){
@@ -112,9 +113,9 @@ this.connectionNode_audio = function(
             
             if( object._direction == 'out' ){
                 try {
-                    object.audioNode.disconnect(object.getForeignNode().audioNode);
+                    object.audioNode.disconnect(object.getForeignNode().audioNode, undefined, object.getForeignNode().inputChannelIndex);
                 } catch (err) {
-                    console.warn('connectionNode_audio._ondisconnect : attempted disconnect faied');
+                    console.warn('connectionNode_audio._ondisconnect : attempted disconnect failed from index', object.inputChannelIndex);
                     console.log(err);
                 }
             }

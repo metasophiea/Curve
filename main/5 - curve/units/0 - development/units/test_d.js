@@ -45,7 +45,7 @@ this['test_d'] = function(name,x,y,angle){
         });
 
     //circuitry
-        OSC = new _canvas_.library.audio.audioWorklet.osc_3(_canvas_.library.audio.context);
+        OSC = new _canvas_.library.audio.audioWorklet.workshop.only_js.osc_3(_canvas_.library.audio.context);
 
     //wiring
         //hid

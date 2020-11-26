@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>Explain Page</title>
+        <meta charset="utf-8"></meta>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300&display=swap" rel="stylesheet"> 
+        <style>
+            html, body{
+                margin:10%;
+            }
+            h1 { 
+                margin:0px;
+                font-weight: 300;
+                font-family: Roboto;
+            }
+            h2 { 
+                font-weight: 100;
+                font-family: Roboto;
+            }
+            p { 
+                font-family: Roboto;
+            }
+            .subHeadingHeading_Info {
+                color: rgb(1241 170 255);
+                font-style: italic;
+            }
+            .subHeadingHeading_Error {
+                color: rgb(200,100,100);
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <h1 id='mainHeading' ></h1>
+        <h2 id='subHeadingHeading' ></h2>
+        <section id='explanation'></section>
+    </body>
+
+</html>
+
+<script>
+    const explanationLibrary = {
+        //info
+            StartAudioContext:[
+                'Have you ever loaded up a website and suddenly some music starts playing, or there\'s a voice telling you something straight away, and its really annoying because you can\'t find where it\'s coming from?',
+                'No? At least not for a while? That\'s because a new feature was added to your browser a while ago that stops audio from websites playing unless you somehow activate it. And that\'s what is happening here; the site cannot automatically begin processing audio until you actively allow that to happen, so, you\'ll need to click the "Start Audio Context" button to let things get started',
+                'You could also click the little lock icon next to the web address, enter "site settings", scroll down to "Sound" and change that setting to "Allow"; which lets the browser know that you\'re confident that this site isn\'t going to try any funny business. So when you visit the site again, you won\'t have to click anything to activate the audio'
+            ],
+
+        //error
+            Mystery:[
+                'How strange, you\'ve somehow stumbled upon an error page where the error is that the error page doesn\'t know what the error is.',
+                'What happens now?',
+            ],
+            OffscreenCanvas:[
+                'Hey everybody. So, it appears that in Brandon\'s insatiable desire for the prowess and speed of his rendering engine; he has left some of us regular people behind. In this particular case, the browser you\'re using to view the site is unable to create the "OffscreenCanvas" which is needed to actually draw what you would see on the screen. Doubtless Brandon has no intention of re-writing things to be more compatible with different browsers, so we\'re just kinda screwed for now.',
+                'To be fair, the website programming standard has had "OffscreenCanvas" in it since at least 2018, so hopefully over time more browsers will be able to run this site. Unfortunately for now, this means that you\'ll need to get Chrome or Chromium, which are the two browsers Brandon develops with and tests on.',
+                'Check out what browsers <i>should</i> be able to create the OffscreenCanvas here <a href="https://caniuse.com/#feat=offscreencanvas">https://caniuse.com/#feat=offscreencanvas</a>',
+                'You can find Chrome pretty easily, you can get Chromium here <a href="https://download-chromium.appspot.com/">https://download-chromium.appspot.com/</a> and ungoogled Chromium here <a href="https://ungoogled-software.github.io/">https://ungoogled-software.github.io/</a>',
+            ],
+            requestAnimationFrame:[
+                'Hey everybody. So, it appears that in Brandon\'s obsession with faster rendering, he has overlooked a number of issues. In this particular case the browser you\'re using to view the site is unable to activate the rendering cycle. Doubtless Brandon has no intention of re-writing things to be more compatible with different browsers, so we\'re just kinda screwed for now.',
+                'To be fair, the website programming standard has had "OffscreenCanvas" in it since at least 2018, so hopefully over time more browsers will be able to run this site. Unfortunately for now, this means that you\'ll need to get Chrome or Chromium, which are the two browsers Brandon develops with and tests on.',
+                'Check out what browsers <i>should</i> be able to create the OffscreenCanvas here <a href="https://caniuse.com/#feat=offscreencanvas">https://caniuse.com/#feat=offscreencanvas</a>',
+                'You can find Chrome pretty easily, you can get Chromium here <a href="https://download-chromium.appspot.com/">https://download-chromium.appspot.com/</a> and ungoogled Chromium here <a href="https://ungoogled-software.github.io/">https://ungoogled-software.github.io/</a>',
+            ],
+            404:[
+                'Looks like you were trying to get to a page that either doesn\'t exist, has changed location or is just spelt differently from how you\'ve written it',
+                'Fret not; 404s aren\'t logged or anything, so no-one knows you\'ve made this mistake (except me of course, but I won\'t tell anyone)'
+            ],
+    };
+
+    //gather URL data
+        const level = (new URL(window.location.href)).searchParams.get('level');
+        const type = (new URL(window.location.href)).searchParams.get('type');
+        const message = (new URL(window.location.href)).searchParams.get('message');
+
+    //page generation
+        if(level == undefined || explanationLibrary[type] == undefined){
+            document.getElementById('mainHeading').innerText = 'Mystery Error';
+            document.getElementById('subHeadingHeading').innerText = '"URL data missing, corrupt or just flat wrong"';
+
+            explanationLibrary['Mystery'].forEach(text => {
+                const p = document.createElement('p');
+                p.innerHTML = text;
+                document.getElementById('explanation').appendChild(p);
+            });
+        } else {
+            if(level == 'info'){
+                document.title = 'Explanation';
+                document.getElementById('mainHeading').innerText = type;
+                document.getElementById('subHeadingHeading').className = 'subHeadingHeading_Info';
+            } else if(level == 'error'){
+                document.title = 'Error Report';
+                document.getElementById('mainHeading').innerText = type+' Error';
+                document.getElementById('subHeadingHeading').className = 'subHeadingHeading_Error';
+            }
+
+            if(message != undefined){
+                document.getElementById('subHeadingHeading').innerText = '"'+message+'"';
+            }
+
+            explanationLibrary[type].forEach(text => {
+                const p = document.createElement('p');
+                p.innerHTML = text;
+                document.getElementById('explanation').appendChild(p);
+            });
+        }
+</script>

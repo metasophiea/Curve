@@ -259,6 +259,33 @@ _canvas_.layers.registerFunctionForLayer("control", function(){
             );
         }
 
+    //audio context starter
+        if(_canvas_.library.audio.context.state == 'suspended'){
+            _canvas_.control.gui.elements.menubar.dropdowns.push(
+                {
+                    text: '! ! ! !',
+                    side: 'right',
+                    important: true,
+                    width: 50,
+                    listWidth: 170,
+                    listItemHeight: 22.5,
+                    breakHeight: 0.5,
+                    spaceHeight: 1,
+                    itemList:[
+                        {type:'button', text_left:'Start Audio Context', function:function(){ 
+                            _canvas_.library.audio.context.resume();
+                            const index = _canvas_.control.gui.elements.menubar.dropdowns.findIndex(item => item.text == '! ! ! !')
+                            _canvas_.control.gui.elements.menubar.dropdowns.splice(index, 1);
+                            _canvas_.control.gui.heavyRefresh();
+                        } },
+                        {type:'button', text_right:'Why?', function:function(){
+                            window.open('explainPage?level=info&type=StartAudioContext&message=Why should I start this?');
+                        }},
+                    ]
+                },
+            );
+        }
+
     //push changes to menubar
         _canvas_.control.gui.heavyRefresh();
 });

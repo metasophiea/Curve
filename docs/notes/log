@@ -1,4 +1,76 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2020-11-26
+  - created a new unit for Accoustic Research; the Data Controlled Frequency
+    Generator, which is exactly the same as the Frequency Generator, but the
+    frequency is controlled by a data input. It uses the
+    integrated_synthesizer_type_1 audio node directly, so, I'll need to create
+    a circuit for it. Some very funky sounds are possible with this,
+    particularly if you have two of them and you feed them into each other
+  - modified connectionNode_audio to have a inputChannelIndex value, which can
+    be set like the audioNode one is. With it, you can select which channel
+    index the incoming audio node connection will be connected to on the 
+    destination audio node. 
+      This should remove the need for the "nothing" audio node, whose main job
+    was to be connected to the non-zero index channels of multi-input audio
+    nodes, in order to allow other incoming audio node connections to use the
+    index 0. Circuits will have to be re-written, though by removing the
+    'nothing' nodes we're reducing the number of audio nodes and thus the
+    amount of memory and processing time needed to have them (as little as
+    that probably was, considering how much they do (which is nothing (hence
+    the name)))
+      This also kind of removes the need for a 'circuit' for this audio node,
+    and probably other nodes will follow suit.
+  - modified Acoustic Research's gain node to use the gain audio node directly,
+    using the features added above
+  - modified the Point struct in the core wasm engine to have get_ref_x and 
+    get_ref_y methods, which are then used in SimplePolygon's
+    intersect_with_point, in a mad bid for speed.. I'm not sure it's done
+    anything, though it hasn't hurt either
+  - modified SimplePolygon's intersect_with_simple_polygon__intersect_only
+    method to check to see if any of the a's points are within b - and vice
+    versa - early in the function. This has spend up the determine_if_visible
+    method in my test of moving the musical_keyboard around (in dev mode) from 
+    ~5.5ms to ~1.8ms. About 3 times faster. I've also copied all the
+    intersect_with_simple_polygon tests to make a set of
+    intersect_with_simple_polygon__intersect_only tests, which say that the 
+    change has been successful
+  - I remember another reason for the circuits. They meant that the audio
+    inputs always had input, even if it was zero.. this probably was always a
+    bug but I just never discovered it somehow. I've fixed it in the
+    integrated_synthesizer_type_1 audio node by having that node check to see
+    if there is data for the input channel before attempting to copy it in.
+    I'll have to do similar moves on other audio nodes
+
+
+2020-11-24
+  - modified the menubar (on the control layer) further to streamline the
+    styles (and not have copied data) Styles are now stored in a "styleLibrary"
+    Styles can be set using the _canvas_.control.gui.style.set method, with the
+    name of the desired style
+  - replaced the errorPage with an explainPage, which produces the same output
+    as the old errorPage, but you can now create "info" pages too, that are
+    less aggressive. You just need to set the "level" url argument to either
+    "info" or "error". Urls that once used the errorPage have been changed to
+    use explainPage, and the new "StartAudioContext" button thing in the
+    menubar, now has a "why?" button that opens up an explainer page about why
+    you need to activate the audio context
+  - slapped together a development unit for the integrated_synthesizer_type_1
+
+
+2020-11-23
+  - modified the menubar (on the control layer) to have the ability to add
+    right-hand-side items. There is now a "side" attribute which can be set
+    to 'left' or 'right' (left being the default) The items stack right to left
+    and their drop downs are aligned on their right side (like a mirror of what
+    happens on the left)
+  - added a new styling option "important". One  can now use the attribute
+    "important: true" when describing the dropdown menu to indicate that it
+    should use the 'important' styling
+  - added menubar item (on curve layer) to give the option to activate the audio
+    context. This item only appears on startup if the audio context is not
+    already running, and will disappear when clicked
+  
+
 2020-11-22
   - oops! Used the wrong words in the synthesizer_2 circuit
   - began work on a new audio node; integrated_synthesizer_type_1

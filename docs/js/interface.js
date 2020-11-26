@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:22} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
                 const library = this;
                 
                 const dev = {
@@ -5964,7 +5964,9 @@
                                                             //automatic
                                                             for(let channel = 0; channel < input_1.length; channel++){
                                                                 this.input1Frame.buffer.set(input_1[channel]);
-                                                                this.input2Frame.buffer.set(input_2[channel]);
+                                                                if(input_2[channel] != undefined){
+                                                                    this.input2Frame.buffer.set(input_2[channel]);
+                                                                }
                                                                 this.wasm.exports.process(false);
                                                                 output[channel].set(this.outputFrame.buffer);
                                                             }
@@ -7776,13 +7778,13 @@
                                                 
                                                         //populate input buffers
                                                             const gain_useFirstOnly = this._state.gain_useControl ? false : parameters.gain.length == 1;
-                                                            this.gainFrame.buffer.set( this._state.gain_useControl ? gainControl[0] : parameters.gain );
+                                                            this.gainFrame.buffer.set( this._state.gain_useControl && gainControl[0] != undefined ? gainControl[0] : parameters.gain );
                                                 
                                                             const detune_useFirstOnly = this._state.detune_useControl ? false : parameters.detune.length == 1;
-                                                            this.detuneFrame.buffer.set( this._state.detune_useControl ? detuneControl[0] : parameters.detune );
+                                                            this.detuneFrame.buffer.set( this._state.detune_useControl && detuneControl[0] != undefined ? detuneControl[0] : parameters.detune );
                                                 
                                                             const dutyCycle_useFirstOnly = this._state.dutyCycle_useControl ? false : parameters.dutyCycle.length == 1;
-                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl ? dutyCycleControl[0] : parameters.dutyCycle );
+                                                            this.dutyCycleFrame.buffer.set( this._state.dutyCycle_useControl && dutyCycleControl[0] != undefined ? dutyCycleControl[0] : parameters.dutyCycle );
                                                 
                                                         //process data, and copy results to channels
                                                             for(let channel = 0; channel < output.length; channel++){
@@ -25026,7 +25028,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:15} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
             
                 const core = this;
             
@@ -27222,7 +27224,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:22} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
                 const interface = this;
             
                 const dev = {
@@ -41710,7 +41712,8 @@
                                     object._direction = isAudioOutput ? 'out' : 'in';
                             
                                 //circuitry
-                                    object.audioNode = undefined; //audioContext.createAnalyser();
+                                    object.audioNode = undefined;
+                                    object.inputChannelIndex = 0;
                             
                                     object._onconnect = function(instigator){
                                         if( object.audioNode == undefined ){
@@ -41723,7 +41726,7 @@
                                         }
                                         
                                         if(object._direction == 'out'){
-                                            object.audioNode.connect(object.getForeignNode().audioNode);
+                                            object.audioNode.connect(object.getForeignNode().audioNode, undefined, object.getForeignNode().inputChannelIndex);
                                         }
                                     };
                                     object._ondisconnect = function(instigator){
@@ -41738,9 +41741,9 @@
                                         
                                         if( object._direction == 'out' ){
                                             try {
-                                                object.audioNode.disconnect(object.getForeignNode().audioNode);
+                                                object.audioNode.disconnect(object.getForeignNode().audioNode, undefined, object.getForeignNode().inputChannelIndex);
                                             } catch (err) {
-                                                console.warn('connectionNode_audio._ondisconnect : attempted disconnect faied');
+                                                console.warn('connectionNode_audio._ondisconnect : attempted disconnect failed from index', object.inputChannelIndex);
                                                 console.log(err);
                                             }
                                         }

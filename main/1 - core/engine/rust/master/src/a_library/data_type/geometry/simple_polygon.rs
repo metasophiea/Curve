@@ -291,12 +291,12 @@
                 return PolySide::Outside; 
             }
         
-            let point_x = point.get_x();
-            let point_y = point.get_y();
+            let point_x = point.get_ref_x();
+            let point_y = point.get_ref_y();
         
             //check if the point is on a point of the poly; bail and return 'onPoint'
             for poly_point in &self.points {
-                if point_x == poly_point.get_x() && point_y == poly_point.get_y() {
+                if point_x == poly_point.get_ref_x() && point_y == poly_point.get_ref_y() {
                     return PolySide::OnPoint;
                 }
             }
@@ -362,10 +362,10 @@
             let mut inside:bool = false;
             let mut index_b = self.points.len() - 1;
             for index_a in 0..self.points.len() {
-                let poly_a_x = self.points[index_a].get_x();
-                let poly_a_y = self.points[index_a].get_y();
-                let poly_b_x = self.points[index_b].get_x();
-                let poly_b_y = self.points[index_b].get_y();
+                let poly_a_x = self.points[index_a].get_ref_x();
+                let poly_a_y = self.points[index_a].get_ref_y();
+                let poly_b_x = self.points[index_b].get_ref_x();
+                let poly_b_y = self.points[index_b].get_ref_y();
         
                 //point must be on the same level of the line
                 if 
@@ -755,6 +755,19 @@
                     return true;
                 }
 
+            //if one point of poly a is in poly b, that's an intersect
+                for point in other.get_points() {
+                    if self.intersect_with_point(point) == PolySide::Inside {
+                        return true;
+                    }
+                }
+            //if one point of poly b is in poly a, that's an intersect (the reverse)
+                for point in self.get_points() {
+                    if other.intersect_with_point(point) == PolySide::Inside {
+                        return true;
+                    }
+                }
+                
             let mut output_result = PolygonIntersectionResult {
                 points: vec![],
                 contact: false,

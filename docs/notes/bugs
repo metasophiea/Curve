@@ -10,7 +10,8 @@
 [2020-02-05:1] the active area of image-based dials, stretches beyond the circle to the entire square image of the handle. Same problem with round buttons, probably could be solved with covers, though also a new round image element.
 [2020-03-01:1] sometimes the mouse pointer doesn't change back to normal after leaving the waveform workspace pin thing
 [2020-10-16:1] looping paths just don't work
-[2020-11-14:1] (probably since wasm was added) the webpage crashes sometimes. 
+[2020-11-14:1] (probably since wasm was added) the webpage crashes sometimes
+    it is a chrome bug. I made a report about it on their bug tracking tool, issue 1149413. So, nothing to do with my code at all, just coincidence 
 
 fixed:
     [XXXX-XX-XX:1] moving groups of units around, doesn't work how you think it should when one of them collides with something (sorta?)
@@ -60,3 +61,5 @@ fixed:
         (log:2020-03-21) turns out, the connection nodes of units were not being removed correctly
     [2020-10-04:1] something is up with webGl on windows, that isn't present on mac or linux..I think only with clipping
         (log:2020-09-30) it was to do with GUI scaling, where the user has theirs set to something that isn't 100%. I had assumed that the devicePixelRatio value would only ever be 1 or 2, but it can actually be any number. Tested on windows
+    [2020-11-22:1] really need a way to "activate" the audio on a browser. I've been living in my development browsers for too long/
+        (log:2020-11-24) there's now an "important" dropdown menubar item that appears if the system isn't able to start the audio context, with which you can start it. Afterwards that item disappears

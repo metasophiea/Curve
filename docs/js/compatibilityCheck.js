@@ -31,13 +31,13 @@ let errorData = {
             errorData.type = 'requestAnimationFrame';
             errorData.message = data.data;
             errorFound = true;
-            const destinationURL = 'errorPage?type='+errorData.type+'&message='+errorData.message;
+            const destinationURL = 'explainPage?level=error&type='+errorData.type+'&message='+errorData.message;
             location.href = destinationURL;
         };
     }
 
 //redirection 
     if(errorFound){
-        const destinationURL = 'errorPage?type='+errorData.type+'&message='+errorData.message;
+        const destinationURL = 'explainPage?level=error&type='+errorData.type+'&message='+errorData.message;
         location.href = destinationURL;
     }
