@@ -1,4 +1,9 @@
 this.callback = new function(){
+    const mouseData = { 
+        x:undefined, 
+        y:undefined, 
+    };
+
     this.listCallbackTypes = function(){
         dev.log.callback('.listCallbackTypes()'); //#development
         return interface.operator.callback.listCallbackTypes();
@@ -74,6 +79,8 @@ this.callback = new function(){
                                     shiftKey: event.shiftKey,
                                 };
                             }else if(event instanceof WheelEvent){
+                                mouseData.x = event.offsetX;
+                                mouseData.y = event.offsetY;
                                 sudoEvent = { 
                                     x: event.offsetX,
                                     y: event.offsetY,
@@ -86,6 +93,8 @@ this.callback = new function(){
                                     shiftKey: event.shiftKey,
                                 };
                             }else if(event instanceof MouseEvent){
+                                mouseData.x = event.offsetX;
+                                mouseData.y = event.offsetY;
                                 sudoEvent = { 
                                     x: event.offsetX, 
                                     y: event.offsetY,
@@ -122,6 +131,9 @@ this.callback = new function(){
         });
     }
 
+    this.mousePosition = function(){
+        return mouseData;
+    };
     this._dump = function(){
         dev.log.callback('._dump()'); //#development
         interface.operator.callback._dump();

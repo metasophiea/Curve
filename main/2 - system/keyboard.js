@@ -24,7 +24,9 @@
             }
     }
     this.releaseAll = function(){
-        Object.keys(this.pressedKeys).forEach(a => keyboard.releaseKey(a))
+        Object.keys(this.pressedKeys).forEach(a => {
+            keyboard.releaseKey(a);
+        })
     };
     this.releaseKey = function(code){
         _canvas_.onkeyup( new KeyboardEvent('keyup',{code:code}) );
@@ -46,7 +48,12 @@
         //     }
         
         //perform action
-            _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+            if(_canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event})){
+                //something was run; if the 'command' key (only seen on MacOS, and called 'meta' in the event) was involved, release all keys
+                    if( keyboard.pressedKeys.command != undefined && keyboard.pressedKeys.command ) {
+                        keyboard.releaseAll();
+                    }
+            }
     };
 
     _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){

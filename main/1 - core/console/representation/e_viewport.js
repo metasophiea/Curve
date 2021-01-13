@@ -6,11 +6,6 @@ this.viewport = new function(){
         anchor:{x:0,y:0},
         stopMouseScroll:false,
     };
-    const mouseData = { 
-        x:undefined, 
-        y:undefined, 
-    };
-
     //adapter
         this.adapter = new function(){
             this.windowPoint2workspacePoint = function(x,y){
@@ -81,13 +76,13 @@ this.viewport = new function(){
                 });
             });
         };
-        this.mousePosition = function(x,y){
-            dev.log.viewport('.mousePosition(',x,y); //#development
-            if(x == undefined || y == undefined){ return mouseData; }
-            mouseData.x = x;
-            mouseData.y = y;
-            interface.operator.viewport.mousePosition(x,y);
-        };
+        // this.mousePosition = function(x,y){
+        //     dev.log.viewport('.mousePosition(',x,y); //#development
+        //     if(x == undefined || y == undefined){ return mouseData; }
+        //     mouseData.x = x;
+        //     mouseData.y = y;
+        //     interface.operator.viewport.mousePosition(x,y);
+        // };
         this.stopMouseScroll = function(bool){
             dev.log.viewport('.stopMouseScroll(',bool); //#development
             if(bool == undefined){ return cachedValues.stopMouseScroll; }

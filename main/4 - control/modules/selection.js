@@ -103,7 +103,7 @@ this.paste = function(position,rectify=true){
 
             //if no position has been provided at all; calculate a new one from the mouse position
                 if(position == undefined){
-                    position = _canvas_.core.viewport.getMousePosition();
+                    position = _canvas_.core.callback.mousePosition();
                     position = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(position.x,position.y);
                     if(position.x == undefined || position.y == undefined){
                         position = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(0, 0);

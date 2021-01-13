@@ -1,4 +1,62 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-01-13
+  - added more options to the help section of the menubar
+  - modified library's functionListRunner to return a bool depending in whether
+    a function of the provided list was run
+  - modified the keyboard section of the system layer. Now in a key-down event,
+    if a function on the function list is run and the 'command' key was
+    involved (which only happens on MacOS) the "releaseAll" method is run to 
+    release all keys. This is a rather ham-fisted solution to the browser not 
+    sending key-up events for keys when a combination is released in a certain
+    order, specifically for the command key on MacOS.
+      For example pressing 'command' then 'z' will activate both keys; but
+    releasing 'z' first will not register the 'z' key-up event. 'command'
+    however will be when it is released. If 'command' is released first then
+    'z', both will be registered. In the first case, any subsequent presses of 
+    'command' will be interpreted as 'command-z' as the 'z' key will apparently
+    still be pressed.
+
+
+2021-01-12
+  - more work on the help site (added an FAQ page with neat drop down boxes, and
+    side-bar navigation to the 'Getting Started' page)
+
+
+2021-01-11
+  - started work on the "Getting Started" section of the help site, making
+    little videos of things you can do (along the way discovering that pasting
+    doesn't work)
+  - fixed issue where the paste command wasn't working. The code that was being
+    called didn't have the information that was needed. It was trying to call
+    core.viewport.getMousePosition - which didn't exist as it had been renamed
+    core.viewport.mousePosition - but even then, there was no mouse position to
+    get as the values it would have been pulling from were never populated. 
+    I've now moved this method to the callback section and have placed the 
+    mousePosition method there. The callbacks which attach to the canvas are 
+    now populating the mouse position data
+  - updated the help option in the menubar to have links to the help places
+
+
+2021-01-10
+  - put together a document library site, which will showcase all the pdf 
+    covers
+
+
+2021-01-09
+  - more work on the Acoustic Research Sigmoid's Affecter document
+
+
+2021-01-06
+  - started making a document for Acoustic Research Sigmoid's Affecter. This 
+    is the first of the "technical" documents for the help section
+
+
+2020-11-27
+  - changed connectionNode_audio again to have an outputChannelIndex value, a
+    lot like the inputChannelIndex from yesterday. This should be helpful to
+    audio nodes with multiple output streams
+
+
 2020-11-26
   - created a new unit for Accoustic Research; the Data Controlled Frequency
     Generator, which is exactly the same as the Frequency Generator, but the

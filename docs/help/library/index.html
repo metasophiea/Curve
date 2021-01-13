@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve - library</title>
+        <meta charset="utf-8">
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300&display=swap" rel="stylesheet">
+        <link href="/help/navigation_bar.css" rel="stylesheet">
+        <style>
+            html, body{
+                margin: 1%;
+                font-family: Roboto;
+            }
+
+            h1{
+                font-size: 3em;
+            }
+            h2{
+                font-size: 2em;
+            }
+
+            .group_section{
+                display: inline-block;
+                width: 100%;
+            }
+            .group_heading{
+                font-size: 200%;
+                font-style: italic;
+            }
+
+            .unit_document_section{
+                position: relative;
+                text-align: center;
+                float: left;
+                margin: 0px;
+                transition: width 1s;
+            }
+            .unit_document_cover_image{
+                background-color: white;
+                box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            }
+            .unit_document_cover_image:hover{
+                filter: saturate(3);
+                transition: filter 1s;
+            }
+            .unit_document_caption{
+                font-style: italic;
+                color:darkgray;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div class="navigation_bar">
+            <a href="/help/">Help</a>
+            <a href="/help/getting_started">Getting Started</a>
+            <a class="active_c" href="/help/library/">Library</a>
+            <a href="/help/faq/">FAQ</a>
+            <a href="/help/demos/">Demos</a>
+        </div>
+
+        <h1>Library</h1>
+
+        <p>As the collection of units has grown, efforts have been made to also collect the original manuals and technical documentation that once accompanied them, or notes from the creators if no official documents can be found. Below you can find that in-progress collection, sorted by manufacturer</p>
+
+        <section id="main_list_section"></section>
+
+    </body>
+
+</html>
+
+<script type='text/javascript' src='catalogue.js'></script>
+<script type='text/javascript' src='main.js'></script>

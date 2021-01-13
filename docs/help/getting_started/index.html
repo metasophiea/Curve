@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve - help</title>
+        <meta charset="utf-8">
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300&display=swap" rel="stylesheet">
+        <link href="/help/navigation_bar.css" rel="stylesheet">
+        <style>
+            html, body{
+                margin:1%;
+                font-family: Roboto;
+            }
+            h1{
+                font-size: xxx-large;
+            }
+            h2{
+                font-size: xx-large;
+                margin: 10px;
+            }
+            h3{
+                font-size: large;
+                margin-top: 30px;
+                font-style: italic;
+            }
+
+            .sidenav {
+                left: 0px;
+                z-index: 1;
+                background-color: #f5f5f5;
+                margin-left: 2%;
+                margin-top: 10px;
+                overflow-x: hidden;
+            }
+            .sidenav a {
+                padding: 8px 8px;
+                text-decoration: none;
+                font-size: large;
+                color: #363636;
+                display: block;
+                transition: background-color 0.2s ease-out;
+            }
+            .sidenav a:hover {
+                background-color: #e0e0e0;
+            }
+            .sidenav_not_sticky {
+                position: absolute;
+            }
+            .sidenav_sticky {
+                position: fixed;
+                top: 10px;
+            }
+            
+            #videos{
+                text-align: center;
+            }
+            .video_section{
+                margin-top: 10px;
+                margin-bottom: 10px;
+
+                background-color: #f5f5f5;
+                display: inline-block;
+                padding: 10px;
+
+                max-width: 520px;
+            }
+            .video_section_p{
+                width: 500px
+            }
+            video{
+                margin-top: 0px;
+                background-color: white;
+                box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            }
+
+            .in_text_link{
+                color: #363636;
+            }
+            .in_text_link:hover {
+                color: #6459ff;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div class="navigation_bar">
+            <a href="/help/">Help</a>
+            <a class="active_b" href="/help/getting_started">Getting Started</a>
+            <a href="/help/library/">Library</a>
+            <a href="/help/faq/">FAQ</a>
+            <a href="/help/demos/">Demos</a>
+        </div>
+
+        <h1>Getting Started</h1>
+
+        <p>Here's an overview of all the basic stuff you can do to help you get started</p>
+
+        <div id="sidenavbar" class="sidenav sidenav_not_sticky">
+            <a href="#Project">Project</a>
+            <a href="#MovingTheViewport">Moving The Viewport</a>
+            <a href="#CreatingAUnit">Creating A Unit</a>
+            <a href="#SelectingAUnit">Selecting A Unit</a>
+            <a href="#MovingAUnit">Moving A Unit</a>
+            <a href="#UnitManagement">Unit Management</a>
+            <a href="#Connecting">Connecting</a>
+            <a href="#ConnectionTypes">Connection Types</a>
+        </div>
+        <script>
+            const navbar = document.getElementById("sidenavbar");
+            const sticky = navbar.offsetTop;
+
+            window.onresize = function(){
+                if(window.innerWidth - 520 < 400){
+                    navbar.style.visibility = 'hidden';
+                } else {
+                    navbar.style.visibility = 'visible';
+                }
+            };
+            window.onresize();
+            
+            window.onscroll = function() {
+                if(window.pageYOffset + 20 >= sticky){
+                    navbar.classList.remove("sidenav_not_sticky");
+                    navbar.classList.add("sidenav_sticky")
+                } else {
+                    navbar.classList.remove("sidenav_sticky");
+                    navbar.classList.add("sidenav_not_sticky")
+                }
+            };
+        </script>
+
+        <div id="videos">
+            <div id="Project" class="video_section">
+                <h2>Project</h2>
+                <p class="video_section_p">Use this option to clear the project</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/new_file.mov" type="video/mp4">
+                </video>
+                <p class="video_section_p">Use the open option to open a curve project file</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/open_file.mov" type="video/mp4">
+                </video>
+                <p class="video_section_p">Save your project using the save option. Project files will appear as a download</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/save_file.mov" type="video/mp4">
+                </video>
+            </div>
+
+            </br>
+                
+            <div id="MovingTheViewport" class="video_section">
+                <h2>Moving The Viewport</h2>
+                <h3>Panning</h3>
+                <p class="video_section_p">Click-and-drag the background to move the viewport</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/viewport_panning.mov" type="video/mp4">
+                </video>
+                <h3>Zoom</h3>
+                <p class="video_section_p">Use your mouse wheel to zoom in and out</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/viewport_zoom.mov" type="video/mp4">
+                </video>
+                <p class="video_section_p">Depending on what type of mouse you have, you'll need to change the "Mouse Wheel Mode" which can be found under "tools > Mouse Wheel Mode"</p>
+                <h3>Reset</h3>
+                <p class="video_section_p">If you ever get a bit lost with the viewport, press the reset button to bring you back to zero</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/viewport_reset.mov" type="video/mp4">
+                </video>
+            </div>
+
+            </br>
+
+            <div id="CreatingAUnit" class="video_section">
+                <h2>Creating A Unit</h2>
+                <p class="video_section_p">Use the create menu to create a new unit</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/creating_a_unit.mov" type="video/mp4">
+                </video>
+            </div>
+
+            </br>
+            
+            <div id="SelectingAUnit" class="video_section">
+                <h2>Selecting A Unit</h2>
+                <h3>Individual Select</h3>
+                <p class="video_section_p">Select a unit by clicking on a part of its body, avoiding any interface items (buttons and dials, etc)</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/individual_select.mov" type="video/mp4">
+                </video>
+                <h3>Group Select</h3>
+                <p class="video_section_p">Hold 'shift' while clicking and dragging to select units in an area</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/group_select.mov" type="video/mp4">
+                </video>
+                <h3>Choosing</h3>
+                <p class="video_section_p">Hold 'shift' while clicking on different units to select and deselect</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/choosing.mov" type="video/mp4">
+                </video>
+            </div>
+
+            </br>
+
+            <div id="MovingAUnit" class="video_section">
+                <h2>Moving A Unit</h2>
+                <h3>Panning</h3>
+                <p class="video_section_p">Simply click-and-drag units around the page</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_moving.mov" type="video/mp4">
+                </video>
+                <h3>Rotation</h3>
+                <p class="video_section_p">Holding 'shift' and 'alt', click-and-drag units to rotate them</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_rotation.mov" type="video/mp4">
+                </video>
+                <h3>Snapping</h3>
+                <p class="video_section_p">This will make units pan and rotate in blocky increments</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_movement_snapping.mov" type="video/mp4">
+                </video>
+            </div>
+
+            </br>
+
+            <div id="UnitManagement" class="video_section">
+                <h2>Unit Management</h2>
+                <h3>Cut</h3>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_cut.mov" type="video/mp4">
+                </video>
+                <h3>Copy</h3>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_copy.mov" type="video/mp4">
+                </video>
+                <h3>Paste</h3>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_paste.mov" type="video/mp4">
+                </video>
+                <h3>Duplicate</h3>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_duplicate.mov" type="video/mp4">
+                </video>
+                <p class="video_section_p">You can also hold the 'alt' button then click-and-drag a unit to duplicate</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_alt-duplicate.mov" type="video/mp4">
+                </video>
+                <p class="video_section_p">You can also cut/copy/paste/duplicate groups of units, which will maintain their connections</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_group_paste.mov" type="video/mp4">
+                </video>
+                <h3>Delete</h3>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/unit_delete.mov" type="video/mp4">
+                </video>
+            </div>
+
+            </br>
+
+            <div id="Connecting" class="video_section">
+                <h2>Connecting</h2>
+                <p class="video_section_p">Click-and-drag on a connector port to start a connection, then drag it to another port to connect</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/connecting.mov" type="video/mp4">
+                </video>
+                <p class="video_section_p">You don't have to disconnect a cable, before trying to connect it elsewhere</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/swapping_2.mov" type="video/mp4">
+                </video>
+                <h3>Disconnecting</h3>
+                <p class="video_section_p">Double-click the connector port to disconnect</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/disconnecting.mov" type="video/mp4">
+                </video>
+                <h3>Swapping</h3>
+                <p class="video_section_p">You can have a cable replace a connection - and so long as you don't stop the click - pulling the cable away will reconnect the other cable</p>
+                <video width="500" height="500" autoplay loop>
+                    <source src="videos/swapping_1.mov" type="video/mp4">
+                </video>
+            </div>
+
+            </br>
+
+            <div id="ConnectionTypes" class="video_section">
+                <h2>Connection Types</h2>
+                    <p>There are four main connection types, each with their own particular colour. Each type covers a different type of transmission and you can only connect ports of the same type</p>
+                    <p>Red - Signal</p>
+                    <p>Green - Voltage</p>
+                    <p>Orange - Audio</p>
+                    <p>Blue - Data</p>
+                    <video width="500" height="500" autoplay loop>
+                        <source src="videos/connection_types.mov" type="video/mp4">
+                    </video>
+                    <p>These are referred to as "CUIS", or the "Coordinated Universal Interworking Standard", which you can read more about in the <a class="in_text_link" href="/help/library">Library</a></p>
+                    <p>Note: Audio connections have a direction, and as such you cannot connect together ports that are both inputs or are both outputs</p>             
+                    <video width="500" height="500" autoplay loop>
+                        <source src="videos/connections_not_working.mov" type="video/mp4">
+                    </video>
+            </div>
+
+        </div>
+        
+    </body>
+
+</html>

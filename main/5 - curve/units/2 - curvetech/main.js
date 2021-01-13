@@ -2,7 +2,8 @@
 
 this._collectionData = {
     name:'curveTech',
-    itemWidth:210,
+    // itemWidth:210,
+    itemWidth:120,
     categoryOrder:[
         'interface',
         'logic_gates',

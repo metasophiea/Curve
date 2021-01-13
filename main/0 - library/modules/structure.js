@@ -5,6 +5,9 @@ this.functionListRunner = function(list,activeKeys){
     //function builder for working with the 'functionList' format
 
     return function(event,data){
+        //return a bool saying whether something in the list was activated
+            let somethingWasRun = false;
+
         //run through function list, and activate functions where necessary
             for(let a = 0; a < list.length; a++){
                 let shouldRun = true;
@@ -14,17 +17,21 @@ this.functionListRunner = function(list,activeKeys){
                         shouldRun = true;
                         for(let c = 0; c < list[a].requiredKeys[b].length; c++){
                             shouldRun = shouldRun && activeKeys[ list[a].requiredKeys[b][c] ];
-                            if(!shouldRun){break;} //(one is already not a match, so save time and just skip to the next one)
+                            if(!shouldRun){ break; } //(one is already not a match, so save time and just skip to the next one)
                         }
                         if(shouldRun){ break; } //one of the collections worked, so save time and skip the rest
                     }
 
                 //if requirements were met, run the function
 	            if(shouldRun){  
+                    somethingWasRun = true;
+
                     //if the function returns 'false', continue with the list; otherwise stop here
         	            if( list[a].function(event,data) ){ break; }
                 }
             }
+
+        return somethingWasRun;
     }
 };
 

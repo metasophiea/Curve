@@ -116,7 +116,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             };
         };
         _canvas_.library = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
             const library = this;
             
             const dev = {
@@ -1729,6 +1729,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //function builder for working with the 'functionList' format
                 
                     return function(event,data){
+                        //return a bool saying whether something in the list was activated
+                            let somethingWasRun = false;
+                
                         //run through function list, and activate functions where necessary
                             for(let a = 0; a < list.length; a++){
                                 let shouldRun = true;
@@ -1738,17 +1741,21 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         shouldRun = true;
                                         for(let c = 0; c < list[a].requiredKeys[b].length; c++){
                                             shouldRun = shouldRun && activeKeys[ list[a].requiredKeys[b][c] ];
-                                            if(!shouldRun){break;} //(one is already not a match, so save time and just skip to the next one)
+                                            if(!shouldRun){ break; } //(one is already not a match, so save time and just skip to the next one)
                                         }
                                         if(shouldRun){ break; } //one of the collections worked, so save time and skip the rest
                                     }
                 
                                 //if requirements were met, run the function
                 	            if(shouldRun){  
+                                    somethingWasRun = true;
+                
                                     //if the function returns 'false', continue with the list; otherwise stop here
                         	            if( list[a].function(event,data) ){ break; }
                                 }
                             }
+                
+                        return somethingWasRun;
                     }
                 };
                 
@@ -25084,7 +25091,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("library");
         };
         _canvas_.core = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:11} };
         
             const core = this;
         
@@ -26710,11 +26717,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     anchor:{x:0,y:0},
                     stopMouseScroll:false,
                 };
-                const mouseData = { 
-                    x:undefined, 
-                    y:undefined, 
-                };
-            
                 //adapter
                     this.adapter = new function(){
                         this.windowPoint2workspacePoint = function(x,y){
@@ -26785,13 +26787,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             });
                         });
                     };
-                    this.mousePosition = function(x,y){
-                        dev.log.viewport('.mousePosition(',x,y); //#development
-                        if(x == undefined || y == undefined){ return mouseData; }
-                        mouseData.x = x;
-                        mouseData.y = y;
-                        interface.operator.viewport.mousePosition(x,y);
-                    };
+                    // this.mousePosition = function(x,y){
+                    //     dev.log.viewport('.mousePosition(',x,y); //#development
+                    //     if(x == undefined || y == undefined){ return mouseData; }
+                    //     mouseData.x = x;
+                    //     mouseData.y = y;
+                    //     interface.operator.viewport.mousePosition(x,y);
+                    // };
                     this.stopMouseScroll = function(bool){
                         dev.log.viewport('.stopMouseScroll(',bool); //#development
                         if(bool == undefined){ return cachedValues.stopMouseScroll; }
@@ -26936,6 +26938,11 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
             };
             this.callback = new function(){
+                const mouseData = { 
+                    x:undefined, 
+                    y:undefined, 
+                };
+            
                 this.listCallbackTypes = function(){
                     dev.log.callback('.listCallbackTypes()'); //#development
                     return interface.operator.callback.listCallbackTypes();
@@ -27011,6 +27018,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 shiftKey: event.shiftKey,
                                             };
                                         }else if(event instanceof WheelEvent){
+                                            mouseData.x = event.offsetX;
+                                            mouseData.y = event.offsetY;
                                             sudoEvent = { 
                                                 x: event.offsetX,
                                                 y: event.offsetY,
@@ -27023,6 +27032,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                                 shiftKey: event.shiftKey,
                                             };
                                         }else if(event instanceof MouseEvent){
+                                            mouseData.x = event.offsetX;
+                                            mouseData.y = event.offsetY;
                                             sudoEvent = { 
                                                 x: event.offsetX, 
                                                 y: event.offsetY,
@@ -27059,6 +27070,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     });
                 }
             
+                this.mousePosition = function(){
+                    return mouseData;
+                };
                 this._dump = function(){
                     dev.log.callback('._dump()'); //#development
                     interface.operator.callback._dump();
@@ -27080,7 +27094,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         
         _canvas_.layers.registerLayer("core", _canvas_.core);
         _canvas_.system = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:29} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
             this.mouseReady = false;
         };
         _canvas_.system.mouse = new function(){
@@ -27176,7 +27190,9 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                 }
                 this.releaseAll = function(){
-                    Object.keys(this.pressedKeys).forEach(a => keyboard.releaseKey(a))
+                    Object.keys(this.pressedKeys).forEach(a => {
+                        keyboard.releaseKey(a);
+                    })
                 };
                 this.releaseKey = function(code){
                     _canvas_.onkeyup( new KeyboardEvent('keyup',{code:code}) );
@@ -27198,7 +27214,12 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     //     }
                     
                     //perform action
-                        _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                        if(_canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event})){
+                            //something was run; if the 'command' key (only seen on MacOS, and called 'meta' in the event) was involved, release all keys
+                                if( keyboard.pressedKeys.command != undefined && keyboard.pressedKeys.command ) {
+                                    keyboard.releaseAll();
+                                }
+                        }
                 };
             
                 _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
@@ -27280,7 +27301,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             }
         }, 100);
         _canvas_.interface = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:27} };
             const interface = this;
         
             const dev = {
@@ -41770,6 +41791,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             //circuitry
                                 object.audioNode = undefined;
                                 object.inputChannelIndex = 0;
+                                object.outputChannelIndex = 0;
                         
                                 object._onconnect = function(instigator){
                                     if( object.audioNode == undefined ){
@@ -41782,7 +41804,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     }
                                     
                                     if(object._direction == 'out'){
-                                        object.audioNode.connect(object.getForeignNode().audioNode, undefined, object.getForeignNode().inputChannelIndex);
+                                        object.audioNode.connect(object.getForeignNode().audioNode, object.outputChannelIndex, object.getForeignNode().inputChannelIndex);
                                     }
                                 };
                                 object._ondisconnect = function(instigator){
@@ -41797,7 +41819,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     
                                     if( object._direction == 'out' ){
                                         try {
-                                            object.audioNode.disconnect(object.getForeignNode().audioNode, undefined, object.getForeignNode().inputChannelIndex);
+                                            object.audioNode.disconnect(object.getForeignNode().audioNode, object.outputChannelIndex, object.getForeignNode().inputChannelIndex);
                                         } catch (err) {
                                             console.warn('connectionNode_audio._ondisconnect : attempted disconnect failed from index', object.inputChannelIndex);
                                             console.log(err);
@@ -43290,7 +43312,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         });
             
         _canvas_.control = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:24} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:11} };
             const control = this;
         
             const dev = {
@@ -44709,7 +44731,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                             //if no position has been provided at all; calculate a new one from the mouse position
                                 if(position == undefined){
-                                    position = _canvas_.core.viewport.getMousePosition();
+                                    position = _canvas_.core.callback.mousePosition();
                                     position = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(position.x,position.y);
                                     if(position.x == undefined || position.y == undefined){
                                         position = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(0, 0);
@@ -45491,7 +45513,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("control");
         } );
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
         };
         
         _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -52938,7 +52960,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                 this._collectionData = {
                     name:'curveTech',
-                    itemWidth:210,
+                    // itemWidth:210,
+                    itemWidth:120,
                     categoryOrder:[
                         'interface',
                         'logic_gates',
@@ -58225,12 +58248,17 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     {
                         text:'help',
                         width:50,
-                        listWidth:160,
+                        listWidth:170,
                         listItemHeight:22.5,
                         breakHeight: 0.5,
                         spaceHeight: 1,
                         itemList:[
-                            {type:'button', text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
+                            {type:'button', text_left:'Curve Help', function:function(){window.open('/help/');} },
+                            {type:'button', text_left:'Getting Started Guide', function:function(){window.open('/help/getting_started/');} },
+                            {type:'button', text_left:'Library', function:function(){window.open('/help/library/');} },
+                            {type:'button', text_left:'FAQ', function:function(){window.open('/help/faq/');} },
+                            {type:'button', text_left:'Demos', function:function(){window.open('/help/demos/');} },
+                            {type:'break'},
                             {type:'button', text_left:'Development Log', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/log');}},
                             {type:'button', text_left:'Github', function:function(){window.open('https://github.com/metasophiea/curve');}},
                             {type:'button', text_left:'Ideas List', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/ideas');}},

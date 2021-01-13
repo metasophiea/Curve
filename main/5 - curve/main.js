@@ -1,5 +1,5 @@
 _canvas_.curve = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
 };
 
 _canvas_.layers.registerLayer("curve", _canvas_.curve);

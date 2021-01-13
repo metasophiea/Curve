@@ -60,7 +60,7 @@
                 };
             };
             _canvas_.library = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
                 const library = this;
                 
                 const dev = {
@@ -1673,6 +1673,9 @@
                         //function builder for working with the 'functionList' format
                     
                         return function(event,data){
+                            //return a bool saying whether something in the list was activated
+                                let somethingWasRun = false;
+                    
                             //run through function list, and activate functions where necessary
                                 for(let a = 0; a < list.length; a++){
                                     let shouldRun = true;
@@ -1682,17 +1685,21 @@
                                             shouldRun = true;
                                             for(let c = 0; c < list[a].requiredKeys[b].length; c++){
                                                 shouldRun = shouldRun && activeKeys[ list[a].requiredKeys[b][c] ];
-                                                if(!shouldRun){break;} //(one is already not a match, so save time and just skip to the next one)
+                                                if(!shouldRun){ break; } //(one is already not a match, so save time and just skip to the next one)
                                             }
                                             if(shouldRun){ break; } //one of the collections worked, so save time and skip the rest
                                         }
                     
                                     //if requirements were met, run the function
                     	            if(shouldRun){  
+                                        somethingWasRun = true;
+                    
                                         //if the function returns 'false', continue with the list; otherwise stop here
                             	            if( list[a].function(event,data) ){ break; }
                                     }
                                 }
+                    
+                            return somethingWasRun;
                         }
                     };
                     
@@ -25028,7 +25035,7 @@
                 _canvas_.layers.declareLayerAsLoaded("library");
             };
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:26} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:11} };
             
                 const core = this;
             
@@ -26654,11 +26661,6 @@
                         anchor:{x:0,y:0},
                         stopMouseScroll:false,
                     };
-                    const mouseData = { 
-                        x:undefined, 
-                        y:undefined, 
-                    };
-                
                     //adapter
                         this.adapter = new function(){
                             this.windowPoint2workspacePoint = function(x,y){
@@ -26729,13 +26731,13 @@
                                 });
                             });
                         };
-                        this.mousePosition = function(x,y){
-                            dev.log.viewport('.mousePosition(',x,y); //#development
-                            if(x == undefined || y == undefined){ return mouseData; }
-                            mouseData.x = x;
-                            mouseData.y = y;
-                            interface.operator.viewport.mousePosition(x,y);
-                        };
+                        // this.mousePosition = function(x,y){
+                        //     dev.log.viewport('.mousePosition(',x,y); //#development
+                        //     if(x == undefined || y == undefined){ return mouseData; }
+                        //     mouseData.x = x;
+                        //     mouseData.y = y;
+                        //     interface.operator.viewport.mousePosition(x,y);
+                        // };
                         this.stopMouseScroll = function(bool){
                             dev.log.viewport('.stopMouseScroll(',bool); //#development
                             if(bool == undefined){ return cachedValues.stopMouseScroll; }
@@ -26880,6 +26882,11 @@
                     };
                 };
                 this.callback = new function(){
+                    const mouseData = { 
+                        x:undefined, 
+                        y:undefined, 
+                    };
+                
                     this.listCallbackTypes = function(){
                         dev.log.callback('.listCallbackTypes()'); //#development
                         return interface.operator.callback.listCallbackTypes();
@@ -26955,6 +26962,8 @@
                                                     shiftKey: event.shiftKey,
                                                 };
                                             }else if(event instanceof WheelEvent){
+                                                mouseData.x = event.offsetX;
+                                                mouseData.y = event.offsetY;
                                                 sudoEvent = { 
                                                     x: event.offsetX,
                                                     y: event.offsetY,
@@ -26967,6 +26976,8 @@
                                                     shiftKey: event.shiftKey,
                                                 };
                                             }else if(event instanceof MouseEvent){
+                                                mouseData.x = event.offsetX;
+                                                mouseData.y = event.offsetY;
                                                 sudoEvent = { 
                                                     x: event.offsetX, 
                                                     y: event.offsetY,
@@ -27003,6 +27014,9 @@
                         });
                     }
                 
+                    this.mousePosition = function(){
+                        return mouseData;
+                    };
                     this._dump = function(){
                         dev.log.callback('._dump()'); //#development
                         interface.operator.callback._dump();
@@ -27024,7 +27038,7 @@
             
             _canvas_.layers.registerLayer("core", _canvas_.core);
             _canvas_.system = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:9,d:29} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
                 this.mouseReady = false;
             };
             _canvas_.system.mouse = new function(){
@@ -27120,7 +27134,9 @@
                             }
                     }
                     this.releaseAll = function(){
-                        Object.keys(this.pressedKeys).forEach(a => keyboard.releaseKey(a))
+                        Object.keys(this.pressedKeys).forEach(a => {
+                            keyboard.releaseKey(a);
+                        })
                     };
                     this.releaseKey = function(code){
                         _canvas_.onkeyup( new KeyboardEvent('keyup',{code:code}) );
@@ -27142,7 +27158,12 @@
                         //     }
                         
                         //perform action
-                            _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                            if(_canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event})){
+                                //something was run; if the 'command' key (only seen on MacOS, and called 'meta' in the event) was involved, release all keys
+                                    if( keyboard.pressedKeys.command != undefined && keyboard.pressedKeys.command ) {
+                                        keyboard.releaseAll();
+                                    }
+                            }
                     };
                 
                     _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
