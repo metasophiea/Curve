@@ -1,5 +1,6 @@
 <p align="center">
-    <a href="https://curve.metasophiea.com/"><img width="100%" src="https://curve.metasophiea.com/images/logo/curve.png"></a>
+<!--     <a href="https://curve.metasophiea.com/"><img width="100%" src="https://curve.metasophiea.com/images/logo/curve.png"></a> -->
+    <a href="https://curve.metasophiea.com/"><img width="100%" src="https://raw.githubusercontent.com/metasophiea/Curve/master/docs/images/logo/curve.png"></a>
 </p>
 
 ## Demonstration Video
