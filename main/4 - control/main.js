@@ -1,5 +1,5 @@
 _canvas_.control = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:11} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:14} };
     const control = this;
 
     {{include:dev.js}}

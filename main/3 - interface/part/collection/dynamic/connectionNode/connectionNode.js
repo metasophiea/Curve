@@ -31,7 +31,7 @@ this.connectionNode = function(
 
         object.isConnected = function(){ return cable != undefined; };
         object.canDisconnect = function(){ return this.allowDisconnections() && (foreignNode!=undefined && foreignNode.allowDisconnections()); };
-        object.isAppropiateConnectionNode = function(potentialConnectionNode){
+        object.isAppropriateConnectionNode = function(potentialConnectionNode){
             if( object._type != potentialConnectionNode._type ){ return false; }
             if( (object._direction == '' || potentialConnectionNode._direction == '') && object._direction != potentialConnectionNode._direction ){ return false; }
             if( object._direction != '' && (potentialConnectionNode._direction == object._direction) ){ return false; }
@@ -51,7 +51,7 @@ this.connectionNode = function(
             if( new_foreignNode == undefined){ return; }
             if( new_foreignNode == this ){ return; }
             if( new_foreignNode._type != this._type ){ return; }
-            if( !this.isAppropiateConnectionNode(new_foreignNode) ){ return; }
+            if( !this.isAppropriateConnectionNode(new_foreignNode) ){ return; }
 
             if( new_foreignNode == foreignNode ){ return; }
             if( new_foreignNode.isConnected() && !new_foreignNode.canDisconnect() ){ return; }
@@ -200,7 +200,7 @@ this.connectionNode = function(
                         dev.log.partDynamic('.connectionNode-onmousedown -> snapToNode:'+(snapToNode!=undefined?JSON.stringify(snapToNode.getAddress()):'-none-')); //#development
                     
                     //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
-                        if( snapToNode == undefined || !snapToNode.allowConnections() || !object.isAppropiateConnectionNode(snapToNode) ){
+                        if( snapToNode == undefined || !snapToNode.allowConnections() || !object.isAppropriateConnectionNode(snapToNode) ){
                             dev.log.partDynamic('.connectionNode-onmousedown -> no node found'); //#development
                             if( liveCable == undefined ){
                                 if( object.isConnected() && displacedNode!=undefined ){

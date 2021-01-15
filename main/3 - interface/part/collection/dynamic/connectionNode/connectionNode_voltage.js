@@ -42,9 +42,9 @@ this.connectionNode_voltage = function(
         object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : 0); };
 
         object._onconnect = function(instigator){
-            const forignValue = object.getForeignNode()._getLocalValue();
-            if(forignValue>0){ object.activate(); }
-            try{object.onchange(forignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
+            const foreignValue = object.getForeignNode()._getLocalValue();
+            if(foreignValue>0){ object.activate(); }
+            try{object.onchange(foreignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
         };
         object._ondisconnect = function(instigator){
             if(localValue==0){ object.deactivate(); }

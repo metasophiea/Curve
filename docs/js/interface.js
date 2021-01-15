@@ -41625,9 +41625,9 @@
                                     object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : 0); };
                             
                                     object._onconnect = function(instigator){
-                                        const forignValue = object.getForeignNode()._getLocalValue();
-                                        if(forignValue>0){ object.activate(); }
-                                        try{object.onchange(forignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
+                                        const foreignValue = object.getForeignNode()._getLocalValue();
+                                        if(foreignValue>0){ object.activate(); }
+                                        try{object.onchange(foreignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
                                     };
                                     object._ondisconnect = function(instigator){
                                         if(localValue==0){ object.deactivate(); }
@@ -42179,7 +42179,7 @@
                                 return object;
                             };
                             
-                            interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){ 
+                            interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){
                                 return interfacePart.collection.dynamic.connectionNode_signal(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
                                     data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,

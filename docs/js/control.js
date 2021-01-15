@@ -41625,9 +41625,9 @@
                                     object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : 0); };
                             
                                     object._onconnect = function(instigator){
-                                        const forignValue = object.getForeignNode()._getLocalValue();
-                                        if(forignValue>0){ object.activate(); }
-                                        try{object.onchange(forignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
+                                        const foreignValue = object.getForeignNode()._getLocalValue();
+                                        if(foreignValue>0){ object.activate(); }
+                                        try{object.onchange(foreignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
                                     };
                                     object._ondisconnect = function(instigator){
                                         if(localValue==0){ object.deactivate(); }
@@ -42179,7 +42179,7 @@
                                 return object;
                             };
                             
-                            interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){ 
+                            interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){
                                 return interfacePart.collection.dynamic.connectionNode_signal(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
                                     data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
@@ -43256,7 +43256,7 @@
             });
                 
             _canvas_.control = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:11} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:14} };
                 const control = this;
             
                 const dev = {
@@ -44930,11 +44930,18 @@
                 };
                 this.queryString = new function(){
                     let modsBeingLoaded = 0;
+                    let filesBeingLoaded = 0;
                     
                     this.modParameterKey = 'mod';
                     this.controlModListPostfix = 'cml';
+                    
+                    this.autoLoadSceneParameterKey = 'autoLoadScene';
+                    
                     this.demoParameterKey = 'demo';
                     this.defaultDemoUrlPrefix =  'localhost:8000/demos/';
+                    
+                    
+                    
                     
                     this.modsBeingLoaded = function(){return modsBeingLoaded;};
                     this.modLoader = function(loadingCompleteCallback){
@@ -44969,23 +44976,40 @@
                     this.demoLoader = function(loadingCompleteCallback,beDumbAboutIt=false){
                         dev.log.queryString('.demoLoader(',loadingCompleteCallback,beDumbAboutIt); //#development
                     
-                        function loadDemo(){
+                        function load(){
                             const demoURL = (new URL(window.location.href)).searchParams.get(_canvas_.control.queryString.demoParameterKey);
                         
                             if(demoURL == undefined){
                                 return;
                             }else if( !isNaN(parseInt(demoURL)) ){
                                 _canvas_.control.scene.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback,false);
-                            }else{ 
-                                _canvas_.control.scene.load(demoURL,loadingCompleteCallback,false);
                             }
                         }
                         function waiter(){
                             if(modsBeingLoaded > 0){ setTimeout(waiter,1000); return; }
-                            loadDemo();
+                            load();
                         }
                     
-                        beDumbAboutIt ? loadDemo() : waiter();
+                        beDumbAboutIt ? load() : waiter();
+                    };
+                    this.autoLoadScene = function(loadingCompleteCallback,beDumbAboutIt=false){
+                        dev.log.queryString('.autoLoadScene(',loadingCompleteCallback,beDumbAboutIt); //#development
+                    
+                        function load(){
+                            const url = (new URL(window.location.href)).searchParams.get(_canvas_.control.queryString.autoLoadSceneParameterKey);
+                        
+                            if(url == undefined){
+                                return;
+                            }else{ 
+                                _canvas_.control.scene.load(url,loadingCompleteCallback,false);
+                            }
+                        }
+                        function waiter(){
+                            if(filesBeingLoaded > 0){ setTimeout(waiter,1000); return; }
+                            load();
+                        }
+                    
+                        beDumbAboutIt ? load() : waiter();
                     };
                 };
             

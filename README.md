@@ -1,5 +1,4 @@
 <p align="center">
-<!--     <a href="https://curve.metasophiea.com/"><img width="100%" src="https://curve.metasophiea.com/images/logo/curve.png"></a> -->
     <a href="https://curve.metasophiea.com/"><img width="100%" src="https://raw.githubusercontent.com/metasophiea/Curve/master/docs/images/logo/curve.png"></a>
 </p>
 
@@ -50,6 +49,7 @@ Rewriting the rendering engine in WebAssembly went pretty well - only took 6 mon
 
 
 ## Interesting Links
+- [The Help Site](https://curve.metasophiea.com/help/)
 - [Dev Mode](https://curve.metasophiea.com?dev)
 - [Curve Demo 1](https://curve.metasophiea.com?demo=1)
 - [Curve Demo 2](https://curve.metasophiea.com?demo=2)

@@ -1,4 +1,17 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-01-15
+  - finished up (for now) on the CUIS document, created a section for the IEC
+    and added the document. Also added descriptions for groups
+  - added some words of encouragement to the main help page
+
+
+2021-01-14
+  - modified the control layer's queryString section, to make the demo loader
+    only load demos, and have a separate url parameter finder for any address;
+    "autoLoadScene" (which I might change)
+  - began work on the CUIS document
+
+
 2021-01-13
   - added more options to the help section of the menubar
   - modified library's functionListRunner to return a bool depending in whether

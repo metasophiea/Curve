@@ -26,6 +26,15 @@ const root_directory = '/help/library/';
             group_heading.innerHTML = group.print_name;
             group_section.append(group_heading);
 
+        //add group descriptions
+            group.description.forEach(description => {
+                const group_description = document.createElement('p');
+                group_description.id = 'description';
+                group_description.innerHTML = description;
+                group_section.append(group_description);
+            });
+
+
         //add units
             const group_units_section = document.createElement('section');
             group_units_section.id = 'group_units_section';

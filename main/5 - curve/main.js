@@ -17,6 +17,7 @@ _canvas_.layers.registerFunctionForLayer("curve", function(){
     _canvas_.control.queryString.modLoader();
     _canvas_.control.queryString.defaultDemoUrlPrefix = 'https://curve.metasophiea.com/demos/';
     _canvas_.control.queryString.demoLoader();
+    _canvas_.control.queryString.autoLoadScene();
 
     const hour = (new Date()).getHours();
     if( 

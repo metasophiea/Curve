@@ -56,7 +56,7 @@ this.connectionNode_signal = function(
     return object;
 };
 
-interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){ 
+interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){
     return interfacePart.collection.dynamic.connectionNode_signal(
         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
