@@ -17,7 +17,7 @@ library = [
                 document_aspect_ratio: 1.41,
             },
             {
-                name: 'Alpha',
+                name: 'alpha',
                 print_name: 'Alpha Collection Catalogue',
                 document_aspect_ratio: 1.41,
             },
