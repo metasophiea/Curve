@@ -3,7 +3,7 @@ library = [
         name: 'IEC',
         print_name: 'IEC',
         description: [
-            'The International Electronics Consortium is an international non-profit organization responsible for coordinating electronics manufacture\'s products and services. Ultimately, this is to ensure that electronic equipment can communicate with other equipment, without complicated technical specifications and warnings printed everywhere. Over time, their standards and protocols have become so pervasive that you would have a hard time finding equipment that doesn\'t use them for all forms of communication.',
+            'The International Electronics Consortium is an international non-profit organisation responsible for coordinating electronics manufacture\'s products and services. Ultimately, this is to ensure that electronic equipment can communicate with other equipment, without complicated technical specifications and warnings printed everywhere. Over time, their standards and protocols have become so pervasive that you would have a hard time finding equipment that doesn\'t use them for all forms of communication.',
             'They also produced a number of basic units commonly known as the "Alpha" collection, around the same time they first released CUIS, primarily as a way of displaying and encouraging people to use the new standard.'
         ],
         logo_image_dimensions: {
@@ -14,6 +14,11 @@ library = [
             {
                 name: 'CUIS',
                 print_name: 'CUIS Description',
+                document_aspect_ratio: 1.41,
+            },
+            {
+                name: 'Alpha',
+                print_name: 'Alpha Collection Catalogue',
                 document_aspect_ratio: 1.41,
             },
         ],
