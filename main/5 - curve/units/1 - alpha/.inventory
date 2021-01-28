@@ -26,10 +26,7 @@ _/ - distortion unit (mono)
 \/ - filter unit (mono)(high-med-low) (filtration is a bit off)
 _/ - reverb unit (mono)
 
-Tools
-_/ - ruler
-
-Miscellaneous
+Routing
 _/ - audio duplicator
 _/ - data combiner
 _/ - data duplicator
@@ -38,3 +35,6 @@ _/ - signal combiner
 _/ - signal duplicator
 _/ - voltage combiner
 _/ - voltage duplicator
+
+Tools
+_/ - ruler

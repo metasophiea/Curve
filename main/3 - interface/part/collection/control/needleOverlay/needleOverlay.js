@@ -80,124 +80,133 @@ this.needleOverlay = function(
             }
 
             //selection_A
-                selectionObjects.selection_A = generateNeedle('selection_A',needleStyles[1]);
-                selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
-                selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
-                selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
-                selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
-                    if(!allowAreaSelection){return;}
-    
-                    grappled['selection_A'] = true;
-    
-                    const initialValue = needleData['selection_A'];
-                    const initialX = currentMousePosition_x(event);
-                    const mux = (width - width*needleWidth);
+                function generateSelectionA(){
+                    selectionObjects.selection_A = generateNeedle('selection_A',needleStyles[1]);
+                    selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                    selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                    selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                    selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
+                        if(!allowAreaSelection){return;}
+        
+                        grappled['selection_A'] = true;
+        
+                        const initialValue = needleData['selection_A'];
+                        const initialX = currentMousePosition_x(event);
+                        const mux = (width - width*needleWidth);
 
-                    function calculateArea(event){
-                        const numerator = initialX - currentMousePosition_x(event);
-                        const divider = _canvas_.core.viewport.scale();
-                        let location = initialValue - numerator/(divider*mux);
-                        location = location < 0 ? 0 : location;
-                        location = location > 1 ? 1 : location;
-                        area(location,needleData.selection_B);
-                    }
-    
-                    _canvas_.system.mouse.mouseInteractionHandler(
-                        function(x,y,event){
-                            calculateArea(event);
-                        },
-                        function(x,y,event){
-                            calculateArea(event);
-                            grappled['selection_A'] = false;
-                            if(object.onrelease != undefined){ object.onrelease('selection_A',location); }
-                        },       
-                    );
-                } );
-                needleData['selection_A'] = undefined;
+                        function calculateArea(event){
+                            const numerator = initialX - currentMousePosition_x(event);
+                            const divider = _canvas_.core.viewport.scale();
+                            let location = initialValue - numerator/(divider*mux);
+                            location = location < 0 ? 0 : location;
+                            location = location > 1 ? 1 : location;
+                            area(location,needleData.selection_B);
+                        }
+        
+                        _canvas_.system.mouse.mouseInteractionHandler(
+                            function(x,y,event){
+                                calculateArea(event);
+                            },
+                            function(x,y,event){
+                                calculateArea(event);
+                                grappled['selection_A'] = false;
+                                if(object.onrelease != undefined){ object.onrelease('selection_A',location); }
+                            },       
+                        );
+                    } );
+                    needleData['selection_A'] = undefined;
+                }
+                generateSelectionA();
             //selection_B
-                selectionObjects.selection_B = generateNeedle('selection_B',needleStyles[1]);
-                selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
-                selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
-                selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
-                selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
-                    if(!allowAreaSelection){return;}
-    
-                    grappled['selection_B'] = true;
-    
-                    const initialValue = needleData['selection_B'];
-                    const initialX = currentMousePosition_x(event);
-                    const mux = (width - width*needleWidth);
+                function generateSelectionB(){
+                    selectionObjects.selection_B = generateNeedle('selection_B',needleStyles[1]);
+                    selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                    selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                    selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                    selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
+                        if(!allowAreaSelection){return;}
+        
+                        grappled['selection_B'] = true;
+        
+                        const initialValue = needleData['selection_B'];
+                        const initialX = currentMousePosition_x(event);
+                        const mux = (width - width*needleWidth);
 
-                    function calculateArea(event){
-                        const numerator = initialX - currentMousePosition_x(event);
-                        const divider = _canvas_.core.viewport.scale();
-                        let location = initialValue - numerator/(divider*mux);
-                        location = location < 0 ? 0 : location;
-                        location = location > 1 ? 1 : location;
-                        area(needleData.selection_A,location);
-                    }
-    
-                    _canvas_.system.mouse.mouseInteractionHandler(
-                        function(x,y,event){
-                            calculateArea(event);
-                        },
-                        function(x,y,event){
-                            calculateArea(event);
-                            grappled['selection_B'] = false;
-                            if(object.onrelease != undefined){ object.onrelease('selection_B',location); }
-                        },       
-                    );
-                } );
-                needleData['selection_B'] = undefined;
+                        function calculateArea(event){
+                            const numerator = initialX - currentMousePosition_x(event);
+                            const divider = _canvas_.core.viewport.scale();
+                            let location = initialValue - numerator/(divider*mux);
+                            location = location < 0 ? 0 : location;
+                            location = location > 1 ? 1 : location;
+                            area(needleData.selection_A,location);
+                        }
+        
+                        _canvas_.system.mouse.mouseInteractionHandler(
+                            function(x,y,event){
+                                calculateArea(event);
+                            },
+                            function(x,y,event){
+                                calculateArea(event);
+                                grappled['selection_B'] = false;
+                                if(object.onrelease != undefined){ object.onrelease('selection_B',location); }
+                            },       
+                        );
+                    } );
+                    needleData['selection_B'] = undefined;
+                }
+                generateSelectionB();
             //selection_area
-                selectionObjects.selection_area = interfacePart.builder('basic','rectangle','selection_area',{ height:height, colour:_canvas_.library.math.blendColours(needleStyles[1],{r:0,g:0,b:0,a:0},0.5) });
-                selectionObjects.selection_area.attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('grab');} );
-                selectionObjects.selection_area.attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('grab');} );
-                selectionObjects.selection_area.attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
-                selectionObjects.selection_area.attachCallback('onmousedown', function(x,y,event){
-                    if(!allowAreaSelection){return;}
-    
-                    _canvas_.core.viewport.cursor('grabbing');
-                    grappled['selection_area'] = true;
-    
-                    const areaSize = needleData.selection_B - needleData.selection_A;
-                    const initialValues = {A:needleData.selection_A, B:needleData.selection_B};
-                    const initialX = currentMousePosition_x(event);
-                    const mux = (width - width*needleWidth);
-    
-                    function calculate(event){
-                        const numerator = initialX - currentMousePosition_x(event);
-                        const divider = _canvas_.core.viewport.scale();
-    
-                        let location = {
-                            A: initialValues.A - numerator/(divider*mux),
-                            B: initialValues.B - numerator/(divider*mux),
-                        };
-    
-                        if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
-                        else if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
-                        if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
-                        else if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
-    
-                        return location;
-                    }
-                    _canvas_.system.mouse.mouseInteractionHandler(
-                        function(x,y,event){
-                            const location = calculate(event);
-                            area(location.A,location.B);
-                        },
-                        function(x,y,event){
-                            _canvas_.core.viewport.cursor('grab');
-    
-                            // const location = calculate(event);
-    
-                            selectionArea_grappled = false;
-                            // area(location.A,location.B);
-                            if(object.onrelease != undefined){object.onrelease('selection_A',location.A);}
-                            if(object.onrelease != undefined){object.onrelease('selection_B',location.B);}
-                        },
-                    );                    
-                } );
+                function generateSelectionArea(){
+                    selectionObjects.selection_area = interfacePart.builder('basic','rectangle','selection_area',{ height:height, colour:_canvas_.library.math.blendColours(needleStyles[1],{r:0,g:0,b:0,a:0},0.5) });
+                    selectionObjects.selection_area.attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('grab');} );
+                    selectionObjects.selection_area.attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('grab');} );
+                    selectionObjects.selection_area.attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                    selectionObjects.selection_area.attachCallback('onmousedown', function(x,y,event){
+                        if(!allowAreaSelection){return;}
+        
+                        _canvas_.core.viewport.cursor('grabbing');
+                        grappled['selection_area'] = true;
+        
+                        const areaSize = needleData.selection_B - needleData.selection_A;
+                        const initialValues = {A:needleData.selection_A, B:needleData.selection_B};
+                        const initialX = currentMousePosition_x(event);
+                        const mux = (width - width*needleWidth);
+        
+                        function calculate(event){
+                            const numerator = initialX - currentMousePosition_x(event);
+                            const divider = _canvas_.core.viewport.scale();
+        
+                            let location = {
+                                A: initialValues.A - numerator/(divider*mux),
+                                B: initialValues.B - numerator/(divider*mux),
+                            };
+        
+                            if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
+                            else if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
+                            if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
+                            else if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
+        
+                            return location;
+                        }
+                        _canvas_.system.mouse.mouseInteractionHandler(
+                            function(x,y,event){
+                                const location = calculate(event);
+                                area(location.A,location.B);
+                            },
+                            function(x,y,event){
+                                _canvas_.core.viewport.cursor('grab');
+        
+                                // const location = calculate(event);
+        
+                                selectionArea_grappled = false;
+                                // area(location.A,location.B);
+                                if(object.onrelease != undefined){object.onrelease('selection_A',location.A);}
+                                if(object.onrelease != undefined){object.onrelease('selection_B',location.B);}
+                            },
+                        );                    
+                    } );
+                }
+                generateSelectionArea();
 
     //internal functions
         function currentMousePosition_x(event){
@@ -224,18 +233,16 @@ this.needleOverlay = function(
                     markerCount++;
                 }
 
-            //if the needle isn't in the scene, add it
-                if( !controlObjectsGroup.contains(controlObjects[needleID]) ){
-                    controlObjectsGroup.append(controlObjects[needleID]);
-                }
-
             //if the location is wrong, remove the needle and return
                 if(location == undefined || location < 0 || location > 1){
                     controlObjectsGroup.remove(controlObjects[needleID]);
                     delete needleData[needleID];
                     delete grappled[needleID];
+                    controlObjects[needleID] = undefined;
                     markerCount--;
                     return;
+                } else if ( !controlObjectsGroup.contains(controlObjects[needleID]) ){ //otherwise if the needle isn't in the scene, add it
+                    controlObjectsGroup.append(controlObjects[needleID]);
                 }
 
             //actually set the location of the needle (adjusting for the size of needle)
@@ -265,6 +272,7 @@ this.needleOverlay = function(
 
             //if the area isn't in the scene, add it
                 if( !controlObjectsGroup.contains(selectionObjects['selection_area']) ){
+                    // generateSelectionArea();
                     controlObjectsGroup.prepend(selectionObjects['selection_area']);
                     if(object.selectionAreaToggle){object.selectionAreaToggle(true);}
                 }
@@ -289,6 +297,8 @@ this.needleOverlay = function(
 
             //if the needles aren't in the scene, add them
                 if( !controlObjectsGroup.contains(selectionObjects['selection_A']) ){
+                    generateSelectionA();
+                    generateSelectionB();
                     controlObjectsGroup.prepend(selectionObjects['selection_A']);
                     controlObjectsGroup.prepend(selectionObjects['selection_B']);
                 }

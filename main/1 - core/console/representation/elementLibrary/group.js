@@ -173,9 +173,6 @@ this.Group = function(_name){
         
         //perform removal callback
             if(elementToRemove.getCallback('onremove')){ elementToRemove.getCallback('onremove')(); }
-        
-        // //perform removal callback
-        //     if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
 
         //remove element
             children.splice(children.indexOf(elementToRemove), 1);

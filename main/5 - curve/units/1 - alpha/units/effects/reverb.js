@@ -61,10 +61,10 @@ this.reverb = function(name,x,y,angle){
                     data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
                 },
                 {collection:'control', type:'dial_2_continuous',name:'wet',data:{
-                    x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_wet,
+                    x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_wet,
                 }},
                 {collection:'control', type:'dial_2_continuous',name:'dry',data:{
-                    x:120, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_dry,
+                    x:120, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_dry,
                 }},
                 {collection:'control', type:'button_image', name:'rocker_up', data:{
                     x:58.7, y:10, width:10, height:15, hoverable:false, 
@@ -149,6 +149,8 @@ this.reverb = function(name,x,y,angle){
                 object.elements.sevenSegmentDisplay.LCD_1.enterCharacter();
             };
             function setReadout(num){
+                num++;
+
                 num = ("0" + num).slice(-2);
 
                 object.elements.sevenSegmentDisplay.LCD_10.enterCharacter(num[0]);

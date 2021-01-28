@@ -359,6 +359,15 @@ this.player = function(context){
         this.isLoaded = function(){return state.fileLoaded;};
         this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
         this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
+        this.currentPlayingState = function(playhead){
+            dev.log.circuit('.player.currentPlayingState('+playhead+')'); //#development
+            //check if file is loaded
+                if(!state.fileLoaded){return false;}
+            //if no playhead is selected, do all of them
+                if(playhead == undefined){ return Object.keys(state.playhead).map(key => self.currentPlayingState(key)); }
+            //get state
+                return state.playhead[playhead].playing;
+        };
         this.currentTime = function(playhead){
             dev.log.circuit('.player.currentTime('+playhead+')'); //#development
             //check if file is loaded

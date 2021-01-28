@@ -25993,9 +25993,6 @@
                                 
                                 //perform removal callback
                                     if(elementToRemove.getCallback('onremove')){ elementToRemove.getCallback('onremove')(); }
-                                
-                                // //perform removal callback
-                                //     if(elementToRemove.getCallback('onremove')){elementToRemove.getCallback('onremove')();}
                         
                                 //remove element
                                     children.splice(children.indexOf(elementToRemove), 1);
@@ -27245,7 +27242,7 @@
                 }
             }, 100);
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2020,m:11,d:27} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:25} };
                 const interface = this;
             
                 const dev = {
@@ -28947,6 +28944,15 @@
                             this.isLoaded = function(){return state.fileLoaded;};
                             this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
                             this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
+                            this.currentPlayingState = function(playhead){
+                                dev.log.circuit('.player.currentPlayingState('+playhead+')'); //#development
+                                //check if file is loaded
+                                    if(!state.fileLoaded){return false;}
+                                //if no playhead is selected, do all of them
+                                    if(playhead == undefined){ return Object.keys(state.playhead).map(key => self.currentPlayingState(key)); }
+                                //get state
+                                    return state.playhead[playhead].playing;
+                            };
                             this.currentTime = function(playhead){
                                 dev.log.circuit('.player.currentTime('+playhead+')'); //#development
                                 //check if file is loaded
@@ -37359,124 +37365,133 @@
                                         }
                             
                                         //selection_A
-                                            selectionObjects.selection_A = generateNeedle('selection_A',needleStyles[1]);
-                                            selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
-                                            selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
-                                            selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
-                                            selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
-                                                if(!allowAreaSelection){return;}
-                                
-                                                grappled['selection_A'] = true;
-                                
-                                                const initialValue = needleData['selection_A'];
-                                                const initialX = currentMousePosition_x(event);
-                                                const mux = (width - width*needleWidth);
+                                            function generateSelectionA(){
+                                                selectionObjects.selection_A = generateNeedle('selection_A',needleStyles[1]);
+                                                selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                                selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                                selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                                                selectionObjects.selection_A.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
+                                                    if(!allowAreaSelection){return;}
+                                    
+                                                    grappled['selection_A'] = true;
+                                    
+                                                    const initialValue = needleData['selection_A'];
+                                                    const initialX = currentMousePosition_x(event);
+                                                    const mux = (width - width*needleWidth);
                             
-                                                function calculateArea(event){
-                                                    const numerator = initialX - currentMousePosition_x(event);
-                                                    const divider = _canvas_.core.viewport.scale();
-                                                    let location = initialValue - numerator/(divider*mux);
-                                                    location = location < 0 ? 0 : location;
-                                                    location = location > 1 ? 1 : location;
-                                                    area(location,needleData.selection_B);
-                                                }
-                                
-                                                _canvas_.system.mouse.mouseInteractionHandler(
-                                                    function(x,y,event){
-                                                        calculateArea(event);
-                                                    },
-                                                    function(x,y,event){
-                                                        calculateArea(event);
-                                                        grappled['selection_A'] = false;
-                                                        if(object.onrelease != undefined){ object.onrelease('selection_A',location); }
-                                                    },       
-                                                );
-                                            } );
-                                            needleData['selection_A'] = undefined;
+                                                    function calculateArea(event){
+                                                        const numerator = initialX - currentMousePosition_x(event);
+                                                        const divider = _canvas_.core.viewport.scale();
+                                                        let location = initialValue - numerator/(divider*mux);
+                                                        location = location < 0 ? 0 : location;
+                                                        location = location > 1 ? 1 : location;
+                                                        area(location,needleData.selection_B);
+                                                    }
+                                    
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(x,y,event){
+                                                            calculateArea(event);
+                                                        },
+                                                        function(x,y,event){
+                                                            calculateArea(event);
+                                                            grappled['selection_A'] = false;
+                                                            if(object.onrelease != undefined){ object.onrelease('selection_A',location); }
+                                                        },       
+                                                    );
+                                                } );
+                                                needleData['selection_A'] = undefined;
+                                            }
+                                            generateSelectionA();
                                         //selection_B
-                                            selectionObjects.selection_B = generateNeedle('selection_B',needleStyles[1]);
-                                            selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
-                                            selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
-                                            selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
-                                            selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
-                                                if(!allowAreaSelection){return;}
-                                
-                                                grappled['selection_B'] = true;
-                                
-                                                const initialValue = needleData['selection_B'];
-                                                const initialX = currentMousePosition_x(event);
-                                                const mux = (width - width*needleWidth);
+                                            function generateSelectionB(){
+                                                selectionObjects.selection_B = generateNeedle('selection_B',needleStyles[1]);
+                                                selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                                selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('col-resize');} );
+                                                selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                                                selectionObjects.selection_B.getChildByName('invisibleHandle').attachCallback('onmousedown', function(x,y,event){
+                                                    if(!allowAreaSelection){return;}
+                                    
+                                                    grappled['selection_B'] = true;
+                                    
+                                                    const initialValue = needleData['selection_B'];
+                                                    const initialX = currentMousePosition_x(event);
+                                                    const mux = (width - width*needleWidth);
                             
-                                                function calculateArea(event){
-                                                    const numerator = initialX - currentMousePosition_x(event);
-                                                    const divider = _canvas_.core.viewport.scale();
-                                                    let location = initialValue - numerator/(divider*mux);
-                                                    location = location < 0 ? 0 : location;
-                                                    location = location > 1 ? 1 : location;
-                                                    area(needleData.selection_A,location);
-                                                }
-                                
-                                                _canvas_.system.mouse.mouseInteractionHandler(
-                                                    function(x,y,event){
-                                                        calculateArea(event);
-                                                    },
-                                                    function(x,y,event){
-                                                        calculateArea(event);
-                                                        grappled['selection_B'] = false;
-                                                        if(object.onrelease != undefined){ object.onrelease('selection_B',location); }
-                                                    },       
-                                                );
-                                            } );
-                                            needleData['selection_B'] = undefined;
+                                                    function calculateArea(event){
+                                                        const numerator = initialX - currentMousePosition_x(event);
+                                                        const divider = _canvas_.core.viewport.scale();
+                                                        let location = initialValue - numerator/(divider*mux);
+                                                        location = location < 0 ? 0 : location;
+                                                        location = location > 1 ? 1 : location;
+                                                        area(needleData.selection_A,location);
+                                                    }
+                                    
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(x,y,event){
+                                                            calculateArea(event);
+                                                        },
+                                                        function(x,y,event){
+                                                            calculateArea(event);
+                                                            grappled['selection_B'] = false;
+                                                            if(object.onrelease != undefined){ object.onrelease('selection_B',location); }
+                                                        },       
+                                                    );
+                                                } );
+                                                needleData['selection_B'] = undefined;
+                                            }
+                                            generateSelectionB();
                                         //selection_area
-                                            selectionObjects.selection_area = interfacePart.builder('basic','rectangle','selection_area',{ height:height, colour:_canvas_.library.math.blendColours(needleStyles[1],{r:0,g:0,b:0,a:0},0.5) });
-                                            selectionObjects.selection_area.attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('grab');} );
-                                            selectionObjects.selection_area.attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('grab');} );
-                                            selectionObjects.selection_area.attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
-                                            selectionObjects.selection_area.attachCallback('onmousedown', function(x,y,event){
-                                                if(!allowAreaSelection){return;}
-                                
-                                                _canvas_.core.viewport.cursor('grabbing');
-                                                grappled['selection_area'] = true;
-                                
-                                                const areaSize = needleData.selection_B - needleData.selection_A;
-                                                const initialValues = {A:needleData.selection_A, B:needleData.selection_B};
-                                                const initialX = currentMousePosition_x(event);
-                                                const mux = (width - width*needleWidth);
-                                
-                                                function calculate(event){
-                                                    const numerator = initialX - currentMousePosition_x(event);
-                                                    const divider = _canvas_.core.viewport.scale();
-                                
-                                                    let location = {
-                                                        A: initialValues.A - numerator/(divider*mux),
-                                                        B: initialValues.B - numerator/(divider*mux),
-                                                    };
-                                
-                                                    if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
-                                                    else if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
-                                                    if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
-                                                    else if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
-                                
-                                                    return location;
-                                                }
-                                                _canvas_.system.mouse.mouseInteractionHandler(
-                                                    function(x,y,event){
-                                                        const location = calculate(event);
-                                                        area(location.A,location.B);
-                                                    },
-                                                    function(x,y,event){
-                                                        _canvas_.core.viewport.cursor('grab');
-                                
-                                                        // const location = calculate(event);
-                                
-                                                        selectionArea_grappled = false;
-                                                        // area(location.A,location.B);
-                                                        if(object.onrelease != undefined){object.onrelease('selection_A',location.A);}
-                                                        if(object.onrelease != undefined){object.onrelease('selection_B',location.B);}
-                                                    },
-                                                );                    
-                                            } );
+                                            function generateSelectionArea(){
+                                                selectionObjects.selection_area = interfacePart.builder('basic','rectangle','selection_area',{ height:height, colour:_canvas_.library.math.blendColours(needleStyles[1],{r:0,g:0,b:0,a:0},0.5) });
+                                                selectionObjects.selection_area.attachCallback('onmouseenterelement', function(){_canvas_.core.viewport.cursor('grab');} );
+                                                selectionObjects.selection_area.attachCallback('onmousemove', function(){_canvas_.core.viewport.cursor('grab');} );
+                                                selectionObjects.selection_area.attachCallback('onmouseleaveelement', function(){_canvas_.core.viewport.cursor('default');} );
+                                                selectionObjects.selection_area.attachCallback('onmousedown', function(x,y,event){
+                                                    if(!allowAreaSelection){return;}
+                                    
+                                                    _canvas_.core.viewport.cursor('grabbing');
+                                                    grappled['selection_area'] = true;
+                                    
+                                                    const areaSize = needleData.selection_B - needleData.selection_A;
+                                                    const initialValues = {A:needleData.selection_A, B:needleData.selection_B};
+                                                    const initialX = currentMousePosition_x(event);
+                                                    const mux = (width - width*needleWidth);
+                                    
+                                                    function calculate(event){
+                                                        const numerator = initialX - currentMousePosition_x(event);
+                                                        const divider = _canvas_.core.viewport.scale();
+                                    
+                                                        let location = {
+                                                            A: initialValues.A - numerator/(divider*mux),
+                                                            B: initialValues.B - numerator/(divider*mux),
+                                                        };
+                                    
+                                                        if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
+                                                        else if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
+                                                        if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
+                                                        else if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
+                                    
+                                                        return location;
+                                                    }
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(x,y,event){
+                                                            const location = calculate(event);
+                                                            area(location.A,location.B);
+                                                        },
+                                                        function(x,y,event){
+                                                            _canvas_.core.viewport.cursor('grab');
+                                    
+                                                            // const location = calculate(event);
+                                    
+                                                            selectionArea_grappled = false;
+                                                            // area(location.A,location.B);
+                                                            if(object.onrelease != undefined){object.onrelease('selection_A',location.A);}
+                                                            if(object.onrelease != undefined){object.onrelease('selection_B',location.B);}
+                                                        },
+                                                    );                    
+                                                } );
+                                            }
+                                            generateSelectionArea();
                             
                                 //internal functions
                                     function currentMousePosition_x(event){
@@ -37503,18 +37518,16 @@
                                                 markerCount++;
                                             }
                             
-                                        //if the needle isn't in the scene, add it
-                                            if( !controlObjectsGroup.contains(controlObjects[needleID]) ){
-                                                controlObjectsGroup.append(controlObjects[needleID]);
-                                            }
-                            
                                         //if the location is wrong, remove the needle and return
                                             if(location == undefined || location < 0 || location > 1){
                                                 controlObjectsGroup.remove(controlObjects[needleID]);
                                                 delete needleData[needleID];
                                                 delete grappled[needleID];
+                                                controlObjects[needleID] = undefined;
                                                 markerCount--;
                                                 return;
+                                            } else if ( !controlObjectsGroup.contains(controlObjects[needleID]) ){ //otherwise if the needle isn't in the scene, add it
+                                                controlObjectsGroup.append(controlObjects[needleID]);
                                             }
                             
                                         //actually set the location of the needle (adjusting for the size of needle)
@@ -37544,6 +37557,7 @@
                             
                                         //if the area isn't in the scene, add it
                                             if( !controlObjectsGroup.contains(selectionObjects['selection_area']) ){
+                                                // generateSelectionArea();
                                                 controlObjectsGroup.prepend(selectionObjects['selection_area']);
                                                 if(object.selectionAreaToggle){object.selectionAreaToggle(true);}
                                             }
@@ -37568,6 +37582,8 @@
                             
                                         //if the needles aren't in the scene, add them
                                             if( !controlObjectsGroup.contains(selectionObjects['selection_A']) ){
+                                                generateSelectionA();
+                                                generateSelectionB();
                                                 controlObjectsGroup.prepend(selectionObjects['selection_A']);
                                                 controlObjectsGroup.prepend(selectionObjects['selection_B']);
                                             }
@@ -41869,7 +41885,7 @@
                             
                                     object.isConnected = function(){ return cable != undefined; };
                                     object.canDisconnect = function(){ return this.allowDisconnections() && (foreignNode!=undefined && foreignNode.allowDisconnections()); };
-                                    object.isAppropiateConnectionNode = function(potentialConnectionNode){
+                                    object.isAppropriateConnectionNode = function(potentialConnectionNode){
                                         if( object._type != potentialConnectionNode._type ){ return false; }
                                         if( (object._direction == '' || potentialConnectionNode._direction == '') && object._direction != potentialConnectionNode._direction ){ return false; }
                                         if( object._direction != '' && (potentialConnectionNode._direction == object._direction) ){ return false; }
@@ -41889,7 +41905,7 @@
                                         if( new_foreignNode == undefined){ return; }
                                         if( new_foreignNode == this ){ return; }
                                         if( new_foreignNode._type != this._type ){ return; }
-                                        if( !this.isAppropiateConnectionNode(new_foreignNode) ){ return; }
+                                        if( !this.isAppropriateConnectionNode(new_foreignNode) ){ return; }
                             
                                         if( new_foreignNode == foreignNode ){ return; }
                                         if( new_foreignNode.isConnected() && !new_foreignNode.canDisconnect() ){ return; }
@@ -42038,7 +42054,7 @@
                                                     dev.log.partDynamic('.connectionNode-onmousedown -> snapToNode:'+(snapToNode!=undefined?JSON.stringify(snapToNode.getAddress()):'-none-')); //#development
                                                 
                                                 //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
-                                                    if( snapToNode == undefined || !snapToNode.allowConnections() || !object.isAppropiateConnectionNode(snapToNode) ){
+                                                    if( snapToNode == undefined || !snapToNode.allowConnections() || !object.isAppropriateConnectionNode(snapToNode) ){
                                                         dev.log.partDynamic('.connectionNode-onmousedown -> no node found'); //#development
                                                         if( liveCable == undefined ){
                                                             if( object.isConnected() && displacedNode!=undefined ){
@@ -45481,7 +45497,7 @@
                 _canvas_.layers.declareLayerAsLoaded("control");
             } );
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:13} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:27} };
             };
             
             _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -46035,656 +46051,6 @@
                     };
                 };
                 this.alpha = new function(){
-                    this.voltage_combiner = function(name,x,y,angle){
-                        //style data
-                            const unitStyle = new function(){
-                                //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
-                    
-                                //calculation of measurements
-                                    const div = 6;
-                                    const measurement = { 
-                                        file: { width:260, height:260 },
-                                        design: { width:4, height:4 },
-                                    };
-                    
-                                    this.offset = 20/div;
-                                    this.drawingValue = { 
-                                        width: measurement.file.width/div, 
-                                        height: measurement.file.height/div
-                                    };
-                            };
-                    
-                        //main object creation
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'voltage_combiner',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                                   },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset     },
-                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset     },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output',   data:{ 
-                                        x:0, y:unitStyle.drawingValue.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input_1',  data:{ 
-                                        x:unitStyle.drawingValue.width-3-1/3, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input_2',  data:{ 
-                                        x:unitStyle.drawingValue.width-3-1/3, y:unitStyle.drawingValue.height-18-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ 
-                                        x:unitStyle.drawingValue.width*0.78, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage 
-                                    }},
-                    
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                    
-                                    {collection:'control', type:'slide_continuous_image',name:'slide_mix',data:{
-                                        x:32.5, y:10, width:5, height:25, handleHeight:0.18, value:0.5, resetValue:0.5,
-                                        handleURL:unitStyle.imageStoreURL_localPrefix+'handle.png'
-                                    }},
-                                ]
-                            });
-                    
-                            //circuitry
-                                let mix = 0.5;
-                                const inputValue = [0,0];
-                                function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
-                    
-                            //wiring
-                                //hid
-                                    object.elements.slide_continuous_image.slide_mix.onchange = function(value){ mix = value; calculateOutput(); };
-                                //io (updates hid)
-                                    object.io.voltage.input_1.onchange = function(value){ inputValue[0] = value; calculateOutput(); };
-                                    object.io.voltage.input_2.onchange = function(value){ inputValue[1] = value; calculateOutput(); };
-                                    object.io.voltage.port_mix.onchange = function(value){ object.elements.slide_continuous_image.slide_mix.set(value); };
-                    
-                            //interface
-                                object.i = {
-                                    mix:function(value){ object.elements.slide_continuous_image.slide_mix.set(value); },
-                                };
-                    
-                            //import/export
-                                object.exportData = function(){ return mix; };
-                                object.importData = function(data){
-                                    if(data == undefined){return;}
-                    
-                                    object.elements.slide_continuous_image.slide_mix.set(data); 
-                                };
-                    
-                            return object;
-                        };
-                    this.voltage_combiner.metadata = {
-                        name:'Voltage Combiner',
-                        category:'misc',
-                        helpURL:'/help/units/alpha/voltage_combiner/'
-                    };
-                    this.audio_duplicator = function(name,x,y,angle){
-                        //style data
-                            const unitStyle = new function(){
-                                //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
-                    
-                                //calculation of measurements
-                                    const div = 6;
-                                    const measurement = { 
-                                        file: { width:320, height:320 },
-                                        design: { width:5, height:5 },
-                                    };
-                    
-                                    this.offset = 20/div;
-                                    this.drawingValue = { 
-                                        width: measurement.file.width/div, 
-                                        height: measurement.file.height/div
-                                    };
-                            };
-                    
-                        //main object creation
-                            const reverseOffset = (unitStyle.drawingValue.width)*(0.875/10);
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'audio_duplicator',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    { x:reverseOffset,                                                              y:0                                                       },
-                                    { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1.7/10),  y:0                                                       },
-                                    { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
-                                    { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
-                                    { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1.7/10),  y:unitStyle.drawingValue.height -unitStyle.offset         },
-                                    { x:reverseOffset,                                                              y:unitStyle.drawingValue.height -unitStyle.offset         },
-                                    { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
-                                    { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(1.25/10), y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/2) },
-                                    { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)*0.5 - 15/2, 
-                                        width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
-                                        x:2.25, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 20, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ 
-                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2,
-                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
-                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
-                                        }
-                                    },
-                                ]
-                            });
-                    
-                        //circuitry
-                            const node = _canvas_.library.audio.context.createAnalyser();
-                    
-                        //wiring
-                            //io
-                                object.io.audio.input.audioNode = node;
-                                object.io.audio.output_1.audioNode = node;
-                                object.io.audio.output_2.audioNode = node;
-                    
-                        return object;
-                    };
-                    this.audio_duplicator.metadata = {
-                        name:'Audio Duplicator',
-                        category:'misc',
-                        helpURL:'/help/units/alpha/audio_duplicator/'
-                    };
-                    this.data_combiner = function(name,x,y,angle){
-                        //style data
-                            const unitStyle = new function(){
-                                //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
-                    
-                                //calculation of measurements
-                                    const div = 6;
-                                    const measurement = { 
-                                        file: { width:320, height:320 },
-                                        design: { width:5, height:5 },
-                                    };
-                    
-                                    this.offset = 20/div;
-                                    this.drawingValue = { 
-                                        width: measurement.file.width/div, 
-                                        height: measurement.file.height/div
-                                    };
-                            };
-                    
-                        //main object creation
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'data_combiner',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
-                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)*(2/5), y:0                                                       },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset,         y:0                                                       },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset,         y:unitStyle.drawingValue.height -unitStyle.offset         },
-                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)*(2/5), y:unitStyle.drawingValue.height -unitStyle.offset         },
-                                    { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 15/2, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input_1', data:{ 
-                                        x:unitStyle.drawingValue.width -3 -1/3, y:7.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input_2', data:{ 
-                                        x:unitStyle.drawingValue.width -3 -1/3, y:27.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                ]
-                            });
-                    
-                        //wiring
-                            //io
-                                object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };
-                                object.io.data.input_2.onreceive = function(address,data){ object.io.data.output.send(address,data); };
-                        
-                        return object;
-                    };
-                    this.data_combiner.metadata = {
-                        name:'Data Combiner',
-                        category:'misc',
-                        helpURL:'/help/units/alpha/data_combiner/'
-                    };
-                    this.signal_combiner= function(name,x,y,angle){
-                        //style data
-                            const unitStyle = new function(){
-                                //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'signal_combiner/';
-                    
-                                //calculation of measurements
-                                    const div = 6;
-                                    const measurement = { 
-                                        file: { width:260, height:260 },
-                                        design: { width:4, height:4 },
-                                    };
-                    
-                                    this.offset = 20/div;
-                                    this.drawingValue = { 
-                                        width: measurement.file.width/div, 
-                                        height: measurement.file.height/div
-                                    };
-                            };
-                    
-                        //main object creation
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'signal_combiner',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)*0.25 },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0 },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset        },
-                                    { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ 
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ 
-                                        x:unitStyle.drawingValue.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ 
-                                        x:unitStyle.drawingValue.width-3-1/3, y:unitStyle.drawingValue.height-20.5-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.signal 
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ 
-                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
-                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
-                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
-                                        }
-                                    },
-                                ]
-                            });
-                    
-                        //wiring
-                            //io
-                                object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };
-                                object.io.signal.input_2.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_1.read()); };
-                    
-                        return object;
-                    };
-                    this.signal_combiner.metadata = {
-                        name:'Signal Combiner',
-                        category:'misc',
-                        helpURL:'/help/units/alpha/signal_combiner/'
-                    };
-                    this.signal_duplicator = function(name,x,y,angle){
-                        //style data
-                            const unitStyle = new function(){
-                                //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
-                    
-                                //calculation of measurements
-                                    const div = 6;
-                                    const measurement = { 
-                                        file: { width:260, height:260 },
-                                        design: { width:4, height:4 },
-                                    };
-                    
-                                    this.offset = 20/div;
-                                    this.drawingValue = { 
-                                        width: measurement.file.width/div, 
-                                        height: measurement.file.height/div
-                                    };
-                            };
-                    
-                        //main object creation
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'signal_duplicator',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    { x:0,                                              y:0                                                      },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)*0.25 },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
-                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset        },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
-                                        x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 15, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ 
-                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
-                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
-                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
-                                        }
-                                    },
-                                ]
-                            });
-                    
-                            //wiring
-                                //io
-                                    object.io.signal.input.onchange = function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); };
-                    
-                        return object;
-                    };
-                    this.signal_duplicator.metadata = {
-                        name:'Signal Duplicator',
-                        category:'misc',
-                        helpURL:'/help/units/alpha/signal_duplicator/'
-                    };
-                    this.voltage_duplicator = function(name,x,y,angle){
-                        //style data
-                            const unitStyle = new function(){
-                                //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
-                    
-                                //calculation of measurements
-                                    const div = 6;
-                                    const measurement = { 
-                                        file: { width:260, height:260 },
-                                        design: { width:4, height:4 },
-                                    };
-                    
-                                    this.offset = 20/div;
-                                    this.drawingValue = { 
-                                        width: measurement.file.width/div, 
-                                        height: measurement.file.height/div
-                                    };
-                            };
-                    
-                        //main object creation
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'voltage_duplicator',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    { x:0,                                              y:0                                                   },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset     },
-                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset     },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
-                                        x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)*0.75 - 5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 15, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                    
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ 
-                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
-                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
-                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
-                                        }
-                                    },
-                                ]
-                            });
-                    
-                        //wiring
-                            //io
-                                object.io.voltage.input.onchange = function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); };
-                    
-                        return object;
-                    };
-                    this.voltage_duplicator.metadata = {
-                        name:'Voltage Duplicator',
-                        category:'misc',
-                        helpURL:'/help/units/alpha/voltage_duplicator/'
-                    };
-                    this.data_duplicator = function(name,x,y,angle){
-                        //style data
-                            const unitStyle = new function(){
-                                //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
-                    
-                                //calculation of measurements
-                                    const div = 6;
-                                    const measurement = { 
-                                        file: { width:320, height:320 },
-                                        design: { width:5, height:5 },
-                                    };
-                    
-                                    this.offset = 20/div;
-                                    this.drawingValue = { 
-                                        width: measurement.file.width/div, 
-                                        height: measurement.file.height/div
-                                    };
-                            };
-                    
-                        //main object creation
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'data_duplicator',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    { x:0,                                                      y:0                                                       },
-                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)*(3/5), y:0                                                       },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset,         y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset,         y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
-                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)*(3/5), y:unitStyle.drawingValue.height -unitStyle.offset         },
-                                    { x:0,                                                      y:unitStyle.drawingValue.height -unitStyle.offset         },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
-                                        x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
-                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 20, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
-                                    }},
-                                    
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ 
-                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2,
-                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
-                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
-                                        }
-                                    },
-                                ]
-                            });
-                    
-                        //wiring
-                            //io
-                                object.io.data.input.onreceive = function(address,data){
-                                    object.io.data.output_1.send(address,data);
-                                    object.io.data.output_2.send(address,data);
-                                };
-                    
-                        return object;
-                    };
-                    this.data_duplicator.metadata = {
-                        name:'Data Duplicator',
-                        category:'misc',
-                        helpURL:'/help/units/alpha/data_duplicator/'
-                    };
-                    this.eightTrackMixer = function(name,x,y,angle){
-                        //style data
-                            const unitStyle = new function(){
-                                //image store location URL
-                                    this.imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
-                    
-                                //calculation of measurements
-                                    const div = 6;
-                                    const measurement = { 
-                                        file: { width:1550, height:830 },
-                                        design: { width:25.5, height:13.5 },
-                                    };
-                    
-                                    this.offset = 20/div;
-                                    this.drawingValue = { 
-                                        width: measurement.file.width/div, 
-                                        height: measurement.file.height/div
-                                    };
-                    
-                                //styling values
-                                    this.dial = style.primaryEight.map(item => { return { handle:item, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} }; });
-                            };
-                    
-                        //main object creation
-                            const object = _canvas_.interface.unit.builder({
-                                name:name,
-                                model:'eightTrackMixer',
-                                x:x, y:y, angle:angle,
-                                space:[
-                                    { x:0,                                              y:0                                               },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
-                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
-                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_L', data:{ 
-                                        x:105, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_R', data:{ 
-                                        x:130, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ].concat(
-                                    (function(){
-                                        const newElements = [];
-                                        for(let a = 0; a < 8; a++){
-                                            newElements.push(
-                                                {collection:'control', type:'dial_2_continuous',name:'dial_panner_'+a,data:{
-                                                    x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5, style:unitStyle.dial[a],
-                                                }},
-                                            );
-                                            newElements.push(
-                                                {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
-                                                    x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                                    handleURL:unitStyle.imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
-                                                }}
-                                            );
-                                            newElements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
-                                                    x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
-                                                }},
-                                            );
-                                            newElements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_panner_'+a, data:{ 
-                                                    x:0, y:20 +12.5*a, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage
-                                                }},
-                                            );
-                                            newElements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_volume_'+a, data:{ 
-                                                    x:255, y:30 +12.5*a, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage
-                                                }},
-                                            );
-                                        }
-                                        return newElements;
-                                    })()
-                                )
-                            });
-                    
-                        //circuitry
-                            const outLeft = _canvas_.library.audio.context.createAnalyser();
-                            const outRight = _canvas_.library.audio.context.createAnalyser();
-                            const audioLanes = []
-                            for(let a = 0; a < 8; a++){
-                                audioLanes.push( new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2) );
-                            }
-                    
-                        //wiring
-                            //hid
-                                for(let a = 0; a < 8; a++){
-                                    object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
-                                        return function(value){
-                                            audioLanes[a].inGain(2*(1-value));
-                                        }
-                                    }(a);
-                                    object.elements.dial_2_continuous['dial_panner_'+a].onchange = function(a){
-                                        return function(value){
-                                            audioLanes[a].outGain(0,1-value);
-                                            audioLanes[a].outGain(1,value);
-                                        }
-                                    }(a);
-                    
-                                    object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
-                                        return function(value){
-                                            object.elements.dial_2_continuous['dial_panner_'+a].set(value);
-                                        }
-                                    }(a);
-                                    object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
-                                        return function(value){
-                                            object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
-                                        }
-                                    }(a);
-                                }
-                            //io
-                                object.io.audio.output_L.audioNode = outLeft;
-                                object.io.audio.output_R.audioNode = outRight;
-                    
-                                for(let a = 0; a < 8; a++){
-                                    object.io.audio['input_'+a].audioNode = audioLanes[a].in();
-                                    audioLanes[a].out(0).connect( outLeft );
-                                    audioLanes[a].out(1).connect( outRight );
-                                }
-                    
-                        //interface
-                            object.i = {
-                                gain:function(track,value){
-                                    if(value == undefined){
-                                        return 1-object.elements.slide_continuous_image['slide_volume_'+track].get();
-                                    }else{
-                                        object.elements.slide_continuous_image['slide_volume_'+track].set(1-value);
-                                    }
-                                },
-                                pan:function(track,value){
-                                    if(value == undefined){
-                                        return object.elements.dial_2_continuous['dial_panner_'+track].get();
-                                    }else{
-                                        object.elements.dial_2_continuous['dial_panner_'+track].set(value);
-                                    }
-                                },
-                            };
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    gains:[...Array(8).keys()].map(item => object.i.gain(item)),
-                                    pans:[...Array(8).keys()].map(item => object.i.pan(item)),
-                                };
-                            };
-                            object.importData = function(data){
-                                data.gains.forEach((value,index) => object.i.gain(index,value));
-                                data.pans.forEach((value,index) => object.i.pan(index,value));
-                            };
-                    
-                        //setup/tearDown
-                            object.oncreate = function(){
-                                for(let a = 0; a < 8; a++){
-                                    object.i.gain(a,0.5);
-                                    object.i.pan(a,0.5);
-                                }
-                            };
-                    
-                        return object;
-                    };
-                    this.eightTrackMixer.metadata = {
-                        name:'Eight Track Mixer',
-                        category:'misc',
-                        helpURL:'/help/units/alpha/eightTrackMixer/'
-                    };
                     this.signal_readout = function(name,x,y,angle){
                         //style data
                             const unitStyle = new function(){
@@ -48756,18 +48122,23 @@
                                         object.elements.readout_sixteenSegmentDisplay.time.print();
                                     }else{
                                         object.elements.readout_sixteenSegmentDisplay.time.text(
-                                            _canvas_.library.misc.padString(playerCircuit.currentTime().length,8,' ')
+                                            _canvas_.library.misc.padString(playerCircuit.currentPlayingState().filter(a => a).length,8,' ')
                                         );
                                         object.elements.readout_sixteenSegmentDisplay.time.print();
                                     }
                                 
                                 //waveport
+                                    const relevance = playerCircuit.currentPlayingState();
                                     const progressList = playerCircuit.progress();
                                     let needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
                     
                                     //adjust needles to match player
                                         progressList.forEach((needlePosition,index) => {
-                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
+                                            if(!relevance[index]){
+                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,-1,false);
+                                            }else{
+                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
+                                            }
                                         });
                     
                                     //remove unneeded needles
@@ -48839,7 +48210,7 @@
                                     object.elements.dial_2_continuous.dial_playbackSpeed.set(value);
                                 };
                                 object.io.voltage.io_waveworkspace_startPosition.onchange = function(value){
-                                    vconstcurrent = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().B;
+                                    let current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().B;
                                     if(current == undefined){current = 1;}
                                     object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(value,current);
                                 };
@@ -48907,6 +48278,656 @@
                         name:'Audio File Player',
                         category:'synthesizers',
                         helpURL:'/help/units/alpha/audio_file_player/'
+                    };
+                    this.voltage_combiner = function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
+                    
+                                //calculation of measurements
+                                    const div = 6;
+                                    const measurement = { 
+                                        file: { width:260, height:260 },
+                                        design: { width:4, height:4 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'voltage_combiner',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                                   },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output',   data:{ 
+                                        x:0, y:unitStyle.drawingValue.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage 
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input_1',  data:{ 
+                                        x:unitStyle.drawingValue.width-3-1/3, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage 
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input_2',  data:{ 
+                                        x:unitStyle.drawingValue.width-3-1/3, y:unitStyle.drawingValue.height-18-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage 
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ 
+                                        x:unitStyle.drawingValue.width*0.78, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage 
+                                    }},
+                    
+                                    {collection:'basic', type:'image', name:'backing', data:{ 
+                                        x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                    } },
+                    
+                                    {collection:'control', type:'slide_continuous_image',name:'slide_mix',data:{
+                                        x:32.5, y:10, width:5, height:25, handleHeight:0.18, value:0.5, resetValue:0.5,
+                                        handleURL:unitStyle.imageStoreURL_localPrefix+'handle.png'
+                                    }},
+                                ]
+                            });
+                    
+                            //circuitry
+                                let mix = 0.5;
+                                const inputValue = [0,0];
+                                function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
+                    
+                            //wiring
+                                //hid
+                                    object.elements.slide_continuous_image.slide_mix.onchange = function(value){ mix = value; calculateOutput(); };
+                                //io (updates hid)
+                                    object.io.voltage.input_1.onchange = function(value){ inputValue[0] = value; calculateOutput(); };
+                                    object.io.voltage.input_2.onchange = function(value){ inputValue[1] = value; calculateOutput(); };
+                                    object.io.voltage.port_mix.onchange = function(value){ object.elements.slide_continuous_image.slide_mix.set(value); };
+                    
+                            //interface
+                                object.i = {
+                                    mix:function(value){ object.elements.slide_continuous_image.slide_mix.set(value); },
+                                };
+                    
+                            //import/export
+                                object.exportData = function(){ return mix; };
+                                object.importData = function(data){
+                                    if(data == undefined){return;}
+                    
+                                    object.elements.slide_continuous_image.slide_mix.set(data); 
+                                };
+                    
+                            return object;
+                        };
+                    this.voltage_combiner.metadata = {
+                        name:'Voltage Combiner',
+                        category:'routing',
+                        helpURL:'/help/units/alpha/voltage_combiner/'
+                    };
+                    this.audio_duplicator = function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
+                    
+                                //calculation of measurements
+                                    const div = 6;
+                                    const measurement = { 
+                                        file: { width:320, height:320 },
+                                        design: { width:5, height:5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            const reverseOffset = (unitStyle.drawingValue.width)*(0.875/10);
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'audio_duplicator',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:reverseOffset,                                                              y:0                                                       },
+                                    { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1.7/10),  y:0                                                       },
+                                    { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                    { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                    { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1.7/10),  y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                    { x:reverseOffset,                                                              y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                    { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                    { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(1.25/10), y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/2) },
+                                    { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                        x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)*0.5 - 15/2, 
+                                        width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
+                                        x:2.25, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 20, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2,
+                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }
+                                    },
+                                ]
+                            });
+                    
+                        //circuitry
+                            const node = _canvas_.library.audio.context.createAnalyser();
+                    
+                        //wiring
+                            //io
+                                object.io.audio.input.audioNode = node;
+                                object.io.audio.output_1.audioNode = node;
+                                object.io.audio.output_2.audioNode = node;
+                    
+                        return object;
+                    };
+                    this.audio_duplicator.metadata = {
+                        name:'Audio Duplicator',
+                        category:'routing',
+                        helpURL:'/help/units/alpha/audio_duplicator/'
+                    };
+                    this.data_combiner = function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
+                    
+                                //calculation of measurements
+                                    const div = 6;
+                                    const measurement = { 
+                                        file: { width:320, height:320 },
+                                        design: { width:5, height:5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'data_combiner',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)*(2/5), y:0                                                       },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,         y:0                                                       },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,         y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)*(2/5), y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                    { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 15/2, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_data', name:'input_1', data:{ 
+                                        x:unitStyle.drawingValue.width -3 -1/3, y:7.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_data', name:'input_2', data:{ 
+                                        x:unitStyle.drawingValue.width -3 -1/3, y:27.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', data:{ 
+                                        x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                    }},
+                                ]
+                            });
+                    
+                        //wiring
+                            //io
+                                object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                                object.io.data.input_2.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                        
+                        return object;
+                    };
+                    this.data_combiner.metadata = {
+                        name:'Data Combiner',
+                        category:'routing',
+                        helpURL:'/help/units/alpha/data_combiner/'
+                    };
+                    this.signal_combiner= function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'signal_combiner/';
+                    
+                                //calculation of measurements
+                                    const div = 6;
+                                    const measurement = { 
+                                        file: { width:260, height:260 },
+                                        design: { width:4, height:4 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'signal_combiner',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)*0.25 },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0 },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                    { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ 
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal 
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ 
+                                        x:unitStyle.drawingValue.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal 
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ 
+                                        x:unitStyle.drawingValue.width-3-1/3, y:unitStyle.drawingValue.height-20.5-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.signal 
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }
+                                    },
+                                ]
+                            });
+                    
+                        //wiring
+                            //io
+                                object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };
+                                object.io.signal.input_2.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_1.read()); };
+                    
+                        return object;
+                    };
+                    this.signal_combiner.metadata = {
+                        name:'Signal Combiner',
+                        category:'routing',
+                        helpURL:'/help/units/alpha/signal_combiner/'
+                    };
+                    this.signal_duplicator = function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
+                    
+                                //calculation of measurements
+                                    const div = 6;
+                                    const measurement = { 
+                                        file: { width:260, height:260 },
+                                        design: { width:4, height:4 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'signal_duplicator',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:0                                                      },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)*0.25 },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
+                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
+                                        x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 15, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }
+                                    },
+                                ]
+                            });
+                    
+                            //wiring
+                                //io
+                                    object.io.signal.input.onchange = function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); };
+                    
+                        return object;
+                    };
+                    this.signal_duplicator.metadata = {
+                        name:'Signal Duplicator',
+                        category:'routing',
+                        helpURL:'/help/units/alpha/signal_duplicator/'
+                    };
+                    this.voltage_duplicator = function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
+                    
+                                //calculation of measurements
+                                    const div = 6;
+                                    const measurement = { 
+                                        file: { width:260, height:260 },
+                                        design: { width:4, height:4 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'voltage_duplicator',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:0                                                   },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
+                                        x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)*0.75 - 5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 15, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                    
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }
+                                    },
+                                ]
+                            });
+                    
+                        //wiring
+                            //io
+                                object.io.voltage.input.onchange = function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); };
+                    
+                        return object;
+                    };
+                    this.voltage_duplicator.metadata = {
+                        name:'Voltage Duplicator',
+                        category:'routing',
+                        helpURL:'/help/units/alpha/voltage_duplicator/'
+                    };
+                    this.data_duplicator = function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
+                    
+                                //calculation of measurements
+                                    const div = 6;
+                                    const measurement = { 
+                                        file: { width:320, height:320 },
+                                        design: { width:5, height:5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'data_duplicator',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                                      y:0                                                       },
+                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)*(3/5), y:0                                                       },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,         y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,         y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)*(3/5), y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                    { x:0,                                                      y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
+                                        x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
+                                        x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 20, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
+                                    }},
+                                    
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2,
+                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }
+                                    },
+                                ]
+                            });
+                    
+                        //wiring
+                            //io
+                                object.io.data.input.onreceive = function(address,data){
+                                    object.io.data.output_1.send(address,data);
+                                    object.io.data.output_2.send(address,data);
+                                };
+                    
+                        return object;
+                    };
+                    this.data_duplicator.metadata = {
+                        name:'Data Duplicator',
+                        category:'routing',
+                        helpURL:'/help/units/alpha/data_duplicator/'
+                    };
+                    this.eightTrackMixer = function(name,x,y,angle){
+                        //style data
+                            const unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
+                    
+                                //calculation of measurements
+                                    const div = 6;
+                                    const measurement = { 
+                                        file: { width:1550, height:830 },
+                                        design: { width:25.5, height:13.5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.dial = style.primaryEight.map(item => { return { handle:item, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} }; });
+                            };
+                    
+                        //main object creation
+                            const object = _canvas_.interface.unit.builder({
+                                name:name,
+                                model:'eightTrackMixer',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_L', data:{ 
+                                        x:105, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_R', data:{ 
+                                        x:130, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                    },
+                                ].concat(
+                                    (function(){
+                                        const newElements = [];
+                                        for(let a = 0; a < 8; a++){
+                                            newElements.push(
+                                                {collection:'control', type:'dial_2_continuous',name:'dial_panner_'+a,data:{
+                                                    x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5, style:unitStyle.dial[a],
+                                                }},
+                                            );
+                                            newElements.push(
+                                                {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
+                                                    x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
+                                                    handleURL:unitStyle.imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
+                                                }}
+                                            );
+                                            newElements.unshift(
+                                                {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
+                                                    x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                                }},
+                                            );
+                                            newElements.unshift(
+                                                {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_panner_'+a, data:{ 
+                                                    x:0, y:20 +12.5*a, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage
+                                                }},
+                                            );
+                                            newElements.unshift(
+                                                {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_volume_'+a, data:{ 
+                                                    x:255, y:30 +12.5*a, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage
+                                                }},
+                                            );
+                                        }
+                                        return newElements;
+                                    })()
+                                )
+                            });
+                    
+                        //circuitry
+                            const outLeft = _canvas_.library.audio.context.createAnalyser();
+                            const outRight = _canvas_.library.audio.context.createAnalyser();
+                            const audioLanes = []
+                            for(let a = 0; a < 8; a++){
+                                audioLanes.push( new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2) );
+                            }
+                    
+                        //wiring
+                            //hid
+                                for(let a = 0; a < 8; a++){
+                                    object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
+                                        return function(value){
+                                            audioLanes[a].inGain(2*(1-value));
+                                        }
+                                    }(a);
+                                    object.elements.dial_2_continuous['dial_panner_'+a].onchange = function(a){
+                                        return function(value){
+                                            audioLanes[a].outGain(0,1-value);
+                                            audioLanes[a].outGain(1,value);
+                                        }
+                                    }(a);
+                    
+                                    object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
+                                        return function(value){
+                                            object.elements.dial_2_continuous['dial_panner_'+a].set(value);
+                                        }
+                                    }(a);
+                                    object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
+                                        return function(value){
+                                            object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
+                                        }
+                                    }(a);
+                                }
+                            //io
+                                object.io.audio.output_L.audioNode = outLeft;
+                                object.io.audio.output_R.audioNode = outRight;
+                    
+                                for(let a = 0; a < 8; a++){
+                                    object.io.audio['input_'+a].audioNode = audioLanes[a].in();
+                                    audioLanes[a].out(0).connect( outLeft );
+                                    audioLanes[a].out(1).connect( outRight );
+                                }
+                    
+                        //interface
+                            object.i = {
+                                gain:function(track,value){
+                                    if(value == undefined){
+                                        return 1-object.elements.slide_continuous_image['slide_volume_'+track].get();
+                                    }else{
+                                        object.elements.slide_continuous_image['slide_volume_'+track].set(1-value);
+                                    }
+                                },
+                                pan:function(track,value){
+                                    if(value == undefined){
+                                        return object.elements.dial_2_continuous['dial_panner_'+track].get();
+                                    }else{
+                                        object.elements.dial_2_continuous['dial_panner_'+track].set(value);
+                                    }
+                                },
+                            };
+                    
+                        //import/export
+                            object.exportData = function(){
+                                return {
+                                    gains:[...Array(8).keys()].map(item => object.i.gain(item)),
+                                    pans:[...Array(8).keys()].map(item => object.i.pan(item)),
+                                };
+                            };
+                            object.importData = function(data){
+                                data.gains.forEach((value,index) => object.i.gain(index,value));
+                                data.pans.forEach((value,index) => object.i.pan(index,value));
+                            };
+                    
+                        //setup/tearDown
+                            object.oncreate = function(){
+                                for(let a = 0; a < 8; a++){
+                                    object.i.gain(a,0.5);
+                                    object.i.pan(a,0.5);
+                                }
+                            };
+                    
+                        return object;
+                    };
+                    this.eightTrackMixer.metadata = {
+                        name:'Eight Track Mixer',
+                        category:'routing',
+                        helpURL:'/help/units/alpha/eightTrackMixer/'
                     };
                     this.distortion = function(name,x,y,angle){
                         //style data
@@ -49132,10 +49153,10 @@
                                         data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
                                     },
                                     {collection:'control', type:'dial_2_continuous',name:'wet',data:{
-                                        x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_wet,
+                                        x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_wet,
                                     }},
                                     {collection:'control', type:'dial_2_continuous',name:'dry',data:{
-                                        x:120, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_dry,
+                                        x:120, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_dry,
                                     }},
                                     {collection:'control', type:'button_image', name:'rocker_up', data:{
                                         x:58.7, y:10, width:10, height:15, hoverable:false, 
@@ -49220,6 +49241,8 @@
                                     object.elements.sevenSegmentDisplay.LCD_1.enterCharacter();
                                 };
                                 function setReadout(num){
+                                    num++;
+                    
                                     num = ("0" + num).slice(-2);
                     
                                     object.elements.sevenSegmentDisplay.LCD_10.enterCharacter(num[0]);
@@ -50148,13 +50171,13 @@
                             'sequencers',
                             'synthesizers',
                             'effects',
+                            'routing',
                             'tools',
-                            'misc',
                         ],   
                     };
                     this._categoryData = {
                         tools:{ printingName:'Tools',itemWidth:150},
-                        misc:{ printingName:'Miscellaneous',itemWidth:150},
+                        routing:{ printingName:'Routing',itemWidth:150},
                         monitors:{ printingName:'Monitors',itemWidth:150},
                         effects:{ printingName:'Audio Effect Units',itemWidth:150},
                         sequencers:{ printingName:'Sequencers',itemWidth:175},

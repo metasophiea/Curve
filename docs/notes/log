@@ -1,4 +1,39 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-01-27
+  - changed the Reverb Unit to display that it's counting from 1 instead of 0.
+    Also changed it so that the dials both start at 0.5 instead of 0, which now
+    matches how the internal circuit starts
+  - renamed the miscellaneous section of the Alpha collection to Routing
+  - more work on the Alpha document
+  - updated Alpha's Amplifier and Audio Duplicator backing image
+  - began work on the Audio Combiner
+
+
+2021-01-25
+  - repaired the needleOverlay control part. When it was to remove a needle, it
+    just removed it and assumed that the group of elements would still be
+    around. Unfortunately, this is not the case, as removing a group from a 
+    group causes all the children to be destroyed..which in retrospect is not a
+    fantastic method. The problems arose when the needleOverlay part tried to
+    readd one of these needles, and only the group itself was there, thus it
+    was invisible to the user. I fixed it by making it make a new needle every
+    time. There was a similar problem with the area, which was fixed in a
+    similarly ham-fisted way I will need to redo how the remove function works
+    in core
+  - added the method currentPlayingState to the player circuit, which returns
+    data on whether playheads are playing or not
+  - fixed two problems with the audio file player
+    1. the needles were disappearing when you stopped/started them (see the fix
+       at the top)
+    2. the needle counter was giving the wrong number for multiplay mode. It
+       didn't understand that not-playing playheads shouldn't be counted. Adding
+       the currentPlayingState means that the unit can now figure out which are
+       actually relevant
+  - small correction to one of audio_file_player's voltage callbacks, which had
+    a mistake in spelling. "vconstcurrent = ..." instead of "let current = ..."
+  - more work on the Alpha document
+
+
 2021-01-21
   - removed the 'curve' logo from Alpha's Amplifier
   - more work on the Alpha catalogue document, I've added it to the library (we

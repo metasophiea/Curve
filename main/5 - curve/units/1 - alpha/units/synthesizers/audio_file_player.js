@@ -137,18 +137,23 @@ this.audio_file_player = function(name,x,y,angle){
                     object.elements.readout_sixteenSegmentDisplay.time.print();
                 }else{
                     object.elements.readout_sixteenSegmentDisplay.time.text(
-                        _canvas_.library.misc.padString(playerCircuit.currentTime().length,8,' ')
+                        _canvas_.library.misc.padString(playerCircuit.currentPlayingState().filter(a => a).length,8,' ')
                     );
                     object.elements.readout_sixteenSegmentDisplay.time.print();
                 }
             
             //waveport
+                const relevance = playerCircuit.currentPlayingState();
                 const progressList = playerCircuit.progress();
                 let needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
 
                 //adjust needles to match player
                     progressList.forEach((needlePosition,index) => {
-                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
+                        if(!relevance[index]){
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,-1,false);
+                        }else{
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
+                        }
                     });
 
                 //remove unneeded needles
@@ -220,7 +225,7 @@ this.audio_file_player = function(name,x,y,angle){
                 object.elements.dial_2_continuous.dial_playbackSpeed.set(value);
             };
             object.io.voltage.io_waveworkspace_startPosition.onchange = function(value){
-                vconstcurrent = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().B;
+                let current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().B;
                 if(current == undefined){current = 1;}
                 object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(value,current);
             };
