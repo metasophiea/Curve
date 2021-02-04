@@ -45553,7 +45553,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("control");
         } );
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:29} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:4} };
         };
         
         _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -52157,7 +52157,6 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                     x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                    // x:0, y:unitStyle.drawingValue.height*2/3 - 4, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                     x:0, y:unitStyle.drawingValue.height*1/2 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
