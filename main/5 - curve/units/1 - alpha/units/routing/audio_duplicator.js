@@ -5,13 +5,13 @@ this.audio_duplicator = function(name,x,y,angle){
                 this.imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
 
             //calculation of measurements
-                const div = 6;
+                const div = 10;
                 const measurement = { 
-                    file: { width:320, height:320 },
-                    design: { width:5, height:5 },
+                    file: { width:584, height:534 },
+                    design: { width:5.5, height:5 },
                 };
 
-                this.offset = 20/div;
+                this.offset = 30/div;
                 this.drawingValue = { 
                     width: measurement.file.width/div, 
                     height: measurement.file.height/div
@@ -19,7 +19,7 @@ this.audio_duplicator = function(name,x,y,angle){
         };
 
     //main object creation
-        const reverseOffset = (unitStyle.drawingValue.width)*(0.875/10);
+        const reverseOffset = (unitStyle.drawingValue.width)*(0.95/10);
         const object = _canvas_.interface.unit.builder({
             name:name,
             model:'audio_duplicator',

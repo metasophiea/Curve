@@ -1,4 +1,27 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-02-04
+  - swapped the names on CurveTech's Multiplexer and Demultiplexer, as it turns
+    out I had them the wrong way around
+  - finished the Curve Tech devices document, and wrote the company paragraph
+
+
+2021-02-02
+  - added a document for Curve Tech into the library, for the interface units,
+    and made a start on the devices
+
+
+2021-01-31
+  - added a document for Curve Tech into the library, for the logic gates
+
+
+2021-01-29
+  - added the audio combiner unit to the Alpha collection, and modified the 
+    audio duplicator slightly to make it match in size
+  - changed the print name of curveTech to CurveTech
+  - changed the look documents in the library web page have when they are
+    hovered
+  
+
 2021-01-27
   - changed the Reverb Unit to display that it's counting from 1 instead of 0.
     Also changed it so that the dials both start at 0.5 instead of 0, which now

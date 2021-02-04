@@ -45553,7 +45553,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("control");
         } );
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:27} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:1,d:29} };
         };
         
         _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -48335,6 +48335,114 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                     category:'synthesizers',
                     helpURL:'/help/units/alpha/audio_file_player/'
                 };
+                this.audio_combiner = function(name,x,y,angle){
+                    //style data
+                        const unitStyle = new function(){
+                            //image store location URL
+                                this.imageStoreURL_localPrefix = imageStoreURL+'audio_combiner/';
+                
+                            //calculation of measurements
+                                const div = 10;
+                                const measurement = { 
+                                    file: { width:584, height:534 },
+                                    design: { width:5.5, height:5 },
+                                };
+                
+                                this.offset = 30/div;
+                                this.drawingValue = { 
+                                    width: measurement.file.width/div, 
+                                    height: measurement.file.height/div
+                                };
+                                this.dial = { handle:style.connectionNode.audio.dim, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                        };
+                
+                    //main object creation
+                        const reverseOffset = (unitStyle.drawingValue.width)*(0.95/10);
+                        const object = _canvas_.interface.unit.builder({
+                            name:name,
+                            model:'audio_combiner',
+                            x:x, y:y, angle:angle,
+                            space:[
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 - 0/10),    y:0                                                       },
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 - 1.7/10),  y:0                                                       },
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 - 9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 - 9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 - 1.7/10),  y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 - 0/10),    y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 + 0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 + 1.25/10), y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/2) },
+                                { x:-reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1 + 0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                    x:1, y:unitStyle.drawingValue.height - 20.75, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, style:style.connectionNode.audio 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input_1', data:{ 
+                                    x:unitStyle.drawingValue.width-4 -1, y:7.85, width:5, height:15, angle:-0.15, cableVersion:2, style:style.connectionNode.audio
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input_2', data:{ 
+                                    x:unitStyle.drawingValue.width-1.8 -1, y:unitStyle.drawingValue.height-25-0.5, width:5, height:15, angle:0.15, cableVersion:2, style:style.connectionNode.audio 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ 
+                                    x:unitStyle.drawingValue.width*0.5, y:unitStyle.drawingValue.height - 8, width:5, height:10, angle:0.25 + Math.PI/2, cableVersion:2, style:style.connectionNode.voltage 
+                                }},
+                
+                                {collection:'basic', type:'image', name:'backing', data:{
+                                    x:-unitStyle.offset/2, y:-unitStyle.offset/2,
+                                    width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                    url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                } },
+                                
+                                {collection:'control', type:'dial_2_continuous',name:'chanel_selection',data:{
+                                    x:36.75, y:25.75, radius:30/2, startAngle:Math.PI/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5, style:unitStyle.dial,
+                                }}
+                            ]
+                        });
+                
+                        //circuitry
+                            let mix = 0.5;
+                            const gains = [
+                                new _canvas_.library.audio.audioWorklet.production.wasm.gain(_canvas_.library.audio.context),
+                                new _canvas_.library.audio.audioWorklet.production.wasm.gain(_canvas_.library.audio.context),
+                            ];
+                            const combiner = new _canvas_.library.audio.audioWorklet.production.only_js.nothing(_canvas_.library.audio.context);
+                            gains[0].connect(combiner);
+                            gains[1].connect(combiner);
+                            function update(){
+                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, gains[0].gain, mix, 0.01, 'instant', true);
+                                _canvas_.library.audio.changeAudioParam(_canvas_.library.audio.context, gains[1].gain, 1-mix, 0.01, 'instant', true);
+                            }
+                            update();
+                
+                        //wiring
+                            //hid
+                                object.elements.dial_2_continuous.chanel_selection.onchange = function(value){ mix = value; update(); };
+                            //io
+                                object.io.voltage.port_mix.onchange = function(value){ object.elements.dial_2_continuous.chanel_selection.set(value); };
+                                object.io.audio.input_1.audioNode = gains[0];
+                                object.io.audio.input_2.audioNode = gains[1];
+                                object.io.audio.output.audioNode = combiner;
+                
+                        //interface
+                            object.i = {
+                                mix:function(value){ object.elements.dial_2_continuous.chanel_selection.set(value); },
+                            };
+                
+                        //import/export
+                            object.exportData = function(){ return mix; };
+                            object.importData = function(data){
+                                if(data == undefined){return;}
+                
+                                object.elements.dial_2_continuous.chanel_selection.set(data); 
+                            };
+                
+                        return object;
+                    };
+                this.audio_combiner.metadata = {
+                    name:'Audio Combiner',
+                    category:'routing',
+                    helpURL:'/help/units/alpha/audio_combiner/'
+                };
                 this.voltage_combiner = function(name,x,y,angle){
                     //style data
                         const unitStyle = new function(){
@@ -48431,13 +48539,13 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 this.imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
                 
                             //calculation of measurements
-                                const div = 6;
+                                const div = 10;
                                 const measurement = { 
-                                    file: { width:320, height:320 },
-                                    design: { width:5, height:5 },
+                                    file: { width:584, height:534 },
+                                    design: { width:5.5, height:5 },
                                 };
                 
-                                this.offset = 20/div;
+                                this.offset = 30/div;
                                 this.drawingValue = { 
                                     width: measurement.file.width/div, 
                                     height: measurement.file.height/div
@@ -48445,7 +48553,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         };
                 
                     //main object creation
-                        const reverseOffset = (unitStyle.drawingValue.width)*(0.875/10);
+                        const reverseOffset = (unitStyle.drawingValue.width)*(0.95/10);
                         const object = _canvas_.interface.unit.builder({
                             name:name,
                             model:'audio_duplicator',
@@ -52048,20 +52156,21 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
                                     x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                    // x:0, y:unitStyle.drawingValue.height*2/3 - 4, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    x:0, y:unitStyle.drawingValue.height*1/2 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*1/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*2/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*3/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*3/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*4/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*4/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_backing.png' }
@@ -52088,22 +52197,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                         function update(){
                             if(state.previousPosition != -1){
-                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                object.io.signal['out_'+state.previousPosition].set(false);
                                 object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
                             }
                             object.elements.glowbox_rectangle['LED_'+state.position].on();
-                            object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
                         }
                 
                     //wiring
                         //io
-                            for(let a = 0; a < state.channelCount; a++){
-                                object.io.signal['in_'+a].onchange = (function(a){
-                                    return function(value){
-                                        if(state.position == a){ object.io.signal.out.set(value); }
-                                    };
-                                })(a);
-                            }
+                            object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
                             object.io.signal.switch.onchange = function(value){
                                 if(!value){return;}
                                 step();
@@ -52180,20 +52283,20 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
                                     x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height*1/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height*2/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*3/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height*3/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*4/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height*4/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_backing.png' }
@@ -52220,16 +52323,22 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                         function update(){
                             if(state.previousPosition != -1){
-                                object.io.signal['out_'+state.previousPosition].set(false);
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
                                 object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
                             }
                             object.elements.glowbox_rectangle['LED_'+state.position].on();
-                            object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
                         }
                 
                     //wiring
                         //io
-                            object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                            for(let a = 0; a < state.channelCount; a++){
+                                object.io.signal['in_'+a].onchange = (function(a){
+                                    return function(value){
+                                        if(state.position == a){ object.io.signal.out.set(value); }
+                                    };
+                                })(a);
+                            }
                             object.io.signal.switch.onchange = function(value){
                                 if(!value){return;}
                                 step();
@@ -52392,32 +52501,32 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
                                     x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height*0.6 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
-                                    x:0, y:6 + 2.5 + 5.5*0, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*0, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
-                                    x:0, y:6 + 2.5 + 5.5*1, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*1, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
-                                    x:0, y:6 + 2.5 + 5.5*2, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*2, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
-                                    x:0, y:6 + 2.5 + 5.5*3, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*3, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_4', data:{ 
-                                    x:0, y:6 + 2.5 + 5.5*4, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_4', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*4, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_5', data:{ 
-                                    x:0, y:6 + 2.5 + 5.5*5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_5', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_6', data:{ 
-                                    x:0, y:6 + 2.5 + 5.5*6, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_6', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*6, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_7', data:{ 
-                                    x:0, y:6 + 2.5 + 5.5*7, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_7', data:{ 
+                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*7, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_backing.png' }
@@ -52448,22 +52557,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                         function update(){
                             if(state.previousPosition != -1){
-                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                object.io.signal['out_'+state.previousPosition].set(false);
                                 object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
                             }
                             object.elements.glowbox_rectangle['LED_'+state.position].on();
-                            object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
                         }
                 
                     //wiring
                         //io
-                            for(let a = 0; a < state.channelCount; a++){
-                                object.io.signal['in_'+a].onchange = (function(a){
-                                    return function(value){
-                                        if(state.position == a){ object.io.signal.out.set(value); }
-                                    };
-                                })(a);
-                            }
+                            object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
                             object.io.signal.switch.onchange = function(value){
                                 if(!value){return;}
                                 step();
@@ -52540,14 +52643,14 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
                                     x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height*1/3 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height*2/3 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'2_backing.png' }
@@ -52572,16 +52675,22 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                         function update(){
                             if(state.previousPosition != -1){
-                                object.io.signal['out_'+state.previousPosition].set(false);
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
                                 object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
                             }
                             object.elements.glowbox_rectangle['LED_'+state.position].on();
-                            object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
                         }
                 
                     //wiring
                         //io
-                            object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                            for(let a = 0; a < state.channelCount; a++){
+                                object.io.signal['in_'+a].onchange = (function(a){
+                                    return function(value){
+                                        if(state.position == a){ object.io.signal.out.set(value); }
+                                    };
+                                })(a);
+                            }
                             object.io.signal.switch.onchange = function(value){
                                 if(!value){return;}
                                 step();
@@ -52780,32 +52889,32 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
                                     x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*0.6 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
-                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*0, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                    x:0, y:6 + 2.5 + 5.5*0, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
-                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*1, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                    x:0, y:6 + 2.5 + 5.5*1, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
-                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*2, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
+                                    x:0, y:6 + 2.5 + 5.5*2, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
-                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*3, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
+                                    x:0, y:6 + 2.5 + 5.5*3, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_4', data:{ 
-                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*4, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_4', data:{ 
+                                    x:0, y:6 + 2.5 + 5.5*4, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_5', data:{ 
-                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_5', data:{ 
+                                    x:0, y:6 + 2.5 + 5.5*5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_6', data:{ 
-                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*6, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_6', data:{ 
+                                    x:0, y:6 + 2.5 + 5.5*6, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out_7', data:{ 
-                                    x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*7, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in_7', data:{ 
+                                    x:0, y:6 + 2.5 + 5.5*7, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_backing.png' }
@@ -52836,16 +52945,22 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                         function update(){
                             if(state.previousPosition != -1){
-                                object.io.signal['out_'+state.previousPosition].set(false);
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
                                 object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
                             }
                             object.elements.glowbox_rectangle['LED_'+state.position].on();
-                            object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
                         }
                 
                     //wiring
                         //io
-                            object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                            for(let a = 0; a < state.channelCount; a++){
+                                object.io.signal['in_'+a].onchange = (function(a){
+                                    return function(value){
+                                        if(state.position == a){ object.io.signal.out.set(value); }
+                                    };
+                                })(a);
+                            }
                             object.io.signal.switch.onchange = function(value){
                                 if(!value){return;}
                                 step();
@@ -52922,14 +53037,14 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
                                     x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
-                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                    x:0, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*1/3 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
-                                    x:0, y:unitStyle.drawingValue.height*2/3 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'2_backing.png' }
@@ -52954,22 +53069,16 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         }
                         function update(){
                             if(state.previousPosition != -1){
-                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                object.io.signal['out_'+state.previousPosition].set(false);
                                 object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
                             }
                             object.elements.glowbox_rectangle['LED_'+state.position].on();
-                            object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
                         }
                 
                     //wiring
                         //io
-                            for(let a = 0; a < state.channelCount; a++){
-                                object.io.signal['in_'+a].onchange = (function(a){
-                                    return function(value){
-                                        if(state.position == a){ object.io.signal.out.set(value); }
-                                    };
-                                })(a);
-                            }
+                            object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
                             object.io.signal.switch.onchange = function(value){
                                 if(!value){return;}
                                 step();
@@ -53007,7 +53116,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 };
                 
                 this._collectionData = {
-                    name:'curveTech',
+                    name:'CurveTech',
                     // itemWidth:210,
                     itemWidth:120,
                     categoryOrder:[
@@ -58395,57 +58504,42 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         });
         
         // {{include:0.js}} //workshop
+        // {{include:1.js}} //alpha units
         _canvas_.layers.registerFunctionForLayer("curve", function(){
-            // _canvas_.control.scene.addUnit(10,-135,0,'distortion','alpha');
-            // _canvas_.control.scene.addUnit(-145,-170,0,'reverb','alpha');
-            // _canvas_.control.scene.addUnit(-180,240,0,'filter','alpha');
+            // _canvas_.control.scene.addUnit(10,10,0,'button_panel_1','curvetech');
+            // _canvas_.control.scene.addUnit(35,10,0,'button_panel_2','curvetech');
+            // _canvas_.control.scene.addUnit(70,10,0,'button_panel_4','curvetech');
+            // _canvas_.control.scene.addUnit(125,10,0,'button_panel_8','curvetech');
+            // _canvas_.control.scene.addUnit(10,45,0,'light_panel_2','curvetech');
+            // _canvas_.control.scene.addUnit(45,45,0,'light_panel_4','curvetech');
+            // _canvas_.control.scene.addUnit(105,45,0,'light_panel_8','curvetech');
+            // _canvas_.control.scene.addUnit(10,70,0,'multi_option_signal_sender_2','curvetech');
+            // _canvas_.control.scene.addUnit(50,70,0,'multi_option_signal_sender_4','curvetech');
+            // _canvas_.control.scene.addUnit(95,70,0,'multi_option_signal_sender_8','curvetech');
         
-            // _canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','alpha');
-            // _canvas_.control.scene.addUnit(175,-95,0,'audio_in','alpha');
-            // _canvas_.control.scene.addUnit(140,-115,0,'signal_switch','alpha');
-            // _canvas_.control.scene.addUnit(-235,240,0,'voltage_dial','alpha');
+            // _canvas_.control.scene.addUnit(135,70,0,'REP','curvetech');
+            // _canvas_.control.scene.addUnit(150,70,0,'DUP','curvetech');
+            // _canvas_.control.scene.addUnit(135,90,0,'NOT','curvetech');
+            // _canvas_.control.scene.addUnit(165,70,0,'AND','curvetech');
+            // _canvas_.control.scene.addUnit(180,70,0,'OR','curvetech');
+            // _canvas_.control.scene.addUnit(195,70,0,'XOR','curvetech');
+            // _canvas_.control.scene.addUnit(165,90,0,'NAND','curvetech');
+            // _canvas_.control.scene.addUnit(180,90,0,'NOR','curvetech');
+            // _canvas_.control.scene.addUnit(195,90,0,'XNOR','curvetech');
         
-            // _canvas_.control.scene.addUnit(500,30,0,'signal_duplicator','alpha');
-            // _canvas_.control.scene.addUnit(385,30,0,'voltage_duplicator','alpha');
-            // _canvas_.control.scene.addUnit(435,-35,0,'data_duplicator','alpha');
-            // _canvas_.control.scene.addUnit(360,-90,0,'audio_duplicator','alpha');
-            // _canvas_.control.scene.addUnit(445,30,0,'signal_combiner','alpha');
-            // _canvas_.control.scene.addUnit(330,30,0,'voltage_combiner','alpha');
-            // _canvas_.control.scene.addUnit(370,-35,0,'data_combiner','alpha');
-            // _canvas_.control.scene.addUnit(-255,-60,0,'eightTrackMixer','alpha');
-        
-            // _canvas_.control.scene.addUnit(10,-65,0,'amplifier','alpha');
-            // _canvas_.control.scene.addUnit(370,225,0,'audio_recorder','alpha');
-            // _canvas_.control.scene.addUnit(-280,85,0,'data_readout','alpha');
-            // _canvas_.control.scene.addUnit(-230,-110,0,'signal_readout','alpha');
-            // _canvas_.control.scene.addUnit(85,290,0,'voltage_readout','alpha');
-            // _canvas_.control.scene.addUnit(165,225,0,'audio_scope','alpha');
-        
-            // _canvas_.control.scene.addUnit(370,275,0,'pulse_generator','alpha');
-            // _canvas_.control.scene.addUnit(-200,290,0,'eightStepSequencer','alpha');
-            // _canvas_.control.scene.addUnit(-70,85,0,'launchpad','alpha');
-        
-            // _canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer','alpha');
-            let afp = _canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','alpha');
-        
-            // _canvas_.control.scene.addUnit(-10,-10,0,'ruler','alpha');
-        
-            _canvas_.control.viewport.scale(5);
-            _canvas_.control.viewport.position(-180,-125);
+            // _canvas_.control.scene.addUnit(10,110,0,'adder','curvetech');
+            _canvas_.control.scene.addUnit(35,110,0,'multiplexer_2','curvetech');
+            _canvas_.control.scene.addUnit(65,110,0,'multiplexer_4','curvetech');
+            _canvas_.control.scene.addUnit(95,110,0,'multiplexer_8','curvetech');
+            _canvas_.control.scene.addUnit(125,110,0,'demultiplexer_2','curvetech');
+            _canvas_.control.scene.addUnit(155,110,0,'demultiplexer_4','curvetech');
+            _canvas_.control.scene.addUnit(185,110,0,'demultiplexer_8','curvetech');
+            // _canvas_.control.scene.addUnit(215,110,0,'single_bit_memory','curvetech');
         
         
-            let amp = _canvas_.control.scene.addUnit(-450,-65,0,'amplifier','alpha');
-            amp.io.audio.input_L.connectTo( afp.io.audio.io_output_L );
-            amp.io.audio.input_R.connectTo( afp.io.audio.io_output_R );
-        
-        
-            _canvas_.core.render.frameRateLimit(10);
-        
-            // scene = {"compressed":false,"data":"[{\"position\":{\"x\":363.1473990393359,\"y\":49.09867592589141,\"angle\":0},\"details\":{\"collection\":\"alpha\",\"model\":\"audio_duplicator\"},\"data\":{},\"connections\":[{\"typeAndNameOfSourcePort\":{\"type\":\"audio\",\"name\":\"input\"},\"nameOfDestinationUnit\":\"2\",\"indexOfDestinationUnit\":2,\"typeAndNameOfDestinationPort\":{\"type\":\"audio\",\"name\":\"io_output\"}},{\"typeAndNameOfSourcePort\":{\"type\":\"audio\",\"name\":\"output_1\"},\"nameOfDestinationUnit\":\"0\",\"indexOfDestinationUnit\":1,\"typeAndNameOfDestinationPort\":{\"type\":\"audio\",\"name\":\"input_R\"}},{\"typeAndNameOfSourcePort\":{\"type\":\"audio\",\"name\":\"output_2\"},\"nameOfDestinationUnit\":\"0\",\"indexOfDestinationUnit\":1,\"typeAndNameOfDestinationPort\":{\"type\":\"audio\",\"name\":\"input_L\"}}]},{\"position\":{\"x\":152,\"y\":-52.57142857142858,\"angle\":0},\"details\":{\"collection\":\"alpha\",\"model\":\"amplifier\"},\"data\":{},\"connections\":[{\"typeAndNameOfSourcePort\":{\"type\":\"audio\",\"name\":\"input_L\"},\"nameOfDestinationUnit\":\"1\",\"indexOfDestinationUnit\":0,\"typeAndNameOfDestinationPort\":{\"type\":\"audio\",\"name\":\"output_2\"}},{\"typeAndNameOfSourcePort\":{\"type\":\"audio\",\"name\":\"input_R\"},\"nameOfDestinationUnit\":\"1\",\"indexOfDestinationUnit\":0,\"typeAndNameOfDestinationPort\":{\"type\":\"audio\",\"name\":\"output_1\"}}]},{\"position\":{\"x\":460.53825884820566,\"y\":37.948395991313554,\"angle\":0},\"details\":{\"collection\":\"alpha\",\"model\":\"basic_synthesizer\"},\"data\":{\"gain\":0.5,\"attack\":0,\"release\":0,\"detune\":0,\"octave\":0,\"waveType\":\"sine\",\"gainWobble\":{\"rate\":50,\"depth\":0},\"detuneWobble\":{\"rate\":50,\"depth\":0}},\"connections\":[{\"typeAndNameOfSourcePort\":{\"type\":\"data\",\"name\":\"io_midiNoteInput\"},\"nameOfDestinationUnit\":\"3\",\"indexOfDestinationUnit\":3,\"typeAndNameOfDestinationPort\":{\"type\":\"data\",\"name\":\"output\"}},{\"typeAndNameOfSourcePort\":{\"type\":\"audio\",\"name\":\"io_output\"},\"nameOfDestinationUnit\":\"1\",\"indexOfDestinationUnit\":0,\"typeAndNameOfDestinationPort\":{\"type\":\"audio\",\"name\":\"input\"}}]},{\"position\":{\"x\":679.9980442496039,\"y\":51.23127038465677,\"angle\":0},\"details\":{\"collection\":\"alpha\",\"model\":\"eightStepSequencer\"},\"data\":{\"stages\":[{\"note\":0,\"octave\":0,\"velocity\":0.5},{\"note\":0,\"octave\":0,\"velocity\":0.5},{\"note\":0,\"octave\":0,\"velocity\":0.5},{\"note\":0,\"octave\":0,\"velocity\":0.5},{\"note\":0,\"octave\":0,\"velocity\":0.5},{\"note\":0,\"octave\":0,\"velocity\":0.5},{\"note\":0,\"octave\":0,\"velocity\":0.5},{\"note\":0,\"octave\":0,\"velocity\":0.5}],\"direction\":1,\"currentStage\":7},\"connections\":[{\"typeAndNameOfSourcePort\":{\"type\":\"signal\",\"name\":\"directionChange_step\"},\"nameOfDestinationUnit\":\"4\",\"indexOfDestinationUnit\":4,\"typeAndNameOfDestinationPort\":{\"type\":\"signal\",\"name\":\"output\"}},{\"typeAndNameOfSourcePort\":{\"type\":\"data\",\"name\":\"output\"},\"nameOfDestinationUnit\":\"2\",\"indexOfDestinationUnit\":2,\"typeAndNameOfDestinationPort\":{\"type\":\"data\",\"name\":\"io_midiNoteInput\"}}]},{\"position\":{\"x\":1008.8571428571428,\"y\":38,\"angle\":0},\"details\":{\"collection\":\"alpha\",\"model\":\"pulse_generator\"},\"data\":{\"tempo\":120},\"connections\":[{\"typeAndNameOfSourcePort\":{\"type\":\"signal\",\"name\":\"output\"},\"nameOfDestinationUnit\":\"3\",\"indexOfDestinationUnit\":3,\"typeAndNameOfDestinationPort\":{\"type\":\"signal\",\"name\":\"directionChange_step\"}}]}]"};
-            // _canvas_.control.scene.printUnits( JSON.parse(scene.data) );
-            // _canvas_.control.selection.deselectEverything();
+            _canvas_.control.viewport.scale(6);
+            // _canvas_.control.viewport.position(515, -490);
         });
-        // {{include:2.js}} //curveTech units
         // {{include:3.js}} //harbinger units
         // {{include:4.js}} //acoustic research units
     }

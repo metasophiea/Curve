@@ -38,10 +38,12 @@
             .unit_document_cover_image{
                 background-color: white;
                 box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+                outline-color: rgba(0, 0, 0, 0.2);
             }
             .unit_document_cover_image:hover{
-                filter: saturate(3);
-                transition: filter 1s;
+                outline-style: solid;
+                outline-width: 6px;
+                transition: outline-width 0.25s;
             }
             .unit_document_caption{
                 font-style: italic;

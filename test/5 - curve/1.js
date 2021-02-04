@@ -11,10 +11,11 @@ _canvas_.layers.registerFunctionForLayer("curve", function(){
     // _canvas_.control.scene.addUnit(500,30,0,'signal_duplicator','alpha');
     // _canvas_.control.scene.addUnit(385,30,0,'voltage_duplicator','alpha');
     // _canvas_.control.scene.addUnit(435,-35,0,'data_duplicator','alpha');
-    // _canvas_.control.scene.addUnit(360,-90,0,'audio_duplicator','alpha');
     // _canvas_.control.scene.addUnit(445,30,0,'signal_combiner','alpha');
     // _canvas_.control.scene.addUnit(330,30,0,'voltage_combiner','alpha');
     // _canvas_.control.scene.addUnit(370,-35,0,'data_combiner','alpha');
+    _canvas_.control.scene.addUnit(90,20/*360,-90*/,0,'audio_duplicator','alpha');
+    _canvas_.control.scene.addUnit(20,20,0,'audio_combiner','alpha');
     // _canvas_.control.scene.addUnit(-255,-60,0,'eightTrackMixer','alpha');
 
     // _canvas_.control.scene.addUnit(10,-65,0,'amplifier','alpha');
@@ -29,17 +30,13 @@ _canvas_.layers.registerFunctionForLayer("curve", function(){
     // _canvas_.control.scene.addUnit(-70,85,0,'launchpad','alpha');
 
     // _canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer','alpha');
-    let afp = _canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','alpha');
+    // let afp = _canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','alpha');
 
     // _canvas_.control.scene.addUnit(-10,-10,0,'ruler','alpha');
 
     _canvas_.control.viewport.scale(5);
-    _canvas_.control.viewport.position(-180,-125);
+    // _canvas_.control.viewport.position(-180,-125);
 
-
-    let amp = _canvas_.control.scene.addUnit(-450,-65,0,'amplifier','alpha');
-    amp.io.audio.input_L.connectTo( afp.io.audio.io_output_L );
-    amp.io.audio.input_R.connectTo( afp.io.audio.io_output_R );
 
 
     _canvas_.core.render.frameRateLimit(10);

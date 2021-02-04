@@ -1,7 +1,7 @@
 {{include:units}}
 
 this._collectionData = {
-    name:'curveTech',
+    name:'CurveTech',
     // itemWidth:210,
     itemWidth:120,
     categoryOrder:[

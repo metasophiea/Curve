@@ -39,20 +39,20 @@ this.demultiplexer_4 = function(name,x,y,angle){
                 {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
                     x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                 }},
-                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
-                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                    x:0, y:unitStyle.drawingValue.height*1/2 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
                 }},
-                {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
-                    x:0, y:unitStyle.drawingValue.height*1/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                 }},
-                {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
-                    x:0, y:unitStyle.drawingValue.height*2/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                 }},
-                {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
-                    x:0, y:unitStyle.drawingValue.height*3/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*3/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                 }},
-                {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
-                    x:0, y:unitStyle.drawingValue.height*4/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                    x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*4/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
                 }},
                 {collection:'basic', type:'image', name:'backing', 
                     data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_backing.png' }
@@ -79,22 +79,16 @@ this.demultiplexer_4 = function(name,x,y,angle){
         }
         function update(){
             if(state.previousPosition != -1){
-                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                object.io.signal['out_'+state.previousPosition].set(false);
                 object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
             }
             object.elements.glowbox_rectangle['LED_'+state.position].on();
-            object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+            object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
         }
 
     //wiring
         //io
-            for(let a = 0; a < state.channelCount; a++){
-                object.io.signal['in_'+a].onchange = (function(a){
-                    return function(value){
-                        if(state.position == a){ object.io.signal.out.set(value); }
-                    };
-                })(a);
-            }
+            object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
             object.io.signal.switch.onchange = function(value){
                 if(!value){return;}
                 step();
