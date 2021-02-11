@@ -72,6 +72,11 @@ library = [
                 print_name: 'Digital Sample Drum Set',
                 document_aspect_ratio: 1,
             },
+            {
+                name: 'mrd-16',
+                print_name: 'Mini Rhythm Designer',
+                document_aspect_ratio: 1,
+            },
         ],
     },
 ];

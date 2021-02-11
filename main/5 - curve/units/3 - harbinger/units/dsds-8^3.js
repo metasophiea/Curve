@@ -430,6 +430,7 @@ this['dsds-8^3'] = function(name,x,y,angle){
             });
         }
         function savePreset(block){
+            block = block - 1;
             state.presets[block] = (new Array(8)).fill().map((item,index) => {
                 return {
                     bank:object.elements.dial_discrete_image['bank_'+index].get(), 
@@ -487,7 +488,7 @@ this['dsds-8^3'] = function(name,x,y,angle){
                 setTimeout(() => { 
                     const pressedTime = object.elements.button_image.preset_1.pressedTime;
                     if( pressedTime > 0 && Date.now() - pressedTime > state.presetSettingTimeout ){
-                        savePreset(0);
+                        savePreset(1);
                     }
                 }, state.presetSettingTimeout);
             };
@@ -500,7 +501,7 @@ this['dsds-8^3'] = function(name,x,y,angle){
                 setTimeout(() => { 
                     const pressedTime = object.elements.button_image.preset_2.pressedTime;
                     if( pressedTime > 0 && Date.now() - pressedTime > state.presetSettingTimeout ){
-                        savePreset(1);
+                        savePreset(2);
                     }
                 }, state.presetSettingTimeout);
             };

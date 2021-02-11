@@ -25,7 +25,7 @@ this['rdp-32'] = function(name,x,y,angle){
                 };
                 this.selectorStepLEDstyle = {
                     glow:{r:1,g:1,b:1,a:1},
-                    dim:{r:0.5,g:0.5,b:0.5,a:1},
+                    dim:{r:0.25,g:0.25,b:0.25,a:1},
                 };
         };
 
@@ -62,8 +62,8 @@ this['rdp-32'] = function(name,x,y,angle){
 
                         {collection:'control', type:'checkbox_image', name:'unify', data:{
                             x:10, y:22, width:8, height:20,
-                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
-                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
+                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_up.png',
+                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'clear', data:{
                             x:21, y:22, width:8, height:20, hoverable:false,
@@ -92,23 +92,23 @@ this['rdp-32'] = function(name,x,y,angle){
                         }},
                         {collection:'control', type:'button_image', name:'channel_left', data:{
                             x:76, y:22, width:8, height:20, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'channel_right', data:{
                             x:87+8, y:22+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'page_up', data:{
-                            x:98, y:22, width:20, height:8, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
+                            x:98, y:30, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'plus_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'plus_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'page_down', data:{
-                            x:98, y:34, width:20, height:8, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
+                            x:98, y:42, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'minus_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'minus_down.png',
                         }},
                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                             x:121.5, y:22.5, width:11, height:19, canvasBased:true, resolution:5,

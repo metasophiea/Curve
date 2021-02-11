@@ -81,28 +81,28 @@ this['mrd-16'] = function(name,x,y,angle){
 
                         {collection:'control', type:'button_image', name:'channel_left', data:{
                             x:34, y:13, width:8, height:20, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'channel_right', data:{
                             x:46+8, y:13+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                         }},
                         {collection:'control', type:'checkbox_image', name:'unify', data:{
                             x:58, y:13, width:8, height:20,
-                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
-                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
+                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_up.png',
+                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'page_up', data:{
-                            x:70, y:13, width:20, height:8, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
+                            x:70, y:21, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'plus_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'plus_down.png',
                         }},
                         {collection:'control', type:'button_image', name:'page_down', data:{
-                            x:70, y:25, width:20, height:8, hoverable:false,
-                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
-                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
+                            x:70, y:33, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'minus_up.png',
+                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'minus_down.png',
                         }},
                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                             x:94.5, y:13.5, width:11, height:19, canvasBased:true, resolution:5,

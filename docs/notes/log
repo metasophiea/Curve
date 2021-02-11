@@ -1,4 +1,18 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-02-10
+  - cleaned up what images the Harbinger units were using, plus replaced the
+    DSDS images with new ones
+  - fixed some issues with the Harbinger DSDS, where the preset buttons weren't
+    using the preset saver function correctly. There was a little confusion
+    over what numbers to use, so I made things easier by making them the same
+    as the preset selection function
+  - work on Harbinger's documents (dsds added, mrd underway)
+
+
+2021-02-08
+  - some of harbinger's common images were misnamed 
+
+
 2021-02-04
   - swapped the names on CurveTech's Multiplexer and Demultiplexer, as it turns
     out I had them the wrong way around

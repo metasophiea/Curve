@@ -45553,7 +45553,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("control");
         } );
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:4} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:10} };
         };
         
         _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -53563,6 +53563,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                             });
                         }
                         function savePreset(block){
+                            block = block - 1;
                             state.presets[block] = (new Array(8)).fill().map((item,index) => {
                                 return {
                                     bank:object.elements.dial_discrete_image['bank_'+index].get(), 
@@ -53620,7 +53621,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 setTimeout(() => { 
                                     const pressedTime = object.elements.button_image.preset_1.pressedTime;
                                     if( pressedTime > 0 && Date.now() - pressedTime > state.presetSettingTimeout ){
-                                        savePreset(0);
+                                        savePreset(1);
                                     }
                                 }, state.presetSettingTimeout);
                             };
@@ -53633,7 +53634,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 setTimeout(() => { 
                                     const pressedTime = object.elements.button_image.preset_2.pressedTime;
                                     if( pressedTime > 0 && Date.now() - pressedTime > state.presetSettingTimeout ){
-                                        savePreset(1);
+                                        savePreset(2);
                                     }
                                 }, state.presetSettingTimeout);
                             };
@@ -53867,28 +53868,28 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                         {collection:'control', type:'button_image', name:'channel_left', data:{
                                             x:34, y:13, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'channel_right', data:{
                                             x:46+8, y:13+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                                         }},
                                         {collection:'control', type:'checkbox_image', name:'unify', data:{
                                             x:58, y:13, width:8, height:20,
-                                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
-                                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
+                                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_up.png',
+                                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'page_up', data:{
-                                            x:70, y:13, width:20, height:8, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
+                                            x:70, y:21, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'plus_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'plus_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'page_down', data:{
-                                            x:70, y:25, width:20, height:8, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
+                                            x:70, y:33, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'minus_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'minus_down.png',
                                         }},
                                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                                             x:94.5, y:13.5, width:11, height:19, canvasBased:true, resolution:5,
@@ -54479,7 +54480,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                 };
                                 this.selectorStepLEDstyle = {
                                     glow:{r:1,g:1,b:1,a:1},
-                                    dim:{r:0.5,g:0.5,b:0.5,a:1},
+                                    dim:{r:0.25,g:0.25,b:0.25,a:1},
                                 };
                         };
                 
@@ -54516,8 +54517,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                 
                                         {collection:'control', type:'checkbox_image', name:'unify', data:{
                                             x:10, y:22, width:8, height:20,
-                                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
-                                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
+                                            checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_up.png',
+                                            uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'clear', data:{
                                             x:21, y:22, width:8, height:20, hoverable:false,
@@ -54546,23 +54547,23 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                                         }},
                                         {collection:'control', type:'button_image', name:'channel_left', data:{
                                             x:76, y:22, width:8, height:20, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'channel_right', data:{
                                             x:87+8, y:22+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'page_up', data:{
-                                            x:98, y:22, width:20, height:8, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
+                                            x:98, y:30, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'plus_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'plus_down.png',
                                         }},
                                         {collection:'control', type:'button_image', name:'page_down', data:{
-                                            x:98, y:34, width:20, height:8, hoverable:false,
-                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
-                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
+                                            x:98, y:42, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                                            backingURL__up:unitStyle.imageStoreURL_commonPrefix+'minus_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_commonPrefix+'minus_down.png',
                                         }},
                                         {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                                             x:121.5, y:22.5, width:11, height:19, canvasBased:true, resolution:5,
@@ -58504,42 +58505,57 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
         
         // {{include:0.js}} //workshop
         // {{include:1.js}} //alpha units
+        // {{include:2.js}} //curveTech units
         _canvas_.layers.registerFunctionForLayer("curve", function(){
-            // _canvas_.control.scene.addUnit(10,10,0,'button_panel_1','curvetech');
-            // _canvas_.control.scene.addUnit(35,10,0,'button_panel_2','curvetech');
-            // _canvas_.control.scene.addUnit(70,10,0,'button_panel_4','curvetech');
-            // _canvas_.control.scene.addUnit(125,10,0,'button_panel_8','curvetech');
-            // _canvas_.control.scene.addUnit(10,45,0,'light_panel_2','curvetech');
-            // _canvas_.control.scene.addUnit(45,45,0,'light_panel_4','curvetech');
-            // _canvas_.control.scene.addUnit(105,45,0,'light_panel_8','curvetech');
-            // _canvas_.control.scene.addUnit(10,70,0,'multi_option_signal_sender_2','curvetech');
-            // _canvas_.control.scene.addUnit(50,70,0,'multi_option_signal_sender_4','curvetech');
-            // _canvas_.control.scene.addUnit(95,70,0,'multi_option_signal_sender_8','curvetech');
+            _canvas_.core.render.frameRateLimit(10);
         
-            // _canvas_.control.scene.addUnit(135,70,0,'REP','curvetech');
-            // _canvas_.control.scene.addUnit(150,70,0,'DUP','curvetech');
-            // _canvas_.control.scene.addUnit(135,90,0,'NOT','curvetech');
-            // _canvas_.control.scene.addUnit(165,70,0,'AND','curvetech');
-            // _canvas_.control.scene.addUnit(180,70,0,'OR','curvetech');
-            // _canvas_.control.scene.addUnit(195,70,0,'XOR','curvetech');
-            // _canvas_.control.scene.addUnit(165,90,0,'NAND','curvetech');
-            // _canvas_.control.scene.addUnit(180,90,0,'NOR','curvetech');
-            // _canvas_.control.scene.addUnit(195,90,0,'XNOR','curvetech');
-        
-            // _canvas_.control.scene.addUnit(10,110,0,'adder','curvetech');
-            _canvas_.control.scene.addUnit(35,110,0,'multiplexer_2','curvetech');
-            _canvas_.control.scene.addUnit(65,110,0,'multiplexer_4','curvetech');
-            _canvas_.control.scene.addUnit(95,110,0,'multiplexer_8','curvetech');
-            _canvas_.control.scene.addUnit(125,110,0,'demultiplexer_2','curvetech');
-            _canvas_.control.scene.addUnit(155,110,0,'demultiplexer_4','curvetech');
-            _canvas_.control.scene.addUnit(185,110,0,'demultiplexer_8','curvetech');
-            // _canvas_.control.scene.addUnit(215,110,0,'single_bit_memory','curvetech');
+            // const dsds = _canvas_.control.scene.addUnit(10,100,0,'dsds-8^3','harbinger');
+            // const pg = _canvas_.control.scene.addUnit(10,300,0,'pulse_generator','alpha');
+            // pg.io.signal.output.connectTo( dsds.io.signal.signal_in_0 );
+            // pg.i.tempo(60)
         
         
-            _canvas_.control.viewport.scale(6);
-            // _canvas_.control.viewport.position(515, -490);
+            const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
+            // const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
+        
+            // setTimeout( () => {
+            //     const rdp2 = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
+            // },1000);
+        
+            // for(let a = 0; a < 8; a++){
+            //     mrd.io.signal['signal_out_'+a].connectTo(dsds.io.signal['signal_in_'+a]);
+            // }
+        
+        
+            // const pulse = _canvas_.control.scene.addUnit(370,120,0,'pulse_generator','alpha');
+            // const amp = _canvas_.control.scene.addUnit(-150,-150,0,'amplifier','alpha');
+            // const dup = _canvas_.control.scene.addUnit(60,-60,0,'audio_duplicator','alpha');
+            // dsds.io.audio.audio_out_master.connectTo(dup.io.audio.input);
+            // dup.io.audio.output_1.connectTo(amp.io.audio.input_R);
+            // dup.io.audio.output_2.connectTo(amp.io.audio.input_L);
+            // pulse.io.signal.output.connectTo(mrd.io.signal.pulseIn);
+            // pulse.i.tempo(380);
+        
+            // mrd.i.pageData(0,0,
+            //     [true, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false]
+            // );
+            // mrd.i.pageData(1,0,
+            //     [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false]
+            // );
+            // mrd.i.pageData(2,0,
+            //     [false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, true]
+            // );
+            // mrd.i.pageData(6,0,
+            //     [false, false, true, false, false, false, true, false, false, false, true, true, false, false, true, false]
+            // );
+            
+            
+        
+        
+        
+            _canvas_.control.viewport.scale(4);
+            _canvas_.control.viewport.position(-10,70);
         });
-        // {{include:3.js}} //harbinger units
         // {{include:4.js}} //acoustic research units
     }
 }

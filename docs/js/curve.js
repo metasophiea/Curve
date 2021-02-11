@@ -45497,7 +45497,7 @@
                 _canvas_.layers.declareLayerAsLoaded("control");
             } );
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:4} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:10} };
             };
             
             _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -53507,6 +53507,7 @@
                                 });
                             }
                             function savePreset(block){
+                                block = block - 1;
                                 state.presets[block] = (new Array(8)).fill().map((item,index) => {
                                     return {
                                         bank:object.elements.dial_discrete_image['bank_'+index].get(), 
@@ -53564,7 +53565,7 @@
                                     setTimeout(() => { 
                                         const pressedTime = object.elements.button_image.preset_1.pressedTime;
                                         if( pressedTime > 0 && Date.now() - pressedTime > state.presetSettingTimeout ){
-                                            savePreset(0);
+                                            savePreset(1);
                                         }
                                     }, state.presetSettingTimeout);
                                 };
@@ -53577,7 +53578,7 @@
                                     setTimeout(() => { 
                                         const pressedTime = object.elements.button_image.preset_2.pressedTime;
                                         if( pressedTime > 0 && Date.now() - pressedTime > state.presetSettingTimeout ){
-                                            savePreset(1);
+                                            savePreset(2);
                                         }
                                     }, state.presetSettingTimeout);
                                 };
@@ -53811,28 +53812,28 @@
                     
                                             {collection:'control', type:'button_image', name:'channel_left', data:{
                                                 x:34, y:13, width:8, height:20, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'channel_right', data:{
                                                 x:46+8, y:13+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                                             }},
                                             {collection:'control', type:'checkbox_image', name:'unify', data:{
                                                 x:58, y:13, width:8, height:20,
-                                                checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
-                                                uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
+                                                checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_up.png',
+                                                uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_down.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'page_up', data:{
-                                                x:70, y:13, width:20, height:8, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
+                                                x:70, y:21, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'plus_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'plus_down.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'page_down', data:{
-                                                x:70, y:25, width:20, height:8, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
+                                                x:70, y:33, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'minus_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'minus_down.png',
                                             }},
                                             {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                                                 x:94.5, y:13.5, width:11, height:19, canvasBased:true, resolution:5,
@@ -54423,7 +54424,7 @@
                                     };
                                     this.selectorStepLEDstyle = {
                                         glow:{r:1,g:1,b:1,a:1},
-                                        dim:{r:0.5,g:0.5,b:0.5,a:1},
+                                        dim:{r:0.25,g:0.25,b:0.25,a:1},
                                     };
                             };
                     
@@ -54460,8 +54461,8 @@
                     
                                             {collection:'control', type:'checkbox_image', name:'unify', data:{
                                                 x:10, y:22, width:8, height:20,
-                                                checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_on.png',
-                                                uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_off.png',
+                                                checkURL:unitStyle.imageStoreURL_commonPrefix+'unify_up.png',
+                                                uncheckURL:unitStyle.imageStoreURL_commonPrefix+'unify_down.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'clear', data:{
                                                 x:21, y:22, width:8, height:20, hoverable:false,
@@ -54490,23 +54491,23 @@
                                             }},
                                             {collection:'control', type:'button_image', name:'channel_left', data:{
                                                 x:76, y:22, width:8, height:20, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'channel_right', data:{
                                                 x:87+8, y:22+20, width:8, height:20, angle:Math.PI, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'row_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'row_down.png',
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'arrow_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'arrow_down.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'page_up', data:{
-                                                x:98, y:22, width:20, height:8, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_up_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_up_down.png',
+                                                x:98, y:30, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'plus_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'plus_down.png',
                                             }},
                                             {collection:'control', type:'button_image', name:'page_down', data:{
-                                                x:98, y:34, width:20, height:8, hoverable:false,
-                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'page_down_up.png',
-                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'page_down_down.png',
+                                                x:98, y:42, width:8, height:20, angle:-Math.PI/2, hoverable:false,
+                                                backingURL__up:unitStyle.imageStoreURL_commonPrefix+'minus_up.png',
+                                                backingURL__press:unitStyle.imageStoreURL_commonPrefix+'minus_down.png',
                                             }},
                                             {collection:'display', type:'sevenSegmentDisplay', name:'page', data:{
                                                 x:121.5, y:22.5, width:11, height:19, canvasBased:true, resolution:5,
