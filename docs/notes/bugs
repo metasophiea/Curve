@@ -12,6 +12,7 @@
 [2020-10-16:1] looping paths just don't work
 [2020-11-14:1] (probably since wasm was added) the webpage crashes sometimes
     it is a chrome bug. I made a report about it on their bug tracking tool, issue 1149413. So, nothing to do with my code at all, just coincidence 
+[2021-02-18:1] the Harbinger rdp cut/copy/paste functions don't work
 
 
 fixed:

@@ -77,6 +77,11 @@ library = [
                 print_name: 'Mini Rhythm Designer',
                 document_aspect_ratio: 1,
             },
+            {
+                name: 'rdp-32',
+                print_name: 'Rhythm Designer Pro',
+                document_aspect_ratio: 1,
+            },
         ],
     },
 ];
