@@ -45553,7 +45553,7 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             _canvas_.layers.declareLayerAsLoaded("control");
         } );
         _canvas_.curve = new function(){
-            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:10} };
+            this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:22} };
         };
         
         _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -54994,8 +54994,10 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
                         //hid
                             //page
                                 object.elements.checkbox_image.unify.onchange = function(bool){
+                                    if(state.unifyChannels != bool){
+                                        state.clipboard = [];
+                                    }
                                     state.unifyChannels = bool;
-                                    state.clipboard = [];
                                 };
                                 object.elements.button_image.clear.onpress = function(){
                                     clear();
@@ -58515,8 +58517,8 @@ for(let __canvasElements_count = 0; __canvasElements_count < __canvasElements.le
             // pg.i.tempo(60)
         
         
-            const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
-            // const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
+            // const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
+            const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
         
             // setTimeout( () => {
             //     const rdp2 = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');

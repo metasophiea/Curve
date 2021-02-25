@@ -539,8 +539,10 @@ this['rdp-32'] = function(name,x,y,angle){
         //hid
             //page
                 object.elements.checkbox_image.unify.onchange = function(bool){
+                    if(state.unifyChannels != bool){
+                        state.clipboard = [];
+                    }
                     state.unifyChannels = bool;
-                    state.clipboard = [];
                 };
                 object.elements.button_image.clear.onpress = function(){
                     clear();

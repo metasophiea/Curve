@@ -12,7 +12,6 @@
 [2020-10-16:1] looping paths just don't work
 [2020-11-14:1] (probably since wasm was added) the webpage crashes sometimes
     it is a chrome bug. I made a report about it on their bug tracking tool, issue 1149413. So, nothing to do with my code at all, just coincidence 
-[2021-02-18:1] the Harbinger rdp cut/copy/paste functions don't work
 
 
 fixed:
@@ -68,3 +67,5 @@ fixed:
     [2021-01-11:1] pasting doesn't work
         something to do with not knowing where the mouse is
         (log:2021-01-11) the code that was being called didn't have the information that was needed. It was trying to call core.viewport.getMousePosition - which didn't exist as it had been renamed core.viewport.mousePosition - but even then, there was no mouse position to get as the values it would have been pulling from were never populated. I've now moved this method to the callback section and have placed the mousePosition method there. The callbacks which attach to the canvas are now populating the mouse position data
+    [2021-02-18:1] the Harbinger rdp cut/copy/paste functions don't work
+        (log:2021-02-22) the clipboard was being cleared by mistake

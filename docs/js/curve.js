@@ -45497,7 +45497,7 @@
                 _canvas_.layers.declareLayerAsLoaded("control");
             } );
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:10} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2021,m:2,d:22} };
             };
             
             _canvas_.layers.registerLayer("curve", _canvas_.curve);
@@ -54938,8 +54938,10 @@
                             //hid
                                 //page
                                     object.elements.checkbox_image.unify.onchange = function(bool){
+                                        if(state.unifyChannels != bool){
+                                            state.clipboard = [];
+                                        }
                                         state.unifyChannels = bool;
-                                        state.clipboard = [];
                                     };
                                     object.elements.button_image.clear.onpress = function(){
                                         clear();

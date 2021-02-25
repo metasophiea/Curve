@@ -1,6 +1,6 @@
 const main_section = document.getElementById('main_list_section');
 const document_size = 250;
-const document_padding = 0.2;
+const document_padding = 25;
 const root_directory = '/help/library/';
 
 
@@ -71,14 +71,12 @@ const root_directory = '/help/library/';
 
 //resizing
     window.onresize = function(){
-        const mux = Math.trunc( (window.innerWidth / document_size) - document_padding );
+        const mux = Math.trunc( window.innerWidth / (document_size + document_padding) );
         groups.forEach(group => {
             const sections = group.getElementsByClassName('unit_document_section');
-
             for(var a = 0; a < sections.length; a++){
                 sections[a].style.width = (1/mux)*100 + '%';
             }
         });
-
     };
     setTimeout(window.onresize,1);

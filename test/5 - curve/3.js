@@ -7,8 +7,8 @@ _canvas_.layers.registerFunctionForLayer("curve", function(){
     // pg.i.tempo(60)
 
 
-    const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
-    // const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
+    // const mrd = _canvas_.control.scene.addUnit(10,180,0,'mrd-16','harbinger');
+    const rdp = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');
 
     // setTimeout( () => {
     //     const rdp2 = _canvas_.control.scene.addUnit(10,180,0,'rdp-32','harbinger');

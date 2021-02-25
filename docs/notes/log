@@ -1,4 +1,21 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-02-22
+  - added more documents (all Harbinger's documents are now in)
+  - fixed issue in the Harbinger RDP, where cut/copy/pasting didn't work
+    properly. Seems in some of the code, it would clear the clipboard. This 
+    would happen immediately after cut and paste operations, and was a quirk of
+    the refreshLEDs function, which would reset the Unify button, which in doing
+    so would clear the clipboard.
+      Clearing the clipboard is important however, as otherwise while in unified
+    mode the pasting function will expect a multi-dimensional array in the
+    clipboard. If the clipboard wasn't cleared during the switch to Unified mode,
+    then the old single-dimension data structure will be present, causing an
+    error. The solution was to add an if statement to the unify button's code 
+    that detects if the incoming value is different to the current one. If so,
+    the clipboard is cleared... it's admittedly a little messy.
+  - added the 'next' site, to hold the new software (well, test programs)
+
+
 2021-02-10
   - cleaned up what images the Harbinger units were using, plus replaced the
     DSDS images with new ones

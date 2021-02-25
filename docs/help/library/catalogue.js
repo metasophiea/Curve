@@ -55,6 +55,16 @@ library = [
         ],
         documents: [
             {
+                name: 'amplitude_modifier',
+                print_name: 'Amplitude Modifier',
+                document_aspect_ratio: 1.41,
+            },
+            {
+                name: 'bitcrusher',
+                print_name: 'Bitcrusher',
+                document_aspect_ratio: 1.41,
+            },
+            {
                 name: 'sigmoids_affecter',
                 print_name: 'Sigmoid\'s Affecter',
                 document_aspect_ratio: 1.41,
@@ -65,7 +75,10 @@ library = [
     {
         name: 'harbinger',
         print_name: 'Harbinger',
-        description: [],
+        description: [
+            'Harbinger is an audio equipment company founded in 1989 by the Swiss engineer Werner Nussbaum-Harbinger, in Willich, Germany. By 2006, Harbinger was the 14th largest manufacturer of music products in the world. Known for their reliability and concentrated though complete feature set; Harbinger sequencers have become a central component of many professional music studios.',
+            'Company founder Werner Nussbaum-Harbinger, was born 1961 in Baden, Switzerland. Nussbaum-Harbinger\'s father was a church organist and nuclear physicist; his mother a pianist and interpreter; his uncle a professor of composition at the Richard Strauss Conservatory in Munich; and his aunt a classical singer and pianist. At the age of four, Nussbaum-Harbinger started to learn piano. When he was five years old, his father built his own church organ with over 1000 pipes and integrated them into the family home. Nussbaum-Harbinger helped his father build the organ. At the age of 16, he built his first synthesizer, the DSDS-8-3.',
+        ],
         documents: [
             {
                 name: 'dsds-8^3',
