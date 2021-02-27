@@ -65,6 +65,11 @@ library = [
                 document_aspect_ratio: 1.41,
             },
             {
+                name: 'data_controlled_frequency_generator',
+                print_name: 'Data Controlled Frequency Generator',
+                document_aspect_ratio: 1.41,
+            },
+            {
                 name: 'sigmoids_affecter',
                 print_name: 'Sigmoid\'s Affecter',
                 document_aspect_ratio: 1.41,
