@@ -1,4 +1,15 @@
 ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2021-03-04
+  - more work on documents
+
+
+2021-03-02
+  - modified frequency_generator and data_controlled_frequency_generator unit
+    backing images to make the 'detune' dial markings match what the math is
+    actually doing
+  - more work on documents
+
+
 2021-02-26
   - more work on documents
 

@@ -70,6 +70,11 @@ library = [
                 document_aspect_ratio: 1.41,
             },
             {
+                name: 'frequency_amplitude_response_workstation',
+                print_name: 'Frequency Amplitude Response Workstation',
+                document_aspect_ratio: 1.41,
+            },
+            {
                 name: 'sigmoids_affecter',
                 print_name: 'Sigmoid\'s Affecter',
                 document_aspect_ratio: 1.41,
